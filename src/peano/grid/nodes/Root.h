@@ -8,6 +8,9 @@
 #include "peano/grid/TraversalOrderOnTopLevel.h"
 #include "peano/grid/nodes/Node.h"
 #include "peano/geometry/Geometry.h"
+#include "peano/grid/SingleElementVertexEnumerator.h"
+#include "peano/grid/SingleLevelEnumerator.h"
+
 
 /**
  * Root Node
