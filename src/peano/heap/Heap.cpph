@@ -188,7 +188,7 @@ void peano::heap::Heap<Data>::setName(std::string name) {
 #if !defined(Asserts)
 template <class Data>
 void peano::heap::Heap<Data>::sendData(int index, int toRank, MessageType messageType) {
-  sendData(index, toRank, 0, 0, isSentDueToForkOrJoin, messageType);
+  sendData(index, toRank, 0, 0, messageType);
 }
 #endif
 
@@ -428,7 +428,7 @@ void peano::heap::Heap<Data>::releaseReceivedMessagesRequests() {
 #if !defined(Asserts)
 template <class Data>
 std::vector<Data> peano::heap::Heap<Data>::receiveData(int fromRank, MessageType messageType) {
-  return receiveData(fromRank, 0, 0, isExchangedSynchronously, messageType);
+  return receiveData(fromRank, 0, 0, messageType);
 }
 #endif
 
