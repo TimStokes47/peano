@@ -103,10 +103,10 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
     LeafNode&                             _leafNode;
     RefinedNode&                          _refinedNode;
 
-    SingleLevelEnumerator          getCoarseGridEnumeratorForLocalData() const;
-    SingleElementVertexEnumerator  getCoarseGridEnumeratorForReceivedData() const;
-    SingleLevelEnumerator          getLevelOneGridEnumeratorForLocalData() const;
-    SingleElementVertexEnumerator  getLevelOneGridEnumeratorForReceivedData() const;
+    peano::grid::SingleLevelEnumerator          getCoarseGridEnumeratorForLocalData() const;
+    peano::grid::SingleElementVertexEnumerator  getCoarseGridEnumeratorForReceivedData() const;
+    peano::grid::SingleLevelEnumerator          getLevelOneGridEnumeratorForLocalData() const;
+    peano::grid::SingleElementVertexEnumerator  getLevelOneGridEnumeratorForReceivedData() const;
 
     /**
      * Initialise fine grid cells
