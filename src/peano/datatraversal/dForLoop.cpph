@@ -25,12 +25,12 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
   const tarch::la::Vector<DIMENSIONS,int>&  range,
   LoopBody&                                 body,
   int                                       grainSize,
-  bool                                      useSixPowerDColouring
+  bool                                      useSevenPowerDColouring
 ) {
 	assertion( grainSize >= 0 );
 	if (grainSize>0) {
     #ifdef SharedTBB
-	  if (useSixPowerDColouring) {
+	  if (useSevenPowerDColouring) {
 	    assertionMsg( "dForLoop(...)", "not implemented yet" );
 	  }
 	  else {
