@@ -71,6 +71,7 @@
   #define FOUR_POWER_D_DIVIDED_BY_FOUR  (BasePowerExponent<4,DIMENSIONS-1>::value)
   #define FIVE_POWER_D  (BasePowerExponent<5,DIMENSIONS>::value)
   #define FIVE_POWER_D_DIVIDED_BY_FIVE  (BasePowerExponent<5,DIMENSIONS-1>::value)
+  #define SIX_POWER_D  (BasePowerExponent<6,DIMENSIONS>::value)
   #define SEVEN_POWER_D  (BasePowerExponent<7,DIMENSIONS>::value)
   #define NUMBER_OF_VERTICES_PER_ELEMENT TWO_POWER_D
   #define DIMENSIONS_TIMES_TWO (2*DIMENSIONS)
