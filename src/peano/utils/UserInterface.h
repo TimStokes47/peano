@@ -95,7 +95,7 @@ class peano::utils::UserInterface {
     /**
      * Write the static program header to be plotted at startup.
      */
-    void writeHeader();
+    void writeHeader(const std::string& experimentName = "");
 
     /**
      * Write some information about the amount of data / datatypes used.
