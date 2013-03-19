@@ -10,7 +10,7 @@
 # Please adopt these directories to your Peano installation. The values are 
 # used by the compiler and linker calls.
 PEANO_HOME   = ../../src
-PROJECT_HOME = ..   # project home is the directory holding your project-specific subdirectory
+PROJECT_HOME = ../__COMPONENT_NAME__  
 
 
 # Set Dimension
@@ -135,4 +135,4 @@ clean:
 
 
 $(OBJECTS): %.o : %.cpp
-	$(CC) $(DIM) $(PROJECT_CFLAGS) $(COMPILER_CFLAGS) $(SYSTEM_CFLAGS) -I$(PROJECT_HOME) -I$(PEANO_HOME) -c $< -o $@
+	$(CC) $(DIM) $(PROJECT_CFLAGS) $(COMPILER_CFLAGS) $(SYSTEM_CFLAGS) -I.. -I$(PEANO_HOME) -c $< -o $@
