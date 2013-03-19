@@ -2,7 +2,6 @@
 #include "peano/grid/aspects/CellRefinement.h"
 #include "peano/utils/Loop.h"
 #include "peano/grid/nodes/Constants.h"
-#include "peano/grid/SingleElementVertexEnumerator.h"
 #include "peano/parallel/Partitioner.h"
 
 
