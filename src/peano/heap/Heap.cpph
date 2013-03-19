@@ -124,6 +124,17 @@ std::vector<Data>& peano::heap::Heap<Data>::getData(int index) {
 
 
 template <class Data>
+const std::vector<Data>& peano::heap::Heap<Data>::getData(int index) const {
+  #ifdef Asserts
+  std::string message = "Trying to get heap data for unknown index. Has the index been initialized correctly?";
+  #endif
+  assertion4(_heapData.find(index) != _heapData.end(), _name, message, index, _heapData.size());
+  assertionMsg(_heapData[index] != 0, _name << ": Null-pointer was stored in heap data map");
+  return *(_heapData[index]);
+}
+
+
+template <class Data>
 void peano::heap::Heap<Data>::moveData( int toIndex, int fromIndex ) {
   assertion4(_heapData.find(toIndex) != _heapData.end(), _name, toIndex, fromIndex, _heapData.size());
   assertion4(_heapData.find(fromIndex) != _heapData.end(), _name, toIndex, fromIndex, _heapData.size());
@@ -134,7 +145,7 @@ void peano::heap::Heap<Data>::moveData( int toIndex, int fromIndex ) {
 
 
 template <class Data>
-bool peano::heap::Heap<Data>::isValidIndex(int index) {
+bool peano::heap::Heap<Data>::isValidIndex(int index) const {
     return _heapData.find(index) != _heapData.end();
 }
 
@@ -162,7 +173,7 @@ void peano::heap::Heap<Data>::deleteData(int index) {
 
 
 template <class Data>
-int peano::heap::Heap<Data>::getNumberOfAllocatedEntries() {
+int peano::heap::Heap<Data>::getNumberOfAllocatedEntries() const {
   return _heapData.size();
 }
 
@@ -205,7 +216,7 @@ void peano::heap::Heap<Data>::sendData(
 
   #ifdef Parallel
   int mpiTag = getTagForMessageType(messageType);
-  std::vector<Data>& data = getData(index);
+  const std::vector<Data>& data = getData(index);
 
   SendReceiveTask sendTask;
 

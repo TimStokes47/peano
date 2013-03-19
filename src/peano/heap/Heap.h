@@ -162,12 +162,6 @@ class peano::heap::Heap: public tarch::services::Service {
        */
       int             _rank;
 
-      /**
-       * Used to differentiate between neighbour communication, master-worker
-       * communication and fork/join communication messages.
-       */
-//      int             _mpiTag;
-
       #if defined(Parallel) && defined(ParallelExchangePackedRecords)
       typedef typename Data::Packed  MPIData;
       #else
@@ -423,6 +417,11 @@ class peano::heap::Heap: public tarch::services::Service {
     std::vector<Data>& getData(int index);
 
     /**
+     * Retrieves the data that corresponds to the given index.
+     */
+    const std::vector<Data>& getData(int index) const;
+
+    /**
      * Creates new data on the heap and returns the
      * corresponding index.
      *
@@ -434,7 +433,7 @@ class peano::heap::Heap: public tarch::services::Service {
      * Returns, if the given index is a known index and, thus,
      * refers to a valid heap data object.
      */
-    bool isValidIndex(int index);
+    bool isValidIndex(int index) const;
 
     /**
      * Deletes the data with the given index.
@@ -450,7 +449,7 @@ class peano::heap::Heap: public tarch::services::Service {
     /**
      * Returns the number of entries being held by this object.
      */
-    int getNumberOfAllocatedEntries();
+    int getNumberOfAllocatedEntries() const;
 
     /**
      * Takes data from fromIndex and reassings it to toIndex.
