@@ -104,6 +104,11 @@ public class AnalysisAdapter implements Analysis
         defaultCase(node);
     }
 
+    public void caseAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node)
+    {
+        defaultCase(node);
+    }
+
     public void caseAWriteScalarOperation(AWriteScalarOperation node)
     {
         defaultCase(node);
@@ -120,6 +125,11 @@ public class AnalysisAdapter implements Analysis
     }
 
     public void caseAWriteStencilOperation(AWriteStencilOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node)
     {
         defaultCase(node);
     }
@@ -195,6 +205,11 @@ public class AnalysisAdapter implements Analysis
     }
 
     public void caseTTokenVectorTwoPowD(TTokenVectorTwoPowD node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseTTokenVectorFivePowD(TTokenVectorFivePowD node)
     {
         defaultCase(node);
     }

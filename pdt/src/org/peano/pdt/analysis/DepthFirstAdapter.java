@@ -220,6 +220,27 @@ public class DepthFirstAdapter extends AnalysisAdapter
         outAReadStencilOperation(node);
     }
 
+    public void inAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node)
+    {
+        inAReadIntergridOperatorOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadIntergridOperatorOperation(node);
+    }
+
     public void inAWriteScalarOperation(AWriteScalarOperation node)
     {
         defaultIn(node);
@@ -302,6 +323,27 @@ public class DepthFirstAdapter extends AnalysisAdapter
             node.getName().apply(this);
         }
         outAWriteStencilOperation(node);
+    }
+
+    public void inAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node)
+    {
+        inAWriteIntergridOperatorOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteIntergridOperatorOperation(node);
     }
 
     public void inACell(ACell node)

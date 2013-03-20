@@ -19,10 +19,12 @@ public interface Analysis extends Switch
     void caseAReadVectorOperation(AReadVectorOperation node);
     void caseAReadVectorTwoPowDOperation(AReadVectorTwoPowDOperation node);
     void caseAReadStencilOperation(AReadStencilOperation node);
+    void caseAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node);
     void caseAWriteScalarOperation(AWriteScalarOperation node);
     void caseAWriteVectorOperation(AWriteVectorOperation node);
     void caseAWriteVectorTwoPowDOperation(AWriteVectorTwoPowDOperation node);
     void caseAWriteStencilOperation(AWriteStencilOperation node);
+    void caseAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node);
     void caseACell(ACell node);
     void caseAState(AState node);
     void caseAEventMapping(AEventMapping node);
@@ -39,6 +41,7 @@ public interface Analysis extends Switch
     void caseTTokenScalar(TTokenScalar node);
     void caseTTokenVectorD(TTokenVectorD node);
     void caseTTokenVectorTwoPowD(TTokenVectorTwoPowD node);
+    void caseTTokenVectorFivePowD(TTokenVectorFivePowD node);
     void caseTTokenStencil(TTokenStencil node);
     void caseTTokenName(TTokenName node);
     void caseTTokenDastgenFile(TTokenDastgenFile node);

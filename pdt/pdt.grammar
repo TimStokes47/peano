@@ -37,6 +37,7 @@ Tokens
   token_scalar                = 'scalar:';
   token_vector_d              = 'vector:';
   token_vector_two_pow_d      = 'vector2PowD:';
+  token_vector_five_pow_d     = 'intergrid-operator:';
   token_stencil               = 'stencil:';
   	
   token_name                  = 'name:';
@@ -103,6 +104,10 @@ Productions
         { -> [New operation.read_stencil(identifier) ] }
     | {list_read_stencil}   token_read token_stencil identifier operation_list
         { -> [New operation.read_stencil(identifier),operation_list.operation] }
+    | {single_read_intergrid_operator}   token_read token_vector_five_pow_d identifier 
+        { -> [New operation.read_intergrid_operator(identifier) ] }
+    | {list_read_intergrid_operator}   token_read token_vector_five_pow_d identifier operation_list
+        { -> [New operation.read_intergrid_operator(identifier),operation_list.operation] }
     | {single_write_scalar} token_write token_scalar identifier
         { -> [New operation.write_scalar(identifier) ] }
     | {list_write_scalar}   token_write token_scalar identifier operation_list
@@ -118,7 +123,11 @@ Productions
     | {single_write_stencil} token_write token_stencil identifier
         { -> [New operation.write_stencil(identifier) ] }
     | {list_write_stencil}   token_write token_stencil identifier operation_list
-        { -> [New operation.write_stencil(identifier),operation_list.operation] };
+        { -> [New operation.write_stencil(identifier),operation_list.operation] }
+    | {single_write_intergrid_operator}   token_write token_vector_five_pow_d identifier 
+        { -> [New operation.write_intergrid_operator(identifier) ] }
+    | {list_write_intergrid_operator}   token_write token_vector_five_pow_d identifier operation_list
+        { -> [New operation.write_intergrid_operator(identifier),operation_list.operation] };
   
   event_mapping_list {->event_mapping*} =
       {single}  token_event_mapping token_name identifier 
@@ -169,10 +178,13 @@ Abstract Syntax Tree
     | {read_vector}       [name]:identifier
     | {read_vector_two_pow_d}  [name]:identifier
     | {read_stencil}      [name]:identifier
+    | {read_intergrid_operator}      [name]:identifier
     | {write_scalar}      [name]:identifier
     | {write_vector}      [name]:identifier
     | {write_vector_two_pow_d} [name]:identifier
-    | {write_stencil}     [name]:identifier;
+    | {write_stencil}     [name]:identifier
+    | {write_intergrid_operator}     [name]:identifier
+    ;
     
   cell = [filename]:filename;
  

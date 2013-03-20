@@ -36,10 +36,12 @@ public class TranslationTable extends DepthFirstAdapter {
   private static final String _MULTIPLE_LINE_KEYWORD_READ_VECTOR_OPERATION = "__READ_VECTOR_OPERATION__";
   private static final String _MULTIPLE_LINE_KEYWORD_READ_VECTOR_TWO_POW_D_OPERATION = "__READ_VECTOR_TWO_POW_D_OPERATION__";
   private static final String _MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION = "__READ_STENCIL_OPERATION__";
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION = "__READ_INTERGRID_OPERATOR_OPERATION__";
   private static final String _MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION = "__WRITE_SCALAR_OPERATION__";
   private static final String _MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION = "__WRITE_VECTOR_OPERATION__";
   private static final String _MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION = "__WRITE_VECTOR_TWO_POW_D_OPERATION__";
   private static final String _MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION = "__WRITE_STENCIL_OPERATION__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION = "__WRITE_INTERGRID_OPERATOR_OPERATION__";
 
   private static final String _MULTIPLE_LINE_KEYWORD_MAPPINGS = "__MAPPINGS__";
   private static final String _KEYWORD_IF_MAPPING_EXISTS_AND_PREDEFINED_MAPPING_EXISTS_INSERT_COMMA = "__IF_MAPPINGS_EXIST_AND_PREDEFINED_MAPPINGS_EXIST_INSERT_COMMA__";
@@ -84,6 +86,8 @@ public class TranslationTable extends DepthFirstAdapter {
             new java.util.Vector<String>());
     _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION,
         new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION,
+        new java.util.Vector<String>());
     _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION,
         new java.util.Vector<String>());
     _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION,
@@ -91,6 +95,8 @@ public class TranslationTable extends DepthFirstAdapter {
     _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION,
             new java.util.Vector<String>());
     _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION,
+        new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION,
         new java.util.Vector<String>());
   }
 
@@ -114,6 +120,12 @@ public class TranslationTable extends DepthFirstAdapter {
         node.getName().toString().trim());
   }
   
+  public void inAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION).add(
+        node.getName().toString().trim());
+  }
+
+  
   public void inAWriteVectorOperation(AWriteVectorOperation node) {
     _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION).add(
         node.getName().toString().trim());
@@ -131,6 +143,12 @@ public class TranslationTable extends DepthFirstAdapter {
 
   public void inAWriteStencilOperation(AWriteStencilOperation node) {
     _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION).add(
+        node.getName().toString().trim());
+  }
+  
+  public void inAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION
+        ).add(
         node.getName().toString().trim());
   }
 
