@@ -341,6 +341,12 @@ void peano::grid::State<StateData>::mergeWithWorkerState(const peano::grid::Stat
 
   _stateData.setHasChangedVertexOrCellState(workerState._stateData.getHasChangedVertexOrCellState() || _stateData.getHasChangedVertexOrCellState());
 
+  _stateData.setHasChangedVertexOrCellState(            _stateData.getHasChangedVertexOrCellState()            | workerState._stateData.getHasChangedVertexOrCellState() );
+  _stateData.setHasRefined(                             _stateData.getHasRefined()                             | workerState._stateData.getHasRefined() );
+  _stateData.setHasErased(                              _stateData.getHasErased()                              | workerState._stateData.getHasErased() );
+  _stateData.setHasTriggeredRefinementForNextIteration( _stateData.getHasTriggeredRefinementForNextIteration() | workerState._stateData.getHasTriggeredRefinementForNextIteration() );
+  _stateData.setHasTriggeredEraseForNextIteration(      _stateData.getHasTriggeredEraseForNextIteration()      | workerState._stateData.getHasTriggeredEraseForNextIteration() );
+
   _stateData.setMaxLevel( workerState._stateData.getMaxLevel() > _stateData.getMaxLevel() ? workerState._stateData.getMaxLevel() : _stateData.getMaxLevel() );
   for (int d=0; d<DIMENSIONS; d++) {
     _stateData.setMaxMeshWidth(d,
