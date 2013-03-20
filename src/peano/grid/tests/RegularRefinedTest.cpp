@@ -39,6 +39,8 @@ void peano::grid::tests::RegularRefinedTest::setUp() {
 
 
 void peano::grid::tests::RegularRefinedTest::testIsVertexOnLevel1DataDecompositionBoundaryAlgorithm() {
+  logTraceIn( "testIsVertexOnLevel1DataDecompositionBoundaryAlgorithm()" );
+  #ifdef Dim2
   peano::grid::UnrolledLevelEnumerator enumerator(
     0.1, //  coarsestGridCellSize,
     0.0, // domainOffset,
@@ -126,10 +128,13 @@ void peano::grid::tests::RegularRefinedTest::testIsVertexOnLevel1DataDecompositi
   validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
   vertexPosition = 9,9;
   validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
+  #endif
+  logTraceOut( "testIsVertexOnLevel1DataDecompositionBoundaryAlgorithm()" );
 }
 
 
 void peano::grid::tests::RegularRefinedTest::test2DComputePositionRelativeToNextCoarserLevelFromFineGridVertexPosition() {
+  logTraceIn( "test2DComputePositionRelativeToNextCoarserLevelFromFineGridVertexPosition()" );
   #ifdef Dim2
   tarch::la::Vector<DIMENSIONS,int> fineGridPosition;
   tarch::la::Vector<DIMENSIONS,int> offsetOfCoarseGridEnumerator;
@@ -190,10 +195,12 @@ void peano::grid::tests::RegularRefinedTest::test2DComputePositionRelativeToNext
   validateEquals( fineGridPositionRelativeToCoarserCell(0), 1 );
   validateEquals( fineGridPositionRelativeToCoarserCell(1), 1 );
   #endif
+  logTraceOut( "test2DComputePositionRelativeToNextCoarserLevelFromFineGridVertexPosition()" );
 }
 
 
 void peano::grid::tests::RegularRefinedTest::test2DComputePositionRelativeToNextCoarserLevelFromFineGridCellPosition() {
+  logTraceIn( "test2DComputePositionRelativeToNextCoarserLevelFromFineGridCellPosition()" );
   #ifdef Dim2
   tarch::la::Vector<DIMENSIONS,int> fineGridPosition;
   tarch::la::Vector<DIMENSIONS,int> offsetOfCoarseGridEnumerator;
@@ -254,6 +261,7 @@ void peano::grid::tests::RegularRefinedTest::test2DComputePositionRelativeToNext
   validateEquals( fineGridPositionRelativeToCoarserCell(0), 1 );
   validateEquals( fineGridPositionRelativeToCoarserCell(1), 1 );
   #endif
+  logTraceOut( "test2DComputePositionRelativeToNextCoarserLevelFromFineGridCellPosition()" );
 }
 
 
