@@ -363,26 +363,6 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     void releaseReceivedMessagesRequests();
 
-    #if !defined(Asserts)
-    /**
-     * This operation is public if compiled without assertions.
-     */
-    std::vector< Data > receiveData(
-      int                                           fromRank,
-      const tarch::la::Vector<DIMENSIONS, double>&  position,
-      int                                           level,
-      MessageType                                   messageType
-    );
-
-    void sendData(
-      int                                           index,
-      int                                           toRank,
-      const tarch::la::Vector<DIMENSIONS, double>&  position,
-      int                                           level,
-      MessageType                                   messageType
-    );
-    #endif
-
     std::vector< Data > receiveNeighbourData(
       int fromRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
@@ -401,7 +381,7 @@ class peano::heap::Heap: public tarch::services::Service {
     /**
      * Returns the correct MPI tag for the given message type.
      */
-    int getTagForMessageType(MessageType messageType);
+    int getTagForMessageType(MessageType messageType) const;
 
   public:
     /**
@@ -489,19 +469,8 @@ class peano::heap::Heap: public tarch::services::Service {
     /**
      * Sends heap data associated to one index to one rank.
      *
-     * Wrapper forwarding to the other sendData() operation with default
-     * values. Operation should be used in release mode, as all additional
-     * attributes of the overloaded sendData() operation are used for
-     * validation purposes.
-     *
      * To avoid overcrowded MPI buffers, send also calls receiveDanglingMessages()
      * once.
-     */
-    #if !defined(Asserts)
-    void sendData(int index, int toRank, MessageType messageType);
-    #else
-    /**
-     * @see Heap
      */
     void sendData(
       int                                           index,
@@ -510,7 +479,14 @@ class peano::heap::Heap: public tarch::services::Service {
       int                                           level,
       MessageType                                   messageType
     );
-    #endif
+
+    void sendData(
+      const std::vector<Data>&                      data,
+      int                                           toRank,
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level,
+      MessageType                                   messageType
+    );
 
     /**
      * Receive heap data associated to one index from one rank.
@@ -524,11 +500,10 @@ class peano::heap::Heap: public tarch::services::Service {
      *
      * Though the operation only deploys data that has been received before, it
      * is not const as it frees data of the local buffers.
-     */
-    #if !defined(Asserts)
-    std::vector< Data > receiveData(int fromRank, MessageType messageType);
-    #else
-    /**
+     *
+     * This operation is not const, as local handles might be deleted
+     * afterwards.
+     *
      * @see Heap
      * @see receiveData(int)
      */
@@ -538,7 +513,19 @@ class peano::heap::Heap: public tarch::services::Service {
       int                                           level,
       MessageType                                   messageType
     );
-    #endif
+
+    /**
+     * Receive data and append it to local data.
+     *
+     * @see receiveData()
+     */
+    void receiveData(
+      int                                           index,
+      int                                           fromRank,
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level,
+      MessageType                                   messageType
+    );
 
     /**
      * @see Heap

@@ -196,38 +196,29 @@ void peano::heap::Heap<Data>::setName(std::string name) {
 }
 
 
-#if !defined(Asserts)
-template <class Data>
-void peano::heap::Heap<Data>::sendData(int index, int toRank, MessageType messageType) {
-  sendData(index, toRank, 0, 0, messageType);
-}
-#endif
-
-
 template <class Data>
 void peano::heap::Heap<Data>::sendData(
-  int                                           index,
+  const std::vector< Data >&                    data,
   int                                           toRank,
   const tarch::la::Vector<DIMENSIONS, double>&  position,
   int                                           level,
-  MessageType messageType
+  MessageType                                   messageType
 ) {
-  logTraceInWith6Arguments( "sendData(...)", _name, index, toRank, position, level, messageType );
+  logTraceInWith6Arguments( "sendData(...)", _name, toRank, position, level, messageType, data.size() );
 
   #ifdef Parallel
   int mpiTag = getTagForMessageType(messageType);
-  const std::vector<Data>& data = getData(index);
 
   SendReceiveTask sendTask;
 
-  sendTask._data = new typename SendReceiveTask::MPIData[getData(index).size()];
+  sendTask._data = new typename SendReceiveTask::MPIData[data.size()];
   sendTask._rank = toRank;
 
-  for (int i=0; i<static_cast<int>( getData(index).size() ); i++) {
+  for (int i=0; i<static_cast<int>( data.size() ); i++) {
     #if defined(ParallelExchangePackedRecords)
-    sendTask._data[i] = getData(index)[i].convert();
+    sendTask._data[i] = data[i].convert();
     #else
-    sendTask._data[i] = getData(index)[i];
+    sendTask._data[i] = data[i];
     #endif
   }
 
@@ -266,9 +257,25 @@ void peano::heap::Heap<Data>::sendData(
   } else {
     _forkJoinDataSendTasks.push_back(sendTask);
   }
-
-  logTraceOutWith1Argument( "sendData(...)", data.size() );
   #endif
+
+  logTraceOut( "sendData(...)" );
+}
+
+
+template <class Data>
+void peano::heap::Heap<Data>::sendData(
+  int                                           index,
+  int                                           toRank,
+  const tarch::la::Vector<DIMENSIONS, double>&  position,
+  int                                           level,
+  MessageType                                   messageType
+) {
+  logTraceInWith6Arguments( "sendData(...)", _name, index, toRank, position, level, messageType );
+
+  sendData( getData(index), toRank, position, level, messageType );
+
+  logTraceOutWith1Argument( "sendData(...)", getData(index).size() );
 }
 
 
@@ -434,14 +441,6 @@ void peano::heap::Heap<Data>::releaseReceivedMessagesRequests() {
   }
   #endif
 }
-
-
-#if !defined(Asserts)
-template <class Data>
-std::vector<Data> peano::heap::Heap<Data>::receiveData(int fromRank, MessageType messageType) {
-  return receiveData(fromRank, 0, 0, messageType);
-}
-#endif
 
 
 template <class Data>
@@ -653,6 +652,26 @@ std::vector< Data > peano::heap::Heap<Data>::receiveData(
 }
 
 
+
+template <class Data>
+void peano::heap::Heap<Data>::receiveData(
+  int                                           index,
+  int                                           fromRank,
+  const tarch::la::Vector<DIMENSIONS, double>&  position,
+  int                                           level,
+  MessageType                                   messageType
+) {
+  std::vector< Data >   receivedData;
+  std::vector< Data >&  localData = getData(index);
+  if (messageType == NeighbourCommunication) {
+    receivedData = receiveNeighbourData(fromRank, position, level);
+  } else {
+    receivedData = receiveMasterWorkerOrForkJoinData(fromRank, position, level, messageType);
+  }
+  localData.insert( localData.end(), receivedData.begin(), receivedData.end() );
+}
+
+
 template <class Data>
 void peano::heap::Heap<Data>::receiveDanglingMessages(int tag, std::vector<SendReceiveTask>& taskQueue) {
   #ifdef Parallel
@@ -713,16 +732,18 @@ void peano::heap::Heap<Data>::receiveDanglingMessages() {
 }
 
 template <class Data>
-int peano::heap::Heap<Data>::getTagForMessageType(MessageType messageType) {
+int peano::heap::Heap<Data>::getTagForMessageType(MessageType messageType) const {
   #ifdef Parallel
-    switch(messageType)
-    {
-    case NeighbourCommunication:
-      return _mpiTagForNeighbourDataExchange;
-    case MasterWorkerCommunication:
-      return _mpiTagForMasterWorkerDataExchange;
-    case ForkOrJoinCommunication:
-      return _mpiTagToExchangeForkJoinData;
+    switch(messageType) {
+      case NeighbourCommunication:
+        return _mpiTagForNeighbourDataExchange;
+      case MasterWorkerCommunication:
+        return _mpiTagForMasterWorkerDataExchange;
+      case ForkOrJoinCommunication:
+        return _mpiTagToExchangeForkJoinData;
+      default:
+        assertionMsg( false, "not supported" );
+        return -1;
     }
   #else
   return -1;
