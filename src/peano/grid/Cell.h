@@ -181,9 +181,6 @@ class peano::grid::Cell {
 
     void assignToRemoteNode( int rank );
 
-    /**
-     * You may call this operation iff isAssignedToRemoteRank() holds.
-     */
     int getRankOfRemoteNode() const;
 
     std::bitset<DIMENSIONS> getEvenFlags() const;

@@ -494,7 +494,6 @@ void peano::grid::Cell<CellData>::assignToRemoteNode(int rank) {
 
 template <class CellData>
 int peano::grid::Cell<CellData>::getRankOfRemoteNode() const {
-  assertion1( _cellData.getResponsibleRank()!=tarch::parallel::Node::getInstance().getRank(), toString() );
   return _cellData.getResponsibleRank();
 }
 
