@@ -239,13 +239,15 @@ class peano::heap::Heap: public tarch::services::Service {
      * Stores the maximum number of heap objects that was stored
      * in this object at any time.
      */
-    int _maximumNumberOfHeapObjects;
+    int _maximumNumberOfHeapEntries;
 
     /**
      * Stores the number of heap objects that have been allocated within
      * this object during the program's runtime.
      */
-    double _numberOfAllocatedHeapObjects;
+    int _numberOfHeapAllocations;
+
+    int _numberOfHeapFrees;
 
     /**
      * Name for this heap object. Used for plotting statistics.

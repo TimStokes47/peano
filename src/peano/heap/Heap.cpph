@@ -65,8 +65,12 @@ void peano::heap::Heap<Data>::plotStatistics() {
   if(_name != "") {
     logInfo("plotStatistics()", "Statistics for " << _name);
   }
-  logInfo("plotStatistics()", "maximum number of allocated heap objects: " << _maximumNumberOfHeapObjects << " (" << (_maximumNumberOfHeapObjects * sizeof(Data)) << " Byte(s))" );
-  logInfo("plotStatistics()", "number of heap allocations: " << _numberOfAllocatedHeapObjects << " (" << (_numberOfAllocatedHeapObjects * sizeof(Data)) <<  " Byte(s))" );
+  logInfo("plotStatistics()", "size of heap: " << _heapData.size() << " entries" );
+  logInfo("plotStatistics()", "freed but not reassigned heap indices: " << _freedHeapIndices.size() );
+
+  logInfo("plotStatistics()", "maximum number of allocated heap entries: " << _maximumNumberOfHeapEntries );
+  logInfo("plotStatistics()", "number of heap allocations: " << _numberOfHeapAllocations );
+  logInfo("plotStatistics()", "number of heap frees: " << _numberOfHeapFrees );
 
   logInfo("plotStatistics()", "records sent to neighbours: " << _numberOfRecordsSentToNeighbour << " (" << (_numberOfRecordsSentToNeighbour * sizeof(Data)) <<  " Byte(s)) in " << _numberOfMessagesSentToNeighbour << " message(s)" );
   logInfo("plotStatistics()", "records sent to master and workers: " << _numberOfRecordsSentToMasterWorker << " (" << (_numberOfRecordsSentToMasterWorker * sizeof(Data)) <<  " Byte(s)) in " << _numberOfMessagesSentToMasterWorker << " message(s)" );
@@ -80,6 +84,10 @@ void peano::heap::Heap<Data>::plotStatistics() {
 
 template <class Data>
 void peano::heap::Heap<Data>::clearStatistics() {
+  _maximumNumberOfHeapEntries   = 0;
+  _numberOfHeapAllocations      = 0;
+  _numberOfHeapFrees            = 0;
+
   _numberOfRecordsSentToNeighbour    = 0;
   _numberOfRecordsSentToMasterWorker = 0;
   _numberOfRecordsSentDueToForkJoin  = 0;
@@ -124,13 +132,13 @@ int peano::heap::Heap<Data>::createData() {
   assertionMsg(_heapData.find(index) != _heapData.end(), "insertion of heap data not successful.");
   assertion(index >= 0);
 
-  _numberOfAllocatedHeapObjects += 1.0;
+  _numberOfHeapAllocations += 1.0;
 
-  if(static_cast<int>(_heapData.size()) > _maximumNumberOfHeapObjects) {
-    _maximumNumberOfHeapObjects = static_cast<int>(_heapData.size());
+  if(static_cast<int>(_heapData.size()) > _maximumNumberOfHeapEntries) {
+    _maximumNumberOfHeapEntries = static_cast<int>(_heapData.size());
   }
 
-  logTraceOutWith2Arguments("createData()", index, _numberOfAllocatedHeapObjects);
+  logTraceOutWith2Arguments("createData()", index, _numberOfHeapAllocations);
   return index;
 }
 
@@ -190,6 +198,7 @@ void peano::heap::Heap<Data>::deleteData(int index) {
   _heapData.erase(index);
 
   _freedHeapIndices.push_back(index);
+  _numberOfHeapFrees++;
 
   logTraceOut("deleteData(int)");
 }
@@ -814,8 +823,7 @@ std::string peano::heap::Heap<Data>::toString() const {
   std::ostringstream msg;
 
   msg << "(name=" << _name
-      << ",heap-map-size=" << _heapData.size()
-      << ",no-allocated-heap-objects=" << _numberOfAllocatedHeapObjects;
+      << ",heap-map-size=" << _heapData.size();
 
   #ifdef Parallel
   msg << ",mpi-tag-neighbour-data=" << _mpiTagForNeighbourDataExchange
