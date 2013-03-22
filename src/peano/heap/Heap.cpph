@@ -46,7 +46,6 @@ peano::heap::Heap<Data>::Heap()
 template <class Data>
 peano::heap::Heap<Data>::~Heap()
 {
-  plotStatistics();
   deleteAllData();
 }
 
@@ -66,8 +65,32 @@ void peano::heap::Heap<Data>::plotStatistics() {
   if(_name != "") {
     logInfo("plotStatistics()", "Statistics for " << _name);
   }
-  logInfo("plotStatistics()", "Maximum number of allocated heap objects: " << _maximumNumberOfHeapObjects << " (" << (_maximumNumberOfHeapObjects * sizeof(Data)) << " Byte)" <<
-      ", number of heap allocations: " << _numberOfAllocatedHeapObjects << " (" << (_numberOfAllocatedHeapObjects * sizeof(Data)) <<  " Byte)");
+  logInfo("plotStatistics()", "maximum number of allocated heap objects: " << _maximumNumberOfHeapObjects << " (" << (_maximumNumberOfHeapObjects * sizeof(Data)) << " Byte(s))" );
+  logInfo("plotStatistics()", "number of heap allocations: " << _numberOfAllocatedHeapObjects << " (" << (_numberOfAllocatedHeapObjects * sizeof(Data)) <<  " Byte(s))" );
+
+  logInfo("plotStatistics()", "records sent to neighbours: " << _numberOfRecordsSentToNeighbour << " (" << (_numberOfRecordsSentToNeighbour * sizeof(Data)) <<  " Byte(s)) in " << _numberOfMessagesSentToNeighbour << " message(s)" );
+  logInfo("plotStatistics()", "records sent to master and workers: " << _numberOfRecordsSentToMasterWorker << " (" << (_numberOfRecordsSentToMasterWorker * sizeof(Data)) <<  " Byte(s)) in " << _numberOfMessagesSentToMasterWorker << " message(s)" );
+  logInfo("plotStatistics()", "records sent due to join or fork: " << _numberOfRecordsSentDueToForkJoin << " (" << (_numberOfRecordsSentDueToForkJoin * sizeof(Data)) <<  " Byte(s)) in " << _numberOfMessagesSentDueToForkJoin << " message(s)" );
+
+  logInfo("plotStatistics()", "messages received from neighbours: "         << _numberOfMessagesReceivedFromNeighbour  );
+  logInfo("plotStatistics()", "messages received from master and workers: " << _numberOfMessagesReceivedFromMasterWorker  );
+  logInfo("plotStatistics()", "messages received due to join or fork: "     << _numberOfMessagesReceivedDueToForkJoin  );
+}
+
+
+template <class Data>
+void peano::heap::Heap<Data>::clearStatistics() {
+  _numberOfRecordsSentToNeighbour    = 0;
+  _numberOfRecordsSentToMasterWorker = 0;
+  _numberOfRecordsSentDueToForkJoin  = 0;
+
+  _numberOfMessagesSentToNeighbour    = 0;
+  _numberOfMessagesSentToMasterWorker = 0;
+  _numberOfMessagesSentDueToForkJoin  = 0;
+
+  _numberOfMessagesReceivedFromNeighbour    = 0;
+  _numberOfMessagesReceivedFromMasterWorker = 0;
+  _numberOfMessagesReceivedDueToForkJoin    = 0;
 }
 
 
@@ -207,7 +230,7 @@ void peano::heap::Heap<Data>::sendData(
   logTraceInWith6Arguments( "sendData(...)", _name, toRank, position, level, messageType, data.size() );
 
   #ifdef Parallel
-  int mpiTag = getTagForMessageType(messageType);
+  int mpiTag = getTagForMessageType(messageType,true,data.size());
 
   SendReceiveTask sendTask;
 
@@ -228,8 +251,7 @@ void peano::heap::Heap<Data>::sendData(
   sendTask._metaInformation.setLevel(level);
   #endif
 
-  // Send size of vector
-  logInfo("sendData", "Sending data at " << position << " to Rank " << toRank << " with mpiTag: " << mpiTag << "\nForkOrJoin: " << _mpiTagToExchangeForkJoinData << "\nMaster-Worker:" << _mpiTagForMasterWorkerDataExchange << "\nFork/Join:" << _mpiTagToExchangeForkJoinData);
+  logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with mpiTag: " << mpiTag << ", neighbour-data-tag: " << _mpiTagForNeighbourDataExchange << ", master/worker-tag=" << _mpiTagForMasterWorkerDataExchange << ", fork/join-tag=" << _mpiTagToExchangeForkJoinData);
 
   sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
   sendTask._metaInformation.send(toRank, mpiTag, true);
@@ -369,7 +391,7 @@ void peano::heap::Heap<Data>::waitUntilNumberOfReceivedMessagesEqualsNumberOfSen
          _mpiTagForNeighbourDataExchange, -1
        );
 
-       logInfo("waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages", "send=" << getSizeOfSendBuffer() << ", receive=" << getSizeOfReceiveBuffer());
+       logDebug("waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages", "send=" << getSizeOfSendBuffer() << ", receive=" << getSizeOfReceiveBuffer());
 
        triggeredTimeoutWarning = true;
     }
@@ -521,11 +543,11 @@ std::vector< Data > peano::heap::Heap<Data>::receiveMasterWorkerOrForkJoinData(
   bool           triggeredTimeoutWarning = false;
   int            resultTask              = -1;
 
-  int mpiTag = getTagForMessageType(messageType);
+  int mpiTag = getTagForMessageType(messageType,false,0);
 
   std::vector<SendReceiveTask>& receiveTasks = (messageType == MasterWorkerCommunication) ? _masterWorkerDataReceiveTasks : _forkJoinDataReceiveTasks;
 
-  logInfo("receiveMasterWorkerOrForkJoinData", "Receiving data synchronously with mpiTag: " << mpiTag << "\nForkOrJoin: " << _mpiTagToExchangeForkJoinData << "\nNeighbour: " << _mpiTagForNeighbourDataExchange << "\nMasterWorker: " <<  _mpiTagForMasterWorkerDataExchange);
+  logDebug("receiveMasterWorkerOrForkJoinData", "Receiving data synchronously with mpiTag: " << mpiTag << ", fork/join-tag=" << _mpiTagToExchangeForkJoinData << ", neighbour-data-tag=" << _mpiTagForNeighbourDataExchange << ", master/worker-tag=" <<  _mpiTagForMasterWorkerDataExchange);
 
   while (resultTask == -1) {
     resultTask = findMessageFromRankInMasterWorkerOrForkJoinDataBuffer(fromRank, receiveTasks);
@@ -616,8 +638,6 @@ std::vector< Data > peano::heap::Heap<Data>::receiveNeighbourData(
   int                                           level
 ) {
   logTraceInWith6Arguments( "receiveNeighbourData(...)", fromRank, position, level, _currentReceiveBuffer, _neighbourDataReceiveTasks[0].size(), _neighbourDataReceiveTasks[1].size() );
-
-  logInfo("receiveNeighbourData", "Receiving data (Neighbour)");
 
   std::vector< Data > result;
 
@@ -732,14 +752,35 @@ void peano::heap::Heap<Data>::receiveDanglingMessages() {
 }
 
 template <class Data>
-int peano::heap::Heap<Data>::getTagForMessageType(MessageType messageType) const {
+int peano::heap::Heap<Data>::getTagForMessageType(MessageType messageType, bool isSendTask, int messageSize) {
   #ifdef Parallel
     switch(messageType) {
       case NeighbourCommunication:
+        if (isSendTask) {
+          _numberOfRecordsSentToNeighbour  += messageSize;
+          _numberOfMessagesSentToNeighbour += 1;
+        }
+        else {
+          _numberOfMessagesReceivedFromNeighbour += 1;
+        }
         return _mpiTagForNeighbourDataExchange;
       case MasterWorkerCommunication:
+        if (isSendTask) {
+          _numberOfRecordsSentToMasterWorker  += messageSize;
+          _numberOfMessagesSentToMasterWorker += 1;
+        }
+        else {
+          _numberOfMessagesReceivedFromMasterWorker += 1;
+        }
         return _mpiTagForMasterWorkerDataExchange;
       case ForkOrJoinCommunication:
+        if (isSendTask) {
+          _numberOfRecordsSentDueToForkJoin  += messageSize;
+          _numberOfMessagesSentDueToForkJoin += 1;
+        }
+        else {
+          _numberOfMessagesReceivedDueToForkJoin += 1;
+        }
         return _mpiTagToExchangeForkJoinData;
       default:
         assertionMsg( false, "not supported" );

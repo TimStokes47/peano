@@ -213,6 +213,18 @@ class peano::heap::Heap: public tarch::services::Service {
     std::vector<SendReceiveTask> _masterWorkerDataReceiveTasks;
     std::vector<SendReceiveTask> _forkJoinDataReceiveTasks;
 
+    int  _numberOfRecordsSentToNeighbour;
+    int  _numberOfRecordsSentToMasterWorker;
+    int  _numberOfRecordsSentDueToForkJoin;
+
+    int  _numberOfMessagesSentToNeighbour;
+    int  _numberOfMessagesSentToMasterWorker;
+    int  _numberOfMessagesSentDueToForkJoin;
+
+    int  _numberOfMessagesReceivedFromNeighbour;
+    int  _numberOfMessagesReceivedFromMasterWorker;
+    int  _numberOfMessagesReceivedDueToForkJoin;
+
     /**
      * Is either 0 or 1 and identifies which element of _receiveDeployTasks
      * currently is the receive buffer and which one is the deploy buffer.
@@ -273,11 +285,6 @@ class peano::heap::Heap: public tarch::services::Service {
      * Private destructor to free the MPI datatypes.
      */
     ~Heap();
-
-    /**
-     * Plots statistics for this heap data.
-     */
-    void plotStatistics();
 
     int findMessageFromRankInNeighbourDataDeployBuffer(int ofRank) const;
 
@@ -380,8 +387,10 @@ class peano::heap::Heap: public tarch::services::Service {
 
     /**
      * Returns the correct MPI tag for the given message type.
+     *
+     * Operation is not const as it updates internal statistics.
      */
-    int getTagForMessageType(MessageType messageType) const;
+    int getTagForMessageType(MessageType messageType, bool isSendTask, int messageSize);
 
   public:
     /**
@@ -558,6 +567,13 @@ class peano::heap::Heap: public tarch::services::Service {
      * @see releaseSentMessages()
      */
     void finishedToSendOrReceiveHeapData();
+
+    /**
+     * Plots statistics for this heap data.
+     */
+    void plotStatistics();
+
+    void clearStatistics();
 };
 
 
