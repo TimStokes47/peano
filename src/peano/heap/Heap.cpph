@@ -194,6 +194,7 @@ void peano::heap::Heap<Data>::deleteData(int index) {
   assertion4(_heapData.find(index) != _heapData.end(), _name, message, index, _heapData.size());
   assertionMsg(_heapData[index] != 0, _name << ": Null-pointer was stored in heap data map");
 
+  _heapData[index]->clear();
   delete _heapData[index];
   _heapData.erase(index);
 

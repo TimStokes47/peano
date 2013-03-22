@@ -427,7 +427,11 @@ class peano::heap::Heap: public tarch::services::Service {
     bool isValidIndex(int index) const;
 
     /**
-     * Deletes the data with the given index.
+     * Deletes the data with the given index and remove index from heap.
+     * First, all data associated to this index is cleared. Afterwards, we
+     * clear the heap entry. The user however is responsible not to use
+     * index anymore. This is important, as the heap might decide to reuse
+     * index already for the next createData() call.
      */
     void deleteData(int index);
 
