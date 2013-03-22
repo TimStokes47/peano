@@ -158,8 +158,8 @@
 
  Please note that the events ascend and descend are omitted here, as there is no 
  parallelisation-related issue there. They just fit smoothly into the event sequence. 
-   
- If you interpolate from coarse to fine meshes in enterCell(), please note that you have 
- to invoke that interplay manually in prepareSendToWorker(),too. 
+ That means, different to enter/leaveCell(), ascend and descend are invoked for all 
+ @f$ 3^d @f$ children cells at once. It can happen that one of the children is remote. 
+ ascend() and descend() do not check this. 
  
  */
