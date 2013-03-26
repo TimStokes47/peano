@@ -25,7 +25,7 @@ class __NAMESPACE__::runners::Runner {
     int runAsMaster(__NAMESPACE__::repositories::Repository& repository);
     
     #ifdef Parallel
-    int runAsClient(__NAMESPACE__::repositories::Repository& repository);
+    int runAsWorker(__NAMESPACE__::repositories::Repository& repository);
     #endif
   public:
     Runner();

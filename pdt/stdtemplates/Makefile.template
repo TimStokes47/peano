@@ -12,10 +12,10 @@
 PEANO_HOME   = ../../src
 
 # this is the path/root where your projects are stored
-PROJECT_ROOT = .. 
+PROJECT_ROOT = ..
 
 # points to directory holding the project's sources
-PROJECT_HOME = __PROJECT_PATH__   
+PROJECT_HOME = __PROJECT_PATH__  
 
 
 # Set Dimension

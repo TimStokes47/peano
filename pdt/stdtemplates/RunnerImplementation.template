@@ -53,7 +53,7 @@ int __NAMESPACE__::runners::Runner::run() {
   }
   #ifdef Parallel
   else {
-    result = runAsClient( *repository );
+    result = runAsWorker( *repository );
   }
   #endif
   

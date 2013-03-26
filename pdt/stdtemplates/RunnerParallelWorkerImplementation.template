@@ -8,7 +8,7 @@
 #include "__PROJECT_PATH__/repositories/Repository.h"
 
 
-int __NAMESPACE__::runners::Runner::runAsClient(__NAMESPACE__::repositories::Repository& repository) {
+int __NAMESPACE__::runners::Runner::runAsWorker(__NAMESPACE__::repositories::Repository& repository) {
   while ( tarch::parallel::NodePool::getInstance().waitForJob() >= tarch::parallel::NodePool::JobRequestMessageAnswerValues::NewMaster ) {
     peano::parallel::messages::ForkMessage forkMessage;
     forkMessage.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),tarch::parallel::NodePool::getInstance().getTagForForkMessages(), true);
