@@ -11,7 +11,11 @@ java -jar lib/sablecc.jar -d src pdt.grammar
 
 To (re-)create the jar file, please type in
 \code
-jar cvfm pdt.jar Manifest.txt stdtemplates lib/DaStGen.jar lib/jargs.jar -C bin .
+cd bin
+jar xvf ../lib/DaStGen.jar
+jar xvf ../lib/jargs.jar
+cd ..
+jar cvfm pdt.jar Manifest.txt stdtemplates lib/DaStGen.jar -C bin .
 \endcode
 We here assume that all class files are held in a directory bin and that the 
 command is invoked in the pdt directory. 
