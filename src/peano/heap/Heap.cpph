@@ -28,6 +28,7 @@ peano::heap::Heap<Data>::Heap()
     , _dataSemaphore()
   #endif
   ,_readDeployBufferInReverseOrder(true)
+  ,_wasTraversalInvertedThroughoutLastSendReceiveTraversal(false)
   ,_heapIsCurrentlySentReceived(false)
 {
   #ifdef Parallel
