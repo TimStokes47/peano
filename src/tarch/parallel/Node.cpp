@@ -29,7 +29,7 @@ int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessag
   
   tarch::logging::Log _log("tarch::parallel::Node<static>");
 
-  logInfo(
+  logDebug(
     "reserveFreeTag()",
     "assigned message " << fullQualifiedMessageName
      << " the free tag " << result
