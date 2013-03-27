@@ -470,6 +470,7 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
         tarch::parallel::messages::NodePoolAnswerMessage answerMessage( NoFreeNodesMessage );
         answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true );
       }
+      _strategy->fillWorkerRequestQueue(queue);
     }
   }
 
