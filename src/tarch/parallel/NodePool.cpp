@@ -180,7 +180,7 @@ tarch::parallel::NodePool::~NodePool() {
 tarch::parallel::NodePool::JobRequestMessageAnswer tarch::parallel::NodePool::waitForJob() {
   logTraceIn( "waitForJob()" );
 
-  assertion1( _isAlive, Node::getInstance().getRank() );
+  assertion2( _isAlive, Node::getInstance().getRank(), "forgot to call restart?" );
   assertion( !Node::getInstance().isGlobalMaster() );
 
   _masterNode = -1;

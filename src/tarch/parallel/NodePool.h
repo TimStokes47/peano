@@ -220,7 +220,10 @@ class tarch::parallel::NodePool: public tarch::services::Service {
     /**
      * Set service up.
      *
-     * Should be called once and only once. Its counterpart is shutdown().
+     * Should be called once and only once. Its counterpart is shutdown(). This
+     * operation is typically called by the method initParallelEnvironment(), so
+     * there is never a need to call this operation yourself in an
+     * application-specific code.
      */
     void init();
 
@@ -299,11 +302,12 @@ class tarch::parallel::NodePool: public tarch::services::Service {
     void waitForAllNodesToBecomeIdle();
 
     /**
-     * Master of This Worker Process
+     * Master of this worker process
      *
      * For non-idle processes this operation returns the number of the process
      * that awakened them. If you want to find out the global master of the
-     * cluster, you have to call Node::getMasterProcessRank().
+     * cluster, you have to call Node's getGlobalMasterRank(). If the code
+     * runs without MPI, this operation returns -1.
      */
     int getMasterRank() const;
 
