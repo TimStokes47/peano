@@ -1,4 +1,8 @@
 #include "tarch/mpianalysis/DefaultAnalyser.h"
+#include "tarch/parallel/Node.h"
+
+
+tarch::logging::Log  tarch::mpianalysis::DefaultAnalyser::_log( "tarch::mpianalysis::DefaultAnalyser" );
 
 
 tarch::mpianalysis::DefaultAnalyser::DefaultAnalyser() {
@@ -23,4 +27,43 @@ void tarch::mpianalysis::DefaultAnalyser::addWorker(
   const tarch::la::Vector<3,double>&  boundingBoxOffset,
   const tarch::la::Vector<3,double>&  boundingBoxSize
 ) {
+  logInfo(
+    "addWorker(int,Vector,Vector)",
+    tarch::parallel::Node::getInstance().getRank()
+    << "->"
+    << tarch::parallel::Node::getInstance().getRank()
+    << "+"
+    << workerRank
+    << " [worker's domain:"
+    << boundingBoxOffset
+    << "x"
+    << boundingBoxSize
+    << ",level:"
+    << level
+    << "]"
+  );
+}
+
+
+void tarch::mpianalysis::DefaultAnalyser::removeWorker(
+  int                                 workerRank,
+  int                                 level,
+  const tarch::la::Vector<3,double>&  boundingBoxOffset,
+  const tarch::la::Vector<3,double>&  boundingBoxSize
+) {
+  logInfo(
+    "removeWorker()",
+    tarch::parallel::Node::getInstance().getRank()
+    << "+"
+    << workerRank
+    << "->"
+    << tarch::parallel::Node::getInstance().getRank()
+    << " [worker's domain:"
+    << boundingBoxOffset
+    << "x"
+    << boundingBoxSize
+    << ",level:"
+    << level
+    << "]"
+  );
 }

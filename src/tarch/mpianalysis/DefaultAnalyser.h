@@ -5,6 +5,7 @@
 
 
 #include "tarch/mpianalysis/Analyser.h"
+#include "tarch/logging/Log.h"
 
 
 namespace tarch {
@@ -21,6 +22,8 @@ namespace tarch {
  * @author Roland Wittmann, Tobias Weinzierl
  */
 class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
+  private:
+    static tarch::logging::Log     _log;
   public:
     DefaultAnalyser();
     virtual ~DefaultAnalyser();
@@ -30,6 +33,13 @@ class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
     virtual void endIteration();
 
     virtual void addWorker(
+      int                                 workerRank,
+      int                                 level,
+      const tarch::la::Vector<3,double>&  boundingBoxOffset,
+      const tarch::la::Vector<3,double>&  boundingBoxSize
+    );
+
+    virtual void removeWorker(
       int                                 workerRank,
       int                                 level,
       const tarch::la::Vector<3,double>&  boundingBoxOffset,

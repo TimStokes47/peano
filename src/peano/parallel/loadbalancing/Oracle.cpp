@@ -1,6 +1,7 @@
 #include "peano/parallel/loadbalancing/Oracle.h"
 #include "tarch/parallel/Node.h"
 #include "tarch/Assertions.h"
+#include "tarch/mpianalysis/Analysis.h"
 
 
 tarch::logging::Log  peano::parallel::loadbalancing::Oracle::_log( "peano::parallel::loadbalancing::Oracle" );
@@ -8,10 +9,12 @@ tarch::logging::Log  peano::parallel::loadbalancing::Oracle::_log( "peano::paral
 
 peano::parallel::loadbalancing::Oracle::Worker::Worker(
    int rank,
+   int level,
    const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
    const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize
 ):
   _rank(rank),
+  _level(level),
   _boundingBoxOffset(boundingBoxOffset),
   _boundingBoxSize(boundingBoxSize) {
 }
@@ -61,7 +64,7 @@ void peano::parallel::loadbalancing::Oracle::addWorker(
 ) {
   assertion( !workersListContainsRank(rank) );
   assertion( level>=0 );
-  _workers.push_back( Worker(rank, boundingBoxOffset, boundingBoxSize) );
+  _workers.push_back( Worker(rank, level, boundingBoxOffset, boundingBoxSize) );
   if (_startCommand>ForkOnce) {
     _startCommand = static_cast<LoadBalancingFlag>(_startCommand-1);
   }
@@ -69,38 +72,7 @@ void peano::parallel::loadbalancing::Oracle::addWorker(
     _startCommand = Continue;
   }
 
-  if (level==0) {
-    logInfo(
-      "addWorker(int,Vector,Vector)",
-      tarch::parallel::Node::getInstance().getRank()
-      << "->"
-      << tarch::parallel::Node::getInstance().getRank()
-      << "+"
-      << rank
-      << " [worker's domain:"
-      << boundingBoxOffset
-      << "x"
-      << boundingBoxSize
-      << "]"
-    );
-  }
-  else {
-    logInfo(
-      "addWorker(int,Vector,Vector)",
-      tarch::parallel::Node::getInstance().getRank()
-      << "->"
-      << tarch::parallel::Node::getInstance().getRank()
-      << "+"
-      << rank
-      << " [worker's domain:"
-      << boundingBoxOffset
-      << "x"
-      << boundingBoxSize
-      << ",level:"
-      << level
-      << "]"
-    );
-  }
+  tarch::mpianalysis::Analysis::getInstance().getDevice().addWorker(rank,level,boundingBoxOffset,boundingBoxSize);
 }
 
 
@@ -113,19 +85,10 @@ void peano::parallel::loadbalancing::Oracle::removeWorker(int rank) {
     p++
   ) {
     if (p->_rank == rank) {
-      logInfo(
-        "removeWorker()",
-        tarch::parallel::Node::getInstance().getRank()
-        << "+"
-        << p->_rank
-        << "->"
-        << tarch::parallel::Node::getInstance().getRank()
-        << " [worker's domain:"
-        << p->_boundingBoxOffset
-        << "x"
-        << p->_boundingBoxSize
-        << "]"
+      tarch::mpianalysis::Analysis::getInstance().getDevice().addWorker(
+        rank,p->_level,p->_boundingBoxOffset,p->_boundingBoxSize
       );
+
       _workers.erase( p );
       return;
     }

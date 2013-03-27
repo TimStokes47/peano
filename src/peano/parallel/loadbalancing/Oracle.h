@@ -43,10 +43,11 @@ class peano::parallel::loadbalancing::Oracle {
   private:
     struct Worker {
       int                                   _rank;
+      int                                   _level;
       tarch::la::Vector<DIMENSIONS,double>  _boundingBoxOffset;
       tarch::la::Vector<DIMENSIONS,double>  _boundingBoxSize;
 
-      Worker(int rank, const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset, const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize);
+      Worker(int rank, int level, const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset, const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize);
     };
 
     static tarch::logging::Log  _log;
