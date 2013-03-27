@@ -3,6 +3,9 @@
 #endif
 
 
+#include "tarch/mpianalysis/Analysis.h"
+
+
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
@@ -152,6 +155,8 @@ template <class Vertex, class Cell, class State, class VertexStack, class CellSt
 void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::iterate(bool reduceState) {
   logTraceInWith2Arguments( "iterate(State)", _state.toString(), reduceState );
 
+  tarch::mpianalysis::Analysis::getInstance().getDevice().beginIteration();
+
   receiveStartupDataFromMaster(reduceState);
 
   _state.resetStateAtBeginOfIteration();
@@ -174,6 +179,8 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
   #endif
 
   _state.resetStateAtEndOfIteration();
+
+  tarch::mpianalysis::Analysis::getInstance().getDevice().endIteration();
 
   logTraceOutWith1Argument( "iterate(State)", _state.toString() );
 }

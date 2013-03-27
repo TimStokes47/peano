@@ -4,9 +4,11 @@
 #define _TARCH_MPIANALYIS_ANALYSIS_H_
 
 
+#include "tarch/mpianalysis/Analyser.h"
+
+
 namespace tarch {
   namespace mpianalysis {
-    class Analyser;
     class Analysis;
   }
 }
@@ -46,6 +48,8 @@ class tarch::mpianalysis::Analysis {
      * device again).
      */
     void setDevice( Analyser* device );
+
+    Analyser& getDevice();
 };
 
 

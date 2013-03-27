@@ -31,3 +31,10 @@ void tarch::mpianalysis::Analysis::setDevice( Analyser* device ) {
   deleteDevice();
   _device = device;
 }
+
+
+tarch::mpianalysis::Analyser& tarch::mpianalysis::Analysis::getDevice() {
+  assertion( _device!=0 );
+  return *_device;
+}
+
