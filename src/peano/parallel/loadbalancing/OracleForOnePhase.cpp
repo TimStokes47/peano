@@ -3,6 +3,9 @@
 #include "tarch/parallel/Node.h"
 
 
+#include <sstream>
+
+
 peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::getLoadBalancingFlag( int value ) {
   switch (value) {
     case Continue:
@@ -13,6 +16,8 @@ peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing
       return ForkOnce;
     case ForkGreedy:
       return ForkGreedy;
+    case ForkAllChildrenAndBecomeAdministrativeRank:
+      return ForkAllChildrenAndBecomeAdministrativeRank;
     default:
       assertion3( false, "fork type not supported", value, tarch::parallel::Node::getInstance().getRank() );
       return Continue;
@@ -21,16 +26,26 @@ peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing
 
 
 std::string peano::parallel::loadbalancing::toString(const LoadBalancingFlag& flag) {
+  std::ostringstream result;
   switch (flag) {
     case Continue:
-      return "Continue";
+      result << "Continue";
+      break;
     case Join:
-      return "Join";
+      result << "Join";
+      break;
     case ForkOnce:
-      return "ForkOnce";
+      result << "ForkOnce";
+      break;
     case ForkGreedy:
-      return "ForkGreedy";
+      result << "ForkGreedy";
+      break;
+    case ForkAllChildrenAndBecomeAdministrativeRank:
+      result << "ForkAllChildrenAndBecomeAdministrativeRank";
+      break;
     default:
-      return "<default>";
+      result << "integer-lb-flag=" << static_cast<int>(flag);
+      break;
   }
+  return result.str();
 }

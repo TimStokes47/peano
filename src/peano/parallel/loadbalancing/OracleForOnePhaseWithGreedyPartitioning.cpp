@@ -38,7 +38,8 @@ peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing
     && _idleWorkers.count(workerRank)>0
   ) {
     _idleWorkers.clear();
-    result = Join;
+    _forkHasFailed = false;
+    result         = Join;
   }
   else if (!_forkHasFailed && forkIsAllowed) {
     result = ForkGreedy;

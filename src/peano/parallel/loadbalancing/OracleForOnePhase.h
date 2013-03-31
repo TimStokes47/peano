@@ -21,7 +21,12 @@ namespace peano {
        * Represents action to be done.
        */
       enum LoadBalancingFlag {
-        Continue=-2, Join=-1, UndefinedLoadBalancingFlag=0, ForkOnce=1, ForkGreedy=THREE_POWER_D_MINUS_ONE
+        Continue=-2,
+        Join=-1,
+        UndefinedLoadBalancingFlag=0,
+        ForkOnce=1,
+        ForkGreedy=THREE_POWER_D_MINUS_ONE,
+        ForkAllChildrenAndBecomeAdministrativeRank=THREE_POWER_D
       };
 
       LoadBalancingFlag getLoadBalancingFlag( int value );

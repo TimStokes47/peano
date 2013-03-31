@@ -69,7 +69,7 @@ void peano::parallel::Partitioner::reserveNodes() {
 
   const int MaxRemoteRanksToBook =
     std::min(
-      static_cast<int>(_localCellsOfPatch.count())-1,
+      static_cast<int>(_localCellsOfPatch.count()),
       static_cast<int>(peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand())
     );
 
