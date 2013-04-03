@@ -105,8 +105,9 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
      * Restart the Node Pool.
      *
      * As the buffer implements a lazy behaviour, this operation does not create
-     * new buffers. However, it sets back the buffer size to one. For each
-     * restart(), the user has to call terminate() before. Consequently,
+     * new buffers.
+     *
+     * For each restart(), the user has to call terminate() before. Consequently,
      * the maps with the send and receive buffers has to be empty when restart()
      * is invoked. For the Peano repositories this implies the following
      * constraint: the initialisation of the (regular grid) data containers
