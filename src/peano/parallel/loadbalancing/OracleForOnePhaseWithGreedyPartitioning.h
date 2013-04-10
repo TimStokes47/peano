@@ -106,6 +106,8 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
     virtual OracleForOnePhase* createNewOracle(int adapterNumber) const;
 
     virtual void forkFailed();
+
+    virtual int getCoarsestRegularInnerAndOuterGridLevel() const;
 };
 
 

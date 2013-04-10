@@ -77,6 +77,12 @@ void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::pl
 }
 
 
+
+int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::getCoarsestRegularInnerAndOuterGridLevel() const {
+  return 3;
+}
+
+
 peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::OracleForOnePhase* peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::createNewOracle(int adapterNumber) const {
   return new OracleForOnePhaseWithGreedyPartitioning(_joinsAllowed);
 }

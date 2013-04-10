@@ -72,7 +72,7 @@ void peano::parallel::loadbalancing::Oracle::addWorker(
     _startCommand = Continue;
   }
 
-  tarch::mpianalysis::Analysis::getInstance().getDevice().addWorker(rank,level,boundingBoxOffset,boundingBoxSize);
+  tarch::mpianalysis::Analysis::getInstance().addWorker(rank,level,boundingBoxOffset,boundingBoxSize);
 }
 
 
@@ -85,7 +85,7 @@ void peano::parallel::loadbalancing::Oracle::removeWorker(int rank) {
     p++
   ) {
     if (p->_rank == rank) {
-      tarch::mpianalysis::Analysis::getInstance().getDevice().addWorker(
+      tarch::mpianalysis::Analysis::getInstance().addWorker(
         rank,p->_level,p->_boundingBoxOffset,p->_boundingBoxSize
       );
 
@@ -230,6 +230,14 @@ void peano::parallel::loadbalancing::Oracle::receivedStartCommand(const LoadBala
   }
 
   _startCommand = commandFromMaster;
+}
+
+
+int peano::parallel::loadbalancing::Oracle::getCoarsestRegularInnerAndOuterGridLevel() const {
+  assertion( _currentOracle>=0 );
+  assertion( _currentOracle<static_cast<int>(_oracles.size()));
+
+  return  _oracles[_currentOracle]->getCoarsestRegularInnerAndOuterGridLevel();
 }
 
 

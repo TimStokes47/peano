@@ -269,6 +269,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   #ifdef Parallel
   const bool AnalyseVertex =  !_fineGridVertices[positionInVertexArray].isRemote(_state,true, true);
+  const int  CoarsestRegularInnerAndOuterGridLevel = peano::parallel::loadbalancing::Oracle::getInstance().getCoarsestRegularInnerAndOuterGridLevel();
   #else
   const bool AnalyseVertex = true;
   #endif
@@ -290,11 +291,14 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       case peano::geometry::GeometryHelper::LeaveVertexUnaltered:
         break;
       case peano::geometry::GeometryHelper::LeaveOuterVertexUnaltered:
-        // boeser Fix -> 3 dann konfigurierbar machen
-        // 2 reicht definitiv nicht aus, es muss mindestens eine 3 sein => warning
-        if (_fineGridVerticesEnumerator.getLevel()<3 && _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Unrefined) {
+        #ifdef Parallel
+        if (
+          _fineGridVerticesEnumerator.getLevel()<CoarsestRegularInnerAndOuterGridLevel &&
+          _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Unrefined
+        ) {
           _fineGridVertices[positionInVertexArray].refine();
         }
+        #endif
         break;
       case peano::geometry::GeometryHelper::EraseOutsideVertex:
         logDebug( "updateGeometry(...)", "EraseOutsideVertex" );

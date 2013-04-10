@@ -247,6 +247,19 @@ class peano::parallel::loadbalancing::Oracle {
      * next time.
      */
     void forkFailed();
+
+    /**
+     * Get Coarsest Level of Grid
+     *
+     * For the parallelisation, might make sense to determine a coarsest grid
+     * level that should be regular no matter wether cells there are inside or
+     * outside. Peano can fork on this level also outer cells. Those typically
+     * are cells that are refined and have inner descendands, i.e. cells along
+     * the parallel boundary or cells that will become inside due to changing
+     * domains. With this operation, we can ensure that they can already be
+     * distributed before the domain change actually happens.
+     */
+    int getCoarsestRegularInnerAndOuterGridLevel() const;
 };
 
 

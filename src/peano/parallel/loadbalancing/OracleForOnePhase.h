@@ -218,6 +218,8 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      * @see Oracle
      */
     virtual void forkFailed() = 0;
+
+    virtual int getCoarsestRegularInnerAndOuterGridLevel() const = 0;
 };
 
 
