@@ -13,8 +13,8 @@
 
 namespace peano {
   namespace grid {
-      template <class StateData>
-      class State;
+    template <class StateData>
+    class State;
 	}
 }
 
@@ -144,7 +144,13 @@ class peano::grid::State {
      */
      double getNumberOfOuterCells() const;
 
-    /**
+     double getNumberOfInnerLeafVertices() const;
+     double getNumberOfBoundaryLeafVertices() const;
+     double getNumberOfOuterLeafVertices() const;
+     double getNumberOfInnerLeafCells() const;
+     double getNumberOfOuterLeafCells() const;
+
+     /**
      * Get maximum  mesh width
      *
      * This operation returns a valid value at the end of the iteration, i.e.
@@ -168,11 +174,36 @@ class peano::grid::State {
 
     int getMaxLevel() const;
 
+    /**
+     * Only for non leaves.
+     */
     void incNumberOfInnerVertices( double increment );
+
+    /**
+     * Only for non leaves.
+     */
     void incNumberOfBoundaryVertices( double increment );
-    void incNumberOfOuterVertices( double increment );
+
+    /**
+     * Only for non leaves.
+     */
+    void incNumberOfOuterVertices( double increment  );
+
+    /**
+     * Only for non leaves.
+     */
     void incNumberOfInnerCells( double increment );
-    void incNumberOfOuterCells( double increment );
+
+    /**
+     * Only for non leaves.
+     */
+    void incNumberOfOuterCells( double incrementLeaf );
+
+    void incNumberOfInnerLeafVertices( double increment );
+    void incNumberOfBoundaryLeafVertices( double increment );
+    void incNumberOfOuterLeafVertices( double increment  );
+    void incNumberOfInnerLeafCells( double increment );
+    void incNumberOfOuterLeafCells( double incrementLeaf );
 
     bool isTraversalInverted() const;
 

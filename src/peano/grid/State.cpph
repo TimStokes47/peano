@@ -173,6 +173,36 @@ double peano::grid::State<StateData>::getNumberOfOuterCells() const {
 
 
 template <class StateData>
+double peano::grid::State<StateData>::getNumberOfInnerLeafVertices() const {
+  return _stateData.getNumberOfInnerLeafVertices();
+}
+
+
+template <class StateData>
+double peano::grid::State<StateData>::getNumberOfBoundaryLeafVertices() const {
+  return _stateData.getNumberOfBoundaryLeafVertices();
+}
+
+
+template <class StateData>
+double peano::grid::State<StateData>::getNumberOfOuterLeafVertices() const {
+  return _stateData.getNumberOfOuterLeafVertices();
+}
+
+
+template <class StateData>
+double peano::grid::State<StateData>::getNumberOfInnerLeafCells() const {
+  return _stateData.getNumberOfInnterLeafCells();
+}
+
+
+template <class StateData>
+double peano::grid::State<StateData>::getNumberOfOuterLeafCells() const {
+  return _stateData.getNumberOfOuterLeafCells();
+}
+
+
+template <class StateData>
 tarch::la::Vector<DIMENSIONS,double> peano::grid::State<StateData>::getMaximumMeshWidth() const {
   return _stateData.getMaxMeshWidth();
 }
@@ -272,6 +302,12 @@ void peano::grid::State<StateData>::resetStateAtBeginOfIteration() {
   _stateData.setNumberOfInnerCells(0.0);
   _stateData.setNumberOfOuterCells(0.0);
 
+  _stateData.setNumberOfInnerLeafVertices(0.0);
+  _stateData.setNumberOfBoundaryLeafVertices(0.0);
+  _stateData.setNumberOfOuterLeafVertices(0.0);
+  _stateData.setNumberOfInnerLeafCells(0.0);
+  _stateData.setNumberOfOuterLeafCells(0.0);
+
   logTraceOutWith1Argument( "resetStateAtBeginOfIteration()", toString() );
 }
 
@@ -284,10 +320,10 @@ void peano::grid::State<StateData>::updateInLeaf( int level, const tarch::la::Ve
   for (int d=0; d<DIMENSIONS; d++) {
     _stateData.setMaxMeshWidth(d,
       _stateData.getMaxMeshWidth(d)<h(d) ? h(d) : _stateData.getMaxMeshWidth(d)
-	);
+	  );
     _stateData.setMinMeshWidth(d,
       _stateData.getMinMeshWidth(d)>h(d) ? h(d) : _stateData.getMinMeshWidth(d)
-	);
+	  );
   }
 }
 
@@ -322,6 +358,40 @@ void peano::grid::State<StateData>::incNumberOfOuterCells( double increment ) {
 }
 
 
+template <class StateData>
+void peano::grid::State<StateData>::incNumberOfInnerLeafVertices( double increment ) {
+  _stateData.setNumberOfInnerVertices(_stateData.getNumberOfInnerVertices()+increment);
+  _stateData.setNumberOfInnerLeafVertices(_stateData.getNumberOfInnerLeafVertices()+increment);
+}
+
+
+template <class StateData>
+void peano::grid::State<StateData>::incNumberOfBoundaryLeafVertices( double increment ) {
+  _stateData.setNumberOfBoundaryVertices(_stateData.getNumberOfBoundaryVertices()+increment);
+  _stateData.setNumberOfBoundaryLeafVertices(_stateData.getNumberOfBoundaryLeafVertices()+increment);
+}
+
+
+template <class StateData>
+void peano::grid::State<StateData>::incNumberOfOuterLeafVertices( double increment ) {
+  _stateData.setNumberOfOuterVertices(_stateData.getNumberOfOuterVertices()+increment);
+  _stateData.setNumberOfOuterLeafVertices(_stateData.getNumberOfOuterLeafVertices()+increment);
+}
+
+
+template <class StateData>
+void peano::grid::State<StateData>::incNumberOfInnerLeafCells( double increment ) {
+  _stateData.setNumberOfInnerCells(_stateData.getNumberOfInnerCells()+increment);
+  _stateData.setNumberOfInnerLeafCells(_stateData.getNumberOfInnerLeafCells()+increment);
+}
+
+
+template <class StateData>
+void peano::grid::State<StateData>::incNumberOfOuterLeafCells( double increment ) {
+  _stateData.setNumberOfOuterCells(_stateData.getNumberOfOuterCells()+increment);
+  _stateData.setNumberOfOuterLeafCells(_stateData.getNumberOfOuterLeafCells()+increment);
+}
+
 #ifdef Parallel
 template <class StateData>
 std::set<int> peano::grid::State<StateData>::getForkingOrJoiningOrTriggeredForRebalancingRanks() const {
@@ -333,11 +403,17 @@ template <class StateData>
 void peano::grid::State<StateData>::mergeWithWorkerState(const peano::grid::State<StateData>& workerState) {
   logTraceInWith2Arguments( "mergeWithWorkerState(...)", toString(), workerState.toString() );
 
-  incNumberOfInnerVertices(workerState._stateData.getNumberOfInnerVertices());
-  incNumberOfBoundaryVertices(workerState._stateData.getNumberOfBoundaryVertices());
-  incNumberOfOuterVertices(workerState._stateData.getNumberOfOuterVertices());
-  incNumberOfInnerCells(workerState._stateData.getNumberOfInnerCells());
-  incNumberOfOuterCells(workerState._stateData.getNumberOfOuterCells());
+  _stateData.setNumberOfInnerVertices( _stateData.getNumberOfInnerVertices() + workerState._stateData.getNumberOfInnerVertices());
+  _stateData.setNumberOfBoundaryVertices( _stateData.getNumberOfBoundaryVertices() + workerState._stateData.getNumberOfBoundaryVertices());
+  _stateData.setNumberOfOuterVertices( _stateData.getNumberOfOuterVertices() + workerState._stateData.getNumberOfOuterVertices());
+  _stateData.setNumberOfInnerCells( _stateData.getNumberOfInnerCells() + workerState._stateData.getNumberOfInnerCells());
+  _stateData.setNumberOfOuterCells( _stateData.getNumberOfOuterCells() + workerState._stateData.getNumberOfOuterCells());
+
+  _stateData.setNumberOfInnerLeafVertices( _stateData.getNumberOfInnerLeafVertices() + workerState._stateData.getNumberOfInnerLeafVertices() );
+  _stateData.setNumberOfBoundaryLeafVertices( _stateData.getNumberOfBoundaryLeafVertices() + workerState._stateData.getNumberOfBoundaryLeafVertices());
+  _stateData.setNumberOfOuterLeafVertices( _stateData.getNumberOfOuterLeafVertices() + workerState._stateData.getNumberOfOuterLeafVertices());
+  _stateData.setNumberOfInnerLeafCells( _stateData.getNumberOfInnerLeafCells() + workerState._stateData.getNumberOfInnerLeafCells());
+  _stateData.setNumberOfOuterLeafCells( _stateData.getNumberOfOuterLeafCells() + workerState._stateData.getNumberOfOuterLeafCells());
 
   _stateData.setHasChangedVertexOrCellState(workerState._stateData.getHasChangedVertexOrCellState() || _stateData.getHasChangedVertexOrCellState());
 
