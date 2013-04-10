@@ -40,6 +40,7 @@ class peano::geometry::GeometryHelper {
 
     enum VertexAction {
       LeaveVertexUnaltered,
+      LeaveOuterVertexUnaltered,
       CreateInnerVertex,
       CreateBoundaryVertex,
       EraseOutsideVertex,
