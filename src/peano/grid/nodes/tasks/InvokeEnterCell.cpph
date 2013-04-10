@@ -28,7 +28,9 @@ peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::
   _eventHandle(eventHandle),
   _threadLocalEventHandle(eventHandle),
   _innerCells(0),
-  _outerCells(0) {
+  _outerCells(0),
+  _innerLeafCells(0),
+  _outerLeafCells(0) {
 }
 
 template < class Vertex, class Cell, class State, class EventHandle>
@@ -60,10 +62,20 @@ void peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandl
       _coarseGridCell,
       _fineGridPositionOfCell
     );
-    _innerCells += 1.0;
+    if (_fineGridCell.isRefined()) {
+      _innerCells += 1.0;
+    }
+    else {
+      _innerLeafCells += 1.0;
+    }
   }
   else {
-    _outerCells += 1.0;
+    if (_fineGridCell.isRefined()) {
+      _outerCells += 1.0;
+    }
+    else {
+      _outerLeafCells += 1.0;
+    }
   }
 
   logTraceOut( "operator()" );
@@ -74,6 +86,9 @@ template < class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::~InvokeEnterCell() {
   _state.incNumberOfOuterCells( _outerCells );
   _state.incNumberOfInnerCells( _innerCells );
+
+  _state.incNumberOfOuterLeafCells( _outerLeafCells );
+  _state.incNumberOfInnerLeafCells( _innerLeafCells );
 
   #if defined(SharedMemoryParallelisation)
   _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );

@@ -58,6 +58,9 @@ class peano::grid::nodes::tasks::InvokeEnterCell {
     double  _innerCells;
     double  _outerCells;
 
+    double  _innerLeafCells;
+    double  _outerLeafCells;
+
   public:
     InvokeEnterCell(
       State&                                     state,
