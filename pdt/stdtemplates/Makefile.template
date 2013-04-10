@@ -62,42 +62,45 @@ SYSTEM_LFLAGS = $(LINK_TBB)    $(LINK_MPI)
 # ------------------------------------------
 CC=g++
 COMPILER_CFLAGS=-O0 -pedantic -pedantic-errors -Wall -Werror -Wstrict-aliasing -fstrict-aliasing -ggdb
-COMPILER_LFLAGS=
 
 
 # Settings for the GNU Compiler (Release Mode)
 # --------------------------------------------
 #CC=g++
 #COMPILER_CFLAGS=-O3 -fstrict-aliasing -fno-rtti -fno-exceptions
-#COMPILER_LFLAGS=
 
 
 # Settings for the Intel Compiler (Debug Mode)
 # --------------------------------------------
 #CC=icpc
 #COMPILER_CFLAGS=-O0 -fstrict-aliasing 
-#COMPILER_LFLAGS=
 
 
 # Settings for the Intel Compiler (Release Mode)
 # ----------------------------------------------
 #CC=icpc
 #COMPILER_CFLAGS=-fast -fstrict-aliasing  -DMPICH_IGNORE_CXX_SEEK -fast -fno-rtti -no-ipo -ip -xSSE4.2
-#COMPILER_LFLAGS=
 
 
 # Settings for the XLC Compiler (Debug Mode)
 # --------------------------------------------
 #CC=xlcc
 #COMPILER_CFLAGS=-O0 -fstrict-aliasing -qpack_semantic=gnu 
-#COMPILER_LFLAGS=
 
 
 # Settings for the XLC Compiler (Release Mode)
 # ----------------------------------------------
 #CC=xlcc
 #COMPILER_CFLAGS=-fast -fstrict-aliasing -qpack_semantic=gnu 
-#COMPILER_LFLAGS=
+
+
+
+#
+# Linker Settings
+# ---------------
+# By default, I use the compiler command. But you might wanna modify it.
+LL=$(CC)
+COMPILER_LFLAGS=
 
 
 OBJECTS=$(SOURCES:.cpp=.o)
@@ -126,7 +129,7 @@ header:
 
 
 build: files.mk $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(EXECUTABLE) $(PROJECT_LFLAGS) $(COMPILER_LFLAGS) $(SYSTEM_LFLAGS) 
+	$(LL) $(OBJECTS) -o $(EXECUTABLE) $(PROJECT_LFLAGS) $(COMPILER_LFLAGS) $(SYSTEM_LFLAGS) 
 	@echo
 	@echo build of Peano with component __COMPONENT_NAME__ successful
 	@echo visit Peano\'s homepage at http://www.peano-framework.org
