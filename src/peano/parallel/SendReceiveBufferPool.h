@@ -196,6 +196,19 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
      * to the Node services. Consequently, the implementation can reduce to a
      * simple wait for enough messages - it does not have to actively receive
      * messages (this is done due to receiveDanglingMessages() anyway).
+     *
+     * It basically does not matter in which order we run through the sent
+     * messages, as all of them have to be released prior to the receive
+     * process. For the receive order, however, I use a reverse iterator. The
+     * assumption here is that the smaller the rank the more messages we receive
+     * from it. If this holds and if we would receive smaller ranks first, all
+     * the data from bigger ranks would be on place already when we try this one,
+     * and all statements on `how long do I have to wait` are irrelevant.
+     *
+     * This assumption relies on a linear node pool server, i.e. one that deploys
+     * the ranks along their number. If such a linear ordering does not hold, we
+     * cannot determine whether a standard iterator or a reverse iterator is
+     * better.
      */
     void releaseMessages();
 
