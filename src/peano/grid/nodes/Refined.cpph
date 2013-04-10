@@ -428,19 +428,25 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 std::bitset<THREE_POWER_D> peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::getForkCandidates(
-  State&  state,
-  Cell    newFineGridCells[THREE_POWER_D],
-  Vertex  fineGridVertices[FOUR_POWER_D]
+  State&                  state,
+  const std::vector< SingleLevelEnumerator >&  newFineGridVerticesEnumerators,
+  Cell                    newFineGridCells[THREE_POWER_D],
+  Vertex                  fineGridVertices[FOUR_POWER_D]
 ) const {
   std::bitset<THREE_POWER_D>  result = 0;
 
   #ifdef Parallel
   dfor3(k)
     bool isInside =
-      newFineGridCells[kScalar].isInside() &&
       !newFineGridCells[kScalar].isRemote(state,true,true) &&
       !newFineGridCells[kScalar].thisSubtreeHoldsWorker();
-      ;
+
+    if (isInside && newFineGridCells[kScalar].isOutside()) {
+      const tarch::la::Vector<DIMENSIONS,double> x = newFineGridVerticesEnumerators[kScalar].getCellCenter();
+      const tarch::la::Vector<DIMENSIONS,double> h = newFineGridVerticesEnumerators[kScalar].getCellSize();
+      isInside &= !Base::_geometry.isCompletelyOutside(x,h);
+    }
+
     dfor2(i)
       isInside &= !fineGridVertices[ SingleLevelEnumerator::lineariseVertexIndex(i+k) ].isHangingNode();
       isInside &= fineGridVertices[ SingleLevelEnumerator::lineariseVertexIndex(i+k) ].getRefinementControl()==Vertex::Records::Refined;
@@ -469,7 +475,13 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     state.reduceStateAndCell() &&
     !state.isInvolvedInJoinOrFork()
   ) {
-    const std::bitset<THREE_POWER_D> localInnerCells = getForkCandidates(state,newFineGridCells,newFineGridVertices);
+    const std::bitset<THREE_POWER_D> localInnerCells =
+      getForkCandidates(
+        state,
+        newFineGridVerticesEnumerators,
+        newFineGridCells,
+        newFineGridVertices
+      );
 
     if (localInnerCells.count()>1) {
       logTraceInWith3Arguments( "splitUpGrid(...)", state, fineGridCell, fineGridVerticesEnumerator.toString() );
