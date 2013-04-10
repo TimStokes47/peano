@@ -225,45 +225,46 @@ tarch::parallel::NodePool::JobRequestMessageAnswer tarch::parallel::NodePool::wa
 
 
 void tarch::parallel::NodePool::terminate() {
-  #ifdef Parallel
-  assertion1WithExplanation( _strategy!=0, Node::getInstance().getRank(), "node pool restart missing?" );
-  assertion1( Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
-  assertion1( _isAlive, Node::getInstance().getRank() );
-  #endif
+  if (Node::getInstance().isGlobalMaster()) {
+    #ifdef Parallel
+    assertion1WithExplanation( _strategy!=0, Node::getInstance().getRank(), "node pool restart missing?" );
+    assertion1( Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
+    assertion1( _isAlive, Node::getInstance().getRank() );
+    #endif
 
-  logTraceIn("terminate()" );
+    logTraceIn("terminate()" );
 
-  _isAlive = false;
+    _isAlive = false;
 
-  #ifdef Parallel
-  while ( _strategy->hasIdleNode(-1) ) {
-	  int rank = _strategy->removeNextIdleNode();
-	  tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
-    answerMessage.send( rank, _jobManagementTag, true );
-  }
-
-  logDebug( "terminate()", "still working: " << _strategy->getNumberOfRegisteredNodes() << " node(s)" );
-
-  clock_t      timeOutWarning   = Node::getInstance().getDeadlockWarningTimeStamp();
-  clock_t      timeOutShutdown  = Node::getInstance().getDeadlockTimeOutTimeStamp();
-  bool         triggeredTimeoutWarning = false;
-
-  assertion1( _strategy!=0, Node::getInstance().getRank() );
-  while ( _strategy->getNumberOfRegisteredNodes()>0 ) {
-    Node::getInstance().receiveDanglingMessages();
-
-    // deadlock aspect
-    if ( Node::getInstance().isTimeOutWarningEnabled() && (clock()>timeOutWarning) && (!triggeredTimeoutWarning)) {
-      Node::getInstance().writeTimeOutWarning( "tarch::parallel::NodePool", "terminate()", -1, _jobManagementTag, 1);
-      triggeredTimeoutWarning = true;
+    #ifdef Parallel
+    while ( _strategy->hasIdleNode(-1) ) {
+      int rank = _strategy->removeNextIdleNode();
+      tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
+      answerMessage.send( rank, _jobManagementTag, true );
     }
-    if ( Node::getInstance().isTimeOutDeadlockEnabled() && (clock()>timeOutShutdown)) {
-      Node::getInstance().triggerDeadlockTimeOut( "tarch::parallel::NodePool", "terminate()", -1, _jobManagementTag, 1 );
-    }
-  }
-  #endif
 
-  logTraceOut( "terminate()" );
+    logDebug( "terminate()", "still working: " << _strategy->getNumberOfRegisteredNodes() << " node(s)" );
+
+    clock_t      timeOutWarning   = Node::getInstance().getDeadlockWarningTimeStamp();
+    clock_t      timeOutShutdown  = Node::getInstance().getDeadlockTimeOutTimeStamp();
+    bool         triggeredTimeoutWarning = false;
+
+    assertion1( _strategy!=0, Node::getInstance().getRank() );
+    while ( _strategy->getNumberOfRegisteredNodes()>0 ) {
+      Node::getInstance().receiveDanglingMessages();
+
+      // deadlock aspect
+      if ( Node::getInstance().isTimeOutWarningEnabled() && (clock()>timeOutWarning) && (!triggeredTimeoutWarning)) {
+        Node::getInstance().writeTimeOutWarning( "tarch::parallel::NodePool", "terminate()", -1, _jobManagementTag, 1);
+        triggeredTimeoutWarning = true;
+      }
+      if ( Node::getInstance().isTimeOutDeadlockEnabled() && (clock()>timeOutShutdown)) {
+        Node::getInstance().triggerDeadlockTimeOut( "tarch::parallel::NodePool", "terminate()", -1, _jobManagementTag, 1 );
+      }
+    }
+    #endif
+    logTraceOut( "terminate()" );
+  }
 }
 
 

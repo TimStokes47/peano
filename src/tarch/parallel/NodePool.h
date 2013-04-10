@@ -269,6 +269,9 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * told to terminate. So an internal flag is set and all new queries are
      * answered this way. Furthermore all processes marked as not working are
      * sent a termination message immediately.
+     *
+     * If the operation is called on a different node than the global master,
+     * it deteriorates to nop.
      */
     void terminate();
 
