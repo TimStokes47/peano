@@ -350,6 +350,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   #ifdef Parallel
     logTraceInWith2Arguments( "updateCellsParallelStateAfterLoadIfStateIsForking(...)", state.toString(), fineGridCell.toString() );
     const std::set<int> forkingRanks= state.getForkingOrJoiningOrTriggeredForRebalancingRanks();
+
+    bool cellWasSentToNewWorker = false;
     for (std::set<int>::const_iterator p = forkingRanks.begin(); p!=forkingRanks.end();p++ ) {
       const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> adjacencyBitset   = peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(*p,fineGridVertices,fineGridVerticesEnumerator);
       if (adjacencyBitset.any()) {
@@ -360,6 +362,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         enddforx
         logDebug( "updateCellsParallelStateAfterLoadIfStateIsForking(...)", "- cell: " << fineGridCell.toString() );
 
+        cellWasSentToNewWorker = true;
+
         _eventHandle.prepareCopyToRemoteNode(
           fineGridCell,
           *p,
@@ -369,23 +373,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         );
 
         peano::parallel::JoinDataBufferPool::getInstance().sendCell(fineGridCell,adjacencyBitset,*p);
-
-        if (
-          fineGridCell.isInside() &&
-          fineGridCell.isAssignedToRemoteRank()
-        ) {
-          _eventHandle.destroyCell(
-            fineGridCell,
-            fineGridVertices,
-            fineGridVerticesEnumerator,
-            coarseGridVertices,
-            coarseGridVerticesEnumerator,
-            coarseGridCell,
-            fineGridPositionOfCell
-          );
-          fineGridCell.switchToOutside();
-          state.changedCellState();
-        }
 
         dfor2(k)
           if (adjacencyBitset[kScalar]) {
@@ -409,6 +396,25 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         enddforx
       }
     }
+
+    if (
+      cellWasSentToNewWorker &&
+      fineGridCell.isInside() &&
+      fineGridCell.isAssignedToRemoteRank()
+    ) {
+      _eventHandle.destroyCell(
+        fineGridCell,
+        fineGridVertices,
+        fineGridVerticesEnumerator,
+        coarseGridVertices,
+        coarseGridVerticesEnumerator,
+        coarseGridCell,
+        fineGridPositionOfCell
+      );
+      fineGridCell.switchToOutside();
+      state.changedCellState();
+    }
+
     logTraceOut( "updateCellsParallelStateAfterLoadIfStateIsForking(...)" );
   #endif
 }

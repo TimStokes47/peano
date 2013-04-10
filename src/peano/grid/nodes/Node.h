@@ -361,6 +361,20 @@ class peano::grid::nodes::Node {
        const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
      ) const;
 
+     /**
+      *
+      * !!! Rationale
+      *
+      * We switch a cell to remote if we have sent it to a worker and it is not
+      * assigned to the local node anymore. However, we do this after the loop
+      * running over all forking nodes, not within this loop. If we did it inside
+      * the loop, we would run over all forking ranks. If a cell is adjacent to
+      * rank k but will belong to rank k+1 from now on, we switch its state already
+      * after the send to rank k. We could fix this if we compared to the assigned
+      * rank rather than just asking whether it belongs to another rank. This
+      * however would not solve the whole issue: If there is also a rank k+1
+      * forking, this one again would receive an already destroyed cell.
+      */
      void updateCellsParallelStateAfterLoadIfStateIsForking(
        State&                                    state,
        Cell&                                     fineGridCell,
