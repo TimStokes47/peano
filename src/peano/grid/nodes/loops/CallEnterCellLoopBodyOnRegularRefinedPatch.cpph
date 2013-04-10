@@ -50,6 +50,9 @@ peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cel
   _state.incNumberOfInnerCells(_numberOfInnerCells);
   _state.incNumberOfOuterCells(_numberOfOuterCells);
 
+  _state.incNumberOfInnerLeafCells(_numberOfInnerLeafCells);
+  _state.incNumberOfOuterLeafCells(_numberOfOuterLeafCells);
+
   #if defined(SharedMemoryParallelisation)
   _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
   #endif
@@ -74,7 +77,12 @@ void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Verte
   Cell& currentCell = _regularGridContainer.getCell(_level,fineGridCellIndex);
 
   if (currentCell.isInside()) {
-    _numberOfInnerCells++;
+    if (currentCell.isRefined()) {
+      _numberOfInnerCells++;
+    }
+    else {
+      _numberOfInnerLeafCells++;
+    }
     _threadLocalEventHandle.enterCell(
       currentCell,
       _regularGridContainer.getVertex(_level),
@@ -86,7 +94,12 @@ void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Verte
     );
   }
   else {
-    _numberOfOuterCells++;
+    if (currentCell.isRefined()) {
+      _numberOfOuterCells++;
+    }
+    else {
+      _numberOfOuterLeafCells++;
+    }
   }
 }
 

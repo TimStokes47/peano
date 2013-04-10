@@ -62,6 +62,10 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
     double _numberOfBoundaryVertices;
     double _numberOfOuterVertices;
 
+    double _numberOfInnerLeafVertices;
+    double _numberOfBoundaryLeafVertices;
+    double _numberOfOuterLeafVertices;
+
     UnrolledLevelEnumerator  _fineGridEnumerator;
     UnrolledLevelEnumerator  _coarseGridEnumerator;
 

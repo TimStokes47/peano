@@ -71,6 +71,11 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
     double _numberOfInnerVertices;
     double _numberOfBoundaryVertices;
     double _numberOfOuterVertices;
+
+    double _numberOfInnerLeafVertices;
+    double _numberOfBoundaryLeafVertices;
+    double _numberOfOuterLeafVertices;
+
     bool   _hasRefinened;
     bool   _hasErased;
     bool   _hasChangedVertexState;

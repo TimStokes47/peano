@@ -67,6 +67,9 @@ class peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch {
     double _numberOfInnerCells;
     double _numberOfOuterCells;
 
+    double _numberOfInnerLeafCells;
+    double _numberOfOuterLeafCells;
+
     UnrolledLevelEnumerator  _fineGridEnumerator;
     UnrolledLevelEnumerator  _coarseGridEnumerator;
   public:

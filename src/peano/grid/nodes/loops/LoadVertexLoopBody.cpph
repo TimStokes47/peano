@@ -53,6 +53,9 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   _numberOfInnerVertices(0.0),
   _numberOfBoundaryVertices(0.0),
   _numberOfOuterVertices(0.0),
+  _numberOfInnerLeafVertices(0.0),
+  _numberOfBoundaryLeafVertices(0.0),
+  _numberOfOuterLeafVertices(0.0),
   _hasRefinened(false),
   _hasErased(false),
   _hasChangedVertexState(false),
@@ -71,6 +74,10 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   _state.incNumberOfInnerVertices(_numberOfInnerVertices);
   _state.incNumberOfBoundaryVertices(_numberOfBoundaryVertices);
   _state.incNumberOfOuterVertices(_numberOfOuterVertices);
+
+  _state.incNumberOfInnerLeafVertices(_numberOfInnerLeafVertices);
+  _state.incNumberOfBoundaryLeafVertices(_numberOfBoundaryLeafVertices);
+  _state.incNumberOfOuterLeafVertices(_numberOfOuterLeafVertices);
 
   _state.updateRefinementHistoryAfterLoad( _hasRefinened, _hasErased, _hasChangedVertexState );
 
@@ -282,6 +289,13 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     ) {
       case peano::geometry::GeometryHelper::LeaveVertexUnaltered:
         break;
+      case peano::geometry::GeometryHelper::LeaveOuterVertexUnaltered:
+        // boeser Fix -> 3 dann konfigurierbar machen
+        // 2 reicht definitiv nicht aus, es muss mindestens eine 3 sein => warning
+        if (_fineGridVerticesEnumerator.getLevel()<3 && _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Unrefined) {
+          _fineGridVertices[positionInVertexArray].refine();
+        }
+        break;
       case peano::geometry::GeometryHelper::EraseOutsideVertex:
         logDebug( "updateGeometry(...)", "EraseOutsideVertex" );
         assertion1( _fineGridVertices[positionInVertexArray].isOutside(),_fineGridVertices[positionInVertexArray] );
@@ -392,15 +406,26 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       _coarseGridCell,
       _fineGridPositionOfCell + positionInLocalCell
     );
-    if (_fineGridVertices[positionInVertexArray].isBoundary()) {
+    if (_fineGridVertices[positionInVertexArray].isBoundary() && _fineGridVertices[positionInVertexArray].getRefinementControl()!=Vertex::Records::Unrefined) {
       _numberOfBoundaryVertices += 1.0;
     }
-    else {
+    else if (_fineGridVertices[positionInVertexArray].isBoundary()) {
+      _numberOfBoundaryLeafVertices += 1.0;
+    }
+    else if (_fineGridVertices[positionInVertexArray].getRefinementControl()!=Vertex::Records::Unrefined) {
       _numberOfInnerVertices += 1.0;
+    }
+    else {
+      _numberOfInnerLeafVertices += 1.0;
     }
   }
   else {
-    _numberOfOuterVertices += 1.0;
+    if (_fineGridVertices[positionInVertexArray].getRefinementControl()!=Vertex::Records::Unrefined) {
+      _numberOfOuterVertices += 1.0;
+    }
+    else {
+      _numberOfOuterLeafVertices += 1.0;
+    }
   }
 
   logTraceOutWith1Argument( "invokeLoadVertexEvents(...)", _fineGridVertices[positionInVertexArray] );
