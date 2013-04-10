@@ -6,6 +6,7 @@
 #include <cstdlib>
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "tarch/mpianalysis/Analysis.h"
 
 
 /**
@@ -24,17 +25,13 @@ bool tarch::parallel::Node::_initIsCalled = false;
 
 
 int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessageName) {
-  static int result = 0;
+  static int            result = 0;
   result++;
   
   tarch::logging::Log _log("tarch::parallel::Node<static>");
 
-  logDebug(
-    "reserveFreeTag()",
-    "assigned message " << fullQualifiedMessageName
-     << " the free tag " << result
-  );
-  
+  tarch::mpianalysis::Analysis::getInstance().tagIsUsedFor(result,fullQualifiedMessageName);
+
   return result;
 }
 
@@ -339,7 +336,9 @@ MPI_Comm tarch::parallel::Node::getCommunicator() const {
 
 
 int tarch::parallel::Node::getNumberOfNodes() const {
+  #ifdef Parallel
   assertion(_initIsCalled);
+  #endif
   return _numberOfProcessors;
 }
 
