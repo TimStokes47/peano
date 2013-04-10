@@ -68,7 +68,21 @@ class tarch::mpianalysis::Analyser {
       const tarch::la::Vector<2,double>&  boundingBoxSize
     ) = 0;
 
+    /**
+     * Inform analyser what an MPI tag is used for.
+     */
     virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier ) = 0;
+
+    /**
+     * Inform analyser that there was data that should have been received in
+     * background but that wasn't there, when we needed it.
+     *
+     * @param fromRank     From which rank was data expected.
+     * @param tag          On which tag was the data expected.
+     * @param cardinality  How much data (i.e. how many integeres, e.g.) were expected.
+     * @param pageSize     In which batches should this data arrive.
+     */
+    virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) = 0;
 };
 
 

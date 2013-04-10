@@ -5,6 +5,7 @@
 #include "tarch/parallel/NodePool.h"
 #include "tarch/Assertions.h"
 #include "tarch/timing/Watch.h"
+#include "tarch/mpianalysis/Analyser.h"
 
 
 #include "tarch/services/ServiceFactory.h"
@@ -96,12 +97,6 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
     p->second->releaseSentMessages();
   }
   watchSend.stopTimer();
-  // Doku rein, warum: Oben ist es wurscht, aber so hangelt er sich entland der Rank-Ordnung
-  // d.h. er wartet erst mal auf den 0er. Damit ist davon auszugehen, dass dann alle anderen
-  // Daten auch schon da sind, wenn der 0er erst mal fertig ist. Von der Datensemantik ist das
-  // alles wunderbar, aber die Analyse liefert dann nix mehr vernuenftiges. Ich will ja wissen,
-  // ob man auf Daten warten hat muessen. Und wenn die 0 immer so lang wartet, dann ist die Info
-  // ueber die anderen Ranks irrelevant.
   for ( std::map<int,SendReceiveBuffer*>::const_reverse_iterator p = _map.rbegin(); p != _map.rend(); p++ ) {
     p->second->releaseReceivedMessages(true);
   }
@@ -110,7 +105,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
   logInfo(
     "releaseMessages()",
-    "data exchange for iteration termination needed "
+    "rank had to wait from data "
     << "(" << watchTotal.getCPUTicks() << "," << watchTotal.getCPUTime() << "," << watchTotal.getCalendarTime() << ")"
     << ", hereof "
     << "(" << watchSend.getCPUTicks() << "," << watchSend.getCPUTime() << "," << watchSend.getCalendarTime() << ") "

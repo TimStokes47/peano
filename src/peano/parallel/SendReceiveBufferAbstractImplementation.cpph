@@ -2,6 +2,7 @@
 #include "peano/utils/PeanoOptimisations.h"
 #include "tarch/Assertions.h"
 #include "peano/parallel/SendReceiveBufferPool.h"
+#include "tarch/mpianalysis/Analysis.h"
 
 
 #include <sstream>
@@ -294,13 +295,11 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::releaseRe
   bool         triggeredTimeoutWarning = false;
 
   if (getNumberOfReceivedMessages() < getNumberOfSentMessages()) {
-    // evtl. zum Analyser rein
-    logInfo(
-      "releaseReceivedMessages()",
-      "messages from node " << _destinationNodeNumber << " that were not received in background: "
-      << (getNumberOfSentMessages()-getNumberOfReceivedMessages())
-      << ", i.e. " << ((getNumberOfSentMessages()-getNumberOfReceivedMessages())/_bufferPageSize+1)
-      << " buffer pages"
+    tarch::mpianalysis::Analysis::getInstance().dataWasNotReceivedInBackground(
+      _destinationNodeNumber,
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(),
+      getNumberOfSentMessages()-getNumberOfReceivedMessages(),
+      _bufferPageSize
     );
   }
   while (

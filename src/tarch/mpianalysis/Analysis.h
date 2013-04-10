@@ -80,6 +80,7 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
       const tarch::la::Vector<2,double>&  boundingBoxSize
     );
     virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier );
+    virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
 };
 
 

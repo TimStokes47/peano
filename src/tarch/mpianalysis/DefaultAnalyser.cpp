@@ -128,3 +128,15 @@ void tarch::mpianalysis::DefaultAnalyser::tagIsUsedFor( int tag, const std::stri
     );
   }
 }
+
+
+void tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {
+//  logInfo(
+//    "releaseMessages()",
+//    "rank had to wait from data "
+//    << "(" << watchTotal.getCPUTicks() << "," << watchTotal.getCPUTime() << "," << watchTotal.getCalendarTime() << ")"
+//    << ", hereof "
+//    << "(" << watchSend.getCPUTicks() << "," << watchSend.getCPUTime() << "," << watchSend.getCalendarTime() << ") "
+//    << "for send [cpu ticks, cpu time, calendar time]"
+//  );
+}

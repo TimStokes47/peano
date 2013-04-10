@@ -93,3 +93,9 @@ void tarch::mpianalysis::Analysis::tagIsUsedFor( int tag, const std::string& com
   assertion( _device!=0 );
   _device->tagIsUsedFor(tag,communicationTypeIdentifier);
 }
+
+
+void tarch::mpianalysis::Analysis::dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {
+  assertion( _device!=0 );
+  _device->dataWasNotReceivedInBackground(fromRank,tag,cardinality,pageSize);
+}
