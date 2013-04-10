@@ -4,8 +4,6 @@
 
 
 #include "tarch/mpianalysis/Analysis.h"
-
-
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
@@ -100,7 +98,6 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::rec
       peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
       true
     );
-    logDebug( "receiveStartupDataFromMaster()", "received load balancing message " << loadBalancingMessage.toString() );
 
     assertion(
       loadBalancingMessage.getLoadBalancingFlag()!=peano::parallel::loadbalancing::Join ||
@@ -155,7 +152,7 @@ template <class Vertex, class Cell, class State, class VertexStack, class CellSt
 void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::iterate(bool reduceState) {
   logTraceInWith2Arguments( "iterate(State)", _state.toString(), reduceState );
 
-  tarch::mpianalysis::Analysis::getInstance().getDevice().beginIteration();
+  tarch::mpianalysis::Analysis::getInstance().beginIteration();
 
   receiveStartupDataFromMaster(reduceState);
 
@@ -180,7 +177,7 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
 
   _state.resetStateAtEndOfIteration();
 
-  tarch::mpianalysis::Analysis::getInstance().getDevice().endIteration();
+  tarch::mpianalysis::Analysis::getInstance().endIteration();
 
   logTraceOutWith1Argument( "iterate(State)", _state.toString() );
 }

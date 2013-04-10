@@ -45,6 +45,22 @@ class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
       const tarch::la::Vector<3,double>&  boundingBoxOffset,
       const tarch::la::Vector<3,double>&  boundingBoxSize
     );
+
+    virtual void addWorker(
+      int                                 workerRank,
+      int                                 level,
+      const tarch::la::Vector<2,double>&  boundingBoxOffset,
+      const tarch::la::Vector<2,double>&  boundingBoxSize
+    );
+
+    virtual void removeWorker(
+      int                                 workerRank,
+      int                                 level,
+      const tarch::la::Vector<2,double>&  boundingBoxOffset,
+      const tarch::la::Vector<2,double>&  boundingBoxSize
+    );
+
+    virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier );
 };
 
 

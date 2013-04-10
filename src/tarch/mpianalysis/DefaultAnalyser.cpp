@@ -21,6 +21,32 @@ void tarch::mpianalysis::DefaultAnalyser::endIteration() {
 }
 
 
+
+void tarch::mpianalysis::DefaultAnalyser::addWorker(
+  int                                 workerRank,
+  int                                 level,
+  const tarch::la::Vector<2,double>&  boundingBoxOffset,
+  const tarch::la::Vector<2,double>&  boundingBoxSize
+) {
+
+  logInfo(
+    "addWorker(int,Vector,Vector)",
+    tarch::parallel::Node::getInstance().getRank()
+    << "->"
+    << tarch::parallel::Node::getInstance().getRank()
+    << "+"
+    << workerRank
+    << " [worker's domain:"
+    << boundingBoxOffset
+    << "x"
+    << boundingBoxSize
+    << ",level:"
+    << level
+    << "]"
+  );
+}
+
+
 void tarch::mpianalysis::DefaultAnalyser::addWorker(
   int                                 workerRank,
   int                                 level,
@@ -66,4 +92,39 @@ void tarch::mpianalysis::DefaultAnalyser::removeWorker(
     << level
     << "]"
   );
+}
+
+
+void tarch::mpianalysis::DefaultAnalyser::removeWorker(
+  int                                 workerRank,
+  int                                 level,
+  const tarch::la::Vector<2,double>&  boundingBoxOffset,
+  const tarch::la::Vector<2,double>&  boundingBoxSize
+) {
+  logInfo(
+    "removeWorker()",
+    tarch::parallel::Node::getInstance().getRank()
+    << "+"
+    << workerRank
+    << "->"
+    << tarch::parallel::Node::getInstance().getRank()
+    << " [worker's domain:"
+    << boundingBoxOffset
+    << "x"
+    << boundingBoxSize
+    << ",level:"
+    << level
+    << "]"
+  );
+}
+
+
+void tarch::mpianalysis::DefaultAnalyser::tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier ) {
+  if (!tarch::parallel::Node::getInstance().isInitialised() || tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    logInfo(
+      "reserveFreeTag()",
+      "assigned message " << communicationTypeIdentifier
+       << " the free tag " << tag
+    );
+  }
 }

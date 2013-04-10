@@ -30,7 +30,7 @@ namespace tarch {
  *
  * @author Roland Wittmann, Tobias Weinzierl
  */
-class tarch::mpianalysis::Analysis {
+class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
   private:
     Analysis();
 
@@ -49,7 +49,37 @@ class tarch::mpianalysis::Analysis {
      */
     void setDevice( Analyser* device );
 
-    Analyser& getDevice();
+
+    /**
+     * Everything below is inherited and forwards the call to the current device.
+     */
+    virtual void beginIteration();
+    virtual void endIteration();
+    virtual void addWorker(
+      int                                 workerRank,
+      int                                 level,
+      const tarch::la::Vector<3,double>&  boundingBoxOffset,
+      const tarch::la::Vector<3,double>&  boundingBoxSize
+    );
+    virtual void removeWorker(
+      int                                 workerRank,
+      int                                 level,
+      const tarch::la::Vector<3,double>&  boundingBoxOffset,
+      const tarch::la::Vector<3,double>&  boundingBoxSize
+    );
+    virtual void addWorker(
+      int                                 workerRank,
+      int                                 level,
+      const tarch::la::Vector<2,double>&  boundingBoxOffset,
+      const tarch::la::Vector<2,double>&  boundingBoxSize
+    );
+    virtual void removeWorker(
+      int                                 workerRank,
+      int                                 level,
+      const tarch::la::Vector<2,double>&  boundingBoxOffset,
+      const tarch::la::Vector<2,double>&  boundingBoxSize
+    );
+    virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier );
 };
 
 

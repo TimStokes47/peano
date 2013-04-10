@@ -24,10 +24,14 @@ class tarch::mpianalysis::Analyser {
   public:
     virtual ~Analyser() {};
 
-    // indicates start of a new global iteration run
+    /**
+     * Indicates start of a new global iteration run
+     */
     virtual void beginIteration() = 0;
 
-    // indicates end of an running global iteration
+    /**
+     * Counterpart of beginIteration()
+     */
     virtual void endIteration() = 0;
 
     /**
@@ -50,41 +54,21 @@ class tarch::mpianalysis::Analyser {
       const tarch::la::Vector<3,double>&  boundingBoxSize
     ) = 0;
 
-    /**
-     * 2d wrapper
-     */
     virtual void addWorker(
       int                                 workerRank,
       int                                 level,
       const tarch::la::Vector<2,double>&  boundingBoxOffset,
       const tarch::la::Vector<2,double>&  boundingBoxSize
-    ) {
-      tarch::la::Vector<3,double> boundingBoxOffset3d;
-      tarch::la::Vector<3,double> boundingBoxSize3d;
+    ) = 0;
 
-      tarch::la::assignList(boundingBoxOffset3d) = boundingBoxOffset(0), boundingBoxOffset(1), 0.0;
-      tarch::la::assignList(boundingBoxSize3d)   = boundingBoxSize(0),   boundingBoxSize(1),   0.0;
-
-      addWorker( workerRank, level, boundingBoxOffset3d, boundingBoxSize3d );
-    }
-
-    /**
-     * 2d wrapper
-     */
     virtual void removeWorker(
       int                                 workerRank,
       int                                 level,
       const tarch::la::Vector<2,double>&  boundingBoxOffset,
       const tarch::la::Vector<2,double>&  boundingBoxSize
-    ) {
-      tarch::la::Vector<3,double> boundingBoxOffset3d;
-      tarch::la::Vector<3,double> boundingBoxSize3d;
+    ) = 0;
 
-      tarch::la::assignList(boundingBoxOffset3d) = boundingBoxOffset(0), boundingBoxOffset(1), 0.0;
-      tarch::la::assignList(boundingBoxSize3d)   = boundingBoxSize(0),   boundingBoxSize(1),   0.0;
-
-      removeWorker( workerRank, level, boundingBoxOffset3d, boundingBoxSize3d );
-    }
+    virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier ) = 0;
 };
 
 
