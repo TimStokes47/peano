@@ -192,8 +192,10 @@ void peano::parallel::JoinDataBufferPool::removeCellMarkerFromStream(int rank, b
 
 
 void peano::parallel::JoinDataBufferPool::setBufferSize( int bufferSize ) {
+  #ifdef Parallel
   assertion1( _map.empty(), tarch::parallel::Node::getInstance().getRank() );
   assertion2( bufferSize>0, bufferSize, tarch::parallel::Node::getInstance().getRank() );
 
   _bufferSize = bufferSize;
+  #endif
 }

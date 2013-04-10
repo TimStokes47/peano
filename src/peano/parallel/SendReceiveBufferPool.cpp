@@ -33,7 +33,7 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
 
 peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
-    logWarning( "~SendReceiveBufferPool()", "encountered open buffer for destination " << p->first );
+    std::cerr << "encountered open buffer for destination " << p->first << ". Would be nicer to call terminate on SendReceiveBufferPool." << std::endl;
     delete p->second;
   }
 }
@@ -92,11 +92,17 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   tarch::timing::Watch watchTotal( "peano::parallel::SendReceiveBufferPool", "releaseMessages()", false );
   tarch::timing::Watch watchSend( "peano::parallel::SendReceiveBufferPool", "releaseMessages()", false );
 
-  for ( std::map<int,SendReceiveBuffer*>::const_iterator p = _map.begin(); p != _map.end(); p++ ) {
+  for ( std::map<int,SendReceiveBuffer*>::const_reverse_iterator p = _map.rbegin(); p != _map.rend(); p++ ) {
     p->second->releaseSentMessages();
   }
   watchSend.stopTimer();
-  for ( std::map<int,SendReceiveBuffer*>::const_iterator p = _map.begin(); p != _map.end(); p++ ) {
+  // Doku rein, warum: Oben ist es wurscht, aber so hangelt er sich entland der Rank-Ordnung
+  // d.h. er wartet erst mal auf den 0er. Damit ist davon auszugehen, dass dann alle anderen
+  // Daten auch schon da sind, wenn der 0er erst mal fertig ist. Von der Datensemantik ist das
+  // alles wunderbar, aber die Analyse liefert dann nix mehr vernuenftiges. Ich will ja wissen,
+  // ob man auf Daten warten hat muessen. Und wenn die 0 immer so lang wartet, dann ist die Info
+  // ueber die anderen Ranks irrelevant.
+  for ( std::map<int,SendReceiveBuffer*>::const_reverse_iterator p = _map.rbegin(); p != _map.rend(); p++ ) {
     p->second->releaseReceivedMessages(true);
   }
 
@@ -116,8 +122,10 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
 
 void peano::parallel::SendReceiveBufferPool::setBufferSize( int bufferSize ) {
+  #ifdef Parallel
   assertion1( _map.empty(), tarch::parallel::Node::getInstance().getRank() );
   assertion2( bufferSize>0, bufferSize, tarch::parallel::Node::getInstance().getRank() );
 
   _bufferSize = bufferSize;
+  #endif
 }

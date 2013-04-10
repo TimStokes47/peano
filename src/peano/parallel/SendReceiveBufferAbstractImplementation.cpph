@@ -293,6 +293,16 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::releaseRe
   clock_t      timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
   bool         triggeredTimeoutWarning = false;
 
+  if (getNumberOfReceivedMessages() < getNumberOfSentMessages()) {
+    // evtl. zum Analyser rein
+    logInfo(
+      "releaseReceivedMessages()",
+      "messages from node " << _destinationNodeNumber << " that were not received in background: "
+      << (getNumberOfSentMessages()-getNumberOfReceivedMessages())
+      << ", i.e. " << ((getNumberOfSentMessages()-getNumberOfReceivedMessages())/_bufferPageSize+1)
+      << " buffer pages"
+    );
+  }
   while (
     getNumberOfReceivedMessages() < getNumberOfSentMessages() ||
     _receiveBufferRequestHandle != 0

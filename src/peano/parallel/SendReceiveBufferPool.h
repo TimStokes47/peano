@@ -67,12 +67,21 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
 
 
   public:
+    /**
+     * Delete all the buffers not yet deleted.
+     *
+     * For the warning, I use std::cerr, as the logging might already be shut
+     * down when the destructor of the pool is invoked.
+     */
     ~SendReceiveBufferPool();
 
     static SendReceiveBufferPool& getInstance();
 
     /**
-     * Means that all buffers are cleared and freed (deleted).
+     * Means that all buffers are cleared and freed (deleted). As the pool
+     * realises a lazy creation pattern, it might make sense to call this
+     * operation whenever the rank has joined into its father and accepts a
+     * new job.
      */
     void terminate();
 
