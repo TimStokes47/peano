@@ -36,9 +36,17 @@
  
  This file then is to be translated into a Peano C++ class due to the statement
  \code
- java -jar DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator VertexData.def my-pde-applications-records-directory
+ java -jar DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoNameTranslator VertexData.def my-pde-applications-records-directory
  \endcode
  That's the formal stuff.
+ 
+ Also the pdt is based upon DaStGen. However, it uses a different plug in. The 
+ difference between the two plugins is that the heap's plugin does not augment 
+ the records with additional fields such as sender rank. The memory footpring 
+ of the heap records thus is smaller than those of a standard DaStGen product. 
+ Furthermore, all destructors are non-virtual. As a consequence, there is no 
+ memory spent on vtables.
+ 
  
  !!! Modelling Vertex V
  
