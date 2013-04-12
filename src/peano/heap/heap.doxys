@@ -36,7 +36,7 @@
  
  This file then is to be translated into a Peano C++ class due to the statement
  \code
- java -jar DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoNameTranslator VertexData.def my-pde-applications-records-directory
+ java -jar DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoHeapNameTranslator VertexData.def my-pde-applications-records-directory
  \endcode
  That's the formal stuff.
  
@@ -214,7 +214,11 @@
   !!! AVX/SSE Support
   
   Heap data are predestinated for AVX/SSE treatment. To do so, you typically 
-  have
+  have to add an aling statement to your DaStGen call:
+  
+  \code
+    java -jar DaStGen.jar ... --align
+  \endode
     
   
  */
