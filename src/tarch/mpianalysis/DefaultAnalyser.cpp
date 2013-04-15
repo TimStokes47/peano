@@ -120,7 +120,9 @@ void tarch::mpianalysis::DefaultAnalyser::removeWorker(
 
 
 void tarch::mpianalysis::DefaultAnalyser::tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier ) {
-  if (!tarch::parallel::Node::getInstance().isInitialised() || tarch::parallel::Node::getInstance().isGlobalMaster()) {
+  if (
+    tarch::parallel::Node::getInstance().isInitialised() && tarch::parallel::Node::getInstance().isGlobalMaster()
+  ) {
     logInfo(
       "reserveFreeTag()",
       "assigned message " << communicationTypeIdentifier
