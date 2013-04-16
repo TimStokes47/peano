@@ -10,12 +10,6 @@
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
 
-#include "tarch/multicore/MulticoreDefinitions.h"
-
-
-#if defined(SharedMemoryParallelisation)
-#include "tarch/multicore/BooleanSemaphore.h"
-#endif
 
 #ifdef ParallelExchangePackedRecords
    #pragma pack (push, 1)
@@ -121,6 +115,13 @@ namespace peano {
  * in-order and synchronous. For these special cases, all communication is
  * deployed to a separate tag to avoid confusion. You switch to this mode due
  * to the synchronous flag of the send and receive operation.
+ *
+ * !!! Multithreading
+ *
+ * The heap class is not thread-safe and does not provide any threading
+ * facilities. If you use it within a multithreaded application, you have to
+ * ensure all the data consistency - either via semaphores or an a priori
+ * exclusion of races.
  *
  * !!! Troubleshooting
  *
@@ -230,10 +231,6 @@ class peano::heap::Heap: public tarch::services::Service {
      * currently is the receive buffer and which one is the deploy buffer.
      */
     int                          _currentReceiveBuffer;
-
-    #if defined(SharedMemoryParallelisation)
-    tarch::multicore::BooleanSemaphore _dataSemaphore;
-    #endif
 
     /**
      * Stores the maximum number of heap objects that was stored

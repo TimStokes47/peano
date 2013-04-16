@@ -6,7 +6,6 @@
 #endif
 
 #include "tarch/Assertions.h"
-#include "tarch/multicore/Lock.h"
 #include "tarch/services/ServiceRepository.h"
 
 
@@ -23,10 +22,24 @@ peano::heap::Heap<Data>::Heap()
     , _mpiTagToExchangeForkJoinData(tarch::parallel::Node::reserveFreeTag("heap[join/fork]"))
   #endif
   , _neighbourDataSendTasks()
+  ,_masterWorkerDataSendTasks()
+  ,_forkJoinDataSendTasks()
+  ,_masterWorkerDataReceiveTasks()
+  ,_forkJoinDataReceiveTasks()
+  ,_numberOfRecordsSentToNeighbour(0)
+  ,_numberOfRecordsSentToMasterWorker(0)
+  ,_numberOfRecordsSentDueToForkJoin(0)
+  ,_numberOfMessagesSentToNeighbour(0)
+  ,_numberOfMessagesSentToMasterWorker(0)
+  ,_numberOfMessagesSentDueToForkJoin(0)
+  ,_numberOfMessagesReceivedFromNeighbour(0)
+  ,_numberOfMessagesReceivedFromMasterWorker(0)
+  ,_numberOfMessagesReceivedDueToForkJoin(0)
   ,_currentReceiveBuffer(0)
-  #if defined(SharedMemoryParallelisation)
-    , _dataSemaphore()
-  #endif
+  ,_maximumNumberOfHeapEntries(0)
+  ,_numberOfHeapAllocations(0)
+  ,_numberOfHeapFrees(0)
+  ,_name("<heap name not set>")
   ,_readDeployBufferInReverseOrder(true)
   ,_wasTraversalInvertedThroughoutLastSendReceiveTraversal(false)
   ,_heapIsCurrentlySentReceived(false)
@@ -113,9 +126,6 @@ peano::heap::Heap<Data>& peano::heap::Heap<Data>::getInstance() {
 template <class Data>
 int peano::heap::Heap<Data>::createData() {
   logTraceIn( "createData()" );
-  #if defined(SharedMemoryParallelisation)
-  tarch::multicore::Lock lock(_dataSemaphore);
-  #endif
 
   int index;
   if (_freedHeapIndices.empty()) {
@@ -186,9 +196,6 @@ template <class Data>
 void peano::heap::Heap<Data>::deleteData(int index) {
   logTraceInWith2Arguments("deleteData(int)", _name, index);
 
-  #if defined(SharedMemoryParallelisation)
-  tarch::multicore::Lock lock(_dataSemaphore);
-  #endif
   #ifdef Asserts
   std::string message = "Trying to get heap data for unknown index. Has the index been initialized correctly?";
   #endif
@@ -934,9 +941,6 @@ template <class Data>
 void peano::heap::Heap<Data>::startToSendOrReceiveHeapData(bool isTraversalInverted) {
   logTraceInWith5Arguments( "startToSendOrReceiveHeapData()", _name, _neighbourDataSendTasks.size(), _currentReceiveBuffer, _neighbourDataReceiveTasks[0].size(), _neighbourDataReceiveTasks[1].size() );
 
-  #ifdef Parallel
-  releaseAndClearSentForkJoinAndMasterWorkerMessages();
-
   const std::map<int,int> sendStatistics = releaseSentNeighbourMessages();
   _neighbourDataSendTasks.clear();
 
@@ -958,7 +962,6 @@ void peano::heap::Heap<Data>::startToSendOrReceiveHeapData(bool isTraversalInver
   _heapIsCurrentlySentReceived                            = true;
 
   switchReceiveAndDeployBuffer(sendStatistics);
-  #endif
 
   logTraceOutWith5Arguments( "startToSendOrReceiveHeapData()", _readDeployBufferInReverseOrder, _neighbourDataSendTasks.size(), _currentReceiveBuffer, _neighbourDataReceiveTasks[0].size(), _neighbourDataReceiveTasks[1].size() );
 
@@ -969,6 +972,7 @@ template <class Data>
 void peano::heap::Heap<Data>::finishedToSendOrReceiveHeapData() {
   logTraceInWith5Arguments( "finishedToSendOrReceiveHeapData()", _name, _neighbourDataSendTasks.size(), _currentReceiveBuffer, _neighbourDataReceiveTasks[0].size(), _neighbourDataReceiveTasks[1].size() );
 
+  releaseAndClearSentForkJoinAndMasterWorkerMessages();
   _heapIsCurrentlySentReceived = false;
 
   logTraceOutWith5Arguments( "finishedToSendOrReceiveHeapData()", _readDeployBufferInReverseOrder, _neighbourDataSendTasks.size(), _currentReceiveBuffer, _neighbourDataReceiveTasks[0].size(), _neighbourDataReceiveTasks[1].size() );
