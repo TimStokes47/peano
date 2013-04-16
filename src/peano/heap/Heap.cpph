@@ -366,20 +366,32 @@ void peano::heap::Heap<Data>::releaseSentMessages(std::vector<SendReceiveTask>& 
 
 
 template <class Data>
-void peano::heap::Heap<Data>::releaseSentMessages() {
+void peano::heap::Heap<Data>::releaseSentNeighbourMessages() {
   #ifdef Parallel
-  logTraceInWith3Arguments( "releaseSentMessages()", _neighbourDataSendTasks.size(), _masterWorkerDataSendTasks.size(), _forkJoinDataSendTasks.size() );
+  logTraceInWith3Arguments( "releaseSentNeighbourMessages()", _neighbourDataSendTasks.size(), _masterWorkerDataSendTasks.size(), _forkJoinDataSendTasks.size() );
 
   releaseSentMessages( _neighbourDataSendTasks );
+
+  logTraceOut( "releaseSentNeighbourMessages()" );
+  #endif
+}
+
+
+template <class Data>
+void peano::heap::Heap<Data>::releaseAndClearSentForkJoinAndMasterWorkerMessages() {
+  #ifdef Parallel
+  logTraceInWith3Arguments( "releaseAndClearSentForkJoinAndMasterWorkerMessages()", _neighbourDataSendTasks.size(), _masterWorkerDataSendTasks.size(), _forkJoinDataSendTasks.size() );
+
   releaseSentMessages( _masterWorkerDataSendTasks );
   releaseSentMessages( _forkJoinDataSendTasks );
 
   _masterWorkerDataSendTasks.clear();
   _forkJoinDataSendTasks.clear();
 
-  logTraceOut( "releaseSentMessages()" );
+  logTraceOut( "releaseAndClearSentForkJoinAndMasterWorkerMessages()" );
   #endif
 }
+
 
 
 template <class Data>
@@ -426,7 +438,7 @@ void peano::heap::Heap<Data>::waitUntilNumberOfReceivedMessagesEqualsNumberOfSen
 
 
 template <class Data>
-void peano::heap::Heap<Data>::releaseReceivedMessagesRequests() {
+void peano::heap::Heap<Data>::releaseReceivedNeighbourMessagesRequests() {
   #ifdef Parallel
   // I originally used a plain for loop over the receive buffer, but that does not
   // work, as a receiveDanglingMessages within this for loop might change the
@@ -858,10 +870,13 @@ void peano::heap::Heap<Data>::startToSendOrReceiveHeapData(bool isTraversalInver
   logTraceInWith5Arguments( "startToSendOrReceiveHeapData()", _name, _neighbourDataSendTasks.size(), _currentReceiveBuffer, _neighbourDataReceiveTasks[0].size(), _neighbourDataReceiveTasks[1].size() );
 
   #ifdef Parallel
-  releaseSentMessages();
-  waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages();
+  releaseSentNeighbourMessages();
+  releaseAndClearSentForkJoinAndMasterWorkerMessages();
+
+  waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages();
   _neighbourDataSendTasks.clear();
-  releaseReceivedMessagesRequests();
+
+  releaseReceivedNeighbourMessagesRequests();
 
   // either deploy buffer is empty or receive buffer is empty
   assertion3(

@@ -342,7 +342,8 @@ class peano::heap::Heap: public tarch::services::Service {
      * the receiving traversal begins. So I moved it into an operation called
      * later.
      */
-    void releaseSentMessages();
+    void releaseSentNeighbourMessages();
+    void releaseAndClearSentForkJoinAndMasterWorkerMessages();
 
     void releaseSentMessages(std::vector<SendReceiveTask>& tasks);
 
@@ -356,7 +357,7 @@ class peano::heap::Heap: public tarch::services::Service {
      * Besides waiting for MPI to release some handles, the operation also
      * invokes all the services to receive any dangling messages.
      */
-    void waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages();
+    void waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages();
 
     /**
      * Release Requests for Received Messages
@@ -370,7 +371,7 @@ class peano::heap::Heap: public tarch::services::Service {
      * Besides waiting for MPI to release some handles, the operation also
      * invokes all the services to receive any dangling messages.
      */
-    void releaseReceivedMessagesRequests();
+    void releaseReceivedNeighbourMessagesRequests();
 
     std::vector< Data > receiveNeighbourData(
       int fromRank,
