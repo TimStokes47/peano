@@ -373,6 +373,8 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     void waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages(const std::map<int,int>&  statistics);
 
+    void switchReceiveAndDeployBuffer(std::map<int,int>  statistics);
+
     /**
      * Release Requests for Received Messages
      *
