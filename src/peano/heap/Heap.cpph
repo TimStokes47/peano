@@ -395,8 +395,8 @@ void peano::heap::Heap<Data>::releaseAndClearSentForkJoinAndMasterWorkerMessages
 
 
 template <class Data>
-void peano::heap::Heap<Data>::waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages() {
-  logTraceInWith3Arguments( "waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages()", _name, getSizeOfReceiveBuffer(), getSizeOfSendBuffer() );
+void peano::heap::Heap<Data>::waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages() {
+  logTraceInWith3Arguments( "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", _name, getSizeOfReceiveBuffer(), getSizeOfSendBuffer() );
 
   #ifdef Parallel
   const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -414,7 +414,7 @@ void peano::heap::Heap<Data>::waitUntilNumberOfReceivedMessagesEqualsNumberOfSen
          _mpiTagForNeighbourDataExchange, -1
        );
 
-       logDebug("waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages", "send=" << getSizeOfSendBuffer() << ", receive=" << getSizeOfReceiveBuffer());
+       logDebug("waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages", "send=" << getSizeOfSendBuffer() << ", receive=" << getSizeOfReceiveBuffer());
 
        triggeredTimeoutWarning = true;
     }
@@ -424,7 +424,7 @@ void peano::heap::Heap<Data>::waitUntilNumberOfReceivedMessagesEqualsNumberOfSen
     ) {
        tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
          "peano::heap::Heap::releaseMessages",
-         "waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages()", -1,
+         "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", -1,
          _mpiTagForNeighbourDataExchange, -1
        );
     }
@@ -433,7 +433,7 @@ void peano::heap::Heap<Data>::waitUntilNumberOfReceivedMessagesEqualsNumberOfSen
   }
   #endif
 
-  logTraceOutWith3Arguments( "waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages()", _name, getSizeOfReceiveBuffer(), getSizeOfSendBuffer() );
+  logTraceOutWith3Arguments( "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", _name, getSizeOfReceiveBuffer(), getSizeOfSendBuffer() );
 }
 
 

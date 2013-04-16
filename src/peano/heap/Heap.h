@@ -205,13 +205,15 @@ class peano::heap::Heap: public tarch::services::Service {
     int _mpiTagToExchangeForkJoinData;
     #endif
 
-    std::vector<SendReceiveTask> _neighbourDataSendTasks;
-    std::vector<SendReceiveTask> _masterWorkerDataSendTasks;
-    std::vector<SendReceiveTask> _forkJoinDataSendTasks;
+//    std::map< int, std::vector<SendReceiveTask> >  _neighbourDataSendTasks;
+    std::vector<SendReceiveTask>   _neighbourDataSendTasks;
+    std::vector<SendReceiveTask>                   _masterWorkerDataSendTasks;
+    std::vector<SendReceiveTask>                   _forkJoinDataSendTasks;
 
-    std::vector<SendReceiveTask> _neighbourDataReceiveTasks[2];
-    std::vector<SendReceiveTask> _masterWorkerDataReceiveTasks;
-    std::vector<SendReceiveTask> _forkJoinDataReceiveTasks;
+//    std::map< int, std::vector<SendReceiveTask> >  _neighbourDataReceiveTasks[2];
+    std::vector<SendReceiveTask>   _neighbourDataReceiveTasks[2];
+    std::vector<SendReceiveTask>                   _masterWorkerDataReceiveTasks;
+    std::vector<SendReceiveTask>                   _forkJoinDataReceiveTasks;
 
     int  _numberOfRecordsSentToNeighbour;
     int  _numberOfRecordsSentToMasterWorker;
