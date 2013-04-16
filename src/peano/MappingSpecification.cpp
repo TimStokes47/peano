@@ -39,6 +39,7 @@ std::string peano::MappingSpecification::toString() const {
       break;
     case AvoidCoarseGridRaces:
       msg << "avoid-coarse-grid-races";
+      break;
   }
   msg << ",restartable=" << restartable
       << ")";
