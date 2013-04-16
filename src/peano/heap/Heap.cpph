@@ -366,14 +366,25 @@ void peano::heap::Heap<Data>::releaseSentMessages(std::vector<SendReceiveTask>& 
 
 
 template <class Data>
-void peano::heap::Heap<Data>::releaseSentNeighbourMessages() {
+std::map<int,int> peano::heap::Heap<Data>::releaseSentNeighbourMessages() {
+  std::map<int,int> result;
+
   #ifdef Parallel
   logTraceInWith3Arguments( "releaseSentNeighbourMessages()", _neighbourDataSendTasks.size(), _masterWorkerDataSendTasks.size(), _forkJoinDataSendTasks.size() );
+
+  for (typename std::vector<SendReceiveTask>::const_iterator p=_neighbourDataSendTasks.begin(); p!=_neighbourDataSendTasks.end(); p++) {
+    if (result.count(p->_rank)==0) {
+      result.insert( std::pair<int,int>(p->_rank,0));
+    }
+    result[ p->_rank ] ++;
+  }
 
   releaseSentMessages( _neighbourDataSendTasks );
 
   logTraceOut( "releaseSentNeighbourMessages()" );
   #endif
+
+  return result;
 }
 
 
@@ -395,45 +406,51 @@ void peano::heap::Heap<Data>::releaseAndClearSentForkJoinAndMasterWorkerMessages
 
 
 template <class Data>
-void peano::heap::Heap<Data>::waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages() {
-  logTraceInWith3Arguments( "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", _name, getSizeOfReceiveBuffer(), getSizeOfSendBuffer() );
+void peano::heap::Heap<Data>::waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages(const std::map<int,int>&  statistics) {
+  logTraceInWith2Arguments( "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", _name, getSizeOfSendBuffer() );
 
   #ifdef Parallel
-  const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-  const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-  bool           triggeredTimeoutWarning = false;
-  while (getSizeOfReceiveBuffer()<getSizeOfSendBuffer()) {
-    if (
-       tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
-       (clock()>timeOutWarning) &&
-       (!triggeredTimeoutWarning)
-    ) {
-       tarch::parallel::Node::getInstance().writeTimeOutWarning(
-         "peano::heap::Heap::releaseMessages",
-         "waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages()", -1,
-         _mpiTagForNeighbourDataExchange, -1
-       );
+  for (
+    std::map<int,int>::const_iterator p = statistics.begin();
+    p != statistics.end();
+    p++) {
+    const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+    const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+    bool           triggeredTimeoutWarning = false;
+    while (getSizeOfReceiveBuffer(p->first)<p->second) {
+      if (
+         tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+         (clock()>timeOutWarning) &&
+         (!triggeredTimeoutWarning)
+      ) {
+         tarch::parallel::Node::getInstance().writeTimeOutWarning(
+           "peano::heap::Heap::releaseMessages",
+           "waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages()", -1,
+           _mpiTagForNeighbourDataExchange, -1
+         );
 
-       logDebug("waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages", "send=" << getSizeOfSendBuffer() << ", receive=" << getSizeOfReceiveBuffer());
+         logDebug("waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages", "send=" << p->first << ", receive=" << p->second );
 
-       triggeredTimeoutWarning = true;
+         triggeredTimeoutWarning = true;
+      }
+      if (
+         tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+         (clock()>timeOutShutdown)
+      ) {
+         tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+           "peano::heap::Heap::releaseMessages",
+           "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", -1,
+           _mpiTagForNeighbourDataExchange, -1
+         );
+      }
+
+      tarch::parallel::Node::getInstance().receiveDanglingMessages();
     }
-    if (
-       tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
-       (clock()>timeOutShutdown)
-    ) {
-       tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-         "peano::heap::Heap::releaseMessages",
-         "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", -1,
-         _mpiTagForNeighbourDataExchange, -1
-       );
-    }
 
-    tarch::parallel::Node::getInstance().receiveDanglingMessages();
   }
   #endif
 
-  logTraceOutWith3Arguments( "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", _name, getSizeOfReceiveBuffer(), getSizeOfSendBuffer() );
+  logTraceOutWith2Arguments( "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", _name, getSizeOfSendBuffer() );
 }
 
 
@@ -815,8 +832,18 @@ int peano::heap::Heap<Data>::getTagForMessageType(MessageType messageType, bool 
 }
 
 template <class Data>
-int peano::heap::Heap<Data>::getSizeOfReceiveBuffer() const {
-  return static_cast<int>(_neighbourDataReceiveTasks[_currentReceiveBuffer].size());
+int peano::heap::Heap<Data>::getSizeOfReceiveBuffer(int neighbourRank) const {
+  int result = 0;
+  for (
+    typename std::vector<SendReceiveTask>::const_iterator p = _neighbourDataReceiveTasks[_currentReceiveBuffer].begin();
+    p != _neighbourDataReceiveTasks[_currentReceiveBuffer].end();
+    p++
+  ) {
+    if (p->_rank==neighbourRank) {
+      result ++;
+    }
+  }
+  return result;
 }
 
 
@@ -870,11 +897,12 @@ void peano::heap::Heap<Data>::startToSendOrReceiveHeapData(bool isTraversalInver
   logTraceInWith5Arguments( "startToSendOrReceiveHeapData()", _name, _neighbourDataSendTasks.size(), _currentReceiveBuffer, _neighbourDataReceiveTasks[0].size(), _neighbourDataReceiveTasks[1].size() );
 
   #ifdef Parallel
-  releaseSentNeighbourMessages();
   releaseAndClearSentForkJoinAndMasterWorkerMessages();
 
-  waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages();
+  const std::map<int,int> sendStatistics = releaseSentNeighbourMessages();
   _neighbourDataSendTasks.clear();
+
+  waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages(sendStatistics);
 
   releaseReceivedNeighbourMessagesRequests();
 
@@ -886,15 +914,19 @@ void peano::heap::Heap<Data>::startToSendOrReceiveHeapData(bool isTraversalInver
     _currentReceiveBuffer
   );
 
+
   _readDeployBufferInReverseOrder                         = _wasTraversalInvertedThroughoutLastSendReceiveTraversal != isTraversalInverted;
   _wasTraversalInvertedThroughoutLastSendReceiveTraversal = isTraversalInverted;
   _heapIsCurrentlySentReceived                            = true;
 
+  assertionEquals(getSizeOfDeployBuffer(),0);
   if (getSizeOfDeployBuffer()==0) {
-	  _currentReceiveBuffer                               = 1-_currentReceiveBuffer;
+    // @todo Nutze sendStatistics, damit nach dem Tauschen einiger Date womoeglich Daten in den receive buffer zurueck gegeben werden
+  _currentReceiveBuffer                               = 1-_currentReceiveBuffer;
 	  _neighbourDataReceiveTasks[_currentReceiveBuffer].clear();
   }
-#endif
+  #endif
+
   logTraceOutWith5Arguments( "startToSendOrReceiveHeapData()", _readDeployBufferInReverseOrder, _neighbourDataSendTasks.size(), _currentReceiveBuffer, _neighbourDataReceiveTasks[0].size(), _neighbourDataReceiveTasks[1].size() );
 
 }

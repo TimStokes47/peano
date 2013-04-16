@@ -205,15 +205,13 @@ class peano::heap::Heap: public tarch::services::Service {
     int _mpiTagToExchangeForkJoinData;
     #endif
 
-//    std::map< int, std::vector<SendReceiveTask> >  _neighbourDataSendTasks;
     std::vector<SendReceiveTask>   _neighbourDataSendTasks;
-    std::vector<SendReceiveTask>                   _masterWorkerDataSendTasks;
-    std::vector<SendReceiveTask>                   _forkJoinDataSendTasks;
+    std::vector<SendReceiveTask>   _masterWorkerDataSendTasks;
+    std::vector<SendReceiveTask>   _forkJoinDataSendTasks;
 
-//    std::map< int, std::vector<SendReceiveTask> >  _neighbourDataReceiveTasks[2];
     std::vector<SendReceiveTask>   _neighbourDataReceiveTasks[2];
-    std::vector<SendReceiveTask>                   _masterWorkerDataReceiveTasks;
-    std::vector<SendReceiveTask>                   _forkJoinDataReceiveTasks;
+    std::vector<SendReceiveTask>   _masterWorkerDataReceiveTasks;
+    std::vector<SendReceiveTask>   _forkJoinDataReceiveTasks;
 
     int  _numberOfRecordsSentToNeighbour;
     int  _numberOfRecordsSentToMasterWorker;
@@ -326,6 +324,18 @@ class peano::heap::Heap: public tarch::services::Service {
     /**
      * Release all sent messages
      *
+     * @see releaseAndClearSentForkJoinAndMasterWorkerMessages for general information
+     *
+     * Different to releaseAndClearSentForkJoinAndMasterWorkerMessages(), this
+     * operation returns some statistics which rank was sent how many messages.
+     *
+     * @result Mapping from ranks onto message numbers
+     */
+    std::map<int,int> releaseSentNeighbourMessages();
+
+    /**
+     * Release all sent messages
+     *
      * This operation runs through all sent messages and waits for each sent
      * message until the corresponding non-blocking MPI request is freed, i.e.
      * until the message has left the system. As the underlying MPI_Test
@@ -344,7 +354,6 @@ class peano::heap::Heap: public tarch::services::Service {
      * the receiving traversal begins. So I moved it into an operation called
      * later.
      */
-    void releaseSentNeighbourMessages();
     void releaseAndClearSentForkJoinAndMasterWorkerMessages();
 
     void releaseSentMessages(std::vector<SendReceiveTask>& tasks);
@@ -358,8 +367,11 @@ class peano::heap::Heap: public tarch::services::Service {
      *
      * Besides waiting for MPI to release some handles, the operation also
      * invokes all the services to receive any dangling messages.
+     *
+     * @param statistics Mapping from ranks to number of messages that
+     *                   specifies for how many messages we have to wait.
      */
-    void waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages();
+    void waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages(const std::map<int,int>&  statistics);
 
     /**
      * Release Requests for Received Messages
@@ -553,7 +565,7 @@ class peano::heap::Heap: public tarch::services::Service {
     int getSizeOfForkJoinDataBuffer() const;
     int getSizeOfMasterWorkerDataBuffer() const;
     int getSizeOfDeployBuffer() const;
-    int getSizeOfReceiveBuffer() const;
+    int getSizeOfReceiveBuffer(int neighbourRank) const;
     int getSizeOfSendBuffer() const;
 
     std::string toString() const;
