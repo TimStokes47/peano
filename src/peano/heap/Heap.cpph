@@ -915,8 +915,9 @@ void peano::heap::Heap<Data>::switchReceiveAndDeployBuffer(std::map<int,int>  se
   _currentReceiveBuffer = 1-_currentReceiveBuffer;
   assertionEquals( _neighbourDataReceiveTasks[_currentReceiveBuffer].size(),0 );
 
-  if (sumOfSentMessages==static_cast<int>(_neighbourDataReceiveTasks[_currentReceiveBuffer].size())) {
+  if (sumOfSentMessages < static_cast<int>(_neighbourDataReceiveTasks[_currentReceiveBuffer].size())) {
     logDebug( "switchReceiveAndDeployBuffer(map)", "we have to copy back messages from the deploy buffer to the receive buffer" );
+
     for (
       typename std::vector<SendReceiveTask>::iterator p = _neighbourDataReceiveTasks[1-_currentReceiveBuffer].begin();
       p != _neighbourDataReceiveTasks[1-_currentReceiveBuffer].end();
@@ -930,6 +931,10 @@ void peano::heap::Heap<Data>::switchReceiveAndDeployBuffer(std::map<int,int>  se
         _neighbourDataReceiveTasks[1-_currentReceiveBuffer].erase(p);
         p--;
       }
+    }
+
+    for (std::map<int,int>::const_iterator p=sendStatistics.begin(); p!=sendStatistics.end(); p++) {
+      assertionEquals(p->second, 0);
     }
   }
 
