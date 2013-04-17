@@ -10,9 +10,13 @@
 #include <tbb/task.h>
 
 
-int        tarch::multicore::BooleanSemaphore::_pauseCounter(1);
-const int  tarch::multicore::BooleanSemaphore::_pauseBeforeYield(32);
-const int  tarch::multicore::BooleanSemaphore::_counterThresholdForWarning(std::numeric_limits<int>::max() - 20);
+/**
+ * There is no constructor for an atomic. I hence rely on the TBB documentation
+ * saying "you can rely on zero initialization o initialize an atomic".
+ */
+tbb::atomic<int>   tarch::multicore::BooleanSemaphore::_pauseCounter;
+const int          tarch::multicore::BooleanSemaphore::_pauseBeforeYield(32);
+const int          tarch::multicore::BooleanSemaphore::_counterThresholdForWarning(std::numeric_limits<int>::max() - 20);
 
 
 tarch::multicore::BooleanSemaphore::BooleanSemaphore() {
@@ -37,7 +41,7 @@ void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string
   static tarch::logging::Log  _log( "tarch::multicore::BooleanSemaphore" );
   if (_pauseCounter < _pauseBeforeYield) {
     __TBB_Pause(_pauseCounter);
-    _pauseCounter*=2;
+    _pauseCounter = _pauseCounter * 2;
   }
   else {
     if (_pauseCounter>_counterThresholdForWarning && _pauseCounter != std::numeric_limits<int>::max()) {
@@ -53,8 +57,6 @@ void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string
 
 
 void tarch::multicore::BooleanSemaphore::continueWithTask() {
-  static tbb::spin_mutex  mutex;
-  tbb::spin_mutex::scoped_lock lock( mutex );
   _pauseCounter = 1;
 }
 

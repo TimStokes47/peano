@@ -23,11 +23,11 @@ class tarch::multicore::BooleanSemaphore {
   private:
     friend class tarch::multicore::Lock;
 
-    static int                            _pauseCounter;
-    static const int                      _pauseBeforeYield;
-    static const int                      _counterThresholdForWarning;
+    static tbb::atomic<int>  _pauseCounter;
+    static const int         _pauseBeforeYield;
+    static const int         _counterThresholdForWarning;
 
-    tbb::spin_mutex _mutex;
+    tbb::spin_mutex          _mutex;
 
     /**
      * Waits until I can enter the critical section.
