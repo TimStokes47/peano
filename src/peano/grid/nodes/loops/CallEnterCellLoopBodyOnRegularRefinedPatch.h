@@ -74,9 +74,16 @@ class peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch {
     UnrolledLevelEnumerator  _coarseGridEnumerator;
   public:
     CallEnterCellLoopBodyOnRegularRefinedPatch(
-      State&        state,
-      EventHandle&  eventHandle,
+      State&                                           state,
+      EventHandle&                                     eventHandle,
       peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
+    );
+
+    /**
+     * Copy constructor.
+     */
+    CallEnterCellLoopBodyOnRegularRefinedPatch(
+      const CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>&  copy
     );
 
     ~CallEnterCellLoopBodyOnRegularRefinedPatch();
