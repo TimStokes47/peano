@@ -27,7 +27,7 @@ class tarch::multicore::BooleanSemaphore {
     static const int                      _pauseBeforeYield;
     static const int                      _counterThresholdForWarning;
 
-    tbb::spin_mutex _lock;
+    tbb::spin_mutex _mutex;
 
     /**
      * Waits until I can enter the critical section.

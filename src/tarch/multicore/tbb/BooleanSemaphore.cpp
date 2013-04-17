@@ -24,21 +24,12 @@ tarch::multicore::BooleanSemaphore::~BooleanSemaphore() {
 
 
 void tarch::multicore::BooleanSemaphore::enterCriticalSection() {
-  // This creates a seg fault
-//  bool gotLock = _lock.try_lock();
-//  if (!gotLock) {
-//    while (!gotLock) {
-//      sendCurrentTaskToBack("enterCriticalSection()");
-//      gotLock = _lock.try_lock();
-//    }
-//    continueWithTask();
-//  }
-  _lock.lock();
+  _mutex.lock();
 }
 
 
 void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
-  _lock.unlock();
+  _mutex.unlock();
 }
 
 
@@ -62,6 +53,8 @@ void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string
 
 
 void tarch::multicore::BooleanSemaphore::continueWithTask() {
+  static tbb::spin_mutex  mutex;
+  tbb::spin_mutex::scoped_lock lock( mutex );
   _pauseCounter = 1;
 }
 
