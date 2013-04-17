@@ -70,6 +70,15 @@ int tarch::parallel::NodePool::getNumberOfWorkingNodes() const {
 }
 
 
+
+bool tarch::parallel::NodePool::areAllNodesWorking() const {
+  assertion1( Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
+  assertion1( _strategy!=0, Node::getInstance().getRank() );
+
+  return _strategy->getNumberOfIdleNodes()==0;
+}
+
+
 void tarch::parallel::NodePool::init() {
   _registrationTag  = Node::getInstance().reserveFreeTag( "tarch::parallel::NodePool[registration]" );
   _jobManagementTag = Node::getInstance().reserveFreeTag( "tarch::parallel::NodePool[job-management]" );

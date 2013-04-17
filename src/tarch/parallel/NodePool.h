@@ -369,6 +369,11 @@ class tarch::parallel::NodePool: public tarch::services::Service {
     int getNumberOfWorkingNodes() const;
 
     /**
+     * @return true If there are not idle workers left
+     */
+    bool areAllNodesWorking() const;
+
+    /**
      * Broadcast to non-idle nodes
      *
      * Take an MPI message and broadcast it to all non-idle nodes that are
