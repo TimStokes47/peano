@@ -49,8 +49,8 @@ peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cel
   _numberOfOuterCells(0.0),
   _numberOfInnerLeafCells(0.0),
   _numberOfOuterLeafCells(0.0),
-  _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(1)),
-  _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(0)) {
+  _fineGridEnumerator(copy._fineGridEnumerator),
+  _coarseGridEnumerator(copy._coarseGridEnumerator) {
 }
 
 
