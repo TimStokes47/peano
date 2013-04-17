@@ -42,8 +42,8 @@ class peano::datatraversal::SingleLevelCellLoop {
 
      class dForLoopInstance {
        private:
-         LoopBody                                 _loopBody;
-         const tarch::la::Vector<DIMENSIONS,int>  _offset;
+         LoopBody                           _loopBody;
+         tarch::la::Vector<DIMENSIONS,int>  _offset;
          /**
           * Should be set to 2 for @f$ 2^d @f$ colouring.
           */
@@ -91,6 +91,8 @@ class peano::datatraversal::SingleLevelCellLoop {
           * throw away this operation.
           */
          void join(const dForLoopInstance&  with);
+
+         void setOffset(const tarch::la::Vector<DIMENSIONS,int>&  offset);
      };
 
   public:

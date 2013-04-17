@@ -43,12 +43,9 @@ void peano::datatraversal::SingleLevelCellLoop<LoopBody>::runParallel(
   int                                       grainSize,
   bool                                      useSixPowerDColouring
 ) {
-  for (int d=0; d<DIMENSIONS; d++) {
-    assertion2( range(d)>=2, range, grainSize );
-  }
-
   const int colouringAlongOneAxis = useSixPowerDColouring ? 6 : 2;
 
+  dForLoopInstance loopInstance(loopBody,0,colouringAlongOneAxis);
   dfor(k,colouringAlongOneAxis) {
     tarch::la::Vector<DIMENSIONS,int> localRange = range;
     for (int d=0; d<DIMENSIONS; d++) {
@@ -59,8 +56,9 @@ void peano::datatraversal::SingleLevelCellLoop<LoopBody>::runParallel(
       else {
         localRange(d) /= colouringAlongOneAxis;
       }
+      assertion4( localRange(d)>=1, range, localRange, k, grainSize );
     }
-    dForLoopInstance loopInstance(loopBody,k,colouringAlongOneAxis);
+    loopInstance.setOffset(k);
     #ifdef SharedTBB
     tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance );
     #elif defined(SharedMemoryParallelisation)
@@ -102,4 +100,10 @@ void peano::datatraversal::SingleLevelCellLoop<LoopBody>::dForLoopInstance::oper
 
 template <class LoopBody>
 void peano::datatraversal::SingleLevelCellLoop<LoopBody>::dForLoopInstance::join(const dForLoopInstance&  with) {
+}
+
+
+template <class LoopBody>
+void peano::datatraversal::SingleLevelCellLoop<LoopBody>::dForLoopInstance::setOffset(const tarch::la::Vector<DIMENSIONS,int>&  offset) {
+    _offset = offset;
 }
