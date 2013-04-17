@@ -86,8 +86,8 @@ void peano::grid::UnrolledLevelEnumerator::setOffset(const LocalVertexIntegerInd
   logTraceInWith1Argument( "setOffset(Vector)", gridPointOffset );
 
   for (int d=0; d<DIMENSIONS; d++) {
-    assertion2( gridPointOffset(d)>=0,               gridPointOffset, toString() );
-    assertion2( gridPointOffset(d)<=_CellsPerAxis+1, gridPointOffset, toString() ); // if they are equal, we may only access the left/bottom points due to the enumerator
+    assertion2( gridPointOffset(d)>=0,             gridPointOffset, toString() );
+    assertion2( gridPointOffset(d)<=_CellsPerAxis, gridPointOffset, toString() ); // if they are equal, we may only access the left/bottom points due to the enumerator
   }
   _discreteOffset = gridPointOffset;
 
