@@ -143,9 +143,9 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
   cellsVertexEnumerator.setOffset(cellsPositionWithinUnrolledTreeLevel);
 
   #if defined(CacheActionSets)
-  const peano::datatraversal::ActionSetTraversal& writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequence(currentCell,_isTraversalInverted,false);
+  const peano::datatraversal::ActionSetTraversal& writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #else
-  peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequence(currentCell,_isTraversalInverted,false);
+  peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #endif
 
   for (int currentStepInPath=0; currentStepInPath < writeVertexSequence.getMaximumPath(); currentStepInPath++) {
@@ -216,9 +216,9 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
   cellsVertexEnumerator.setOffset(cellsPositionWithinUnrolledTreeLevel);
 
   #if defined(CacheActionSets)
-  const peano::datatraversal::ActionSetTraversal& writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequence(currentCell,_isTraversalInverted,false);
+  const peano::datatraversal::ActionSetTraversal& writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #else
-  peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequence(currentCell,_isTraversalInverted,false);
+  peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #endif
 
   for (int currentStepInPath=0; currentStepInPath < writeVertexSequence.getMaximumPath(); currentStepInPath++) {

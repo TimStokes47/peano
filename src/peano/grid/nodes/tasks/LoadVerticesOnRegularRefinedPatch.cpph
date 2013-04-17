@@ -98,14 +98,14 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   cellsVertexEnumerator.setOffset(cellsPositionWithinUnrolledTreeLevel);
 
   #if defined(CacheActionSets)
-  const peano::datatraversal::ActionSetTraversal& readVertexSequence  = peano::grid::aspects::CellLocalPeanoCurve::getReadVertexSequence(currentCell,_isTraversalInverted,false);
+  const peano::datatraversal::ActionSetTraversal& readVertexSequence  = peano::grid::aspects::CellLocalPeanoCurve::getReadVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #ifdef Asserts
-  const peano::datatraversal::ActionSetTraversal& writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequence(currentCell,_isTraversalInverted,false);
+  const peano::datatraversal::ActionSetTraversal& writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #endif
   #else
-  peano::datatraversal::ActionSetTraversal readVertexSequence  = peano::grid::aspects::CellLocalPeanoCurve::getReadVertexSequence(currentCell,_isTraversalInverted,false);
+  peano::datatraversal::ActionSetTraversal readVertexSequence  = peano::grid::aspects::CellLocalPeanoCurve::getReadVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #ifdef Asserts
-  peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequence(currentCell,_isTraversalInverted,false);
+  peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #endif
   #endif
 
@@ -225,11 +225,11 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   cellsVertexEnumerator.setOffset(cellsPositionWithinUnrolledTreeLevel);
 
   #if defined(CacheActionSets)
-  const peano::datatraversal::ActionSetTraversal& readVertexSequence  = peano::grid::aspects::CellLocalPeanoCurve::getReadVertexSequence(currentCell,_isTraversalInverted,false);
-  const peano::datatraversal::ActionSetTraversal& writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequence(currentCell,_isTraversalInverted,false);
+  const peano::datatraversal::ActionSetTraversal& readVertexSequence  = peano::grid::aspects::CellLocalPeanoCurve::getReadVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
+  const peano::datatraversal::ActionSetTraversal& writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #else
-  peano::datatraversal::ActionSetTraversal readVertexSequence  = peano::grid::aspects::CellLocalPeanoCurve::getReadVertexSequence(currentCell,_isTraversalInverted,false);
-  peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequence(currentCell,_isTraversalInverted,false);
+  peano::datatraversal::ActionSetTraversal readVertexSequence  = peano::grid::aspects::CellLocalPeanoCurve::getReadVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
+  peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #endif
 
   for (int currentStepInPath=0; currentStepInPath < readVertexSequence.getMaximumPath(); currentStepInPath++) {
