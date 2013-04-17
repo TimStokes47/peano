@@ -88,6 +88,9 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
     peano::grid::RegularGridContainer<Vertex,Cell>&                   _regularGridContainer;
     VertexStack&                                                      _vertexStack;
 
+    /**
+     * @see Constructor
+     */
     const bool                                                        _loadProcessRunsInParallelToOtherTasks;
     int                                                               _maxLevelToFork;
 
@@ -108,8 +111,23 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
     const tarch::la::Vector<DIMENSIONS,int>                           _coarsestCellsOffset;
 
     /**
+     * Store the number of reads per level
+     *
      * Stores the number of reads per level, i.e.~how many @f$ 3^d @f$ patches
-     * on each level have been handled by this task.
+     * on each level have been handled by this task. We use this field if we do
+     * not run this task in parallel to different tasks (pipelining).
+     *
+     * If we have no pipelining, we make each thread hold its own statistics on
+     * the number of reads. At the end of the thread's load activities, the
+     * thread takes these statistics and updates the grid container accordingly.
+     * See the operator(). This way, we avoid many concurrent write accesses to
+     * the grid container.
+     *
+     * The reasoning is different if we have pipelining. For pipelining, it is
+     * important to mark the levels as `everything loaded here` asap. Therefore,
+     * we do not accumulate anything in this array but immediately update the
+     * grid container and take into account that many threads wanna write
+     * simultaneously and have to synchronize each other.
      */
     std::vector<int>                                                  _trackNumberOfReadsPerLevel;
 
@@ -261,13 +279,16 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
       const tarch::la::Vector<DIMENSIONS,int>&                          offsetWithinPatch,
       typename VertexStack::PopBlockVertexStackView                     stackView,
       const std::bitset<THREE_POWER_D>&                                 forkedSubtree
-   );
+    );
   public:
     /**
      *
      * @param maxNumberOfForks The oracles do not support recursive analysis,
      *                         i.e. we have to determine once a priori, how
      *                         often we may split up a tree load process.
+     * @param loadProcessRunsInParallelToOtherTasks This flag is true if we may
+     *                         run another task in parallel to the load, i.e.
+     *                         if we do a pipelining of the code.
      */
     LoadVerticesOnRegularRefinedPatch(
       const bool                                                        isTraversalInverted,
