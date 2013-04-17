@@ -1,5 +1,14 @@
 #include "peano/grid/aspects/CellLocalPeanoCurve.h"
 
+
+
+#if defined(CacheActionSets)
+std::map<int,peano::datatraversal::ActionSetTraversal*> peano::grid::aspects::CellLocalPeanoCurve::cachedEntriesForWriteVertexSequence;
+std::map<int,peano::datatraversal::ActionSetTraversal*> peano::grid::aspects::CellLocalPeanoCurve::cachedEntriesForReadVertexSequence;
+#endif
+
+
+
 peano::grid::aspects::CellLocalPeanoCurve::CellLocalPeanoCurve() {
 }
 

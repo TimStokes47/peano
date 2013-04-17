@@ -5,6 +5,8 @@
 
 
 #include <bitset>
+#include <map>
+
 
 #include "peano/datatraversal/ActionSetTraversal.h"
 #include "peano/utils/PeanoOptimisations.h"
@@ -29,6 +31,11 @@ namespace peano {
  */
 class peano::grid::aspects::CellLocalPeanoCurve {
   private:
+    #if defined(CacheActionSets)
+    static std::map<int,peano::datatraversal::ActionSetTraversal*> cachedEntriesForWriteVertexSequence;
+    static std::map<int,peano::datatraversal::ActionSetTraversal*> cachedEntriesForReadVertexSequence;
+    #endif
+
     /**
      * To access the vertex array of a geometric element you use an integer.
      * This integer corresponds to a bitfield, that indicates for every axis
@@ -77,9 +84,31 @@ class peano::grid::aspects::CellLocalPeanoCurve {
     #if defined(CacheActionSets)
     template <class Cell>
     static const peano::datatraversal::ActionSetTraversal& getReadVertexSequence( const Cell& cell, bool isTraversalInverted, bool parallelIfPossible);
+
+    /**
+     * If a subpart of the tree is static and the traversal sets are cached, we
+     * do know that we have already processed the cell from which this request
+     * stems from. We hence know that the result is already in the cache map
+     * and can eliminate some checks compared to the other routine. This pays
+     * off in terms of performance, and it avoids that thread checkers report
+     * on potential data races.
+     *
+     * Such a scheme works if and only if the alternative getter fillign the
+     * hash map with data generates all the data for serial/parallel and
+     * inverted traversals in one step, as the traversal direction, e.g.,
+     * changes each traversal.
+     */
+    template <class Cell>
+    static const peano::datatraversal::ActionSetTraversal& getReadVertexSequenceForStaticSubtree( const Cell& cell, bool isTraversalInverted, bool parallelIfPossible);
     #else
     template <class Cell>
     static peano::datatraversal::ActionSetTraversal getReadVertexSequence( const Cell& cell, bool isTraversalInverted, bool parallelIfPossible);
+
+    /**
+     * Alias for other routine for non-static subtrees.
+     */
+    template <class Cell>
+    static peano::datatraversal::ActionSetTraversal getReadVertexSequenceForStaticSubtree( const Cell& cell, bool isTraversalInverted, bool parallelIfPossible);
     #endif
 
     /**
@@ -88,9 +117,21 @@ class peano::grid::aspects::CellLocalPeanoCurve {
     #if defined(CacheActionSets)
     template <class Cell>
     static const peano::datatraversal::ActionSetTraversal& getWriteVertexSequence( const Cell& cell, bool isTraversalInverted, bool parallelIfPossible);
+
+    /**
+     * @see getReadVertexSequenceForStaticSubtree()
+     */
+    template <class Cell>
+    static const peano::datatraversal::ActionSetTraversal& getWriteVertexSequenceForStaticSubtree( const Cell& cell, bool isTraversalInverted, bool parallelIfPossible);
     #else
     template <class Cell>
     static peano::datatraversal::ActionSetTraversal getWriteVertexSequence( const Cell& cell, bool isTraversalInverted, bool parallelIfPossible);
+
+    /**
+     * Alias for other routine for non-static subtrees.
+     */
+    template <class Cell>
+    static peano::datatraversal::ActionSetTraversal getWriteVertexSequenceForStaticSubtree( const Cell& cell, bool isTraversalInverted, bool parallelIfPossible);
     #endif
 
     /**
