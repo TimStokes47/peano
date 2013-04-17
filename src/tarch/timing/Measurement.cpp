@@ -86,6 +86,12 @@ void tarch::timing::Measurement::setAccuracy(const double& value) {
 }
 
 
+void tarch::timing::Measurement::increaseAccuracy( const double& factor ) {
+  assertion(factor>0.0);
+  _accuracy /= factor;
+}
+
+
 void tarch::timing::Measurement::setValue(const double& value) {
   if (_numberOfMeasurements<=1) {
     assertion( !_isAccurateValue );

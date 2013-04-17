@@ -106,6 +106,8 @@ class tarch::timing::Measurement {
      */
     void setAccuracy(const double& value);
 
+    void increaseAccuracy( const double& factor );
+
     /**
      * Set the value. If the measurement already holds a value, this value is
      * not overwritten. Instead, the measurement accumulates all values and
