@@ -150,6 +150,8 @@ void peano::datatraversal::autotuning::Oracle::switchToOracle(int id) {
 int peano::datatraversal::autotuning::Oracle::parallelise(int problemSize, MethodTrace askingMethod ) {
   logTraceInWith3Arguments( "parallelise(int,int)", problemSize, askingMethod, toString(askingMethod) );
 
+  assertion2( problemSize>=0, problemSize, toString(askingMethod) );
+
   int result;
 
   #if defined(SharedMemoryParallelisation)
@@ -175,6 +177,7 @@ int peano::datatraversal::autotuning::Oracle::parallelise(int problemSize, Metho
 
   assertion3( result >=0, result, problemSize, toString(askingMethod) );
   assertion3( result <= problemSize, result, problemSize, toString(askingMethod) );
+  assertion2( problemSize>0 || result==0, problemSize, toString(askingMethod) );
 
   logTraceOutWith1Argument( "parallelise(int,int)", result );
   return result;
