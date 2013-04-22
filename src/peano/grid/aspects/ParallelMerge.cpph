@@ -5,6 +5,23 @@
 
 
 template <class Vertex>
+void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
+  Vertex&        localVertex,
+  const Vertex&  masterVertex
+) {
+  if (
+    masterVertex._vertexData.getRefinementControl() == Vertex::Records::Erasing &&
+    masterVertex.isAdjacentToDomainOf( tarch::parallel::NodePool::getInstance().getMasterRank() )
+  ) {
+    localVertex._vertexData.setRefinementControl( Vertex::Records::Erasing );
+
+    // @todo bitte wieder raus
+    logInfo( "mergeWithVertexFromMaster(...)", "erase worker's top level vertex, as master is erasing a subtree: " << localVertex.toString() << " [@todo bitte wieder auf Debug umstellen]" );
+  }
+}
+
+
+template <class Vertex>
 void peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
   Vertex&        localVertex,
   const Vertex&  neighbourVertex,

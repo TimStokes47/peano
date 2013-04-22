@@ -55,6 +55,42 @@ class peano::grid::aspects::ParallelMerge {
     );
 
     /**
+     * Merge vertex on worker with vertex from master
+     *
+     * This is a standard operation that is called once prior to each iteration
+     * by each worker receiving data from its master. When we study the
+     * operation, it might seem to be surprising that the refinement state of
+     * the worker usually is not modified independently of the master's state.
+     * The reason for this is simple: The coarsest @f$ 2^d @f$ vertices on the
+     * worker also are adjacent to other domains, i.e. they are both vertices
+     * belonging to a master-worker vertical interface and standard boundary
+     * vertices. And most of the refinement updates is handled by the standard
+     * boundary merges (see mergeOnDomainBoundary()). So, nothing to do here.
+     *
+     * In most of the cases. However, there's one important special case: If
+     * the master does an erase somewhere in the grid hierarchy, this erase
+     * propagates down in the spacetree immediately (see
+     * LoadVertexLoopBody::updateRefinementFlagsOfVertexAfterLoad()). In such a
+     * case, the worker just wouldn't notice that the grid changes dramatically.
+     * Therefore, this operation checks the master's vertex. If it holds an
+     * erasing state, this erase immediately is anticipated by the worker vertex.
+     * Otherwise, we neglect the master's refinement state and rely on
+     * mergeOnDomainBoundary() for updates.
+     *
+     * The description before still has one shortcoming. It can happen that the
+     * master vertex holds an erasing state but this state may not be updated
+     * locally: If the master forks all @f$ 2^d @f$ adjacent subdomains of a
+     * vertex to other ranks, it will afterwards set its local vertex to
+     * erasing. In this case, this erasing is not to be done on the workers.
+     */
+    template <class Vertex>
+    static void mergeWithVertexFromMaster(
+      Vertex&        localVertex,
+      const Vertex&  masterVertex
+    );
+
+
+    /**
      * Merge with data from master
      *
      * This operation is basically a copy from the master's data to the

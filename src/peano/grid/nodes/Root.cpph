@@ -323,15 +323,10 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           _haveMergedMasterVertex[ currentVertexsIndexInMasterVertexArray ] = true;
 
           const int  currentVertexIndexInLevelOnePatch = SingleLevelEnumerator::lineariseCellIndex(currentVertexInLevelOnePatch);
-          assertion5(
-            _masterVertices[currentVertexsIndexInMasterVertexArray].getRefinementControl() == fineGridVertices[ currentVertexIndexInLevelOnePatch ].getRefinementControl() ||
-            (_masterVertices[currentVertexsIndexInMasterVertexArray].getRefinementControl()==Vertex::Records::Refined && fineGridVertices[ currentVertexIndexInLevelOnePatch ].getRefinementControl() == Vertex::Records::Refining) ||
-             _masterVertices[currentVertexsIndexInMasterVertexArray].isAdjacentToDomainOf(tarch::parallel::Node::getInstance().getRank()),
-             _masterVertices[currentVertexsIndexInMasterVertexArray].toString(),
-             fineGridVertices[ currentVertexIndexInLevelOnePatch ].toString(),
-             currentVertexsIndexInMasterVertexArray,
-             currentVertexInReceivedVertexArray,
-             currentVertexIndexInLevelOnePatch
+
+          peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
+            fineGridVertices[currentVertexIndexInLevelOnePatch],
+            _masterVertices[currentVertexsIndexInMasterVertexArray]
           );
 
           Base::_eventHandle.mergeWithWorker(
