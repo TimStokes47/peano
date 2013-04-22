@@ -163,7 +163,7 @@ template<int Size, typename Scalar>
 bool tarch::la::equals (
   const Vector<Size,Scalar>&  lhs,
   const Scalar&               cmp,
-  const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
+  const Scalar                tolerance 
 ) {
   for ( int i=0; i < Size; i++ ) {
     if ( la::abs(lhs(i) - cmp) > tolerance ) {
@@ -178,7 +178,7 @@ template<int Size, typename Scalar>
 bool tarch::la::oneGreater (
   const Vector<Size,Scalar>&  lhs,
   const Scalar&               cmp,
-  const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
+  const Scalar                tolerance 
 ) {
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp > tolerance ) {
@@ -193,7 +193,7 @@ template<int Size, typename Scalar>
 bool tarch::la::oneGreaterEquals (
   const Vector<Size,Scalar>&  lhs,
   const Scalar&               cmp,
-  const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
+  const Scalar                tolerance
 ) {
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp >= - tolerance ) {
@@ -208,7 +208,7 @@ template<int Size, typename Scalar>
 bool tarch::la::allGreater (
   const Vector<Size,Scalar>&  lhs,
   const Scalar&               cmp,
-  const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
+  const Scalar                tolerance
 ) {
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp <= tolerance ) {
@@ -223,7 +223,7 @@ template<int Size, typename Scalar>
 bool tarch::la::allGreaterEquals (
   const Vector<Size,Scalar>&  lhs,
   const Scalar&               cmp,
-  const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
+  const Scalar                tolerance
 ) {
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp < -tolerance ) {
@@ -238,7 +238,7 @@ template<int Size, typename Scalar>
 bool tarch::la::allSmaller (
   const Vector<Size,Scalar>&  lhs,
   const Scalar&               cmp,
-  const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
+  const Scalar                tolerance 
 ) {
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp >= tolerance ) {
@@ -253,7 +253,7 @@ template<int Size, typename Scalar>
 bool tarch::la::allSmallerEquals (
   const Vector<Size,Scalar>&  lhs,
   const Scalar&               cmp,
-  const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
+  const Scalar                tolerance 
 ) {
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp > -tolerance ) {
