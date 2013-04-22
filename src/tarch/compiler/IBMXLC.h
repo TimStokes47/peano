@@ -11,7 +11,7 @@
  *
  * To make define work, see the documentation of the test super class.
  */
-#define UseTestSpecificCompilerSettings
+//#define UseTestSpecificCompilerSettings
 
 
 
