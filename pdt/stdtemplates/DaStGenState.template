@@ -47,7 +47,8 @@ class __NAMESPACE__::records::State {
     JoinWithMasterTriggered,
     JoiningWithMaster,
     HasJoinedWithMaster,
-    IsNewWorkerDueToForkOfExistingDomain
+    IsNewWorkerDueToForkOfExistingDomain,
+    Starving
   };
   
   persistent LoadBalancingState  loadRebalancingState;
