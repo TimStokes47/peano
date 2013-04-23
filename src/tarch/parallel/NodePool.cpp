@@ -218,16 +218,18 @@ tarch::parallel::NodePool::JobRequestMessageAnswer tarch::parallel::NodePool::wa
   if ( answer.getNewMaster() == JobRequestMessageAnswerValues::Terminate ) {
   	logDebug("waitForJob()", "node received termination signal");
   	_isAlive = false;
-    logTraceInWith1Argument( "waitForJob()", false );
+    logTraceOutWith1Argument( "waitForJob()", "terminate" );
   	return JobRequestMessageAnswerValues::Terminate;
   }
   else {
     _masterNode = answer.getNewMaster();
     logTraceOutWith2Arguments( "waitForJob()", true, _masterNode );
     assertion1(_masterNode>=0, _masterNode);
+    logTraceOutWith1Argument( "waitForJob()", _masterNode );
     return _masterNode;
   }
   #else
+  logTraceOutWith1Argument( "waitForJob()", _masterNode );
   return _masterNode;
   #endif
 }
