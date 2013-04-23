@@ -10,7 +10,7 @@ peano::MappingSpecification::MappingSpecification(peano::MappingSpecification::M
   manipulates(manipulates_),
   multithreading(multithreading_),
   restartable(restartable_) {
-  assertion(!restartable || multithreading);
+  assertion1(!restartable || multithreading, toString());
 }
 
 
