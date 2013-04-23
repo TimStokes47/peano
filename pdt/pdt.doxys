@@ -25,6 +25,7 @@ To create a zip with all the sources, invoke
 \code
 tar -cvf pdt.tar src stdtemplates Manifest.txt pdt.doxys pdt.grammar --exclude=.svn
 gzip pdt.tar
+mv pdt.tar.gz ../tarballs
 \endcode
 
 */
