@@ -171,7 +171,7 @@ std::string tarch::parallel::MPIReturnValueToString( int result ) {
     case MPI_ERR_TRUNCATE: out << "MPI_ERR_TRUNCATE [message has been truncated by receiver]"; break;
     case MPI_ERR_OTHER:    out << "MPI_ERR_OTHER [other unknown error]"; break;
     case MPI_ERR_INTERN:   out << "MPI_ERR_INTERN [internal mpi error]"; break;
-    default: out << "unknown";
+    default: out << "unknown"; break;
   }
 
   delete[] string;
