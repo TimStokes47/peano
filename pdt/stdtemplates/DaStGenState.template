@@ -38,21 +38,6 @@ class __NAMESPACE__::records::State {
   persistent parallelise bool   isTraversalInverted;
   
   #ifdef Parallel
-  enum LoadBalancingState {
-    NoRebalancing,
-    ForkTriggered,
-    Forking,
-    JoinTriggered,
-    Joining,
-    JoinWithMasterTriggered,
-    JoiningWithMaster,
-    HasJoinedWithMaster,
-    IsNewWorkerDueToForkOfExistingDomain,
-    Starving
-  };
-  
-  persistent LoadBalancingState  loadRebalancingState;
-
   /**
    * There is no need to exchange this piece of data, as we it is set due to 
    * the repository state.
