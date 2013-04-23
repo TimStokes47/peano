@@ -61,7 +61,7 @@ class peano::grid::State {
     typedef StateData                                      Records;
 
   protected:
-    StateData _stateData;
+    StateData           _stateData;
 
     State();
     State(const PersistentState& argument);
@@ -73,12 +73,26 @@ class peano::grid::State {
 
     static const int IterationsInBetweenRebalancing;
 
+    enum LoadBalancingState {
+      NoRebalancing,
+      ForkTriggered,
+      Forking,
+      JoinTriggered,
+      Joining,
+      JoinWithMasterTriggered,
+      JoiningWithMaster,
+      HasJoinedWithMaster,
+      IsNewWorkerDueToForkOfExistingDomain
+    };
+
     #ifdef Parallel
     /*
      * So, this flag either holds all the joining ranks or all the
      * forking ranks.
      */
-    std::set<int>                _loadRebalancingRemoteRanks;
+    std::set<int>       _loadRebalancingRemoteRanks;
+    LoadBalancingState  _loadRebalancingState;
+    bool                _starves;
 
     /**
      * We may fork/join only every third iteration.
@@ -241,6 +255,7 @@ class peano::grid::State {
     void resetStateAtBeginOfIteration();
 
     /**
+     * Reset the state at the end of the iteration.
      *
      * !!! Forking
      *
@@ -273,38 +288,56 @@ class peano::grid::State {
      * This operation always exchanges all data, i.e. not only the attributes
      * marked with parallelise. Please note that the attribute
      * _loadRebalancingRemoteRanks is a local attribute to this class and not
-     * to the type modelled due to DaStGen. Hence, this container remains
-     * unaltered. In contrast, the load balancing flag is modelled by DaStGen
-     * and normally would be overwritten by the received state. As it is the
-     * only flag that is not overwritten by the master's data, we preserve it
-     * manually.
+     * to the type modeled due to DaStGen. Hence, this container remains
+     * unaltered.
+     *
+     * An exception to the anticipate-everything-from-master rule is the load
+     * balancing flag. It is modeled by DaStGen and normally would be
+     * overwritten by the received state. As it shall be worker-local and shall
+     * not be overwritten by the master's data, we restore it manually.
      */
     void receive(int source, int tag);
 
-     void joinWithRank( int rank );
-     void splitIntoRank( int rank );
-     bool isForkTriggered() const;
-     bool isForking() const;
+    /**
+     * Switch load balancing state to starving.
+     *
+     * Starving means that the code has triggered an erase somewhere in
+     * the code. As a result, subgrids are removed. It those subgrids are
+     * handled by a worker, it might happen that a whole worker disappears
+     * together with the grid. It runs out of grid entities. It starves.
+     */
+    void starve();
 
-     bool isInvolvedInJoinOrFork() const;
+    /**
+     * Notify state about join
+     *
+     * This operation is used both to notify the state that some subworkers
+     * shall join and notify the state that this worker joins into its master.
+     */
+    void joinWithRank( int rank );
+    void splitIntoRank( int rank );
+    bool isForkTriggered() const;
+    bool isForking() const;
 
-     bool isJoinWithMasterTriggered() const;
-     bool isJoiningWithMaster() const;
+    bool isInvolvedInJoinOrFork() const;
 
-     bool isJoiningWithWorker() const;
+    bool isJoinWithMasterTriggered() const;
+    bool isJoiningWithMaster() const;
 
-     bool isForkTriggeredForRank(int rank) const;
+    bool isJoiningWithWorker() const;
 
-     bool isJoinTriggeredForRank(int rank) const;
+    bool isForkTriggeredForRank(int rank) const;
 
-     bool hasJoinedWithMaster() const;
+    bool isJoinTriggeredForRank(int rank) const;
 
-     bool isForkingRank(int rank) const;
-     bool isJoiningRank(int rank) const;
+    bool hasJoinedWithMaster() const;
 
-     bool isNewWorkerDueToForkOfExistingDomain() const;
+    bool isForkingRank(int rank) const;
+    bool isJoiningRank(int rank) const;
 
-     void setIsNewWorkerDueToForkOfExistingDomain(bool value);
+    bool isNewWorkerDueToForkOfExistingDomain() const;
+
+    void setIsNewWorkerDueToForkOfExistingDomain(bool value);
 
     std::set<int> getForkingOrJoiningOrTriggeredForRebalancingRanks() const;
 
@@ -349,14 +382,7 @@ class peano::grid::State {
      * responsibility for a new subpartition.
      */
     void restart();
-    #else
-    bool isInvolvedInJoinOrFork() const { return false; }
-    
-    void restart();
-    #endif
 
-
-    #ifdef Parallel
     /**
      * Merge with worker state
      *
@@ -370,6 +396,10 @@ class peano::grid::State {
      *   merged into the master state and no merges are pending.
      */
     void mergeWithWorkerState(const peano::grid::State<StateData>& workerState);
+    #else
+    bool isInvolvedInJoinOrFork() const { return false; }
+
+    void restart();
     #endif
 };
 
