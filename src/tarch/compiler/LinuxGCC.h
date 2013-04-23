@@ -39,7 +39,9 @@
  */
 //#define CompilerICC
 
+// @todo wieder raus
 //#define CompilerHasSSE
+//#define VectorisationAlignment 16
 
 
 /**
@@ -59,7 +61,8 @@
 #define CompilerHasUTSName
 
 
-//#define CompilerHasTimespec
+#define CompilerHasTimespec
+
 
 /**
  * Some compiler/MPI combinations define the constant

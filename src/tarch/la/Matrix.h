@@ -18,6 +18,8 @@ namespace tarch {
 #include "tarch/la/MatrixMatrixOperations.h"
 #include "tarch/la/MatrixScalarOperations.h"
 
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
 
 #include <string>
 
@@ -32,6 +34,7 @@ class tarch::la::Matrix {
     /**
      * Values of the matrix components.
      */
+//    Scalar _values[Rows*Cols] __attribute__((aligned(VectorisationAlignment)));
     Scalar _values[Rows*Cols];
 
   public:

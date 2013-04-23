@@ -84,15 +84,20 @@
 
 /**
  * Switch on manual alignment of vectors
- * 
- * If this flag is switched on, you have to specify the value 
- * VectorisationAlignment which is usually 16 for SSE and 32 for 
- * AVX.
  */
-#ifndef noManualAlignment
-#define UseManualAlignment
-#define VectorisationAlignment 16 // SSE
-//#define VectorisationAlignment 32 // AVX
+// @todo raus
+#define noUseManualAlignment
+
+#ifdef noUseManualAlignment
+  #if defined(VectorisationAlignment)
+    #warning Specified VectorisationAlignment though manual alignment was switched off due to -DnoUseManualAlignment
+  #endif
+#elif !defined(VectorisationAlignment)
+  #warning No alignment specified by compiler though UseManualAlignment is switched on
+#endif
+
+#if defined(CompilerHasSSE) && defined(noUseManualAlignment)
+  #warning Code is trying to use SSE without manual alignment of data structures
 #endif
 
 

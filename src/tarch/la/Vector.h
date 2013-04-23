@@ -19,10 +19,14 @@ namespace tarch {
 #include "tarch/la/VectorSlice.h"
 
 
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
+
 
 template<int Size, typename Scalar>
 class tarch::la::Vector {
   private:
+//    Scalar _values[Size] __attribute__((aligned(VectorisationAlignment)));
     Scalar _values[Size];
 
   public:

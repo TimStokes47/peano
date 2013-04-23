@@ -39,7 +39,12 @@
  */
 #define CompilerICC
 
+
+/**
+ * Enable SSE vectorisation with a 16 bytes alignment
+ */
 #define CompilerHasSSE
+#define VectorisationAlignment 16
 
 
 /**

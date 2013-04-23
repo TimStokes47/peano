@@ -14,10 +14,11 @@
  
  !!! Recreate the Peano zip
  
- To create a copy of the code, call
+ To create a tarball of the code, call
  \code
   tar -cvf peano.tar . --exclude=.svn
   gzip peano.tar
+  mv peano.tar.gz ../tarballs
  \endcode
  within our sources directory.
 
