@@ -370,6 +370,32 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     void waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages(const std::map<int,int>&  statistics);
 
+    /**
+     * Switches receive and deploy buffer between two iterations.
+     *
+     * This method switches receive and deploy buffer for heap data
+     * exchanged between neighbours. This happens between two iterations
+     * in which heap data is exchanged and results in a situation where
+     * the former receive buffer is the deploy buffer afterwards and vice
+     * versa.
+     *
+     * Due to the polling mechanism in receiveDanglingMessages(...) it
+     * might happen that the receive buffer before the switch contains
+     * messages which belong to the following iteration, since a
+     * neighbouring rank may already be an iteration ahead. These
+     * messages need to reside in the new receive buffer (i.e. the
+     * former deploy buffer). Thus, after switching both buffers the
+     * information of the statistics map is used to copy all messages
+     * that do not belong to the previous iteration to the new receive
+     * buffer.
+     *
+     * @param statistics This map contains the number of messages that
+     * where sent to every neighbouring rank. That means the key for the
+     * map is a neighbouring rank and the according value is the number
+     * of messages sent to this rank in the last grid iteration. If a
+     * key (i.e. a rank) does not exist in this map, this means it is
+     * either no neighbouring rank or no messages have been sent to it.
+     */
     void switchReceiveAndDeployBuffer(std::map<int,int>  statistics);
 
     /**
