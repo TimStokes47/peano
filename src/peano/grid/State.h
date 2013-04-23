@@ -305,6 +305,11 @@ class peano::grid::State {
      * the code. As a result, subgrids are removed. It those subgrids are
      * handled by a worker, it might happen that a whole worker disappears
      * together with the grid. It runs out of grid entities. It starves.
+     *
+     * If we call starve, we finish all the ings such as refining, but quit
+     * afterwards.
+     * 
+     * @image html starve.png
      */
     void starve();
 

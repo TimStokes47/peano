@@ -210,7 +210,7 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
      * @see _verticesFromMaster
      */
     void receiveCellAndVerticesFromMaster(
-      const State&                                 state
+      State&  state
     );
 
     /**

@@ -144,6 +144,31 @@ class peano::grid::nodes::Node {
       Vertex                         fineGridVertices[FOUR_POWER_D],
       const SingleLevelEnumerator&   fineGridVerticesEnumerator
     ) const;
+
+    /**
+     * Is Remote Rank Starving
+     *
+     * If Peano switches an erase-triggered into erase somewhere, this erase
+     * propagates along the spacetree and removes whole subparts of the tree.
+     * In the example below, an erase on the green vertex removes two grid
+     * levels immeditely.
+     *
+     * @image html ../starve.png
+     *
+     * If some of the removed subtrees are deployed to different ranks, these
+     * ranks run out of cells in one step. They starve. We identify this case
+     * on the worker first. As a result, we tell the node to continue once
+     * more (finish another fork or join, e.g.). When the worker returns, it
+     * basically doesn't have a grid anymore, and we remove it from the worker
+     * list.
+     *
+     * The counterpart is the root node, where we also identify a starving
+     * process, inherit the starve down in the tree, and continue.
+     */
+    bool remoteRankIsStarving(
+      Vertex*                               coarseGridVertices,
+      const peano::grid::VertexEnumerator&  coarseGridVerticesEnumerator
+    ) const;
     #endif
 
     /**

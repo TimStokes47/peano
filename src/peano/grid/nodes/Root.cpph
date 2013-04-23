@@ -225,7 +225,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 #ifdef Parallel
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::receiveCellAndVerticesFromMaster(
-  const State&                                 state
+  State&  state
 ) {
   logTraceIn( "receiveCellAndVerticesFromMaster(...)" );
 
@@ -242,7 +242,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       coarseVertexFromMaster[iScalar].receive(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
       logDebug(
         "receiveCellAndVerticesFromMaster(...)",
-        "received vertex " << coarseVertexFromMaster[iScalar].toString() << " from master and stored it in _masterVertex " << iScalar
+        "received vertex " << coarseVertexFromMaster[iScalar].toString() << " from master and stored it in coarseVertexFromMaster " << iScalar
       );
     }
 
@@ -253,13 +253,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       logDebug(
         "receiveCellAndVerticesFromMaster(...)",
         "received vertex " << _masterVertices[iScalar].toString() << " from master and stored it in _masterVertex " << iScalar
-      );
-
-      // Diesen Fall habe ich mir noch nicht ueberlegt -> der geht aber genau schief, d.h. wir haben ihn jetzt
-      // vermutlich muss dann einfach die Adjazenzliste lokal so gesetzt werden, dass kein Master dabei ist
-      assertion1(
-        !_masterVertices[iScalar].isHangingNode(),
-        _masterVertices[iScalar].toString()
       );
 
       _haveMergedMasterVertex[iScalar] = false;
@@ -277,6 +270,18 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       _coarseGridCell,
       _positionOfRootCellRelativeToCoarserCellOnMaster
     );
+
+    if (Base::remoteRankIsStarving(coarseVertexFromMaster,getCoarseGridEnumeratorForLocalData())) {
+      logInfo(
+        "receiveCellAndVerticesFromMaster(...)",
+        "this rank is starving: "
+        << _coarseGridVertices[ getCoarseGridEnumeratorForLocalData()(0) ].toString() << ", "
+        << _coarseGridVertices[ getCoarseGridEnumeratorForLocalData()(1) ].toString() << ", "
+        << _coarseGridVertices[ getCoarseGridEnumeratorForLocalData()(2) ].toString() << ", "
+        << _coarseGridVertices[ getCoarseGridEnumeratorForLocalData()(3) ].toString()
+      );
+      state.starve();
+    }
 
     tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
   }

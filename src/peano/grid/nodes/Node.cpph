@@ -113,6 +113,41 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   logTraceOut( "makeCellRemoteCell(...)" );
 }
+
+
+template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
+bool peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::remoteRankIsStarving(
+  Vertex*                               coarseGridVertices,
+  const peano::grid::VertexEnumerator&  coarseGridVerticesEnumerator
+) const {
+  logTraceIn( "remoteRankIsStarving(...)" );
+
+  bool result =
+    !tarch::parallel::Node::getInstance().isGlobalMaster()
+    &&
+    tarch::parallel::NodePool::getInstance().getMasterRank()!=tarch::parallel::Node::getGlobalMasterRank();
+
+  result &= peano::grid::aspects::VertexStateAnalysis::doesNoVertexCarryRefinementFlag(
+    coarseGridVertices,
+    coarseGridVerticesEnumerator,
+    Vertex::Records::Refined
+  );
+
+  result &= peano::grid::aspects::VertexStateAnalysis::doesNoVertexCarryRefinementFlag(
+    coarseGridVertices,
+    coarseGridVerticesEnumerator,
+    Vertex::Records::EraseTriggered
+  );
+
+  result &= peano::grid::aspects::VertexStateAnalysis::doesNoVertexCarryRefinementFlag(
+    coarseGridVertices,
+    coarseGridVerticesEnumerator,
+    Vertex::Records::Refining
+  );
+
+  logTraceOutWith1Argument( "remoteRankIsStarving(...)", result );
+  return result;
+}
 #endif
 
 
@@ -247,6 +282,16 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if (
+    fineGridCell.isRemote(state,false,false) &&
+    !coarseGridCell.isRemote(state,false,true) &&
+    remoteRankIsStarving(coarseGridVertices,coarseGridVerticesEnumerator)
+  ) {
+    // @todo evtl. raus
+    logInfo( "updateCellsParallelStateBeforeStore(...)", "worker " << fineGridCell.getRankOfRemoteNode() << " is starving" );
+    peano::parallel::loadbalancing::Oracle::getInstance().removeWorker(fineGridCell.getRankOfRemoteNode());
+  }
+
+  if (
     fineGridCell.isRemote(state,false,true) &&
     state.isJoiningRank(fineGridCell.getRankOfRemoteNode())
   ) {
@@ -275,11 +320,17 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
     const int currentWorker = fineGridCell.getRankOfRemoteNode();
     peano::parallel::messages::LoadBalancingMessage loadBalancingMessage;
+
+    const bool isStarvingWorker = remoteRankIsStarving(
+      coarseGridVertices,
+      coarseGridVerticesEnumerator
+    );
+
     loadBalancingMessage.setLoadBalancingFlag(
       peano::parallel::loadbalancing::Oracle::getInstance().getCommandForWorker(
         currentWorker,
-        state.mayForkDueToLoadBalancing(),
-        state.mayJoinDueToLoadBalancing() && !fineGridCell.thisSubtreeHoldsWorker()
+        state.mayForkDueToLoadBalancing() && !isStarvingWorker,
+        state.mayJoinDueToLoadBalancing() && !fineGridCell.thisSubtreeHoldsWorker() && !isStarvingWorker
       )
     );
 
