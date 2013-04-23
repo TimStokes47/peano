@@ -40,7 +40,7 @@ class __NAMESPACE__::records::Cell {
    * computational domain. If the computational domain boundary cuts the cell, 
    * it is outside. 
    */
-  persistent packed bool  isInside;
+  persistent parallelise packed bool  isInside;
 
 
   /**
