@@ -241,7 +241,7 @@ bool tarch::la::allSmaller (
   const Scalar                tolerance 
 ) {
   for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - cmp >= tolerance ) {
+    if ( lhs(i) - cmp >= -tolerance ) {
       return false;
     }
   }
@@ -256,7 +256,7 @@ bool tarch::la::allSmallerEquals (
   const Scalar                tolerance 
 ) {
   for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - cmp > -tolerance ) {
+    if ( lhs(i) - cmp > tolerance ) {
       return false;
     }
   }
