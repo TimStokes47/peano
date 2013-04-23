@@ -65,7 +65,11 @@ void peano::parallel::Partitioner::reserveNodes() {
   #ifdef Parallel
   assertionEquals( _ranks.size(), 0 );
   assertion(peano::parallel::messages::ForkMessage::Datatype!=0);
-  assertion(peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()>=peano::parallel::loadbalancing::ForkOnce);
+  assertion(
+    (peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()>=peano::parallel::loadbalancing::ForkOnce)
+    ||
+    tarch::parallel::Node::getInstance().isGlobalMaster()
+  );
   #endif
 
   const int MaxRemoteRanksToBook =
