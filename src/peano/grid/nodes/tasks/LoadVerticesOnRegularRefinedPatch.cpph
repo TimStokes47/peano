@@ -332,7 +332,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         _coarsestCellsOffset,
         _coarsestLevelOfThisTask
       );
-      assertionEquals10(
+      assertionEquals14(
         _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration(),
         _regularGridContainer.getVertexEnumerator(0).getCellFlags()-currentLevel,
         _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
@@ -344,7 +344,11 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         CaseLoadPersistentVertex,
         CaseTakeFromTempStacks,
         _regularGridContainer.getCell(0,_regularGridContainer.getVertexEnumerator(0).lineariseCellIndex(0)).toString(),
-        toString( _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration() )
+        toString( _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration() ),
+        _regularGridContainer.getVertex(0,0).toString(),
+        _regularGridContainer.getVertex(0,1).toString(),
+        _regularGridContainer.getVertex(0,2).toString(),
+        _regularGridContainer.getVertex(0,3).toString()
       );
       if (_regularGridContainer.getVertexEnumerator(0).getCellFlags()-currentLevel==0) {
         assertion5(

@@ -450,6 +450,84 @@
       assertionTriggersExit; \
     }
 
+
+    #define assertionEquals11(lhs,rhs,larg,rarg,three,four,five,six,seven,eight,nine,ten,p11) if ((lhs)!=(rhs)) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #lhs << "==" #rhs << std::endl << #lhs << "=" << lhs << "\t" << #rhs << "=" << rhs << std::endl; \
+      std::cerr << "1st argument " << #larg << ": " << larg << std::endl; \
+      std::cerr << "2nd argument " << #rarg << ": " << rarg << std::endl; \
+      std::cerr << "3rd argument " << #three << ": " << three << std::endl; \
+      std::cerr << "4th argument " << #four << ": " << four << std::endl; \
+      std::cerr << "5th argument " << #five << ": " << five << std::endl; \
+      std::cerr << "6th argument " << #six << ": " << six << std::endl; \
+      std::cerr << "7th argument " << #seven << ": " << seven << std::endl; \
+      std::cerr << "8th argument " << #eight << ": " << eight << std::endl; \
+      std::cerr << "9th argument " << #nine << ": " << nine << std::endl; \
+      std::cerr << "10th argument " << #ten << ": " << ten << std::endl; \
+      std::cerr << "11th argument " << #p11<< ": " << ten << std::endl; \
+      assertionTriggersExit; \
+    }
+
+
+    #define assertionEquals12(lhs,rhs,larg,rarg,three,four,five,six,seven,eight,nine,ten,p11,p12) if ((lhs)!=(rhs)) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #lhs << "==" #rhs << std::endl << #lhs << "=" << lhs << "\t" << #rhs << "=" << rhs << std::endl; \
+      std::cerr << "1st argument " << #larg << ": " << larg << std::endl; \
+      std::cerr << "2nd argument " << #rarg << ": " << rarg << std::endl; \
+      std::cerr << "3rd argument " << #three << ": " << three << std::endl; \
+      std::cerr << "4th argument " << #four << ": " << four << std::endl; \
+      std::cerr << "5th argument " << #five << ": " << five << std::endl; \
+      std::cerr << "6th argument " << #six << ": " << six << std::endl; \
+      std::cerr << "7th argument " << #seven << ": " << seven << std::endl; \
+      std::cerr << "8th argument " << #eight << ": " << eight << std::endl; \
+      std::cerr << "9th argument " << #nine << ": " << nine << std::endl; \
+      std::cerr << "10th argument " << #ten << ": " << ten << std::endl; \
+      std::cerr << "11th argument " << #p11<< ": " << ten << std::endl; \
+      std::cerr << "12th argument " << #p12<< ": " << ten << std::endl; \
+      assertionTriggersExit; \
+    }
+
+
+    #define assertionEquals13(lhs,rhs,larg,rarg,three,four,five,six,seven,eight,nine,ten,p11,p12,p13) if ((lhs)!=(rhs)) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #lhs << "==" #rhs << std::endl << #lhs << "=" << lhs << "\t" << #rhs << "=" << rhs << std::endl; \
+      std::cerr << "1st argument " << #larg << ": " << larg << std::endl; \
+      std::cerr << "2nd argument " << #rarg << ": " << rarg << std::endl; \
+      std::cerr << "3rd argument " << #three << ": " << three << std::endl; \
+      std::cerr << "4th argument " << #four << ": " << four << std::endl; \
+      std::cerr << "5th argument " << #five << ": " << five << std::endl; \
+      std::cerr << "6th argument " << #six << ": " << six << std::endl; \
+      std::cerr << "7th argument " << #seven << ": " << seven << std::endl; \
+      std::cerr << "8th argument " << #eight << ": " << eight << std::endl; \
+      std::cerr << "9th argument " << #nine << ": " << nine << std::endl; \
+      std::cerr << "10th argument " << #ten << ": " << ten << std::endl; \
+      std::cerr << "11th argument " << #p11<< ": " << ten << std::endl; \
+      std::cerr << "12th argument " << #p12<< ": " << ten << std::endl; \
+      std::cerr << "13th argument " << #p13<< ": " << ten << std::endl; \
+      assertionTriggersExit; \
+    }
+
+
+    #define assertionEquals14(lhs,rhs,larg,rarg,three,four,five,six,seven,eight,nine,ten,p11,p12,p13,p14) if ((lhs)!=(rhs)) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #lhs << "==" #rhs << std::endl << #lhs << "=" << lhs << "\t" << #rhs << "=" << rhs << std::endl; \
+      std::cerr << "1st argument " << #larg << ": " << larg << std::endl; \
+      std::cerr << "2nd argument " << #rarg << ": " << rarg << std::endl; \
+      std::cerr << "3rd argument " << #three << ": " << three << std::endl; \
+      std::cerr << "4th argument " << #four << ": " << four << std::endl; \
+      std::cerr << "5th argument " << #five << ": " << five << std::endl; \
+      std::cerr << "6th argument " << #six << ": " << six << std::endl; \
+      std::cerr << "7th argument " << #seven << ": " << seven << std::endl; \
+      std::cerr << "8th argument " << #eight << ": " << eight << std::endl; \
+      std::cerr << "9th argument " << #nine << ": " << nine << std::endl; \
+      std::cerr << "10th argument " << #ten << ": " << ten << std::endl; \
+      std::cerr << "11th argument " << #p11<< ": " << ten << std::endl; \
+      std::cerr << "12th argument " << #p12<< ": " << ten << std::endl; \
+      std::cerr << "13th argument " << #p13<< ": " << ten << std::endl; \
+      std::cerr << "14th argument " << #p14<< ": " << ten << std::endl; \
+      assertionTriggersExit; \
+    }
+
     /**
      * @see ASSERTION_EXIT_CODE
      *
@@ -759,6 +837,10 @@
     #define assertionNumericalEquals8(lhs,rhs,a,b,c,d,e,f,g,h)
     #define assertionNumericalEquals9(lhs,rhs,a,b,c,d,e,f,g,h,i)
     #define assertionNumericalEquals10(lhs,rhs,a,b,c,d,e,f,g,h,i,j)
+    #define assertionNumericalEquals11(lhs,rhs,a,b,c,d,e,f,g,h,i,j,k)
+    #define assertionNumericalEquals12(lhs,rhs,a,b,c,d,e,f,g,h,i,j,k,l)
+    #define assertionNumericalEquals13(lhs,rhs,a,b,c,d,e,f,g,h,i,j,k,l,m)
+    #define assertionNumericalEquals14(lhs,rhs,a,b,c,d,e,f,g,h,i,j,k,l,m,n)
     #define assertionVectorNumericalEquals(lhs,rhs)
     #define assertionVectorNumericalEquals1(lhs,rhs,param0)
     #define assertionVectorNumericalEquals2(lhs,rhs,param0,param1)
