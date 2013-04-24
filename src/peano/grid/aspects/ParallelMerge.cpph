@@ -13,6 +13,14 @@ void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
     masterVertex._vertexData.getRefinementControl() == Vertex::Records::Erasing &&
     masterVertex.isAdjacentToDomainOf( tarch::parallel::NodePool::getInstance().getMasterRank() )
   ) {
+    assertion2( !localVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
+    assertion2(
+      (localVertex._vertexData.getRefinementControl() == Vertex::Records::Refined)
+      ||
+      (localVertex._vertexData.getRefinementControl() == Vertex::Records::Erasing),
+      masterVertex.toString(), localVertex.toString()
+    );
+
     localVertex._vertexData.setRefinementControl( Vertex::Records::Erasing );
 
     // @todo bitte wieder raus
