@@ -135,7 +135,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
     }
   }
 
-  if (_eventHandle.touchVertexLastTimeSpecification().manipulates != peano::MappingSpecification::OnlyLeaves) {
+  if (_eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop) {
     const int                                level            = _treeDepth;
     const tarch::la::Vector<DIMENSIONS,int>  NumberOfVertices = _gridContainer.getNumberOfVertices(level);
     for (int i=0; i<tarch::la::volume(NumberOfVertices); i++) {
@@ -146,7 +146,11 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
     }
   }
 
-  if (_eventHandle.touchVertexLastTimeSpecification().manipulates != peano::MappingSpecification::WholeTree) {
+  if (
+    _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::OnlyLeaves
+    ||
+    _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop
+  ) {
     for (int level=_treeDepth-1; level>=1; level--) {
       const tarch::la::Vector<DIMENSIONS,int> NumberOfVertices      = _gridContainer.getNumberOfVertices(level);
       for (int i=0; i<tarch::la::volume(NumberOfVertices); i++) {
