@@ -136,12 +136,14 @@ void tarch::parallel::NodePool::setStrategy(NodePoolStrategy* strategy) {
 
 
 void tarch::parallel::NodePool::waitForAllNodesToBecomeIdle() {
+  #ifdef Parallel
   assertion1( Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
   assertion1( _strategy!=0, Node::getInstance().getRank() );
 
   while ( _strategy->getNumberOfIdleNodes() < Node::getInstance().getNumberOfNodes()-1) {
     replyToJobRequestMessages();
   }
+  #endif
 }
 
 
