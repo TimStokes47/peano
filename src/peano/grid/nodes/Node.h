@@ -472,6 +472,39 @@ class peano::grid::nodes::Node {
       const SingleLevelEnumerator&              coarseGridVerticesEnumerator,
       const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
     ) const;
+
+    /**
+     * Get flag for a cell identified by verticesEnumerator.
+     *
+     * This operation runs throught the adjacent vertices and sets the right
+     * height. See SingleLevelEnumerator::updateAdjacentCellsFlag().
+     *
+     * This operation has to be called before traverse() is invoked on a child
+     * cell. The load operation might trigger some immediate refinements in a
+     * neighbouring cell (see documentation of
+     * peano::grid::nodes::loops::StoreVertexLoopBody::invalidateCoarseGridTreeHeightAttributesIfRefined())
+     * and this refinement might change the tree information of this cell. So,
+     * updating the flags after the load is not an option - it has to happen
+     * before the descend.
+     *
+     * !!! Parallelisation
+     *
+     * If the oracle of the local node is told to fork, we always invalidate
+     * the enumerator's optimisation flags, as this command means that we
+     * should try to fork and not do any static optimisation. So, when a fork
+     * has failed on one node, this node stops to fork on this node.
+     *
+     * @param vertices in   Vertices adjacent to current cell identified by
+     *                      enumerator
+     * @param verticesEnumerator inout The enumerator's spatial data is not
+     *                      modified, but the static tree properties are
+     *                      overwritten
+     */
+    void updateRefinedEnumeratorsCellFlag(
+      const State&            state,
+      const Vertex            vertices[FOUR_POWER_D],
+      SingleLevelEnumerator&  verticesEnumerator
+    ) const;
   public:
 };
 

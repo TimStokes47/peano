@@ -152,7 +152,7 @@ peano::grid::SingleElementVertexEnumerator  peano::grid::nodes::Root<Vertex,Cell
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 peano::grid::SingleLevelEnumerator peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::getLevelOneGridEnumeratorForLocalData() const {
-  return SingleLevelEnumerator(_sizeOfEnclosingCoarseCell,_offsetOfEnclosingCoarseCell,_levelOfEnclosingCell);
+  return peano::grid::SingleLevelEnumerator(_sizeOfEnclosingCoarseCell,_offsetOfEnclosingCoarseCell,_levelOfEnclosingCell);
 }
 
 
@@ -528,15 +528,25 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       Cell& currentCell = fineGridCells[SingleLevelEnumerator::lineariseCellIndex( currentCellTraversal )];
       logDebug( "traverse(State)", "traverse cell " << currentCell.toString() << " at " << currentCellTraversal );
       fineGridEnumerator.setOffset( currentCellTraversal );
-      if ( currentCell.isRefined() ) {
-        _refinedNode.traverse( state, currentCell, fineGridVertices, fineGridEnumerator, _coarseGridCell, _coarseGridVertices, coarseGridEnumerator, currentCellTraversal );
-      }
-      else if ( currentCell.isLeaf() ) {
-        _leafNode.traverse( state, currentCell, fineGridVertices, fineGridEnumerator, _coarseGridCell, _coarseGridVertices, coarseGridEnumerator, currentCellTraversal );
-      }
-      else {
-        assertion1(false,currentCell);
-      }
+
+      updateRefinedEnumeratorsCellFlag(
+        state,
+        fineGridVertices,
+        fineGridEnumerator
+      );
+
+
+      _refinedNode.descendIntoASingleCell(
+        state,
+        currentCell,
+        fineGridVertices,
+        fineGridEnumerator,
+        _coarseGridCell,
+        _coarseGridVertices,
+        coarseGridEnumerator,
+        currentCellTraversal
+      );
+
       traverseLoopCounter++;
     } while (traverseLoopCounter < loadLoopCounter);
 

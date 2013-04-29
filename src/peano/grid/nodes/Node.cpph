@@ -929,3 +929,48 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   logTraceOutWith2Arguments( "updateCellsGeometryInformationAfterLoad(...)", state.toString(), fineGridCell.toString() );
 }
+
+
+template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
+void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::updateRefinedEnumeratorsCellFlag(
+  const State&            state,
+  const Vertex            vertices[FOUR_POWER_D],
+  SingleLevelEnumerator&  verticesEnumerator
+) const {
+  logTraceInWith1Argument( "updateRefinedEnumeratorsCellFlag(...)", verticesEnumerator.toString() );
+
+  peano::grid::CellFlags adjacencyFlag = peano::grid::Undefined;
+
+  #ifdef Parallel
+  if (
+    peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()!=peano::parallel::loadbalancing::Continue
+    ||
+    state.isInvolvedInJoinOrFork()
+  ) {
+    adjacencyFlag = peano::grid::NotStationary;
+  }
+  else {
+  #endif
+
+  dfor2(k)
+    const peano::grid::CellFlags vertexFlag = vertices[verticesEnumerator(k)].getAdjacentCellsHeightOfPreviousIteration();
+
+    if (adjacencyFlag!=vertexFlag) {
+      logDebug(
+        "updateRefinedEnumeratorsCellFlag(...)",
+        "updated adjacency flag due to " << vertices[verticesEnumerator(k)].toString() <<
+        " to minimum of " << adjacencyFlag << " and " << vertexFlag
+      );
+    }
+
+    adjacencyFlag = peano::grid::min(adjacencyFlag, vertexFlag);
+  enddforx
+
+  #ifdef Parallel
+  }
+  #endif
+
+  verticesEnumerator.updateAdjacentCellsFlag( adjacencyFlag );
+
+  logTraceOutWith1Argument( "updateRefinedEnumeratorsCellFlag(...)", verticesEnumerator.toString() );
+}
