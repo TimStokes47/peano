@@ -901,10 +901,6 @@ peano::heap::Heap<Data>::SendReceiveTask::SendReceiveTask():
 
 template <class Data>
 void peano::heap::Heap<Data>::switchReceiveAndDeployBuffer(std::map<int,int>  sendStatistics) {
-    //    @todo Doku
-    // annahme: Durch releaseReceivedNeighbourMessagesRequests sind alle MPIRequest handles ok -> wir duerfen kopieren
-
-
   assertionEquals(getSizeOfDeployBuffer(),0);
 
   int sumOfSentMessages = 0;
@@ -915,7 +911,7 @@ void peano::heap::Heap<Data>::switchReceiveAndDeployBuffer(std::map<int,int>  se
   _currentReceiveBuffer = 1-_currentReceiveBuffer;
   assertionEquals( _neighbourDataReceiveTasks[_currentReceiveBuffer].size(),0 );
 
-  if (sumOfSentMessages < static_cast<int>(_neighbourDataReceiveTasks[_currentReceiveBuffer].size())) {
+  if (sumOfSentMessages < static_cast<int>(_neighbourDataReceiveTasks[1-_currentReceiveBuffer].size())) {
     logDebug( "switchReceiveAndDeployBuffer(map)", "we have to copy back messages from the deploy buffer to the receive buffer" );
 
     for (
@@ -938,7 +934,7 @@ void peano::heap::Heap<Data>::switchReceiveAndDeployBuffer(std::map<int,int>  se
     }
   }
 
-  assertionEquals( static_cast<int>(_neighbourDataReceiveTasks[_currentReceiveBuffer].size()), sumOfSentMessages);
+  assertionEquals( static_cast<int>(_neighbourDataReceiveTasks[1-_currentReceiveBuffer].size()), sumOfSentMessages);
 }
 
 
