@@ -73,6 +73,7 @@ peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequence(
 }
 
 
+template <class Cell>
 peano::datatraversal::ActionSetTraversal
 peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(
   const Cell& cell, bool isTraversalInverted, bool parallelIfPossible
