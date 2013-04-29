@@ -44,11 +44,4 @@ namespace peano {
    */
   int initSharedMemoryEnvironment();
   void shutdownSharedMemoryEnvironment();
-
-
-
-  /** system calls for hybrid MD-LB simulations with MarDyn and
-   *  Lattice Boltzmann-in-Peano simulations.
-   */
-  void initMolecularDynamicsCoupling(int* argc, char*** argv);
 }
