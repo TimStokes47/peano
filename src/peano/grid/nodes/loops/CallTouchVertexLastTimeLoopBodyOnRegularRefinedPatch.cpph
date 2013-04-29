@@ -85,7 +85,7 @@ void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedP
       );
     }
 
-     performVertexTransition(currentVertex,_level);
+    performVertexTransition(currentVertex,_level);
   }
 
   logTraceOutWith1Argument( "operator()(...)", currentVertex.toString() );

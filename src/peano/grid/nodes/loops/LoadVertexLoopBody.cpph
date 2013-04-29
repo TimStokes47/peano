@@ -516,12 +516,14 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     << ", CaseTakeFromTempStacks=" <<  CaseTakeFromTempStacks
   );
 
+  #ifdef Debug
   assertion1(
     !(CaseLoadPersistentVertex || CaseLoadOfDeleteVertex) ||
     !StaticGridWithParallelBoundary ||
     _fineGridVertices[positionInArray].getRefinementControl() != Vertex::Records::EraseTriggered,
     _fineGridVertices[positionInArray].toString()
   );
+  #endif
 
   if ( CaseLoadPersistentVertex || CaseLoadOfDeleteVertex ) {
     loadVertexFromInputStream(positionInArray, action._cartesianPosition);
