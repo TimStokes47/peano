@@ -124,8 +124,8 @@ peano::heap::Heap<Data>& peano::heap::Heap<Data>::getInstance() {
 
 
 template <class Data>
-int peano::heap::Heap<Data>::createData() {
-  logTraceIn( "createData()" );
+int peano::heap::Heap<Data>::createData(int numberOfEntries) {
+  logTraceInWith1Argument( "createData()", numberOfEntries );
 
   int index;
   if (_freedHeapIndices.empty()) {
@@ -138,7 +138,7 @@ int peano::heap::Heap<Data>::createData() {
   }
 
   assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry does exist already.");
-  _heapData.insert( typename HeapContainer::value_type(index,new std::vector<Data>()) );
+  _heapData.insert( typename HeapContainer::value_type(index,new std::vector<Data>(numberOfEntries)) );
 
   assertionMsg(_heapData.find(index) != _heapData.end(), "insertion of heap data not successful.");
   assertion(index >= 0);

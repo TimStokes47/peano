@@ -456,9 +456,13 @@ class peano::heap::Heap: public tarch::services::Service {
      * Creates new data on the heap and returns the
      * corresponding index.
      *
+     * @param numberOfEntries If you know a priori how many elements you'll
+     *        gonna store for this heap entry, use this constructor. You can
+     *        always add more elements later, but using this parameter should
+     *        be faster and leads to a lower memory fragmentation
      * @return The index return is always a non-negativ number.
      */
-    int createData();
+    int createData(int numberOfEntries=0);
 
     /**
      * Returns, if the given index is a known index and, thus,
