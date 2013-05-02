@@ -267,6 +267,15 @@ bool tarch::parallel::FCFSNodePoolStrategy::NodePoolListEntry::isIdle() const {
 
 
 bool tarch::parallel::FCFSNodePoolStrategy::NodePoolListEntry::operator<( const tarch::parallel::FCFSNodePoolStrategy::NodePoolListEntry& than ) const {
-  return isIdle() && !than.isIdle();
+  bool moveIdleToSmaller = isIdle() && !than.isIdle();
+
+  #if defined(Asserts) || defined(Debug)
+  bool orderRanks        = (isIdle()==than.isIdle()) && (_rank < than._rank);
+  #else
+  bool orderRanks = false;
+  #endif
+
+  return moveIdleToSmaller || orderRanks;
+
 }
 
