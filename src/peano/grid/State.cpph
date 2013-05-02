@@ -230,6 +230,8 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
     assertion(_loadRebalancingRemoteRanks.empty());
 
     _loadRebalancingState = HasJoinedWithMaster;
+
+    logInfo( "resetStateAtEndOfIteration()", "state is set to has-joined-with-master as rank starved: " << toString() );
   }
   else {
     switch (_loadRebalancingState) {
@@ -511,6 +513,9 @@ void peano::grid::State<StateData>::starve() {
 
   _iterationCounter = 0;
   _starves          = true;
+
+  // @todo Das sollte auf Debug
+  logInfo( "resetStateAtEndOfIteration()", "set state to starve: " << toString() );
 }
 
 
