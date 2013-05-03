@@ -260,6 +260,30 @@ class peano::parallel::loadbalancing::Oracle {
      * distributed before the domain change actually happens.
      */
     int getCoarsestRegularInnerAndOuterGridLevel() const;
+
+    /**
+     * Tells the oracle not to split
+     *
+     * This operation should be called if you wanna manually avoid that the
+     * local grid is split further in this traversal.
+     *
+     * !!! Starve process
+     *
+     * If a process is starving, we remove it from the local worker list in
+     * the very end. If the master of the starving process however were asked
+     * to split further, it might immediately rebook the worker which messes
+     * up the data consistency. This happens if
+     * - the master tells the worker that it will starve
+     * - the worker goes down (pretty fast, as there is no work to do there anymore)
+     * - the worker registers itself as idle at the node pool
+     * - the master meanwhile continues with its local partition
+     * - and books another worker
+     * - the node pool delivers the rank that starved before
+     *
+     * The master removes the node from its local list not before it ascends
+     * in the spacetree and this way, everything gets messed up.
+     */
+    void switchOffLocalSplitsInThisIteration();
 };
 
 

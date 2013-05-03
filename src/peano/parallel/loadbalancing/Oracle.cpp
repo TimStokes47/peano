@@ -264,6 +264,12 @@ void peano::parallel::loadbalancing::Oracle::forkFailed() {
 }
 
 
+void peano::parallel::loadbalancing::Oracle::switchOffLocalSplitsInThisIteration() {
+  assertion1( _startCommand==Continue || _startCommand>=ForkOnce, toString(_startCommand) );
+  _startCommand = Continue;
+}
+
+
 peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::Oracle::getCommandForWorker(
   int workerRank,
   bool forkIsAllowed,
