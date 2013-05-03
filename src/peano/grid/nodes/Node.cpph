@@ -326,12 +326,14 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       coarseGridVerticesEnumerator
     );
 
-    // @todo Wieder raus
     if (isStarvingWorker) {
+      // @todo Debug
       logInfo(
         "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()",
-        "startup worker " << currentWorker << " that will starve in this iteration"
+        "startup worker " << currentWorker << " that will starve in this iteration. First, switch off local load balancing."
       );
+
+      peano::parallel::loadbalancing::Oracle::getInstance().switchOffLocalSplitsInThisIteration();
     }
 
     loadBalancingMessage.setLoadBalancingFlag(
