@@ -62,8 +62,8 @@ void peano::parallel::loadbalancing::Oracle::addWorker(
   const tarch::la::Vector<DIMENSIONS,double>&  boundingBoxSize,
   int                                          level
 ) {
-  assertion( !workersListContainsRank(rank) );
-  assertion( level>=0 );
+  assertion4( !workersListContainsRank(rank), rank, boundingBoxOffset, boundingBoxSize, level );
+  assertion4( level>=0, rank, boundingBoxOffset, boundingBoxSize, level );
   _workers.push_back( Worker(rank, level, boundingBoxOffset, boundingBoxSize) );
   if (_startCommand>ForkOnce) {
     _startCommand = static_cast<LoadBalancingFlag>(_startCommand-1);
