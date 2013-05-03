@@ -271,7 +271,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       _positionOfRootCellRelativeToCoarserCellOnMaster
     );
 
-    if (Base::remoteRankIsStarving(coarseVertexFromMaster,getCoarseGridEnumeratorForLocalData())) {
+    if (Base::remoteRankIsStarving(coarseVertexFromMaster,getCoarseGridEnumeratorForReceivedData())) {
       logInfo(
         "receiveCellAndVerticesFromMaster(...)",
         "this rank is starving: "
