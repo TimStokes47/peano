@@ -60,6 +60,9 @@ void peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
   assertion3( localVertex.getRefinementControl()!=Vertex::Records::Refining,                                    localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
   assertion3( localVertex.getRefinementControl()!=Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing, localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
 
+  assertion3( neighbourVertex.getRefinementControl()!=Vertex::Records::Erasing , localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
+  assertion3( neighbourVertex.getRefinementControl()!=Vertex::Records::Refining, localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
+
   const bool OnlyNeighbourHasTriggeredRefinement =
     neighbourVertex._vertexData.getRefinementControl()==Vertex::Records::RefinementTriggered &&
     localVertex._vertexData.getRefinementControl()==Vertex::Records::Unrefined;
