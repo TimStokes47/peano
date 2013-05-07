@@ -543,7 +543,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     for (int d=0; d<DIMENSIONS; d++) {
       assertionEquals( descendingGridEnumerator[kScalar].getOffset()(d), k(d) );
     }
-    updateRefinedEnumeratorsCellFlag(state,descendingGridVertices,descendingGridEnumerator[kScalar]);
+    Base::updateRefinedEnumeratorsCellFlag(state,descendingGridVertices,descendingGridEnumerator[kScalar]);
     Cell&       currentCell              = descendingFineGridCells[kScalar];
 
     descendIntoASingleCell(
