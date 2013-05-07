@@ -10,10 +10,10 @@ void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
   const Vertex&  masterVertex
 ) {
   if (
-    masterVertex._vertexData.getRefinementControl() == Vertex::Records::Erasing &&
-    masterVertex.isAdjacentToDomainOf( tarch::parallel::NodePool::getInstance().getMasterRank() )
+    masterVertex._vertexData.getRefinementControl() == Vertex::Records::Erasing
+//    &&
+//    masterVertex.isAdjacentToDomainOf( tarch::parallel::NodePool::getInstance().getMasterRank() )
   ) {
-    assertion2( !localVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
     assertion2(
       (localVertex._vertexData.getRefinementControl() == Vertex::Records::Refined)
       ||
@@ -25,18 +25,19 @@ void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
 
     // @todo bitte wieder raus
     logInfo( "mergeWithVertexFromMaster(...)", "erase worker's top level vertex, as master is erasing a subtree: " << localVertex.toString() << " [@todo bitte wieder auf Debug umstellen]" );
+    assertionMsg( false, "Houston, wir haben ein Problem " ) ;
   }
+
+  #ifdef Debug // if we are not in debug mode, these values are not available.
+  assertionVectorNumericalEquals2( localVertex._vertexData.getX(), masterVertex._vertexData.getX(),     localVertex.toString(), masterVertex.toString() );
+  assertionEquals2( localVertex._vertexData.getLevel(),            masterVertex._vertexData.getLevel(), localVertex.toString(), masterVertex.toString() );
+  #endif
 
 
   // Diesen Fall habe ich mir noch nicht ueberlegt -> der geht aber genau schief, d.h. wir haben ihn jetzt
   // vermutlich muss dann einfach die Adjazenzliste lokal so gesetzt werden, dass kein Master dabei ist
-  assertion2(
-    !masterVertex.isHangingNode() ||
-    (localVertex.getRefinementControl()==Vertex::Records::Unrefined && !localVertex.isAdjacentToRemoteRank()),
-    masterVertex.toString(),
-    localVertex.toString()
-  );
-
+  assertion2( !localVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
+  assertion2( !masterVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
 }
 
 
@@ -59,9 +60,6 @@ void peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
   assertion3( localVertex.getRefinementControl()!=Vertex::Records::Erasing ,                                    localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
   assertion3( localVertex.getRefinementControl()!=Vertex::Records::Refining,                                    localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
   assertion3( localVertex.getRefinementControl()!=Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing, localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
-
-  assertion3( neighbourVertex.getRefinementControl()!=Vertex::Records::Erasing , localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
-  assertion3( neighbourVertex.getRefinementControl()!=Vertex::Records::Refining, localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
 
   const bool OnlyNeighbourHasTriggeredRefinement =
     neighbourVertex._vertexData.getRefinementControl()==Vertex::Records::RefinementTriggered &&
