@@ -522,12 +522,11 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       logDebug( "traverse(State)", "traverse cell " << currentCell.toString() << " at " << currentCellTraversal );
       fineGridEnumerator.setOffset( currentCellTraversal );
 
-      updateRefinedEnumeratorsCellFlag(
+      Base::updateRefinedEnumeratorsCellFlag(
         state,
         fineGridVertices,
         fineGridEnumerator
       );
-
 
       _refinedNode.descendIntoASingleCell(
         state,
