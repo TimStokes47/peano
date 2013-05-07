@@ -63,7 +63,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   #ifdef Asserts
   SingleLevelEnumerator coarseGridEnumerator( getCoarseGridEnumeratorForLocalData() );
   dfor2(k)
-    _coarseGridVertices[kScalar].setPosition( coarseGridEnumerator.getVertexPosition(k), coarseGridEnumerator.getLevel() );
+    _coarseGridVertices[ coarseGridEnumerator(kScalar) ].setPosition( coarseGridEnumerator.getVertexPosition(k), coarseGridEnumerator.getLevel() );
   enddforx
   #endif
 
@@ -303,49 +303,42 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     !tarch::parallel::Node::getInstance().isGlobalMaster() &&
     !state.isJoiningWithMaster()
   ) {
-    SingleElementVertexEnumerator levelOneEnumerator( getLevelOneGridEnumeratorForReceivedData() );
-
     if (currentLevelOneCell==tarch::la::Vector<DIMENSIONS,int>(1)) {
       Base::_eventHandle.mergeWithWorker(
         fineGridCell,
         _masterCell,
-        levelOneEnumerator.getCellCenter(),
-        levelOneEnumerator.getCellSize(),
-        levelOneEnumerator.getLevel()
+        getLevelOneGridEnumeratorForReceivedData().getCellCenter(),
+        getLevelOneGridEnumeratorForReceivedData().getCellSize(),
+        getLevelOneGridEnumeratorForReceivedData().getLevel()
       );
     }
 
     dfor2(i)
-      const tarch::la::Vector<DIMENSIONS,int> currentVertexInLevelOnePatch = i + currentLevelOneCell;
+      const tarch::la::Vector<DIMENSIONS,int> currentVertexInLocalLevelOnePatch = i + currentLevelOneCell;
       bool isAdjacentToCentralElement = true;
       for (int d=0; d<DIMENSIONS; d++) {
-        isAdjacentToCentralElement &= ( currentVertexInLevelOnePatch(d)==1 || currentVertexInLevelOnePatch(d)==2 );
+        isAdjacentToCentralElement &= ( currentVertexInLocalLevelOnePatch(d)==1 || currentVertexInLocalLevelOnePatch(d)==2 );
       }
       if (isAdjacentToCentralElement) {
-        const tarch::la::Vector<DIMENSIONS,int> currentVertexInReceivedVertexArray = currentVertexInLevelOnePatch - tarch::la::Vector<DIMENSIONS,int>(1);
-        const int  currentVertexsIndexInMasterVertexArray = peano::grid::SingleElementVertexEnumerator::lineariseVertexIndex(currentVertexInReceivedVertexArray);
-        if (!_haveMergedMasterVertex[ currentVertexsIndexInMasterVertexArray ]) {
-          _haveMergedMasterVertex[ currentVertexsIndexInMasterVertexArray ] = true;
+        const tarch::la::Vector<DIMENSIONS,int> currentVertexInReceivedVertexArray = currentVertexInLocalLevelOnePatch - tarch::la::Vector<DIMENSIONS,int>(1);
 
-          const int  currentVertexIndexInLevelOnePatch = SingleLevelEnumerator::lineariseCellIndex(currentVertexInLevelOnePatch);
+        assertion( tarch::la::allGreaterEquals(currentVertexInReceivedVertexArray,0) );
+        assertion( tarch::la::allSmallerEquals(currentVertexInReceivedVertexArray,1) );
+
+        if (!_haveMergedMasterVertex[ getLevelOneGridEnumeratorForLocalData()(currentVertexInLocalLevelOnePatch) ]) {
+          _haveMergedMasterVertex[ getLevelOneGridEnumeratorForLocalData()(currentVertexInLocalLevelOnePatch) ] = true;
 
           peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
-            fineGridVertices[currentVertexIndexInLevelOnePatch],
-            _masterVertices[currentVertexsIndexInMasterVertexArray]
+            fineGridVertices[ getLevelOneGridEnumeratorForLocalData()(currentVertexInLocalLevelOnePatch) ],
+            _masterVertices[  getLevelOneGridEnumeratorForReceivedData()(currentVertexInReceivedVertexArray) ]
           );
 
           Base::_eventHandle.mergeWithWorker(
-            fineGridVertices[currentVertexIndexInLevelOnePatch],
-            _masterVertices[currentVertexsIndexInMasterVertexArray],
-            levelOneEnumerator.getVertexPosition(i),
-            levelOneEnumerator.getCellSize(),
-            levelOneEnumerator.getLevel()
-          );
-
-          logDebug(
-            "mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(...)",
-            "merged master vertex " <<  _masterVertices[currentVertexsIndexInMasterVertexArray].toString() << " from position " << currentVertexsIndexInMasterVertexArray << " with " <<
-            "local vertex " << fineGridVertices[currentVertexIndexInLevelOnePatch].toString() << " at position " << currentVertexIndexInLevelOnePatch
+            fineGridVertices[ getLevelOneGridEnumeratorForLocalData()(currentVertexInLocalLevelOnePatch) ],
+            _masterVertices[ getLevelOneGridEnumeratorForReceivedData()(currentVertexInReceivedVertexArray) ],
+            getLevelOneGridEnumeratorForReceivedData().getVertexPosition(currentVertexInReceivedVertexArray),
+            getLevelOneGridEnumeratorForReceivedData().getCellSize(),
+            getLevelOneGridEnumeratorForReceivedData().getLevel()
           );
         }
       }
