@@ -9,10 +9,25 @@ void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
   Vertex&        localVertex,
   const Vertex&  masterVertex
 ) {
+  #ifdef Debug // if we are not in debug mode, these values are not available.
+  assertionVectorNumericalEquals2( localVertex._vertexData.getX(), masterVertex._vertexData.getX(),     localVertex.toString(), masterVertex.toString() );
+  assertionEquals2( localVertex._vertexData.getLevel(),            masterVertex._vertexData.getLevel(), localVertex.toString(), masterVertex.toString() );
+  #endif
+
+  assertion2( !localVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
+
+  // the second condition avoids that an erase is propagated that is triggered
+  // by the master as it has deployed all 2^d adjacent cells of a vertex to
+  // other ranks.
   if (
-    masterVertex._vertexData.getRefinementControl() == Vertex::Records::Erasing
-//    &&
-//    masterVertex.isAdjacentToDomainOf( tarch::parallel::NodePool::getInstance().getMasterRank() )
+    (
+      masterVertex._vertexData.getRefinementControl() == Vertex::Records::Erasing &&
+      masterVertex.isAdjacentToDomainOf( tarch::parallel::NodePool::getInstance().getMasterRank() )
+    ) ||
+    (
+      masterVertex.isHangingNode() &&
+      localVertex.isAdjacentToRemoteRank()
+    )
   ) {
     assertion2(
       (localVertex._vertexData.getRefinementControl() == Vertex::Records::Refined)
@@ -21,23 +36,16 @@ void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
       masterVertex.toString(), localVertex.toString()
     );
 
+    // @todo wieder Debug
+    logInfo(
+      "mergeWithVertexFromMaster(...)",
+      "erase worker's top level vertex, as master is this vertex; local=" << localVertex.toString() <<
+      "remote=" << masterVertex.toString()
+    );
+
     localVertex._vertexData.setRefinementControl( Vertex::Records::Erasing );
-
-    // @todo bitte wieder raus
-    logInfo( "mergeWithVertexFromMaster(...)", "erase worker's top level vertex, as master is erasing a subtree: " << localVertex.toString() << " [@todo bitte wieder auf Debug umstellen]" );
-    assertionMsg( false, "Houston, wir haben ein Problem " ) ;
+    localVertex.setAdjacentRanks(tarch::parallel::Node::getInstance().getRank());
   }
-
-  #ifdef Debug // if we are not in debug mode, these values are not available.
-  assertionVectorNumericalEquals2( localVertex._vertexData.getX(), masterVertex._vertexData.getX(),     localVertex.toString(), masterVertex.toString() );
-  assertionEquals2( localVertex._vertexData.getLevel(),            masterVertex._vertexData.getLevel(), localVertex.toString(), masterVertex.toString() );
-  #endif
-
-
-  // Diesen Fall habe ich mir noch nicht ueberlegt -> der geht aber genau schief, d.h. wir haben ihn jetzt
-  // vermutlich muss dann einfach die Adjazenzliste lokal so gesetzt werden, dass kein Master dabei ist
-  assertion2( !localVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
-  assertion2( !masterVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
 }
 
 

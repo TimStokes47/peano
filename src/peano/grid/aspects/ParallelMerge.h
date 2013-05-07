@@ -77,11 +77,35 @@ class peano::grid::aspects::ParallelMerge {
      * Otherwise, we neglect the master's refinement state and rely on
      * mergeOnDomainBoundary() for updates.
      *
+     * However, we may follow this scheme if and only if the master's vertex
+     * was still adjacent to cells belonging to the master. Otherwise, the
+     * master erases due to forks (it erases remote grid regions), and we may
+     * not update the local attributes and erase the vertices locally, too:
      * The description before still has one shortcoming. It can happen that the
      * master vertex holds an erasing state but this state may not be updated
      * locally: If the master forks all @f$ 2^d @f$ adjacent subdomains of a
      * vertex to other ranks, it will afterwards set its local vertex to
      * erasing. In this case, this erasing is not to be done on the workers.
+     *
+     * Vertices of a worker's root cell always are persistent as they are
+     * transported via the stacks. Hence, we cannot handle them as hanging
+     * nodes if coarser parts of the grid are erased (we never fork subdomains
+     * with hanging nodes, so if hanging nodes occur this is always a results of
+     * a posteriori grid erasing). Instead, we manually delete all adjacency
+     * information. The vertex then is not communicated anymore.
+     *
+     * A second 'erase' use case pops up if the master has deployed all 2^d
+     * adjacent cells of a vertex to different ranks and now erases a coarser
+     * vertex at the same (or a related) position. If we have good luck, this
+     * leads to a starvation process and everything is handled. If we have bad
+     * luck, this erase propagates to the vertex vertex with the adjacent
+     * deployed subtrees. This vertex is unrefined on the master, as the
+     * master always erases vertices that are remote. Hence, the workers do not
+     * get this information 'hey, a subtree has to be removed'. However, they
+     * are informed about this one iteration later, when the master's vertex is
+     * already a hanging node. In this case, we erase the local vertices, i.e.
+     * the erase process here is not propagated in one step (as it is typically
+     * done for erase), but spans two grid traversals.
      */
     template <class Vertex>
     static void mergeWithVertexFromMaster(
