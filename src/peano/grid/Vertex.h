@@ -222,16 +222,31 @@ class peano::grid::Vertex {
     void rollbackRefinementOrEraseTriggered();
 
     /**
+     * Switch State's Refinement Triggered into Refining
+     *
      * This operation reads the refinement flag. If it is set to
-     * refinement triggered the operation changed refinement triggered into
+     * refinement triggered, the operation changes refinement triggered into
      * refining. This operation does not analyse the parallel state of the
      * vertex.
+     *
+     * If the vertex's refinement state is not equal to refinement triggered,
+     * the operation becomes nop.
      *
      * @return Has done a transition.
      */
     bool switchRefinementTriggeredToRefining();
 
     /**
+     * Switch State's Erase Triggered into Erasing
+     *
+     * This operation reads the refinement flag. If it is set to
+     * erase triggered, the operation changes erase triggered into
+     * erasing. This operation does not analyse the parallel state of the
+     * vertex.
+     *
+     * If the vertex's refinement state is not equal to erase triggered,
+     * the operation becomes nop.
+     *
      * @return Has done a transition.
      */
     bool switchEraseTriggeredToErasing();
