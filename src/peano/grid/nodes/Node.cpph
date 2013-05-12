@@ -109,44 +109,10 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   dfor2(j)
     logDebug( "makeCellRemoteCell(...)", "- vertex: " << fineGridVertices[fineGridVerticesEnumerator(j)].toString() );
+    fineGridVertices[ fineGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
   enddforx
 
   logTraceOut( "makeCellRemoteCell(...)" );
-}
-
-
-template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
-bool peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::remoteRankIsStarving(
-  Vertex*                               coarseGridVertices,
-  const peano::grid::VertexEnumerator&  coarseGridVerticesEnumerator
-) const {
-  logTraceIn( "remoteRankIsStarving(...)" );
-
-  bool result =
-    !tarch::parallel::Node::getInstance().isGlobalMaster()
-    &&
-    tarch::parallel::NodePool::getInstance().getMasterRank()!=tarch::parallel::Node::getGlobalMasterRank();
-
-  result &= peano::grid::aspects::VertexStateAnalysis::doesNoVertexCarryRefinementFlag(
-    coarseGridVertices,
-    coarseGridVerticesEnumerator,
-    Vertex::Records::Refined
-  );
-
-  result &= peano::grid::aspects::VertexStateAnalysis::doesNoVertexCarryRefinementFlag(
-    coarseGridVertices,
-    coarseGridVerticesEnumerator,
-    Vertex::Records::EraseTriggered
-  );
-
-  result &= peano::grid::aspects::VertexStateAnalysis::doesNoVertexCarryRefinementFlag(
-    coarseGridVertices,
-    coarseGridVerticesEnumerator,
-    Vertex::Records::Refining
-  );
-
-  logTraceOutWith1Argument( "remoteRankIsStarving(...)", result );
-  return result;
 }
 #endif
 
@@ -282,16 +248,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if (
-    fineGridCell.isRemote(state,false,false) &&
-    !coarseGridCell.isRemote(state,false,true) &&
-    remoteRankIsStarving(coarseGridVertices,coarseGridVerticesEnumerator)
-  ) {
-    // @todo evtl. raus
-    logInfo( "updateCellsParallelStateBeforeStore(...)", "worker " << fineGridCell.getRankOfRemoteNode() << " is starving" );
-    peano::parallel::loadbalancing::Oracle::getInstance().removeWorker(fineGridCell.getRankOfRemoteNode());
-  }
-
-  if (
     fineGridCell.isRemote(state,false,true) &&
     state.isJoiningRank(fineGridCell.getRankOfRemoteNode())
   ) {
@@ -321,28 +277,14 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     const int currentWorker = fineGridCell.getRankOfRemoteNode();
     peano::parallel::messages::LoadBalancingMessage loadBalancingMessage;
 
-    const bool isStarvingWorker = remoteRankIsStarving(
-      coarseGridVertices,
-      coarseGridVerticesEnumerator
-    );
-
-    if (isStarvingWorker) {
-      // @todo Debug
-      logInfo(
-        "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()",
-        "startup worker " << currentWorker << " that will starve in this iteration. First, switch off local load balancing."
-      );
-
-      peano::parallel::loadbalancing::Oracle::getInstance().switchOffLocalSplitsInThisIteration();
-    }
-
     loadBalancingMessage.setLoadBalancingFlag(
       peano::parallel::loadbalancing::Oracle::getInstance().getCommandForWorker(
         currentWorker,
-        state.mayForkDueToLoadBalancing() && !isStarvingWorker,
-        state.mayJoinDueToLoadBalancing() && !fineGridCell.thisSubtreeHoldsWorker() && !isStarvingWorker
+        state.mayForkDueToLoadBalancing(),
+        state.mayJoinDueToLoadBalancing() && !fineGridCell.thisSubtreeHoldsWorker()
       )
     );
+    loadBalancingMessage.setCouldNotEraseDueToDecomposition(peano::parallel::loadbalancing::Oracle::getInstance().getCouldNotEraseDueToDecompositionFlag())
 
     logDebug(
       "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()",
@@ -390,6 +332,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     fineGridCell.send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
       fineGridVertices[ fineGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     enddforx
     logTraceOut( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(...)" );
@@ -441,6 +384,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
             // this vertex after this iteration. And if I switch a vertex to outside, it has to be invalidated
             // before (see assertion).
             fineGridVertices[ fineGridVerticesEnumerator(k) ].invalidateAdjacentCellInformation();
+            fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
             _eventHandle.prepareCopyToRemoteNode(
               fineGridVertices[fineGridVerticesEnumerator(k)],
               *p,
