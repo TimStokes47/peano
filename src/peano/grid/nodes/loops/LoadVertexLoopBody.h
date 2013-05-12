@@ -111,6 +111,31 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      * one iteration: Only one level per traversal is refined along parallel
      * boundaries. This way, we ensure that grids along parallel boundaries are
      * consistent.
+     *
+     * The erase process mirrors that behaviour: Ease in the serial mode
+     * propagates immediately down the tree and thus can throw away whole
+     * subtrees in one rush. In the parallel code, this can induce starvation
+     * (see ParallelMerge::mergeWithVertexFromMaster()). To avoid grid
+     * consistencies, erase-triggers are not switched to erasing if subworkers
+     * are involved. This check is realised in
+     * Vertex::switchEraseTriggeredToErasing().
+     *
+     * Another option to 'slow down' the erasing would be to allow at most one
+     * level to be erased along the parallel boundaries, i.e. to mirror exactly
+     * the refinement behaviour. I decided to stop erase totally instead for
+     * two reasons:
+     *
+     * - The information whether we are one level higher than the finest level
+     *   is not available at the moment.
+     * - Even with one grid level removed per iteration, starvation (i.e. workers
+     *   running out of work) still can happen. So I'd have to write all the
+     *   code to handle this.
+     * - If we support erase between master-worker domains, we also have to
+     *   realise refines, as the erase might be followed by a refine
+     *   immediately. This makes it even more tricky, as a hanging node
+     *   becoming persistent has hold the right adjacency information.
+     *   Information that often is not available.
+     *
      */
     void updateRefinementFlagsOfVertexAfterLoad(int positionInArray, bool counterIsDelete);
 

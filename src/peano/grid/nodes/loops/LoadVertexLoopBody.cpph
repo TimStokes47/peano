@@ -199,13 +199,24 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex erasing as parent is erasing: " << _fineGridVertices[positionInVertexArray].toString() );
   }
-  if ( _fineGridVertices[positionInVertexArray].switchRefinementTriggeredToRefining() ) {
+  const bool                                         switchedIntoRefining = _fineGridVertices[positionInVertexArray].switchRefinementTriggeredToRefining();
+  const typename Vertex::SwitchEraseTriggeredResult  switchedIntoErasing  = _fineGridVertices[positionInVertexArray].switchEraseTriggeredToErasing();
+  if ( switchedIntoRefining ) {
     _hasRefinened = true;
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex refining: " << _fineGridVertices[positionInVertexArray].toString() );
   }
-  if ( _fineGridVertices[positionInVertexArray].switchEraseTriggeredToErasing() ) {
+  if ( switchedIntoErasing == Vertex::SwitchedIntoErasing ) {
     _hasErased = true;
-    logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex coarsening: " << _fineGridVertices[positionInVertexArray].toString() );
+    logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex erasing: " << _fineGridVertices[positionInVertexArray].toString() );
+  }
+  if ( switchedIntoErasing == Vertex::WasntAbleToSwitchDueToFork ) {
+    #ifdef Parallel
+    _hasErased = true;
+    peano::parallel::loadbalancing::Oracle::getInstance().couldNotEraseDueToDecomposition();
+    logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "tried to make vertex erasing but could not due to fork: " << _fineGridVertices[positionInVertexArray].toString() );
+    #else
+    assertionMsg( false, "branch is not reachable in serial mode" );
+    #endif
   }
 
   logTraceOutWith1Argument( "updateRefinementFlagsOfVertexAfterLoad(...)", _fineGridVertices[positionInVertexArray].toString() );
