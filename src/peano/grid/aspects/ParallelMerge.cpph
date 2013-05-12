@@ -15,37 +15,9 @@ void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
   #endif
 
   assertion2( !localVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
-
-  // the second condition avoids that an erase is propagated that is triggered
-  // by the master as it has deployed all 2^d adjacent cells of a vertex to
-  // other ranks.
-  if (
-    (
-      masterVertex._vertexData.getRefinementControl() == Vertex::Records::Erasing &&
-      masterVertex.isAdjacentToDomainOf( tarch::parallel::NodePool::getInstance().getMasterRank() )
-    ) ||
-    (
-      masterVertex.isHangingNode() &&
-      localVertex.isAdjacentToRemoteRank()
-    )
-  ) {
-    assertion2(
-      (localVertex._vertexData.getRefinementControl() == Vertex::Records::Refined)
-      ||
-      (localVertex._vertexData.getRefinementControl() == Vertex::Records::Erasing),
-      masterVertex.toString(), localVertex.toString()
-    );
-
-    // @todo wieder Debug
-    logInfo(
-      "mergeWithVertexFromMaster(...)",
-      "erase worker's top level vertex, as master is this vertex; local=" << localVertex.toString() <<
-      "remote=" << masterVertex.toString()
-    );
-
-    localVertex._vertexData.setRefinementControl( Vertex::Records::Erasing );
-    localVertex.setAdjacentRanks(tarch::parallel::Node::getInstance().getRank());
-  }
+  assertion2( localVertex._vertexData.getRefinementControl() != Vertex::Records::Erasing, masterVertex.toString(), localVertex.toString() );
+  assertion2( !masterVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
+  assertion2( masterVertex._vertexData.getRefinementControl() != Vertex::Records::Erasing, masterVertex.toString(), localVertex.toString() );
 }
 
 
@@ -99,7 +71,8 @@ void peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
     );
   }
 
-  localVertex._vertexData.setNumberOfAdjacentRefinedCells( neighbourVertex._vertexData.getNumberOfAdjacentRefinedCells() );
+  localVertex._vertexData.setNumberOfAdjacentRefinedCells(      neighbourVertex._vertexData.getNumberOfAdjacentRefinedCells() );
+  localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank( neighbourVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank() );
   
   logTraceOutWith1Argument( "mergeOnDomainBoundary(...)", localVertex );
 }
