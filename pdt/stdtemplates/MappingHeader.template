@@ -185,6 +185,47 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * Please consult peano/grid/vertex-lifecycle.doxys for details on the 
      * vertex and cell lifecycle.
      *
+     * !!! Addendum to fine grid vertex position and vertex event order
+     *
+     * One fundamental principle of Peano is that you don't know exact event 
+     * orders. It is up to Peano to decide in which order it triggers the 
+     * operations of your mappings as long as certain partial orders are 
+     * preserved (enterCell() after touchVertexFirstTime(), e.g.). For a 
+     * discussion of the partial orders, please confer the page vertex 
+     * lifecycle of the peano::grid component.
+     *
+     * If a patch is created, you consequently don't know in which order the 
+     * vertices are created. Neither do you know later in which order touch 
+     * first or last is called. There are many reasons for this besides the 
+     * fact that there is no need to expose traversal orders. The most 
+     * important reason is that the freedom for the Peano kernel allows the 
+     * latter to reorder events as long as logical constraints represented by 
+     * the partial order are preserved. Reordering might yield a speedup. More 
+     * important is that the kernel even might decide to trigger events in 
+     * parallel in shared memory environments. The parallel execution however 
+     * is disabled for creational events and works only for touch first/last.
+     *
+     * We know that all vertices adjacent to a cell are created 
+     * before the cell itself is created. We also know that all vertices and 
+     * cells in the spacetree that are coarser than the current vertex have 
+     * been created before. Again, there are nondeterministic effects: Study
+     * a @f$ 6\times 3 @f$ grid in 2d, i.e. a grid with 18 fine grid cells 
+     * and two coarse cells. We refer to the coarse grid as left and right 
+     * cell. When the vertex (3,1) in the patch is created (we start to count 
+     * with zero), you do not know a priori whether the corresponding coarse 
+     * cell is the left one or the right one.
+     *
+     * However, Peano passes the integer array fineGridPositionOfVertex to 
+     * the events (same holds for touch first/last and destroy). That one 
+     * tells you within the current patch the position of the vertex. If this 
+     * argument in the previous example is (3,1), then the code currently is 
+     * descending in the left coarse grid cell. If the argument is (0,1) it 
+     * has been descending in the right. You can access all @f$ 2^d @f$ coarse 
+     * grid vertices and you can be sure that they have been initialised 
+     * before. With fineGridPositionOfVertex you can interpolate data from 
+     * the coarse grid as you know where the vertex is located relative to the 
+     * coarse grid vertices.
+     *
      * @see peano::MappingSpecification for information on thread safety.
      *
      * @param fineGridVertex  Vertex that is to be initialised. This is the 
