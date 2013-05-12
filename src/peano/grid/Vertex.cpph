@@ -162,15 +162,29 @@ bool peano::grid::Vertex<VertexData>::switchRefinementTriggeredToRefining() {
 
 
 template <class VertexData>
-bool peano::grid::Vertex<VertexData>::switchEraseTriggeredToErasing() {
+typename peano::grid::Vertex<VertexData>::SwitchEraseTriggeredResult peano::grid::Vertex<VertexData>::switchEraseTriggeredToErasing() {
   assertion1( _vertexData.getRefinementControl()!=VertexData::RefineDueToJoinThoughWorkerIsAlreadyErasing, toString() );
-  bool doTransition = _vertexData.getRefinementControl()==VertexData::EraseTriggered;
-  if ( doTransition ) {
+  #ifdef Parallel
+  if (
+    _vertexData.getRefinementControl()==VertexData::EraseTriggered &&
+    _vertexData.getAdjacentSubtreeForksIntoOtherRank()
+  ) {
+    return WasntAbleToSwitchDueToFork;
+  }
+  else
+  #endif
+  if ( _vertexData.getRefinementControl()==VertexData::EraseTriggered ) {
     _vertexData.setRefinementControl( VertexData::Erasing );
     assertion1(_vertexData.getAdjacentCellsHeight() <= peano::grid::NotStationary ,toString());
     invalidateAdjacentCellInformation();
+    return SwitchedIntoErasing;
   }
-  return doTransition;
+  else {
+    #ifdef Parallel
+    _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
+    #endif
+    return Nop;
+  }
 }
 
 
@@ -349,6 +363,18 @@ bool peano::grid::Vertex<VertexData>::isRemote(
   bool          considerJoiningNodesToBeRemote
 ) const {
   return peano::parallel::AdjacencyListAspect<peano::grid::Vertex<VertexData> >::isRemote(*this,state,considerForkingNodesToBeRemote,considerJoiningNodesToBeRemote);
+}
+
+
+template <class VertexData>
+void  peano::grid::Vertex<VertexData>::setAdjacentSubtreeForksIntoOtherRankFlag() {
+  _vertexData.setAdjacentSubtreeForksIntoOtherRank(true);
+}
+
+
+template <class VertexData>
+bool  peano::grid::Vertex<VertexData>::isAdjacentSubtreeForksIntoOtherRankFlag() const {
+  return _vertexData.getAdjacentSubtreeForksIntoOtherRank();
 }
 
 

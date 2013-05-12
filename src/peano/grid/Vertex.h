@@ -237,6 +237,13 @@ class peano::grid::Vertex {
     bool switchRefinementTriggeredToRefining();
 
     /**
+     * @see switchEraseTriggeredToErasing()
+     */
+    enum SwitchEraseTriggeredResult {
+      Nop, SwitchedIntoErasing, WasntAbleToSwitchDueToFork
+    };
+
+    /**
      * Switch State's Erase Triggered into Erasing
      *
      * This operation reads the refinement flag. If it is set to
@@ -247,9 +254,19 @@ class peano::grid::Vertex {
      * If the vertex's refinement state is not equal to erase triggered,
      * the operation becomes nop.
      *
+     * !!! Parallel mode
+     *
+     * In parallel, a vertex may not become erasing, if any of the adjacent
+     * subtrees forks into another ranker. Otherwise, we would observe
+     * starvation, i.e. workers running out of work in one step. To avoid
+     * this, we do not switch to erasing but instead return a flag that
+     * indicates that we are in that special case. The trigger then remains.
+     * If the code decides to join workers afterwards, it might happen that
+     * the trigger passes through later.
+     *
      * @return Has done a transition.
      */
-    bool switchEraseTriggeredToErasing();
+    SwitchEraseTriggeredResult switchEraseTriggeredToErasing();
 
     /**
      * Switch refinement flags
@@ -304,7 +321,7 @@ class peano::grid::Vertex {
      * you switch off the static tree optimisations and the recursion
      * unrolling manually.
      *
-     * This is for example done due to a merge on the worker side. Implicitely,
+     * This is for example done due to a merge on the worker side. Implicitly,
      * any erase() or refine() call invalidates as well, so usually it is not a
      * PDE task to invalidate any vertex anytime.
      */
@@ -344,6 +361,15 @@ class peano::grid::Vertex {
     #endif
 
     #ifdef Parallel
+    /**
+     * Set this flag. The flag ist unset automatically when you evluate it, i.e.
+     * when you call switchEraseTriggeredToErasing().
+     *
+     */
+    void  setAdjacentSubtreeForksIntoOtherRankFlag();
+    bool  isAdjacentSubtreeForksIntoOtherRankFlag() const;
+
+
     /**
      * Is vertex remote?
      *
