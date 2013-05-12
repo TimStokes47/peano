@@ -456,7 +456,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
           const int NewRemoteRank =  partitioner.getRankOfWorkerReponsibleForCell(k);
           if (NewRemoteRank!=tarch::parallel::Node::getInstance().getRank()) {
             state.splitIntoRank(NewRemoteRank);
-            makeCellRemoteCell(state,NewRemoteRank,newFineGridCells[ kScalar ],newFineGridVertices,newFineGridVerticesEnumerators[kScalar]);
+            Base::makeCellRemoteCell(state,NewRemoteRank,newFineGridCells[ kScalar ],newFineGridVertices,newFineGridVerticesEnumerators[kScalar]);
           }
         enddforx
       }
