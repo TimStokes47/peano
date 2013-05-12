@@ -267,6 +267,13 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * This is possible as the domain covered by Peano grids (the volume) grows
      * montonically with each additional grid level, i.e. a grid of level k
      * always covers at least the domain covered by a grid of level k-1.
+     *
+     * !!! Parallel mode
+     *
+     * If we compile with MPI, the operation restricts the flag
+     * adjacentSubtreeForksIntoOtherRank. This flag is used at other places
+     * to avoid starvation. See LoadVertexLoopBody::updateRefinementFlagsOfVertexAfterLoad()
+     * for documentation on starvation.
      */
     void updateCoarseGridTreeHeightAttributes(
       int                                       positionInVertexArray,

@@ -305,6 +305,14 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
         }
       }
 
+      #ifdef Parallel
+      if (
+        _fineGridVertices[positionInVertexArray].isAdjacentSubtreeForksIntoOtherRankFlag()
+      ) {
+        _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setAdjacentSubtreeForksIntoOtherRankFlag();
+      }
+      #endif
+
       if (
         !_fineGridVertices[positionInVertexArray].isOutside() ||
         #ifdef Parallel
