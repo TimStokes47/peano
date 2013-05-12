@@ -271,18 +271,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       _positionOfRootCellRelativeToCoarserCellOnMaster
     );
 
-    if (Base::remoteRankIsStarving(coarseVertexFromMaster,getCoarseGridEnumeratorForReceivedData())) {
-      logInfo(
-        "receiveCellAndVerticesFromMaster(...)",
-        "this rank is starving: "
-        << _coarseGridVertices[ getCoarseGridEnumeratorForLocalData()(0) ].toString() << ", "
-        << _coarseGridVertices[ getCoarseGridEnumeratorForLocalData()(1) ].toString() << ", "
-        << _coarseGridVertices[ getCoarseGridEnumeratorForLocalData()(2) ].toString() << ", "
-        << _coarseGridVertices[ getCoarseGridEnumeratorForLocalData()(3) ].toString()
-      );
-      state.starve();
-    }
-
     tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
   }
 
