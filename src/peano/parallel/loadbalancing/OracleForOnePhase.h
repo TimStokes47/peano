@@ -77,7 +77,7 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      *
      * @see Oracle
      */
-    virtual void receivedStartCommand(const LoadBalancingFlag& commandFromMaster ) = 0;
+    virtual void receivedStartCommand(const LoadBalancingFlag& commandFromMaster, bool couldNotEraseDueToDecomposition ) = 0;
 
     /**
      * Get command for one single worker

@@ -59,7 +59,7 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
     OracleForOnePhaseWithGreedyPartitioning(bool joinsAllowed);
     virtual ~OracleForOnePhaseWithGreedyPartitioning();
 
-    virtual void receivedStartCommand(const LoadBalancingFlag& commandFromMaster );
+    virtual void receivedStartCommand(const LoadBalancingFlag& commandFromMaster, bool couldNotEraseDueToDecomposition );
 
     /**
      * This operation is not const, as it might update some local stuff.

@@ -86,6 +86,7 @@ class peano::parallel::loadbalancing::Oracle {
     WorkerContainer                          _workers;
 
     LoadBalancingFlag                        _startCommand;
+    bool                                     _couldNotEraseDueToDecomposition;
 
     void createOracles(int numberOfOracles);
     void deleteOracles();
@@ -168,7 +169,7 @@ class peano::parallel::loadbalancing::Oracle {
      */
     void setOracle( OracleForOnePhase* oraclePrototype );
 
-    void receivedStartCommand(const LoadBalancingFlag& commandFromMaster );
+    void receivedStartCommand(const LoadBalancingFlag& commandFromMaster, bool couldNotEraseDueToDecomposition );
 
     /**
      * Return last start command
@@ -262,28 +263,24 @@ class peano::parallel::loadbalancing::Oracle {
     int getCoarsestRegularInnerAndOuterGridLevel() const;
 
     /**
-     * Tells the oracle not to split
+     * Inform the oracle that an erase was not performed to avoid starvation
      *
-     * This operation should be called if you wanna manually avoid that the
-     * local grid is split further in this traversal.
+     * This operation is triggered by the load process to inform the oracle that
+     * an erase-triggered was not transformed into an erasing flag to avoid
+     * starvation. Such an information afterwards also is propagated down to
+     * all the workers.
      *
-     * !!! Starve process
-     *
-     * If a process is starving, we remove it from the local worker list in
-     * the very end. If the master of the starving process however were asked
-     * to split further, it might immediately rebook the worker which messes
-     * up the data consistency. This happens if
-     * - the master tells the worker that it will starve
-     * - the worker goes down (pretty fast, as there is no work to do there anymore)
-     * - the worker registers itself as idle at the node pool
-     * - the master meanwhile continues with its local partition
-     * - and books another worker
-     * - the node pool delivers the rank that starved before
-     *
-     * The master removes the node from its local list not before it ascends
-     * in the spacetree and this way, everything gets messed up.
+     * It might make sense to pick up that information in your load balancing
+     * scheme and to trigger a join if the flag is set. If you join, it might
+     * happen that the erase afterwards passes through and the grid becomes
+     * coarser.
      */
-    void switchOffLocalSplitsInThisIteration();
+    void couldNotEraseDueToDecomposition();
+
+    /**
+     * @return _couldNotEraseDueToDecomposition
+     */
+    bool getCouldNotEraseDueToDecompositionFlag() const;
 };
 
 
