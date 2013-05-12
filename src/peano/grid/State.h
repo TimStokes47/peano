@@ -92,7 +92,6 @@ class peano::grid::State {
      */
     std::set<int>       _loadRebalancingRemoteRanks;
     LoadBalancingState  _loadRebalancingState;
-    bool                _starves;
 
     /**
      * We may fork/join only every third iteration.
@@ -297,21 +296,6 @@ class peano::grid::State {
      * not be overwritten by the master's data, we restore it manually.
      */
     void receive(int source, int tag);
-
-    /**
-     * Switch load balancing state to starving.
-     *
-     * Starving means that the code has triggered an erase somewhere in
-     * the code. As a result, subgrids are removed. It those subgrids are
-     * handled by a worker, it might happen that a whole worker disappears
-     * together with the grid. It runs out of grid entities. It starves.
-     *
-     * If we call starve, we finish all the ings such as refining, but quit
-     * afterwards.
-     * 
-     * @image html starve.png
-     */
-    void starve();
 
     /**
      * Notify state about join
