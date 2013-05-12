@@ -5,8 +5,9 @@ peano::parallel::messages::LoadBalancingMessage::PersistentRecords::PersistentRe
 }
 
 
-peano::parallel::messages::LoadBalancingMessage::PersistentRecords::PersistentRecords(const int& loadBalancingFlag):
-_loadBalancingFlag(loadBalancingFlag) {
+peano::parallel::messages::LoadBalancingMessage::PersistentRecords::PersistentRecords(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition):
+_loadBalancingFlag(loadBalancingFlag),
+_couldNotEraseDueToDecomposition(couldNotEraseDueToDecomposition) {
    
 }
 
@@ -22,19 +23,31 @@ _loadBalancingFlag(loadBalancingFlag) {
 }
 
 
+
+ bool peano::parallel::messages::LoadBalancingMessage::PersistentRecords::getCouldNotEraseDueToDecomposition() const  {
+   return _couldNotEraseDueToDecomposition;
+}
+
+
+
+ void peano::parallel::messages::LoadBalancingMessage::PersistentRecords::setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition)  {
+   _couldNotEraseDueToDecomposition = couldNotEraseDueToDecomposition;
+}
+
+
 peano::parallel::messages::LoadBalancingMessage::LoadBalancingMessage() {
    
 }
 
 
 peano::parallel::messages::LoadBalancingMessage::LoadBalancingMessage(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._loadBalancingFlag) {
+_persistentRecords(persistentRecords._loadBalancingFlag, persistentRecords._couldNotEraseDueToDecomposition) {
    
 }
 
 
-peano::parallel::messages::LoadBalancingMessage::LoadBalancingMessage(const int& loadBalancingFlag):
-_persistentRecords(loadBalancingFlag) {
+peano::parallel::messages::LoadBalancingMessage::LoadBalancingMessage(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition):
+_persistentRecords(loadBalancingFlag, couldNotEraseDueToDecomposition) {
    
 }
 
@@ -54,6 +67,18 @@ peano::parallel::messages::LoadBalancingMessage::~LoadBalancingMessage() { }
 
 
 
+ bool peano::parallel::messages::LoadBalancingMessage::getCouldNotEraseDueToDecomposition() const  {
+   return _persistentRecords._couldNotEraseDueToDecomposition;
+}
+
+
+
+ void peano::parallel::messages::LoadBalancingMessage::setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition)  {
+   _persistentRecords._couldNotEraseDueToDecomposition = couldNotEraseDueToDecomposition;
+}
+
+
+
 
 std::string peano::parallel::messages::LoadBalancingMessage::toString() const {
    std::ostringstream stringstr;
@@ -64,6 +89,8 @@ std::string peano::parallel::messages::LoadBalancingMessage::toString() const {
 void peano::parallel::messages::LoadBalancingMessage::toString (std::ostream& out) const {
    out << "("; 
    out << "loadBalancingFlag:" << getLoadBalancingFlag();
+   out << ",";
+   out << "couldNotEraseDueToDecomposition:" << getCouldNotEraseDueToDecomposition();
    out <<  ")";
 }
 
@@ -74,7 +101,8 @@ peano::parallel::messages::LoadBalancingMessage::PersistentRecords peano::parall
 
 peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages::LoadBalancingMessage::convert() const{
    return LoadBalancingMessagePacked(
-      getLoadBalancingFlag()
+      getLoadBalancingFlag(),
+      getCouldNotEraseDueToDecomposition()
    );
 }
 
@@ -89,14 +117,16 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
       {
          LoadBalancingMessage dummyLoadBalancingMessage[2];
          
-         const int Attributes = 2;
+         const int Attributes = 3;
          MPI_Datatype subtypes[Attributes] = {
             MPI_INT,		 //loadBalancingFlag
+            MPI_CHAR,		 //couldNotEraseDueToDecomposition
             MPI_UB		 // end/displacement flag
          };
          
          int blocklen[Attributes] = {
             1,		 //loadBalancingFlag
+            1,		 //couldNotEraseDueToDecomposition
             1		 // end/displacement flag
          };
          
@@ -105,7 +135,8 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
          MPI_Aint base;
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[0]))), &base);
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[0]._persistentRecords._loadBalancingFlag))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[1]._persistentRecords._loadBalancingFlag))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[0]._persistentRecords._couldNotEraseDueToDecomposition))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[1]._persistentRecords._loadBalancingFlag))), 		&disp[2] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -120,14 +151,16 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
       {
          LoadBalancingMessage dummyLoadBalancingMessage[2];
          
-         const int Attributes = 2;
+         const int Attributes = 3;
          MPI_Datatype subtypes[Attributes] = {
             MPI_INT,		 //loadBalancingFlag
+            MPI_CHAR,		 //couldNotEraseDueToDecomposition
             MPI_UB		 // end/displacement flag
          };
          
          int blocklen[Attributes] = {
             1,		 //loadBalancingFlag
+            1,		 //couldNotEraseDueToDecomposition
             1		 // end/displacement flag
          };
          
@@ -136,7 +169,8 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
          MPI_Aint base;
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[0]))), &base);
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[0]._persistentRecords._loadBalancingFlag))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[1]._persistentRecords._loadBalancingFlag))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[0]._persistentRecords._couldNotEraseDueToDecomposition))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[1]._persistentRecords._loadBalancingFlag))), 		&disp[2] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -353,8 +387,9 @@ peano::parallel::messages::LoadBalancingMessagePacked::PersistentRecords::Persis
 }
 
 
-peano::parallel::messages::LoadBalancingMessagePacked::PersistentRecords::PersistentRecords(const int& loadBalancingFlag):
-_loadBalancingFlag(loadBalancingFlag) {
+peano::parallel::messages::LoadBalancingMessagePacked::PersistentRecords::PersistentRecords(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition):
+_loadBalancingFlag(loadBalancingFlag),
+_couldNotEraseDueToDecomposition(couldNotEraseDueToDecomposition) {
    
 }
 
@@ -370,19 +405,31 @@ _loadBalancingFlag(loadBalancingFlag) {
 }
 
 
+
+ bool peano::parallel::messages::LoadBalancingMessagePacked::PersistentRecords::getCouldNotEraseDueToDecomposition() const  {
+   return _couldNotEraseDueToDecomposition;
+}
+
+
+
+ void peano::parallel::messages::LoadBalancingMessagePacked::PersistentRecords::setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition)  {
+   _couldNotEraseDueToDecomposition = couldNotEraseDueToDecomposition;
+}
+
+
 peano::parallel::messages::LoadBalancingMessagePacked::LoadBalancingMessagePacked() {
    
 }
 
 
 peano::parallel::messages::LoadBalancingMessagePacked::LoadBalancingMessagePacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._loadBalancingFlag) {
+_persistentRecords(persistentRecords._loadBalancingFlag, persistentRecords._couldNotEraseDueToDecomposition) {
    
 }
 
 
-peano::parallel::messages::LoadBalancingMessagePacked::LoadBalancingMessagePacked(const int& loadBalancingFlag):
-_persistentRecords(loadBalancingFlag) {
+peano::parallel::messages::LoadBalancingMessagePacked::LoadBalancingMessagePacked(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition):
+_persistentRecords(loadBalancingFlag, couldNotEraseDueToDecomposition) {
    
 }
 
@@ -402,6 +449,18 @@ peano::parallel::messages::LoadBalancingMessagePacked::~LoadBalancingMessagePack
 
 
 
+ bool peano::parallel::messages::LoadBalancingMessagePacked::getCouldNotEraseDueToDecomposition() const  {
+   return _persistentRecords._couldNotEraseDueToDecomposition;
+}
+
+
+
+ void peano::parallel::messages::LoadBalancingMessagePacked::setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition)  {
+   _persistentRecords._couldNotEraseDueToDecomposition = couldNotEraseDueToDecomposition;
+}
+
+
+
 
 std::string peano::parallel::messages::LoadBalancingMessagePacked::toString() const {
    std::ostringstream stringstr;
@@ -412,6 +471,8 @@ std::string peano::parallel::messages::LoadBalancingMessagePacked::toString() co
 void peano::parallel::messages::LoadBalancingMessagePacked::toString (std::ostream& out) const {
    out << "("; 
    out << "loadBalancingFlag:" << getLoadBalancingFlag();
+   out << ",";
+   out << "couldNotEraseDueToDecomposition:" << getCouldNotEraseDueToDecomposition();
    out <<  ")";
 }
 
@@ -422,7 +483,8 @@ peano::parallel::messages::LoadBalancingMessagePacked::PersistentRecords peano::
 
 peano::parallel::messages::LoadBalancingMessage peano::parallel::messages::LoadBalancingMessagePacked::convert() const{
    return LoadBalancingMessage(
-      getLoadBalancingFlag()
+      getLoadBalancingFlag(),
+      getCouldNotEraseDueToDecomposition()
    );
 }
 
@@ -437,14 +499,16 @@ peano::parallel::messages::LoadBalancingMessage peano::parallel::messages::LoadB
       {
          LoadBalancingMessagePacked dummyLoadBalancingMessagePacked[2];
          
-         const int Attributes = 2;
+         const int Attributes = 3;
          MPI_Datatype subtypes[Attributes] = {
             MPI_INT,		 //loadBalancingFlag
+            MPI_CHAR,		 //couldNotEraseDueToDecomposition
             MPI_UB		 // end/displacement flag
          };
          
          int blocklen[Attributes] = {
             1,		 //loadBalancingFlag
+            1,		 //couldNotEraseDueToDecomposition
             1		 // end/displacement flag
          };
          
@@ -453,7 +517,8 @@ peano::parallel::messages::LoadBalancingMessage peano::parallel::messages::LoadB
          MPI_Aint base;
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[0]))), &base);
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[0]._persistentRecords._loadBalancingFlag))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[1]._persistentRecords._loadBalancingFlag))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[0]._persistentRecords._couldNotEraseDueToDecomposition))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[1]._persistentRecords._loadBalancingFlag))), 		&disp[2] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -468,14 +533,16 @@ peano::parallel::messages::LoadBalancingMessage peano::parallel::messages::LoadB
       {
          LoadBalancingMessagePacked dummyLoadBalancingMessagePacked[2];
          
-         const int Attributes = 2;
+         const int Attributes = 3;
          MPI_Datatype subtypes[Attributes] = {
             MPI_INT,		 //loadBalancingFlag
+            MPI_CHAR,		 //couldNotEraseDueToDecomposition
             MPI_UB		 // end/displacement flag
          };
          
          int blocklen[Attributes] = {
             1,		 //loadBalancingFlag
+            1,		 //couldNotEraseDueToDecomposition
             1		 // end/displacement flag
          };
          
@@ -484,7 +551,8 @@ peano::parallel::messages::LoadBalancingMessage peano::parallel::messages::LoadB
          MPI_Aint base;
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[0]))), &base);
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[0]._persistentRecords._loadBalancingFlag))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[1]._persistentRecords._loadBalancingFlag))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[0]._persistentRecords._couldNotEraseDueToDecomposition))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[1]._persistentRecords._loadBalancingFlag))), 		&disp[2] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );

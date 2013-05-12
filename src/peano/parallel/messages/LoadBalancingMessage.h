@@ -32,9 +32,9 @@ namespace peano {
  * 		   2007-2009 Wolfgang Eckhardt
  * 		   2012      Tobias Weinzierl
  *
- * 		   build date: 20-02-2013 11:21
+ * 		   build date: 12-04-2013 09:18
  *
- * @date   15/03/2013 11:51
+ * @date   12/05/2013 09:17
  */
 class peano::parallel::messages::LoadBalancingMessage { 
    
@@ -44,6 +44,7 @@ class peano::parallel::messages::LoadBalancingMessage {
       
       struct PersistentRecords {
          int _loadBalancingFlag;
+         bool _couldNotEraseDueToDecomposition;
          /**
           * Generated
           */
@@ -52,7 +53,7 @@ class peano::parallel::messages::LoadBalancingMessage {
          /**
           * Generated
           */
-         PersistentRecords(const int& loadBalancingFlag);
+         PersistentRecords(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition);
          
          /**
           * Generated
@@ -63,6 +64,16 @@ class peano::parallel::messages::LoadBalancingMessage {
           * Generated
           */
           void setLoadBalancingFlag(const int& loadBalancingFlag) ;
+         
+         /**
+          * Generated
+          */
+          bool getCouldNotEraseDueToDecomposition() const ;
+         
+         /**
+          * Generated
+          */
+          void setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition) ;
          
          
       };
@@ -84,7 +95,7 @@ class peano::parallel::messages::LoadBalancingMessage {
       /**
        * Generated
        */
-      LoadBalancingMessage(const int& loadBalancingFlag);
+      LoadBalancingMessage(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition);
       
       /**
        * Generated
@@ -100,6 +111,16 @@ class peano::parallel::messages::LoadBalancingMessage {
        * Generated
        */
        void setLoadBalancingFlag(const int& loadBalancingFlag) ;
+      
+      /**
+       * Generated
+       */
+       bool getCouldNotEraseDueToDecomposition() const ;
+      
+      /**
+       * Generated
+       */
+       void setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition) ;
       
       /**
        * Generated
@@ -161,9 +182,9 @@ class peano::parallel::messages::LoadBalancingMessage {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 20-02-2013 11:21
+    * 		   build date: 12-04-2013 09:18
     *
-    * @date   15/03/2013 11:51
+    * @date   12/05/2013 09:17
     */
    class peano::parallel::messages::LoadBalancingMessagePacked { 
       
@@ -171,6 +192,7 @@ class peano::parallel::messages::LoadBalancingMessage {
          
          struct PersistentRecords {
             int _loadBalancingFlag;
+            bool _couldNotEraseDueToDecomposition;
             /**
              * Generated
              */
@@ -179,7 +201,7 @@ class peano::parallel::messages::LoadBalancingMessage {
             /**
              * Generated
              */
-            PersistentRecords(const int& loadBalancingFlag);
+            PersistentRecords(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition);
             
             /**
              * Generated
@@ -190,6 +212,16 @@ class peano::parallel::messages::LoadBalancingMessage {
              * Generated
              */
              void setLoadBalancingFlag(const int& loadBalancingFlag) ;
+            
+            /**
+             * Generated
+             */
+             bool getCouldNotEraseDueToDecomposition() const ;
+            
+            /**
+             * Generated
+             */
+             void setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition) ;
             
             
          };
@@ -211,7 +243,7 @@ class peano::parallel::messages::LoadBalancingMessage {
          /**
           * Generated
           */
-         LoadBalancingMessagePacked(const int& loadBalancingFlag);
+         LoadBalancingMessagePacked(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition);
          
          /**
           * Generated
@@ -227,6 +259,16 @@ class peano::parallel::messages::LoadBalancingMessage {
           * Generated
           */
           void setLoadBalancingFlag(const int& loadBalancingFlag) ;
+         
+         /**
+          * Generated
+          */
+          bool getCouldNotEraseDueToDecomposition() const ;
+         
+         /**
+          * Generated
+          */
+          void setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition) ;
          
          /**
           * Generated
