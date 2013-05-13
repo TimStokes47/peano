@@ -6,14 +6,15 @@
    }
    
    
-   peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
+   peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
    _isHangingNode(isHangingNode),
    _refinementControl(refinementControl),
    _adjacentCellsHeight(adjacentCellsHeight),
    _insideOutsideDomain(insideOutsideDomain),
    _x(x),
    _level(level),
-   _adjacentRanks(adjacentRanks) {
+   _adjacentRanks(adjacentRanks),
+   _adjacentSubtreeForksIntoOtherRank(adjacentSubtreeForksIntoOtherRank) {
       
    }
    
@@ -101,25 +102,37 @@
    }
    
    
+   
+    bool peano::grid::tests::records::TestVertex::PersistentRecords::getAdjacentSubtreeForksIntoOtherRank() const  {
+      return _adjacentSubtreeForksIntoOtherRank;
+   }
+   
+   
+   
+    void peano::grid::tests::records::TestVertex::PersistentRecords::setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank)  {
+      _adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksIntoOtherRank;
+   }
+   
+   
    peano::grid::tests::records::TestVertex::TestVertex() {
       
    }
    
    
    peano::grid::tests::records::TestVertex::TestVertex(const PersistentRecords& persistentRecords):
-   _persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._x, persistentRecords._level, persistentRecords._adjacentRanks) {
+   _persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._x, persistentRecords._level, persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank) {
       
    }
    
    
-   peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
-   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks) {
+   peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
+   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank) {
       
    }
    
    
-   peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
-   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+   peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
+   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
    _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
       
    }
@@ -270,6 +283,18 @@
    }
    
    
+   
+    bool peano::grid::tests::records::TestVertex::getAdjacentSubtreeForksIntoOtherRank() const  {
+      return _persistentRecords._adjacentSubtreeForksIntoOtherRank;
+   }
+   
+   
+   
+    void peano::grid::tests::records::TestVertex::setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank)  {
+      _persistentRecords._adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksIntoOtherRank;
+   }
+   
+   
    std::string peano::grid::tests::records::TestVertex::toString(const InsideOutsideDomain& param) {
       switch (param) {
          case Inside: return "Inside";
@@ -333,6 +358,8 @@
       out << getAdjacentRanks(i) << ",";
    }
    out << getAdjacentRanks(TWO_POWER_D-1) << "]";
+      out << ",";
+      out << "adjacentSubtreeForksIntoOtherRank:" << getAdjacentSubtreeForksIntoOtherRank();
       out <<  ")";
    }
    
@@ -351,7 +378,8 @@
          getInsideOutsideDomain(),
          getX(),
          getLevel(),
-         getAdjacentRanks()
+         getAdjacentRanks(),
+         getAdjacentSubtreeForksIntoOtherRank()
       );
    }
    
@@ -366,7 +394,7 @@
          {
             TestVertex dummyTestVertex[2];
             
-            const int Attributes = 8;
+            const int Attributes = 9;
             MPI_Datatype subtypes[Attributes] = {
                MPI_CHAR,		 //isHangingNode
                MPI_INT,		 //refinementControl
@@ -374,6 +402,7 @@
                MPI_DOUBLE,		 //x
                MPI_INT,		 //level
                MPI_INT,		 //adjacentRanks
+               MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
                MPI_INT,		 //numberOfAdjacentRefinedCells
                MPI_UB		 // end/displacement flag
             };
@@ -385,6 +414,7 @@
                DIMENSIONS,		 //x
                1,		 //level
                TWO_POWER_D,		 //adjacentRanks
+               1,		 //adjacentSubtreeForksIntoOtherRank
                1,		 //numberOfAdjacentRefinedCells
                1		 // end/displacement flag
             };
@@ -399,8 +429,9 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._x[0]))), 		&disp[3] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._level))), 		&disp[4] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[5] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[6] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[7] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[6] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[7] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[8] );
             
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
@@ -415,7 +446,7 @@
          {
             TestVertex dummyTestVertex[2];
             
-            const int Attributes = 10;
+            const int Attributes = 11;
             MPI_Datatype subtypes[Attributes] = {
                MPI_CHAR,		 //isHangingNode
                MPI_INT,		 //refinementControl
@@ -424,6 +455,7 @@
                MPI_DOUBLE,		 //x
                MPI_INT,		 //level
                MPI_INT,		 //adjacentRanks
+               MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
                MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
                MPI_INT,		 //numberOfAdjacentRefinedCells
                MPI_UB		 // end/displacement flag
@@ -437,6 +469,7 @@
                DIMENSIONS,		 //x
                1,		 //level
                TWO_POWER_D,		 //adjacentRanks
+               1,		 //adjacentSubtreeForksIntoOtherRank
                1,		 //adjacentCellsHeightOfPreviousIteration
                1,		 //numberOfAdjacentRefinedCells
                1		 // end/displacement flag
@@ -453,9 +486,10 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._x[0]))), 		&disp[4] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._level))), 		&disp[5] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[6] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[7] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[8] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[9] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[7] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[8] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[9] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[10] );
             
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
@@ -673,11 +707,12 @@
    }
    
    
-   peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
+   peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
    _adjacentCellsHeight(adjacentCellsHeight),
    _x(x),
    _level(level),
-   _adjacentRanks(adjacentRanks) {
+   _adjacentRanks(adjacentRanks),
+   _adjacentSubtreeForksIntoOtherRank(adjacentSubtreeForksIntoOtherRank) {
       setIsHangingNode(isHangingNode);
       setRefinementControl(refinementControl);
       setInsideOutsideDomain(insideOutsideDomain);
@@ -790,6 +825,18 @@
    }
    
    
+   
+    bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getAdjacentSubtreeForksIntoOtherRank() const  {
+      return _adjacentSubtreeForksIntoOtherRank;
+   }
+   
+   
+   
+    void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank)  {
+      _adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksIntoOtherRank;
+   }
+   
+   
    peano::grid::tests::records::TestVertexPacked::TestVertexPacked() {
       assertion((6 < (8 * sizeof(int))));
       
@@ -797,21 +844,21 @@
    
    
    peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const PersistentRecords& persistentRecords):
-   _persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._x, persistentRecords._level, persistentRecords._adjacentRanks) {
+   _persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._x, persistentRecords._level, persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank) {
       assertion((6 < (8 * sizeof(int))));
       
    }
    
    
-   peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
-   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks) {
+   peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
+   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank) {
       assertion((6 < (8 * sizeof(int))));
       
    }
    
    
-   peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
-   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+   peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
+   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
    _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
       assertion((6 < (8 * sizeof(int))));
       
@@ -984,6 +1031,18 @@
    }
    
    
+   
+    bool peano::grid::tests::records::TestVertexPacked::getAdjacentSubtreeForksIntoOtherRank() const  {
+      return _persistentRecords._adjacentSubtreeForksIntoOtherRank;
+   }
+   
+   
+   
+    void peano::grid::tests::records::TestVertexPacked::setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank)  {
+      _persistentRecords._adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksIntoOtherRank;
+   }
+   
+   
    std::string peano::grid::tests::records::TestVertexPacked::toString(const InsideOutsideDomain& param) {
       return peano::grid::tests::records::TestVertex::toString(param);
    }
@@ -1035,6 +1094,8 @@
       out << getAdjacentRanks(i) << ",";
    }
    out << getAdjacentRanks(TWO_POWER_D-1) << "]";
+      out << ",";
+      out << "adjacentSubtreeForksIntoOtherRank:" << getAdjacentSubtreeForksIntoOtherRank();
       out <<  ")";
    }
    
@@ -1053,7 +1114,8 @@
          getInsideOutsideDomain(),
          getX(),
          getLevel(),
-         getAdjacentRanks()
+         getAdjacentRanks(),
+         getAdjacentSubtreeForksIntoOtherRank()
       );
    }
    
@@ -1068,11 +1130,12 @@
          {
             TestVertexPacked dummyTestVertexPacked[2];
             
-            const int Attributes = 6;
+            const int Attributes = 7;
             MPI_Datatype subtypes[Attributes] = {
                MPI_DOUBLE,		 //x
                MPI_INT,		 //level
                MPI_INT,		 //adjacentRanks
+               MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
                MPI_INT,		 //_packedRecords0
                MPI_INT,		 //numberOfAdjacentRefinedCells
                MPI_UB		 // end/displacement flag
@@ -1082,6 +1145,7 @@
                DIMENSIONS,		 //x
                1,		 //level
                TWO_POWER_D,		 //adjacentRanks
+               1,		 //adjacentSubtreeForksIntoOtherRank
                1,		 //_packedRecords0
                1,		 //numberOfAdjacentRefinedCells
                1		 // end/displacement flag
@@ -1094,9 +1158,10 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._x[0]))), 		&disp[0] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._level))), 		&disp[1] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[2] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[3] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[4] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestVertexPacked[1]._persistentRecords._x[0])), 		&disp[5] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[3] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[4] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[5] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestVertexPacked[1]._persistentRecords._x[0])), 		&disp[6] );
             
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
@@ -1111,12 +1176,13 @@
          {
             TestVertexPacked dummyTestVertexPacked[2];
             
-            const int Attributes = 8;
+            const int Attributes = 9;
             MPI_Datatype subtypes[Attributes] = {
                MPI_INT,		 //adjacentCellsHeight
                MPI_DOUBLE,		 //x
                MPI_INT,		 //level
                MPI_INT,		 //adjacentRanks
+               MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
                MPI_INT,		 //_packedRecords0
                MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
                MPI_INT,		 //numberOfAdjacentRefinedCells
@@ -1128,6 +1194,7 @@
                DIMENSIONS,		 //x
                1,		 //level
                TWO_POWER_D,		 //adjacentRanks
+               1,		 //adjacentSubtreeForksIntoOtherRank
                1,		 //_packedRecords0
                1,		 //adjacentCellsHeightOfPreviousIteration
                1,		 //numberOfAdjacentRefinedCells
@@ -1142,10 +1209,11 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._x[0]))), 		&disp[1] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._level))), 		&disp[2] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[3] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[4] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[5] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[6] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[7] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[4] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[5] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[6] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[7] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[8] );
             
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
@@ -3675,12 +3743,13 @@ peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords() 
 }
 
 
-peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
+peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
 _isHangingNode(isHangingNode),
 _refinementControl(refinementControl),
 _adjacentCellsHeight(adjacentCellsHeight),
 _insideOutsideDomain(insideOutsideDomain),
-_adjacentRanks(adjacentRanks) {
+_adjacentRanks(adjacentRanks),
+_adjacentSubtreeForksIntoOtherRank(adjacentSubtreeForksIntoOtherRank) {
 
 }
 
@@ -3744,25 +3813,37 @@ _adjacentRanks = (adjacentRanks);
 }
 
 
+
+ bool peano::grid::tests::records::TestVertex::PersistentRecords::getAdjacentSubtreeForksIntoOtherRank() const  {
+return _adjacentSubtreeForksIntoOtherRank;
+}
+
+
+
+ void peano::grid::tests::records::TestVertex::PersistentRecords::setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank)  {
+_adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksIntoOtherRank;
+}
+
+
 peano::grid::tests::records::TestVertex::TestVertex() {
 
 }
 
 
 peano::grid::tests::records::TestVertex::TestVertex(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._adjacentRanks) {
+_persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank) {
 
 }
 
 
-peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks) {
+peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank) {
 
 }
 
 
-peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
 _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
 
 }
@@ -3871,6 +3952,18 @@ _persistentRecords._adjacentRanks[elementIndex]= adjacentRanks;
 }
 
 
+
+ bool peano::grid::tests::records::TestVertex::getAdjacentSubtreeForksIntoOtherRank() const  {
+return _persistentRecords._adjacentSubtreeForksIntoOtherRank;
+}
+
+
+
+ void peano::grid::tests::records::TestVertex::setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank)  {
+_persistentRecords._adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksIntoOtherRank;
+}
+
+
 std::string peano::grid::tests::records::TestVertex::toString(const InsideOutsideDomain& param) {
 switch (param) {
    case Inside: return "Inside";
@@ -3926,6 +4019,8 @@ out << "adjacentRanks:[";
       out << getAdjacentRanks(i) << ",";
    }
    out << getAdjacentRanks(TWO_POWER_D-1) << "]";
+out << ",";
+out << "adjacentSubtreeForksIntoOtherRank:" << getAdjacentSubtreeForksIntoOtherRank();
 out <<  ")";
 }
 
@@ -3942,7 +4037,8 @@ return TestVertexPacked(
    getAdjacentCellsHeightOfPreviousIteration(),
    getNumberOfAdjacentRefinedCells(),
    getInsideOutsideDomain(),
-   getAdjacentRanks()
+   getAdjacentRanks(),
+   getAdjacentSubtreeForksIntoOtherRank()
 );
 }
 
@@ -3957,11 +4053,12 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
    {
       TestVertex dummyTestVertex[2];
       
-      const int Attributes = 5;
+      const int Attributes = 6;
       MPI_Datatype subtypes[Attributes] = {
          MPI_CHAR,		 //isHangingNode
          MPI_INT,		 //refinementControl
          MPI_INT,		 //adjacentRanks
+         MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
          MPI_INT,		 //numberOfAdjacentRefinedCells
          MPI_UB		 // end/displacement flag
       };
@@ -3970,6 +4067,7 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
          1,		 //isHangingNode
          1,		 //refinementControl
          TWO_POWER_D,		 //adjacentRanks
+         1,		 //adjacentSubtreeForksIntoOtherRank
          1,		 //numberOfAdjacentRefinedCells
          1		 // end/displacement flag
       };
@@ -3981,8 +4079,9 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._isHangingNode))), 		&disp[0] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._refinementControl))), 		&disp[1] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[2] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[3] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[4] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[3] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[4] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[5] );
       
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
@@ -3997,13 +4096,14 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
    {
       TestVertex dummyTestVertex[2];
       
-      const int Attributes = 8;
+      const int Attributes = 9;
       MPI_Datatype subtypes[Attributes] = {
          MPI_CHAR,		 //isHangingNode
          MPI_INT,		 //refinementControl
          MPI_INT,		 //adjacentCellsHeight
          MPI_INT,		 //insideOutsideDomain
          MPI_INT,		 //adjacentRanks
+         MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
          MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
          MPI_INT,		 //numberOfAdjacentRefinedCells
          MPI_UB		 // end/displacement flag
@@ -4015,6 +4115,7 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
          1,		 //adjacentCellsHeight
          1,		 //insideOutsideDomain
          TWO_POWER_D,		 //adjacentRanks
+         1,		 //adjacentSubtreeForksIntoOtherRank
          1,		 //adjacentCellsHeightOfPreviousIteration
          1,		 //numberOfAdjacentRefinedCells
          1		 // end/displacement flag
@@ -4029,9 +4130,10 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentCellsHeight))), 		&disp[2] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._insideOutsideDomain))), 		&disp[3] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[4] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[5] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[6] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[7] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[5] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[6] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[7] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[8] );
       
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
@@ -4249,9 +4351,10 @@ assertion((6 < (8 * sizeof(int))));
 }
 
 
-peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
+peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
 _adjacentCellsHeight(adjacentCellsHeight),
-_adjacentRanks(adjacentRanks) {
+_adjacentRanks(adjacentRanks),
+_adjacentSubtreeForksIntoOtherRank(adjacentSubtreeForksIntoOtherRank) {
 setIsHangingNode(isHangingNode);
 setRefinementControl(refinementControl);
 setInsideOutsideDomain(insideOutsideDomain);
@@ -4340,6 +4443,18 @@ _adjacentRanks = (adjacentRanks);
 }
 
 
+
+ bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getAdjacentSubtreeForksIntoOtherRank() const  {
+return _adjacentSubtreeForksIntoOtherRank;
+}
+
+
+
+ void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank)  {
+_adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksIntoOtherRank;
+}
+
+
 peano::grid::tests::records::TestVertexPacked::TestVertexPacked() {
 assertion((6 < (8 * sizeof(int))));
 
@@ -4347,21 +4462,21 @@ assertion((6 < (8 * sizeof(int))));
 
 
 peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._adjacentRanks) {
+_persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank) {
 assertion((6 < (8 * sizeof(int))));
 
 }
 
 
-peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks) {
+peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank) {
 assertion((6 < (8 * sizeof(int))));
 
 }
 
 
-peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
 _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
 assertion((6 < (8 * sizeof(int))));
 
@@ -4492,6 +4607,18 @@ _persistentRecords._adjacentRanks[elementIndex]= adjacentRanks;
 }
 
 
+
+ bool peano::grid::tests::records::TestVertexPacked::getAdjacentSubtreeForksIntoOtherRank() const  {
+return _persistentRecords._adjacentSubtreeForksIntoOtherRank;
+}
+
+
+
+ void peano::grid::tests::records::TestVertexPacked::setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank)  {
+_persistentRecords._adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksIntoOtherRank;
+}
+
+
 std::string peano::grid::tests::records::TestVertexPacked::toString(const InsideOutsideDomain& param) {
 return peano::grid::tests::records::TestVertex::toString(param);
 }
@@ -4535,6 +4662,8 @@ out << "adjacentRanks:[";
       out << getAdjacentRanks(i) << ",";
    }
    out << getAdjacentRanks(TWO_POWER_D-1) << "]";
+out << ",";
+out << "adjacentSubtreeForksIntoOtherRank:" << getAdjacentSubtreeForksIntoOtherRank();
 out <<  ")";
 }
 
@@ -4551,7 +4680,8 @@ return TestVertex(
    getAdjacentCellsHeightOfPreviousIteration(),
    getNumberOfAdjacentRefinedCells(),
    getInsideOutsideDomain(),
-   getAdjacentRanks()
+   getAdjacentRanks(),
+   getAdjacentSubtreeForksIntoOtherRank()
 );
 }
 
@@ -4566,9 +4696,10 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
    {
       TestVertexPacked dummyTestVertexPacked[2];
       
-      const int Attributes = 4;
+      const int Attributes = 5;
       MPI_Datatype subtypes[Attributes] = {
          MPI_INT,		 //adjacentRanks
+         MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
          MPI_INT,		 //_packedRecords0
          MPI_INT,		 //numberOfAdjacentRefinedCells
          MPI_UB		 // end/displacement flag
@@ -4576,6 +4707,7 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
       
       int blocklen[Attributes] = {
          TWO_POWER_D,		 //adjacentRanks
+         1,		 //adjacentSubtreeForksIntoOtherRank
          1,		 //_packedRecords0
          1,		 //numberOfAdjacentRefinedCells
          1		 // end/displacement flag
@@ -4586,9 +4718,10 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
       MPI_Aint base;
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]))), &base);
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[1] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[2] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestVertexPacked[1]._persistentRecords._adjacentRanks[0])), 		&disp[3] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[1] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[2] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[3] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestVertexPacked[1]._persistentRecords._adjacentRanks[0])), 		&disp[4] );
       
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
@@ -4603,10 +4736,11 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
    {
       TestVertexPacked dummyTestVertexPacked[2];
       
-      const int Attributes = 6;
+      const int Attributes = 7;
       MPI_Datatype subtypes[Attributes] = {
          MPI_INT,		 //adjacentCellsHeight
          MPI_INT,		 //adjacentRanks
+         MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
          MPI_INT,		 //_packedRecords0
          MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
          MPI_INT,		 //numberOfAdjacentRefinedCells
@@ -4616,6 +4750,7 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
       int blocklen[Attributes] = {
          1,		 //adjacentCellsHeight
          TWO_POWER_D,		 //adjacentRanks
+         1,		 //adjacentSubtreeForksIntoOtherRank
          1,		 //_packedRecords0
          1,		 //adjacentCellsHeightOfPreviousIteration
          1,		 //numberOfAdjacentRefinedCells
@@ -4628,10 +4763,11 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]))), &base);
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentCellsHeight))), 		&disp[0] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[1] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[2] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[3] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[4] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[5] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[2] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[3] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[4] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[5] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[6] );
       
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );

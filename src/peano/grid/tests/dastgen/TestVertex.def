@@ -79,5 +79,6 @@ class peano::grid::tests::records::TestVertex {
   
   #ifdef Parallel
   persistent parallelise int    adjacentRanks[TWO_POWER_D];
+  persistent parallelise bool   adjacentSubtreeForksIntoOtherRank;
   #endif
 };

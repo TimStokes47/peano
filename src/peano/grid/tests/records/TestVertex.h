@@ -35,9 +35,9 @@ namespace peano {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 20-02-2013 11:21
+    * 		   build date: 12-04-2013 09:18
     *
-    * @date   21/02/2013 13:55
+    * @date   13/05/2013 09:58
     */
    class peano::grid::tests::records::TestVertex { 
       
@@ -61,6 +61,7 @@ namespace peano {
             tarch::la::Vector<DIMENSIONS,double> _x;
             int _level;
             tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+            bool _adjacentSubtreeForksIntoOtherRank;
             /**
              * Generated
              */
@@ -69,7 +70,7 @@ namespace peano {
             /**
              * Generated
              */
-            PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+            PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
             
             /**
              * Generated
@@ -129,6 +130,16 @@ namespace peano {
             
              void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
             
+            /**
+             * Generated
+             */
+             bool getAdjacentSubtreeForksIntoOtherRank() const ;
+            
+            /**
+             * Generated
+             */
+             void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+            
             
          };
          
@@ -151,12 +162,12 @@ namespace peano {
          /**
           * Generated
           */
-         TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+         TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
          
          /**
           * Generated
           */
-         TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+         TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
          
          /**
           * Generated
@@ -252,6 +263,16 @@ namespace peano {
          /**
           * Generated
           */
+          bool getAdjacentSubtreeForksIntoOtherRank() const ;
+         
+         /**
+          * Generated
+          */
+          void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+         
+         /**
+          * Generated
+          */
          static std::string toString(const InsideOutsideDomain& param);
          
          /**
@@ -329,9 +350,9 @@ namespace peano {
        * 		   2007-2009 Wolfgang Eckhardt
        * 		   2012      Tobias Weinzierl
        *
-       * 		   build date: 20-02-2013 11:21
+       * 		   build date: 12-04-2013 09:18
        *
-       * @date   21/02/2013 13:55
+       * @date   13/05/2013 09:58
        */
       class peano::grid::tests::records::TestVertexPacked { 
          
@@ -346,6 +367,7 @@ namespace peano {
                tarch::la::Vector<DIMENSIONS,double> _x;
                int _level;
                tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+               bool _adjacentSubtreeForksIntoOtherRank;
                
                /** mapping of records:
                || Member 	|| startbit 	|| length
@@ -363,7 +385,7 @@ namespace peano {
                /**
                 * Generated
                 */
-               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                
                /**
                 * Generated
@@ -423,6 +445,16 @@ namespace peano {
                
                 void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
                
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
                
             };
             
@@ -445,12 +477,12 @@ namespace peano {
             /**
              * Generated
              */
-            TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+            TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
             
             /**
              * Generated
              */
-            TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+            TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
             
             /**
              * Generated
@@ -546,6 +578,16 @@ namespace peano {
             /**
              * Generated
              */
+             bool getAdjacentSubtreeForksIntoOtherRank() const ;
+            
+            /**
+             * Generated
+             */
+             void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+            
+            /**
+             * Generated
+             */
             static std::string toString(const InsideOutsideDomain& param);
             
             /**
@@ -625,9 +667,9 @@ namespace peano {
           * 		   2007-2009 Wolfgang Eckhardt
           * 		   2012      Tobias Weinzierl
           *
-          * 		   build date: 20-02-2013 11:21
+          * 		   build date: 12-04-2013 09:18
           *
-          * @date   21/02/2013 13:55
+          * @date   13/05/2013 09:58
           */
          class peano::grid::tests::records::TestVertex { 
             
@@ -872,9 +914,9 @@ namespace peano {
              * 		   2007-2009 Wolfgang Eckhardt
              * 		   2012      Tobias Weinzierl
              *
-             * 		   build date: 20-02-2013 11:21
+             * 		   build date: 12-04-2013 09:18
              *
-             * @date   21/02/2013 13:55
+             * @date   13/05/2013 09:58
              */
             class peano::grid::tests::records::TestVertexPacked { 
                
@@ -1122,9 +1164,9 @@ namespace peano {
              * 		   2007-2009 Wolfgang Eckhardt
              * 		   2012      Tobias Weinzierl
              *
-             * 		   build date: 20-02-2013 11:21
+             * 		   build date: 12-04-2013 09:18
              *
-             * @date   21/02/2013 13:55
+             * @date   13/05/2013 09:58
              */
             class peano::grid::tests::records::TestVertex { 
                
@@ -1403,9 +1445,9 @@ namespace peano {
                 * 		   2007-2009 Wolfgang Eckhardt
                 * 		   2012      Tobias Weinzierl
                 *
-                * 		   build date: 20-02-2013 11:21
+                * 		   build date: 12-04-2013 09:18
                 *
-                * @date   21/02/2013 13:55
+                * @date   13/05/2013 09:58
                 */
                class peano::grid::tests::records::TestVertexPacked { 
                   
@@ -1687,9 +1729,9 @@ namespace peano {
                 * 		   2007-2009 Wolfgang Eckhardt
                 * 		   2012      Tobias Weinzierl
                 *
-                * 		   build date: 20-02-2013 11:21
+                * 		   build date: 12-04-2013 09:18
                 *
-                * @date   21/02/2013 13:55
+                * @date   13/05/2013 09:58
                 */
                class peano::grid::tests::records::TestVertex { 
                   
@@ -1711,6 +1753,7 @@ namespace peano {
                         int _adjacentCellsHeight;
                         InsideOutsideDomain _insideOutsideDomain;
                         tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+                        bool _adjacentSubtreeForksIntoOtherRank;
                         /**
                          * Generated
                          */
@@ -1719,7 +1762,7 @@ namespace peano {
                         /**
                          * Generated
                          */
-                        PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+                        PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                         
                         /**
                          * Generated
@@ -1765,6 +1808,16 @@ namespace peano {
                         
                          void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
                         
+                        /**
+                         * Generated
+                         */
+                         bool getAdjacentSubtreeForksIntoOtherRank() const ;
+                        
+                        /**
+                         * Generated
+                         */
+                         void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+                        
                         
                      };
                      
@@ -1787,12 +1840,12 @@ namespace peano {
                      /**
                       * Generated
                       */
-                     TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+                     TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                      
                      /**
                       * Generated
                       */
-                     TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+                     TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                      
                      /**
                       * Generated
@@ -1866,6 +1919,16 @@ namespace peano {
                       int getAdjacentRanks(int elementIndex) const ;
                      
                       void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+                     
+                     /**
+                      * Generated
+                      */
+                      bool getAdjacentSubtreeForksIntoOtherRank() const ;
+                     
+                     /**
+                      * Generated
+                      */
+                      void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
                      
                      /**
                       * Generated
@@ -1947,9 +2010,9 @@ namespace peano {
                    * 		   2007-2009 Wolfgang Eckhardt
                    * 		   2012      Tobias Weinzierl
                    *
-                   * 		   build date: 20-02-2013 11:21
+                   * 		   build date: 12-04-2013 09:18
                    *
-                   * @date   21/02/2013 13:55
+                   * @date   13/05/2013 09:58
                    */
                   class peano::grid::tests::records::TestVertexPacked { 
                      
@@ -1962,6 +2025,7 @@ namespace peano {
                         struct PersistentRecords {
                            int _adjacentCellsHeight;
                            tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+                           bool _adjacentSubtreeForksIntoOtherRank;
                            
                            /** mapping of records:
                            || Member 	|| startbit 	|| length
@@ -1979,7 +2043,7 @@ namespace peano {
                            /**
                             * Generated
                             */
-                           PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+                           PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                            
                            /**
                             * Generated
@@ -2025,6 +2089,16 @@ namespace peano {
                            
                             void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
                            
+                           /**
+                            * Generated
+                            */
+                            bool getAdjacentSubtreeForksIntoOtherRank() const ;
+                           
+                           /**
+                            * Generated
+                            */
+                            void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+                           
                            
                         };
                         
@@ -2047,12 +2121,12 @@ namespace peano {
                         /**
                          * Generated
                          */
-                        TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+                        TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                         
                         /**
                          * Generated
                          */
-                        TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks);
+                        TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
                         
                         /**
                          * Generated
@@ -2126,6 +2200,16 @@ namespace peano {
                          int getAdjacentRanks(int elementIndex) const ;
                         
                          void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+                        
+                        /**
+                         * Generated
+                         */
+                         bool getAdjacentSubtreeForksIntoOtherRank() const ;
+                        
+                        /**
+                         * Generated
+                         */
+                         void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
                         
                         /**
                          * Generated
