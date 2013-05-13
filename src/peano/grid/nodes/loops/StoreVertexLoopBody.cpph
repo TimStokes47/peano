@@ -309,6 +309,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
       if (
         _fineGridVertices[positionInVertexArray].isAdjacentSubtreeForksIntoOtherRankFlag()
       ) {
+        logDebug( "updateCoarseGridTreeHeightAttributes(int)", "set remote flag of coarse vertex due to " << _fineGridVertices[positionInVertexArray].toString() );
         _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setAdjacentSubtreeForksIntoOtherRankFlag();
       }
       #endif
