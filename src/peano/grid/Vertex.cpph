@@ -17,6 +17,10 @@ peano::grid::Vertex<VertexData>::Vertex():
   _vertexData.setAdjacentCellsHeight( peano::grid::StationaryButIrregular );
   _vertexData.setRefinementControl(Records::Unrefined);
   _vertexData.setNumberOfAdjacentRefinedCells(0);
+
+  #ifdef Parallel
+  _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
+  #endif
 }
 
 
@@ -169,6 +173,7 @@ typename peano::grid::Vertex<VertexData>::SwitchEraseTriggeredResult peano::grid
     _vertexData.getRefinementControl()==VertexData::EraseTriggered &&
     _vertexData.getAdjacentSubtreeForksIntoOtherRank()
   ) {
+    _vertexData.setRefinementControl( VertexData::Refined );
     return WasntAbleToSwitchDueToFork;
   }
   else

@@ -210,6 +210,15 @@ class peano::grid::Vertex {
      * An erase becomes nop if it is done for a vertex belonging to an
      * instationary or forked subpartition, i.e. parallelisation and refinement
      * have a higher priority than making the grid coarser.
+     *
+     * !!! Parallel
+     *
+     * In the parallel mode, it can happen that Peano does not erase the grid
+     * if this would induce a starvation effect. If this happens, Peano rolls
+     * back the erase (i.e. the vertex is reset to refined). However, it
+     * informs the load balancing that it wasn't able to perfom some erases.
+     * So, the load balancing might react to such an erase call and join
+     * partitions. If you then call erase again, it might go through.
      */
     void erase();
 
