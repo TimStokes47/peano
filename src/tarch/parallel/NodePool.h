@@ -301,6 +301,9 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * registered, the node pool waits for the registration before it continues.
      * Consequently, this operation acts as a global barrier if it is called in
      * the beginning - a barrier that waits for two messages from each node.
+     *
+     * The operation becomes nop if you call it on another rank than the global
+     * master.
      */
     void waitForAllNodesToBecomeIdle();
 
