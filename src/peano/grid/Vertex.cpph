@@ -174,12 +174,16 @@ typename peano::grid::Vertex<VertexData>::SwitchEraseTriggeredResult peano::grid
     _vertexData.getAdjacentSubtreeForksIntoOtherRank()
   ) {
     _vertexData.setRefinementControl( VertexData::Refined );
+    _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
     return WasntAbleToSwitchDueToFork;
   }
   else
   #endif
   if ( _vertexData.getRefinementControl()==VertexData::EraseTriggered ) {
     _vertexData.setRefinementControl( VertexData::Erasing );
+    #ifdef Parallel
+    _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
+    #endif
     assertion1(_vertexData.getAdjacentCellsHeight() <= peano::grid::NotStationary ,toString());
     invalidateAdjacentCellInformation();
     return SwitchedIntoErasing;
