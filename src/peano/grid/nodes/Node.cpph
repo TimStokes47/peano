@@ -107,10 +107,11 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   peano::parallel::AdjacencyListAspect<Vertex>::replaceAdjancyEntriesOfVerticesOfOneCellWithDifferentRank(remoteRank,fineGridVertices,fineGridVerticesEnumerator);
   state.changedCellState();
 
-  dfor2(j)
-    logDebug( "makeCellRemoteCell(...)", "- vertex: " << fineGridVertices[fineGridVerticesEnumerator(j)].toString() );
-    fineGridVertices[ fineGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-  enddforx
+// Does not work
+//  dfor2(j)
+//    logDebug( "makeCellRemoteCell(...)", "- vertex: " << fineGridVertices[fineGridVerticesEnumerator(j)].toString() );
+//    fineGridVertices[ fineGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+//  enddforx
 
   logTraceOut( "makeCellRemoteCell(...)" );
 }
