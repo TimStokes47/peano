@@ -94,7 +94,7 @@ class tarch::timing::Measurement {
      *
      * I therefore use a normalised mean value
      *
-     * @f$ valid = | \frac{m^{(n+1)}-m^{(n)}}{m^{(n)}} | \leq \eqs = | \frac{m^{(n+1)}}{m^{(n)}}-1  | \leq \eqs @f$
+     * @f$ valid = | \frac{m^{(n+1)}-m^{(n)}}{m^{(n)}} | \leq \eps = | \frac{m^{(n+1)}}{m^{(n)}}-1  | \leq \eps @f$
      *
      * where @f$ m^{(n)} @f$ and @f$ m^{(n+1)} @f$ are two subsequent mean
      * values.
