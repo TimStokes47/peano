@@ -62,6 +62,7 @@ class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
 
     virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier );
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
+    virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers);
 };
 
 

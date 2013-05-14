@@ -6,6 +6,9 @@
 #include "tarch/parallel/messages/JobRequestMessage.h"
 #include "tarch/parallel/messages/NodePoolAnswerMessage.h"
 
+#include "tarch/mpianalysis/Analysis.h"
+
+
 #include <sstream>
 
 #include "tarch/services/ServiceFactory.h"
@@ -108,11 +111,6 @@ tarch::parallel::NodePool& tarch::parallel::NodePool::getInstance() {
 
 int tarch::parallel::NodePool::getTagForForkMessages() const {
   return _jobManagementTag;
-}
-
-
-void tarch::parallel::NodePool::answerAllJobRequestMessagesWithHandleLocalProblem( bool value ) {
-  _answerJobRequestsWithHandleLocalProblem = value;
 }
 
 
@@ -406,6 +404,7 @@ void tarch::parallel::NodePool::replyToRegistrationMessages() {
     message.receive( MPI_ANY_SOURCE, _registrationTag, true );
     logDebug(  "replyToRegistrationMessages()", "got registration from rank " << message.getSenderRank() );
     _strategy->addNode( message );
+    logStatistics();
   }
 
   logTraceOut( "replyToRegistrationMessages()" );
@@ -452,6 +451,8 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
     else {
       _strategy->setNodeIdle( queryMessage.getSenderRank() );
     }
+
+    logStatistics();
   }
   #endif
 }
@@ -485,11 +486,20 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
         answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true );
       }
       _strategy->fillWorkerRequestQueue(queue);
+      logStatistics();
     }
   }
 
   logTraceOut( "replyToWorkerRequestMessages()" );
   #endif
+}
+
+
+void tarch::parallel::NodePool::logStatistics() {
+  tarch::mpianalysis::Analysis::getInstance().logNodePoolStatistics(
+    _strategy->getNumberOfRegisteredNodes(),
+    _strategy->getNumberOfIdleNodes()
+  );
 }
 
 

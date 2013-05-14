@@ -142,3 +142,7 @@ void tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedInBackground( int fr
 //    << "for send [cpu ticks, cpu time, calendar time]"
 //  );
 }
+
+
+void tarch::mpianalysis::DefaultAnalyser::logNodePoolStatistics(int registeredWorkers, int idleWorkers) {
+}

@@ -83,6 +83,15 @@ class tarch::mpianalysis::Analyser {
      * @param pageSize     In which batches should this data arrive.
      */
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) = 0;
+
+    /**
+     * Log information about mpi resources.
+     *
+     * This operation is invoked by node pools, i.e. by mpi ranks managing
+     * resources. They call this operation upon state changes. See
+     * NodePool::logStatistics().
+     */
+    virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers) = 0;
 };
 
 

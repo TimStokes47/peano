@@ -99,3 +99,9 @@ void tarch::mpianalysis::Analysis::dataWasNotReceivedInBackground( int fromRank,
   assertion( _device!=0 );
   _device->dataWasNotReceivedInBackground(fromRank,tag,cardinality,pageSize);
 }
+
+
+void tarch::mpianalysis::Analysis::logNodePoolStatistics(int registeredWorkers, int idleWorkers) {
+  assertion( _device!=0 );
+  _device->logNodePoolStatistics(registeredWorkers, idleWorkers);
+}

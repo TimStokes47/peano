@@ -216,6 +216,7 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * Only the master is allowed to call this operation.
      */
     void waitUntilAllTerminationMessagesHaveBeenSent();
+
   public:
     /**
      * Set service up.
@@ -389,7 +390,16 @@ class tarch::parallel::NodePool: public tarch::services::Service {
     template <class Message>
     void broadcastToWorkingNodes(Message& message, int tag);
 
-    void answerAllJobRequestMessagesWithHandleLocalProblem( bool value );
+    /**
+     * Update statistics
+     *
+     * The node pool pipes some statistics to the mpi analysis interface due to
+     * this operation. The node pool automatically calls this operation if its
+     * state changes. If the state does not change, this operation is not
+     * called and no statistics are logged. However, you are always free to
+     * call this operation additionally from a runner.
+     */
+    void logStatistics();
 };
 
 
