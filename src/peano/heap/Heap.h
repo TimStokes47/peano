@@ -125,8 +125,8 @@ namespace peano {
  *
  * !!! Troubleshooting
  *
- * # Is your receiving mapping also calling startToSendOrReceiveHeapData()?
- * # Does each node send exactly the same number of vertices to the other nodes
+ * - Is your receiving mapping also calling startToSendOrReceiveHeapData()?
+ * - Does each node send exactly the same number of vertices to the other nodes
  *   that it wants to receive? The size of the heap records doesn't have to be
  *   the same but each vertex that wants to receive data also has to send a
  *   (probably empty) record the the corresponding neighbour.

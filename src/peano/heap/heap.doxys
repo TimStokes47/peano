@@ -1,6 +1,6 @@
 /**
 
- @dir "Heap"
+ @page "How to use a heap"
  
  Peano originally supported solely vertex (and cell) attributes stored and 
  managed by stacks. This proved to be a big disadvantage for two types of 
