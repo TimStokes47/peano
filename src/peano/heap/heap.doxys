@@ -209,18 +209,5 @@
   The following image shows the events that are called during the various parallel actions.
   
   \image html MPIEvents.png
-  
-  
-  !!! AVX/SSE Support
-  
-  Heap data are predestinated for AVX/SSE treatment. To do so, you typically 
-  have to add an aling statement to your DaStGen call:
-  
-  \code
-    java -jar DaStGen.jar ... --align
-  \endode
     
-  
  */
- 
- 
