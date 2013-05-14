@@ -72,8 +72,11 @@ void peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
   }
 
   localVertex._vertexData.setNumberOfAdjacentRefinedCells(      neighbourVertex._vertexData.getNumberOfAdjacentRefinedCells() );
-  localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank( neighbourVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank() );
-  
+  localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank(
+     neighbourVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank() |
+     localVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank()
+  );
+
   logTraceOutWith1Argument( "mergeOnDomainBoundary(...)", localVertex );
 }
 

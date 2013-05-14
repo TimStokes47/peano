@@ -33,9 +33,17 @@ class peano::grid::aspects::ParallelMerge {
      * # merge the refinement and vertex states (this operation), and
      * # call the mapping's merge operation, i.e. the one that is PDE-specific.
      *
-     * mergeOnDomainBoundary() does some validation checks (in the assert
-     * mode). Its more important role is to keep the refinement information
-     * consistent.
+     * mergeOnDomainBoundary() furthermore does some validation checks (in the
+     * assert mode). Its more important role is to keep the refinement
+     * information consistent.
+     *
+     * mergeOnDomainBoundary() is called by the LoadVertexLoopBody directly
+     * after a vertex has been read from the input stream. Please note that
+     * an update of the refinement states (e.g. switch from
+     * refinement-triggered to refining) happens after the PDE-specific code
+     * has been called and, consequently, after the merge. Any update of the
+     * refinement state in this operation hence immediately affects the
+     * vertex updates in this very iteration.
      *
      * !!! Consistency checks
      *
