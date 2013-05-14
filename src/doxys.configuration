@@ -1,4 +1,4 @@
-# DoxySfile 0.99.0.0 ShortConfig -- Do not remove or edit this line please --
+# DoxySfile 1.1.5.0 ShortConfig -- Do not remove or edit this line please --
 
 #---------------------------------------------------------------------------
 # General configuration options
@@ -35,7 +35,7 @@ AUTO_KEYWORD_LIMIT                  = 2
 # Specify what is included in the output
 #---------------------------------------------------------------------------
 CREATE_DOC_FOR_FILES                = YES
-CREATE_SOURCECODE_FOR_FILES         = NO
+CREATE_SOURCECODE_FOR_FILES         = YES
 CREATE_SOURCECODE_FOR_MEMBERS       = YES
 EXTRACT_PRIVATE                     = YES
 EXTRACT_PROTECTED                   = YES
@@ -97,15 +97,31 @@ QUIET                               = NO
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
 IGNORE_FILE_NAME                    = DoxyS.ignore
-FILE_PATTERNS                       = *.h *.doxys
+FILE_PATTERNS                       = *.h *.doxys *.cp*
 RECURSIVE                           = YES
-EXCLUDE                             = 
+EXCLUDE                             = doxys_docs/
 EXCLUDE_SYMLINKS                    = NO
 EXCLUDE_PATTERNS                    = 
 EXAMPLE_PATH                        = 
 IMAGE_PATH                          = 
 INPUT_FILTER                        = 
 FILTER_SOURCE_FILES                 = NO
+SIMPLE_REPLACE_FILTER               = 
+#---------------------------------------------------------------------------
+# Configuration options related to which tabs are shown
+#---------------------------------------------------------------------------
+DIR_TAB_SHOW_GLOBALS                = YES
+DIR_TAB_SHOW_GROUPS                 = YES
+#---------------------------------------------------------------------------
+# Options to control whether the various list displayed are alphabetized (sorted)
+
+#---------------------------------------------------------------------------
+SORT_GROUPS                         = YES
+SORT_GROUP_MEMBERS                  = YES
+#---------------------------------------------------------------------------
+# Configuration options related to groups
+#---------------------------------------------------------------------------
+GROUP_DUMMY_PLACEHOLDER_OPTION      = YES
 #---------------------------------------------------------------------------
 # Configuration options related to the HTML layout
 #---------------------------------------------------------------------------
@@ -116,6 +132,7 @@ LIMIT_ALFA_INDEX_IN_OVERVIEW_TABLES = 200
 COMPACT_CHAR_LENGTH                 = 25
 INFO_ON_OVERVIEW_TABLES_NORMAL      = YES
 INFO_ON_OVERVIEW_TABLES_COMPACT     = YES
+INFO_ON_CODE_LINKS                  = YES
 INCLUDE_BRIEF_IN_HEADER             = YES
 INCLUDE_BRIEF_IN_DESCRIPTION        = YES
 HIDE_TYPE_ON_DESCRIPTION            = NO
@@ -124,6 +141,11 @@ EXPAND_COLLAPSE_TABLE_SECTIONS_ONLY = YES
 CENTER_ALIGN_IMAGES                 = NO
 OPTIMIZE_OUTPUT_FOR_C               = NO
 SHOW_PATH_IN_HEADER                 = YES
+FUNCTION_POINTER_NAME               = 
+FUNCTION_POINTERS_NAME              = 
+EXAMPLES_USE_TABS                   = YES
+EXAMPLE_GROUP_USE_TABS              = YES
+CONTENT_FRAME_USE_SLIDER            = YES
 #---------------------------------------------------------------------------
 # Configuration options related to Left Menu layout
 #---------------------------------------------------------------------------
@@ -138,13 +160,28 @@ LEFT_MENU_PAGES                     = YES
 LEFT_MENU_CLASSES                   = YES
 LEFT_MENU_STRUCTS                   = YES
 LEFT_MENU_FUNCTIONS                 = YES
+LEFT_MENU_FUNCTION_POINTERS         = YES
 LEFT_MENU_MACROS                    = YES
 LEFT_MENU_DEFINES                   = YES
 LEFT_MENU_ATTRIBUTES                = NO
 LEFT_MENU_TYPES                     = YES
 LEFT_MENU_UNITS                     = YES
+LEFT_MENU_GROUPS                    = YES
 LEFT_MENU_STATISTICS                = YES
 STATISTICS_LINK_ON_MAIN_PAGE        = YES
+LEFT_MENU_TREE_VIEW                 = NO
+LEFT_MENU_TREE_DEFAULT_EXPANDED_LVL = 1
+LEFT_MENU_TREE_EXPAND_ON_TEXT       = NO
+#---------------------------------------------------------------------------
+# Configuration options related to left menu treeview
+#---------------------------------------------------------------------------
+TREE_VIEW_FOLDER_FOR_CLASSES        = YES
+TREE_VIEW_FOLDER_FOR_STRUCTS        = YES
+TREE_VIEW_FOLDER_FOR_UNITS          = YES
+TREE_VIEW_FOLDER_FOR_FUNCTIONS      = YES
+TREE_VIEW_FOLDER_FOR_FUNCTION_POINTERS                                        = YES
+TREE_VIEW_FOLDER_FOR_GROUPS         = YES
+TREE_VIEW_FOLDER_FOR_PAGES          = YES
 #---------------------------------------------------------------------------
 # Configuration options related to header and footer layout
 #---------------------------------------------------------------------------
@@ -154,6 +191,10 @@ HIDE_HEADER_ON_CLASS_AND_MEMBERS    = NO
 HIDE_FOOTER_ON_CLASS_AND_MEMBERS    = NO
 HIDE_HEADER_ON_UNITS                = NO
 HIDE_FOOTER_ON_UNITS                = NO
+HIDE_HEADER_ON_GROUPS               = NO
+HIDE_FOOTER_ON_GROUPS               = NO
+HIDE_HEADER_ON_EXAMPLES             = NO
+HIDE_FOOTER_ON_EXAMPLES             = NO
 #---------------------------------------------------------------------------
 # Configuration options related to the preprocessor   
 #---------------------------------------------------------------------------
