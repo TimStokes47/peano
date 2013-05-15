@@ -285,7 +285,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         state.mayJoinDueToLoadBalancing() && !fineGridCell.thisSubtreeHoldsWorker()
       )
     );
-    loadBalancingMessage.setCouldNotEraseDueToDecomposition(peano::parallel::loadbalancing::Oracle::getInstance().getCouldNotEraseDueToDecompositionFlag())
+    loadBalancingMessage.setCouldNotEraseDueToDecomposition(peano::parallel::loadbalancing::Oracle::getInstance().getCouldNotEraseDueToDecompositionFlag());
 
     logDebug(
       "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()",
