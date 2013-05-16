@@ -15,9 +15,7 @@ void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
   #endif
 
   assertion2( !localVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
-  assertion2( localVertex._vertexData.getRefinementControl() != Vertex::Records::Erasing, masterVertex.toString(), localVertex.toString() );
   assertion2( !masterVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
-  assertion2( masterVertex._vertexData.getRefinementControl() != Vertex::Records::Erasing, masterVertex.toString(), localVertex.toString() );
 }
 
 
