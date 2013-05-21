@@ -21,6 +21,7 @@ namespace peano {
        * Represents action to be done.
        */
       enum LoadBalancingFlag {
+        ContinueButTryToJoinWorkers=-3,
         Continue=-2,
         Join=-1,
         UndefinedLoadBalancingFlag=0,
@@ -77,7 +78,7 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      *
      * @see Oracle
      */
-    virtual void receivedStartCommand(const LoadBalancingFlag& commandFromMaster, bool couldNotEraseDueToDecomposition ) = 0;
+    virtual void receivedStartCommand(const LoadBalancingFlag& commandFromMaster ) = 0;
 
     /**
      * Get command for one single worker
@@ -195,7 +196,8 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
       double  parentCellLocalWorkload,
       double  parentCellTotalWorkload,
       const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize
+      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
+      bool    workerCouldNotEraseDueToDecomposition
     ) = 0;
 
     /**

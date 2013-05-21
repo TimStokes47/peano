@@ -106,13 +106,12 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::rec
 
     if ( _state.isInvolvedInJoinOrFork() ) {
       peano::parallel::loadbalancing::Oracle::getInstance().receivedStartCommand(
-        peano::parallel::loadbalancing::Continue, false
+        peano::parallel::loadbalancing::Continue
       );
     }
     else {
       peano::parallel::loadbalancing::Oracle::getInstance().receivedStartCommand(
-        peano::parallel::loadbalancing::getLoadBalancingFlag( loadBalancingMessage.getLoadBalancingFlag() ),
-        loadBalancingMessage.getCouldNotEraseDueToDecomposition()
+        peano::parallel::loadbalancing::getLoadBalancingFlag( loadBalancingMessage.getLoadBalancingFlag() )
       );
     }
 

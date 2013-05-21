@@ -34,7 +34,7 @@ namespace peano {
  *
  * 		   build date: 12-04-2013 09:18
  *
- * @date   12/05/2013 09:17
+ * @date   21/05/2013 13:39
  */
 class peano::parallel::messages::LoadBalancingMessage { 
    
@@ -44,7 +44,6 @@ class peano::parallel::messages::LoadBalancingMessage {
       
       struct PersistentRecords {
          int _loadBalancingFlag;
-         bool _couldNotEraseDueToDecomposition;
          /**
           * Generated
           */
@@ -53,7 +52,7 @@ class peano::parallel::messages::LoadBalancingMessage {
          /**
           * Generated
           */
-         PersistentRecords(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition);
+         PersistentRecords(const int& loadBalancingFlag);
          
          /**
           * Generated
@@ -64,16 +63,6 @@ class peano::parallel::messages::LoadBalancingMessage {
           * Generated
           */
           void setLoadBalancingFlag(const int& loadBalancingFlag) ;
-         
-         /**
-          * Generated
-          */
-          bool getCouldNotEraseDueToDecomposition() const ;
-         
-         /**
-          * Generated
-          */
-          void setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition) ;
          
          
       };
@@ -95,7 +84,7 @@ class peano::parallel::messages::LoadBalancingMessage {
       /**
        * Generated
        */
-      LoadBalancingMessage(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition);
+      LoadBalancingMessage(const int& loadBalancingFlag);
       
       /**
        * Generated
@@ -111,16 +100,6 @@ class peano::parallel::messages::LoadBalancingMessage {
        * Generated
        */
        void setLoadBalancingFlag(const int& loadBalancingFlag) ;
-      
-      /**
-       * Generated
-       */
-       bool getCouldNotEraseDueToDecomposition() const ;
-      
-      /**
-       * Generated
-       */
-       void setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition) ;
       
       /**
        * Generated
@@ -184,7 +163,7 @@ class peano::parallel::messages::LoadBalancingMessage {
     *
     * 		   build date: 12-04-2013 09:18
     *
-    * @date   12/05/2013 09:17
+    * @date   21/05/2013 13:39
     */
    class peano::parallel::messages::LoadBalancingMessagePacked { 
       
@@ -192,7 +171,6 @@ class peano::parallel::messages::LoadBalancingMessage {
          
          struct PersistentRecords {
             int _loadBalancingFlag;
-            bool _couldNotEraseDueToDecomposition;
             /**
              * Generated
              */
@@ -201,7 +179,7 @@ class peano::parallel::messages::LoadBalancingMessage {
             /**
              * Generated
              */
-            PersistentRecords(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition);
+            PersistentRecords(const int& loadBalancingFlag);
             
             /**
              * Generated
@@ -212,16 +190,6 @@ class peano::parallel::messages::LoadBalancingMessage {
              * Generated
              */
              void setLoadBalancingFlag(const int& loadBalancingFlag) ;
-            
-            /**
-             * Generated
-             */
-             bool getCouldNotEraseDueToDecomposition() const ;
-            
-            /**
-             * Generated
-             */
-             void setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition) ;
             
             
          };
@@ -243,7 +211,7 @@ class peano::parallel::messages::LoadBalancingMessage {
          /**
           * Generated
           */
-         LoadBalancingMessagePacked(const int& loadBalancingFlag, const bool& couldNotEraseDueToDecomposition);
+         LoadBalancingMessagePacked(const int& loadBalancingFlag);
          
          /**
           * Generated
@@ -259,16 +227,6 @@ class peano::parallel::messages::LoadBalancingMessage {
           * Generated
           */
           void setLoadBalancingFlag(const int& loadBalancingFlag) ;
-         
-         /**
-          * Generated
-          */
-          bool getCouldNotEraseDueToDecomposition() const ;
-         
-         /**
-          * Generated
-          */
-          void setCouldNotEraseDueToDecomposition(const bool& couldNotEraseDueToDecomposition) ;
          
          /**
           * Generated

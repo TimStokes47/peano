@@ -308,6 +308,10 @@ void peano::grid::State<StateData>::resetStateAtBeginOfIteration() {
   _stateData.setNumberOfInnerLeafCells(0.0);
   _stateData.setNumberOfOuterLeafCells(0.0);
 
+  #ifdef Parallel
+  _stateData.setCouldNotEraseDueToDecompositionFlag(false);
+  #endif
+
   logTraceOutWith1Argument( "resetStateAtBeginOfIteration()", toString() );
 }
 
@@ -432,6 +436,11 @@ void peano::grid::State<StateData>::mergeWithWorkerState(const peano::grid::Stat
       workerState._stateData.getMinMeshWidth(d) < _stateData.getMinMeshWidth(d) ? workerState._stateData.getMinMeshWidth(d) : _stateData.getMinMeshWidth(d)
     );
   }
+
+  _stateData.setCouldNotEraseDueToDecompositionFlag(
+    _stateData.getCouldNotEraseDueToDecompositionFlag() |
+    workerState._stateData.getCouldNotEraseDueToDecompositionFlag()
+  );
 
   logTraceOutWith1Argument( "mergeWithWorkerState(...)", toString() );
 }
@@ -588,6 +597,18 @@ void peano::grid::State<StateData>::setIsNewWorkerDueToForkOfExistingDomain(bool
   else {
     _loadRebalancingState = NoRebalancing;
   }
+}
+
+
+template <class StateData>
+void peano::grid::State<StateData>::couldNotEraseDueToDecomposition() {
+  _stateData.setCouldNotEraseDueToDecompositionFlag(true);
+}
+
+
+template <class StateData>
+bool peano::grid::State<StateData>::getCouldNotEraseDueToDecompositionFlag() const {
+  return _stateData.getCouldNotEraseDueToDecompositionFlag();
 }
 
 

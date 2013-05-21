@@ -197,7 +197,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       coarseGridCell.getLocalWorkload(),
       coarseGridCell.getTotalWorkload(),
       workerEnumerator.getVertexPosition(),
-      workerEnumerator.getCellSize()
+      workerEnumerator.getCellSize(),
+      workerState.getCouldNotEraseDueToDecompositionFlag()
     );
 
     tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
@@ -285,7 +286,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         state.mayJoinDueToLoadBalancing() && !fineGridCell.thisSubtreeHoldsWorker()
       )
     );
-    loadBalancingMessage.setCouldNotEraseDueToDecomposition(peano::parallel::loadbalancing::Oracle::getInstance().getCouldNotEraseDueToDecompositionFlag());
 
     logDebug(
       "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()",
@@ -897,7 +897,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   #ifdef Parallel
   if (
-    peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()!=peano::parallel::loadbalancing::Continue
+    peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()>peano::parallel::loadbalancing::Continue
     ||
     state.isInvolvedInJoinOrFork()
   ) {

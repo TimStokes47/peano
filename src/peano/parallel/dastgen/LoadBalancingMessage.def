@@ -16,5 +16,4 @@ class peano::parallel::messages::LoadBalancingMessage {
    * @see peano::kernel::parallel::loadbalancing::LoadBalancingFlag
    */
   parallelise persistent int    loadBalancingFlag;
-  parallelise persistent bool   couldNotEraseDueToDecomposition;
 };

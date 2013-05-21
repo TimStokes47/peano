@@ -59,7 +59,7 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
     OracleForOnePhaseWithGreedyPartitioning(bool joinsAllowed);
     virtual ~OracleForOnePhaseWithGreedyPartitioning();
 
-    virtual void receivedStartCommand(const LoadBalancingFlag& commandFromMaster, bool couldNotEraseDueToDecomposition );
+    virtual void receivedStartCommand(const LoadBalancingFlag& commandFromMaster );
 
     /**
      * This operation is not const, as it might update some local stuff.
@@ -86,7 +86,8 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
       double  parentCellLocalWorkload,
       double  parentCellTotalWorkload,
       const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize
+      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
+      bool    workerCouldNotEraseDueToDecomposition
     );
 
     /**

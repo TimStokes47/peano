@@ -86,7 +86,6 @@ class peano::parallel::loadbalancing::Oracle {
     WorkerContainer                          _workers;
 
     LoadBalancingFlag                        _startCommand;
-    bool                                     _couldNotEraseDueToDecomposition;
 
     void createOracles(int numberOfOracles);
     void deleteOracles();
@@ -169,7 +168,7 @@ class peano::parallel::loadbalancing::Oracle {
      */
     void setOracle( OracleForOnePhase* oraclePrototype );
 
-    void receivedStartCommand(const LoadBalancingFlag& commandFromMaster, bool couldNotEraseDueToDecomposition );
+    void receivedStartCommand(const LoadBalancingFlag& commandFromMaster );
 
     /**
      * Return last start command
@@ -213,7 +212,8 @@ class peano::parallel::loadbalancing::Oracle {
       int     parentCellLocalWorkload,
       int     parentCellTotalWorkload,
       const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize
+      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
+      bool    workerCouldNotEraseDueToDecomposition
     );
 
     /**
@@ -261,26 +261,6 @@ class peano::parallel::loadbalancing::Oracle {
      * distributed before the domain change actually happens.
      */
     int getCoarsestRegularInnerAndOuterGridLevel() const;
-
-    /**
-     * Inform the oracle that an erase was not performed to avoid starvation
-     *
-     * This operation is triggered by the load process to inform the oracle that
-     * an erase-triggered was not transformed into an erasing flag to avoid
-     * starvation. Such an information afterwards also is propagated down to
-     * all the workers.
-     *
-     * It might make sense to pick up that information in your load balancing
-     * scheme and to trigger a join if the flag is set. If you join, it might
-     * happen that the erase afterwards passes through and the grid becomes
-     * coarser.
-     */
-    void couldNotEraseDueToDecomposition();
-
-    /**
-     * @return _couldNotEraseDueToDecomposition
-     */
-    bool getCouldNotEraseDueToDecompositionFlag() const;
 };
 
 

@@ -330,6 +330,19 @@ class peano::grid::State {
 
     std::set<int> getForkingOrJoiningOrTriggeredForRebalancingRanks() const;
 
+
+    /**
+     * Inform the oracle that an erase was not performed to avoid starvation
+     *
+     * This operation is triggered by the load process to inform the state that
+     * an erase-triggered was not transformed into an erasing flag to avoid
+     * starvation. Such an information afterwards is always restricted bottom-up
+     * along the master-worker topology.
+     */
+    void couldNotEraseDueToDecomposition();
+    bool getCouldNotEraseDueToDecompositionFlag() const;
+
+
     /**
      * This operation should not be called by any user. It was created for the
      * repositories and the kernel only. If you want to switch off the global 

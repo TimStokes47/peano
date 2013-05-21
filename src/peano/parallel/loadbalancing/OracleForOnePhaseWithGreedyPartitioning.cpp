@@ -21,7 +21,7 @@ peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::~Oracle
 }
 
 
-void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::receivedStartCommand(const LoadBalancingFlag& commandFromMaster, bool couldNotEraseDueToDecomposition ) {
+void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::receivedStartCommand(const LoadBalancingFlag& commandFromMaster ) {
   if (commandFromMaster==Join) {
     _idleWorkers.clear();
   }
@@ -65,7 +65,8 @@ void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::re
   double  parentCellLocalWorkload,
   double  parentCellTotalWorkload,
   const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-  const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize
+  const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
+  bool    workerCouldNotEraseDueToDecomposition
 ) {
   if ( tarch::la::equals( workerNumberOfInnerCells, tarch::la::NUMERICAL_ZERO_DIFFERENCE ) ) {
     _idleWorkers.insert( workerRank );

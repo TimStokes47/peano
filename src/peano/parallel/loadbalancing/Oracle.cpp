@@ -31,8 +31,7 @@ peano::parallel::loadbalancing::Oracle::Oracle():
   _watch( "peano::parallel::loadbalancing::Oracle", "Oracle()", false),
   _oraclePrototype(0),
   _workers(),
-  _startCommand(Continue),
-  _couldNotEraseDueToDecomposition(false) {
+  _startCommand(Continue) {
 }
 
 
@@ -218,8 +217,7 @@ void peano::parallel::loadbalancing::Oracle::setOracle( OracleForOnePhase* oracl
 
 
 void peano::parallel::loadbalancing::Oracle::receivedStartCommand(
-  const LoadBalancingFlag& commandFromMaster,
-  bool                     couldNotEraseDueToDecomposition
+  const LoadBalancingFlag& commandFromMaster
 ) {
   assertion( _currentOracle>=0 );
   assertion( _currentOracle<static_cast<int>(_oracles.size()));
@@ -230,11 +228,10 @@ void peano::parallel::loadbalancing::Oracle::receivedStartCommand(
     logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
   }
   else {
-    _oracles[_currentOracle]->receivedStartCommand(commandFromMaster, couldNotEraseDueToDecomposition);
+    _oracles[_currentOracle]->receivedStartCommand(commandFromMaster);
   }
 
   _startCommand                    = commandFromMaster;
-  _couldNotEraseDueToDecomposition = couldNotEraseDueToDecomposition;
 }
 
 
@@ -266,18 +263,6 @@ void peano::parallel::loadbalancing::Oracle::forkFailed() {
       _startCommand = Continue;
     }
   }
-}
-
-
-void peano::parallel::loadbalancing::Oracle::couldNotEraseDueToDecomposition() {
-  assertion( _currentOracle>=0 );
-  assertion( _currentOracle<static_cast<int>(_oracles.size()));
-  _couldNotEraseDueToDecomposition = true;
-}
-
-
-bool peano::parallel::loadbalancing::Oracle::getCouldNotEraseDueToDecompositionFlag() const {
-  return _couldNotEraseDueToDecomposition;
 }
 
 
@@ -320,7 +305,8 @@ void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
   int     parentCellLocalWorkload,
   int     parentCellTotalWorkload,
   const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-  const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize
+  const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
+  bool    workerCouldNotEraseDueToDecomposition
 ) {
   assertion( _currentOracle>=0 );
   assertion( _currentOracle<static_cast<int>(_oracles.size()));
@@ -342,7 +328,8 @@ void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
     parentCellLocalWorkload,
     parentCellTotalWorkload,
     boundingBoxOffset,
-    boundingBoxSize
+    boundingBoxSize,
+    workerCouldNotEraseDueToDecomposition
   );
 
   _watch.startTimer();

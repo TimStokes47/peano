@@ -212,7 +212,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   if ( switchedIntoErasing == Vertex::WasntAbleToSwitchDueToFork ) {
     #ifdef Parallel
     _hasErased = true;
-    peano::parallel::loadbalancing::Oracle::getInstance().couldNotEraseDueToDecomposition();
+    _state.couldNotEraseDueToDecomposition();
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "tried to make vertex erasing but could not due to fork: " << _fineGridVertices[positionInVertexArray].toString() );
     #else
     assertionMsg( false, "branch is not reachable in serial mode" );
