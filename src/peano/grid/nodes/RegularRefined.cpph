@@ -100,13 +100,15 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid );
 
   #if defined(SharedMemoryParallelisation)
-    assertion1(
+    assertion2(
       fineGridCell.getNumberOfStoresToOutputStack()==0,
-      fineGridCell.toString()
+      fineGridCell.toString(),
+      fineGridVerticesEnumerator.toString()
     );
-    assertion1(
+    assertion2(
       fineGridCell.getNumberOfLoadsFromInputStack()==0,
-      fineGridCell.toString()
+      fineGridCell.toString(),
+      fineGridVerticesEnumerator.toString()
     );
 
     const int sizeOfInputStackBeforeDescend  = Base::_vertexStack.sizeOfInputStack();
