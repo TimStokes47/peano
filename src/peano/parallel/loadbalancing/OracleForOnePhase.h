@@ -120,7 +120,7 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      * @see Oracle
      * @see receivedTerminateCommand()
      */
-    virtual LoadBalancingFlag getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed ) = 0;
+    virtual int getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed ) = 0;
 
     /**
      * Information about termination call

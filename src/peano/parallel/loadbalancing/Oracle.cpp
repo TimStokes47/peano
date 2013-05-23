@@ -264,7 +264,7 @@ void peano::parallel::loadbalancing::Oracle::forkFailed() {
 }
 
 
-peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::Oracle::getCommandForWorker(
+int peano::parallel::loadbalancing::Oracle::getCommandForWorker(
   int workerRank,
   bool forkIsAllowed,
   bool joinIsAllowed
@@ -276,7 +276,7 @@ peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing
 
   joinIsAllowed &= !tarch::parallel::Node::getInstance().isGlobalMaster();
 
-  peano::parallel::loadbalancing::LoadBalancingFlag result;
+  int result;
   if (_oraclePrototype==0) {
     logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
     result = peano::parallel::loadbalancing::Continue;
@@ -284,7 +284,7 @@ peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing
   else {
     result = _oracles[_currentOracle]->getCommandForWorker(workerRank, forkIsAllowed, joinIsAllowed);
   }
-  logTraceOutWith1Argument( "getCommandForWorker(int)", toString(result) );
+  logTraceOutWith1Argument( "getCommandForWorker(int)", convertLoadBalancingFlagToString(result) );
   return result;
 }
 

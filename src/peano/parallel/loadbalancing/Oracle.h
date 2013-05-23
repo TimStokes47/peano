@@ -199,7 +199,7 @@ class peano::parallel::loadbalancing::Oracle {
      * @param workerRank Rank of the worker for which the load balancing would
      *                   be interested in a command
      */
-    LoadBalancingFlag getCommandForWorker( int workerRank, bool forkIsAllowed = true, bool joinIsAllowed = true);
+    int getCommandForWorker( int workerRank, bool forkIsAllowed = true, bool joinIsAllowed = true);
 
     /**
      * Notification mechanism that the master is finished. This might not be

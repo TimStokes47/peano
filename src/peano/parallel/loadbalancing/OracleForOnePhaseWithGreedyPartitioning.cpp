@@ -28,10 +28,10 @@ void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::re
 }
 
 
-peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed ) {
+int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed ) {
   logTraceInWith5Arguments( "getCommandForWorker(int,bool)", workerRank, forkIsAllowed, joinIsAllowed, _joinsAllowed, _idleWorkers.count(workerRank) );
 
-  LoadBalancingFlag result = Continue;
+  int result = Continue;
 
   if ( joinIsAllowed
     && _joinsAllowed
@@ -45,7 +45,7 @@ peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing
     result = ForkGreedy;
   }
 
-  logTraceOutWith1Argument( "getCommandForWorker(int,bool)", toString(result) );
+  logTraceOutWith1Argument( "getCommandForWorker(int,bool)", convertLoadBalancingFlagToString(result) );
   return result;
 }
 

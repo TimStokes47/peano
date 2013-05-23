@@ -64,7 +64,7 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
     /**
      * This operation is not const, as it might update some local stuff.
      */
-    virtual LoadBalancingFlag getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed );
+    virtual int getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed );
 
     /**
      * Notification mechanism that the master is finished. This might not be
