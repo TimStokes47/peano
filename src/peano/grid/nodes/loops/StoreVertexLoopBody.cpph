@@ -87,7 +87,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
 
   #ifdef Parallel
   // @todo Roland => ist das ein Fix fuer Dein Problem?
-  if (_state.isForkTriggered() ) {
+  if (_state.isJoinTriggered() ) {
     _fineGridVertices[positionInVertexArray].setAdjacentSubtreeForksIntoOtherRankFlag();
   }
 

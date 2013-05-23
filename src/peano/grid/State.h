@@ -317,6 +317,7 @@ class peano::grid::State {
 
     bool isForkTriggeredForRank(int rank) const;
 
+    bool isJoinTriggered() const;
     bool isJoinTriggeredForRank(int rank) const;
 
     bool hasJoinedWithMaster() const;
