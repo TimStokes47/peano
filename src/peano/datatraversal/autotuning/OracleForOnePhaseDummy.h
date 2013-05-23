@@ -7,6 +7,7 @@
 #include "tarch/logging/Log.h"
 #include "peano/datatraversal/autotuning/OracleForOnePhase.h"
 #include "tarch/timing/Measurement.h"
+#include "peano/utils/Globals.h"
 
 
 #include <map>
@@ -39,13 +40,31 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
     int                                        _smallestGrainSize;
 
     int                                        _lastProblemSize;
+
+    const int                                  _smallestGrainSize1DForCellEvents;
+    const int                                  _smallestGrainSize1DForVertexEvents;
+    const int                                  _smallestGrainSizeForLoadStoreSplits;
   public:
     /**
      * Dummy oracle
      *
      * @param splitTheTree (0=no, 1=yes and parallelise, 2=yes, but do not parallelise any events on the regular subgrid
+     * @param smallestGrainSize1DForCellEvents    Magic number. (Sub-)Grids smaller than this size (in 1d) should not be parallelised.
+     * @param smallestGrainSize1DForVertexEvents  Magic number.
+     * @param smallestGrainSizeForLoadStoreSplits Magic number.
+     *
      */
-    OracleForOnePhaseDummy(bool useMultithreading=true, bool measureAlsoSerialProgramParts = false, int splitTheTree = 1, bool pipelineDescendProcessing = false, bool pipelineAscendProcessing = false, const MethodTrace& methodTrace = NumberOfDifferentMethodsCalling);
+    OracleForOnePhaseDummy(
+      bool useMultithreading             = true,
+      bool measureAlsoSerialProgramParts = false,
+      int  splitTheTree                  = 1,
+      bool pipelineDescendProcessing     = false,
+      bool pipelineAscendProcessing      = false,
+      int  smallestGrainSize1DForCellEvents    = 12,
+      int  smallestGrainSize1DForVertexEvents  = 3*3*3 + 1,
+      int  smallestGrainSizeForLoadStoreSplits = THREE_POWER_D,
+      const MethodTrace& methodTrace     = NumberOfDifferentMethodsCalling
+    );
 
     virtual ~OracleForOnePhaseDummy();
 

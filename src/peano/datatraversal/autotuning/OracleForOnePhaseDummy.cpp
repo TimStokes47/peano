@@ -1,5 +1,4 @@
 #include "peano/datatraversal/autotuning/OracleForOnePhaseDummy.h"
-#include "peano/utils/Globals.h"
 #include "tarch/Assertions.h"
 
 #include <cstdlib>
@@ -27,6 +26,9 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
   int                 splitTheTree,
   bool                pipelineDescendProcessing,
   bool                pipelineAscendProcessing,
+  int                 smallestGrainSize1DForCellEvents,
+  int                 smallestGrainSize1DForVertexEvents,
+  int                 smallestGrainSizeForLoadStoreSplits,
   const MethodTrace&  methodTrace
 ):
   _useMulticore(useMultithreading),
@@ -37,8 +39,10 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
   _pipelineDescendProcessing(pipelineDescendProcessing),
   _pipelineAscendProcessing(pipelineAscendProcessing),
   _smallestGrainSize(std::numeric_limits<int>::max()),
-  _lastProblemSize(-1) {
-
+  _lastProblemSize(-1),
+  _smallestGrainSize1DForCellEvents(smallestGrainSize1DForCellEvents),
+  _smallestGrainSize1DForVertexEvents(smallestGrainSize1DForVertexEvents),
+  _smallestGrainSizeForLoadStoreSplits(smallestGrainSizeForLoadStoreSplits) {
   if (
     ( _methodTrace==CallEnterCellOnRegularStationaryGrid ||
       _methodTrace==CallLeaveCellOnRegularStationaryGrid ||
@@ -48,7 +52,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
     _splitTheTree !=2
   ) {
     _smallestGrainSize            = 1;
-    const int smallestGrainSize1D = 12;
+    const int smallestGrainSize1D = _smallestGrainSize1DForCellEvents;
     for (int d=0; d<DIMENSIONS; d++) {
       _smallestGrainSize *= smallestGrainSize1D;
     }
@@ -63,7 +67,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
     _splitTheTree !=2
   ) {
     _smallestGrainSize            = 1;
-    const int smallestGrainSize1D = ((3*3*3) + 1 );
+    const int smallestGrainSize1D = _smallestGrainSize1DForVertexEvents;
     for (int d=0; d<DIMENSIONS; d++) {
       _smallestGrainSize *= smallestGrainSize1D;
     }
@@ -76,7 +80,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
       _methodTrace == SplitStoreVerticesTaskOnRegularStationaryGrid
     )
   ) {
-    _smallestGrainSize  = THREE_POWER_D;
+    _smallestGrainSize  = _smallestGrainSizeForLoadStoreSplits;
   }
   else if ( _pipelineAscendProcessing && _methodTrace == PipelineAscendTask ) {
     _smallestGrainSize = 1;
@@ -133,7 +137,17 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::~OracleForOnePhaseDumm
 
 
 peano::datatraversal::autotuning::OracleForOnePhase* peano::datatraversal::autotuning::OracleForOnePhaseDummy::createNewOracle(int adapterNumber, const MethodTrace& methodTrace) const {
-  return new OracleForOnePhaseDummy(_useMulticore,_measureAlsoSerialProgramParts,_splitTheTree,_pipelineDescendProcessing, _pipelineAscendProcessing,methodTrace);
+  return new OracleForOnePhaseDummy(
+    _useMulticore,
+    _measureAlsoSerialProgramParts,
+    _splitTheTree,
+    _pipelineDescendProcessing,
+    _pipelineAscendProcessing,
+    _smallestGrainSize1DForCellEvents,
+    _smallestGrainSize1DForVertexEvents,
+    _smallestGrainSizeForLoadStoreSplits,
+    methodTrace
+  );
 }
 
 
