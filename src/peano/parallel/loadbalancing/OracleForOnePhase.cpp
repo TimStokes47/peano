@@ -6,26 +6,10 @@
 #include <sstream>
 
 
-peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::getLoadBalancingFlag( int value ) {
-  switch (value) {
-    case Continue:
-      return Continue;
-    case Join:
-      return Join;
-    case ForkOnce:
-      return ForkOnce;
-    case ForkGreedy:
-      return ForkGreedy;
-    case ForkAllChildrenAndBecomeAdministrativeRank:
-      return ForkAllChildrenAndBecomeAdministrativeRank;
-    default:
-      assertion3( false, "fork type not supported", value, tarch::parallel::Node::getInstance().getRank() );
-      return Continue;
-  }
-}
+std::string peano::parallel::loadbalancing::convertLoadBalancingFlagToString(int flag) {
+  assertion1( flag>=ContinueButTryToJoinWorkers, flag );
+  assertion1( flag<=ForkAllChildrenAndBecomeAdministrativeRank, flag );
 
-
-std::string peano::parallel::loadbalancing::toString(const LoadBalancingFlag& flag) {
   std::ostringstream result;
   switch (flag) {
     case Continue:

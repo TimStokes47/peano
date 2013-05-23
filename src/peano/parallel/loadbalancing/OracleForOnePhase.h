@@ -30,9 +30,7 @@ namespace peano {
         ForkAllChildrenAndBecomeAdministrativeRank=THREE_POWER_D
       };
 
-      LoadBalancingFlag getLoadBalancingFlag( int value );
-
-      std::string toString(const LoadBalancingFlag& flag);
+      std::string convertLoadBalancingFlagToString(int flag);
     }
   }
 }
@@ -77,8 +75,10 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      * is invoked exactly once per traversal.
      *
      * @see Oracle
+     *
+     * @param commandFromMaster Usually is a value from the enum LoadBalancingFlag
      */
-    virtual void receivedStartCommand(const LoadBalancingFlag& commandFromMaster ) = 0;
+    virtual void receivedStartCommand( int commandFromMaster ) = 0;
 
     /**
      * Get command for one single worker

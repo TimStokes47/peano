@@ -21,7 +21,7 @@ peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::~Oracle
 }
 
 
-void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::receivedStartCommand(const LoadBalancingFlag& commandFromMaster ) {
+void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::receivedStartCommand(int commandFromMaster ) {
   if (commandFromMaster==Join) {
     _idleWorkers.clear();
   }

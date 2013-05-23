@@ -85,7 +85,10 @@ class peano::parallel::loadbalancing::Oracle {
      */
     WorkerContainer                          _workers;
 
-    LoadBalancingFlag                        _startCommand;
+    /**
+     * Typically of type LoadBalancingFlag.
+     */
+    int                                      _startCommand;
 
     void createOracles(int numberOfOracles);
     void deleteOracles();
@@ -168,7 +171,12 @@ class peano::parallel::loadbalancing::Oracle {
      */
     void setOracle( OracleForOnePhase* oraclePrototype );
 
-    void receivedStartCommand(const LoadBalancingFlag& commandFromMaster );
+    /**
+     * @see OracleForOnePhase
+     *
+     * @param commandFromMaster Usually is a value from the enum LoadBalancingFlag
+     */
+    void receivedStartCommand(int commandFromMaster);
 
     /**
      * Return last start command
@@ -178,7 +186,7 @@ class peano::parallel::loadbalancing::Oracle {
      *
      * @see forkFailed()
      */
-    LoadBalancingFlag getLastStartCommand() const;
+    int getLastStartCommand() const;
 
     /**
      * Get the command for a worker

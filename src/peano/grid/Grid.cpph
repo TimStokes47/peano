@@ -110,9 +110,7 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::rec
       );
     }
     else {
-      peano::parallel::loadbalancing::Oracle::getInstance().receivedStartCommand(
-        peano::parallel::loadbalancing::getLoadBalancingFlag( loadBalancingMessage.getLoadBalancingFlag() )
-      );
+      peano::parallel::loadbalancing::Oracle::getInstance().receivedStartCommand(loadBalancingMessage.getLoadBalancingFlag());
     }
 
     if (peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()==peano::parallel::loadbalancing::Join) {

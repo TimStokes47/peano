@@ -216,9 +216,7 @@ void peano::parallel::loadbalancing::Oracle::setOracle( OracleForOnePhase* oracl
 }
 
 
-void peano::parallel::loadbalancing::Oracle::receivedStartCommand(
-  const LoadBalancingFlag& commandFromMaster
-) {
+void peano::parallel::loadbalancing::Oracle::receivedStartCommand( int  commandFromMaster ) {
   assertion( _currentOracle>=0 );
   assertion( _currentOracle<static_cast<int>(_oracles.size()));
 
@@ -243,7 +241,7 @@ int peano::parallel::loadbalancing::Oracle::getCoarsestRegularInnerAndOuterGridL
 }
 
 
-peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::Oracle::getLastStartCommand() const {
+int peano::parallel::loadbalancing::Oracle::getLastStartCommand() const {
   assertion( _startCommand!=UndefinedLoadBalancingFlag );
   return _startCommand;
 }
