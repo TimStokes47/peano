@@ -448,33 +448,42 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       peano::parallel::JoinDataBufferPool::getInstance().createVertexBufferManually<Vertex>( true, *p );
       peano::parallel::JoinDataBufferPool::getInstance().createCellBufferManually<Cell>( true, *p );
 
-      const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> adjacencyBitset   = peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(*p,fineGridVertices,fineGridVerticesEnumerator);
-      if (adjacencyBitset.any()) {
+      const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedAdjacencyBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(*p) );
+      if (receivedAdjacencyBitset.any()) {
         #ifdef Asserts
-        const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(*p) );
-        assertionEquals7(
-          receivedBitset,
-          adjacencyBitset,
+        const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> localAdjacencyBitset = peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(*p,fineGridVertices,fineGridVerticesEnumerator);
+        assertion12(
+          (receivedAdjacencyBitset==localAdjacencyBitset) ||
+          localAdjacencyBitset==0,
           fineGridVerticesEnumerator.toString(),
           *p,
-          adjacencyBitset,
+          receivedAdjacencyBitset,
+          localAdjacencyBitset,
           fineGridVertices[ fineGridVerticesEnumerator(0) ].toString(),
           fineGridVertices[ fineGridVerticesEnumerator(1) ].toString(),
           fineGridVertices[ fineGridVerticesEnumerator(2) ].toString(),
-          fineGridVertices[ fineGridVerticesEnumerator(3) ].toString()
+          fineGridVertices[ fineGridVerticesEnumerator(3) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(0) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(1) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(2) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(3) ].toString()
         );
         #endif
         #if defined(Debug) && (defined(Dim2) || defined(Dim3) || defined(Dim4))
-        assertionEquals7(
+        assertionEquals11(
           fineGridCell.getLevel(),
           peano::parallel::JoinDataBufferPool::getInstance().getCellLevelFromStream(*p),
           fineGridVerticesEnumerator.toString(),
           *p,
-          adjacencyBitset,
+          receivedAdjacencyBitset,
           fineGridVertices[ fineGridVerticesEnumerator(0) ].toString(),
           fineGridVertices[ fineGridVerticesEnumerator(1) ].toString(),
           fineGridVertices[ fineGridVerticesEnumerator(2) ].toString(),
-          fineGridVertices[ fineGridVerticesEnumerator(3) ].toString()
+          fineGridVertices[ fineGridVerticesEnumerator(3) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(0) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(1) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(2) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(3) ].toString()
         );
         #endif
         logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", "received flag " << adjacencyBitset << " due to join with worker");
@@ -506,7 +515,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", "received cell " << receivedCell.toString() << " and merged it into " << fineGridCell.toString()  << " due to join with worker");
 
         dfor2(k)
-          if (adjacencyBitset[kScalar]) {
+          if (receivedAdjacencyBitset[kScalar]) {
             fineGridVertices[ fineGridVerticesEnumerator(k) ].invalidateAdjacentCellInformation();
             const Vertex receivedVertex = peano::parallel::JoinDataBufferPool::getInstance().getVertexFromStream<Vertex>(*p);
             const peano::grid::aspects::ParallelMerge::MergeVertexDueToJoinEffect modifyVertex =
