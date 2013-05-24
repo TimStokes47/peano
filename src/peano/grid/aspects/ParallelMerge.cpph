@@ -105,15 +105,7 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
   );
 
   assertion4(
-    workerVertex.getRefinementControl()!=Vertex::Records::EraseTriggered,
-    localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank()
-  );
-  assertion4(
     workerVertex.getRefinementControl()!=Vertex::Records::RefinementTriggered,
-    localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank()
-  );
-  assertion4(
-    localVertex.getRefinementControl()!=Vertex::Records::EraseTriggered,
     localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank()
   );
   assertion4(
@@ -125,7 +117,9 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
     localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank()
   );
 
+  // ========================
   // local vertex = unrefined
+  // ========================
   if (
     workerVertex.getRefinementControl()==Vertex::Records::Unrefined &&
     localVertex.getRefinementControl()==Vertex::Records::Unrefined
@@ -152,6 +146,14 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
     localVertex._vertexData.setRefinementControl(Vertex::Records::Refining);
   }
   else if (
+    workerVertex.getRefinementControl()==Vertex::Records::EraseTriggered &&
+    localVertex.getRefinementControl()==Vertex::Records::Unrefined
+  ) {
+    // worker holds erase triggered but it was blocked. Refine and set flag
+    localVertex._vertexData.setRefinementControl(Vertex::Records::Refining);
+    localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank(true);
+  }
+  else if (
     workerVertex.getRefinementControl()==Vertex::Records::Erasing &&
     localVertex.getRefinementControl()==Vertex::Records::Unrefined
   ) {
@@ -162,7 +164,9 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
       assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
     }
   }
+  // ========================
   // local vertex = refining
+  // ========================
   else if (
     workerVertex.getRefinementControl()==Vertex::Records::Unrefined &&
     localVertex.getRefinementControl()==Vertex::Records::Refining
@@ -178,6 +182,13 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
     workerVertex.getRefinementControl()==Vertex::Records::Refined &&
     localVertex.getRefinementControl()==Vertex::Records::Refining
   ) {
+  }
+  else if (
+    workerVertex.getRefinementControl()==Vertex::Records::EraseTriggered &&
+    localVertex.getRefinementControl()==Vertex::Records::Refining
+  ) {
+    // worker holds erase triggered but it was blocked. Continue to refine and set flag
+    localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank(true);
   }
   else if (
     workerVertex.getRefinementControl()==Vertex::Records::Erasing &&
@@ -185,7 +196,9 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
   ) {
     assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
   }
+  // ========================
   // local vertex = refined
+  // ========================
   else if (
     workerVertex.getRefinementControl()==Vertex::Records::Unrefined &&
     localVertex.getRefinementControl()==Vertex::Records::Refined
@@ -201,6 +214,13 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
     workerVertex.getRefinementControl()==Vertex::Records::Refined &&
     localVertex.getRefinementControl()==Vertex::Records::Refined
   ) {
+  }
+  else if (
+    workerVertex.getRefinementControl()==Vertex::Records::EraseTriggered &&
+    localVertex.getRefinementControl()==Vertex::Records::Refined
+  ) {
+    localVertex._vertexData.setRefinementControl(Vertex::Records::EraseTriggered);
+    localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank(true);
   }
   else if (
     workerVertex.getRefinementControl()==Vertex::Records::Erasing &&
@@ -210,11 +230,57 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
       !LocalNodeHasNotBeenResponsibleBefore,
       localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank()
     );
-    // ich mein dass die richtig ist. Das sollte nicht auftauchen, tuts aber schon mit n=3 bei rotating heat source
     assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
-//    localVertex._vertexData.setRefinementControl(Vertex::Records::Erasing);
   }
+  // ========================
+  // local vertex = erase triggered
+  // ========================
+  else if (
+    workerVertex.getRefinementControl()==Vertex::Records::Unrefined &&
+    localVertex.getRefinementControl()==Vertex::Records::EraseTriggered
+  ) {
+    assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
+  }
+  else if (
+    workerVertex.getRefinementControl()==Vertex::Records::Refining &&
+    localVertex.getRefinementControl()==Vertex::Records::EraseTriggered
+  ) {
+    assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
+  }
+  else if (
+    workerVertex.getRefinementControl()==Vertex::Records::Refined &&
+    localVertex.getRefinementControl()==Vertex::Records::EraseTriggered
+  ) {
+    // if the worker is refined and the master has erase triggered, then this
+    // implies that the master hold the respective vertex actively, i.e. the
+    // vertex is part of the master's domain. Hence, it should have been
+    // notified as well that there is an erase triggered that has been blocked.
+    // Please note that we can't evaluate the block flag, is this already has
+    // been reset
+    assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
+  }
+  else if (
+    workerVertex.getRefinementControl()==Vertex::Records::EraseTriggered &&
+    localVertex.getRefinementControl()==Vertex::Records::EraseTriggered
+  ) {
+    assertion4( localVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank(), localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
+  }
+  else if (
+    workerVertex.getRefinementControl()==Vertex::Records::Erasing &&
+    localVertex.getRefinementControl()==Vertex::Records::EraseTriggered
+  ) {
+    // we may not block it on the worker but do the erase on the master
+    assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
+  }
+  // ========================
   // local vertex = erasing
+  // ========================
+  else if (
+    workerVertex.getRefinementControl()==Vertex::Records::Refined &&
+    localVertex.getRefinementControl()==Vertex::Records::Erasing
+  ) {
+    assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
+  }
   else if (
     workerVertex.getRefinementControl()==Vertex::Records::Unrefined &&
     localVertex.getRefinementControl()==Vertex::Records::Erasing
@@ -228,7 +294,7 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
     assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
   }
   else if (
-    workerVertex.getRefinementControl()==Vertex::Records::Refined &&
+    workerVertex.getRefinementControl()==Vertex::Records::EraseTriggered &&
     localVertex.getRefinementControl()==Vertex::Records::Erasing
   ) {
     assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
@@ -238,7 +304,9 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
     localVertex.getRefinementControl()==Vertex::Records::Erasing
   ) {
   }
+  // ========================
   // local vertex = RefineDueToJoinThoughWorkerIsAlreadyErasing
+  // ========================
   else if (
     workerVertex.getRefinementControl()==Vertex::Records::Unrefined &&
     localVertex.getRefinementControl()==Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing
@@ -253,6 +321,12 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
   }
   else if (
     workerVertex.getRefinementControl()==Vertex::Records::Refined &&
+    localVertex.getRefinementControl()==Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing
+  ) {
+    assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
+  }
+  else if (
+    workerVertex.getRefinementControl()==Vertex::Records::EraseTriggered &&
     localVertex.getRefinementControl()==Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing
   ) {
     assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
@@ -383,6 +457,8 @@ void peano::grid::aspects::ParallelMerge::mergeWithForkedVertexFromMaster(
   }
 
   localVertex.invalidateAdjacentCellInformation();
+
+  localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank(masterVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank());
 
   assertion4(
     localVertex.getRefinementControl() != Vertex::Records::Erasing,

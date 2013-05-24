@@ -86,11 +86,6 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   _fineGridVertices[positionInVertexArray].refineVertexIfItHasOnlyRefinedAdjacentCells();
 
   #ifdef Parallel
-  // @todo Roland => ist das ein Fix fuer Dein Problem?
-  if (_state.isJoinTriggered() ) {
-    _fineGridVertices[positionInVertexArray].setAdjacentSubtreeForksIntoOtherRankFlag();
-  }
-
   if (
     _state.isJoiningWithWorker() &&
     _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank()
