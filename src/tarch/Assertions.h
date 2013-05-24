@@ -237,6 +237,61 @@
       assertionTriggersExit; \
     }
 
+
+    #define assertion10(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9) if (!(expr)) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #expr <<  std::endl; \
+      std::cerr << "parameter " << #param0 << ": " << param0 << std::endl; \
+      std::cerr << "parameter " << #param1 << ": " << param1 << std::endl; \
+      std::cerr << "parameter " << #param2 << ": " << param2 << std::endl; \
+      std::cerr << "parameter " << #param3 << ": " << param3 << std::endl; \
+      std::cerr << "parameter " << #param4 << ": " << param4 << std::endl; \
+      std::cerr << "parameter " << #param5 << ": " << param5 << std::endl; \
+      std::cerr << "parameter " << #param6 << ": " << param6 << std::endl; \
+      std::cerr << "parameter " << #param7 << ": " << param7 << std::endl; \
+      std::cerr << "parameter " << #param8 << ": " << param8 << std::endl; \
+      std::cerr << "parameter " << #param9 << ": " << param9 << std::endl; \
+      assertionTriggersExit; \
+    }
+
+
+    #define assertion11(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10) if (!(expr)) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #expr <<  std::endl; \
+      std::cerr << "parameter " << #param0 << ": " << param0 << std::endl; \
+      std::cerr << "parameter " << #param1 << ": " << param1 << std::endl; \
+      std::cerr << "parameter " << #param2 << ": " << param2 << std::endl; \
+      std::cerr << "parameter " << #param3 << ": " << param3 << std::endl; \
+      std::cerr << "parameter " << #param4 << ": " << param4 << std::endl; \
+      std::cerr << "parameter " << #param5 << ": " << param5 << std::endl; \
+      std::cerr << "parameter " << #param6 << ": " << param6 << std::endl; \
+      std::cerr << "parameter " << #param7 << ": " << param7 << std::endl; \
+      std::cerr << "parameter " << #param8 << ": " << param8 << std::endl; \
+      std::cerr << "parameter " << #param9 << ": " << param9 << std::endl; \
+      std::cerr << "parameter " << #param10 << ": " << param10 << std::endl; \
+      assertionTriggersExit; \
+    }
+
+
+    #define assertion12(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11) if (!(expr)) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #expr <<  std::endl; \
+      std::cerr << "parameter " << #param0 << ": " << param0 << std::endl; \
+      std::cerr << "parameter " << #param1 << ": " << param1 << std::endl; \
+      std::cerr << "parameter " << #param2 << ": " << param2 << std::endl; \
+      std::cerr << "parameter " << #param3 << ": " << param3 << std::endl; \
+      std::cerr << "parameter " << #param4 << ": " << param4 << std::endl; \
+      std::cerr << "parameter " << #param5 << ": " << param5 << std::endl; \
+      std::cerr << "parameter " << #param6 << ": " << param6 << std::endl; \
+      std::cerr << "parameter " << #param7 << ": " << param7 << std::endl; \
+      std::cerr << "parameter " << #param8 << ": " << param8 << std::endl; \
+      std::cerr << "parameter " << #param9 << ": " << param9 << std::endl; \
+      std::cerr << "parameter " << #param10 << ": " << param10 << std::endl; \
+      std::cerr << "parameter " << #param11 << ": " << param11 << std::endl; \
+      assertionTriggersExit; \
+    }
+
+
     /**
      * @see ASSERTION_EXIT_CODE
      *
@@ -813,6 +868,9 @@
     #define assertion7(expr,param0,param1,param2,param3,param4,param5,param6)
     #define assertion8(expr,param0,param1,param2,param3,param4,param5,param6,param7)
     #define assertion9(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8)
+    #define assertion10(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9)
+    #define assertion11(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10)
+    #define assertion12(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11)
     #define assertion1WithExplanation(expr,param,explanation)
     #define assertionEquals(lhs,rhs)
     #define assertionEqualsMsg(lhs,rhs,msg)
