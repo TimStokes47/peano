@@ -30,7 +30,7 @@ namespace peano {
 
 
 /**
- * Super class for all cells of the regular grid.
+ * Super class for all cells.
  *
  * @author Tobias Weinzierl
  */
