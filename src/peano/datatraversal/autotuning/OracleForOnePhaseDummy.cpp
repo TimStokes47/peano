@@ -88,11 +88,15 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
   else if ( _pipelineDescendProcessing && _methodTrace == PipelineDescendTask ) {
     _smallestGrainSize = 1;
   }
+
+  if (_smallestGrainSize==0) {
+    _smallestGrainSize = 1;
+  }
 }
 
 
 std::pair<int,bool> peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelise(int problemSize) {
-  assertionEquals1( _lastProblemSize, -1, toString(_methodTrace) );
+  assertionEquals1( _lastProblemSize, -1, peano::datatraversal::autotuning::toString(_methodTrace) );
   if (_useMulticore) {
     if (problemSize < _smallestGrainSize) {
       if (_measureAlsoSerialProgramParts) _lastProblemSize = problemSize;
@@ -111,7 +115,7 @@ std::pair<int,bool> peano::datatraversal::autotuning::OracleForOnePhaseDummy::pa
 
 
 void peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelSectionHasTerminated(double elapsedCalendarTime) {
-  assertion( _lastProblemSize>0 );
+  assertion1( _lastProblemSize>0, toString() );
   _executionTime[_lastProblemSize].setValue( elapsedCalendarTime );
   _executionTime[_lastProblemSize].setAccuracy(1.0e-5);
   _lastProblemSize = -1;
@@ -123,7 +127,7 @@ void peano::datatraversal::autotuning::OracleForOnePhaseDummy::plotStatistics() 
     if (p->second.getNumberOfMeasurements()>0) {
       logInfo(
         "plotRuntimes()",
-        "averaged runtime for " << toString(_methodTrace)
+        "averaged runtime for " << peano::datatraversal::autotuning::toString(_methodTrace)
         << " for problem size " << p->first << ": " <<
         p->second.toString()
       );
@@ -152,4 +156,24 @@ peano::datatraversal::autotuning::OracleForOnePhase* peano::datatraversal::autot
 
 
 void peano::datatraversal::autotuning::OracleForOnePhaseDummy::informAboutElapsedTimeOfLastTraversal(double elapsedTime) {
+}
+
+
+std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString() const {
+  std::ostringstream msg;
+
+  msg << "(multicore="           << _useMulticore
+      << ",measure-serial="      << _measureAlsoSerialProgramParts
+      << ",method="              << peano::datatraversal::autotuning::toString(_methodTrace)
+      << ",split-tree="          << _splitTheTree
+      << ",pipeline-descend="    << _pipelineDescendProcessing
+      << ",pipeline-ascend="     << _pipelineAscendProcessing
+      << ",smallest-grain-size=" << _smallestGrainSize
+      << ",last-problem-size="   << _lastProblemSize
+      << ",1d-cell-events="      << _smallestGrainSize1DForCellEvents
+      << ",1d-vertex-events="    << _smallestGrainSize1DForVertexEvents
+      << ",store-splits-grain="  << _smallestGrainSizeForLoadStoreSplits
+      << ")";
+
+  return msg.str();
 }
