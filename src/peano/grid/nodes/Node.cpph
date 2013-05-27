@@ -448,10 +448,14 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       peano::parallel::JoinDataBufferPool::getInstance().createVertexBufferManually<Vertex>( true, *p );
       peano::parallel::JoinDataBufferPool::getInstance().createCellBufferManually<Cell>( true, *p );
 
-      const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedAdjacencyBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(*p) );
-      if (receivedAdjacencyBitset.any()) {
+      const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> localAdjacencyBitset(    peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(*p,fineGridVertices,fineGridVerticesEnumerator) );
+
+      // @todo Hier muss Doku rein, warum wir die received List nehmen anstatt der lokalen.
+//      xxx
+
+      if (localAdjacencyBitset.any()) {
+        const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedAdjacencyBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(*p) );
         #ifdef Asserts
-        const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> localAdjacencyBitset = peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(*p,fineGridVertices,fineGridVerticesEnumerator);
         assertion12(
           (receivedAdjacencyBitset==localAdjacencyBitset) ||
           localAdjacencyBitset==0,
