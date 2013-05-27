@@ -342,6 +342,21 @@ class peano::grid::Vertex {
     void incCounterOfAdjacentRefinedCells();
 
     /**
+     * Refine Vertex if surrounded by refined cells
+     *
+     * We do check explicitly whether to a vertex is surrounded only by refined
+     * cells. If that is the case, the grid manually refines it. Otherwise, it
+     * can happen that there is a hanging vertex (on the next finer level) within
+     * a @f$ 7^d @f$ patch.
+     *
+     * !!! Parallel Mode
+     *
+     * The important exception to that rule is remote vertices. If a vertex is
+     * surrounded by cells deployed to another subtree, we should not refine it
+     * manually. If we did, we would introduce a vertex oscillation. The vertex
+     * is refined, but in the next iteration, it is erased again as remote
+     * refined vertices always are erased.
+     *
      * @see clearCounterOfAdjacentRefinedCells()
      * @see StoreVertexLoopBody::updateRefinementFlagsAndStoreVertexToOutputStream()
      */

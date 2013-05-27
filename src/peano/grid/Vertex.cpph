@@ -345,7 +345,15 @@ void peano::grid::Vertex<VertexData>::incCounterOfAdjacentRefinedCells() {
 
 template <class VertexData>
 void peano::grid::Vertex<VertexData>::refineVertexIfItHasOnlyRefinedAdjacentCells() {
+  #ifdef Parallel
+  const bool refineInParallelMode = isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() );
+  #else
+  const bool refineInParallelMode = true;
+  #endif
+
+
   if (
+    refineInParallelMode &&
     isInside() &&
     _vertexData.getNumberOfAdjacentRefinedCells()==TWO_POWER_D &&
     getRefinementControl() == Vertex::Records::Unrefined
