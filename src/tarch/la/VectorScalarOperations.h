@@ -123,6 +123,13 @@ namespace tarch {
     );
 
     template<int Size, typename Scalar>
+    bool oneEquals (
+      const Vector<Size,Scalar>&  lhs,
+      const Scalar&               cmp,
+      const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
+    );
+
+    template<int Size, typename Scalar>
     bool oneGreater (
       const Vector<Size,Scalar>&  lhs,
       const Scalar&               cmp,
