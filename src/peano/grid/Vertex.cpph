@@ -345,11 +345,11 @@ void peano::grid::Vertex<VertexData>::incCounterOfAdjacentRefinedCells() {
 
 template <class VertexData>
 void peano::grid::Vertex<VertexData>::refineVertexIfItHasOnlyRefinedAdjacentCells() {
-  #ifdef Parallel
-  const bool refineInParallelMode = isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() );
-  #else
+//  #ifdef Parallel
+//  const bool refineInParallelMode = isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() );
+//  #else
   const bool refineInParallelMode = true;
-  #endif
+//  #endif
 
 
   if (
@@ -539,12 +539,21 @@ bool peano::grid::Vertex<VertexData>::isAdjacentToDomainOf( const std::set<int>&
 
 template <class VertexData>
 bool peano::grid::Vertex<VertexData>::isAdjacentToDomainOf( int rank ) const {
+  //
+  bool AssertsResult;
+  #ifdef Asserts
   for (int i=0; i<TWO_POWER_D; i++) {
     if ( _vertexData.getAdjacentRanks(i) == rank ) {
-      return true;
+      AssertsResult =  true;
     }
   }
-  return false;
+  AssertsResult = false;
+  #endif
+
+  const bool result = tarch::la::oneEquals( _vertexData.getAdjacentRanks(), rank );
+
+  assertionEquals( result, AssertsResult );
+  return result;
 }
 
 
