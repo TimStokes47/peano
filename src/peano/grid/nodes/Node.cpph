@@ -329,12 +329,20 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       coarseGridVertices[ coarseGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
-      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+//      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
     enddforx
     fineGridCell.send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       fineGridVertices[ fineGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
+
+      // muss hier sein => dadurch verhindern wir degenerierte Baeume, die nur noch eine Zelle haben;
+      // wuerden wir das unterstuetzen, muesste auch auf Level 0 der komplette Vertex-Lifecycle drin
+      // sein und das wuerde ich gerne vermeiden.
+
+      // @todo Doku
+
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
     enddforx
     logTraceOut( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(...)" );
   #endif
@@ -452,27 +460,11 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
       // @todo Hier muss Doku rein, warum wir die received List nehmen anstatt der lokalen.
 //      xxx
+      // Hier gehoert auch Doku rein, warum man erst local braucht bevor man auf remote zugreift: Weil sonst halt
+      // u.U. man sachen von remote reinlaed, die es gar nicht gibt.
 
       if (localAdjacencyBitset.any()) {
         const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedAdjacencyBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(*p) );
-        #ifdef Asserts
-        assertion12(
-          (receivedAdjacencyBitset==localAdjacencyBitset) ||
-          localAdjacencyBitset==0,
-          fineGridVerticesEnumerator.toString(),
-          *p,
-          receivedAdjacencyBitset,
-          localAdjacencyBitset,
-          fineGridVertices[ fineGridVerticesEnumerator(0) ].toString(),
-          fineGridVertices[ fineGridVerticesEnumerator(1) ].toString(),
-          fineGridVertices[ fineGridVerticesEnumerator(2) ].toString(),
-          fineGridVertices[ fineGridVerticesEnumerator(3) ].toString(),
-          coarseGridVertices[ coarseGridVerticesEnumerator(0) ].toString(),
-          coarseGridVertices[ coarseGridVerticesEnumerator(1) ].toString(),
-          coarseGridVertices[ coarseGridVerticesEnumerator(2) ].toString(),
-          coarseGridVertices[ coarseGridVerticesEnumerator(3) ].toString()
-        );
-        #endif
         #if defined(Debug) && (defined(Dim2) || defined(Dim3) || defined(Dim4))
         assertionEquals11(
           fineGridCell.getLevel(),
@@ -490,7 +482,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           coarseGridVertices[ coarseGridVerticesEnumerator(3) ].toString()
         );
         #endif
-        logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", "received flag " << adjacencyBitset << " due to join with worker");
+        logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", "received flag " << receivedAdjacencyBitset << " (vs. local flag " << localAdjacencyBitset << " due to join with worker");
         peano::parallel::JoinDataBufferPool::getInstance().removeCellMarkerFromStream(*p,true);
 
         const Cell receivedCell = peano::parallel::JoinDataBufferPool::getInstance().getCellFromStream<Cell>(*p);
