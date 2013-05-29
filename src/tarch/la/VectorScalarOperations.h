@@ -170,6 +170,52 @@ namespace tarch {
       const Scalar&               cmp,
       const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
     );
+
+
+    /**
+     * Specialisation for int
+     */
+    template<int Size>
+    bool oneEquals (
+      const Vector<Size,int>&  lhs,
+      const int&               cmp
+    );
+
+    template<int Size>
+    bool oneGreater (
+      const Vector<Size,int>&  lhs,
+      const int&               cmp
+    );
+
+    template<int Size>
+    bool oneGreaterEquals (
+      const Vector<Size,int>&  lhs,
+      const int&               cmp
+    );
+
+    template<int Size>
+    bool allGreater (
+      const Vector<Size,int>&  lhs,
+      const int&               cmp
+    );
+
+    template<int Size>
+    bool allGreaterEquals (
+      const Vector<Size,int>&  lhs,
+      const int&               cmp
+    );
+
+    template<int Size>
+    bool allSmaller (
+      const Vector<Size,int>&  lhs,
+      const int&               cmp
+    );
+
+    template<int Size>
+    bool allSmallerEquals (
+      const Vector<Size,int>&  lhs,
+      const int&               cmp
+    );
   }
 }
 

@@ -181,7 +181,7 @@ bool tarch::la::oneEquals (
   const Scalar                tolerance
 ) {
   for ( int i=0; i < Size; i++ ) {
-    if ( la::abs(lhs(i) - cmp) < tolerance ) {
+    if ( la::abs(lhs(i) - cmp) <= tolerance ) {
       return true;
     }
   }
@@ -272,6 +272,119 @@ bool tarch::la::allSmallerEquals (
 ) {
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp > tolerance ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+
+template<int Size>
+bool tarch::la::equals (
+  const Vector<Size,int>&  lhs,
+  const int&               cmp
+) {
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i)!=cmp ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+template<int Size>
+bool tarch::la::oneEquals (
+  const Vector<Size,int>&  lhs,
+  const int&               cmp
+) {
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i)==cmp ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+template<int Size>
+bool tarch::la::oneGreater (
+  const Vector<Size,int>&  lhs,
+  const int&               cmp
+) {
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) > cmp ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+template<int Size>
+bool tarch::la::oneGreaterEquals (
+  const Vector<Size,int>&  lhs,
+  const int&               cmp
+) {
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) >= cmp ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+template<int Size>
+bool tarch::la::allGreater (
+  const Vector<Size,int>&  lhs,
+  const int&               cmp
+) {
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) <= cmp ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+template<int Size>
+bool tarch::la::allGreaterEquals (
+  const Vector<Size,int>&  lhs,
+  const int&               cmp
+) {
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) < cmp ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+template<int Size>
+bool tarch::la::allSmaller (
+  const Vector<Size,int>&  lhs,
+  const int&               cmp
+) {
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) >= cmp ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+template<int Size>
+bool tarch::la::allSmallerEquals (
+  const Vector<Size,int>&  lhs,
+  const int&               cmp
+) {
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) > cmp ) {
       return false;
     }
   }
