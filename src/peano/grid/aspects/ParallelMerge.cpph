@@ -109,10 +109,6 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
     localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank()
   );
   assertion4(
-    localVertex.getRefinementControl()!=Vertex::Records::RefinementTriggered,
-    localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank()
-  );
-  assertion4(
     workerVertex.getRefinementControl()!=Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing,
     localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank()
   );
@@ -163,6 +159,19 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
     else {
       assertion4( false, localVertex.toString(), workerVertex.toString(), workerRank, tarch::parallel::Node::getInstance().getRank() );
     }
+  }
+  // ===================================
+  // local vertex = refinement-triggered
+  // ===================================
+  else if (
+    workerVertex.getRefinementControl()==Vertex::Records::Unrefined &&
+    localVertex.getRefinementControl()==Vertex::Records::RefinementTriggered
+  ) {
+    // we are merging, but some adjacent cell of the local vertex has already
+    // been visited (or the touch first) and triggered a refinement locally.
+    // Let the local state to refinement-triggered. The other way round, i.e.
+    // with erase-triggered, similar reasoning holds. However, in this case
+    // we can furthermore ensure that the erase-blocking is still switched on.
   }
   // ========================
   // local vertex = refining
