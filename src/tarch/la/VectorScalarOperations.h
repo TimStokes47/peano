@@ -176,6 +176,12 @@ namespace tarch {
      * Specialisation for int
      */
     template<int Size>
+    bool equals (
+      const Vector<Size,int>&  lhs,
+      const int&               cmp
+    );
+
+    template<int Size>
     bool oneEquals (
       const Vector<Size,int>&  lhs,
       const int&               cmp
