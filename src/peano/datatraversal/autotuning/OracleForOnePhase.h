@@ -38,6 +38,13 @@ namespace peano {
         NumberOfDifferentMethodsCalling                  = 21
       };
 
+      /**
+       * The repository management needs a couple of adapters itself. So, if you
+       * speak about adapter no 5 given you by the repository statistics, it is
+       * actually the 8th adapter.
+       */
+      const int NumberOfPredefinedAdapters = 3;
+
       std::string toString( const MethodTrace& methodTrace );
       MethodTrace toMethodTrace(int value);
     }
@@ -82,9 +89,8 @@ class peano::datatraversal::autotuning::OracleForOnePhase {
     virtual void plotStatistics() const = 0;
 
     /**
-     * This operation is called by the oracle (management) on the prototype of
-     * the individual oracles. Can be used to adopt oracle behaviour to global
-     * runtime.
+     * This operation is called by the oracle (management) on all oracles. Can
+     * be used to adopt oracle behaviour to global runtime.
      */
     virtual void informAboutElapsedTimeOfLastTraversal(double elapsedTime) = 0;
 
@@ -96,7 +102,7 @@ class peano::datatraversal::autotuning::OracleForOnePhase {
      *        repository's state if you want to find out which adapters are
      *        mapped to which state. You can even use the toString() operation
      *        there to map this parameter to a string. Sometimes, I use the
-     *        term phase as an alias.
+     *        term phase as an alias. See NumberOfPredefinedAdapters.
      */
     virtual OracleForOnePhase* createNewOracle(int adapterNumber, const MethodTrace& methodTrace) const = 0;
 };

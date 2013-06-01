@@ -138,7 +138,11 @@ void peano::datatraversal::autotuning::Oracle::switchToOracle(int id) {
   _watchSinceLastSwitchCall.stopTimer();
 
   assertion(_oraclePrototype!=0);
-  _oraclePrototype->informAboutElapsedTimeOfLastTraversal(_watchSinceLastSwitchCall.getCalendarTime());
+
+  const double erasedTime = _watchSinceLastSwitchCall.getCalendarTime();
+  for (int i=0; i<getTotalNumberOfOracles(); i++) {
+    _oracles[i]._oracle->informAboutElapsedTimeOfLastTraversal(erasedTime);
+  }
 
   _currentPhase=id;
 
@@ -165,11 +169,17 @@ int peano::datatraversal::autotuning::Oracle::parallelise(int problemSize, Metho
   _oracles[key]._recursiveCallsForThisOracle = true;
   #endif
 
-  const std::pair<int,bool> oracleDecision =  _oracles[key]._oracle->parallelise(problemSize);
-  result = oracleDecision.first;
-  _oracles[key]._measureTime = oracleDecision.second;
-  if ( oracleDecision.second ) {
-    _oracles[key]._watch->startTimer();
+  if (problemSize>0) {
+    const std::pair<int,bool> oracleDecision =  _oracles[key]._oracle->parallelise(problemSize);
+    result = oracleDecision.first;
+    _oracles[key]._measureTime = oracleDecision.second;
+    if ( oracleDecision.second ) {
+      _oracles[key]._watch->startTimer();
+    }
+  }
+  else {
+    result = 0;
+   _oracles[key]._measureTime = false;
   }
   #else
   result = 0;
