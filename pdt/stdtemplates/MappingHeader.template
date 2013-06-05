@@ -364,6 +364,23 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * Please consult peano/grid/vertex-lifecycle.doxys for details on the 
      * vertex and cell lifecycle.
      *
+     * !!! Hanging nodes outside the computational domain
+     *
+     * For performance reasons, Peano does not check whether a hanging node 
+     * is outside of the computational domain or (in the parallel case) does 
+     * not belong to the current rank's subdomain: Peano calls the create 
+     * method for each hanging node independent of its state. If you have to 
+     * filter out outer and remote hanging vertices, you have to do this 
+     * manually.
+     *
+     * To check the geometric property, you have to add the corresponding 
+     * if checks in your mapping. If you run your code with mpi, you have to 
+     * wrap your code into 
+     * \code
+ if ( fineGridVertex.isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() ) ) {
+   ...
+     \endcode  
+     *  
      * @see peano::MappingSpecification for information on thread safety.
      */
     void createHangingVertex(
