@@ -85,6 +85,8 @@ class peano::grid::aspects::ParallelMerge {
      * remain erase-triggered and the oracle is informed that the tree
      * decomposition avoids a grid erase. If the load balancing then decides to
      * join, it might happen that the coarsening afterwards passes through.
+     * As a consequence, we set the block flag here and in all other master-worker 
+     * merge operations. 
      */
     template <class Vertex>
     static void mergeWithVertexFromMaster(

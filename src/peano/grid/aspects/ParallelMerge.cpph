@@ -16,6 +16,8 @@ void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
 
   assertion2( !localVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
   assertion2( !masterVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
+
+  localVertex.setAdjacentSubtreeForksIntoOtherRankFlag();
 }
 
 
@@ -371,6 +373,7 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
   }
 
   localVertex.invalidateAdjacentCellInformation();
+  localVertex.setAdjacentSubtreeForksIntoOtherRankFlag();
 
   logTraceOutWith2Arguments( "mergeWithJoinedVertexFromWorker(...)", localVertex, result );
   return result;
@@ -467,12 +470,12 @@ void peano::grid::aspects::ParallelMerge::mergeWithForkedVertexFromMaster(
 
   localVertex.invalidateAdjacentCellInformation();
 
-  localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank(masterVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank());
-
   assertion4(
     localVertex.getRefinementControl() != Vertex::Records::Erasing,
     localVertex.toString(), masterVertex.toString(), tarch::parallel::NodePool::getInstance().getMasterRank(), tarch::parallel::Node::getInstance().getRank()
   );
+
+  localVertex.setAdjacentSubtreeForksIntoOtherRankFlag();
 
   logTraceOutWith1Argument( "mergeWithForkedVertexFromMaster(...)", localVertex );
 }
