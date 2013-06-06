@@ -123,6 +123,12 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
             _fineGridVerticesEnumerator.getLevel()
           );
           if ( _state.isJoinWithMasterTriggered() ) {
+            // @todo Bugfix fuer Roland -> wieder raus, falls keine Verbesserung
+            _fineGridVertices[positionInVertexArray].setAdjacentSubtreeForksIntoOtherRankFlag();
+            copy.setAdjacentSubtreeForksIntoOtherRankFlag();
+
+
+
             copy.replaceAdjancyEntriesOfLocalRankWithMaster();
           }
 
