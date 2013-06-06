@@ -441,7 +441,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     if (
       localInnerCells.count()>1
       &&
-      state.mayForkCellsOnLevel(newFineGridVerticesEnumerators.getLevel())
+      state.mayForkCellsOnLevel(newFineGridVerticesEnumerators[0].getLevel())
     ) {
       logTraceInWith3Arguments( "splitUpGrid(...)", state, fineGridCell, fineGridVerticesEnumerator.toString() );
 

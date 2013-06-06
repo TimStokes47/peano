@@ -174,7 +174,7 @@ class peano::grid::Cell {
      * a different rank. With this operation, you can explicitly filter out
      * cells you don't want to be forked.
      */
-    void setCellIsAForkCondidate(bool value);
+    void setCellIsAForkCandidate(bool value);
 
     bool isAssignedToRemoteRank() const;
 

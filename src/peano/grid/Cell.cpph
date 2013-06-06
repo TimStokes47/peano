@@ -476,7 +476,7 @@ bool peano::grid::Cell<CellData>::isCellAForkCandidate() const {
 
 
 template <class CellData>
-void peano::grid::Cell<CellData>::setCellIsAForkCondidate(bool value) {
+void peano::grid::Cell<CellData>::setCellIsAForkCandidate(bool value) {
   _cellData.setCellIsAForkCandidate(value);
 }
 
