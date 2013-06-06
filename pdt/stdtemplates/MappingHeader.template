@@ -771,7 +771,16 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * Receive from master operations thus overwrite the worker's local 
      * records with the master's data, as the master always rules.  
      *
-     * The coarse data is a copy from the master and may not be modified. 
+     * The coarse data is a copy from the master and may not be modified.
+     *
+     * !!! Special case: Fork process
+     * 
+     * In the very first iteration on the worker, the receive process accepting 
+     * data from the master is not followed by the corresponding send back even 
+     * if the reduction is switched on. Hence, you have two times receive data 
+     * from master before this operation is invoked for the first time. See 
+     * Node::updateCellsParallelStateBeforeStore() for details on the technical 
+     * reasons for this assymetry.
      */
     void prepareSendToMaster(
       __NAMESPACE__::Cell&                       localCell,
@@ -1092,7 +1101,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * Iteration is done
      * 
      * This operation is called at the very end, i.e. after all the handleCell() 
-     * and toucheVertexLastTime() operations have been invoked. In this 
+     * and touchVertexLastTime() operations have been invoked. In this 
      * operation, you have to write all the data you will need later on back to 
      * the state object passed. Afterwards, the attributes of your mapping 
      * object (as well as global static fields) might be overwritten.  
