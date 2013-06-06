@@ -86,6 +86,8 @@ class  peano::grid::tests::records::TestCell {
   persistent double  localWorkload;
   persistent double  totalWorkload;
   persistent parallelise bool subtreeHoldsWorker;
+  persistent packed bool         cellIsAForkCandidate;
+  
   #endif
   
   #ifdef SharedMemoryParallelisation
