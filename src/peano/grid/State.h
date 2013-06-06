@@ -365,6 +365,12 @@ class peano::grid::State {
      * to reduce, this operation however might return false. This is the case
      * if the state is set to joining or if the state belongs to a node that
      * just is about to be forked.
+     *
+     * !!! Remark
+     *
+     * The reduction is switched off in the first step of the fork process. See
+     * Node::updateCellsParallelStateBeforeStore() for a discussion on the
+     * technical reasons.
      */
     bool reduceStateAndCell() const;
 
