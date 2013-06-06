@@ -97,6 +97,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
       p++
     ) {
       if ( _state.isJoiningRank(*p) ) {
+        _fineGridVertices[positionInVertexArray].sdaf
         _fineGridVertices[positionInVertexArray].replaceAdjancyEntriesOfRemoteRankWithLocalRank(*p);
       }
     }
@@ -107,6 +108,10 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
     !_state.isJoiningWithMaster()
   ) {
     if ( !_fineGridVertices[positionInVertexArray].isRemote( _state, true, false) ) {
+      if ( _state.isJoinWithMasterTriggered() ) {
+        _fineGridVertices[positionInVertexArray].setAdjacentSubtreeForksIntoOtherRankFlag();
+      }
+
       const std::set<int> ranks = _fineGridVertices[positionInVertexArray].getAdjacentRemoteRanks();
       for (
         std::set<int>::const_iterator p = ranks.begin();
@@ -123,12 +128,6 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
             _fineGridVerticesEnumerator.getLevel()
           );
           if ( _state.isJoinWithMasterTriggered() ) {
-            // @todo Bugfix fuer Roland -> wieder raus, falls keine Verbesserung
-            _fineGridVertices[positionInVertexArray].setAdjacentSubtreeForksIntoOtherRankFlag();
-            copy.setAdjacentSubtreeForksIntoOtherRankFlag();
-
-
-
             copy.replaceAdjancyEntriesOfLocalRankWithMaster();
           }
 
