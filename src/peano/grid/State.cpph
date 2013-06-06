@@ -222,7 +222,11 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
   _stateData.setIsTraversalInverted(!_stateData.getIsTraversalInverted());
 
   #ifdef Parallel
-  if (_loadRebalancingState == NoRebalancing && _maxForkLevel < std::numeric_limits<int>::max()) {
+  if (
+    _loadRebalancingState == NoRebalancing &&
+    peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()>=peano::parallel::loadbalancing::ForkOnce &&
+    _maxForkLevel < std::numeric_limits<int>::max()
+  ) {
     _maxForkLevel++;
   }
 
