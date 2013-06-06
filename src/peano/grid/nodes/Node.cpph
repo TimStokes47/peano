@@ -329,20 +329,11 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       coarseGridVertices[ coarseGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
-//      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
     enddforx
     fineGridCell.send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       fineGridVertices[ fineGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
-
-      // muss hier sein => dadurch verhindern wir degenerierte Baeume, die nur noch eine Zelle haben;
-      // wuerden wir das unterstuetzen, muesste auch auf Level 0 der komplette Vertex-Lifecycle drin
-      // sein und das wuerde ich gerne vermeiden.
-
-      // @todo Doku
-
-      fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
     enddforx
     logTraceOut( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(...)" );
   #endif
@@ -462,9 +453,10 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 //      xxx
       // Hier gehoert auch Doku rein, warum man erst local braucht bevor man auf remote zugreift: Weil sonst halt
       // u.U. man sachen von remote reinlaed, die es gar nicht gibt.
-
       if (localAdjacencyBitset.any()) {
         const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedAdjacencyBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(*p) );
+        assertionEquals(receivedAdjacencyBitset,localAdjacencyBitset);
+
         #if defined(Debug) && (defined(Dim2) || defined(Dim3) || defined(Dim4))
         assertionEquals11(
           fineGridCell.getLevel(),
