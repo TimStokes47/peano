@@ -393,6 +393,7 @@ std::bitset<THREE_POWER_D> peano::grid::nodes::Refined<Vertex,Cell,State,VertexS
   dfor3(k)
     bool isInside =
       !newFineGridCells[kScalar].isRemote(state,true,true) &&
+      newFineGridCells[kScalar].isCellAForkCandidate() &&
       !newFineGridCells[kScalar].thisSubtreeHoldsWorker();
 
     if (isInside && newFineGridCells[kScalar].isOutside()) {

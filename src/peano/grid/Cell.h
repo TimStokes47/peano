@@ -167,6 +167,15 @@ class peano::grid::Cell {
     ) const;
 
     #ifdef Parallel
+    bool isCellAForkCandidate() const;
+
+    /**
+     * By default, each cell is a fork candidate and can be forked by Peano to
+     * a different rank. With this operation, you can explicitly filter out
+     * cells you don't want to be forked.
+     */
+    void setCellIsAForkCondidate(bool value);
+
     bool isAssignedToRemoteRank() const;
 
     /**

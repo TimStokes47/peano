@@ -2307,7 +2307,7 @@ peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords() {
 }
 
 
-peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker):
+peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate):
 _isInside(isInside),
 _state(state),
 _evenFlags(evenFlags),
@@ -2316,7 +2316,8 @@ _responsibleRank(responsibleRank),
 _nodeWorkload(nodeWorkload),
 _localWorkload(localWorkload),
 _totalWorkload(totalWorkload),
-_subtreeHoldsWorker(subtreeHoldsWorker) {
+_subtreeHoldsWorker(subtreeHoldsWorker),
+_cellIsAForkCandidate(cellIsAForkCandidate) {
    
 }
 
@@ -2428,19 +2429,31 @@ _subtreeHoldsWorker(subtreeHoldsWorker) {
 }
 
 
+
+ bool peano::grid::tests::records::TestCell::PersistentRecords::getCellIsAForkCandidate() const  {
+   return _cellIsAForkCandidate;
+}
+
+
+
+ void peano::grid::tests::records::TestCell::PersistentRecords::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+   _cellIsAForkCandidate = cellIsAForkCandidate;
+}
+
+
 peano::grid::tests::records::TestCell::TestCell() {
    
 }
 
 
 peano::grid::tests::records::TestCell::TestCell(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._isInside, persistentRecords._state, persistentRecords._evenFlags, persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker) {
+_persistentRecords(persistentRecords._isInside, persistentRecords._state, persistentRecords._evenFlags, persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords._cellIsAForkCandidate) {
    
 }
 
 
-peano::grid::tests::records::TestCell::TestCell(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker):
-_persistentRecords(isInside, state, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker) {
+peano::grid::tests::records::TestCell::TestCell(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate):
+_persistentRecords(isInside, state, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, cellIsAForkCandidate) {
    
 }
 
@@ -2599,6 +2612,18 @@ peano::grid::tests::records::TestCell::~TestCell() { }
 }
 
 
+
+ bool peano::grid::tests::records::TestCell::getCellIsAForkCandidate() const  {
+   return _persistentRecords._cellIsAForkCandidate;
+}
+
+
+
+ void peano::grid::tests::records::TestCell::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+   _persistentRecords._cellIsAForkCandidate = cellIsAForkCandidate;
+}
+
+
 std::string peano::grid::tests::records::TestCell::toString(const State& param) {
    switch (param) {
       case Leaf: return "Leaf";
@@ -2646,6 +2671,8 @@ void peano::grid::tests::records::TestCell::toString (std::ostream& out) const {
    out << "totalWorkload:" << getTotalWorkload();
    out << ",";
    out << "subtreeHoldsWorker:" << getSubtreeHoldsWorker();
+   out << ",";
+   out << "cellIsAForkCandidate:" << getCellIsAForkCandidate();
    out <<  ")";
 }
 
@@ -2664,7 +2691,8 @@ peano::grid::tests::records::TestCellPacked peano::grid::tests::records::TestCel
       getNodeWorkload(),
       getLocalWorkload(),
       getTotalWorkload(),
-      getSubtreeHoldsWorker()
+      getSubtreeHoldsWorker(),
+      getCellIsAForkCandidate()
    );
 }
 
@@ -2713,7 +2741,7 @@ peano::grid::tests::records::TestCellPacked peano::grid::tests::records::TestCel
       {
          TestCell dummyTestCell[2];
          
-         const int Attributes = 10;
+         const int Attributes = 11;
          MPI_Datatype subtypes[Attributes] = {
             MPI_CHAR,		 //isInside
             MPI_INT,		 //state
@@ -2724,6 +2752,7 @@ peano::grid::tests::records::TestCellPacked peano::grid::tests::records::TestCel
             MPI_DOUBLE,		 //localWorkload
             MPI_DOUBLE,		 //totalWorkload
             MPI_CHAR,		 //subtreeHoldsWorker
+            MPI_CHAR,		 //cellIsAForkCandidate
             MPI_UB		 // end/displacement flag
          };
          
@@ -2737,6 +2766,7 @@ peano::grid::tests::records::TestCellPacked peano::grid::tests::records::TestCel
             1,		 //localWorkload
             1,		 //totalWorkload
             1,		 //subtreeHoldsWorker
+            1,		 //cellIsAForkCandidate
             1		 // end/displacement flag
          };
          
@@ -2753,7 +2783,8 @@ peano::grid::tests::records::TestCellPacked peano::grid::tests::records::TestCel
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._localWorkload))), 		&disp[6] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._totalWorkload))), 		&disp[7] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._subtreeHoldsWorker))), 		&disp[8] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[1]._persistentRecords._isInside))), 		&disp[9] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._cellIsAForkCandidate))), 		&disp[9] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[1]._persistentRecords._isInside))), 		&disp[10] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -2966,12 +2997,12 @@ peano::grid::tests::records::TestCellPacked peano::grid::tests::records::TestCel
 
 
 peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords() {
-   assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+   assertion((DIMENSIONS+4 < (8 * sizeof(int))));
    
 }
 
 
-peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker):
+peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate):
 _accessNumber(accessNumber),
 _responsibleRank(responsibleRank),
 _nodeWorkload(nodeWorkload),
@@ -2981,7 +3012,8 @@ _subtreeHoldsWorker(subtreeHoldsWorker) {
    setIsInside(isInside);
    setState(state);
    setEvenFlags(evenFlags);
-   assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+   setCellIsAForkCandidate(cellIsAForkCandidate);
+   assertion((DIMENSIONS+4 < (8 * sizeof(int))));
    
 }
 
@@ -3113,22 +3145,37 @@ _subtreeHoldsWorker(subtreeHoldsWorker) {
 }
 
 
+
+ bool peano::grid::tests::records::TestCellPacked::PersistentRecords::getCellIsAForkCandidate() const  {
+   int mask = 1 << (DIMENSIONS + 3);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano::grid::tests::records::TestCellPacked::PersistentRecords::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+   int mask = 1 << (DIMENSIONS + 3);
+   _packedRecords0 = static_cast<int>( cellIsAForkCandidate ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+}
+
+
 peano::grid::tests::records::TestCellPacked::TestCellPacked() {
-   assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+   assertion((DIMENSIONS+4 < (8 * sizeof(int))));
    
 }
 
 
 peano::grid::tests::records::TestCellPacked::TestCellPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getIsInside(), persistentRecords.getState(), persistentRecords.getEvenFlags(), persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker) {
-   assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+_persistentRecords(persistentRecords.getIsInside(), persistentRecords.getState(), persistentRecords.getEvenFlags(), persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords.getCellIsAForkCandidate()) {
+   assertion((DIMENSIONS+4 < (8 * sizeof(int))));
    
 }
 
 
-peano::grid::tests::records::TestCellPacked::TestCellPacked(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker):
-_persistentRecords(isInside, state, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker) {
-   assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+peano::grid::tests::records::TestCellPacked::TestCellPacked(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate):
+_persistentRecords(isInside, state, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, cellIsAForkCandidate) {
+   assertion((DIMENSIONS+4 < (8 * sizeof(int))));
    
 }
 
@@ -3314,6 +3361,21 @@ peano::grid::tests::records::TestCellPacked::~TestCellPacked() { }
 }
 
 
+
+ bool peano::grid::tests::records::TestCellPacked::getCellIsAForkCandidate() const  {
+   int mask = 1 << (DIMENSIONS + 3);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano::grid::tests::records::TestCellPacked::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+   int mask = 1 << (DIMENSIONS + 3);
+   _persistentRecords._packedRecords0 = static_cast<int>( cellIsAForkCandidate ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+}
+
+
 std::string peano::grid::tests::records::TestCellPacked::toString(const State& param) {
    return peano::grid::tests::records::TestCell::toString(param);
 }
@@ -3357,6 +3419,8 @@ void peano::grid::tests::records::TestCellPacked::toString (std::ostream& out) c
    out << "totalWorkload:" << getTotalWorkload();
    out << ",";
    out << "subtreeHoldsWorker:" << getSubtreeHoldsWorker();
+   out << ",";
+   out << "cellIsAForkCandidate:" << getCellIsAForkCandidate();
    out <<  ")";
 }
 
@@ -3375,7 +3439,8 @@ peano::grid::tests::records::TestCell peano::grid::tests::records::TestCellPacke
       getNodeWorkload(),
       getLocalWorkload(),
       getTotalWorkload(),
-      getSubtreeHoldsWorker()
+      getSubtreeHoldsWorker(),
+      getCellIsAForkCandidate()
    );
 }
 
@@ -4733,7 +4798,7 @@ peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords() {
 }
 
 
-peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
+peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
 _isInside(isInside),
 _state(state),
 _level(level),
@@ -4744,6 +4809,7 @@ _nodeWorkload(nodeWorkload),
 _localWorkload(localWorkload),
 _totalWorkload(totalWorkload),
 _subtreeHoldsWorker(subtreeHoldsWorker),
+_cellIsAForkCandidate(cellIsAForkCandidate),
 _numberOfLoadsFromInputStream(numberOfLoadsFromInputStream),
 _numberOfStoresToOutputStream(numberOfStoresToOutputStream) {
 
@@ -4870,6 +4936,18 @@ _subtreeHoldsWorker = subtreeHoldsWorker;
 
 
 
+ bool peano::grid::tests::records::TestCell::PersistentRecords::getCellIsAForkCandidate() const  {
+return _cellIsAForkCandidate;
+}
+
+
+
+ void peano::grid::tests::records::TestCell::PersistentRecords::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+_cellIsAForkCandidate = cellIsAForkCandidate;
+}
+
+
+
  int peano::grid::tests::records::TestCell::PersistentRecords::getNumberOfLoadsFromInputStream() const  {
 return _numberOfLoadsFromInputStream;
 }
@@ -4899,13 +4977,13 @@ peano::grid::tests::records::TestCell::TestCell() {
 
 
 peano::grid::tests::records::TestCell::TestCell(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._isInside, persistentRecords._state, persistentRecords._level, persistentRecords._evenFlags, persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords._numberOfLoadsFromInputStream, persistentRecords._numberOfStoresToOutputStream) {
+_persistentRecords(persistentRecords._isInside, persistentRecords._state, persistentRecords._level, persistentRecords._evenFlags, persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords._cellIsAForkCandidate, persistentRecords._numberOfLoadsFromInputStream, persistentRecords._numberOfStoresToOutputStream) {
 
 }
 
 
-peano::grid::tests::records::TestCell::TestCell(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
-_persistentRecords(isInside, state, level, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, numberOfLoadsFromInputStream, numberOfStoresToOutputStream) {
+peano::grid::tests::records::TestCell::TestCell(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
+_persistentRecords(isInside, state, level, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, cellIsAForkCandidate, numberOfLoadsFromInputStream, numberOfStoresToOutputStream) {
 
 }
 
@@ -5077,6 +5155,18 @@ _persistentRecords._subtreeHoldsWorker = subtreeHoldsWorker;
 
 
 
+ bool peano::grid::tests::records::TestCell::getCellIsAForkCandidate() const  {
+return _persistentRecords._cellIsAForkCandidate;
+}
+
+
+
+ void peano::grid::tests::records::TestCell::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+_persistentRecords._cellIsAForkCandidate = cellIsAForkCandidate;
+}
+
+
+
  int peano::grid::tests::records::TestCell::getNumberOfLoadsFromInputStream() const  {
 return _persistentRecords._numberOfLoadsFromInputStream;
 }
@@ -5150,6 +5240,8 @@ out << "totalWorkload:" << getTotalWorkload();
 out << ",";
 out << "subtreeHoldsWorker:" << getSubtreeHoldsWorker();
 out << ",";
+out << "cellIsAForkCandidate:" << getCellIsAForkCandidate();
+out << ",";
 out << "numberOfLoadsFromInputStream:" << getNumberOfLoadsFromInputStream();
 out << ",";
 out << "numberOfStoresToOutputStream:" << getNumberOfStoresToOutputStream();
@@ -5173,6 +5265,7 @@ getNodeWorkload(),
 getLocalWorkload(),
 getTotalWorkload(),
 getSubtreeHoldsWorker(),
+getCellIsAForkCandidate(),
 getNumberOfLoadsFromInputStream(),
 getNumberOfStoresToOutputStream()
 );
@@ -5226,7 +5319,7 @@ void peano::grid::tests::records::TestCell::initDatatype() {
 {
    TestCell dummyTestCell[2];
    
-   const int Attributes = 13;
+   const int Attributes = 14;
    MPI_Datatype subtypes[Attributes] = {
       MPI_CHAR,		 //isInside
       MPI_INT,		 //state
@@ -5238,6 +5331,7 @@ void peano::grid::tests::records::TestCell::initDatatype() {
       MPI_DOUBLE,		 //localWorkload
       MPI_DOUBLE,		 //totalWorkload
       MPI_CHAR,		 //subtreeHoldsWorker
+      MPI_CHAR,		 //cellIsAForkCandidate
       MPI_INT,		 //numberOfLoadsFromInputStream
       MPI_INT,		 //numberOfStoresToOutputStream
       MPI_UB		 // end/displacement flag
@@ -5254,6 +5348,7 @@ void peano::grid::tests::records::TestCell::initDatatype() {
       1,		 //localWorkload
       1,		 //totalWorkload
       1,		 //subtreeHoldsWorker
+      1,		 //cellIsAForkCandidate
       1,		 //numberOfLoadsFromInputStream
       1,		 //numberOfStoresToOutputStream
       1		 // end/displacement flag
@@ -5273,9 +5368,10 @@ void peano::grid::tests::records::TestCell::initDatatype() {
    MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._localWorkload))), 		&disp[7] );
    MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._totalWorkload))), 		&disp[8] );
    MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._subtreeHoldsWorker))), 		&disp[9] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._numberOfLoadsFromInputStream))), 		&disp[10] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._numberOfStoresToOutputStream))), 		&disp[11] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[1]._persistentRecords._isInside))), 		&disp[12] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._cellIsAForkCandidate))), 		&disp[10] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._numberOfLoadsFromInputStream))), 		&disp[11] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._numberOfStoresToOutputStream))), 		&disp[12] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[1]._persistentRecords._isInside))), 		&disp[13] );
    
    for (int i=1; i<Attributes; i++) {
       assertion1( disp[i] > disp[i-1], i );
@@ -5488,12 +5584,12 @@ return _senderDestinationRank;
 
 
 peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords() {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
 
-peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
+peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
 _level(level),
 _accessNumber(accessNumber),
 _responsibleRank(responsibleRank),
@@ -5506,7 +5602,8 @@ _numberOfStoresToOutputStream(numberOfStoresToOutputStream) {
 setIsInside(isInside);
 setState(state);
 setEvenFlags(evenFlags);
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+setCellIsAForkCandidate(cellIsAForkCandidate);
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
@@ -5651,6 +5748,21 @@ _subtreeHoldsWorker = subtreeHoldsWorker;
 
 
 
+ bool peano::grid::tests::records::TestCellPacked::PersistentRecords::getCellIsAForkCandidate() const  {
+int mask = 1 << (DIMENSIONS + 3);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano::grid::tests::records::TestCellPacked::PersistentRecords::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+int mask = 1 << (DIMENSIONS + 3);
+   _packedRecords0 = static_cast<int>( cellIsAForkCandidate ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+}
+
+
+
  int peano::grid::tests::records::TestCellPacked::PersistentRecords::getNumberOfLoadsFromInputStream() const  {
 return _numberOfLoadsFromInputStream;
 }
@@ -5675,21 +5787,21 @@ _numberOfStoresToOutputStream = numberOfStoresToOutputStream;
 
 
 peano::grid::tests::records::TestCellPacked::TestCellPacked() {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
 
 peano::grid::tests::records::TestCellPacked::TestCellPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getIsInside(), persistentRecords.getState(), persistentRecords._level, persistentRecords.getEvenFlags(), persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords._numberOfLoadsFromInputStream, persistentRecords._numberOfStoresToOutputStream) {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+_persistentRecords(persistentRecords.getIsInside(), persistentRecords.getState(), persistentRecords._level, persistentRecords.getEvenFlags(), persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords.getCellIsAForkCandidate(), persistentRecords._numberOfLoadsFromInputStream, persistentRecords._numberOfStoresToOutputStream) {
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
 
-peano::grid::tests::records::TestCellPacked::TestCellPacked(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
-_persistentRecords(isInside, state, level, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, numberOfLoadsFromInputStream, numberOfStoresToOutputStream) {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+peano::grid::tests::records::TestCellPacked::TestCellPacked(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
+_persistentRecords(isInside, state, level, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, cellIsAForkCandidate, numberOfLoadsFromInputStream, numberOfStoresToOutputStream) {
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
@@ -5888,6 +6000,21 @@ _persistentRecords._subtreeHoldsWorker = subtreeHoldsWorker;
 
 
 
+ bool peano::grid::tests::records::TestCellPacked::getCellIsAForkCandidate() const  {
+int mask = 1 << (DIMENSIONS + 3);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano::grid::tests::records::TestCellPacked::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+int mask = 1 << (DIMENSIONS + 3);
+   _persistentRecords._packedRecords0 = static_cast<int>( cellIsAForkCandidate ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+}
+
+
+
  int peano::grid::tests::records::TestCellPacked::getNumberOfLoadsFromInputStream() const  {
 return _persistentRecords._numberOfLoadsFromInputStream;
 }
@@ -5957,6 +6084,8 @@ out << "totalWorkload:" << getTotalWorkload();
 out << ",";
 out << "subtreeHoldsWorker:" << getSubtreeHoldsWorker();
 out << ",";
+out << "cellIsAForkCandidate:" << getCellIsAForkCandidate();
+out << ",";
 out << "numberOfLoadsFromInputStream:" << getNumberOfLoadsFromInputStream();
 out << ",";
 out << "numberOfStoresToOutputStream:" << getNumberOfStoresToOutputStream();
@@ -5980,6 +6109,7 @@ getNodeWorkload(),
 getLocalWorkload(),
 getTotalWorkload(),
 getSubtreeHoldsWorker(),
+getCellIsAForkCandidate(),
 getNumberOfLoadsFromInputStream(),
 getNumberOfStoresToOutputStream()
 );
@@ -6296,7 +6426,7 @@ peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords() {
 }
 
 
-peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker):
+peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate):
 _isInside(isInside),
 _state(state),
 _level(level),
@@ -6306,7 +6436,8 @@ _responsibleRank(responsibleRank),
 _nodeWorkload(nodeWorkload),
 _localWorkload(localWorkload),
 _totalWorkload(totalWorkload),
-_subtreeHoldsWorker(subtreeHoldsWorker) {
+_subtreeHoldsWorker(subtreeHoldsWorker),
+_cellIsAForkCandidate(cellIsAForkCandidate) {
 
 }
 
@@ -6430,19 +6561,31 @@ _subtreeHoldsWorker = subtreeHoldsWorker;
 }
 
 
+
+ bool peano::grid::tests::records::TestCell::PersistentRecords::getCellIsAForkCandidate() const  {
+return _cellIsAForkCandidate;
+}
+
+
+
+ void peano::grid::tests::records::TestCell::PersistentRecords::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+_cellIsAForkCandidate = cellIsAForkCandidate;
+}
+
+
 peano::grid::tests::records::TestCell::TestCell() {
 
 }
 
 
 peano::grid::tests::records::TestCell::TestCell(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._isInside, persistentRecords._state, persistentRecords._level, persistentRecords._evenFlags, persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker) {
+_persistentRecords(persistentRecords._isInside, persistentRecords._state, persistentRecords._level, persistentRecords._evenFlags, persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords._cellIsAForkCandidate) {
 
 }
 
 
-peano::grid::tests::records::TestCell::TestCell(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker):
-_persistentRecords(isInside, state, level, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker) {
+peano::grid::tests::records::TestCell::TestCell(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate):
+_persistentRecords(isInside, state, level, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, cellIsAForkCandidate) {
 
 }
 
@@ -6613,6 +6756,18 @@ _persistentRecords._subtreeHoldsWorker = subtreeHoldsWorker;
 }
 
 
+
+ bool peano::grid::tests::records::TestCell::getCellIsAForkCandidate() const  {
+return _persistentRecords._cellIsAForkCandidate;
+}
+
+
+
+ void peano::grid::tests::records::TestCell::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+_persistentRecords._cellIsAForkCandidate = cellIsAForkCandidate;
+}
+
+
 std::string peano::grid::tests::records::TestCell::toString(const State& param) {
 switch (param) {
 case Leaf: return "Leaf";
@@ -6662,6 +6817,8 @@ out << ",";
 out << "totalWorkload:" << getTotalWorkload();
 out << ",";
 out << "subtreeHoldsWorker:" << getSubtreeHoldsWorker();
+out << ",";
+out << "cellIsAForkCandidate:" << getCellIsAForkCandidate();
 out <<  ")";
 }
 
@@ -6681,7 +6838,8 @@ getResponsibleRank(),
 getNodeWorkload(),
 getLocalWorkload(),
 getTotalWorkload(),
-getSubtreeHoldsWorker()
+getSubtreeHoldsWorker(),
+getCellIsAForkCandidate()
 );
 }
 
@@ -6733,7 +6891,7 @@ MPI_Type_commit( &TestCell::Datatype );
 {
 TestCell dummyTestCell[2];
 
-const int Attributes = 11;
+const int Attributes = 12;
 MPI_Datatype subtypes[Attributes] = {
    MPI_CHAR,		 //isInside
    MPI_INT,		 //state
@@ -6745,6 +6903,7 @@ MPI_Datatype subtypes[Attributes] = {
    MPI_DOUBLE,		 //localWorkload
    MPI_DOUBLE,		 //totalWorkload
    MPI_CHAR,		 //subtreeHoldsWorker
+   MPI_CHAR,		 //cellIsAForkCandidate
    MPI_UB		 // end/displacement flag
 };
 
@@ -6759,6 +6918,7 @@ int blocklen[Attributes] = {
    1,		 //localWorkload
    1,		 //totalWorkload
    1,		 //subtreeHoldsWorker
+   1,		 //cellIsAForkCandidate
    1		 // end/displacement flag
 };
 
@@ -6776,7 +6936,8 @@ MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._pers
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._localWorkload))), 		&disp[7] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._totalWorkload))), 		&disp[8] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._subtreeHoldsWorker))), 		&disp[9] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[1]._persistentRecords._isInside))), 		&disp[10] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._cellIsAForkCandidate))), 		&disp[10] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[1]._persistentRecords._isInside))), 		&disp[11] );
 
 for (int i=1; i<Attributes; i++) {
    assertion1( disp[i] > disp[i-1], i );
@@ -6989,12 +7150,12 @@ return _senderDestinationRank;
 
 
 peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords() {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
 
-peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker):
+peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate):
 _level(level),
 _accessNumber(accessNumber),
 _responsibleRank(responsibleRank),
@@ -7005,7 +7166,8 @@ _subtreeHoldsWorker(subtreeHoldsWorker) {
 setIsInside(isInside);
 setState(state);
 setEvenFlags(evenFlags);
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+setCellIsAForkCandidate(cellIsAForkCandidate);
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
@@ -7149,22 +7311,37 @@ _subtreeHoldsWorker = subtreeHoldsWorker;
 }
 
 
+
+ bool peano::grid::tests::records::TestCellPacked::PersistentRecords::getCellIsAForkCandidate() const  {
+int mask = 1 << (DIMENSIONS + 3);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano::grid::tests::records::TestCellPacked::PersistentRecords::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+int mask = 1 << (DIMENSIONS + 3);
+   _packedRecords0 = static_cast<int>( cellIsAForkCandidate ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+}
+
+
 peano::grid::tests::records::TestCellPacked::TestCellPacked() {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
 
 peano::grid::tests::records::TestCellPacked::TestCellPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getIsInside(), persistentRecords.getState(), persistentRecords._level, persistentRecords.getEvenFlags(), persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker) {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+_persistentRecords(persistentRecords.getIsInside(), persistentRecords.getState(), persistentRecords._level, persistentRecords.getEvenFlags(), persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords.getCellIsAForkCandidate()) {
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
 
-peano::grid::tests::records::TestCellPacked::TestCellPacked(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker):
-_persistentRecords(isInside, state, level, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker) {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+peano::grid::tests::records::TestCellPacked::TestCellPacked(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate):
+_persistentRecords(isInside, state, level, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, cellIsAForkCandidate) {
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
@@ -7362,6 +7539,21 @@ _persistentRecords._subtreeHoldsWorker = subtreeHoldsWorker;
 }
 
 
+
+ bool peano::grid::tests::records::TestCellPacked::getCellIsAForkCandidate() const  {
+int mask = 1 << (DIMENSIONS + 3);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano::grid::tests::records::TestCellPacked::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+int mask = 1 << (DIMENSIONS + 3);
+   _persistentRecords._packedRecords0 = static_cast<int>( cellIsAForkCandidate ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+}
+
+
 std::string peano::grid::tests::records::TestCellPacked::toString(const State& param) {
 return peano::grid::tests::records::TestCell::toString(param);
 }
@@ -7407,6 +7599,8 @@ out << ",";
 out << "totalWorkload:" << getTotalWorkload();
 out << ",";
 out << "subtreeHoldsWorker:" << getSubtreeHoldsWorker();
+out << ",";
+out << "cellIsAForkCandidate:" << getCellIsAForkCandidate();
 out <<  ")";
 }
 
@@ -7426,7 +7620,8 @@ getResponsibleRank(),
 getNodeWorkload(),
 getLocalWorkload(),
 getTotalWorkload(),
-getSubtreeHoldsWorker()
+getSubtreeHoldsWorker(),
+getCellIsAForkCandidate()
 );
 }
 
@@ -7735,7 +7930,7 @@ peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords() {
 }
 
 
-peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
+peano::grid::tests::records::TestCell::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
 _isInside(isInside),
 _state(state),
 _evenFlags(evenFlags),
@@ -7745,6 +7940,7 @@ _nodeWorkload(nodeWorkload),
 _localWorkload(localWorkload),
 _totalWorkload(totalWorkload),
 _subtreeHoldsWorker(subtreeHoldsWorker),
+_cellIsAForkCandidate(cellIsAForkCandidate),
 _numberOfLoadsFromInputStream(numberOfLoadsFromInputStream),
 _numberOfStoresToOutputStream(numberOfStoresToOutputStream) {
 
@@ -7859,6 +8055,18 @@ _subtreeHoldsWorker = subtreeHoldsWorker;
 
 
 
+ bool peano::grid::tests::records::TestCell::PersistentRecords::getCellIsAForkCandidate() const  {
+return _cellIsAForkCandidate;
+}
+
+
+
+ void peano::grid::tests::records::TestCell::PersistentRecords::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+_cellIsAForkCandidate = cellIsAForkCandidate;
+}
+
+
+
  int peano::grid::tests::records::TestCell::PersistentRecords::getNumberOfLoadsFromInputStream() const  {
 return _numberOfLoadsFromInputStream;
 }
@@ -7888,13 +8096,13 @@ peano::grid::tests::records::TestCell::TestCell() {
 
 
 peano::grid::tests::records::TestCell::TestCell(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._isInside, persistentRecords._state, persistentRecords._evenFlags, persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords._numberOfLoadsFromInputStream, persistentRecords._numberOfStoresToOutputStream) {
+_persistentRecords(persistentRecords._isInside, persistentRecords._state, persistentRecords._evenFlags, persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords._cellIsAForkCandidate, persistentRecords._numberOfLoadsFromInputStream, persistentRecords._numberOfStoresToOutputStream) {
 
 }
 
 
-peano::grid::tests::records::TestCell::TestCell(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
-_persistentRecords(isInside, state, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, numberOfLoadsFromInputStream, numberOfStoresToOutputStream) {
+peano::grid::tests::records::TestCell::TestCell(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
+_persistentRecords(isInside, state, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, cellIsAForkCandidate, numberOfLoadsFromInputStream, numberOfStoresToOutputStream) {
 
 }
 
@@ -8054,6 +8262,18 @@ _persistentRecords._subtreeHoldsWorker = subtreeHoldsWorker;
 
 
 
+ bool peano::grid::tests::records::TestCell::getCellIsAForkCandidate() const  {
+return _persistentRecords._cellIsAForkCandidate;
+}
+
+
+
+ void peano::grid::tests::records::TestCell::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+_persistentRecords._cellIsAForkCandidate = cellIsAForkCandidate;
+}
+
+
+
  int peano::grid::tests::records::TestCell::getNumberOfLoadsFromInputStream() const  {
 return _persistentRecords._numberOfLoadsFromInputStream;
 }
@@ -8125,6 +8345,8 @@ out << "totalWorkload:" << getTotalWorkload();
 out << ",";
 out << "subtreeHoldsWorker:" << getSubtreeHoldsWorker();
 out << ",";
+out << "cellIsAForkCandidate:" << getCellIsAForkCandidate();
+out << ",";
 out << "numberOfLoadsFromInputStream:" << getNumberOfLoadsFromInputStream();
 out << ",";
 out << "numberOfStoresToOutputStream:" << getNumberOfStoresToOutputStream();
@@ -8147,6 +8369,7 @@ getNodeWorkload(),
 getLocalWorkload(),
 getTotalWorkload(),
 getSubtreeHoldsWorker(),
+getCellIsAForkCandidate(),
 getNumberOfLoadsFromInputStream(),
 getNumberOfStoresToOutputStream()
 );
@@ -8197,7 +8420,7 @@ MPI_Type_commit( &TestCell::Datatype );
 {
 TestCell dummyTestCell[2];
 
-const int Attributes = 12;
+const int Attributes = 13;
 MPI_Datatype subtypes[Attributes] = {
 MPI_CHAR,		 //isInside
 MPI_INT,		 //state
@@ -8208,6 +8431,7 @@ MPI_DOUBLE,		 //nodeWorkload
 MPI_DOUBLE,		 //localWorkload
 MPI_DOUBLE,		 //totalWorkload
 MPI_CHAR,		 //subtreeHoldsWorker
+MPI_CHAR,		 //cellIsAForkCandidate
 MPI_INT,		 //numberOfLoadsFromInputStream
 MPI_INT,		 //numberOfStoresToOutputStream
 MPI_UB		 // end/displacement flag
@@ -8223,6 +8447,7 @@ DIMENSIONS_TIMES_TWO,		 //accessNumber
 1,		 //localWorkload
 1,		 //totalWorkload
 1,		 //subtreeHoldsWorker
+1,		 //cellIsAForkCandidate
 1,		 //numberOfLoadsFromInputStream
 1,		 //numberOfStoresToOutputStream
 1		 // end/displacement flag
@@ -8241,9 +8466,10 @@ MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._pers
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._localWorkload))), 		&disp[6] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._totalWorkload))), 		&disp[7] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._subtreeHoldsWorker))), 		&disp[8] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._numberOfLoadsFromInputStream))), 		&disp[9] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._numberOfStoresToOutputStream))), 		&disp[10] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[1]._persistentRecords._isInside))), 		&disp[11] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._cellIsAForkCandidate))), 		&disp[9] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._numberOfLoadsFromInputStream))), 		&disp[10] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[0]._persistentRecords._numberOfStoresToOutputStream))), 		&disp[11] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestCell[1]._persistentRecords._isInside))), 		&disp[12] );
 
 for (int i=1; i<Attributes; i++) {
 assertion1( disp[i] > disp[i-1], i );
@@ -8456,12 +8682,12 @@ return _senderDestinationRank;
 
 
 peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords() {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
 
-peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
+peano::grid::tests::records::TestCellPacked::PersistentRecords::PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
 _accessNumber(accessNumber),
 _responsibleRank(responsibleRank),
 _nodeWorkload(nodeWorkload),
@@ -8473,7 +8699,8 @@ _numberOfStoresToOutputStream(numberOfStoresToOutputStream) {
 setIsInside(isInside);
 setState(state);
 setEvenFlags(evenFlags);
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+setCellIsAForkCandidate(cellIsAForkCandidate);
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
@@ -8606,6 +8833,21 @@ _subtreeHoldsWorker = subtreeHoldsWorker;
 
 
 
+ bool peano::grid::tests::records::TestCellPacked::PersistentRecords::getCellIsAForkCandidate() const  {
+int mask = 1 << (DIMENSIONS + 3);
+   int tmp = static_cast<int>(_packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano::grid::tests::records::TestCellPacked::PersistentRecords::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+int mask = 1 << (DIMENSIONS + 3);
+   _packedRecords0 = static_cast<int>( cellIsAForkCandidate ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+}
+
+
+
  int peano::grid::tests::records::TestCellPacked::PersistentRecords::getNumberOfLoadsFromInputStream() const  {
 return _numberOfLoadsFromInputStream;
 }
@@ -8630,21 +8872,21 @@ _numberOfStoresToOutputStream = numberOfStoresToOutputStream;
 
 
 peano::grid::tests::records::TestCellPacked::TestCellPacked() {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
 
 peano::grid::tests::records::TestCellPacked::TestCellPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getIsInside(), persistentRecords.getState(), persistentRecords.getEvenFlags(), persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords._numberOfLoadsFromInputStream, persistentRecords._numberOfStoresToOutputStream) {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+_persistentRecords(persistentRecords.getIsInside(), persistentRecords.getState(), persistentRecords.getEvenFlags(), persistentRecords._accessNumber, persistentRecords._responsibleRank, persistentRecords._nodeWorkload, persistentRecords._localWorkload, persistentRecords._totalWorkload, persistentRecords._subtreeHoldsWorker, persistentRecords.getCellIsAForkCandidate(), persistentRecords._numberOfLoadsFromInputStream, persistentRecords._numberOfStoresToOutputStream) {
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
 
-peano::grid::tests::records::TestCellPacked::TestCellPacked(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
-_persistentRecords(isInside, state, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, numberOfLoadsFromInputStream, numberOfStoresToOutputStream) {
-assertion((DIMENSIONS+3 < (8 * sizeof(int))));
+peano::grid::tests::records::TestCellPacked::TestCellPacked(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream):
+_persistentRecords(isInside, state, evenFlags, accessNumber, responsibleRank, nodeWorkload, localWorkload, totalWorkload, subtreeHoldsWorker, cellIsAForkCandidate, numberOfLoadsFromInputStream, numberOfStoresToOutputStream) {
+assertion((DIMENSIONS+4 < (8 * sizeof(int))));
 
 }
 
@@ -8831,6 +9073,21 @@ _persistentRecords._subtreeHoldsWorker = subtreeHoldsWorker;
 
 
 
+ bool peano::grid::tests::records::TestCellPacked::getCellIsAForkCandidate() const  {
+int mask = 1 << (DIMENSIONS + 3);
+   int tmp = static_cast<int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano::grid::tests::records::TestCellPacked::setCellIsAForkCandidate(const bool& cellIsAForkCandidate)  {
+int mask = 1 << (DIMENSIONS + 3);
+   _persistentRecords._packedRecords0 = static_cast<int>( cellIsAForkCandidate ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+}
+
+
+
  int peano::grid::tests::records::TestCellPacked::getNumberOfLoadsFromInputStream() const  {
 return _persistentRecords._numberOfLoadsFromInputStream;
 }
@@ -8898,6 +9155,8 @@ out << "totalWorkload:" << getTotalWorkload();
 out << ",";
 out << "subtreeHoldsWorker:" << getSubtreeHoldsWorker();
 out << ",";
+out << "cellIsAForkCandidate:" << getCellIsAForkCandidate();
+out << ",";
 out << "numberOfLoadsFromInputStream:" << getNumberOfLoadsFromInputStream();
 out << ",";
 out << "numberOfStoresToOutputStream:" << getNumberOfStoresToOutputStream();
@@ -8920,6 +9179,7 @@ getNodeWorkload(),
 getLocalWorkload(),
 getTotalWorkload(),
 getSubtreeHoldsWorker(),
+getCellIsAForkCandidate(),
 getNumberOfLoadsFromInputStream(),
 getNumberOfStoresToOutputStream()
 );

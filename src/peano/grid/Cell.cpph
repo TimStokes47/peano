@@ -27,6 +27,7 @@ peano::grid::Cell<CellData>::Cell():
   _cellData.setTotalWorkload( 0.0 );
   _cellData.setLocalWorkload( 0.0 );
   _cellData.setSubtreeHoldsWorker(false);
+  _cellData.setCellIsAForkCandidate(true);
   #endif
 }
 
@@ -465,6 +466,18 @@ void peano::grid::Cell<CellData>::receive(int source, int tag, bool exchangeOnly
   #else
   _cellData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel);
   #endif
+}
+
+
+template <class CellData>
+bool peano::grid::Cell<CellData>::isCellAForkCandidate() const {
+  return _cellData.getCellIsAForkCandidate();
+}
+
+
+template <class CellData>
+void peano::grid::Cell<CellData>::setCellIsAForkCondidate(bool value) {
+  _cellData.setCellIsAForkCandidate(value);
 }
 
 
