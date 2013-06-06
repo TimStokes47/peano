@@ -28,6 +28,7 @@ peano::grid::State<StateData>::State():
   _stateData.setReduceStateAndCell(true);
   _loadRebalancingRemoteRanks.clear();
   _iterationCounter = 0;
+  _maxForkLevel = std::numeric_limits<int>::max();
   #endif
 }
 
@@ -221,6 +222,10 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
   _stateData.setIsTraversalInverted(!_stateData.getIsTraversalInverted());
 
   #ifdef Parallel
+  if (_loadRebalancingState == NoRebalancing && _maxForkLevel < std::numeric_limits<int>::max()) {
+    _maxForkLevel++;
+  }
+
   switch (_loadRebalancingState) {
     case NoRebalancing:
       assertion( _loadRebalancingRemoteRanks.empty());
@@ -652,6 +657,16 @@ void peano::grid::State<StateData>::setReduceStateAndCell( bool value ) {
 template <class StateData>
 bool peano::grid::State<StateData>::reduceStateAndCell() const {
   return _stateData.getReduceStateAndCell() && _loadRebalancingState != JoiningWithMaster && _loadRebalancingState != IsNewWorkerDueToForkOfExistingDomain;
+}
+
+
+template <class StateData>
+bool peano::grid::State<StateData>::mayForkCellsOnLevel(int level) {
+  const bool result = level <= _maxForkLevel;
+  if (level<_maxForkLevel) {
+    _maxForkLevel = level;
+  }
+  return result;
 }
 
 

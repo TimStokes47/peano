@@ -118,6 +118,11 @@ class peano::grid::State {
      *
      */
     int                          _iterationCounter;
+
+    /**
+     * @see mayForkCellsOnLevel()
+     */
+    int                          _maxForkLevel;
     #endif
   public:
      ~State();
@@ -368,16 +373,52 @@ class peano::grid::State {
      *
      * In principle, the MPI oracle keeps track of which node has workers and
      * which one hasn't, i.e. there we can ask whether our worker employs other
-     * workers or not. This information is propated bottom-up due to the state
-     * and the state's infromation is set by send(), i.e. there is no setter as
+     * workers or not. This information is propagated bottom-up due to the state
+     * and the state's information is set by send(), i.e. there is no setter as
      * send() sets the attribute and the receiving operation (see
      * Node::updateCellsParallelStateBeforeStore()) reads the attribute and
      * passes it on to the oracle.
-     *
      * @see send()
      */
-
     bool mayForkDueToLoadBalancing() const;
+
+    /**
+     * Inform cell that the node would like to fork
+     *
+     * The following operation comes into play if the master of the current
+     * node has invoked it with a fork command, i.e. if mayForkDueToLoadBalancing()
+     * holds on the master. Then, the worker identifies potential fork candidates
+     * and asks this operation whether this fork is o.k.
+     *
+     * The two-stage process is necessary as Peano basically realises a
+     * depth-first traversal. The following sketch illustrates potential
+     * implications:
+     *
+     * @image html State_mayForkCellsOnLevel.png
+     *
+     * Let the root node accept the instruction to fork three times. The labels
+     * illustrate how often a node could fork its children (due to grid regularity
+     * properties, e.g.). Peano descends into the light red node. It could do one
+     * fork and hence deploys the blue node. Afterward, it continues to descend:
+     * not into the blue node as this one is deployed, and the grey one is not
+     * a fork candidate. So we run into the dark red node and fork this one twice.
+     *
+     * This is however not a good choice: We should instead fork the light green
+     * cell. The solution is to introduce the max fork level prescribing the finest
+     * level that may be forked per iteration. This fields is set to inf at the
+     * beginning and is increased after each iteration. When we do a fork, we set
+     * it to level.
+     *
+     * @return false  If the operation returns false, it vetos the fork.
+     */
+    bool mayForkCellsOnLevel(int level);
+
+    /**
+     * Counterpart of mayForkDueToLoadBalancing().
+     *
+     * The major difference is the fact that there is no level analysis, i.e.
+     * the level of a cell does not matter.
+     */
     bool mayJoinDueToLoadBalancing() const;
 
     /**

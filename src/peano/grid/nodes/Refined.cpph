@@ -437,7 +437,11 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
         newFineGridVertices
       );
 
-    if (localInnerCells.count()>1) {
+    if (
+      localInnerCells.count()>1
+      &&
+      state.mayForkCellsOnLevel(newFineGridVerticesEnumerators.getLevel())
+    ) {
       logTraceInWith3Arguments( "splitUpGrid(...)", state, fineGridCell, fineGridVerticesEnumerator.toString() );
 
       peano::parallel::Partitioner partitioner( localInnerCells );
