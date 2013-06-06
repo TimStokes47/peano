@@ -193,7 +193,7 @@ double peano::grid::State<StateData>::getNumberOfOuterLeafVertices() const {
 
 template <class StateData>
 double peano::grid::State<StateData>::getNumberOfInnerLeafCells() const {
-  return _stateData.getNumberOfInnterLeafCells();
+  return _stateData.getNumberOfInnerLeafCells();
 }
 
 
