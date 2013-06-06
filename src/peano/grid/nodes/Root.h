@@ -273,6 +273,10 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
       const tarch::la::Vector<DIMENSIONS,int>&     positionOfFineGridCellRelativeToCoarseGridCell
     );
   public:
+    static bool sendLocalDataToMaster(
+      const State&  state
+    );
+
     /**
      * Constructor
      * 

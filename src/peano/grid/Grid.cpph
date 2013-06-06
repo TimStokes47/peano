@@ -134,7 +134,7 @@ template <class Vertex, class Cell, class State, class VertexStack, class CellSt
 void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::sendStateToMaster() {
   #ifdef Parallel
   logTraceInWith1Argument( "sendStateToMaster()", _state.toString() );
-  if ( _state.reduceStateAndCell() && !tarch::parallel::Node::getInstance().isGlobalMaster() ) {
+  if ( _root.sendLocalDataToMaster(_state) ) {
     _state.send(
       tarch::parallel::NodePool::getInstance().getMasterRank(),
       peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
