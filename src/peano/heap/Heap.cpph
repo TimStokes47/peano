@@ -721,7 +721,7 @@ std::vector< Data > peano::heap::Heap<Data>::receiveData(
 
 
 template <class Data>
-void peano::heap::Heap<Data>::receiveData(
+int peano::heap::Heap<Data>::receiveData(
   int                                           index,
   int                                           fromRank,
   const tarch::la::Vector<DIMENSIONS, double>&  position,
@@ -736,6 +736,7 @@ void peano::heap::Heap<Data>::receiveData(
     receivedData = receiveMasterWorkerOrForkJoinData(fromRank, position, level, messageType);
   }
   localData.insert( localData.end(), receivedData.begin(), receivedData.end() );
+  return static_cast<int>( receivedData.size() );
 }
 
 

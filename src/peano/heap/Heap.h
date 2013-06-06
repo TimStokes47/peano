@@ -577,8 +577,9 @@ class peano::heap::Heap: public tarch::services::Service {
      * Receive data and append it to local data.
      *
      * @see receiveData()
+     * @return Number of appended entries
      */
-    void receiveData(
+    int receiveData(
       int                                           index,
       int                                           fromRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
