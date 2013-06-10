@@ -97,7 +97,6 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
       p++
     ) {
       if ( _state.isJoiningRank(*p) ) {
-        _fineGridVertices[positionInVertexArray].sdaf
         _fineGridVertices[positionInVertexArray].replaceAdjancyEntriesOfRemoteRankWithLocalRank(*p);
       }
     }
