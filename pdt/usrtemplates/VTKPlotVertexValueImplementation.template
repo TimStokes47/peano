@@ -88,7 +88,19 @@ void __THIS_QUALIFIED_TYPENAME__::plotVertex(
     #else
     _vertex2IndexMap[fineGridX] = _vertexWriter->plotVertex(tarch::la::Vector<3,double>(fineGridX.data()));
     #endif
-    _vertexValueWriter->plotVertex             (_vertex2IndexMap[fineGridX],fineGridVertex.PARAM1() );
+    
+    #ifdef Parallel
+    const bool plotValue =
+      !fineGridVertex.isOutside() &&
+      fineGridVertex.isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() );
+    #else
+    const bool plotValue =
+      !fineGridVertex.isOutside();
+    #endif
+
+    const double value = plotValue ? fineGridVertex.PARAM1() : 0.0;
+
+    _vertexValueWriter->plotVertex             (_vertex2IndexMap[fineGridX],value );
   }
 }
 

@@ -199,7 +199,19 @@ void __THIS_QUALIFIED_TYPENAME__::plotVertex(
     _dataset[level]._vertexRefinementControlWriter->plotVertex(_dataset[level]._vertex2IndexMap[fineGridX],fineGridVertex.getRefinementControl() );
     _dataset[level]._vertexAdjacentCellsHeight->plotVertex    (_dataset[level]._vertex2IndexMap[fineGridX],fineGridVertex.getAdjacentCellsHeightOfPreviousIteration() );
     _dataset[level]._vertexHangingNodeWriter->plotVertex      (_dataset[level]._vertex2IndexMap[fineGridX],fineGridVertex.isHangingNode() );
-    _dataset[level]._vertexValueWriter->plotVertex            (_dataset[level]._vertex2IndexMap[fineGridX],fineGridVertex.PARAM1() );
+    
+    #ifdef Parallel
+    const bool plotValue =
+      !fineGridVertex.isOutside() &&
+      fineGridVertex.isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() );
+    #else
+    const bool plotValue =
+      !fineGridVertex.isOutside();
+    #endif
+
+    const double value = plotValue ? fineGridVertex.PARAM1() : 0.0;
+    
+    _dataset[level]._vertexValueWriter->plotVertex            (_dataset[level]._vertex2IndexMap[fineGridX],value );
   }
 }
 
