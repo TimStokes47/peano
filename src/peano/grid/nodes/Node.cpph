@@ -344,8 +344,10 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 // @todo Kommentar in Header ziehen
       // Konzeptionell wuerde das eher in den store fallen, aber der ist inaktiv, falls die
       // Reduktion ausgeschaltet ist
-      fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+//      fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
 
+      // wenn wir ihn nicht forken duerften, dann waere er ja nach wie vor echter Boundary-Rand
+      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
 
       // We are not allowed to coarse the fine grid vertices as well
 //      dfor2(j)
