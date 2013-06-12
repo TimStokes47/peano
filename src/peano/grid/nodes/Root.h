@@ -90,7 +90,7 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
      * @see receiveCellAndVerticesFromMaster()
      */
     Vertex  _masterVertices[TWO_POWER_D];
-    bool    _haveMergedMasterVertex[FOUR_POWER_D];
+    bool    _haveMergedMasterVertex[TWO_POWER_D];
     Cell    _masterCell;
     #endif
 

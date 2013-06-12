@@ -313,12 +313,13 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         assertion( tarch::la::allGreaterEquals(currentVertexInReceivedVertexArray,0) );
         assertion( tarch::la::allSmallerEquals(currentVertexInReceivedVertexArray,1) );
 
-        if (!_haveMergedMasterVertex[ getLevelOneGridEnumeratorForLocalData()(currentVertexInLocalLevelOnePatch) ]) {
-          _haveMergedMasterVertex[ getLevelOneGridEnumeratorForLocalData()(currentVertexInLocalLevelOnePatch) ] = true;
+        const int indexInHaveMergedMasterVertexArray = getLevelOneGridEnumeratorForReceivedData()(currentVertexInReceivedVertexArray);
+        if (!_haveMergedMasterVertex[ indexInHaveMergedMasterVertexArray ]) {
+          _haveMergedMasterVertex[ indexInHaveMergedMasterVertexArray ] = true;
 
           peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
             fineGridVertices[ getLevelOneGridEnumeratorForLocalData()(currentVertexInLocalLevelOnePatch) ],
-            _masterVertices[  getLevelOneGridEnumeratorForReceivedData()(currentVertexInReceivedVertexArray) ]
+            _masterVertices[  indexInHaveMergedMasterVertexArray ]
           );
 
           Base::_eventHandle.mergeWithWorker(
@@ -370,6 +371,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     centralFineGridCell.send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)
       logDebug( "sendCellAndVerticesToMaster(...)", "send vertex " << fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString() << " to master" );
+      assertion2( fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Refined, fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString() );
+      assertion2( fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet(), fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString() );
       fineGridVertices[ centralFineGridVerticesEnumerator(k) ].send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     enddforx
   }
