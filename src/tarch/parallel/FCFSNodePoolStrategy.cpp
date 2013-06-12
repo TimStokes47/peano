@@ -81,9 +81,7 @@ void tarch::parallel::FCFSNodePoolStrategy::removeNode( int rank ) {
     p++
   ) {
     if ( p->getRank() == rank ) {
-      #ifdef Debug
-      _log.debug( "removeNode(int)", "remove entry " + p->toString() );
-      #endif
+      logDebug( "removeNode(int)", "remove entry " + p->toString() );
       _nodes.erase(p);
       _nodes.sort();
       return;
