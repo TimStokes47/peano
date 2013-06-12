@@ -51,14 +51,12 @@ peano::MappingSpecification operator&(const peano::MappingSpecification& lhs, co
   static tarch::logging::Log _log( "peano::MappingSpecification" );
   logTraceInWith2Arguments("operator&(...)", lhs.toString(), rhs.toString() );
 
-  #if defined(Asserts) || defined(Debug)
   if (lhs.manipulates==peano::MappingSpecification::Nop && lhs.multithreading!=peano::MappingSpecification::AvoidFineGridRaces) {
     logWarning( "operator&(...)", "lhs is nop though is not only avoid-fine-grid-races: " << lhs.toString() );
   }
   if (rhs.manipulates==peano::MappingSpecification::Nop && rhs.multithreading!=peano::MappingSpecification::AvoidFineGridRaces) {
     logWarning( "operator&(...)", "rhs is nop though is not only avoid-fine-grid-races: " << rhs.toString() );
   }
-  #endif
 
   peano::MappingSpecification::Manipulates manipulates =
     (rhs.manipulates==peano::MappingSpecification::WholeTree  || lhs.manipulates==peano::MappingSpecification::WholeTree)  ? peano::MappingSpecification::WholeTree  :
