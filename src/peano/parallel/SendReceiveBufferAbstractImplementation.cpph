@@ -375,15 +375,20 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::switchRec
   const bool constraint = (numberOfElementsToCopy==0) || (numberOfTransferredReceivePages<_currentReceiveBufferPage);
   if (!constraint) {
     const int  lastReceiveBufferPageBefilled = _currentReceiveBufferPage-1;
-    const int  elementsToPlot                = numberOfElementsToCopy > _bufferPageSize ? _bufferPageSize : numberOfElementsToCopy;
+    const int  receivedElementsToPlot        = numberOfElementsToCopy > _bufferPageSize ? _bufferPageSize : numberOfElementsToCopy;
+    const int  sentElementsToPlot            = _numberOfElementsSent  > _bufferPageSize ? _bufferPageSize : _numberOfElementsSent;
     logError(
       "switchReceiveAndDeployBuffer()",
       "constraint (numberOfElementsToCopy==0) || (numberOfTransferredReceivePages<_currentReceiveBufferPage) failed. "
       << "Too many messages received from last iteration. "
-      << "Print " << elementsToPlot << " elements from receive buffer page " << _currentReceiveBufferPage
+      << "Print " << receivedElementsToPlot << " element(s) from receive buffer page " << _currentReceiveBufferPage
+      << " and " << sentElementsToPlot << " element(s) from send buffer"
     );
-    for (int i=0; i<elementsToPlot; i++) {
+    for (int i=0; i<receivedElementsToPlot; i++) {
       logError( "switchReceiveAndDeployBuffer()", "received element " << i << " in receive buffer page " << _currentReceiveBufferPage-1 << ": " << _receiveBuffer[_currentReceiveBuffer].at(lastReceiveBufferPageBefilled)[i].toString() );
+    }
+    for (int i=0; i<sentElementsToPlot;i++) {
+      logError( "switchReceiveAndDeployBuffer()", "sent element " << i << ": " << _sendBuffer[i].toString() );
     }
 
     assertion9(
