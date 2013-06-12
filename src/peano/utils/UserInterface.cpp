@@ -214,6 +214,12 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
   #ifdef PackedRecords
   optimisationString << "packed ";
   #endif
+  #ifdef DistinguishStationaryAndInstationarySubtrees
+  optimisationString << "opt-static-subtrees ";
+  #endif
+  #ifdef UseRecursionUnrollingOnRegularPatches
+  optimisationString << "recursion-unrolling ";
+  #endif
 
 
   _log.info("writeHeader()", buildString.str() );
