@@ -73,7 +73,6 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * Holds if and only if an immediate refine has been triggered.
      */
     bool   _hasRefined;
-    bool   _hasErased;
     bool   _hasTriggeredRefinementForNextIteration;
     bool   _hasTriggeredEraseForNextIteration;
 

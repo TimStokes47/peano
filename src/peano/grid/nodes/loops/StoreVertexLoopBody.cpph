@@ -47,7 +47,6 @@ peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,Eve
   _threadLocalEventHandle(eventHandle),
   _geometry(geometry),
   _hasRefined(false),
-  _hasErased(false),
   _hasTriggeredRefinementForNextIteration(false),
   _hasTriggeredEraseForNextIteration(false),
   _runsInParallel(runsInParallel) {
@@ -62,7 +61,7 @@ peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,Eve
     lock.lock();
   }
 
-  _state.updateRefinementHistoryAfterLoad( _hasRefined, _hasErased, false );
+  _state.updateRefinementHistoryAfterLoad( _hasRefined, false, false, false );
 
   _state.updateRefinementHistoryBeforeStore(
     _hasTriggeredRefinementForNextIteration,
