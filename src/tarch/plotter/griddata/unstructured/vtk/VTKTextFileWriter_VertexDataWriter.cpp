@@ -52,8 +52,8 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
   assertion(_lastWriteCommandVertexNumber>=-1);
   assertion(1<=_recordsPerVertex);
 
-  assertion2( value != std::numeric_limits<double>::infinity(), index, value);
-  assertion2( value == value, index, value);  // test for not a number
+  assertion3( value != std::numeric_limits<double>::infinity(), index, value, _dataIdentifier);
+  assertion3( value == value, index, value, _dataIdentifier);  // test for not a number
 
   while (_lastWriteCommandVertexNumber<index-1) {
     plotVertex(_lastWriteCommandVertexNumber+1,0.0);
