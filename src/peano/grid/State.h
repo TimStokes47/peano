@@ -225,7 +225,7 @@ class peano::grid::State {
 
     bool isTraversalInverted() const;
 
-    void updateRefinementHistoryAfterLoad( bool hasRefinened, bool hasErased, bool hasChangedVertexState );
+    void updateRefinementHistoryAfterLoad( bool hasRefinened, bool hasErased, bool hasFailedToEraseDueToDomainDecomposition, bool hasChangedVertexState );
     void updateRefinementHistoryBeforeStore( bool hasTriggeredRefinementForNextIteration, bool hasTriggeredEraseForNextIteration );
     void updateInLeaf( int level, const tarch::la::Vector<DIMENSIONS,double>& h );
 
@@ -336,16 +336,6 @@ class peano::grid::State {
 
     std::set<int> getForkingOrJoiningOrTriggeredForRebalancingRanks() const;
 
-
-    /**
-     * Inform the oracle that an erase was not performed to avoid starvation
-     *
-     * This operation is triggered by the load process to inform the state that
-     * an erase-triggered was not transformed into an erasing flag to avoid
-     * starvation. Such an information afterwards is always restricted bottom-up
-     * along the master-worker topology.
-     */
-    void couldNotEraseDueToDecomposition();
     bool getCouldNotEraseDueToDecompositionFlag() const;
 
 
