@@ -577,7 +577,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         logDebug( "updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain(...)", "- adjacent vertex (before merge): " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() );
       enddforx
 
-      #if defined(Debug) && (defined(Dim2) || defined(Dim3) || defined(Dim4))
+      #if defined(Debug)
       assertionEquals2(
         fineGridCell.getLevel(),
         peano::parallel::JoinDataBufferPool::getInstance().getCellLevelFromStream(tarch::parallel::NodePool::getInstance().getMasterRank()),

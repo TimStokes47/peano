@@ -201,11 +201,11 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
   const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
 ) {
   logTraceInWith6Arguments( "traverse(...)", state, fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, coarseGridVerticesEnumerator.toString(), fineGridPositionOfCell );
-  #ifdef Debug
+
   dfor2(k)
     logDebug( "traverse(...)", " - adjacent vertex: " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() );
   enddforx
-  #endif
+
   assertion4(
     peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Erasing) ||
     peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::EraseTriggered) ||
