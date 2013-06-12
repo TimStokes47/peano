@@ -235,11 +235,22 @@ class peano::grid::State {
     void changedCellState();
 
     /**
-     * @return Has the grid changed the cells state in the last iteration.
+     * @return Has the grid or have cells or vertices in the last iteration changed.
+     *         Also returns false if the grid would like to erase vertices but
+     *         cannot do so due to a domain decomposition. The latter case arises
+     *         in parallel only.
      */
     bool isGridStationary() const;
 
     /**
+     * In serial mode, this equals isGridStationary(). If we call this in
+     * the parallel case, it is similar to grid stationary. However, it does
+     * not evaluate the field getCouldNotEraseDueToDecompositionFlag(), i.e.
+     * even if this field is set, balanced might return true.
+     *
+     * Besides the flag evaluation, the operation returns true if and only if
+     * it iteration counter is that high that load balancing would be possible.
+     *
      * @return If grid is stationary and no rebalancing is happing though it
      *         would be possible to rebalance.
      */
@@ -273,6 +284,13 @@ class peano::grid::State {
      *
      * Nevertheless, if the grid is very coarse (only @f$ 3^d @f$), it can happen
      * that the grid remains stationary even though a fork has happened.
+     *
+     *
+     * !!! Joining with master
+     *
+     * It can happen that a worker has held only one level in the iteration
+     * prior to the join. In this case, the grid is not changed throughout the
+     * join and thus seems to be stationary.
      */
     void resetStateAtEndOfIteration();
 

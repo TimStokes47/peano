@@ -119,17 +119,12 @@ bool peano::grid::State<StateData>::isGridStationary() const {
 template <class StateData>
 bool peano::grid::State<StateData>::isGridBalanced() const {
   #ifdef Parallel
-    // @todo ueberlegen bzw. aufsplitten von Triggered
-    //       Kommentar, dass stationary und balanced nicht gleich sind
   return !_stateData.getHasChangedVertexOrCellState()
       && !_stateData.getHasRefined()
       && !_stateData.getHasErased()
       && !_stateData.getHasTriggeredRefinementForNextIteration()
       && !_stateData.getHasTriggeredEraseForNextIteration()
       && _iterationCounter > IterationsInBetweenRebalancing+1;
-
-//  _stateData.setCouldNotEraseDueToDecompositionFlag(true);
-
   #else
   return isGridStationary();
   #endif
@@ -297,7 +292,15 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
       break;
     case JoiningWithMaster:
       assertion(_loadRebalancingRemoteRanks.empty());
-      assertion2(!isGridStationary(),toString(),tarch::parallel::Node::getInstance().getRank());
+//      assertion2(
+//        !isGridStationary(),
+//        toString(),tarch::parallel::Node::getInstance().getRank()
+//      );
+      assertion2(
+        !isGridStationary() ||
+        (_stateData.getNumberOfInnerLeafCells()+_stateData.getNumberOfOuterLeafCells())==THREE_POWER_D,
+        toString(),tarch::parallel::Node::getInstance().getRank()
+      );
       _stateData.setHasChangedVertexOrCellState(true);
       _loadRebalancingState = HasJoinedWithMaster;
       break;
