@@ -78,6 +78,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
 
     bool   _hasRefinened;
     bool   _hasErased;
+    bool   _hasFailedToEraseDueToDomainDecomposition;
     bool   _hasChangedVertexState;
 
     const bool   _runsInParallel;

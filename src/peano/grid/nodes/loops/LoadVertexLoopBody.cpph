@@ -58,6 +58,7 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   _numberOfOuterLeafVertices(0.0),
   _hasRefinened(false),
   _hasErased(false),
+  _hasFailedToEraseDueToDomainDecomposition(false),
   _hasChangedVertexState(false),
   _runsInParallel(runsInParallel) {
 }
@@ -79,7 +80,7 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   _state.incNumberOfBoundaryLeafVertices(_numberOfBoundaryLeafVertices);
   _state.incNumberOfOuterLeafVertices(_numberOfOuterLeafVertices);
 
-  _state.updateRefinementHistoryAfterLoad( _hasRefinened, _hasErased, _hasChangedVertexState );
+  _state.updateRefinementHistoryAfterLoad( _hasRefinened, _hasErased, _hasFailedToEraseDueToDomainDecomposition, _hasChangedVertexState );
 
   #if defined(SharedMemoryParallelisation)
   _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
@@ -210,11 +211,9 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex erasing: " << _fineGridVertices[positionInVertexArray].toString() );
   }
   if ( switchedIntoErasing == Vertex::WasntAbleToSwitchDueToFork ) {
-    #ifdef Parallel
-    _hasErased = true;
-    _state.couldNotEraseDueToDecomposition();
+    _hasFailedToEraseDueToDomainDecomposition = true;
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "tried to make vertex erasing but could not due to fork: " << _fineGridVertices[positionInVertexArray].toString() );
-    #else
+    #if !defined(Parallel)
     assertionMsg( false, "branch is not reachable in serial mode" );
     #endif
   }
