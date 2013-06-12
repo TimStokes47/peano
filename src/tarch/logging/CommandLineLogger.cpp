@@ -397,6 +397,7 @@ void tarch::logging::CommandLineLogger::setLogFormat(
 void tarch::logging::CommandLineLogger::addFilterListEntry( const FilterListEntry& entry) {
   if (_filterlist.count(entry)!=0) {
     logError( "addFilterListEntry(...)", "tried to insert " << entry.toString() << " multiple times");
+    assertion(false);
   }
   else {
     _filterlist.insert( entry );
