@@ -104,7 +104,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   
   state.incNumberOfOuterCells(THREE_POWER_D+1);
   state.incNumberOfOuterVertices(TWO_POWER_D+FOUR_POWER_D-TWO_POWER_D);
-  state.updateRefinementHistoryAfterLoad( true, false, true );
+  state.updateRefinementHistoryAfterLoad( true, false, false, true );
 
   logTraceOut( "restart()" );
 }
