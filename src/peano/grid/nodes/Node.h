@@ -139,6 +139,10 @@ class peano::grid::nodes::Node {
      * Take the cell, assigne it to the remote rank, and also update the
      * adjacency information fo the adjacent vertices. Finally, also set
      * adjacentSubtreeForksIntoOtherRankFlag.
+     *
+     * There should be no need to set the flag
+     * setAdjacentSubtreeForksIntoOtherRankFlag() as this flag is
+     * automatically set correctly throughout the store process.
      */
     void makeCellRemoteCell(
       State&                         state,
@@ -331,6 +335,25 @@ class peano::grid::nodes::Node {
       const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
     ) const;
 
+     /**
+      * Handle root cell of remote tree
+      *
+      * !!! Block erase on vertices
+      *
+      * Peano allows to block erase on vertices to avoid that mpi processes
+      * starve. See Vertex::setAdjacentSubtreeForksIntoOtherRankFlag(). These
+      * block flags are analysed bottom-up and are reset in each iteration,
+      * i.e. we have to set them in each traversal again if a subtree forks
+      * into another subtree.
+      *
+      * If a cell on level L is deployed to another rank, it is
+      * sufficient to flag the vertices on level L-1 to avoid starvation. It
+      * does make sense to flag the vertices on level L as well to avoid a
+      * degeneration of remote workers, i.e. to avoid that a remote worker
+      * holds the trivial tree with only one inner cell. However, we leave it
+      * to the worker (see the parallel merge) to flag the vertices and
+      * locally only set the coarser flags.
+      */
      void updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(
        State&                                    state,
        Cell&                                     fineGridCell,
@@ -389,6 +412,43 @@ class peano::grid::nodes::Node {
        const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
      ) const;
 
+     /**
+      * Join cell of worker with local cell
+      *
+      * Remark: The following descriptions are errorneous. The adjacency
+      * information on all ranks always has to be consistent. Thus, any
+      * distinction of remote adjacency data and local adjacency data is
+      * unnecessary.
+      *
+      * !!! Determine which vertices to exchage
+      *
+      * In Peano, a merge exchanges only vertices that are adjacent to the
+      * worker's domain. For this, the worker determines those vertices and
+      * sends them to the master. The master in turn can identify vertices that
+      * are adjacent to a joining worker, too, and trigger the corresponding
+      * receives.
+      *
+      * For the fork mechanism, the master sends the worker a bitset
+      * determining which vertices are exchanged. Throughout the fork, we
+      * cannot identify the vertices to be exchanged on both the worker and
+      * the master. Here, only the master knows.
+      *
+      * For joins, it is different. Here, we have consistent information on
+      * both worker and master - even if vertices are remote:
+      *
+      * @image html Node_updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker.png
+      *
+      * - The blue cells all are held by rank 7.
+      * - All red point are refined. We study the bright red point from now on.
+      * - Rank 7 forks the dark blue subpartition to rank 14.
+      * - As a result, the bright red point switches to erase. But it remains
+      *   refined on the new worker 14.
+      * - The red adjacency list next is not set to [-1,-1,-1,-1] though it is
+      *   remote. Cf. Vertex::eliminateAllAdjacencyInformationThatIdentifiesNeitherWorkerNorMaster()
+      *   that explicitly preserves the adjacency information as 14 is a worker
+      *   of 7.
+      * - If 14 makes 7 join, all important adjacency information is at hand.
+      */
      void updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(
        State&                                    state,
        Cell&                                     fineGridCell,
@@ -440,6 +500,15 @@ class peano::grid::nodes::Node {
       const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
     ) const;
 
+    /**
+     * Update of setAdjacentSubtreeForksIntoOtherRankFlag
+     *
+     * The coarse grid vertices of a deployed cell have to hold the flag
+     * adjacentSubtreeForksIntoOtherRankFlag. Conceptionally, we should set
+     * this flag in this routine. However, if we switch off the reduction,
+     * the operation never is called. Thus, I moved the update of the respective
+     * flag to the startup operation.
+     */
     void updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(
       State&                                    state,
       Cell&                                     fineGridCell,

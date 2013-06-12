@@ -159,17 +159,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       fineGridVerticesEnumerator.getLevel()
     );
     
-    // @todo it does work here, but not if we switch off the reduction. Therefore, I put it into the load process
-//
-//    // We are not allowed to coarse the fine grid vertices as well
-//    dfor2(j)
-//      // (1111) Diese Variante funktioniert
-//      //coarseGridVertices[ coarseGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-//
-//      // (2222) Mein neuer Versuch s. Kommentar oben
-//      fineGridVertices[ fineGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-//    enddforx
-
     _eventHandle.mergeWithMaster(
       receivedWorkerCell,
       receivedWorkerVertices,
@@ -334,29 +323,12 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       coarseGridVertices[ coarseGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
+      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
     enddforx
     fineGridCell.send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       fineGridVertices[ fineGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
-
-
-// @todo Kommentar in Header ziehen
-      // Konzeptionell wuerde das eher in den store fallen, aber der ist inaktiv, falls die
-      // Reduktion ausgeschaltet ist
-//      fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-
-      // wenn wir ihn nicht forken duerften, dann waere er ja nach wie vor echter Boundary-Rand
-      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-
-      // We are not allowed to coarse the fine grid vertices as well
-//      dfor2(j)
-//        // (1111) Diese Variante funktioniert
-//        //coarseGridVertices[ coarseGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-//
-//        // (2222) Mein neuer Versuch s. Kommentar oben
-//        fineGridVertices[ fineGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-//      enddforx
     enddforx
     logTraceOut( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(...)" );
   #endif
@@ -471,11 +443,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       peano::parallel::JoinDataBufferPool::getInstance().createCellBufferManually<Cell>( true, *p );
 
       const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> localAdjacencyBitset(    peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(*p,fineGridVertices,fineGridVerticesEnumerator) );
-
-      // @todo Hier muss Doku rein, warum wir die received List nehmen anstatt der lokalen.
-//      xxx
-      // Hier gehoert auch Doku rein, warum man erst local braucht bevor man auf remote zugreift: Weil sonst halt
-      // u.U. man sachen von remote reinlaed, die es gar nicht gibt.
       if (localAdjacencyBitset.any()) {
         const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedAdjacencyBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(*p) );
         assertionEquals(receivedAdjacencyBitset,localAdjacencyBitset);
