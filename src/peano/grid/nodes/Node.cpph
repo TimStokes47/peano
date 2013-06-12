@@ -107,12 +107,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   peano::parallel::AdjacencyListAspect<Vertex>::replaceAdjancyEntriesOfVerticesOfOneCellWithDifferentRank(remoteRank,fineGridVertices,fineGridVerticesEnumerator);
   state.changedCellState();
 
-// Does not work
-//  dfor2(j)
-//    logDebug( "makeCellRemoteCell(...)", "- vertex: " << fineGridVertices[fineGridVerticesEnumerator(j)].toString() );
-//    fineGridVertices[ fineGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-//  enddforx
-
   logTraceOut( "makeCellRemoteCell(...)" );
 }
 #endif
@@ -164,6 +158,17 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       fineGridVerticesEnumerator.getVertexPosition(),
       fineGridVerticesEnumerator.getLevel()
     );
+    
+    // @todo it does work here, but not if we switch off the reduction. Therefore, I put it into the load process
+//
+//    // We are not allowed to coarse the fine grid vertices as well
+//    dfor2(j)
+//      // (1111) Diese Variante funktioniert
+//      //coarseGridVertices[ coarseGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+//
+//      // (2222) Mein neuer Versuch s. Kommentar oben
+//      fineGridVertices[ fineGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+//    enddforx
 
     _eventHandle.mergeWithMaster(
       receivedWorkerCell,
@@ -334,6 +339,22 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       fineGridVertices[ fineGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
+
+
+// @todo Kommentar in Header ziehen
+      // Konzeptionell wuerde das eher in den store fallen, aber der ist inaktiv, falls die
+      // Reduktion ausgeschaltet ist
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+
+
+      // We are not allowed to coarse the fine grid vertices as well
+//      dfor2(j)
+//        // (1111) Diese Variante funktioniert
+//        //coarseGridVertices[ coarseGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+//
+//        // (2222) Mein neuer Versuch s. Kommentar oben
+//        fineGridVertices[ fineGridVerticesEnumerator(j) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+//      enddforx
     enddforx
     logTraceOut( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(...)" );
   #endif
@@ -524,7 +545,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
                   fineGridPositionOfCell + k
                 );
                 fineGridVertices[ fineGridVerticesEnumerator(k) ].switchToBoundary();
-                state.updateRefinementHistoryAfterLoad( false, false, true );
+                state.updateRefinementHistoryAfterLoad( false, false, false, true );
                 break;
               case peano::grid::aspects::ParallelMerge::CreateInnerVertexOnMaster:
                 _eventHandle.createInnerVertex(
@@ -537,7 +558,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
                   fineGridPositionOfCell + k
                 );
                 fineGridVertices[ fineGridVerticesEnumerator(k) ].switchToInside();
-                state.updateRefinementHistoryAfterLoad( false, false, true );
+                state.updateRefinementHistoryAfterLoad( false, false, false, true );
                 break;
               case peano::grid::aspects::ParallelMerge::MasterVertexStateRemainsUnaltered:
                 break;
