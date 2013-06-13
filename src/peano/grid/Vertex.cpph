@@ -168,12 +168,21 @@ bool peano::grid::Vertex<VertexData>::switchRefinementTriggeredToRefining() {
 template <class VertexData>
 typename peano::grid::Vertex<VertexData>::SwitchEraseTriggeredResult peano::grid::Vertex<VertexData>::switchEraseTriggeredToErasing() {
   assertion1( _vertexData.getRefinementControl()!=VertexData::RefineDueToJoinThoughWorkerIsAlreadyErasing, toString() );
+
   #ifdef Parallel
+  if (
+    _vertexData.getRefinementControl()==VertexData::EraseTriggered &&
+    _vertexData.getAdjacentSubtreeForksIntoOtherRank() &&
+    !isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() )
+  ) {
+    _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
+    return Nop;
+  }
+  else
   if (
     _vertexData.getRefinementControl()==VertexData::EraseTriggered &&
     _vertexData.getAdjacentSubtreeForksIntoOtherRank()
   ) {
-    _vertexData.setRefinementControl( VertexData::Refined );
     _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
     return WasntAbleToSwitchDueToFork;
   }
@@ -257,6 +266,8 @@ void peano::grid::Vertex<VertexData>::erase() {
 
 template <class VertexData>
 void peano::grid::Vertex<VertexData>::rollbackRefinementOrEraseTriggered() {
+  assertion1( !isAdjacentSubtreeForksIntoOtherRankFlagSet(), toString() );
+
   assertion2( _vertexData.getRefinementControl()!=VertexData::Refining, toString(), "tried to call erase on vertex that was already unrefined" );
   assertion2( _vertexData.getRefinementControl()!=VertexData::Erasing, toString(), "tried to call erase on vertex that was already unrefined" );
 
@@ -393,7 +404,7 @@ void  peano::grid::Vertex<VertexData>::setAdjacentSubtreeForksIntoOtherRankFlag(
 
 
 template <class VertexData>
-bool  peano::grid::Vertex<VertexData>::isAdjacentSubtreeForksIntoOtherRankFlag() const {
+bool  peano::grid::Vertex<VertexData>::isAdjacentSubtreeForksIntoOtherRankFlagSet() const {
   return _vertexData.getAdjacentSubtreeForksIntoOtherRank();
 }
 
