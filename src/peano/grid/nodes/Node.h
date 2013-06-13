@@ -350,9 +350,8 @@ class peano::grid::nodes::Node {
       * sufficient to flag the vertices on level L-1 to avoid starvation. It
       * does make sense to flag the vertices on level L as well to avoid a
       * degeneration of remote workers, i.e. to avoid that a remote worker
-      * holds the trivial tree with only one inner cell. However, we leave it
-      * to the worker (see the parallel merge) to flag the vertices and
-      * locally only set the coarser flags.
+      * holds the trivial tree with only one inner cell. This way, we preserve
+      * a halo layer around each worker of at least depth one.
       */
      void updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(
        State&                                    state,

@@ -105,17 +105,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   peano::parallel::AdjacencyListAspect<Vertex>::replaceAdjancyEntriesOfVerticesOfOneCellWithDifferentRank(remoteRank,fineGridVertices,fineGridVerticesEnumerator);
   state.changedCellState();
 
-  // @todo docu
-  // ========================
-  // Phase D (voellig unklar)
-  // ========================
-  // scheint auch zu verhindern, dass der Code noch korrekt laeuft
-
-//  dfor2(i)
-//    // @todo das ist extrem wichtig! => Doku was passiert, wenn erase-triggered ist und man forked
-//    fineGridVertices[ fineGridVerticesEnumerator(i) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-//  enddforx
-
   logTraceOut( "makeCellRemoteCell(...)" );
 }
 #endif
@@ -332,21 +321,11 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       coarseGridVertices[ coarseGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
-      // @todo docu
-      // ========================
-      // Phase E (sicher falsch)
-      // ========================
-//      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
     enddforx
     fineGridCell.send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       fineGridVertices[ fineGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
-      // @todo docu
-      // ========================
-      // Phase A (sicher richtig)
-      // ========================
-      // Counterpart vom receive auf der Merge
       fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
     enddforx
     logTraceOut( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(...)" );
@@ -398,20 +377,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
             // this vertex after this iteration. And if I switch a vertex to outside, it has to be invalidated
             // before (see assertion).
             fineGridVertices[ fineGridVerticesEnumerator(k) ].invalidateAdjacentCellInformation();
-
-            // @todo docu
-            // ========================
-            // Phase D (keine Ahnung)
-            // ========================
-//            // @todo vermutlich kann man das sogar wieder rausnehmen
-//            // @todo das ist extrem wichtig! => Doku was passiert, wenn erase-triggered ist und man forked
-//            fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-
-            assertion2(
-              fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl()!=Vertex::Records::Erasing,
-              fineGridVertices[ fineGridVerticesEnumerator(k) ].toString(),
-              state.toString()
-            );
 
             _eventHandle.prepareCopyToRemoteNode(
               fineGridVertices[fineGridVerticesEnumerator(k)],
@@ -762,17 +727,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if (state.isForking()) {
-    dfor2(i)
-      // @todo docu
-      // ========================
-      // Phase D (keine Ahnung)
-      // ========================
-      // so verhindern wir das fast-starving
-
-    //    // @todo das ist extrem wichtig! => Doku was passiert, wenn erase-triggered ist und man forked
-        fineGridVertices[ fineGridVerticesEnumerator(i) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-      enddforx
-
     updateCellsParallelStateAfterLoadIfStateIsForking(
       state,
       fineGridCell,
