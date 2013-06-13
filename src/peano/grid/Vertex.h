@@ -227,6 +227,14 @@ class peano::grid::Vertex {
      *
      * This operation is provided for the load vertex process. We recommend not
      * to use it for any PDE solver.
+     *
+     * It is invoked by the load process for all vertices that will be
+     * destroyed after this iteration. As a consequence, we may not invoke this
+     * operation if erase processes are disabled on this vertex. Otherwise, the
+     * data consistency is harmed: Such a flag has to propagate bottom-up in the
+     * tree and thus avoid on a coarser level that an erase takes place at all.
+     *
+     * @see setAdjacentSubtreeForksIntoOtherRankFlag().
      */
     void rollbackRefinementOrEraseTriggered();
 
@@ -269,9 +277,32 @@ class peano::grid::Vertex {
      * subtrees forks into another ranker. Otherwise, we would observe
      * starvation, i.e. workers running out of work in one step. To avoid
      * this, we do not switch to erasing but instead return a flag that
-     * indicates that we are in that special case. The trigger then remains.
+     * indicates that we are in that special case.
+     *
      * If the code decides to join workers afterwards, it might happen that
      * the trigger passes through later.
+     *
+     * The flag stopping the erase process always is unset as this operation
+     * is called only once per traversal per vertex. If erases shall be
+     * stopped, the corresponding code parts will reset the flag throughout
+     * the traversal again.
+     *
+     * !!! Vertices adjacent to @f$ 2^d @f$ remote cells
+     *
+     * Vertices that are adjacent to @f$ 2^d @f$ are erased by
+     * StoreVertexLoopBody, as they are remote and all remote vertices are
+     * erased. While the latter statement is fine in principle, we wanna keep
+     * the coarsest vertices that correspond to a remote tree refined on the
+     * master refined, too. This later makes the joins simpler, as they then
+     * implicitly hold information how the sfc wraps around the remote cell.
+     * This operation thus does not erase such vertices.
+     *
+     * It also does not tell the calling operation that it keeps an erase
+     * triggered. If it returned WasntAbleToSwitchDueToFork, each rank
+     * forking often would report its master that it wasn't able to fork
+     * due to the domain decomposition in each traversal. That would be
+     * wrong - it has nothing to do with the decomposition but there are
+     * technical reasons tied to the sfc.
      *
      * @return Has done a transition.
      */
@@ -310,8 +341,15 @@ class peano::grid::Vertex {
      *
      * - Store the current adjacency information into the field holding the last iteration's record.
      * - If the vertex is unrefined, set current height to zero.
-     * - Else iIf the vertex is not stationary, set the current height to instationary.
+     * - Else if the vertex is not stationary, set the current height to instationary.
      * - If the vertex is adjacent to a parallel domain boundary (only in parallel mode), invalidate vertex flag.
+     *
+     * This operation is called by vertex load processes, i.e. by
+     * LoadVertexLoopBody and by its regular counterpart. The flag afterward
+     * is updated (downgraded) by the grid manipulation routines erase and
+     * refine, or it is analysed throughout the steps up. As a consequence it
+     * might always still be downgraded as long as the vertex is not written
+     * to the output stream.
      */
     void saveAndClearAdjacentCellsInformation();
 
@@ -386,12 +424,52 @@ class peano::grid::Vertex {
 
     #ifdef Parallel
     /**
-     * Set this flag. The flag ist unset automatically when you evluate it, i.e.
+     * Set flag that blocks erases.
+     *
+     * The flag ist unset automatically when you evaluate it, i.e.
      * when you call switchEraseTriggeredToErasing().
      *
+     * !!! Who sets the flag
+     *
+     * - The flag is propagated bottom-up in the gree as analysed tree grammar.
+     *   If a vertex holds the flag, all its parent vertices hold it too after
+     *   the traversal. This way, we avoid that coarser vertices eliminate
+     *   vertices that may not be erased, i.e. hold the present flag. See also
+     *   rollbackRefinementOrEraseTriggered().
+     * - Node::updateCellsParallelStateAfterLoadForRootOfDeployedSubtree() sets
+     *   the flag in each iteration to avoid that a master coarses away its
+     *   worker (starvation). See the operation for details.
+     * - nodes::Refined::splitUpGrid() sets the grid. Usually, the flag is set
+     *   by the master when it starts up the worker. However, this set
+     *   mechanism is not active yet when we trigger the fork. See the
+     *   operation for details.
+     * - StoreVertexLoopBody::exchangeVerticesDueToParallelisation() sets the
+     *   flag manually when the node is preparing for a join with its master.
+     *   This way, it avoids too harsh grid changes around the region
+     *   throughout the join.
+     * - ParallelMerge::mergeWithJoinedVertexFromWorker() sets the flag to
+     *   give the master one additional traversal where no adjacent grid
+     *   structure does change. A traversal to recover from the grid changes.
+     * - ParallelMerge::mergeWithVertexFromMaster() sets the flag. This is the
+     *   counterpart of Node::updateCellsParallelStateAfterLoadForRootOfDeployedSubtree().
+     *   We also could copy the flag from there where it has been set before.
+     *   However, it is important that it is set to avoid the local events to
+     *   erase the root of the worker tree.
+     *
+     *
+     * !!! Starvation
+     *
+     * For a detailed discussion of starvation, i.e. erases that make masters
+     * loose their workers, see ParallelMerge::mergeWithVertexFromMaster().
      */
     void  setAdjacentSubtreeForksIntoOtherRankFlag();
-    bool  isAdjacentSubtreeForksIntoOtherRankFlag() const;
+
+    /**
+     * Self explaining. See remarks on starvation in the code why we need this.
+     *
+     * @see setAdjacentSubtreeForksIntoOtherRankFlag().
+     */
+    bool  isAdjacentSubtreeForksIntoOtherRankFlagSet() const;
 
 
     /**
