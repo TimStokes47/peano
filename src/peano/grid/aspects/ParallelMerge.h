@@ -109,13 +109,28 @@ class peano::grid::aspects::ParallelMerge {
      *   information might be wrong, as the master might not have updated
      *   the geometry anymore as he felt not responsible.
      *
-     * If the master node is hanging, the local node should be hanging as
-     * well. If the nodes are hanging, their adjacent cells height flag has
-     * no semantics.
+     * !!! Merge process
      *
-     * If the master currently is erasing but the remote vertex is refined, we
-     * overwrite the erase process. According to Vertex::erase(), the
-     * refinement process has higher priority.
+     * Finally, we invalidate all adjacency information and we set the
+     * blocking flag. The latter avoids that adjacent domains immediately
+     * after this fork coarse the domain and make the fork irrelevant. We
+     * delay grid coarsening locally.
+     *
+     * !!! Constraints
+     *
+     * - Only persistent vertices are exchanged throughout a fork or join.
+     *   See Node::updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain().
+     *   As a consequence, this operation never is invoked for hanging nodes.
+     * - Both the local and the remote vertices have no static grid information.
+     *   Their adjacent subtrees are transient.
+     * - Each vertex sent from the master has to be adjacent to the current
+     *   (new) worker.
+     * - Geometric information (inside/outside) has to be the same on master
+     *   and worker if the master still holds cells adjacent to the vertex
+     *   when the present fork went through.
+     * - Local vertices cannot be erasing. The grid just is constructed, so
+     *   we can only build up things not tear grid parts down.
+     * - Local vertices cannot be erase-triggered. Same reasoning.
      */
     template <class Vertex>
     static void mergeWithForkedVertexFromMaster(
