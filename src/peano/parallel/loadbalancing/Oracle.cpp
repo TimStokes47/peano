@@ -89,6 +89,12 @@ void peano::parallel::loadbalancing::Oracle::removeWorker(int rank) {
         rank,p->_level,p->_boundingBoxOffset,p->_boundingBoxSize
       );
 
+      tarch::mpianalysis::Analysis::getInstance().removeWorker(
+        p->_rank,
+        p->_level,
+        p->_boundingBoxOffset,
+        p->_boundingBoxSize
+      );
       _workers.erase( p );
       return;
     }
