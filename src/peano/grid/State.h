@@ -85,6 +85,8 @@ class peano::grid::State {
       IsNewWorkerDueToForkOfExistingDomain
     };
 
+    static std::string toString(LoadBalancingState value);
+
     #ifdef Parallel
     /*
      * So, this flag either holds all the joining ranks or all the
@@ -123,6 +125,11 @@ class peano::grid::State {
      * @see mayForkCellsOnLevel()
      */
     int                          _maxForkLevel;
+
+    #ifdef Asserts
+    LoadBalancingState           _previousLoadRebalancingState;
+    #endif
+
     #endif
   public:
      ~State();
@@ -243,8 +250,10 @@ class peano::grid::State {
     bool isGridStationary() const;
 
     /**
+     * Is the grid balanced (in parallel mode)
+     *
      * In serial mode, this equals isGridStationary(). If we call this in
-     * the parallel case, it is similar to grid stationary. However, it does
+     * the parallel case, it is only similar to grid stationary. However, it does
      * not evaluate the field getCouldNotEraseDueToDecompositionFlag(), i.e.
      * even if this field is set, balanced might return true.
      *
@@ -282,15 +291,12 @@ class peano::grid::State {
      * changed its grid in any case. So, the local state may indicate that
      * nothing has changed if and only if the state reduction is switched off.
      *
-     * Nevertheless, if the grid is very coarse (only @f$ 3^d @f$), it can happen
-     * that the grid remains stationary even though a fork has happened.
+     * !!! Join Process
      *
-     *
-     * !!! Joining with master
-     *
-     * It can happen that a worker has held only one level in the iteration
-     * prior to the join. In this case, the grid is not changed throughout the
-     * join and thus seems to be stationary.
+     * Peano constraints that each worker has a nontrivial spacetree, i.e. it
+     * holds at least a tree of height one. As a result, each join has to come
+     * along with a tree modification on the worker side, i.e. an erase of
+     * spacetree substructures.
      */
     void resetStateAtEndOfIteration();
 
@@ -328,20 +334,18 @@ class peano::grid::State {
      */
     void joinWithRank( int rank );
     void splitIntoRank( int rank );
-    bool isForkTriggered() const;
-    bool isForking() const;
 
     bool isInvolvedInJoinOrFork() const;
 
-    bool isJoinWithMasterTriggered() const;
-    bool isJoiningWithMaster() const;
-
-    bool isJoiningWithWorker() const;
-
+    bool isForkTriggered() const;
     bool isForkTriggeredForRank(int rank) const;
+    bool isForking() const;
 
     bool isJoinTriggered() const;
     bool isJoinTriggeredForRank(int rank) const;
+    bool isJoinWithMasterTriggered() const;
+    bool isJoiningWithWorker() const;
+    bool isJoiningWithMaster() const;
 
     bool hasJoinedWithMaster() const;
 

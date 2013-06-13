@@ -68,17 +68,59 @@ std::string peano::grid::State<StateData>::toString() const {
 
 
 template <class StateData>
+std::string peano::grid::State<StateData>::toString(LoadBalancingState value) {
+  switch (value) {
+    case NoRebalancing:
+      return "no-rebalancing";
+      break;
+    case ForkTriggered:
+      return "fork-triggered";
+      break;
+    case Forking:
+      return "forking";
+      break;
+    case JoinTriggered:
+      return "join-triggered";
+      break;
+    case Joining:
+      return "joining";
+      break;
+    case JoinWithMasterTriggered:
+      return "join-with-master-triggered";
+      break;
+    case JoiningWithMaster:
+      return "joining-with-master";
+      break;
+    case HasJoinedWithMaster:
+      return "has-joined-with-master";
+      break;
+    case IsNewWorkerDueToForkOfExistingDomain:
+      return "is-new-worker";
+      break;
+  }
+
+  return "<undef>";
+}
+
+
+
+template <class StateData>
 void peano::grid::State<StateData>::toString(std::ostream& out) const {
   _stateData.toString(out);
   #ifdef Parallel
+  out << "[lb-state=" << toString(_loadRebalancingState);
   if (!_loadRebalancingRemoteRanks.empty()) {
-    out << "[ ";
     for (std::set<int>::const_iterator p=_loadRebalancingRemoteRanks.begin(); p!=_loadRebalancingRemoteRanks.end(); p++) {
+      out << ",";
       out << *p;
-      out << " ";
     }
-    out << "]";
   }
+  out << ",it=" << _iterationCounter
+      << ",level_max=" << _maxForkLevel;
+  #ifdef Asserts
+  out << ",previous-lb-state=" << toString( _previousLoadRebalancingState );
+  #endif
+  out << "]";
   #endif
 }
 
@@ -123,7 +165,7 @@ bool peano::grid::State<StateData>::isGridBalanced() const {
       && !_stateData.getHasRefined()
       && !_stateData.getHasErased()
       && !_stateData.getHasTriggeredRefinementForNextIteration()
-      && !_stateData.getHasTriggeredEraseForNextIteration()
+//      && !_stateData.getHasTriggeredEraseForNextIteration()
       && _iterationCounter > IterationsInBetweenRebalancing+1;
   #else
   return isGridStationary();
@@ -237,6 +279,11 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
   _stateData.setIsTraversalInverted(!_stateData.getIsTraversalInverted());
 
   #ifdef Parallel
+
+  #ifdef Asserts
+  _previousLoadRebalancingState = _loadRebalancingState;
+  #endif
+
   if (
     _loadRebalancingState == NoRebalancing &&
     peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()>=peano::parallel::loadbalancing::ForkOnce &&
@@ -292,15 +339,7 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
       break;
     case JoiningWithMaster:
       assertion(_loadRebalancingRemoteRanks.empty());
-//      assertion2(
-//        !isGridStationary(),
-//        toString(),tarch::parallel::Node::getInstance().getRank()
-//      );
-      assertion2(
-        !isGridStationary() ||
-        (_stateData.getNumberOfInnerLeafCells()+_stateData.getNumberOfOuterLeafCells())==THREE_POWER_D,
-        toString(),tarch::parallel::Node::getInstance().getRank()
-      );
+      assertion2(!isGridStationary(), toString(),tarch::parallel::Node::getInstance().getRank() );
       _stateData.setHasChangedVertexOrCellState(true);
       _loadRebalancingState = HasJoinedWithMaster;
       break;
