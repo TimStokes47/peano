@@ -462,8 +462,14 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
           if (NewRemoteRank!=tarch::parallel::Node::getInstance().getRank()) {
             state.splitIntoRank(NewRemoteRank);
             Base::makeCellRemoteCell(state,NewRemoteRank,newFineGridCells[ kScalar ],newFineGridVertices,newFineGridVerticesEnumerators[kScalar]);
+
+            dfor2(i)
+              const SingleLevelEnumerator& currentEnumerator = newFineGridVerticesEnumerators[kScalar];
+              newFineGridVertices[ currentEnumerator(i) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+            enddforx
           }
         enddforx
+
       }
       logTraceOutWith3Arguments( "splitUpGrid(...)", state, fineGridCell, fineGridVerticesEnumerator.toString() );
     }

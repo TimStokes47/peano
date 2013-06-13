@@ -76,6 +76,16 @@ class peano::grid::nodes::Refined: public peano::grid::nodes::Node<Vertex,Cell,S
      * - if the code is compiled with MPI, and
      * - if the current node is the master node or its oracle is set to fork at least once, and
      * - if the current node is not involved in a fork.
+     *
+     * !!! Invoke setAdjacentSubtreeForksIntoOtherRankFlag()
+     *
+     * This is the place where I mark the new subtree, i.e. where I flag all
+     * the vertices that will in the next iteration be copied to a new worker.
+     * If I don't do it here, the grid might coarse out the respective subgrid
+     * right before the actual fork takes place. This is kind of a starvation
+     * process. As soon as data is deployed to a worker, the master-worker
+     * communication routines take care of the erase flags and erase control.
+     * Before, I have to do it here manually.
      */
     void splitUpGrid(
       State&                                       state,
