@@ -118,13 +118,17 @@ void peano::grid::nodes::Leaf<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 ) {
   logTraceIn( "validateRefinementStateOfVertices(...)" );
   dfor2(k)
-    assertion4(
+    assertion8(
       fineGridVertices[ fineGridVerticesEnumerator(k) ].isHangingNode() ||
       fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl() != Vertex::Records::Refined,
       fineGridVertices[ fineGridVerticesEnumerator(k) ].toString(),
       fineGridVerticesEnumerator.toString(),
       calledByStore,
-      k
+      k,
+      fineGridVertices[ fineGridVerticesEnumerator(0) ].toString(),
+      fineGridVertices[ fineGridVerticesEnumerator(1) ].toString(),
+      fineGridVertices[ fineGridVerticesEnumerator(2) ].toString(),
+      fineGridVertices[ fineGridVerticesEnumerator(3) ].toString()
     );
   enddforx
   logTraceOut( "validateRefinementStateOfVertices(...)" );
