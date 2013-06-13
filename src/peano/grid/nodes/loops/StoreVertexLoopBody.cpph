@@ -106,10 +106,6 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
     !_state.isJoiningWithMaster()
   ) {
     if ( !_fineGridVertices[positionInVertexArray].isRemote( _state, true, false) ) {
-      if ( _state.isJoinWithMasterTriggered() ) {
-        _fineGridVertices[positionInVertexArray].setAdjacentSubtreeForksIntoOtherRankFlag();
-      }
-
       const std::set<int> ranks = _fineGridVertices[positionInVertexArray].getAdjacentRemoteRanks();
       for (
         std::set<int>::const_iterator p = ranks.begin();
@@ -194,9 +190,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   const tarch::la::Vector<DIMENSIONS,int>&  positionInLocalCell
 ) {
   assertion1( !_fineGridVertices[positionInArray].isHangingNode(), _fineGridVertices[positionInArray] );
-  #ifdef Debug
   assertionNumericalEquals1(_fineGridVertices[positionInArray].getX(), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell), _fineGridVertices[positionInArray] );
-  #endif
 
   #ifdef Parallel
   const bool StudyVertex = !_fineGridVertices[positionInArray].isOutside() && !_fineGridVertices[positionInArray].isRemote(_state, true, true );
@@ -250,9 +244,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   int positionInVertexArray,
   const tarch::la::Vector<DIMENSIONS,int>& positionInLocalCell
 ) {
-  #ifdef Debug
   assertionNumericalEquals1(_fineGridVertices[positionInVertexArray].getX(), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell), _fineGridVertices[positionInVertexArray] );
-  #endif
 
   _threadLocalEventHandle.destroyHangingVertex(
     _fineGridVertices[positionInVertexArray],
@@ -310,7 +302,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
 
       #ifdef Parallel
       if (
-        _fineGridVertices[positionInVertexArray].isAdjacentSubtreeForksIntoOtherRankFlag()
+        _fineGridVertices[positionInVertexArray].isAdjacentSubtreeForksIntoOtherRankFlagSet()
       ) {
         logDebug( "updateCoarseGridTreeHeightAttributes(int)", "set remote flag of coarse vertex due to " << _fineGridVertices[positionInVertexArray].toString() );
         _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setAdjacentSubtreeForksIntoOtherRankFlag();
@@ -350,6 +342,12 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
 
   const bool RegularStaticGrid   = CellFlagsFromEnumerator>=peano::grid::Leaf;
   const bool StaticGrid          = CellFlagsFromEnumerator>=peano::grid::StationaryWithParallelBoundary;
+
+  // These assertions hold for the load. They do not hold for the store, as a
+  // grid part might be static right now whereas some parts of it have been
+  // deployed to another rank, i.e. the next time they are not static anymore.
+  // assertion1( !_state.isInvolvedInJoinOrFork() || !RegularStaticGrid, _state.toString() );
+  // assertion1( !_state.isInvolvedInJoinOrFork() || !StaticGrid,        _state.toString() );
 
   if (RegularStaticGrid) {
     assertion(  !(_counter[positionInArray]==CounterHangingNode) );
@@ -435,7 +433,6 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   int                                       positionInVertexArray,
   const tarch::la::Vector<DIMENSIONS,int>&  positionInLocalCell
 ) const {
-  #ifdef Debug
   assertionEquals3(
     _fineGridVertices[positionInVertexArray].getLevel(),
     _fineGridVerticesEnumerator.getLevel(),
@@ -455,5 +452,4 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
       _fineGridVertices[positionInVertexArray].toString()
     );
   }
-  #endif
 }
