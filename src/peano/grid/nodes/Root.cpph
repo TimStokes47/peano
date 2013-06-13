@@ -371,7 +371,11 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     centralFineGridCell.send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)
       logDebug( "sendCellAndVerticesToMaster(...)", "send vertex " << fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString() << " to master" );
-      assertion2( fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Refined, fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString() );
+      assertion2(
+        fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Refined ||
+        (fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::EraseTriggered && fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet()),
+        fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString()
+      );
       assertion2( fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet(), fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString() );
       fineGridVertices[ centralFineGridVerticesEnumerator(k) ].send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     enddforx
