@@ -490,6 +490,10 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   const bool IrregularStaticGrid             = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
   const bool StaticGridWithParallelBoundary  = CellFlagsFromEnumerator>=peano::grid::StationaryWithParallelBoundary;
 
+  assertion1( !_state.isInvolvedInJoinOrFork() || !RegularStaticGrid,              _state.toString() );
+  assertion1( !_state.isInvolvedInJoinOrFork() || !IrregularStaticGrid,            _state.toString() );
+  assertion1( !_state.isInvolvedInJoinOrFork() || !StaticGridWithParallelBoundary, _state.toString() );
+
   logTraceInWith7Arguments( "operator()", action._cartesianPosition, action._id, _counter[positionInArray], positionInArray, RegularStaticGrid, IrregularStaticGrid, StaticGridWithParallelBoundary );
 
   if (RegularStaticGrid) {
@@ -574,10 +578,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     createNewVertex(positionInArray, action._cartesianPosition );
     updateGeometry(positionInArray,action._cartesianPosition);
     invokeLoadVertexEvents(positionInArray,action._cartesianPosition);
-    const bool UpdateRefinementFlagsAfterLoadImmediately = !_fineGridVertices[positionInArray].isAdjacentToRemoteRank();
-    if (UpdateRefinementFlagsAfterLoadImmediately) {
-      updateRefinementFlagsOfVertexAfterLoad(positionInArray,false);
-    }
     logDebug( "operator()", "vertex at " << positionInArray << " is a temporary new vertex due to a join: " << _fineGridVertices[positionInArray].toString() );
   }
   #endif
@@ -592,7 +592,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     logDebug( "operator()", "vertex at " << positionInArray << " is already loaded or is a hanging node: " << _fineGridVertices[positionInArray].toString() );
   }
 
-  validateVertexInArray( positionInArray, action._cartesianPosition );
+  validateVertexInArray( positionInArray, action._cartesianPosition, action._id );
 
   _counter[positionInArray]++;
 
@@ -603,18 +603,25 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator>
 void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::validateVertexInArray(
   int                                       positionInVertexArray,
-  const tarch::la::Vector<DIMENSIONS,int>&  positionInLocalCell
+  const tarch::la::Vector<DIMENSIONS,int>&  positionInLocalCell,
+  int                                       stackNumber
 ) const {
-  #ifdef Debug
-  assertionEquals3(
+  assertionEquals10(
     _fineGridVertices[positionInVertexArray].getLevel(),
     _fineGridVerticesEnumerator.getLevel(),
     positionInVertexArray,
     _fineGridVerticesEnumerator.toString(),
-    _fineGridVertices[positionInVertexArray].toString()
+    _fineGridVertices[positionInVertexArray].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(0)].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(1)].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(2)].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(3)].toString(),
+    _fineGridVertices[positionInVertexArray].getX(),
+    _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+    stackNumber
   );
   for (int d=0; d<DIMENSIONS; d++) {
-    assertionNumericalEquals7(
+    assertionNumericalEquals8(
       _fineGridVertices[positionInVertexArray].getX()(d), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)(d),
       positionInVertexArray,
       _fineGridVertices[positionInVertexArray].getX(),
@@ -622,8 +629,8 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
       d,
       _fineGridVerticesEnumerator.toString(),
-      _fineGridVertices[positionInVertexArray].toString()
+      _fineGridVertices[positionInVertexArray].toString(),
+      stackNumber
     );
   }
-  #endif
 }

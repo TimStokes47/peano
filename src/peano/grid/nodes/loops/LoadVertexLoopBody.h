@@ -195,10 +195,14 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
     void invokeLoadVertexEvents(int positionInArray, const tarch::la::Vector<DIMENSIONS,int>& positionInLocalCell);
 
     /**
-     * In debug mode, this operation compares the vertex's position and level
-     * to the cell data.
+     * In debug or assert mode, this operation compares the vertex's position
+     * and level to the cell data.
      */
-    void validateVertexInArray( int positionInVertexArray, const tarch::la::Vector<DIMENSIONS,int>& positionInLocalCell ) const;
+    void validateVertexInArray(
+      int                                       positionInVertexArray,
+      const tarch::la::Vector<DIMENSIONS,int>&  positionInLocalCell,
+      int                                       stackNumber
+    ) const;
 
     void invalidateVertexIfGeometryHasChanged( int positionInVertexArray, const tarch::la::Vector<DIMENSIONS,int>& positionInLocalCell ) const;
   public:
@@ -228,6 +232,26 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
 || InOut            |  load(-1)                          |  create hanging node               |  create persistent node            |  load(-1)                          |  nop (vertex is already loaded)
 ||                  |  counter->CounterNodeAlreadyLoaded |  counter->CounterNodeAlreadyLoaded |  counter->CounterNodeAlreadyLoaded |  counter->CounterNodeAlreadyLoaded |  inc counter
 || Temporary        |  load(stack number)                |  load(stack number)                |  load(stack number)                |  load(stack number)                |  nop (vertex is already loaded)
+     *
+     *
+     * !!! Assertions
+     *
+     * If we do some rebalancing such as a fork, the grid may not be handled as
+     * static. This is an assertion we can do only throughout the load process.
+     * Throughout the store, rebalancing might become set for the subsequent
+     * traversal while the current traversal still handles whole grid regions
+     * as stationary grid parts.
+     *
+     * !!! CaseCreateNewNodeTemporarily
+     *
+     * When we fork or join a grid region, it can happen that the sender is
+     * right in the process of destroying grid entities, while the receiver has
+     * to reconstruct exactly these parts. The receiver then is set to
+     * CounterNewNodeRefineDueToJoinThoughWorkerIsAlreadyErasing which equals
+     * from the load process point of view basically a grid generation.
+     * Different to the standard grid generation, this generation is controlled
+     * by a remote data source. There is consequently no need to realise an
+     * immediate refine.
      */
     void operator() (const peano::datatraversal::Action& action);
 };
