@@ -68,7 +68,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   const peano::grid::VertexEnumerator&  fineGridVerticesEnumerator
 ) {
   logTraceIn( "validatePositionOfVertices(...)" );
-  #if defined(Asserts) && defined(Debug)
   dfor2(k)
     assertionEquals3(
       fineGridVerticesEnumerator.getLevel(),
@@ -87,7 +86,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       )
     }
   enddforx
-  #endif
   logTraceOut( "validatePositionOfVertices(...)" );
 }
 
@@ -106,6 +104,17 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   fineGridCell.assignToRemoteNode( remoteRank );
   peano::parallel::AdjacencyListAspect<Vertex>::replaceAdjancyEntriesOfVerticesOfOneCellWithDifferentRank(remoteRank,fineGridVertices,fineGridVerticesEnumerator);
   state.changedCellState();
+
+  // @todo docu
+  // ========================
+  // Phase D (voellig unklar)
+  // ========================
+  // scheint auch zu verhindern, dass der Code noch korrekt laeuft
+
+//  dfor2(i)
+//    // @todo das ist extrem wichtig! => Doku was passiert, wenn erase-triggered ist und man forked
+//    fineGridVertices[ fineGridVerticesEnumerator(i) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+//  enddforx
 
   logTraceOut( "makeCellRemoteCell(...)" );
 }
@@ -323,12 +332,22 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       coarseGridVertices[ coarseGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
-      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+      // @todo docu
+      // ========================
+      // Phase E (sicher falsch)
+      // ========================
+//      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
     enddforx
     fineGridCell.send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
       fineGridVertices[ fineGridVerticesEnumerator(k) ].send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
+      // @todo docu
+      // ========================
+      // Phase A (sicher richtig)
+      // ========================
+      // Counterpart vom receive auf der Merge
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
     enddforx
     logTraceOut( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(...)" );
   #endif
@@ -350,7 +369,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     logTraceInWith2Arguments( "updateCellsParallelStateAfterLoadIfStateIsForking(...)", state.toString(), fineGridCell.toString() );
     const std::set<int> forkingRanks= state.getForkingOrJoiningOrTriggeredForRebalancingRanks();
 
-    bool cellWasSentToNewWorker = false;
+    bool cellWasMovedToNewWorker = false;
     for (std::set<int>::const_iterator p = forkingRanks.begin(); p!=forkingRanks.end();p++ ) {
       const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> adjacencyBitset   = peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(*p,fineGridVertices,fineGridVerticesEnumerator);
       if (adjacencyBitset.any()) {
@@ -361,7 +380,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         enddforx
         logDebug( "updateCellsParallelStateAfterLoadIfStateIsForking(...)", "- cell: " << fineGridCell.toString() );
 
-        cellWasSentToNewWorker = true;
+        cellWasMovedToNewWorker |= fineGridCell.getRankOfRemoteNode()==*p;
 
         _eventHandle.prepareCopyToRemoteNode(
           fineGridCell,
@@ -379,6 +398,21 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
             // this vertex after this iteration. And if I switch a vertex to outside, it has to be invalidated
             // before (see assertion).
             fineGridVertices[ fineGridVerticesEnumerator(k) ].invalidateAdjacentCellInformation();
+
+            // @todo docu
+            // ========================
+            // Phase D (keine Ahnung)
+            // ========================
+//            // @todo vermutlich kann man das sogar wieder rausnehmen
+//            // @todo das ist extrem wichtig! => Doku was passiert, wenn erase-triggered ist und man forked
+//            fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+
+            assertion2(
+              fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl()!=Vertex::Records::Erasing,
+              fineGridVertices[ fineGridVerticesEnumerator(k) ].toString(),
+              state.toString()
+            );
+
             _eventHandle.prepareCopyToRemoteNode(
               fineGridVertices[fineGridVerticesEnumerator(k)],
               *p,
@@ -397,7 +431,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     }
 
     if (
-      cellWasSentToNewWorker &&
+      cellWasMovedToNewWorker &&
       fineGridCell.isInside() &&
       fineGridCell.isAssignedToRemoteRank()
     ) {
@@ -647,15 +681,17 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       );
       peano::parallel::JoinDataBufferPool::getInstance().sendCell(fineGridCell,adjacencyBitset,tarch::parallel::NodePool::getInstance().getMasterRank());
 
-      _eventHandle.destroyCell(
-        fineGridCell,
-        fineGridVertices,
-        fineGridVerticesEnumerator,
-        coarseGridVertices,
-        coarseGridVerticesEnumerator,
-        coarseGridCell,
-        fineGridPositionOfCell
-      );
+      if (!fineGridCell.isAssignedToRemoteRank()) {
+        _eventHandle.destroyCell(
+          fineGridCell,
+          fineGridVertices,
+          fineGridVerticesEnumerator,
+          coarseGridVertices,
+          coarseGridVerticesEnumerator,
+          coarseGridCell,
+          fineGridPositionOfCell
+        );
+      }
 
       logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithMaster()", "due to join sent cell " << fineGridCell.toString() << " with flag (" << adjacencyBitset << ") to rank " << tarch::parallel::NodePool::getInstance().getMasterRank() );
       dfor2(k)
@@ -726,6 +762,17 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if (state.isForking()) {
+    dfor2(i)
+      // @todo docu
+      // ========================
+      // Phase D (keine Ahnung)
+      // ========================
+      // so verhindern wir das fast-starving
+
+    //    // @todo das ist extrem wichtig! => Doku was passiert, wenn erase-triggered ist und man forked
+        fineGridVertices[ fineGridVerticesEnumerator(i) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+      enddforx
+
     updateCellsParallelStateAfterLoadIfStateIsForking(
       state,
       fineGridCell,
