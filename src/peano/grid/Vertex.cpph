@@ -266,7 +266,9 @@ void peano::grid::Vertex<VertexData>::erase() {
 
 template <class VertexData>
 void peano::grid::Vertex<VertexData>::rollbackRefinementOrEraseTriggered() {
+  #ifdef Parallel
   assertion1( !isAdjacentSubtreeForksIntoOtherRankFlagSet(), toString() );
+  #endif
 
   assertion2( _vertexData.getRefinementControl()!=VertexData::Refining, toString(), "tried to call erase on vertex that was already unrefined" );
   assertion2( _vertexData.getRefinementControl()!=VertexData::Erasing, toString(), "tried to call erase on vertex that was already unrefined" );
