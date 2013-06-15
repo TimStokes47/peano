@@ -30,12 +30,48 @@ void peano::grid::tests::SingleLevelEnumeratorTest::run() {
   testMethod( testFunctorWithZeroArgument );
   testMethod( testGetVertexPositionOnCoarserLevel );
   testMethod( test2DFunctor );
+  testMethod( test3DFunctor );
   logTraceOut( "run() ");
 }
 
 
 
 void peano::grid::tests::SingleLevelEnumeratorTest::setUp() {
+}
+
+
+void peano::grid::tests::SingleLevelEnumeratorTest::test3DFunctor() {
+  #ifdef Dim3
+  tarch::la::Vector<3,double> size;
+  tarch::la::Vector<3,double> offset;
+
+  tarch::la::assignList(size)   = 0.3, 0.3, 0.3;
+  tarch::la::assignList(offset) = 1.0, 0.0, 0.0;
+
+  peano::grid::SingleLevelEnumerator vertexEnumerator( size, offset, 2, peano::grid::CellFlags::StationaryButIrregular );
+
+  validateEqualsWithParams1(vertexEnumerator(0), 0,  vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(1), 1,  vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(2), 4,  vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(3), 5,  vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(4), 16, vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(5), 17, vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(6), 20, vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(7), 21, vertexEnumerator.toString());
+
+  peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex discreteOffset;
+  tarch::la::assignList(discreteOffset) = 0, 2, 2;
+  vertexEnumerator.setOffset(discreteOffset);
+
+  validateEqualsWithParams1(vertexEnumerator(0), 40+0,  vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(1), 40+1,  vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(2), 40+4,  vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(3), 40+5,  vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(4), 40+16, vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(5), 40+17, vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(6), 40+20, vertexEnumerator.toString());
+  validateEqualsWithParams1(vertexEnumerator(7), 40+21, vertexEnumerator.toString());
+  #endif
 }
 
 
