@@ -67,7 +67,6 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   logTraceInWith6Arguments( "traverse(...)", state, fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, coarseGridVerticesEnumerator.toString(), fineGridPositionOfCell );
 
   dfor2(k)
-    logDebug( "traverse(...)", " - adjacent vertex: " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() );
     assertion1( fineGridVerticesEnumerator.getCellFlags() > peano::grid::Leaf, toString(fineGridVerticesEnumerator.getCellFlags()) );
     assertionEquals5(
       fineGridVerticesEnumerator.getCellFlags(),
@@ -80,8 +79,8 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     );
   enddforx
 
-  const peano::utils::LoopDirection              TopLevelLoopDirection = peano::grid::aspects::CellPeanoCurve::getLoopDirection(fineGridCell,state.isTraversalInverted());
-  const peano::grid::CellFlags  TreeDepth             = fineGridVerticesEnumerator.getCellFlags();
+  const peano::utils::LoopDirection  TopLevelLoopDirection = peano::grid::aspects::CellPeanoCurve::getLoopDirection(fineGridCell,state.isTraversalInverted());
+  const peano::grid::CellFlags       TreeDepth             = fineGridVerticesEnumerator.getCellFlags();
 
   peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatch<Vertex,Cell>
     initialiseVertexEnumeratorsTask( fineGridVerticesEnumerator, _regularGridContainer );
@@ -124,6 +123,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     Base::_vertexStack.growOutputStackByAtLeastNElements( growStack );
   #endif
 
+    validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
   _regularGridContainer.copyRootNodeDataIntoRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
 
   typedef peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch<Vertex,Cell,CellStack>        LoadCellsTask;
@@ -195,6 +195,8 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   }
 
   _regularGridContainer.copyRootNodeDataFromRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
+  validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
+
   #if defined(SharedMemoryParallelisation)
   const int verticesReadFromInputStack = sizeOfInputStackBeforeDescend          - Base::_vertexStack.sizeOfInputStack();
   const int verticesStoredToOuputStack = Base::_vertexStack.sizeOfOutputStack() - sizeOfOutputStackBeforeDescend;
