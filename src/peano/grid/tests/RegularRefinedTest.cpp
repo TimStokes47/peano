@@ -28,108 +28,12 @@ void peano::grid::tests::RegularRefinedTest::run() {
   logTraceIn( "run() ");
   testMethod( test2DComputePositionRelativeToNextCoarserLevelFromFineGridVertexPosition );
   testMethod( test2DComputePositionRelativeToNextCoarserLevelFromFineGridCellPosition );
-  testMethod( testIsVertexOnLevel1DataDecompositionBoundaryAlgorithm );
   logTraceOut( "run() ");
 }
 
 
 
 void peano::grid::tests::RegularRefinedTest::setUp() {
-}
-
-
-void peano::grid::tests::RegularRefinedTest::testIsVertexOnLevel1DataDecompositionBoundaryAlgorithm() {
-  logTraceIn( "testIsVertexOnLevel1DataDecompositionBoundaryAlgorithm()" );
-  #ifdef Dim2
-  peano::grid::UnrolledLevelEnumerator enumerator(
-    0.1, //  coarsestGridCellSize,
-    0.0, // domainOffset,
-    1, // coarseGridEnumeratorsLevel,
-    4, // totalHeightOfSubtree,
-    2  // relativeLevelOfThisEnumerator
-  );
-
-  validateEquals( enumerator.getCellsPerAxis(),     9 );
-  validateEquals( enumerator.getVerticesPerAxis(), 10 );
-
-  tarch::la::Vector<DIMENSIONS,int>  vertexPosition(0);
-
-  std::bitset<THREE_POWER_D>  forkedSubtrees;
-
-  forkedSubtrees = 0;
-
-  vertexPosition = 0,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 1,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 2,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 3,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 0,1;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 1,1;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 1,2;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-
-
-  forkedSubtrees = 0;
-  forkedSubtrees[1]= true;
-  forkedSubtrees[2]= true;
-  forkedSubtrees[4]= true;
-  forkedSubtrees[5]= true;
-
-  vertexPosition = 0,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 1,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 2,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 3,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), true );
-  vertexPosition = 4,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 5,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 6,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), true );
-  vertexPosition = 7,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 8,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 9,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 0,1;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 3,1;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 0,3;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 3,3;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), true );
-  vertexPosition = 6,3;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), true );
-  vertexPosition = 9,3;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), true );
-  vertexPosition = 0,6;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 3,6;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), true );
-  vertexPosition = 6,6;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), true );
-  vertexPosition = 9,6;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), true );
-  vertexPosition = 0,9;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 3,9;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 6,9;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  vertexPosition = 9,9;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator, forkedSubtrees), false );
-  #endif
-  logTraceOut( "testIsVertexOnLevel1DataDecompositionBoundaryAlgorithm()" );
 }
 
 
