@@ -132,6 +132,15 @@ class peano::stacks::implementation::STDStack {
 
           return result;
         }
+
+        std::string toString() const {
+          std::ostringstream msg;
+          msg << "(size=" << _size
+              << ",currentElement=" << _currentElement
+              << ",remaining-size=" << _remainingSize
+              << ")";
+          return msg.str();
+        }
     };
 
     class PushBlockVertexStackView {
@@ -201,6 +210,16 @@ class peano::stacks::implementation::STDStack {
           assertion3( _remainingSize>=0, numberOfVertices, _remainingSize, _currentElement );
 
           return result;
+        }
+
+
+        std::string toString() const {
+          std::ostringstream msg;
+          msg << "(size=" << _size
+              << ",currentElement=" << _currentElement
+              << ",remaining-size=" << _remainingSize
+              << ")";
+          return msg.str();
         }
     };
 

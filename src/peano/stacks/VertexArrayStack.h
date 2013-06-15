@@ -84,6 +84,8 @@ class peano::stacks::VertexArrayStack {
       int size() const {return -1;}
 
       bool isEmpty() const { return true; }
+
+      std::string toString() const { return "<undef>"; }
     };
 
     class PushBlockVertexStackView {
@@ -97,6 +99,8 @@ class peano::stacks::VertexArrayStack {
 
       void push(const typename Vertex::PersistentVertex& x) {}
       PushBlockVertexStackView  pushBlockOnOutputStack(int numberOfVertices) {std::cout << "not implemented yet" << std::endl; exit(-3); return 0; }
+
+      std::string toString() const { return "<undef>"; }
     };
 
     /**
