@@ -606,6 +606,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   const tarch::la::Vector<DIMENSIONS,int>&  positionInLocalCell,
   int                                       stackNumber
 ) const {
+  #if defined(Dim2)
   assertionEquals10(
     _fineGridVertices[positionInVertexArray].getLevel(),
     _fineGridVerticesEnumerator.getLevel(),
@@ -620,6 +621,39 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
     stackNumber
   );
+  #elif defined(Dim3)
+  assertionEquals14(
+    _fineGridVertices[positionInVertexArray].getLevel(),
+    _fineGridVerticesEnumerator.getLevel(),
+    positionInVertexArray,
+    _fineGridVerticesEnumerator.toString(),
+    _fineGridVertices[positionInVertexArray].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(0)].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(1)].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(2)].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(3)].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(4)].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(5)].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(6)].toString(),
+    _coarseGridVertices[_coarseGridVerticesEnumerator(7)].toString(),
+    _fineGridVertices[positionInVertexArray].getX(),
+    _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+    stackNumber
+  );
+  #else
+  assertionEquals6(
+    _fineGridVertices[positionInVertexArray].getLevel(),
+    _fineGridVerticesEnumerator.getLevel(),
+    positionInVertexArray,
+    _fineGridVerticesEnumerator.toString(),
+    _fineGridVertices[positionInVertexArray].toString(),
+    _fineGridVertices[positionInVertexArray].getX(),
+    _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+    stackNumber
+  );
+  #endif
+
+
   for (int d=0; d<DIMENSIONS; d++) {
     assertionNumericalEquals8(
       _fineGridVertices[positionInVertexArray].getX()(d), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)(d),
