@@ -27,12 +27,12 @@ void peano::grid::nodes::computePositionRelativeToNextCoarserLevelFromFineGridVe
 ) {
   static tarch::logging::Log _log( "peano::grid::nodes::RegularRefined" );
 
-  logTraceInWith1Argument( "computePositionRelativeToNextCoarserLevel(...)", fineGridPosition );
+  logTraceInWith1Argument( "computePositionRelativeToNextCoarserLevelFromFineGridVertexPosition(...)", fineGridPosition );
   for (int d=0; d<DIMENSIONS; d++) {
     offsetOfCoarseGridEnumerator(d)           = fineGridPosition(d) >= 3 ? (fineGridPosition(d)-1)/3 : fineGridPosition(d)/3;
     fineGridPositionRelativeToCoarserCell(d)  = fineGridPosition(d)-offsetOfCoarseGridEnumerator(d)*3;
   }
-  logTraceOutWith2Arguments( "computePositionRelativeToNextCoarserLevel(...)", offsetOfCoarseGridEnumerator, fineGridPositionRelativeToCoarserCell );
+  logTraceOutWith2Arguments( "computePositionRelativeToNextCoarserLevelFromFineGridVertexPosition(...)", offsetOfCoarseGridEnumerator, fineGridPositionRelativeToCoarserCell );
 }
 
 
@@ -43,10 +43,10 @@ void peano::grid::nodes::computePositionRelativeToNextCoarserLevelFromFineGridCe
 ) {
   static tarch::logging::Log _log( "peano::grid::nodes::RegularRefined" );
 
-  logTraceInWith1Argument( "computePositionRelativeToNextCoarserLevel(...)", fineGridPosition );
+  logTraceInWith1Argument( "computePositionRelativeToNextCoarserLevelFromFineGridCellPosition(...)", fineGridPosition );
   for (int d=0; d<DIMENSIONS; d++) {
     offsetOfCoarseGridEnumerator(d)           = fineGridPosition(d)/3;
     fineGridPositionRelativeToCoarserCell(d)  = fineGridPosition(d)-offsetOfCoarseGridEnumerator(d)*3;
   }
-  logTraceOutWith2Arguments( "computePositionRelativeToNextCoarserLevel(...)", offsetOfCoarseGridEnumerator, fineGridPositionRelativeToCoarserCell );
+  logTraceOutWith2Arguments( "computePositionRelativeToNextCoarserLevelFromFineGridCellPosition(...)", offsetOfCoarseGridEnumerator, fineGridPositionRelativeToCoarserCell );
 }
