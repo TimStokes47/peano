@@ -34,11 +34,25 @@ namespace peano {
          *
          * @image html RegularRefined.png
          *
+         * !!! Realisation
+         *
+         * The realisation is straightforward: We first ensure that
+         *
+         * We assume that we have V vertices per dimension. The grid is split
+         * into 3^d subsections. So we can assign each vertex a tuple (a,b)
+         * with a,b \in \{0,1,2\}. a and b span up to 2^d subsections, as
+         * each vertex can be adjacent to several subsections - 2^d in total
+         * as maximum.
+         *
+         * A vertex is at the
+         * fork boundary if and only if
+         *
+         * - At least one of the entries is 0 or V.
          */
         bool isVertexOnLevel1DataDecompositionBoundaryInRegularTree(
-          tarch::la::Vector<DIMENSIONS,int>             vertexPosition,
-          const peano::grid::UnrolledLevelEnumerator&   cellsVertexEnumerator,
-          const std::bitset<THREE_POWER_D>              forkedSubtrees
+          tarch::la::Vector<DIMENSIONS,int>  vertexPosition,
+          int                                numberOfCellsPerDimension,
+          const std::bitset<THREE_POWER_D>   forkedSubtrees
         );
       }
     }
