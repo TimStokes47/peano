@@ -65,7 +65,7 @@ peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,Vertex
 template <class Vertex, class Cell, class VertexStack>
 peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::StoreVerticesOnRegularRefinedPatch(
   const bool                                                        isTraversalInverted,
-  peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
+  peano::grid::RegularGridContainer<Vertex,Cell>&                   regularGridContainer,
   VertexStack&                                                      vertexStack,
   bool                                                              storeProcessRunsInParallelToOtherTasks,
   int                                                               maxLevelToFork,
@@ -176,11 +176,21 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)
         );
-
         assertion6(
           !_regularGridContainer.getVertex(currentLevel,positionInArray).isHangingNode(),
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.getVertexEnumerator(0).toString(),
+          currentLevel,
+          positionInArray,
+          _coarsestCellsOffset,
+          _coarsestLevelOfThisTask
+        );
+
+        assertionNumericalEquals6(
+          _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
+          _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
+          _regularGridContainer.getVertexEnumerator(currentLevel).toString(),
+          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           currentLevel,
           positionInArray,
           _coarsestCellsOffset,
@@ -225,10 +235,11 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     for (int j=0; j<writeVertexSequence.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
       const int                               actionFlag      = writeVertexSequence.getActionSet(currentStepInPath).getAction(j)._id;
       const tarch::la::Vector<DIMENSIONS,int> currentVertex   = writeVertexSequence.getActionSet(currentStepInPath).getAction(j)._cartesianPosition;
+      const tarch::la::Vector<DIMENSIONS,int> currentVertexInPatch  = currentVertex + cellsPositionWithinUnrolledTreeLevel;
       const int                               positionInArray = cellsVertexEnumerator(currentVertex);
 
       if (cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)) {
-        if (isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertex,cellsVertexEnumerator,_forkedSubtree)) {
+        if (isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)) {
           tarch::multicore::Lock lock(_semaphore);
           _regularGridContainer.getCounter(currentLevel,positionInArray)--;
           assertion(_regularGridContainer.getCounter(currentLevel,positionInArray)>=CounterPersistentNode);
@@ -252,15 +263,15 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
       assertion( !CaseStorePersistentVertex || _regularGridContainer.getCounter(currentLevel,positionInArray)==CounterPersistentNode);
       #endif
 
-// @todo ueberdenken
       const bool CaseWriteToTempStacks     =
            cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)
            && actionFlag!=peano::stacks::Constants::InOutStack
         #if defined(SharedMemoryParallelisation)
            && _coarsestLevelOfThisTask==0
-           && !isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertex,cellsVertexEnumerator,_forkedSubtree)
+           && !isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)
         #endif
            && _regularGridContainer.getCounter(currentLevel,positionInArray)==CounterPersistentNode;
+
 
       if ( CaseStorePersistentVertex ) {
         _regularGridContainer.getVertex(currentLevel,positionInArray).updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
@@ -273,7 +284,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           positionInArray,
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString()
         );
-        // @todo weiss nicht, ob die stimmt Ansonsten Kommentar raus
         assertion7(
           _regularGridContainer.getVertex(currentLevel,positionInArray).getCurrentAdjacentCellsHeight()< peano::grid::Undefined,
           currentLevel,
@@ -295,6 +305,17 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _coarsestLevelOfThisTask
         );
 
+        assertionNumericalEquals6(
+          _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
+          _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
+          _regularGridContainer.getVertexEnumerator(currentLevel).toString(),
+          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+          currentLevel,
+          positionInArray,
+          _coarsestCellsOffset,
+          _coarsestLevelOfThisTask
+        );
+
         if (_stackView.isOpen()) {
           _stackView.push(_regularGridContainer.getVertex(currentLevel,positionInArray).getRecords() );
         }
@@ -306,6 +327,17 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
         #endif
       }
       else if (CaseWriteToTempStacks) {
+        assertionNumericalEquals6(
+          _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
+          _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
+          _regularGridContainer.getVertexEnumerator(currentLevel).toString(),
+          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+          currentLevel,
+          positionInArray,
+          _coarsestCellsOffset,
+          _coarsestLevelOfThisTask
+        );
+
         _vertexStack.push(actionFlag,_regularGridContainer.getVertex(currentLevel,positionInArray));
       }
     }
@@ -482,7 +514,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
   typename VertexStack::PushBlockVertexStackView topLevelStackView[THREE_POWER_D];
   zfor3(k,loopDirection1)
-    const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k;
+    const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition(k);
     const int                                currentFineCellIndex    = peano::utils::dLinearisedWithoutLookup(currentFineCellPosition,cellsPerAxisOnFineGrid);
     const Cell&                              currentFineGridCell     = _regularGridContainer.getCell(currentFineGridLevel,currentFineCellIndex);
 
@@ -500,7 +532,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     if (_forkedSubtree[currentFineCellIndex]) {
       typedef StoreVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>  ForkedTask;
       ForkedTask forkedTask(
-        _isTraversalInverted,
+         _isTraversalInverted,
          _regularGridContainer,
          _vertexStack,
          _storeProcessRunsInParallelToOtherTasks,
@@ -538,6 +570,9 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
   }
   tarch::multicore::BooleanSemaphore::continueWithTask();
 
+  // handle the first level, i.e. the level that has not been handled yet. At
+  // this point, all stack views have to be closed.
+  assertion( !_stackView.isOpen() );
   zfor3(k,loopDirection3)
     const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k;
     const int                                currentFineCellIndex    = peano::utils::dLinearisedWithoutLookup(currentFineCellPosition,cellsPerAxisOnFineGrid);

@@ -136,6 +136,17 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       _regularGridContainer.getVertex(currentLevel,positionInArray).saveAndClearAdjacentCellsInformation();
       _regularGridContainer.setIsReadFromTemporaryStack(currentLevel,positionInArray,false);
       _regularGridContainer.setIsToBeWrittenToTemporaryStack(currentLevel,positionInArray,false);
+
+      assertionNumericalEquals6(
+        _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
+        _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
+        _regularGridContainer.getVertexEnumerator(currentLevel).toString(),
+        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+        currentLevel,
+        positionInArray,
+        _coarsestCellsOffset,
+        _coarsestLevelOfThisTask
+      );
     }
 
     logDebug(
@@ -234,10 +245,11 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
   for (int currentStepInPath=0; currentStepInPath < readVertexSequence.getMaximumPath(); currentStepInPath++) {
     assertionEquals(readVertexSequence.getActionSet(currentStepInPath).getNumberOfParallelActions(),1);
-    const int                               actionFlag         = readVertexSequence.getActionSet(currentStepInPath).getAction(0)._id;
-    const tarch::la::Vector<DIMENSIONS,int> currentVertex      = readVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition;
-    const int                               positionInArray    = cellsVertexEnumerator(currentVertex);
-    const int                               actionFlagForWrite = writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._id;
+    const int                               actionFlag            = readVertexSequence.getActionSet(currentStepInPath).getAction(0)._id;
+    const tarch::la::Vector<DIMENSIONS,int> currentVertex         = readVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition;
+    const tarch::la::Vector<DIMENSIONS,int> currentVertexInPatch  = currentVertex + cellsPositionWithinUnrolledTreeLevel;
+    const int                               positionInArray       = cellsVertexEnumerator(currentVertex);
+    const int                               actionFlagForWrite    = writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._id;
 
     for (int d=0; d<DIMENSIONS; d++) {
       assertionEquals4(
@@ -259,7 +271,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         && actionFlag != peano::stacks::Constants::InOutStack
       #if defined(SharedMemoryParallelisation)
         && _coarsestLevelOfThisTask==0
-        && !isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertex,cellsVertexEnumerator,_forkedSubtree)
+        && !isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)
       #endif
         && _regularGridContainer.getCounter(currentLevel,positionInArray)==CounterPersistentNode;
 
@@ -271,11 +283,35 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       _regularGridContainer.getVertex(currentLevel,positionInArray).clearCounterOfAdjacentRefinedCells();
       _regularGridContainer.getVertex(currentLevel,positionInArray).saveAndClearAdjacentCellsInformation();
       _regularGridContainer.setIsReadFromTemporaryStack(currentLevel,positionInArray,false);
+
+
+      assertionNumericalEquals6(
+        _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
+        _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
+        _regularGridContainer.getVertexEnumerator(currentLevel).toString(),
+        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+        currentLevel,
+        positionInArray,
+        _coarsestCellsOffset,
+        _coarsestLevelOfThisTask
+      );
     }
     else if (CaseTakeFromTempStacks) {
       assertion1( actionFlag>=0, actionFlag );
       _regularGridContainer.setVertex(currentLevel,positionInArray,_vertexStack.pop(actionFlag));
       _regularGridContainer.setIsReadFromTemporaryStack(currentLevel,positionInArray,true);
+
+      assertionNumericalEquals6(
+        _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
+        _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
+        _regularGridContainer.getVertexEnumerator(currentLevel).toString(),
+        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+        currentLevel,
+        positionInArray,
+        _coarsestCellsOffset,
+        _coarsestLevelOfThisTask
+      );
+
       logDebug( "loadVerticesOfOneCellAtBoundaryofSubtree(...)", "got vertex #no=" << positionInArray << ": " <<  _regularGridContainer.getVertex(currentLevel,positionInArray).toString() << " from temporary stack " << actionFlag );
     }
 
@@ -312,7 +348,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
           positionInArray,
           CaseLoadPersistentVertex, CaseTakeFromTempStacks,
           _coarsestLevelOfThisTask,
-          isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertex,cellsVertexEnumerator,_forkedSubtree),
+          isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree),
           peano::grid::aspects::CellPeanoCurve::getLoopDirection(_regularGridContainer.getCell(0,_regularGridContainer.getVertexEnumerator(0).lineariseCellIndex(0)),_isTraversalInverted)
         );
       }
@@ -375,7 +411,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     }
 
     if (cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)) {
-      if (isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertex,cellsVertexEnumerator,_forkedSubtree)) {
+      if (isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)) {
         tarch::multicore::Lock lock(_vertexCounterSemaphore);
         _regularGridContainer.getCounter(currentLevel,positionInArray)++;
       }
