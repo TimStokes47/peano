@@ -519,7 +519,7 @@
       std::cerr << "8th argument " << #eight << ": " << eight << std::endl; \
       std::cerr << "9th argument " << #nine << ": " << nine << std::endl; \
       std::cerr << "10th argument " << #ten << ": " << ten << std::endl; \
-      std::cerr << "11th argument " << #p11<< ": " << ten << std::endl; \
+      std::cerr << "11th argument " << #p11<< ": " << p11 << std::endl; \
       assertionTriggersExit; \
     }
 
@@ -537,8 +537,8 @@
       std::cerr << "8th argument " << #eight << ": " << eight << std::endl; \
       std::cerr << "9th argument " << #nine << ": " << nine << std::endl; \
       std::cerr << "10th argument " << #ten << ": " << ten << std::endl; \
-      std::cerr << "11th argument " << #p11<< ": " << ten << std::endl; \
-      std::cerr << "12th argument " << #p12<< ": " << ten << std::endl; \
+      std::cerr << "11th argument " << #p11<< ": " << p11 << std::endl; \
+      std::cerr << "12th argument " << #p12<< ": " << p12 << std::endl; \
       assertionTriggersExit; \
     }
 
@@ -556,9 +556,9 @@
       std::cerr << "8th argument " << #eight << ": " << eight << std::endl; \
       std::cerr << "9th argument " << #nine << ": " << nine << std::endl; \
       std::cerr << "10th argument " << #ten << ": " << ten << std::endl; \
-      std::cerr << "11th argument " << #p11<< ": " << ten << std::endl; \
-      std::cerr << "12th argument " << #p12<< ": " << ten << std::endl; \
-      std::cerr << "13th argument " << #p13<< ": " << ten << std::endl; \
+      std::cerr << "11th argument " << #p11<< ": " << p11 << std::endl; \
+      std::cerr << "12th argument " << #p12<< ": " << p12 << std::endl; \
+      std::cerr << "13th argument " << #p13<< ": " << p13 << std::endl; \
       assertionTriggersExit; \
     }
 
@@ -576,10 +576,10 @@
       std::cerr << "8th argument " << #eight << ": " << eight << std::endl; \
       std::cerr << "9th argument " << #nine << ": " << nine << std::endl; \
       std::cerr << "10th argument " << #ten << ": " << ten << std::endl; \
-      std::cerr << "11th argument " << #p11<< ": " << ten << std::endl; \
-      std::cerr << "12th argument " << #p12<< ": " << ten << std::endl; \
-      std::cerr << "13th argument " << #p13<< ": " << ten << std::endl; \
-      std::cerr << "14th argument " << #p14<< ": " << ten << std::endl; \
+      std::cerr << "11th argument " << #p11<< ": " << p11 << std::endl; \
+      std::cerr << "12th argument " << #p12<< ": " << p12 << std::endl; \
+      std::cerr << "13th argument " << #p13<< ": " << p13 << std::endl; \
+      std::cerr << "14th argument " << #p14<< ": " << p14 << std::endl; \
       assertionTriggersExit; \
     }
 
