@@ -81,8 +81,8 @@ int peano::grid::UnrolledAscendDescendLevelEnumerator::operator() (const LocalVe
 
 
 peano::grid::UnrolledAscendDescendLevelEnumerator::Vector peano::grid::UnrolledAscendDescendLevelEnumerator::getVertexPosition(int localVertexNumber) const {
-  peano::grid::UnrolledAscendDescendLevelEnumerator::Vector result( _domainOffset );
-  return getVertexPosition(peano::utils::dDelinearised(localVertexNumber, 4));
+  assertionMsg(false, "not implemented yet");
+  return getVertexPosition(peano::utils::dDelinearised(localVertexNumber, _VerticesPerAxis));
 }
 
 
