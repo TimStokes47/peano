@@ -41,6 +41,17 @@ peano::grid::UnrolledLevelEnumerator::~UnrolledLevelEnumerator() {
 }
 
 
+peano::grid::UnrolledLevelEnumerator::UnrolledLevelEnumerator(const UnrolledLevelEnumerator& enumerator):
+  _discreteOffset(      enumerator._discreteOffset ),
+  _fineGridCellSize(    enumerator._fineGridCellSize ),
+  _domainOffset(        enumerator._domainOffset ),
+  _level(               enumerator._level ),
+  _adjacentCellsHeight( enumerator._adjacentCellsHeight ),
+  _CellsPerAxis(        enumerator._CellsPerAxis ),
+  _VerticesPerAxis(     enumerator._VerticesPerAxis ) {
+}
+
+
 peano::grid::UnrolledLevelEnumerator::UnrolledLevelEnumerator(
   const Vector&                coarsestGridCellSize,
   const Vector&                domainOffset,
@@ -130,8 +141,7 @@ int peano::grid::UnrolledLevelEnumerator::operator() (const LocalVertexBitsetInd
 
 
 peano::grid::UnrolledLevelEnumerator::Vector peano::grid::UnrolledLevelEnumerator::getVertexPosition(int localVertexNumber) const {
-  peano::grid::UnrolledLevelEnumerator::Vector result( _domainOffset );
-  return getVertexPosition(peano::utils::dDelinearised(localVertexNumber, 2));
+  return getVertexPosition(peano::utils::dDelinearisedWithoutLookup(localVertexNumber, _VerticesPerAxis));
 }
 
 

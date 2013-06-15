@@ -37,7 +37,12 @@ class peano::grid::UnrolledLevelEnumerator: public peano::grid::VertexEnumerator
     Vector                   _fineGridCellSize;
     Vector                   _domainOffset;
 
-    int    _level;
+    /**
+     * Should be const. However, I copy the enumerator in several places, and
+     * there it does not work anymore if the field is const. See
+     * CallLeaveCellLoopBodyOnRegularRefinedPatch::setLevel(), e.g.
+     */
+    int   _level;
 
     /**
      * This flag mirrors the data structure in Vertex with the same name.
@@ -47,8 +52,19 @@ class peano::grid::UnrolledLevelEnumerator: public peano::grid::VertexEnumerator
      */
     peano::grid::CellFlags   _adjacentCellsHeight;
 
-    int _CellsPerAxis;
-    int _VerticesPerAxis;
+    /**
+     * Should be const. However, I copy the enumerator in several places, and
+     * there it does not work anymore if the field is const. See
+     * CallLeaveCellLoopBodyOnRegularRefinedPatch::setLevel(), e.g.
+     */
+    int                      _CellsPerAxis;
+
+    /**
+     * Should be const. However, I copy the enumerator in several places, and
+     * there it does not work anymore if the field is const. See
+     * CallLeaveCellLoopBodyOnRegularRefinedPatch::setLevel(), e.g.
+     */
+    int                      _VerticesPerAxis;
 
     int getFlattenedIndex(const LocalVertexIntegerIndex&  position) const;
 
@@ -73,6 +89,8 @@ class peano::grid::UnrolledLevelEnumerator: public peano::grid::VertexEnumerator
       int                          totalHeightOfSubtree,
       int                          relativeLevelOfThisEnumerator
     );
+
+    UnrolledLevelEnumerator(const UnrolledLevelEnumerator& enumerator);
 
     virtual ~UnrolledLevelEnumerator();
 
