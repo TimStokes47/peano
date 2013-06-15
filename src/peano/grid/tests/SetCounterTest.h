@@ -54,6 +54,8 @@ class peano::grid::tests::SetCounterTest: public tarch::tests::TestCase {
 
     void testRefinementDueToJoinThoughWorkerIsAlreadyErasing0();
     void testRefinementDueToJoinThoughWorkerIsAlreadyErasing1();
+
+    void test3DLevel1();
   public:
     SetCounterTest();
 

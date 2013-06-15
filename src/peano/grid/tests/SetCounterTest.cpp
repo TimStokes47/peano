@@ -35,6 +35,8 @@ void peano::grid::tests::SetCounterTest::run() {
   testMethod( testOptimisedAnalysis );
   testMethod( testRefinementDueToJoinThoughWorkerIsAlreadyErasing0 );
   testMethod( testRefinementDueToJoinThoughWorkerIsAlreadyErasing1 );
+  testMethod( test3DLevel1 );
+
   logTraceOut( "run() ");
 }
 
@@ -42,6 +44,102 @@ void peano::grid::tests::SetCounterTest::run() {
 void peano::grid::tests::SetCounterTest::setUp() {
 }
 
+
+void peano::grid::tests::SetCounterTest::test3DLevel1() {
+  #ifdef Dim3
+  TestVertex coarseGridVertices[FOUR_POWER_D];
+
+  peano::grid::SingleLevelEnumerator   coarseGridVerticesEnumerator(
+    peano::grid::SingleLevelEnumerator::Vector( 3.0),
+    peano::grid::SingleLevelEnumerator::Vector(-1.0),
+    0
+  );
+  int                                                   fineGridCounter[FOUR_POWER_D];
+
+  coarseGridVertices[0].switchToNonhangingNode();
+  coarseGridVertices[0]._vertexData.setRefinementControl( TestVertex::Records::Refined);
+//  coarseGridVertices[1].switchToNonhangingNode();
+//  coarseGridVertices[1]._vertexData.setRefinementControl( TestVertex::Records::Refined);
+  coarseGridVertices[2].switchToNonhangingNode();
+  coarseGridVertices[2]._vertexData.setRefinementControl( TestVertex::Records::Refined);
+//  coarseGridVertices[3].switchToNonhangingNode();
+//  coarseGridVertices[3]._vertexData.setRefinementControl( TestVertex::Records::Refined);
+  coarseGridVertices[4].switchToNonhangingNode();
+  coarseGridVertices[4]._vertexData.setRefinementControl( TestVertex::Records::Refined);
+//  coarseGridVertices[5].switchToNonhangingNode();
+//  coarseGridVertices[5]._vertexData.setRefinementControl( TestVertex::Records::Refined);
+  coarseGridVertices[6].switchToNonhangingNode();
+  coarseGridVertices[6]._vertexData.setRefinementControl( TestVertex::Records::Refined);
+//  coarseGridVertices[7].switchToNonhangingNode();
+//  coarseGridVertices[7]._vertexData.setRefinementControl( TestVertex::Records::Refined);
+
+  peano::grid::nodes::loops::SetCounterLoopBody<TestVertex> loopBody(coarseGridVertices,coarseGridVerticesEnumerator,fineGridCounter);
+
+  tarch::la::Vector<3,int> vertex;
+  int indexInCounterArray;
+
+  vertex = 0,0,0;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterPersistentNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 1,0,0;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterPersistentNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 2,0,0;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterPersistentNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 3,0,0;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterHangingNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 0,1,0;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterPersistentNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 1,1,0;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterPersistentNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 2,1,0;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterPersistentNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 3,1,0;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterHangingNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 0,1,2;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterPersistentNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 1,1,2;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterPersistentNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 2,1,2;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterPersistentNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  vertex = 3,1,2;
+  indexInCounterArray = peano::grid::SingleLevelEnumerator::lineariseVertexIndex(vertex);
+  loopBody(vertex);
+  validateEqualsWithParams3( fineGridCounter[indexInCounterArray], peano::grid::nodes::CounterHangingNode, peano::grid::nodes::counterToString(fineGridCounter[indexInCounterArray]), fineGridCounter[indexInCounterArray], vertex );
+
+  #endif
+}
 
 void peano::grid::tests::SetCounterTest::testRefinementDueToJoinThoughWorkerIsAlreadyErasing0() {
   #if defined(Dim2) && defined(Parallel)
