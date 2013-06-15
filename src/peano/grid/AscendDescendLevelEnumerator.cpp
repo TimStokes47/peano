@@ -44,6 +44,7 @@ int peano::grid::AscendDescendLevelEnumerator::operator() (const LocalVertexBits
 
 
 peano::grid::AscendDescendLevelEnumerator::Vector peano::grid::AscendDescendLevelEnumerator::getVertexPosition(int localVertexNumber) const {
+  assertionMsg( false, "not implemented yet " );
   return getVertexPosition(peano::utils::dDelinearised(localVertexNumber, 2));
 }
 
