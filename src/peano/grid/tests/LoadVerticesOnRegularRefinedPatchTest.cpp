@@ -59,19 +59,19 @@ void peano::grid::tests::LoadVerticesOnRegularRefinedPatchTest::test2D() {
   forkedSubtrees = 0;
 
   vertexPosition = 0,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 1,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 2,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 3,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 0,1;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 1,1;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 1,2;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
 
 
   forkedSubtrees = 0;
@@ -81,39 +81,39 @@ void peano::grid::tests::LoadVerticesOnRegularRefinedPatchTest::test2D() {
   forkedSubtrees[5]= true;
 
   vertexPosition = 0,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 1,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 2,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 3,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
   vertexPosition = 4,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
   vertexPosition = 5,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
   vertexPosition = 6,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
   vertexPosition = 7,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
   vertexPosition = 8,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
   vertexPosition = 9,0;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
   vertexPosition = 0,1;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 3,1;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 0,3;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 3,3;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 6,3;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   vertexPosition = 9,3;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), true );
   vertexPosition = 0,6;
-  validateEquals( peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
+  validateEquals( peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree(vertexPosition, enumerator.getCellsPerAxis(), forkedSubtrees), false );
   #endif
 }
 
@@ -129,22 +129,22 @@ void peano::grid::tests::LoadVerticesOnRegularRefinedPatchTest::test3D() {
   tarch::la::Vector<DIMENSIONS,int>  vertexPosition;
 
   tarch::la::assignList( vertexPosition ) = 0, 0, 0;
-  validateWithParams2( !peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
+  validateWithParams2( !peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
 
   tarch::la::assignList( vertexPosition ) = 5, 0, 0;
-  validateWithParams2( !peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
+  validateWithParams2( !peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
 
   tarch::la::assignList( vertexPosition ) = 5, 2, 0;
-  validateWithParams2( !peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
+  validateWithParams2( !peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
 
   tarch::la::assignList( vertexPosition ) = 5, 3, 0;
-  validateWithParams2(  peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
+  validateWithParams2(  peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
 
   tarch::la::assignList( vertexPosition ) = 5, 4, 0;
-  validateWithParams2(  peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
+  validateWithParams2(  peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
 
   tarch::la::assignList( vertexPosition ) = 5, 4, 1;
-  validateWithParams2( !peano::grid::nodes::tasks::isVertexOnLevel1DataDecompositionBoundaryInRegularTree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
+  validateWithParams2( !peano::grid::nodes::tasks::isSubmanifoldVertexAdjacentToDeployedSubtree( vertexPosition, 9, forkedSubtrees ), vertexPosition, forkedSubtrees );
 
   #endif
 }
