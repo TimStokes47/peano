@@ -239,7 +239,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
       const int                               positionInArray = cellsVertexEnumerator(currentVertex);
 
       if (cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)) {
-        if (isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)) {
+        if (isSubmanifoldVertexAdjacentToDeployedSubtree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)) {
           tarch::multicore::Lock lock(_semaphore);
           _regularGridContainer.getCounter(currentLevel,positionInArray)--;
           assertion(_regularGridContainer.getCounter(currentLevel,positionInArray)>=CounterPersistentNode);
@@ -268,7 +268,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
            && actionFlag!=peano::stacks::Constants::InOutStack
         #if defined(SharedMemoryParallelisation)
            && _coarsestLevelOfThisTask==0
-           && !isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)
+           && !isSubmanifoldVertexAdjacentToDeployedSubtree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)
         #endif
            && _regularGridContainer.getCounter(currentLevel,positionInArray)==CounterPersistentNode;
 

@@ -271,7 +271,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         && actionFlag != peano::stacks::Constants::InOutStack
       #if defined(SharedMemoryParallelisation)
         && _coarsestLevelOfThisTask==0
-        && !isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)
+        && !isSubmanifoldVertexAdjacentToDeployedSubtree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)
       #endif
         && _regularGridContainer.getCounter(currentLevel,positionInArray)==CounterPersistentNode;
 
@@ -348,7 +348,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
           positionInArray,
           CaseLoadPersistentVertex, CaseTakeFromTempStacks,
           _coarsestLevelOfThisTask,
-          isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree),
+          isSubmanifoldVertexAdjacentToDeployedSubtree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree),
           peano::grid::aspects::CellPeanoCurve::getLoopDirection(_regularGridContainer.getCell(0,_regularGridContainer.getVertexEnumerator(0).lineariseCellIndex(0)),_isTraversalInverted)
         );
       }
@@ -411,7 +411,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     }
 
     if (cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)) {
-      if (isVertexOnLevel1DataDecompositionBoundaryInRegularTree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)) {
+      if (isSubmanifoldVertexAdjacentToDeployedSubtree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)) {
         tarch::multicore::Lock lock(_vertexCounterSemaphore);
         _regularGridContainer.getCounter(currentLevel,positionInArray)++;
       }

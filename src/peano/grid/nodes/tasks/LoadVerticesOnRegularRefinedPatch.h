@@ -49,7 +49,7 @@ namespace peano {
          *
          * - At least one of the entries is 0 or V.
          */
-        bool isVertexOnLevel1DataDecompositionBoundaryInRegularTree(
+        bool isSubmanifoldVertexAdjacentToDeployedSubtree(
           tarch::la::Vector<DIMENSIONS,int>  vertexPosition,
           int                                numberOfCellsPerDimension,
           const std::bitset<THREE_POWER_D>   forkedSubtrees

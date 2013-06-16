@@ -85,6 +85,10 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   _fineGridVertices[positionInVertexArray].refineVertexIfItHasOnlyRefinedAdjacentCells();
 
   #ifdef Parallel
+//  const bool IrregularStaticGrid = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
+//  if (!IrregularStaticGrid) dann das Zeugs
+
+
   if (
     _state.isJoiningWithWorker() &&
     _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank()

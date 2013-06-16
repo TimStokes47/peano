@@ -121,6 +121,9 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   assertion1( _fineGridVertices[positionInVertexArray].getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing, _fineGridVertices[positionInVertexArray] );
 
   #ifdef Parallel
+//  const bool IrregularStaticGrid = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
+//  if (!IrregularStaticGrid) dann das Zeugs
+
   if (
       _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank() &&
       !_fineGridVertices[positionInVertexArray].isRemote(_state,false,true)
@@ -521,6 +524,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   const bool CaseTakeFromTempStacks   =  _counter[positionInArray]==CounterPersistentNode ||
                                          (!StaticGridWithParallelBoundary && (_counter[positionInArray]==CounterNewNode || _counter[positionInArray]==CounterPersistentNodeDelete  || _counter[positionInArray]==CounterNewNodeRefineDueToJoinThoughWorkerIsAlreadyErasing));
 
+
   logDebug(
     "operator()",
          "CaseLoadPersistentVertex=" << CaseLoadPersistentVertex
@@ -528,6 +532,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     << ", CaseCreateHangingNode=" << CaseCreateHangingNode
     << ", CaseCreateNewNode=" << CaseCreateNewNode
     << ", CaseTakeFromTempStacks=" <<  CaseTakeFromTempStacks
+    << " (from counter " << _counter[positionInArray] << " at " << positionInArray << ")"
   );
 
   #ifdef Debug
@@ -638,7 +643,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     _coarseGridVertices[_coarseGridVerticesEnumerator(7)].toString(),
     _fineGridVertices[positionInVertexArray].getX(),
     _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
-    stackNumber
+    _vertexStack.pop(stackNumber).toString()
   );
   #else
   assertionEquals6(
