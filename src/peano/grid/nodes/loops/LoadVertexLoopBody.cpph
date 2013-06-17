@@ -121,61 +121,61 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   assertion1( _fineGridVertices[positionInVertexArray].getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing, _fineGridVertices[positionInVertexArray] );
 
   #ifdef Parallel
-//  const bool IrregularStaticGrid = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
-//  if (!IrregularStaticGrid) dann das Zeugs
-
-  if (
-      _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank() &&
-      !_fineGridVertices[positionInVertexArray].isRemote(_state,false,true)
-  ) {
-    std::set<int> ranks = _fineGridVertices[positionInVertexArray].getAdjacentRemoteRanks();
-
-    const tarch::la::Vector<TWO_POWER_D,int> originalAdjacencyList = _fineGridVertices[positionInVertexArray].getAdjacentRanks();
-    tarch::la::Vector<TWO_POWER_D,int>       mergedAdjacencyList   = _fineGridVertices[positionInVertexArray].getAdjacentRanks();
-
-    for (
-      std::set<int>::const_iterator p = ranks.begin();
-      p != ranks.end();
-      p++
+  const bool IrregularStaticGrid = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
+  if (!IrregularStaticGrid) {
+    if (
+        _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank() &&
+        !_fineGridVertices[positionInVertexArray].isRemote(_state,false,true)
     ) {
-      const int currentNeighbourRank = *p;
-      if ( !_state.isForkingRank(currentNeighbourRank) ) {
-        const Vertex receivedVertex = peano::parallel::SendReceiveBufferPool::getInstance().getVertex<Vertex>(currentNeighbourRank);
+      std::set<int> ranks = _fineGridVertices[positionInVertexArray].getAdjacentRemoteRanks();
 
-        #ifdef Debug
-        assertionVectorNumericalEquals5(receivedVertex.getX(), _fineGridVertices[positionInVertexArray].getX(), receivedVertex.toString(), _fineGridVertices[positionInVertexArray].toString(), _state.toString(), *p, tarch::parallel::Node::getInstance().getRank());
-        #endif
-        assertionEquals4(receivedVertex.isOutside(),  _fineGridVertices[positionInVertexArray].isOutside(), receivedVertex.toString(), _fineGridVertices[positionInVertexArray].toString(), *p, tarch::parallel::Node::getInstance().getRank());
-        assertionEquals4(receivedVertex.isBoundary(), _fineGridVertices[positionInVertexArray].isBoundary(), receivedVertex.toString(), _fineGridVertices[positionInVertexArray].toString(), *p, tarch::parallel::Node::getInstance().getRank());
-        assertionEquals4(receivedVertex.isInside(),   _fineGridVertices[positionInVertexArray].isInside(), receivedVertex.toString(), _fineGridVertices[positionInVertexArray].toString(), *p, tarch::parallel::Node::getInstance().getRank());
+      const tarch::la::Vector<TWO_POWER_D,int> originalAdjacencyList = _fineGridVertices[positionInVertexArray].getAdjacentRanks();
+      tarch::la::Vector<TWO_POWER_D,int>       mergedAdjacencyList   = _fineGridVertices[positionInVertexArray].getAdjacentRanks();
 
-        if (!_state.isJoiningRank(currentNeighbourRank)) {
-          peano::parallel::getMergedAdjacencyLists(
-            originalAdjacencyList,
-            mergedAdjacencyList,
-            receivedVertex.getAdjacentRanks(),
+      for (
+        std::set<int>::const_iterator p = ranks.begin();
+        p != ranks.end();
+        p++
+      ) {
+        const int currentNeighbourRank = *p;
+        if ( !_state.isForkingRank(currentNeighbourRank) ) {
+          const Vertex receivedVertex = peano::parallel::SendReceiveBufferPool::getInstance().getVertex<Vertex>(currentNeighbourRank);
+
+          #ifdef Debug
+          assertionVectorNumericalEquals5(receivedVertex.getX(), _fineGridVertices[positionInVertexArray].getX(), receivedVertex.toString(), _fineGridVertices[positionInVertexArray].toString(), _state.toString(), *p, tarch::parallel::Node::getInstance().getRank());
+          #endif
+          assertionEquals4(receivedVertex.isOutside(),  _fineGridVertices[positionInVertexArray].isOutside(), receivedVertex.toString(), _fineGridVertices[positionInVertexArray].toString(), *p, tarch::parallel::Node::getInstance().getRank());
+          assertionEquals4(receivedVertex.isBoundary(), _fineGridVertices[positionInVertexArray].isBoundary(), receivedVertex.toString(), _fineGridVertices[positionInVertexArray].toString(), *p, tarch::parallel::Node::getInstance().getRank());
+          assertionEquals4(receivedVertex.isInside(),   _fineGridVertices[positionInVertexArray].isInside(), receivedVertex.toString(), _fineGridVertices[positionInVertexArray].toString(), *p, tarch::parallel::Node::getInstance().getRank());
+
+          if (!_state.isJoiningRank(currentNeighbourRank)) {
+            peano::parallel::getMergedAdjacencyLists(
+              originalAdjacencyList,
+              mergedAdjacencyList,
+              receivedVertex.getAdjacentRanks(),
+              currentNeighbourRank
+            );
+          }
+
+          peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
+            _fineGridVertices[positionInVertexArray],
+            receivedVertex,
             currentNeighbourRank
           );
+
+          _threadLocalEventHandle.mergeWithNeighbour(
+            _fineGridVertices[positionInVertexArray],
+            receivedVertex,
+            currentNeighbourRank,
+            _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+            _fineGridVerticesEnumerator.getCellSize(),
+            _fineGridVerticesEnumerator.getLevel()
+          );
         }
-
-        peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
-          _fineGridVertices[positionInVertexArray],
-          receivedVertex,
-          currentNeighbourRank
-        );
-
-        _threadLocalEventHandle.mergeWithNeighbour(
-          _fineGridVertices[positionInVertexArray],
-          receivedVertex,
-          currentNeighbourRank,
-          _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
-          _fineGridVerticesEnumerator.getCellSize(),
-          _fineGridVerticesEnumerator.getLevel()
-        );
       }
-    }
 
-    _fineGridVertices[positionInVertexArray].setAdjacentRanks(mergedAdjacencyList);
+      _fineGridVertices[positionInVertexArray].setAdjacentRanks(mergedAdjacencyList);
+    }
   }
   #endif
 
@@ -568,7 +568,9 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     updateGeometry(positionInArray,action._cartesianPosition);
     invokeLoadVertexEvents(positionInArray,action._cartesianPosition);
     #ifdef Parallel
-    const bool UpdateRefinementFlagsAfterLoadImmediately = !_fineGridVertices[positionInArray].isAdjacentToRemoteRank();
+    const bool UpdateRefinementFlagsAfterLoadImmediately =
+      !_fineGridVertices[positionInArray].isAdjacentToRemoteRank() &&
+      !_state.isInvolvedInJoinOrFork();
     #else
     const bool UpdateRefinementFlagsAfterLoadImmediately = true;
     #endif

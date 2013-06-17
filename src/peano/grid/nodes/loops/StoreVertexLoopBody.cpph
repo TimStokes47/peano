@@ -85,77 +85,76 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   _fineGridVertices[positionInVertexArray].refineVertexIfItHasOnlyRefinedAdjacentCells();
 
   #ifdef Parallel
-//  const bool IrregularStaticGrid = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
-//  if (!IrregularStaticGrid) dann das Zeugs
-
-
-  if (
-    _state.isJoiningWithWorker() &&
-    _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank()
-  ) {
-    const std::set<int> ranks = _fineGridVertices[positionInVertexArray].getAdjacentRemoteRanks();
-    for (
-      std::set<int>::const_iterator p = ranks.begin();
-      p != ranks.end();
-      p++
+  const bool IrregularStaticGrid = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
+  if (!IrregularStaticGrid) {
+    if (
+      _state.isJoiningWithWorker() &&
+      _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank()
     ) {
-      if ( _state.isJoiningRank(*p) ) {
-        _fineGridVertices[positionInVertexArray].replaceAdjancyEntriesOfRemoteRankWithLocalRank(*p);
-      }
-    }
-  }
-
-  if (
-    _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank() &&
-    !_state.isJoiningWithMaster()
-  ) {
-    if ( !_fineGridVertices[positionInVertexArray].isRemote( _state, true, false) ) {
       const std::set<int> ranks = _fineGridVertices[positionInVertexArray].getAdjacentRemoteRanks();
       for (
         std::set<int>::const_iterator p = ranks.begin();
         p != ranks.end();
         p++
       ) {
-        if (!_state.isForkTriggeredForRank(*p) && !_state.isJoiningRank(*p) ) {
-          Vertex copy = _fineGridVertices[positionInVertexArray];
-          _threadLocalEventHandle.prepareSendToNeighbour(
-            copy,
-            *p,
-            _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
-            _fineGridVerticesEnumerator.getCellSize(),
-            _fineGridVerticesEnumerator.getLevel()
-          );
-          if ( _state.isJoinWithMasterTriggered() ) {
-            copy.replaceAdjancyEntriesOfLocalRankWithMaster();
-          }
-
-          logDebug("exchangeVerticesDueToParallelisation(...)", "vertex at position " << positionInLocalCell << " belongs to parallel boundary. Send " << copy.toString() << " to rank " << *p );
-          peano::parallel::SendReceiveBufferPool::getInstance().sendVertex(copy,*p,peano::parallel::SendReceiveBufferPool::LIFO);
+        if ( _state.isJoiningRank(*p) ) {
+          _fineGridVertices[positionInVertexArray].replaceAdjancyEntriesOfRemoteRankWithLocalRank(*p);
         }
       }
     }
-    else {
-      if ( !_fineGridVertices[positionInVertexArray].isOutside() ) {
-        _threadLocalEventHandle.destroyVertex(
-          _fineGridVertices[positionInVertexArray],
-          _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
-          _fineGridVerticesEnumerator.getCellSize(),
-          _coarseGridVertices,
-          _coarseGridVerticesEnumerator,
-          _coarseGridCell,
-          _fineGridPositionOfCell + positionInLocalCell
-        );
-        _fineGridVertices[positionInVertexArray].switchToOutside();
+
+    if (
+      _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank() &&
+      !_state.isJoiningWithMaster()
+    ) {
+      if ( !_fineGridVertices[positionInVertexArray].isRemote( _state, true, false) ) {
+        const std::set<int> ranks = _fineGridVertices[positionInVertexArray].getAdjacentRemoteRanks();
+        for (
+          std::set<int>::const_iterator p = ranks.begin();
+          p != ranks.end();
+          p++
+        ) {
+          if (!_state.isForkTriggeredForRank(*p) && !_state.isJoiningRank(*p) ) {
+            Vertex copy = _fineGridVertices[positionInVertexArray];
+            _threadLocalEventHandle.prepareSendToNeighbour(
+              copy,
+              *p,
+              _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+              _fineGridVerticesEnumerator.getCellSize(),
+              _fineGridVerticesEnumerator.getLevel()
+            );
+            if ( _state.isJoinWithMasterTriggered() ) {
+              copy.replaceAdjancyEntriesOfLocalRankWithMaster();
+            }
+
+            logDebug("exchangeVerticesDueToParallelisation(...)", "vertex at position " << positionInLocalCell << " belongs to parallel boundary. Send " << copy.toString() << " to rank " << *p );
+            peano::parallel::SendReceiveBufferPool::getInstance().sendVertex(copy,*p,peano::parallel::SendReceiveBufferPool::LIFO);
+          }
+        }
       }
+      else {
+        if ( !_fineGridVertices[positionInVertexArray].isOutside() ) {
+          _threadLocalEventHandle.destroyVertex(
+            _fineGridVertices[positionInVertexArray],
+            _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+            _fineGridVerticesEnumerator.getCellSize(),
+            _coarseGridVertices,
+            _coarseGridVerticesEnumerator,
+            _coarseGridCell,
+            _fineGridPositionOfCell + positionInLocalCell
+          );
+          _fineGridVertices[positionInVertexArray].switchToOutside();
+        }
 
-      if ( _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined ) {
-        _fineGridVertices[positionInVertexArray].erase();
-        _hasTriggeredEraseForNextIteration = true;
+        if ( _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined ) {
+          _fineGridVertices[positionInVertexArray].erase();
+          _hasTriggeredEraseForNextIteration = true;
+        }
+
+        _fineGridVertices[positionInVertexArray].eliminateAllAdjacencyInformationThatIdentifiesNeitherWorkerNorMaster();
+
+        logDebug("exchangeVerticesDueToParallelisation(...)", "coarsed vertex as it is remote and deleted all adjacency information: " << _fineGridVertices[positionInVertexArray].toString() );
       }
-
-      _fineGridVertices[positionInVertexArray].eliminateAllAdjacencyInformationThatIdentifiesNeitherWorkerNorMaster();
-
-      logDebug("exchangeVerticesDueToParallelisation(...)", "coarsed vertex as it is remote and deleted all adjacency information: " << _fineGridVertices[positionInVertexArray].toString() );
     }
   }
   #endif
