@@ -437,14 +437,20 @@ void peano::grid::aspects::ParallelMerge::mergeWithForkedVertexFromMaster(
     masterVertex.getRefinementControl()==Vertex::Records::Unrefined &&
     localVertex.getRefinementControl()==Vertex::Records::RefinementTriggered
   ) {
-    // This can happen if the local create event has triggered a refinement.
+    // This can happen if the local routines have triggered a refinement. For
+    // example the user has called refine() in the touch first event.
     // We leave it that way.
   }
   else if (
     masterVertex.getRefinementControl()==Vertex::Records::Unrefined &&
     localVertex.getRefinementControl()==Vertex::Records::Refining
   ) {
-    assertion3( MasterIsNotResponsibleAnymore, masterVertex.toString(), localVertex.toString(), tarch::parallel::Node::getInstance().getRank() );
+    // This can happen if the local create event has triggered a refinement,
+    // i.e. create-vertex has called refine and Peano has immediately made
+    // the vertex refining. We should allow this as it induces errors on the
+    // next finer levels, where the worker is expecting data from the master
+    // that the master cannot provide.
+    assertion3( false, masterVertex.toString(), localVertex.toString(), tarch::parallel::Node::getInstance().getRank() );
   }
   else if (
     masterVertex.getRefinementControl()==Vertex::Records::Unrefined &&
