@@ -48,7 +48,7 @@ void peano::grid::tests::SingleLevelEnumeratorTest::test3DFunctor() {
   tarch::la::assignList(size)   = 0.3, 0.3, 0.3;
   tarch::la::assignList(offset) = 1.0, 0.0, 0.0;
 
-  peano::grid::SingleLevelEnumerator vertexEnumerator( size, offset, 2, peano::grid::CellFlags::StationaryButIrregular );
+  peano::grid::SingleLevelEnumerator vertexEnumerator( size, offset, 2, peano::grid::StationaryButIrregular );
 
   validateEqualsWithParams1(vertexEnumerator(0), 0,  vertexEnumerator.toString());
   validateEqualsWithParams1(vertexEnumerator(1), 1,  vertexEnumerator.toString());
