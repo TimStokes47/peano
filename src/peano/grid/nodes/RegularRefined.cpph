@@ -123,7 +123,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     Base::_vertexStack.growOutputStackByAtLeastNElements( growStack );
   #endif
 
-    validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
+  Base::validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
   _regularGridContainer.copyRootNodeDataIntoRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
 
   typedef peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch<Vertex,Cell,CellStack>        LoadCellsTask;
@@ -195,7 +195,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   }
 
   _regularGridContainer.copyRootNodeDataFromRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
-  validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
+  Base::validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
 
   #if defined(SharedMemoryParallelisation)
   const int verticesReadFromInputStack = sizeOfInputStackBeforeDescend          - Base::_vertexStack.sizeOfInputStack();
