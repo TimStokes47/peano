@@ -151,12 +151,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
   }
 
   Base::validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
-  validatePositionOfVertices(coarseGridVertices,coarseGridVerticesEnumerator);
-
-  validateRefinementStateOfVertices(
-    fineGridVertices,
-    fineGridVerticesEnumerator
-  );
+  Base::validatePositionOfVertices(coarseGridVertices,coarseGridVerticesEnumerator);
 
   dfor2(k)
     fineGridVertices[ fineGridVerticesEnumerator(k) ].incCounterOfAdjacentRefinedCells();
@@ -632,7 +627,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
   const SingleLevelEnumerator&              coarseGridVerticesEnumerator,
   const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
 ) {
-  validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
+  Base::validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
 
   #if defined(Parallel) && defined(UseRecursionUnrollingOnRegularPatches)
   const bool  mayEvaluateStaticSubtree =
@@ -663,7 +658,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     assertion1(false,currentCell);
   }
 
-  validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
+  Base::validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
 }
 
 
