@@ -444,9 +444,33 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> localAdjacencyBitset(    peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(*p,fineGridVertices,fineGridVerticesEnumerator) );
       if (localAdjacencyBitset.any()) {
         const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedAdjacencyBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(*p) );
-        assertionEquals(receivedAdjacencyBitset,localAdjacencyBitset);
 
-        #if defined(Debug) && (defined(Dim2) || defined(Dim3) || defined(Dim4))
+        #if defined(Dim2)
+        // @todo Da wir einen Level stehenlassen, gibt es da u.U. einen Vertex, der
+        // auf -1,-1,-1,-1 gesetzt ist, weil alle vier adjazenten Knoten weggeforked
+        // worden sind. => Erklarung ist irgendwie falsch und muss was mit Worker-Kaskaden
+        // zu tun haben. Auf jeden Fall ist das hier so, dass der Worker mehr weiss als
+        // der Master, weil eben auf irgendeinem Knoten kein new aufgerufen worden ist -
+        // u.a. vielleicht weil da auch noch ein erase auf dem Master boykottiert ist.
+        assertion10(
+          receivedAdjacencyBitset.to_ulong()>=localAdjacencyBitset.to_ulong(),
+          fineGridVerticesEnumerator.toString(),
+          *p,
+          fineGridVertices[ fineGridVerticesEnumerator(0) ].toString(),
+          fineGridVertices[ fineGridVerticesEnumerator(1) ].toString(),
+          fineGridVertices[ fineGridVerticesEnumerator(2) ].toString(),
+          fineGridVertices[ fineGridVerticesEnumerator(3) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(0) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(1) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(2) ].toString(),
+          coarseGridVertices[ coarseGridVerticesEnumerator(3) ].toString()
+        );
+        #else
+        // @todo siehe Kommentar oben
+        assertion(receivedAdjacencyBitset.to_ulong()>=localAdjacencyBitset.to_ulong());
+        #endif
+
+        #if defined(Debug) && defined(Dim2)
         assertionEquals11(
           fineGridCell.getLevel(),
           peano::parallel::JoinDataBufferPool::getInstance().getCellLevelFromStream(*p),
@@ -461,6 +485,14 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           coarseGridVertices[ coarseGridVerticesEnumerator(1) ].toString(),
           coarseGridVertices[ coarseGridVerticesEnumerator(2) ].toString(),
           coarseGridVertices[ coarseGridVerticesEnumerator(3) ].toString()
+        );
+        #elif defined(Debug)
+        assertionEquals3(
+          fineGridCell.getLevel(),
+          peano::parallel::JoinDataBufferPool::getInstance().getCellLevelFromStream(*p),
+          fineGridVerticesEnumerator.toString(),
+          *p,
+          receivedAdjacencyBitset
         );
         #endif
         logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", "received flag " << receivedAdjacencyBitset << " (vs. local flag " << localAdjacencyBitset << " due to join with worker");
