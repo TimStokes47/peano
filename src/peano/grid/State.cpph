@@ -166,7 +166,8 @@ bool peano::grid::State<StateData>::isGridBalanced() const {
       && !_stateData.getHasErased()
       && !_stateData.getHasTriggeredRefinementForNextIteration()
 //      && !_stateData.getHasTriggeredEraseForNextIteration()
-      && _iterationCounter > IterationsInBetweenRebalancing+1;
+      && _iterationCounter > IterationsInBetweenRebalancing+1
+      && !isInvolvedInJoinOrFork();
   #else
   return isGridStationary();
   #endif

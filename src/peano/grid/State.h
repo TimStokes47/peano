@@ -242,6 +242,47 @@ class peano::grid::State {
     void changedCellState();
 
     /**
+     * Is the grid stationary
+     *
+     * This operation tells you whether the grid has changed or is about to
+     * change in the next iteration. Often, one uses this as guard for a
+     * while loop that iterates until the grid doesn't change anymore - in a
+     * setup phase typically.
+     *
+     * The story is slightly different if you have a distributed mpi parallel
+     * code. Here, it can happen that erase commands don't pass through as
+     * this erase would destroy whole workers. In such a case,
+     * isGridStationary() is false all the time though the grid doesn't change
+     * from traversal to traversal. Though, if there were a join (rebalancing),
+     * it would change immediately. Also compare to isGridBalanced() for these
+     * cases.
+     *
+     * Another issue arises if you have a grid construction running in
+     * parallel. Whenever Peano does some rebalancing, it waits for a couple of
+     * iterations (at least IterationsInBetweenRebalancing) on the involved
+     * ranks before it continues to rebalance. This is to allow the grid to
+     * recover, i.e. to keep all adjacency information up-to-date all the time.
+     * It thus can happen that you construct your grid in four iterations and
+     * isGridStationary() then returns true as you don't add additional vertices
+     * and you do not remove either. Througout the construction only one fork
+     * took place at the very beginning. You now switch to another adapter or
+     * you do something else and suddenly the rebalancing kicks in again though
+     * you thought everything worked fine.
+     *
+     * In parallel, it is does either a good idea to use isGridBalanced() or,
+     * even more precise, to combine both operations.
+     *
+     * !!! isGridBalanced()
+     *
+     * In the parallel case, isGridBalanced() returns true even though an erase
+     * is triggered that cannot pass due to the domain decomposition. However,
+     * it returns true if and only if the last traversal could have triggered
+     * a rebalancing but didn't do so (see isInvolvedInJoinOrFork()).
+     *
+     * @see isGridBalanced()
+     * @see isInvolvedInJoinOrFork().
+     * @see getCouldNotEraseDueToDecompositionFlag()
+     *
      * @return Has the grid or have cells or vertices in the last iteration changed.
      *         Also returns false if the grid would like to erase vertices but
      *         cannot do so due to a domain decomposition. The latter case arises
@@ -253,12 +294,10 @@ class peano::grid::State {
      * Is the grid balanced (in parallel mode)
      *
      * In serial mode, this equals isGridStationary(). If we call this in
-     * the parallel case, it is only similar to grid stationary. However, it does
-     * not evaluate the field getCouldNotEraseDueToDecompositionFlag(), i.e.
-     * even if this field is set, balanced might return true.
+     * the parallel case, it is only similar to grid stationary. See
+     * isGridStationary() for details.
      *
-     * Besides the flag evaluation, the operation returns true if and only if
-     * it iteration counter is that high that load balancing would be possible.
+     * @see isGridStationary()
      *
      * @return If grid is stationary and no rebalancing is happing though it
      *         would be possible to rebalance.
