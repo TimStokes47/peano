@@ -743,8 +743,7 @@ template <class StateData>
 bool peano::grid::State<StateData>::mayJoinDueToLoadBalancing() const {
   if (_iterationCounter<IterationsInBetweenRebalancing) return false;
 
-  return _loadRebalancingState == NoRebalancing ||
-         _loadRebalancingState == JoinTriggered;
+  return _loadRebalancingState == NoRebalancing;
 }
 
 #endif

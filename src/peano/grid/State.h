@@ -435,7 +435,8 @@ class peano::grid::State {
      * Counterpart of mayForkDueToLoadBalancing().
      *
      * The major difference is the fact that there is no level analysis, i.e.
-     * the level of a cell does not matter.
+     * the level of a cell does not matter. We do not allow more than one join
+     * per traversal per rank.
      */
     bool mayJoinDueToLoadBalancing() const;
 
