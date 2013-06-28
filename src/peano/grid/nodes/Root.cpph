@@ -418,7 +418,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       const int NewRemoteRank =  partitioner.getRankOfWorkerReponsibleForCell(centralCell);
       assertion( NewRemoteRank != tarch::parallel::Node::getInstance().getRank() );
       state.splitIntoRank(NewRemoteRank);
-      makeCellRemoteCell(state,NewRemoteRank,centralFineGridCell,fineGridVertices,centralFineGridVerticesEnumerator);
+      Base::makeCellRemoteCell(state,NewRemoteRank,centralFineGridCell,fineGridVertices,centralFineGridVerticesEnumerator);
     }
 
   }
