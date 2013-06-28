@@ -824,7 +824,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   logTraceInWith2Arguments( "updateCellsGeometryInformationAfterLoad(...)", state.toString(), fineGridCell.toString() );
 
   #ifdef Parallel
-  const bool studyCell = (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) && !fineGridCell.isRemote(state,false,false);
+  const bool studyCell = (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) && !fineGridCell.isRemote(state,true,false);
   #else
   const bool studyCell = fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary;
   #endif
