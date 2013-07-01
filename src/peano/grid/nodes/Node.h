@@ -192,6 +192,11 @@ class peano::grid::nodes::Node {
      *
      * In this special case, we have to refine the vertices even though they
      * are outside.
+     *
+     * !!! Parallelisation
+     *
+     * You finsd documentation on details of the parallelisation in the method
+     * LoadVertexLoopBody::updateGeometry().
      */
     void updateCellsGeometryInformationAfterLoad(
       State&                                    state,

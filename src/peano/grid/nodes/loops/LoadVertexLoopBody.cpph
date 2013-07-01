@@ -281,7 +281,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   logTraceInWith3Arguments( "updateGeometryAndInvokeLoadVertexEvents(...)", _fineGridVertices[positionInVertexArray].toString(), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell), _fineGridVerticesEnumerator.getCellSize() );
 
   #ifdef Parallel
-  const bool AnalyseVertex =  !_fineGridVertices[positionInVertexArray].isRemote(_state,true, true);
+  const bool AnalyseVertex =  !_fineGridVertices[positionInVertexArray].isRemote(_state, false, true);
   const int  CoarsestRegularInnerAndOuterGridLevel = peano::parallel::loadbalancing::Oracle::getInstance().getCoarsestRegularInnerAndOuterGridLevel();
   #else
   const bool AnalyseVertex = true;

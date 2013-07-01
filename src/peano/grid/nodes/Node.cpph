@@ -452,6 +452,9 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         // zu tun haben. Auf jeden Fall ist das hier so, dass der Worker mehr weiss als
         // der Master, weil eben auf irgendeinem Knoten kein new aufgerufen worden ist -
         // u.a. vielleicht weil da auch noch ein erase auf dem Master boykottiert ist.
+
+        // anscheinend war's das nicht
+
         assertion10(
           receivedAdjacencyBitset.to_ulong()>=localAdjacencyBitset.to_ulong(),
           fineGridVerticesEnumerator.toString(),
@@ -824,7 +827,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   logTraceInWith2Arguments( "updateCellsGeometryInformationAfterLoad(...)", state.toString(), fineGridCell.toString() );
 
   #ifdef Parallel
-  const bool studyCell = (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) && !fineGridCell.isRemote(state,true,false);
+  const bool studyCell = (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) && !fineGridCell.isRemote(state,false,true);
   #else
   const bool studyCell = fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary;
   #endif

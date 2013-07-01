@@ -171,10 +171,24 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      *
      * Due to the definition of remote (see Vertex::isRemote()) a vertex
      * is still local even if all adjacent ranks are right now set to
-     * forking. This might occur strange but it is necessary, as the
-     * vertex might exist on different nodes. If a local node does fork,
-     * the other ranks are not yet aware of this fork. So, here it is: We
-     * also have to update remote ranks.
+     * fork-triggered or forking. The latter statement sounds strange, but it
+     * is necessary:
+     *
+     * Throughout the fork, all data is forwarded to the new worker. For
+     * each grid entity, we call the copy operation and a receive/merge
+     * function on the receiving side. On the receiving side, we cannot
+     * identify for a cell/vertex whether it is set remote due to the fork
+     * neither whether it has just been created on the master throughout
+     * the fork process. On the worker, we always assume that everything
+     * merged into the local data structures is properly initialised. Also
+     * the geometry.
+     *
+     * In return, this implies that due to dynamic refinement, it can happen
+     * that a grid entity is created and immediately destroyed afterwards
+     * on the master. We just initialise it to send away properly configured
+     * data.
+     *
+     * @see Node::updateCellsGeometryInformationAfterLoad()
      */
     void updateGeometry(int positionInArray, const tarch::la::Vector<DIMENSIONS,int>& positionInLocalCell);
 
