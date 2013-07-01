@@ -495,18 +495,20 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   assertion1( !_state.isInvolvedInJoinOrFork() || !RegularStaticGrid,              _state.toString() );
   assertion1( !_state.isInvolvedInJoinOrFork() || !IrregularStaticGrid,            _state.toString() );
+  #ifdef Parallel
   assertion1(
-   !(
-     _state.isForking() ||
-     _state.isJoinWithMasterTriggered() ||
-     _state.isJoiningWithWorker() ||
-     _state.isJoiningWithMaster() ||
-     _state.isNewWorkerDueToForkOfExistingDomain()
-   )
-   ||
-   !StaticGridWithParallelBoundary,
-   _state.toString()
- );
+    !(
+      _state.isForking() ||
+      _state.isJoinWithMasterTriggered() ||
+      _state.isJoiningWithWorker() ||
+      _state.isJoiningWithMaster() ||
+      _state.isNewWorkerDueToForkOfExistingDomain()
+    )
+    ||
+    !StaticGridWithParallelBoundary,
+    _state.toString()
+  );
+  #endif
 
   logTraceInWith7Arguments( "operator()", action._cartesianPosition, action._id, _counter[positionInArray], positionInArray, RegularStaticGrid, IrregularStaticGrid, StaticGridWithParallelBoundary );
 
