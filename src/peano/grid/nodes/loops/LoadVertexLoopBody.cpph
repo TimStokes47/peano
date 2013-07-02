@@ -278,7 +278,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   int positionInVertexArray,
   const tarch::la::Vector<DIMENSIONS,int>& positionInLocalCell
 ) {
-  logTraceInWith3Arguments( "updateGeometryAndInvokeLoadVertexEvents(...)", _fineGridVertices[positionInVertexArray].toString(), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell), _fineGridVerticesEnumerator.getCellSize() );
+  logTraceInWith3Arguments( "updateGeometry(...)", _fineGridVertices[positionInVertexArray].toString(), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell), _fineGridVerticesEnumerator.getCellSize() );
 
   #ifdef Parallel
   const bool AnalyseVertex =  !_fineGridVertices[positionInVertexArray].isRemote(_state, false, true);
@@ -351,7 +351,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToBoundary();
         _hasChangedVertexState = true;
-        logDebug( "load_vertices()", "switch vertex to boundary. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
         break;
       case peano::geometry::GeometryHelper::DestroyVertexAndSwitchToOutside:
         logDebug( "updateGeometry(...)", "DestroyVertexAndSwitchToOutside" );
@@ -367,7 +366,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToOutside();
         _hasChangedVertexState = true;
-        logDebug( "load_vertices()", "switch vertex to outside. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
         break;
       case peano::geometry::GeometryHelper::DestroyVertexAndEraseItAndSwitchToOutside:
         logDebug( "updateGeometry(...)", "DestroyVertexAndEraseItAndSwitchToOutside" );
@@ -386,12 +384,11 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
           _fineGridVertices[positionInVertexArray].erase();
         }
         _hasChangedVertexState = true;
-        logDebug( "load_vertices()", "switch vertex to outside. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
         break;
     }
   }
 
-  logTraceOutWith1Argument( "updateGeometryAndInvokeLoadVertexEvents(...)", _fineGridVertices[positionInVertexArray] );
+  logTraceOutWith1Argument( "updateGeometry(...)", _fineGridVertices[positionInVertexArray] );
 }
 
 
