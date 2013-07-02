@@ -90,5 +90,6 @@ peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::OracleF
 
 
 void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::forkFailed() {
+  logInfo( "forkFailed()", "fork has failed. Switch off greedy forking" );
   _forkHasFailed = true;
 }
