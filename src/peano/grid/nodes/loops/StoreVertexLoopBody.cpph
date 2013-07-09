@@ -148,7 +148,6 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
 
         if ( _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined ) {
           _fineGridVertices[positionInVertexArray].erase();
-          _hasTriggeredEraseForNextIteration = true;
         }
 
         _fineGridVertices[positionInVertexArray].eliminateAllAdjacencyInformationThatIdentifiesNeitherWorkerNorMaster();
@@ -173,7 +172,10 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   assertion(!_fineGridVertices[positionInVertexArray].isHangingNode() );
 
   _hasTriggeredRefinementForNextIteration |= _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::RefinementTriggered;
-  _hasTriggeredEraseForNextIteration      |= _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::EraseTriggered;
+  _hasTriggeredEraseForNextIteration      |= (
+      _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::EraseTriggered &&
+      !_fineGridVertices[positionInVertexArray].isRemote(_state,true,false)
+    );
 
   _fineGridVertices[positionInVertexArray].updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
 

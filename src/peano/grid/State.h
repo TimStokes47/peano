@@ -264,7 +264,7 @@ class peano::grid::State {
      * recover, i.e. to keep all adjacency information up-to-date all the time.
      * It thus can happen that you construct your grid in four iterations and
      * isGridStationary() then returns true as you don't add additional vertices
-     * and you do not remove either. Througout the construction only one fork
+     * and you do not remove either. Throughout the construction only one fork
      * took place at the very beginning. You now switch to another adapter or
      * you do something else and suddenly the rebalancing kicks in again though
      * you thought everything worked fine.

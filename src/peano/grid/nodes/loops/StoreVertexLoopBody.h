@@ -118,6 +118,13 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * important to call updateRefinementFlagsAndStoreVertexToOutputStream()
      * before the vertex is passed to the send/receive buffer.
      *
+     * !!! Parallel mode
+     *
+     * If the code is running in parallel, it coarsens grid regions after each
+     * fork. These grid modifications however are not really a grid transition,
+     * as the real grid is just handled on a different rank. So we check
+     * whether a vertex is remote before we update _hasTriggeredEraseForNextIteration.
+     *
      * @see updateRefinementFlagsAndStoreVertexToOutputStream()
      */
     void updateRefinementFlagsAndStoreVertexToOutputStream(int positionInArray, const tarch::la::Vector<DIMENSIONS,int>& positionInLocalCell);
