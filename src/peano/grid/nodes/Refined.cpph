@@ -589,7 +589,16 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     }
     Cell& currentCell = descendingFineGridCells[kScalar];
 
-    if (destroySubLevelsFinally && currentCell.isInside()) {
+    #ifdef Parallel
+    const bool invokeDestroyEvent =
+      destroySubLevelsFinally &&
+      currentCell.isInside()  &&
+      !currentCell.isRemote(state,false,false);
+    #else
+    const bool invokeDestroyEvent = destroySubLevelsFinally && currentCell.isInside();
+    #endif
+
+    if (invokeDestroyEvent) {
       Base::_eventHandle.destroyCell(
         currentCell,
         descendingGridVertices,
