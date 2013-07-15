@@ -172,10 +172,14 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   assertion(!_fineGridVertices[positionInVertexArray].isHangingNode() );
 
   _hasTriggeredRefinementForNextIteration |= _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::RefinementTriggered;
+  #ifdef Parallel
   _hasTriggeredEraseForNextIteration      |= (
       _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::EraseTriggered &&
       !_fineGridVertices[positionInVertexArray].isRemote(_state,true,false)
     );
+  #else
+  _hasTriggeredEraseForNextIteration      |= _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::EraseTriggered;
+  #endif
 
   _fineGridVertices[positionInVertexArray].updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
 
