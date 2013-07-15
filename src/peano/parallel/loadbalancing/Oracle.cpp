@@ -66,7 +66,7 @@ void peano::parallel::loadbalancing::Oracle::addWorker(
   assertion4( level>=0, rank, boundingBoxOffset, boundingBoxSize, level );
   _workers.push_back( Worker(rank, level, boundingBoxOffset, boundingBoxSize) );
   if (_startCommand>ForkOnce) {
-    _startCommand = static_cast<LoadBalancingFlag>(_startCommand-1);
+    _startCommand = _startCommand-1;
   }
   else if (_startCommand==ForkOnce) {
     _startCommand = Continue;
