@@ -161,13 +161,21 @@ bool peano::grid::State<StateData>::isGridStationary() const {
 template <class StateData>
 bool peano::grid::State<StateData>::isGridBalanced() const {
   #ifdef Parallel
-  return !_stateData.getHasChangedVertexOrCellState()
-      && !_stateData.getHasRefined()
-      && !_stateData.getHasErased()
-      && !_stateData.getHasTriggeredRefinementForNextIteration()
-      && !_stateData.getHasTriggeredEraseForNextIteration()
-      && _iterationCounter > IterationsInBetweenRebalancing+1
-      && !isInvolvedInJoinOrFork();
+  const bool result =
+           !_stateData.getHasChangedVertexOrCellState()
+        && !_stateData.getHasRefined()
+        && !_stateData.getHasErased()
+        && !_stateData.getHasTriggeredRefinementForNextIteration()
+        && !_stateData.getHasTriggeredEraseForNextIteration()
+        && _iterationCounter > IterationsInBetweenRebalancing+1
+        && !isInvolvedInJoinOrFork();
+
+  assertion1(
+    !hasSubworkerRebalanced() || !result,
+    toString()
+  );
+
+  return result;
   #else
   return isGridStationary();
   #endif
@@ -382,6 +390,7 @@ void peano::grid::State<StateData>::resetStateAtBeginOfIteration() {
 
   #ifdef Parallel
   _stateData.setCouldNotEraseDueToDecompositionFlag(false);
+  _stateData.setSubWorkerIsInvolvedInJoinOrFork( _loadRebalancingState != NoRebalancing );
   #endif
 
   logTraceOutWith1Argument( "resetStateAtBeginOfIteration()", toString() );
@@ -513,6 +522,15 @@ void peano::grid::State<StateData>::mergeWithWorkerState(const peano::grid::Stat
     _stateData.getCouldNotEraseDueToDecompositionFlag() |
     workerState._stateData.getCouldNotEraseDueToDecompositionFlag()
   );
+
+  _stateData.setSubWorkerIsInvolvedInJoinOrFork(
+    _stateData.getSubWorkerIsInvolvedInJoinOrFork() ||
+    workerState._stateData.getSubWorkerIsInvolvedInJoinOrFork()
+  );
+
+  if (workerState._stateData.getSubWorkerIsInvolvedInJoinOrFork()) {
+    _iterationCounter = 0;
+  }
 
   logTraceOutWith1Argument( "mergeWithWorkerState(...)", toString() );
 }
@@ -745,6 +763,12 @@ bool peano::grid::State<StateData>::mayJoinDueToLoadBalancing() const {
   if (_iterationCounter<IterationsInBetweenRebalancing) return false;
 
   return _loadRebalancingState == NoRebalancing;
+}
+
+
+template <class StateData>
+bool peano::grid::State<StateData>::hasSubworkerRebalanced() const {
+  return _stateData.getSubWorkerIsInvolvedInJoinOrFork();
 }
 
 #endif

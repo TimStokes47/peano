@@ -376,6 +376,18 @@ class peano::grid::State {
 
     bool isInvolvedInJoinOrFork() const;
 
+    /**
+     * Has a subworker rebalanced?
+     *
+     * This operation gives you information whether one of the workers has
+     * rebalanced or is still involved in rebalancing. The operation also
+     * returns true if the local worker is rebalancing. If the present
+     * result holds, isGridBalanced() should not return true.
+     *
+     * The result of this operation is not valid before endIteration().
+     */
+    bool hasSubworkerRebalanced() const;
+
     bool isForkTriggered() const;
     bool isForkTriggeredForRank(int rank) const;
     bool isForking() const;
