@@ -103,7 +103,7 @@ void tarch::parallel::Node::writeTimeOutWarning(
 ) {
   std::ostringstream out;
   out << "operation " << className << "::" << methodName << " on node "
-      << getRank() << " had to wait more than " << _deadlockTimeOut
+      << getRank() << " had to wait more than " << _timeOutWarning
       << " seconds for " << numberOfExpectedMessages
       << " message(s) from node " << communicationPartnerRank << " with tag " << tag << ". Application "
       << "will terminate after " << _deadlockTimeOut << " seconds because "
