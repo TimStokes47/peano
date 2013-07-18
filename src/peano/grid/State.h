@@ -23,6 +23,18 @@ namespace peano {
 /**
  * Super class for all states of the grid.
  *
+ * !!! Remarks on the protected attribute _stateData
+ *
+ * The state class or its pde-specific specialisation, respectively, are
+ * basically semantic wrappers around the a records class that holds the
+ * state properties. This records class is the attribute _stateData. The
+ * fields within this class can be classified into two categories: Peano
+ * attributes and pde-specific attributes. Please note that I highly
+ * recommend to modify the pde-specific attribute only and not to modify
+ * any attributes Peano does provide. If you have to modify those attributes,
+ * use exclusively the modificators of the present class and study their
+ * comments carefully.
+ *
  * @author Tobias Weinzierl
  */
 template <class StateData>
@@ -405,6 +417,12 @@ class peano::grid::State {
 
     bool isNewWorkerDueToForkOfExistingDomain() const;
 
+    /**
+     * Inform the state that this is the very first iteration of the current worker
+     *
+     * This operation is invoked by the root node of the spacetree on
+     * construction time. It is not something a PDE solver should call.
+     */
     void setIsNewWorkerDueToForkOfExistingDomain(bool value);
 
     std::set<int> getForkingOrJoiningOrTriggeredForRebalancingRanks() const;
@@ -438,16 +456,25 @@ class peano::grid::State {
     bool reduceStateAndCell() const;
 
     /**
-     * Has a worker
+     * May fork in this traversal
      *
-     * In principle, the MPI oracle keeps track of which node has workers and
-     * which one hasn't, i.e. there we can ask whether our worker employs other
-     * workers or not. This information is propagated bottom-up due to the state
-     * and the state's information is set by send(), i.e. there is no setter as
-     * send() sets the attribute and the receiving operation (see
-     * Node::updateCellsParallelStateBeforeStore()) reads the attribute and
-     * passes it on to the oracle.
-     * @see send()
+     * Any decision on forks and joins of Peano is prinicipally delegated to a
+     * load balancing oracle. This instance is the strategy deciding when to
+     * fork or not. However, we have, in some cases, to veto any load balancing
+     * a priori. Those cases are:
+     *
+     * - If the last fork/join has happened less than IterationsInBetweenRebalancing
+     *   iterations before. If we identify after an iteration that rebalancing
+     *   has started, we reset the corresponding _iterationCounter to zero and
+     *   wait until the grid has 'recovered'.
+     * - If we are not in a fork-triggered or unbalanced state.
+     *
+     * This operation is used by the Node class and the result it forwarded to
+     * the oracle. You may use this operation to analyse yourself at any point
+     * whether a fork in principle would be possible, but usually this operation
+     * is not used by any pde-specific code.
+     *
+     * @see Node::updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()
      */
     bool mayForkDueToLoadBalancing() const;
 
@@ -485,9 +512,7 @@ class peano::grid::State {
     /**
      * Counterpart of mayForkDueToLoadBalancing().
      *
-     * The major difference is the fact that there is no level analysis, i.e.
-     * the level of a cell does not matter. We do not allow more than one join
-     * per traversal per rank.
+     * @see mayForkDueToLoadBalancing()
      */
     bool mayJoinDueToLoadBalancing() const;
 
