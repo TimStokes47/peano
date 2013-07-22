@@ -88,7 +88,8 @@ class __NAMESPACE__::repositories::RepositorySTDStack: public __NAMESPACE__::rep
    __x__NONQUALIFIED_ADAPTER_TYPE__ virtual bool isActiveAdapter__NONQUALIFIED_ADAPTER_TYPE__() const;
    
     #ifdef Parallel
-    virtual bool continueToIterate();
+    virtual ContinueCommand continueToIterate();
+    virtual void runGlobalStep();
     #endif
 
     virtual void setMaximumMemoryFootprintForTemporaryRegularGrids(double value);

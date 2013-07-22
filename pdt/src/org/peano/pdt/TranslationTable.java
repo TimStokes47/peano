@@ -259,11 +259,12 @@ public class TranslationTable extends DepthFirstAdapter {
   }
 
   public void outStart(Start node) {
-    String enumDeclaration = "enum Action { WriteCheckpoint, ReadCheckpoint, Terminate";
+    String enumDeclaration = "enum Action { WriteCheckpoint, ReadCheckpoint, Terminate, RunOnAllNodes";
     for (String p : _adapters) {
       enumDeclaration += ",UseAdapter";
       enumDeclaration += p;
     }
+    enumDeclaration += ",NumberOfAdapters";
     enumDeclaration += "}";
 
     _mapping.put(_KEYWORD_REPOSITORY_ACTION_ENUM, enumDeclaration);

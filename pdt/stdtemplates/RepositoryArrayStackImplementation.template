@@ -34,9 +34,9 @@ __NAMESPACE__::repositories::RepositoryArrayStack::RepositoryArrayStack(
   
   _repositoryState.setAction( __NAMESPACE__::records::RepositoryState::Terminate );
 
-  peano::datatraversal::autotuning::Oracle::getInstance().setNumberOfOracles(__NUMBER_OF_ADAPTERS__ +3);
+  peano::datatraversal::autotuning::Oracle::getInstance().setNumberOfOracles(__NAMESPACE__::records::RepositoryState::NumberOfAdapters);
   #ifdef Parallel
-  peano::parallel::loadbalancing::Oracle::getInstance().setNumberOfOracles(__NUMBER_OF_ADAPTERS__ +3 );
+  peano::parallel::loadbalancing::Oracle::getInstance().setNumberOfOracles(__NAMESPACE__::records::RepositoryState::NumberOfAdapters);
   #endif
   
   logTraceOut( "RepositoryArrayStack(...)" );
@@ -60,9 +60,9 @@ __NAMESPACE__::repositories::RepositoryArrayStack::RepositoryArrayStack(
   
   _repositoryState.setAction( __NAMESPACE__::records::RepositoryState::Terminate );
 
-  peano::datatraversal::autotuning::Oracle::getInstance().setNumberOfOracles(__NUMBER_OF_ADAPTERS__ +3);
+  peano::datatraversal::autotuning::Oracle::getInstance().setNumberOfOracles(__NAMESPACE__::records::RepositoryState::NumberOfAdapters);
   #ifdef Parallel
-  peano::parallel::loadbalancing::Oracle::getInstance().setNumberOfOracles(__NUMBER_OF_ADAPTERS__ +3 );
+  peano::parallel::loadbalancing::Oracle::getInstance().setNumberOfOracles(__NAMESPACE__::records::RepositoryState::NumberOfAdapters);
   #endif
   
   logTraceOut( "RepositoryArrayStack(Geometry&)" );
@@ -152,6 +152,12 @@ __x__NONQUALIFIED_ADAPTER_TYPE__    case __NAMESPACE__::records::RepositoryState
     case __NAMESPACE__::records::RepositoryState::Terminate:
       assertionMsg( false, "this branch/state should never be reached" ); 
       break;
+    case __NAMESPACE__::records::RepositoryState::NumberOfAdapters:
+      assertionMsg( false, "this branch/state should never be reached" ); 
+      break;
+    case __NAMESPACE__::records::RepositoryState::RunOnAllNodes:
+      assertionMsg( false, "this branch/state should never be reached" ); 
+      break;
     case __NAMESPACE__::records::RepositoryState::ReadCheckpoint:
       assertionMsg( false, "not implemented yet" );
       break;
@@ -200,14 +206,30 @@ void __NAMESPACE__::repositories::RepositoryArrayStack::readCheckpoint( peano::g
 
 
 #ifdef Parallel
-bool __NAMESPACE__::repositories::RepositoryArrayStack::continueToIterate() {
+void __NAMESPACE__::repositories::RepositoryArrayStack::runGlobalStep() {
+  assertion(tarch::parallel::Node::getInstance().isGlobalMaster());
+
+  __NAMESPACE__::records::RepositoryState intermediateStateForWorkingNodes;
+  intermediateStateForWorkingNodes.setAction( __NAMESPACE__::records::RepositoryState::RunOnAllNodes );
+  
+  tarch::parallel::NodePool::getInstance().broadcastToWorkingNodes(
+    intermediateStateForWorkingNodes,
+    peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
+  );
+  tarch::parallel::NodePool::getInstance().activateIdleNodes(
+    peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
+  );
+}
+
+
+__NAMESPACE__::repositories::RepositoryArrayStack::ContinueCommand __NAMESPACE__::repositories::RepositoryArrayStack::continueToIterate() {
   logTraceIn( "continueToIterate()" );
 
   assertion( !tarch::parallel::Node::getInstance().isGlobalMaster());
 
-  bool result;
+  ContinueCommand result;
   if ( _solverState.hasJoinedWithMaster() ) {
-    result = false;
+    result = Terminate;
   }
   else {
     int masterNode = tarch::parallel::Node::getInstance().getGlobalMasterRank();
@@ -215,7 +237,13 @@ bool __NAMESPACE__::repositories::RepositoryArrayStack::continueToIterate() {
 
     _repositoryState.receive( masterNode, peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), true );
 
-    result = _repositoryState.getAction()!=__NAMESPACE__::records::RepositoryState::Terminate;
+    result = Continue;
+    if (_repositoryState.getAction()==__NAMESPACE__::records::RepositoryState::Terminate) {
+      result = Terminate;
+    } 
+    if (_repositoryState.getAction()==__NAMESPACE__::records::RepositoryState::RunOnAllNodes) {
+      result = RunGlobalStep;
+    } 
   }
    
   logTraceOutWith1Argument( "continueToIterate()", result );
