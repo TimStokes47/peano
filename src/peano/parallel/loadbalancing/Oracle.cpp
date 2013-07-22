@@ -171,7 +171,7 @@ int peano::parallel::loadbalancing::Oracle::getNumberOfWorkers() const {
 
 
 void peano::parallel::loadbalancing::Oracle::plotStatistics() {
-  const int AdapterStatesReservedForRepostorySteering = 3; // such as terminate, write-checkpoint, etc.
+  const int AdapterStatesReservedForRepostorySteering = 4; // such as terminate, write-checkpoint, etc.
 
   int i=0;
   for (
