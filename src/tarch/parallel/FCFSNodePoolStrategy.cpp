@@ -98,7 +98,7 @@ bool tarch::parallel::FCFSNodePoolStrategy::hasIdleNode(int forMaster) const {
 
 int tarch::parallel::FCFSNodePoolStrategy::removeNextIdleNode() {
   assertion1( !_nodes.empty(), _nodes.size() );
-  assertion3( FCFSNodePoolStrategy::hasIdleNode(-1), _nodes.size(), _nodes.front().toString(), _nodes.begin()->isIdle() );
+  assertion3( FCFSNodePoolStrategy::hasIdleNode(NodePoolStrategy::AnyMaster), _nodes.size(), _nodes.front().toString(), _nodes.begin()->isIdle() );
 
   int result = _nodes.front().getRank();
   _nodes.pop_front();
