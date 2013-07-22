@@ -18,3 +18,5 @@ void tarch::parallel::NodePool::broadcastToWorkingNodes(Message& message, int ta
   }
   logTraceOut( "broadcastToWorkingNodes(Message, int tag)" );
 }
+
+

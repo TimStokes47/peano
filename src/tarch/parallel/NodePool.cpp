@@ -22,7 +22,7 @@ const int tarch::parallel::NodePool::NoFreeNodesMessage = -1;
 
 const int tarch::parallel::NodePool::JobRequestMessageAnswerValues::NewMaster = 0;
 const int tarch::parallel::NodePool::JobRequestMessageAnswerValues::Terminate = -1;
-const int tarch::parallel::NodePool::JobRequestMessageAnswerValues::HandleLocalProblem = -2;
+const int tarch::parallel::NodePool::JobRequestMessageAnswerValues::RunAllNodes = -2;
 
 
 tarch::parallel::NodePool::NodePool():
@@ -31,7 +31,6 @@ tarch::parallel::NodePool::NodePool():
   _jobManagementTag(-1),
   _jobServicesTag(-1),
   _isAlive(false),
-  _answerJobRequestsWithHandleLocalProblem(false),
   _strategy(0) {
   #ifdef Asserts
   _isInitialised = false;
@@ -248,7 +247,7 @@ void tarch::parallel::NodePool::terminate() {
     _isAlive = false;
 
     #ifdef Parallel
-    while ( _strategy->hasIdleNode(-1) ) {
+    while ( _strategy->hasIdleNode(NodePoolStrategy::AnyMaster) ) {
       int rank = _strategy->removeNextIdleNode();
       tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
       answerMessage.send( rank, _jobManagementTag, true );
@@ -444,10 +443,6 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
       tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
       answerMessage.send( rank, _jobManagementTag, true );
     }
-    else if (_answerJobRequestsWithHandleLocalProblem) {
-      tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::HandleLocalProblem );
-      answerMessage.send( queryMessage.getSenderRank(), _jobManagementTag, true );
-    }
     else {
       _strategy->setNodeIdle( queryMessage.getSenderRank() );
     }
@@ -529,5 +524,27 @@ void tarch::parallel::NodePool::emptyWorkerRequestMessageBuffer() {
     tarch::parallel::messages::WorkerRequestMessage message;
     message.receive( MPI_ANY_SOURCE, _jobServicesTag, true );
   }
+  #endif
+}
+
+
+void tarch::parallel::NodePool::activateIdleNodes(int tag) {
+  #ifdef Parallel
+  assertion1( Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
+  assertion1( _isAlive, Node::getInstance().getRank() );
+  assertion1( _strategy!=0, Node::getInstance().getRank() );
+
+  logTraceInWith1Argument( "activateIdleNodes(int)", tag );
+
+  tarch::parallel::messages::ActivationMessage message( JobRequestMessageAnswerValues::RunAllNodes );
+
+  for (int rank=1; rank<Node::getInstance().getNumberOfNodes(); rank++) {
+    if (_strategy->isIdleNode(rank)) {
+      _strategy->reserveNode(NodePoolStrategy::AnyMaster);
+      message.send(rank,tag, true);
+      logDebug( "activateIdleNodes(int)", "sent message " << message.toString() << " to node " << rank << " on tag " << tag );
+    }
+  }
+  logTraceOut( "activateIdleNodes(int)" );
   #endif
 }

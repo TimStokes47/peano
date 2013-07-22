@@ -87,12 +87,10 @@ class tarch::parallel::NodePool: public tarch::services::Service {
       static const int Terminate;
 
       /**
-       * If a job sends a job request message, i.e. calls waitForJob(), and
-       * HandleLocalProblem is sent back, the job should concentrate on some
-       * local stuff. As soon as it has finished its local stuff, it should ask
-       * for a new job.
+       * All nodes in the setup shall run once a kernel and then either
+       * continue with Peano or ask again for a new job.
        */
-      static const int HandleLocalProblem;
+      static const int RunAllNodes;
     };
 
 
@@ -123,8 +121,6 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * further jobs or additional subclients.
      */
     bool _isAlive;
-
-    bool _answerJobRequestsWithHandleLocalProblem;
 
     /**
      * Holds the strategy to use to answer the worker queries.
@@ -385,10 +381,23 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * are allowed to call this function only on the global rank 0. In return,
      * the broadcasted message never is sent to rank 0, i.e. the global master.
      *
-     * Works on the master node only.
+     * Works on the master node only. In Peano, this operation is used by the
+     * repositories and I do not recommend to use it yourself.
      */
     template <class Message>
     void broadcastToWorkingNodes(Message& message, int tag);
+
+    template <class Message>
+    void broadcastToAllNodes(Message& message, int tag);
+
+    /**
+     * Activate all idle nodes
+     *
+     * This routine wakes up all idle nodes and sends them a new master with
+     * the flag RunAllNodes. Typically they do something and then immediately
+     * afterwards register themselves as idle again.
+     */
+    void activateIdleNodes(int tag);
 
     /**
      * Update statistics

@@ -32,6 +32,8 @@ namespace tarch {
  */
 class tarch::parallel::NodePoolStrategy {
   public:
+    static const int AnyMaster = -1;
+
     typedef std::list<tarch::parallel::messages::WorkerRequestMessage>  RequestQueue;
 
     virtual ~NodePoolStrategy() {}
@@ -140,9 +142,13 @@ class tarch::parallel::NodePoolStrategy {
     virtual std::string toString() const = 0;
 
     /**
-     * Tells caller if there are idle workers available.
-     * The node pool needs this information if it wants to send all the nodes a
-     * terminate signal.
+     * Are idle workers available.
+     *
+     * This operation is used in two different settings. Either we search for
+     * an idle node for a given master forMaster. Or the node pool runs through
+     * the sequence and wants to send all idle nodes a terminate signal. In the
+     * latter case, it passes not a valid forMaster number but the flag
+     * AnyMaster.
      */
     virtual bool hasIdleNode(int forMaster) const = 0;
 };
