@@ -9,7 +9,7 @@ Packed-Type: short int;
  */
 class tarch::parallel::messages::ActivationMessage {
   /**
-   * Either number of new master or -1 which means terminate.
+   * @see tarch::parallel::NodePool for return codes.
    */
   parallelise persistent int newMaster; 
 };
