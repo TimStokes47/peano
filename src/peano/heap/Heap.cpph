@@ -9,6 +9,9 @@
 #include "tarch/services/ServiceRepository.h"
 
 
+#include "tarch/services/ServiceFactory.h"
+
+
 template <class Data>
 tarch::logging::Log peano::heap::Heap<Data>::_log("peano::heap::Heap");
 
@@ -234,6 +237,7 @@ void peano::heap::Heap<Data>::shutdown() {
 template <class Data>
 void peano::heap::Heap<Data>::setName(std::string name) {
   _name = name;
+  tarch::services::ServiceRepository::getInstance().addService( &getInstance(), "heap" );
 }
 
 
@@ -918,15 +922,14 @@ void peano::heap::Heap<Data>::switchReceiveAndDeployBuffer(std::map<int,int>  se
     for (
       typename std::vector<SendReceiveTask>::iterator p = _neighbourDataReceiveTasks[1-_currentReceiveBuffer].begin();
       p != _neighbourDataReceiveTasks[1-_currentReceiveBuffer].end();
-      p++
     ) {
       if ( sendStatistics.count(p->_rank)>0 && sendStatistics[p->_rank]>0 ) {
         sendStatistics[p->_rank]--;
+        p++;
       }
       else {
         _neighbourDataReceiveTasks[_currentReceiveBuffer].push_back(*p);
         _neighbourDataReceiveTasks[1-_currentReceiveBuffer].erase(p);
-        p--;
       }
     }
 
