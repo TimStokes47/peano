@@ -161,11 +161,6 @@ bool tarch::parallel::FCFSNodePoolStrategy::isIdleNode(int rank) const {
 }
 
 
-void tarch::parallel::FCFSNodePoolStrategy::clearRegisteredNodes() {
-  _nodes.clear();
-}
-
-
 int tarch::parallel::FCFSNodePoolStrategy::getNumberOfRegisteredNodes() const {
   return static_cast<int>( _nodes.size() );
 }

@@ -125,13 +125,6 @@ class tarch::parallel::NodePoolStrategy {
     virtual bool isIdleNode(int rank) const = 0;
 
     /**
-     * Remove all the registered node from strategy.
-     *
-     * In this case, all nodes should be idle.
-     */
-    virtual void clearRegisteredNodes() = 0;
-
-    /**
      * @return Number of registered nodes.
      */
     virtual int getNumberOfRegisteredNodes() const = 0;
