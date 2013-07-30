@@ -191,11 +191,18 @@ class peano::grid::Vertex {
     /**
      * Refine Vertex
      *
-     * Refine all adjacent elements along every axis. If this operation is
-     * called on a vertex that does not correspond to fine grid vertex, i.e. a
-     * vertex not having the state unrefined, the operation degenerates to nop.
+     * Refine all adjacent elements along every axis. This operation may not
+     * called on a vertex that does not correspond to fine grid vertex, i.e.
+     * check whether a vertex has the state unrefined prior to invoking this
+     * operation.
      *
-     * The refinement will not happen immediately but in the next iteration.
+     * Peano will conduct the refinement
+     *
+     * - immediately if the vertex is not adjacent to a parallel domain
+     *   boundary and if the refinement is triggered in a touch first event.
+     *   Otherwise,
+     * - Peano bookmarks your refinement wish and refines the grid in the
+     *   subsequent traversal.
      */
     void refine();
 
