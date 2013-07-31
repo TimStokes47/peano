@@ -384,22 +384,22 @@ std::bitset<THREE_POWER_D> peano::grid::nodes::Refined<Vertex,Cell,State,VertexS
 
   #ifdef Parallel
   dfor3(k)
-    bool isInside =
+    bool isForkable =
       !newFineGridCells[kScalar].isRemote(state,true,true) &&
       newFineGridCells[kScalar].isCellAForkCandidate() &&
       !newFineGridCells[kScalar].thisSubtreeHoldsWorker();
 
-    if (isInside && newFineGridCells[kScalar].isOutside()) {
+    if (isForkable && newFineGridCells[kScalar].isOutside()) {
       const tarch::la::Vector<DIMENSIONS,double> x = newFineGridVerticesEnumerators[kScalar].getCellCenter();
       const tarch::la::Vector<DIMENSIONS,double> h = newFineGridVerticesEnumerators[kScalar].getCellSize();
-      isInside &= !Base::_geometry.isCompletelyOutside(x,h);
+      isForkable &= !Base::_geometry.isCompletelyOutside(x,h);
     }
 
     dfor2(i)
-      isInside &= !fineGridVertices[ SingleLevelEnumerator::lineariseVertexIndex(i+k) ].isHangingNode();
-      isInside &= fineGridVertices[ SingleLevelEnumerator::lineariseVertexIndex(i+k) ].getRefinementControl()==Vertex::Records::Refined;
+    isForkable &= !fineGridVertices[ SingleLevelEnumerator::lineariseVertexIndex(i+k) ].isHangingNode();
+    isForkable &= fineGridVertices[ SingleLevelEnumerator::lineariseVertexIndex(i+k) ].getRefinementControl()==Vertex::Records::Refined;
     enddforx
-    result[kScalar] = isInside;
+    result[kScalar] = isForkable;
   enddforx
   #endif
 
@@ -443,6 +443,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
 
       if ( partitioner.hasSuccessfullyReservedAdditionalWorkers() )  {
         logDebug( "splitUpGrid(...)", "fork has been successful with " << partitioner.getNumberOfReservedWorkers() << " new workers on local identifier " << localInnerCells );
+        logInfo( "splitUpGrid(...)", "fork has been successful with " << partitioner.getNumberOfReservedWorkers() << " new workers on local identifier " << localInnerCells );
         partitioner.sendForkMessages(
           fineGridVerticesEnumerator.getVertexPosition(),
           newFineGridVerticesEnumerators[0].getCellSize(),
