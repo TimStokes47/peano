@@ -49,7 +49,8 @@ namespace peano {
  *
  * A similar reasoning holds for cells as well.
  *
- * Since a heap is kind of a global thing, this class is a singleton.
+ * Since a heap is kind of a global thing, this class is a singleton. Please
+ * consult init() when you use the heap.
  *
  * !!! MPI Handling
  *
@@ -520,10 +521,13 @@ class peano::heap::Heap: public tarch::services::Service {
     void shutdown();
 
     /**
-     * Sets the name for this heap object, which shows up in the plotting of the
-     * statistics.
+     * Register heap
+     *
+     * If you use the heap, there's no need to register the object explicitly.
+     * However, if you do so, Peano tries to do all heap communication in the
+     * background due to non-blocking mpi.
      */
-    void setName(std::string name);
+    void init(std::string name);
 
     /**
      * Sends heap data associated to one index to one rank.
