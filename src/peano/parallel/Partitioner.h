@@ -89,6 +89,11 @@ class peano::parallel::Partitioner {
      * This operation asks for new workers at the node pool, and it also adds
      * these new workers to the loadbalancing's oracle. It does not communicate
      * with the new workers directly.
+     *
+     * If the local command does not equal ForkAllChildrenAndBecomeAdministrativeRank
+     * but wants to fork, we do not fork all potential candidates but leave one
+     * rank local. Otherwise, nodes soon becomes pure administrative nodes not
+     * computing anything anymore.
      */
     void reserveNodes();
 

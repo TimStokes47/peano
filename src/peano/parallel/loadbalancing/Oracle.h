@@ -216,9 +216,10 @@ class peano::parallel::loadbalancing::Oracle {
       int     workerMaxLevel,
       int     workerLocalWorkload,
       int     workerTotalWorkload,
+      int     workerMaxWorkload,
+      int     workerMinWorkload,
       int     currentLevel,
       int     parentCellLocalWorkload,
-      int     parentCellTotalWorkload,
       const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
       const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
       bool    workerCouldNotEraseDueToDecomposition

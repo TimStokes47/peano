@@ -375,7 +375,6 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 std::bitset<THREE_POWER_D> peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::getForkCandidates(
-  State&                  state,
   const std::vector< SingleLevelEnumerator >&  newFineGridVerticesEnumerators,
   Cell                    newFineGridCells[THREE_POWER_D],
   Vertex                  fineGridVertices[FOUR_POWER_D]
@@ -385,7 +384,7 @@ std::bitset<THREE_POWER_D> peano::grid::nodes::Refined<Vertex,Cell,State,VertexS
   #ifdef Parallel
   dfor3(k)
     bool isForkable =
-      !newFineGridCells[kScalar].isRemote(state,true,true) &&
+      !newFineGridCells[kScalar].isAssignedToRemoteRank() &&
       newFineGridCells[kScalar].isCellAForkCandidate() &&
       !newFineGridCells[kScalar].thisSubtreeHoldsWorker();
 
@@ -396,8 +395,8 @@ std::bitset<THREE_POWER_D> peano::grid::nodes::Refined<Vertex,Cell,State,VertexS
     }
 
     dfor2(i)
-    isForkable &= !fineGridVertices[ SingleLevelEnumerator::lineariseVertexIndex(i+k) ].isHangingNode();
-    isForkable &= fineGridVertices[ SingleLevelEnumerator::lineariseVertexIndex(i+k) ].getRefinementControl()==Vertex::Records::Refined;
+      isForkable &= !fineGridVertices[ SingleLevelEnumerator::lineariseVertexIndex(i+k) ].isHangingNode();
+      isForkable &= fineGridVertices[ SingleLevelEnumerator::lineariseVertexIndex(i+k) ].getRefinementControl()==Vertex::Records::Refined;
     enddforx
     result[kScalar] = isForkable;
   enddforx
@@ -425,7 +424,6 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
   ) {
     const std::bitset<THREE_POWER_D> localInnerCells =
       getForkCandidates(
-        state,
         newFineGridVerticesEnumerators,
         newFineGridCells,
         newFineGridVertices

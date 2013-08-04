@@ -241,6 +241,8 @@ class peano::grid::Cell {
      */
     double getTotalWorkload() const;
 
+    double getMinWorkload() const;
+    double getMaxWorkload() const;
     /**
      * Set Node Workload
      *

@@ -85,6 +85,8 @@ class  peano::grid::tests::records::TestCell {
   persistent double  nodeWorkload;
   persistent double  localWorkload;
   persistent double  totalWorkload;
+  persistent parallelise double  maxWorkload;
+  persistent parallelise double  minWorkload;
   persistent parallelise bool subtreeHoldsWorker;
   persistent packed bool         cellIsAForkCandidate;
   

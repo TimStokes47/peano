@@ -72,11 +72,15 @@ void peano::parallel::Partitioner::reserveNodes() {
   );
   #endif
 
+  const int NodesToBook = static_cast<int>(peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand());
+        int LocalCells  = static_cast<int>(_localCellsOfPatch.count());
+
+  if (NodesToBook!=peano::parallel::loadbalancing::ForkAllChildrenAndBecomeAdministrativeRank) {
+    LocalCells--;
+  }
+
   const int MaxRemoteRanksToBook =
-    std::min(
-      static_cast<int>(_localCellsOfPatch.count()),
-      static_cast<int>(peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand())
-    );
+    std::min( LocalCells, NodesToBook );
 
   int newWorker = tarch::parallel::NodePool::NoFreeNodesMessage;
   do {

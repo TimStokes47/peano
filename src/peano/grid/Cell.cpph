@@ -5,6 +5,8 @@
 
 #include "tarch/multicore/MulticoreDefinitions.h"
 
+#include <limits>
+
 
 template <class CellData>
 tarch::logging::Log peano::grid::Cell<CellData>::_log( "peano::grid::Cell<CellData>" );
@@ -22,10 +24,9 @@ peano::grid::Cell<CellData>::Cell():
   #endif
 
   #ifdef Parallel
+  setNodeWorkload(1.0);
+
   _cellData.setResponsibleRank(tarch::parallel::Node::getInstance().getRank());
-  _cellData.setNodeWorkload(  0.0 );
-  _cellData.setTotalWorkload( 0.0 );
-  _cellData.setLocalWorkload( 0.0 );
   _cellData.setSubtreeHoldsWorker(false);
   _cellData.setCellIsAForkCandidate(true);
   #endif
@@ -173,24 +174,12 @@ template <class CellData>
 void peano::grid::Cell<CellData>::switchToInside() {
   assertion1( isOutside(), *this );
   _cellData.setIsInside(true);
-
-  #ifdef Parallel
-  _cellData.setNodeWorkload(  1.0 );
-  _cellData.setTotalWorkload( 1.0 );
-  _cellData.setLocalWorkload( 1.0 );
-  #endif
 }
 
 
 template <class CellData>
 void peano::grid::Cell<CellData>::switchToOutside() {
   _cellData.setIsInside(false);
-
-  #ifdef Parallel
-  _cellData.setNodeWorkload(  0.0 );
-  _cellData.setTotalWorkload( 0.0 );
-  _cellData.setLocalWorkload( 0.0 );
-  #endif
 }
 
 
@@ -211,6 +200,8 @@ void peano::grid::Cell<CellData>::switchToLeaf() {
 
   _cellData.setTotalWorkload( 0.0 );
   _cellData.setLocalWorkload( 0.0 );
+  _cellData.setMaxWorkload( 0.0 );
+  _cellData.setMinWorkload( 0.0 );
   #else
   assertion1( isRefined(), *this );
   #endif
@@ -333,6 +324,8 @@ void peano::grid::Cell<CellData>::setRemoteCellWorkloadAndSubtreeFlags( const Ce
   _cellData.setNodeWorkload(  workerCell._cellData.getNodeWorkload() );
   _cellData.setTotalWorkload( workerCell._cellData.getTotalWorkload() );
   _cellData.setLocalWorkload( workerCell._cellData.getLocalWorkload() );
+  _cellData.setMaxWorkload( workerCell._cellData.getMaxWorkload() );
+  _cellData.setMinWorkload( workerCell._cellData.getMinWorkload() );
 
   _cellData.setSubtreeHoldsWorker( workerCell._cellData.getSubtreeHoldsWorker() );
 }
@@ -344,8 +337,11 @@ void peano::grid::Cell<CellData>::setNodeWorkload( double value ) {
   assertion2( value!=std::numeric_limits<double>::infinity(),  value, toString() );
 
   _cellData.setNodeWorkload(  value );
-  _cellData.setTotalWorkload( value );
-  _cellData.setLocalWorkload( value );
+
+  _cellData.setTotalWorkload( 0.0 );
+  _cellData.setLocalWorkload( 0.0 );
+  _cellData.setMaxWorkload( 0.0 );
+  _cellData.setMinWorkload( 0.0 );
 
   assertion1( _cellData.getNodeWorkload()  >=0.0, toString() );
   assertion1( _cellData.getTotalWorkload() >=0.0, toString() );
@@ -365,10 +361,36 @@ double peano::grid::Cell<CellData>::getTotalWorkload() const {
 }
 
 
+
+template <class CellData>
+double peano::grid::Cell<CellData>::getMinWorkload() const {
+  if (_cellData.getLocalWorkload() < _cellData.getMinWorkload()) {
+    return _cellData.getLocalWorkload() + _cellData.getNodeWorkload();
+  }
+  else {
+    return _cellData.getMinWorkload() + _cellData.getNodeWorkload();
+  }
+}
+
+
+template <class CellData>
+double peano::grid::Cell<CellData>::getMaxWorkload() const {
+  if (_cellData.getLocalWorkload() > _cellData.getMaxWorkload()) {
+    return _cellData.getLocalWorkload() + _cellData.getNodeWorkload();
+  }
+  else {
+    return _cellData.getMaxWorkload() + _cellData.getNodeWorkload();
+  }
+}
+
+
 template <class CellData>
 void peano::grid::Cell<CellData>::clearWorkloadAndSubtreeFlags() {
   _cellData.setTotalWorkload( 0.0 );
   _cellData.setLocalWorkload( 0.0 );
+  _cellData.setMaxWorkload( 0.0 );
+  _cellData.setMinWorkload( std::numeric_limits<int>::max() );
+
   _cellData.setSubtreeHoldsWorker(false);
 
   assertion1( _cellData.getNodeWorkload()  >=0.0, toString() );
@@ -390,18 +412,31 @@ void peano::grid::Cell<CellData>::incWorkloadAndReduceSubtreeFlags( const Cell& 
   assertion2( childCell._cellData.getNodeWorkload()  >=0.0,  toString(), childCell.toString() );
   assertion2( childCell._cellData.getTotalWorkload() >=0.0, toString(), childCell.toString() );
   assertion2( childCell._cellData.getLocalWorkload() >=0.0, toString(), childCell.toString() );
+  assertion2( childCell._cellData.getMaxWorkload()   >=0.0, toString(), childCell.toString() );
+  assertion2( childCell._cellData.getMinWorkload()   >=0.0, toString(), childCell.toString() );
 
   assertion2( childCell._cellData.getNodeWorkload()  !=std::numeric_limits<double>::infinity(),  toString(), childCell.toString() );
   assertion2( childCell._cellData.getTotalWorkload() !=std::numeric_limits<double>::infinity(), toString(), childCell.toString() );
   assertion2( childCell._cellData.getLocalWorkload() !=std::numeric_limits<double>::infinity(), toString(), childCell.toString() );
+  assertion2( childCell._cellData.getMaxWorkload() !=std::numeric_limits<double>::infinity(), toString(), childCell.toString() );
+  assertion2( childCell._cellData.getMinWorkload() !=std::numeric_limits<double>::infinity(), toString(), childCell.toString() );
 
   _cellData.setTotalWorkload( _cellData.getTotalWorkload() + childCell.getTotalWorkload() );
   _cellData.setSubtreeHoldsWorker(_cellData.getSubtreeHoldsWorker() | childCell.thisSubtreeHoldsWorker());
-  if ( !childCell.isAssignedToRemoteRank() ) {
-    _cellData.setLocalWorkload( _cellData.getLocalWorkload() + childCell.getLocalWorkload() );
+  if ( childCell.isAssignedToRemoteRank() ) {
+    _cellData.setSubtreeHoldsWorker(_cellData.getSubtreeHoldsWorker() | !isAssignedToRemoteRank());
+
+    if (childCell.getMaxWorkload()>_cellData.getMaxWorkload()) {
+      _cellData.setMaxWorkload(childCell.getMaxWorkload());
+    }
+    if (childCell.getMinWorkload()<_cellData.getMinWorkload()) {
+      _cellData.setMinWorkload(childCell.getMinWorkload());
+    }
   }
   else {
-    _cellData.setSubtreeHoldsWorker(_cellData.getSubtreeHoldsWorker() | !isAssignedToRemoteRank());
+    _cellData.setLocalWorkload( _cellData.getLocalWorkload() + childCell.getLocalWorkload() );
+    _cellData.setMaxWorkload(_cellData.getMaxWorkload() + childCell.getMaxWorkload() );
+    _cellData.setMinWorkload(_cellData.getMinWorkload() + childCell.getMinWorkload() );
   }
 }
 

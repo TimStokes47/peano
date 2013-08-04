@@ -185,9 +185,10 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       workerState.getMaxLevel(),
       fineGridCell.getLocalWorkload(),
       fineGridCell.getTotalWorkload(),
+      fineGridCell.getMaxWorkload(),
+      fineGridCell.getMinWorkload(),
       fineGridVerticesEnumerator.getLevel(),
       coarseGridCell.getLocalWorkload(),
-      coarseGridCell.getTotalWorkload(),
       workerEnumerator.getVertexPosition(),
       workerEnumerator.getCellSize(),
       workerState.getCouldNotEraseDueToDecompositionFlag()

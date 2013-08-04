@@ -38,7 +38,7 @@ namespace peano {
     *
     * 		   build date: 12-04-2013 09:18
     *
-    * @date   06/06/2013 09:26
+    * @date   02/08/2013 09:46
     */
    class peano::grid::tests::records::TestCell { 
       
@@ -272,7 +272,7 @@ namespace peano {
        *
        * 		   build date: 12-04-2013 09:18
        *
-       * @date   06/06/2013 09:26
+       * @date   02/08/2013 09:46
        */
       class peano::grid::tests::records::TestCellPacked { 
          
@@ -510,7 +510,7 @@ namespace peano {
           *
           * 		   build date: 12-04-2013 09:18
           *
-          * @date   06/06/2013 09:26
+          * @date   02/08/2013 09:46
           */
          class peano::grid::tests::records::TestCell { 
             
@@ -723,7 +723,7 @@ namespace peano {
              *
              * 		   build date: 12-04-2013 09:18
              *
-             * @date   06/06/2013 09:26
+             * @date   02/08/2013 09:46
              */
             class peano::grid::tests::records::TestCellPacked { 
                
@@ -941,7 +941,7 @@ namespace peano {
              *
              * 		   build date: 12-04-2013 09:18
              *
-             * @date   06/06/2013 09:26
+             * @date   02/08/2013 09:46
              */
             class peano::grid::tests::records::TestCell { 
                
@@ -962,6 +962,8 @@ namespace peano {
                      double _nodeWorkload;
                      double _localWorkload;
                      double _totalWorkload;
+                     double _maxWorkload;
+                     double _minWorkload;
                      bool _subtreeHoldsWorker;
                      bool _cellIsAForkCandidate;
                      /**
@@ -972,7 +974,7 @@ namespace peano {
                      /**
                       * Generated
                       */
-                     PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
+                     PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
                      
                      /**
                       * Generated
@@ -1045,6 +1047,26 @@ namespace peano {
                      /**
                       * Generated
                       */
+                      double getMaxWorkload() const ;
+                     
+                     /**
+                      * Generated
+                      */
+                      void setMaxWorkload(const double& maxWorkload) ;
+                     
+                     /**
+                      * Generated
+                      */
+                      double getMinWorkload() const ;
+                     
+                     /**
+                      * Generated
+                      */
+                      void setMinWorkload(const double& minWorkload) ;
+                     
+                     /**
+                      * Generated
+                      */
                       bool getSubtreeHoldsWorker() const ;
                      
                      /**
@@ -1082,7 +1104,7 @@ namespace peano {
                   /**
                    * Generated
                    */
-                  TestCell(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
+                  TestCell(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
                   
                   /**
                    * Generated
@@ -1166,6 +1188,26 @@ namespace peano {
                    * Generated
                    */
                    void setTotalWorkload(const double& totalWorkload) ;
+                  
+                  /**
+                   * Generated
+                   */
+                   double getMaxWorkload() const ;
+                  
+                  /**
+                   * Generated
+                   */
+                   void setMaxWorkload(const double& maxWorkload) ;
+                  
+                  /**
+                   * Generated
+                   */
+                   double getMinWorkload() const ;
+                  
+                  /**
+                   * Generated
+                   */
+                   void setMinWorkload(const double& minWorkload) ;
                   
                   /**
                    * Generated
@@ -1259,7 +1301,7 @@ namespace peano {
                 *
                 * 		   build date: 12-04-2013 09:18
                 *
-                * @date   06/06/2013 09:26
+                * @date   02/08/2013 09:46
                 */
                class peano::grid::tests::records::TestCellPacked { 
                   
@@ -1273,6 +1315,8 @@ namespace peano {
                         double _nodeWorkload;
                         double _localWorkload;
                         double _totalWorkload;
+                        double _maxWorkload;
+                        double _minWorkload;
                         bool _subtreeHoldsWorker;
                         
                         /** mapping of records:
@@ -1292,7 +1336,7 @@ namespace peano {
                         /**
                          * Generated
                          */
-                        PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
+                        PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
                         
                         /**
                          * Generated
@@ -1365,6 +1409,26 @@ namespace peano {
                         /**
                          * Generated
                          */
+                         double getMaxWorkload() const ;
+                        
+                        /**
+                         * Generated
+                         */
+                         void setMaxWorkload(const double& maxWorkload) ;
+                        
+                        /**
+                         * Generated
+                         */
+                         double getMinWorkload() const ;
+                        
+                        /**
+                         * Generated
+                         */
+                         void setMinWorkload(const double& minWorkload) ;
+                        
+                        /**
+                         * Generated
+                         */
                          bool getSubtreeHoldsWorker() const ;
                         
                         /**
@@ -1402,7 +1466,7 @@ namespace peano {
                      /**
                       * Generated
                       */
-                     TestCellPacked(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
+                     TestCellPacked(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
                      
                      /**
                       * Generated
@@ -1486,6 +1550,26 @@ namespace peano {
                       * Generated
                       */
                       void setTotalWorkload(const double& totalWorkload) ;
+                     
+                     /**
+                      * Generated
+                      */
+                      double getMaxWorkload() const ;
+                     
+                     /**
+                      * Generated
+                      */
+                      void setMaxWorkload(const double& maxWorkload) ;
+                     
+                     /**
+                      * Generated
+                      */
+                      double getMinWorkload() const ;
+                     
+                     /**
+                      * Generated
+                      */
+                      void setMinWorkload(const double& minWorkload) ;
                      
                      /**
                       * Generated
@@ -1582,7 +1666,7 @@ namespace peano {
                 *
                 * 		   build date: 12-04-2013 09:18
                 *
-                * @date   06/06/2013 09:26
+                * @date   02/08/2013 09:46
                 */
                class peano::grid::tests::records::TestCell { 
                   
@@ -1774,7 +1858,7 @@ namespace peano {
                    *
                    * 		   build date: 12-04-2013 09:18
                    *
-                   * @date   06/06/2013 09:26
+                   * @date   02/08/2013 09:46
                    */
                   class peano::grid::tests::records::TestCellPacked { 
                      
@@ -1971,7 +2055,7 @@ namespace peano {
                    *
                    * 		   build date: 12-04-2013 09:18
                    *
-                   * @date   06/06/2013 09:26
+                   * @date   02/08/2013 09:46
                    */
                   class peano::grid::tests::records::TestCell { 
                      
@@ -1993,6 +2077,8 @@ namespace peano {
                            double _nodeWorkload;
                            double _localWorkload;
                            double _totalWorkload;
+                           double _maxWorkload;
+                           double _minWorkload;
                            bool _subtreeHoldsWorker;
                            bool _cellIsAForkCandidate;
                            int _numberOfLoadsFromInputStream;
@@ -2005,7 +2091,7 @@ namespace peano {
                            /**
                             * Generated
                             */
-                           PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
+                           PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
                            
                            /**
                             * Generated
@@ -2088,6 +2174,26 @@ namespace peano {
                            /**
                             * Generated
                             */
+                            double getMaxWorkload() const ;
+                           
+                           /**
+                            * Generated
+                            */
+                            void setMaxWorkload(const double& maxWorkload) ;
+                           
+                           /**
+                            * Generated
+                            */
+                            double getMinWorkload() const ;
+                           
+                           /**
+                            * Generated
+                            */
+                            void setMinWorkload(const double& minWorkload) ;
+                           
+                           /**
+                            * Generated
+                            */
                             bool getSubtreeHoldsWorker() const ;
                            
                            /**
@@ -2145,7 +2251,7 @@ namespace peano {
                         /**
                          * Generated
                          */
-                        TestCell(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
+                        TestCell(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
                         
                         /**
                          * Generated
@@ -2239,6 +2345,26 @@ namespace peano {
                          * Generated
                          */
                          void setTotalWorkload(const double& totalWorkload) ;
+                        
+                        /**
+                         * Generated
+                         */
+                         double getMaxWorkload() const ;
+                        
+                        /**
+                         * Generated
+                         */
+                         void setMaxWorkload(const double& maxWorkload) ;
+                        
+                        /**
+                         * Generated
+                         */
+                         double getMinWorkload() const ;
+                        
+                        /**
+                         * Generated
+                         */
+                         void setMinWorkload(const double& minWorkload) ;
                         
                         /**
                          * Generated
@@ -2352,7 +2478,7 @@ namespace peano {
                       *
                       * 		   build date: 12-04-2013 09:18
                       *
-                      * @date   06/06/2013 09:26
+                      * @date   02/08/2013 09:46
                       */
                      class peano::grid::tests::records::TestCellPacked { 
                         
@@ -2367,6 +2493,8 @@ namespace peano {
                               double _nodeWorkload;
                               double _localWorkload;
                               double _totalWorkload;
+                              double _maxWorkload;
+                              double _minWorkload;
                               bool _subtreeHoldsWorker;
                               int _numberOfLoadsFromInputStream;
                               int _numberOfStoresToOutputStream;
@@ -2388,7 +2516,7 @@ namespace peano {
                               /**
                                * Generated
                                */
-                              PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
+                              PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
                               
                               /**
                                * Generated
@@ -2471,6 +2599,26 @@ namespace peano {
                               /**
                                * Generated
                                */
+                               double getMaxWorkload() const ;
+                              
+                              /**
+                               * Generated
+                               */
+                               void setMaxWorkload(const double& maxWorkload) ;
+                              
+                              /**
+                               * Generated
+                               */
+                               double getMinWorkload() const ;
+                              
+                              /**
+                               * Generated
+                               */
+                               void setMinWorkload(const double& minWorkload) ;
+                              
+                              /**
+                               * Generated
+                               */
                                bool getSubtreeHoldsWorker() const ;
                               
                               /**
@@ -2528,7 +2676,7 @@ namespace peano {
                            /**
                             * Generated
                             */
-                           TestCellPacked(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
+                           TestCellPacked(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
                            
                            /**
                             * Generated
@@ -2622,6 +2770,26 @@ namespace peano {
                             * Generated
                             */
                             void setTotalWorkload(const double& totalWorkload) ;
+                           
+                           /**
+                            * Generated
+                            */
+                            double getMaxWorkload() const ;
+                           
+                           /**
+                            * Generated
+                            */
+                            void setMaxWorkload(const double& maxWorkload) ;
+                           
+                           /**
+                            * Generated
+                            */
+                            double getMinWorkload() const ;
+                           
+                           /**
+                            * Generated
+                            */
+                            void setMinWorkload(const double& minWorkload) ;
                            
                            /**
                             * Generated
@@ -2738,7 +2906,7 @@ namespace peano {
                       *
                       * 		   build date: 12-04-2013 09:18
                       *
-                      * @date   06/06/2013 09:26
+                      * @date   02/08/2013 09:46
                       */
                      class peano::grid::tests::records::TestCell { 
                         
@@ -2760,6 +2928,8 @@ namespace peano {
                               double _nodeWorkload;
                               double _localWorkload;
                               double _totalWorkload;
+                              double _maxWorkload;
+                              double _minWorkload;
                               bool _subtreeHoldsWorker;
                               bool _cellIsAForkCandidate;
                               /**
@@ -2770,7 +2940,7 @@ namespace peano {
                               /**
                                * Generated
                                */
-                              PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
+                              PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
                               
                               /**
                                * Generated
@@ -2853,6 +3023,26 @@ namespace peano {
                               /**
                                * Generated
                                */
+                               double getMaxWorkload() const ;
+                              
+                              /**
+                               * Generated
+                               */
+                               void setMaxWorkload(const double& maxWorkload) ;
+                              
+                              /**
+                               * Generated
+                               */
+                               double getMinWorkload() const ;
+                              
+                              /**
+                               * Generated
+                               */
+                               void setMinWorkload(const double& minWorkload) ;
+                              
+                              /**
+                               * Generated
+                               */
                                bool getSubtreeHoldsWorker() const ;
                               
                               /**
@@ -2890,7 +3080,7 @@ namespace peano {
                            /**
                             * Generated
                             */
-                           TestCell(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
+                           TestCell(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
                            
                            /**
                             * Generated
@@ -2988,6 +3178,26 @@ namespace peano {
                            /**
                             * Generated
                             */
+                            double getMaxWorkload() const ;
+                           
+                           /**
+                            * Generated
+                            */
+                            void setMaxWorkload(const double& maxWorkload) ;
+                           
+                           /**
+                            * Generated
+                            */
+                            double getMinWorkload() const ;
+                           
+                           /**
+                            * Generated
+                            */
+                            void setMinWorkload(const double& minWorkload) ;
+                           
+                           /**
+                            * Generated
+                            */
                             bool getSubtreeHoldsWorker() const ;
                            
                            /**
@@ -3077,7 +3287,7 @@ namespace peano {
                          *
                          * 		   build date: 12-04-2013 09:18
                          *
-                         * @date   06/06/2013 09:26
+                         * @date   02/08/2013 09:46
                          */
                         class peano::grid::tests::records::TestCellPacked { 
                            
@@ -3092,6 +3302,8 @@ namespace peano {
                                  double _nodeWorkload;
                                  double _localWorkload;
                                  double _totalWorkload;
+                                 double _maxWorkload;
+                                 double _minWorkload;
                                  bool _subtreeHoldsWorker;
                                  
                                  /** mapping of records:
@@ -3111,7 +3323,7 @@ namespace peano {
                                  /**
                                   * Generated
                                   */
-                                 PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
+                                 PersistentRecords(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
                                  
                                  /**
                                   * Generated
@@ -3194,6 +3406,26 @@ namespace peano {
                                  /**
                                   * Generated
                                   */
+                                  double getMaxWorkload() const ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
+                                  void setMaxWorkload(const double& maxWorkload) ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
+                                  double getMinWorkload() const ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
+                                  void setMinWorkload(const double& minWorkload) ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
                                   bool getSubtreeHoldsWorker() const ;
                                  
                                  /**
@@ -3231,7 +3463,7 @@ namespace peano {
                               /**
                                * Generated
                                */
-                              TestCellPacked(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
+                              TestCellPacked(const bool& isInside, const State& state, const int& level, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate);
                               
                               /**
                                * Generated
@@ -3329,6 +3561,26 @@ namespace peano {
                               /**
                                * Generated
                                */
+                               double getMaxWorkload() const ;
+                              
+                              /**
+                               * Generated
+                               */
+                               void setMaxWorkload(const double& maxWorkload) ;
+                              
+                              /**
+                               * Generated
+                               */
+                               double getMinWorkload() const ;
+                              
+                              /**
+                               * Generated
+                               */
+                               void setMinWorkload(const double& minWorkload) ;
+                              
+                              /**
+                               * Generated
+                               */
                                bool getSubtreeHoldsWorker() const ;
                               
                               /**
@@ -3421,7 +3673,7 @@ namespace peano {
                          *
                          * 		   build date: 12-04-2013 09:18
                          *
-                         * @date   06/06/2013 09:26
+                         * @date   02/08/2013 09:46
                          */
                         class peano::grid::tests::records::TestCell { 
                            
@@ -3442,6 +3694,8 @@ namespace peano {
                                  double _nodeWorkload;
                                  double _localWorkload;
                                  double _totalWorkload;
+                                 double _maxWorkload;
+                                 double _minWorkload;
                                  bool _subtreeHoldsWorker;
                                  bool _cellIsAForkCandidate;
                                  int _numberOfLoadsFromInputStream;
@@ -3454,7 +3708,7 @@ namespace peano {
                                  /**
                                   * Generated
                                   */
-                                 PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
+                                 PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
                                  
                                  /**
                                   * Generated
@@ -3527,6 +3781,26 @@ namespace peano {
                                  /**
                                   * Generated
                                   */
+                                  double getMaxWorkload() const ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
+                                  void setMaxWorkload(const double& maxWorkload) ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
+                                  double getMinWorkload() const ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
+                                  void setMinWorkload(const double& minWorkload) ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
                                   bool getSubtreeHoldsWorker() const ;
                                  
                                  /**
@@ -3584,7 +3858,7 @@ namespace peano {
                               /**
                                * Generated
                                */
-                              TestCell(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
+                              TestCell(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
                               
                               /**
                                * Generated
@@ -3668,6 +3942,26 @@ namespace peano {
                                * Generated
                                */
                                void setTotalWorkload(const double& totalWorkload) ;
+                              
+                              /**
+                               * Generated
+                               */
+                               double getMaxWorkload() const ;
+                              
+                              /**
+                               * Generated
+                               */
+                               void setMaxWorkload(const double& maxWorkload) ;
+                              
+                              /**
+                               * Generated
+                               */
+                               double getMinWorkload() const ;
+                              
+                              /**
+                               * Generated
+                               */
+                               void setMinWorkload(const double& minWorkload) ;
                               
                               /**
                                * Generated
@@ -3781,7 +4075,7 @@ namespace peano {
                             *
                             * 		   build date: 12-04-2013 09:18
                             *
-                            * @date   06/06/2013 09:26
+                            * @date   02/08/2013 09:46
                             */
                            class peano::grid::tests::records::TestCellPacked { 
                               
@@ -3795,6 +4089,8 @@ namespace peano {
                                     double _nodeWorkload;
                                     double _localWorkload;
                                     double _totalWorkload;
+                                    double _maxWorkload;
+                                    double _minWorkload;
                                     bool _subtreeHoldsWorker;
                                     int _numberOfLoadsFromInputStream;
                                     int _numberOfStoresToOutputStream;
@@ -3816,7 +4112,7 @@ namespace peano {
                                     /**
                                      * Generated
                                      */
-                                    PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
+                                    PersistentRecords(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
                                     
                                     /**
                                      * Generated
@@ -3889,6 +4185,26 @@ namespace peano {
                                     /**
                                      * Generated
                                      */
+                                     double getMaxWorkload() const ;
+                                    
+                                    /**
+                                     * Generated
+                                     */
+                                     void setMaxWorkload(const double& maxWorkload) ;
+                                    
+                                    /**
+                                     * Generated
+                                     */
+                                     double getMinWorkload() const ;
+                                    
+                                    /**
+                                     * Generated
+                                     */
+                                     void setMinWorkload(const double& minWorkload) ;
+                                    
+                                    /**
+                                     * Generated
+                                     */
                                      bool getSubtreeHoldsWorker() const ;
                                     
                                     /**
@@ -3946,7 +4262,7 @@ namespace peano {
                                  /**
                                   * Generated
                                   */
-                                 TestCellPacked(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
+                                 TestCellPacked(const bool& isInside, const State& state, const std::bitset<DIMENSIONS>& evenFlags, const tarch::la::Vector<DIMENSIONS_TIMES_TWO,short int>& accessNumber, const int& responsibleRank, const double& nodeWorkload, const double& localWorkload, const double& totalWorkload, const double& maxWorkload, const double& minWorkload, const bool& subtreeHoldsWorker, const bool& cellIsAForkCandidate, const int& numberOfLoadsFromInputStream, const int& numberOfStoresToOutputStream);
                                  
                                  /**
                                   * Generated
@@ -4030,6 +4346,26 @@ namespace peano {
                                   * Generated
                                   */
                                   void setTotalWorkload(const double& totalWorkload) ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
+                                  double getMaxWorkload() const ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
+                                  void setMaxWorkload(const double& maxWorkload) ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
+                                  double getMinWorkload() const ;
+                                 
+                                 /**
+                                  * Generated
+                                  */
+                                  void setMinWorkload(const double& minWorkload) ;
                                  
                                  /**
                                   * Generated
@@ -4146,7 +4482,7 @@ namespace peano {
                             *
                             * 		   build date: 12-04-2013 09:18
                             *
-                            * @date   06/06/2013 09:26
+                            * @date   02/08/2013 09:46
                             */
                            class peano::grid::tests::records::TestCell { 
                               
@@ -4401,7 +4737,7 @@ namespace peano {
                                *
                                * 		   build date: 12-04-2013 09:18
                                *
-                               * @date   06/06/2013 09:26
+                               * @date   02/08/2013 09:46
                                */
                               class peano::grid::tests::records::TestCellPacked { 
                                  

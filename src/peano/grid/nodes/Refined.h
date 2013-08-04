@@ -114,7 +114,6 @@ class peano::grid::nodes::Refined: public peano::grid::nodes::Node<Vertex,Cell,S
      * all the algorithmics become a little bit simpler.
      */
     std::bitset<THREE_POWER_D> getForkCandidates(
-      State&                 state,
       const std::vector< SingleLevelEnumerator >&  newFineGridVerticesEnumerators,
       Cell                   newFineGridCells[THREE_POWER_D],
       Vertex                 fineGridVertices[FOUR_POWER_D]
