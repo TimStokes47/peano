@@ -56,7 +56,9 @@ __THIS_QUALIFIED_TYPENAME__::__THIS_TYPENAME__::LevelDataset::LevelDataset():
   _vertexHangingNodeWriter(0),
   _cellStateWriter(0),
   _cellLocalWorkloadWriter(0),
-  _cellTotalWorkloadWriter(0) {
+  _cellTotalWorkloadWriter(0), 
+  _cellMaxWorkloadWriter(0),
+  _cellMinWorkloadWriter(0) {
   _vtkWriter = new tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter();
   assertion( _vtkWriter != 0 );
   
@@ -72,6 +74,8 @@ __THIS_QUALIFIED_TYPENAME__::__THIS_TYPENAME__::LevelDataset::LevelDataset():
   #ifdef Parallel
   _cellLocalWorkloadWriter        = _vtkWriter->createCellDataWriter( "local-workload" ,1);
   _cellTotalWorkloadWriter        = _vtkWriter->createCellDataWriter( "total-workload" ,1);
+  _cellMaxWorkloadWriter          = _vtkWriter->createCellDataWriter( "max-workload" ,1);
+  _cellMinWorkloadWriter          = _vtkWriter->createCellDataWriter( "min-workload" ,1);
   #endif
 
   assertion( _vertexWriter != 0 );
@@ -85,9 +89,13 @@ __THIS_QUALIFIED_TYPENAME__::__THIS_TYPENAME__::LevelDataset::LevelDataset():
   #ifdef Parallel
   assertion( _cellLocalWorkloadWriter != 0 );
   assertion( _cellTotalWorkloadWriter != 0 );
+  assertion( _cellMaxWorkloadWriter != 0 );
+  assertion( _cellMinWorkloadWriter != 0 );
   #else
   assertion( _cellLocalWorkloadWriter == 0 );
   assertion( _cellTotalWorkloadWriter == 0 );
+  assertion( _cellMaxWorkloadWriter == 0 );
+  assertion( _cellMinWorkloadWriter == 0 );
   #endif
 }
 
@@ -102,9 +110,13 @@ void __THIS_QUALIFIED_TYPENAME__::LevelDataset::close(const std::string& filenam
   #ifdef Parallel
   assertion( _cellLocalWorkloadWriter != 0 );
   assertion( _cellTotalWorkloadWriter != 0 );
+  assertion( _cellMaxWorkloadWriter != 0 );
+  assertion( _cellMinWorkloadWriter != 0 );
   #else
   assertion( _cellLocalWorkloadWriter == 0 );
   assertion( _cellTotalWorkloadWriter == 0 );
+  assertion( _cellMaxWorkloadWriter == 0 );
+  assertion( _cellMinWorkloadWriter == 0 );
   #endif
 
   _vertexWriter->close();
@@ -131,6 +143,8 @@ void __THIS_QUALIFIED_TYPENAME__::LevelDataset::close(const std::string& filenam
   #ifdef Parallel
   delete _cellLocalWorkloadWriter;
   delete _cellTotalWorkloadWriter;
+  delete _cellMaxWorkloadWriter;
+  delete _cellMinWorkloadWriter;
   #endif
   
   _vertexWriter                  = 0;
@@ -499,6 +513,8 @@ void __THIS_QUALIFIED_TYPENAME__::leaveCell(
   #ifdef Parallel
   _dataset[coarseGridVerticesEnumerator.getLevel()+1]._cellLocalWorkloadWriter->plotCell( cellIndex, fineGridCell.getLocalWorkload() );
   _dataset[coarseGridVerticesEnumerator.getLevel()+1]._cellTotalWorkloadWriter->plotCell( cellIndex, fineGridCell.getTotalWorkload() );
+  _dataset[coarseGridVerticesEnumerator.getLevel()+1]._cellMaxWorkloadWriter->plotCell( cellIndex, fineGridCell.getMaxWorkload() );
+  _dataset[coarseGridVerticesEnumerator.getLevel()+1]._cellMinWorkloadWriter->plotCell( cellIndex, fineGridCell.getMinWorkload() );
   }
   #endif
 }
@@ -516,7 +532,7 @@ void __THIS_QUALIFIED_TYPENAME__::endIteration(
 ) {
   for (std::map<int,LevelDataset>::iterator p=_dataset.begin(); p!=_dataset.end(); p++) {
     std::ostringstream snapshotFileName;
-    snapshotFileName << "PARAM0-"
+    snapshotFileName << "PARAM0"
                      #ifdef Parallel
                      << "-rank-" << tarch::parallel::Node::getInstance().getRank()
                      #endif

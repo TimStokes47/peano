@@ -60,6 +60,8 @@ class __NAMESPACE__::adapters::__THIS_TYPENAME__ {
       tarch::plotter::griddata::Writer::CellDataWriter*                               _cellStateWriter;
       tarch::plotter::griddata::Writer::CellDataWriter*                               _cellLocalWorkloadWriter;
       tarch::plotter::griddata::Writer::CellDataWriter*                               _cellTotalWorkloadWriter;
+      tarch::plotter::griddata::Writer::CellDataWriter*                               _cellMaxWorkloadWriter;
+      tarch::plotter::griddata::Writer::CellDataWriter*                               _cellMinWorkloadWriter;
       
       LevelDataset();
       

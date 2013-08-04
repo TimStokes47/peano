@@ -539,7 +539,7 @@ void __THIS_QUALIFIED_TYPENAME__::endIteration(
 ) {
   for (std::map<int,LevelDataset>::iterator p=_dataset.begin(); p!=_dataset.end(); p++) {
     std::ostringstream snapshotFileName;
-    snapshotFileName << "PARAM0-"
+    snapshotFileName << "PARAM0"
                      #ifdef Parallel
                      << "-rank-" << tarch::parallel::Node::getInstance().getRank()
                      #endif
