@@ -56,7 +56,7 @@ peano::heap::Heap<Data>::Heap()
   }
   #endif
 
-  tarch::services::ServiceRepository::getInstance().addService( this, "peano::heap::Heap" );
+  tarch::services::ServiceRepository::getInstance().addService( this, "peano::heap::Heap<Data>" );
 }
 
 
@@ -235,9 +235,8 @@ void peano::heap::Heap<Data>::shutdown() {
 
 
 template <class Data>
-void peano::heap::Heap<Data>::init(std::string name) {
+void peano::heap::Heap<Data>::setName(std::string name) {
   _name = name;
-  tarch::services::ServiceRepository::getInstance().addService( &getInstance(), "heap" );
 }
 
 
@@ -256,16 +255,7 @@ void peano::heap::Heap<Data>::sendData(
 
   SendReceiveTask sendTask;
 
-  sendTask._data = new typename SendReceiveTask::MPIData[data.size()];
   sendTask._rank = toRank;
-
-  for (int i=0; i<static_cast<int>( data.size() ); i++) {
-    #if defined(ParallelExchangePackedRecords)
-    sendTask._data[i] = data[i].convert();
-    #else
-    sendTask._data[i] = data[i];
-    #endif
-  }
 
   #ifdef Asserts
   //Set debug information
@@ -281,6 +271,14 @@ void peano::heap::Heap<Data>::sendData(
   assertion((messageType==ForkOrJoinCommunication) || (messageType==MasterWorkerCommunication) || _heapIsCurrentlySentReceived);
 
   if(data.size() > 0) {
+    sendTask._data = new typename SendReceiveTask::MPIData[data.size()];
+    for (int i=0; i<static_cast<int>( data.size() ); i++) {
+      #if defined(ParallelExchangePackedRecords)
+      sendTask._data[i] = data[i].convert();
+      #else
+      sendTask._data[i] = data[i];
+      #endif
+    }
     int result = MPI_Isend(
       sendTask._data, sendTask._metaInformation.getLength(), SendReceiveTask::MPIData::Datatype, toRank,
       mpiTag,
@@ -528,7 +526,13 @@ void peano::heap::Heap<Data>::removeMessageFromBuffer(int number, std::vector<Se
   typename std::vector<SendReceiveTask>::iterator it = tasks.begin();
   it+=number;
 
-  delete[] it->_data;
+  if (it->_metaInformation.getLength()>0) {
+    assertion(it->_data != 0);
+    delete[] it->_data;
+  }
+  else {
+    assertion(it->_data == 0);
+  }
   tasks.erase(it);
 }
 

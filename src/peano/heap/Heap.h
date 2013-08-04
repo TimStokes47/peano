@@ -169,6 +169,11 @@ class peano::heap::Heap: public tarch::services::Service {
       #else
       typedef Data    MPIData;
       #endif
+
+      /**
+       * Pointer to the actual data. If meta data marks a message without
+       * content, this pointer is 0.
+       */
       MPIData*        _data;
 
       #ifdef Asserts
@@ -521,13 +526,11 @@ class peano::heap::Heap: public tarch::services::Service {
     void shutdown();
 
     /**
-     * Register heap
-     *
-     * If you use the heap, there's no need to register the object explicitly.
-     * However, if you do so, Peano tries to do all heap communication in the
-     * background due to non-blocking mpi.
+     * Assign the heap a name (identifier) such that messages from the heap can
+     * be assigned to the heap type. In particular important if you handle
+     * multiple heaps, so you can distinguish error messages, e.g.
      */
-    void init(std::string name);
+    void setName(std::string name);
 
     /**
      * Sends heap data associated to one index to one rank.
