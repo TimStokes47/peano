@@ -21,7 +21,10 @@ draw = ImageDraw.Draw(img)
 scale = (width/1.0,height/1.0)
 
 p = 0
-color = 200 + 200*256 + 200*256*256
+initialColorValue = 200
+colorRed   = initialColorValue
+colorGreen = initialColorValue
+colorBlue  = initialColorValue
 for domain_line in peanoreader_csv:
     print domain_line[0],domain_line[1],domain_line[2],domain_line[3]
 
@@ -34,9 +37,19 @@ for domain_line in peanoreader_csv:
       height-(float(domain_line[1])+float(domain_line[3])) * scale[1]
     )
 
+    color = colorRed + colorGreen*256 + colorBlue*256*256
+
     draw.rectangle([offset1, offset2],fill=color,outline='white')
     
-    color = color - 16
+    difference = 16
+    colorRed   = colorRed - difference
+    if (colorRed<0):
+      colorRed   = initialColorValue
+      colorGreen = colorGreen - difference
+    if (colorGreen<0):
+      colorGreen   = initialColorValue
+      colorBlue    = colorBlue - difference
+      
     p     = p+1
  
 print 'number of partitions: '+str(p)
