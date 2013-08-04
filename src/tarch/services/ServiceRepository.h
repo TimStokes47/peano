@@ -28,8 +28,14 @@ namespace tarch {
  */
 class tarch::services::ServiceRepository: public tarch::services::Service {
   private:
-    std::vector<Service*>    _services;
-    std::vector<std::string> _serviceNames;
+    struct ServiceEntry {
+      std::string  _name;
+      Service*     _service;
+    };
+
+    typedef  std::vector<ServiceEntry>      ServiceContainer;
+
+    ServiceContainer         _services;
 
     ServiceRepository();
   public:
@@ -37,7 +43,12 @@ class tarch::services::ServiceRepository: public tarch::services::Service {
 
     static ServiceRepository& getInstance();
 
+    /**
+     * @param service Pointer to service
+     * @param name    Name of service (mandatory, not empty)
+     */
     void addService( Service* const service, const std::string& name );
+    bool hasService( Service* service ) const;
 
     /**
      * Answer to MPI Messages

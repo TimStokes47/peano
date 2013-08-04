@@ -5,8 +5,7 @@
 
 
 tarch::services::ServiceRepository::ServiceRepository():
-  _services(),
-  _serviceNames() {
+  _services() {
 }
 
 
@@ -22,19 +21,38 @@ tarch::services::ServiceRepository& tarch::services::ServiceRepository::getInsta
 
 
 void tarch::services::ServiceRepository::addService( Service* const service, const std::string& name ) {
-  assertion( service!=0 );
-  _services.push_back( service );
-  _serviceNames.push_back( name );
+  assertion2( service!=0, name, getListOfRegisteredServices() );
+  assertion2( !name.empty(), name, getListOfRegisteredServices() );
+  assertion2( !hasService(service), name, getListOfRegisteredServices() );
+
+  ServiceEntry entry;
+  entry._name    = name;
+  entry._service = service;
+  _services.push_back( entry );
+}
+
+
+bool tarch::services::ServiceRepository::hasService( Service* service ) const {
+  for (
+      ServiceContainer::const_iterator p = _services.begin();
+      p != _services.end();
+      p++
+  ) {
+    if (p->_service==service) {
+      return true;
+    }
+  }
+  return false;
 }
 
 
 void tarch::services::ServiceRepository::receiveDanglingMessages() {
   for (
-      std::vector<Service*>::iterator p = _services.begin();
+      ServiceContainer::iterator p = _services.begin();
       p != _services.end();
       p++
   ) {
-    (*p)->receiveDanglingMessages();
+    p->_service->receiveDanglingMessages();
   }
 }
 
@@ -42,11 +60,11 @@ void tarch::services::ServiceRepository::receiveDanglingMessages() {
 std::string tarch::services::ServiceRepository::getListOfRegisteredServices() const {
   std::ostringstream result;
   for (
-      std::vector<std::string>::const_iterator p = _serviceNames.begin();
-      p != _serviceNames.end();
+      ServiceContainer::const_iterator p = _services.begin();
+      p != _services.end();
       p++
   ) {
-    result << " " << *p;
+    result << " " << p->_name;
   }
   return result.str();
 }
