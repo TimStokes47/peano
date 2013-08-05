@@ -169,7 +169,22 @@ class peano::grid::VertexEnumerator {
     /**
      * Access cell within an array
      *
-     * Only needed within Peano 3.
+     * Most mapping operations are bassed individual cells via call-by-reference
+     * or call-by-value. In this case, you can directly access the cells. There
+     * are few operations however that hand over an array of cells rather than
+     * individual cells. In this case, the access mechanism due to the enumerators
+     * is exactly the same as for the vertices.
+     *
+     * You should not run through the array elements individual with a counter.
+     * Instead, access the individual entries via this operation, i.e. type in
+     *
+     * \code
+       myCellArray[ myCellEnumerator.cell(myCellIndex) ].doSomething();
+       \endcode
+     *
+     * Again, the vertex enumerator internally knows in which order the cells are
+     * enumerated, and it maps a lexicographically cell order onto the array
+     * indices.
      */
     virtual int cell(const LocalVertexIntegerIndex& localVertexNumber) const = 0;
 
