@@ -1141,8 +1141,12 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * cell is outside but its parent is not, descend is not invoked for this 
      * pair of cells, i.e. here you have to do something in enterCell anyway.
      *
-     * To access the fine grid cells, please use the enumerator as you do for 
-     * the vertices in any case.   
+     * To access the fine grid cells, please use the enumerator as you do for
+     * the vertices in any case. In particular the VertexEnumerator's cell()
+     * function is of relevance. It allows you to access the individual array
+     * elements of the cell pointer.
+     *
+     * @see VertexEnumerator::cell()
      *
      * !!! Optimisation
      * 
