@@ -44,15 +44,20 @@
  * bandwidth and latency), one option might result in a significant better
  * performance. The Altix, e.g., is faster if this flag is not set, but the
  * bandwidth requirements rise then.
- *
- * However,
- *
- * The operation is not activated, if the symbol Packed is undefined.
  */
 #if defined(PackedRecords) && !defined(CompilerCLX)
-#ifndef noParallelExchangePackedRecords
-#define ParallelExchangePackedRecords
-#endif
+  #ifndef noParallelExchangePackedRecordsAtBoundary
+    #define ParallelExchangePackedRecordsAtBoundary
+  #endif
+  #ifndef noParallelExchangePackedRecordsBetweenMasterAndWorker
+    #define ParallelExchangePackedRecordsBetweenMasterAndWorker
+  #endif
+  #ifndef noParallelExchangePackedRecordsInHeaps
+    #define ParallelExchangePackedRecordsInHeaps
+  #endif
+  #ifndef noParallelExchangePackedRecordsThroughoutJoinsAndForks
+    #define ParallelExchangePackedRecordsThroughoutJoinsAndForks
+  #endif
 #endif
 
 
