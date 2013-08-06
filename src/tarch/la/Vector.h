@@ -61,33 +61,6 @@ struct tarch::la::Vector {
      */
     Vector (const Scalar& initialValue);
 
-//    /**
-//     * Construct new 2D vector and initialize components separately.
-//     *
-//     * Runtime assertion when dimension is not 2.
-//     */
-//    Vector (const Scalar& initialValue0,
-//            const Scalar& initialValue1);
-//
-//    /**
-//     * Construct new 3D vector and initialize components separately.
-//     *
-//     * Runtime assertion when dimension is not 3.
-//     */
-//    Vector (const Scalar& initialValue0,
-//            const Scalar& initialValue1,
-//            const Scalar& initialValue2);
-//
-//    /**
-//     * Construct new 4D vector and initialize components separately.
-//     *
-//     * Runtime assertion when dimension is not 4.
-//     */
-//    Vector (const Scalar& initialValue0,
-//            const Scalar& initialValue1,
-//            const Scalar& initialValue2,
-//            const Scalar& initialValue3);
-
     /**
      * Returns the number of components of the vector.
      */
