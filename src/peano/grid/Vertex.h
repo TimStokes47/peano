@@ -75,7 +75,7 @@ class peano::grid::Vertex {
     friend class peano::parallel::AdjacencyListAspect<Vertex<VertexData> >;
     #endif
 
-    #if defined(ParallelExchangePackedRecords)
+    #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
     typedef typename VertexData::Packed       MPIDatatypeContainer;
     #else
     typedef VertexData                        MPIDatatypeContainer;

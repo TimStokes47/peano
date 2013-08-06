@@ -538,21 +538,29 @@ void peano::grid::State<StateData>::mergeWithWorkerState(const peano::grid::Stat
 
 template <class StateData>
 void peano::grid::State<StateData>::initDatatype() {
-  if (MPIDatatypeContainer::Datatype==0) {
-    MPIDatatypeContainer::initDatatype();
+  if (StateData::Packed::Datatype==0) {
+    StateData::Packed::initDatatype();
+  }
+  if (StateData::Datatype==0) {
+    StateData::initDatatype();
   }
 
-  assertion(MPIDatatypeContainer::Datatype!=0);
+  assertion(StateData::Packed::Datatype!=0);
+  assertion(StateData::Datatype!=0);
 }
 
 
 template <class StateData>
 void peano::grid::State<StateData>::shutdownDatatype() {
-  if (MPIDatatypeContainer::Datatype!=0) {
-    MPIDatatypeContainer::shutdownDatatype();
+  if (StateData::Packed::Datatype!=0) {
+    StateData::Packed::shutdownDatatype();
+  }
+  if (StateData::Datatype!=0) {
+    StateData::shutdownDatatype();
   }
 
-  MPIDatatypeContainer::Datatype = 0;
+  StateData::Datatype = 0;
+  StateData::Packed::Datatype = 0;
 }
 
 
@@ -560,12 +568,10 @@ template <class StateData>
 void peano::grid::State<StateData>::send(int destination, int tag) {
   assertion(MPIDatatypeContainer::Datatype!=0);
 
-  #if defined(ParallelExchangePackedRecords)
-  MPIDatatypeContainer copy = _stateData.convert();
-  copy.send(destination,tag,true);
+  #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
+  _stateData.convert().send(destination,tag,true);
   #else
-  StateData copy = _stateData;
-  copy.send(destination,tag,true);
+  _stateData.send(destination,tag,true);
   #endif
 }
 
@@ -574,18 +580,12 @@ template <class StateData>
 void peano::grid::State<StateData>::receive(int source, int tag) {
   assertion(MPIDatatypeContainer::Datatype!=0);
 
-  #if defined(ParallelExchangePackedRecords)
+  #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
   MPIDatatypeContainer receivedMessage;
   receivedMessage.receive(source,tag,true);
   _stateData = receivedMessage.convert();
   #else
-  #ifdef Asserts
-  typename StateData::LoadBalancingState oldLoadBalancingState       = _stateData.getLoadRebalancingState();
-  #endif
-
   _stateData.receive(source,tag,true);
-
-  assertionEquals2( oldLoadBalancingState, _stateData.getLoadRebalancingState(),tarch::parallel::Node::getInstance().getRank(),this->toString());
   #endif
 }
 

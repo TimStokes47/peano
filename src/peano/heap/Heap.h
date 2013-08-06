@@ -11,7 +11,7 @@
 #include "tarch/services/Service.h"
 
 
-#ifdef ParallelExchangePackedRecords
+#ifdef ParallelExchangePackedRecordsInHeaps
    #pragma pack (push, 1)
 #endif
 
@@ -138,7 +138,7 @@ template <class Data>
 class peano::heap::Heap: public tarch::services::Service {
   private:
 
-    #if defined(ParallelExchangePackedRecords)
+    #if defined(ParallelExchangePackedRecordsInHeaps)
     typedef peano::heap::records::MetaInformation::Packed  MetaInformation;
     #else
     typedef peano::heap::records::MetaInformation          MetaInformation;
@@ -164,7 +164,7 @@ class peano::heap::Heap: public tarch::services::Service {
        */
       int             _rank;
 
-      #if defined(Parallel) && defined(ParallelExchangePackedRecords)
+      #if defined(Parallel) && defined(ParallelExchangePackedRecordsInHeaps)
       typedef typename Data::Packed  MPIData;
       #else
       typedef Data    MPIData;
@@ -635,7 +635,7 @@ class peano::heap::Heap: public tarch::services::Service {
 };
 
 
-#ifdef ParallelExchangePackedRecords
+#ifdef ParallelExchangePackedRecordsInHeaps
 #pragma pack (pop)
 #endif
 

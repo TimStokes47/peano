@@ -273,7 +273,7 @@ void peano::heap::Heap<Data>::sendData(
   if(data.size() > 0) {
     sendTask._data = new typename SendReceiveTask::MPIData[data.size()];
     for (int i=0; i<static_cast<int>( data.size() ); i++) {
-      #if defined(ParallelExchangePackedRecords)
+      #if defined(ParallelExchangePackedRecordsInHeaps)
       sendTask._data[i] = data[i].convert();
       #else
       sendTask._data[i] = data[i];
@@ -334,7 +334,7 @@ void peano::heap::Heap<Data>::releaseSentMessages(std::vector<SendReceiveTask>& 
     const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
     const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
     bool           triggeredTimeoutWarning = false;
-    int            finishedWait            = i->_metaInformation.getLength()==0;
+    int            finishedWait            = i->_metaInformation.getLength()==0 || i->_request;
 
     while (!finishedWait) {
       MPI_Test(&(i->_request), &finishedWait, &status);
@@ -369,7 +369,9 @@ void peano::heap::Heap<Data>::releaseSentMessages(std::vector<SendReceiveTask>& 
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
     }
 
-    delete[] (i->_data);
+    if (i->_metaInformation.getLength()>0) {
+      delete[] (i->_data);
+    }
   }
   logTraceOut( "releaseSentMessages()" );
   #endif
@@ -683,7 +685,7 @@ std::vector< Data > peano::heap::Heap<Data>::extractMessageFromTaskQueue(
   assertion(tasks[messageNumber]._data!=0 || numberOfElementsOfThisEntry==0);
 
   for (int i=0; i<numberOfElementsOfThisEntry; i++) {
-    #if defined(ParallelExchangePackedRecords)
+    #if defined(ParallelExchangePackedRecordsInHeaps)
     result.push_back(tasks[messageNumber]._data[i].convert());
     #else
     result.push_back(tasks[messageNumber]._data[i]);

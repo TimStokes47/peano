@@ -458,11 +458,15 @@ std::bitset<DIMENSIONS> peano::grid::Cell<CellData>::getEvenFlags() const {
 template <class CellData>
 void peano::grid::Cell<CellData>::initDatatype() {
   logTraceIn( "initDatatype()" );
-  if (MPIDatatypeContainer::Datatype==0) {
-    MPIDatatypeContainer::initDatatype();
+  if (CellData::Packed::Datatype==0) {
+    CellData::Packed::initDatatype();
+  }
+  if (CellData::Datatype==0) {
+    CellData::initDatatype();
   }
 
-  assertion(MPIDatatypeContainer::Datatype!=0);
+  assertion(CellData::Datatype!=0);
+  assertion(CellData::Packed::Datatype!=0);
   logTraceOutWith1Argument( "initDatatype()", MPIDatatypeContainer::Datatype );
 }
 
@@ -470,11 +474,15 @@ void peano::grid::Cell<CellData>::initDatatype() {
 
 template <class CellData>
 void peano::grid::Cell<CellData>::shutdownDatatype() {
-  if (MPIDatatypeContainer::Datatype!=0) {
-    MPIDatatypeContainer::shutdownDatatype();
+  if (CellData::Packed::Datatype!=0) {
+    CellData::Packed::shutdownDatatype();
+  }
+  if (CellData::Datatype!=0) {
+    CellData::shutdownDatatype();
   }
 
-  MPIDatatypeContainer::Datatype = 0;
+  CellData::Datatype = 0;
+  CellData::Packed::Datatype = 0;
 }
 
 
@@ -482,7 +490,7 @@ template <class CellData>
 void peano::grid::Cell<CellData>::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel) {
   assertion4(MPIDatatypeContainer::Datatype!=0,destination,tag,toString(),tarch::parallel::Node::getInstance().getRank());
 
-  #if defined(ParallelExchangePackedRecords)
+  #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
   _cellData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel);
   #else
   _cellData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel);
@@ -494,7 +502,7 @@ template <class CellData>
 void peano::grid::Cell<CellData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel) {
   assertion4(MPIDatatypeContainer::Datatype!=0,source,tag,toString(),tarch::parallel::Node::getInstance().getRank());
 
-  #if defined(ParallelExchangePackedRecords)
+  #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
   MPIDatatypeContainer receivedMessage;
   receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel);
   _cellData = receivedMessage.convert();

@@ -15,7 +15,7 @@ namespace peano {
 }
 
 
-#ifdef ParallelExchangePackedRecords
+#ifdef ParallelExchangePackedRecordsAtBoundary
    #pragma pack (push, 1)
 #endif
 
@@ -116,7 +116,7 @@ class peano::parallel::SendReceiveBufferLIFO: public peano::parallel::SendReceiv
     int getNumberOfDeployedMessages() const;
 };
 
-#ifdef ParallelExchangePackedRecords
+#ifdef ParallelExchangePackedRecordsAtBoundary
 #pragma pack (pop)
 #endif
 

@@ -31,7 +31,7 @@ peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::SendReceiveBuf
   _sendDataWaitTime(0) {
   assertion1WithExplanation( _bufferPageSize > 0, _bufferPageSize, "Have you set the data exchange buffer size due to setBufferSize() for both the SendReceiveBufferPool and the JoinDataBufferPool?" );
 
-  _sendBuffer = new typename Vertex::MPIDatatypeContainer[bufferSize];
+  _sendBuffer = new MPIDatatypeContainer[bufferSize];
 
   #ifdef Debug
   std::ostringstream out;
@@ -129,7 +129,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::sendVerte
 
   logTraceInWith2Arguments( "sendVertex(Vertex)", vertex, _destinationNodeNumber );
 
-  #if defined(ParallelExchangePackedRecords)
+  #if defined(ParallelExchangePackedRecordsAtBoundary)
   _sendBuffer[_sendBufferCurrentPageElement] = vertex.getVertexData().convert();
   #else
   _sendBuffer[_sendBufferCurrentPageElement] = vertex.getVertexData();
@@ -148,8 +148,8 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::sendVerte
 template<class Vertex>
 void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::addAdditionalReceiveDeployBuffer() {
   logTraceIn( "addAdditionalReceiveDeployBuffer()" );
-  _receiveBuffer[0].push_back(new typename Vertex::MPIDatatypeContainer[_bufferPageSize]);
-  _receiveBuffer[1].push_back(new typename Vertex::MPIDatatypeContainer[_bufferPageSize]);
+  _receiveBuffer[0].push_back(new MPIDatatypeContainer[_bufferPageSize]);
+  _receiveBuffer[1].push_back(new MPIDatatypeContainer[_bufferPageSize]);
   logTraceOut( "addAdditionalReceiveDeployBuffer()" );
 }
 
@@ -197,7 +197,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePa
     }
     if (flag) {
       int messages = 0;
-      MPI_Get_count(&status, Vertex::MPIDatatypeContainer::Datatype, &messages);
+      MPI_Get_count(&status, MPIDatatypeContainer::Datatype, &messages);
       logDebug( "receivePageIfAvailable()", "there is/are " << messages << " message(s) from node " << _destinationNodeNumber << ", _currentReceiveBufferPage=" << _currentReceiveBufferPage << ", receive buffer size=" << _receiveBuffer[0].size() );
 
       if ( _currentReceiveBufferPage >= static_cast<int>(_receiveBuffer[0].size()) ) {
@@ -205,7 +205,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePa
       }
 
       assertion2(_currentReceiveBufferPage < static_cast<int>( _receiveBuffer[ _currentReceiveBuffer ].size() ), _destinationNodeNumber, tarch::parallel::Node::getInstance().getRank());
-      assertion2(Vertex::MPIDatatypeContainer::Datatype!=0, _destinationNodeNumber, tarch::parallel::Node::getInstance().getRank());
+      assertion2(MPIDatatypeContainer::Datatype!=0, _destinationNodeNumber, tarch::parallel::Node::getInstance().getRank());
       assertion2( _receiveBuffer[ _currentReceiveBuffer ].at(_currentReceiveBufferPage)!=0, _destinationNodeNumber, tarch::parallel::Node::getInstance().getRank() );
       assertion4( messages <= _bufferPageSize, messages, _bufferPageSize, _destinationNodeNumber, tarch::parallel::Node::getInstance().getRank() );
 
@@ -227,7 +227,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePa
       int result = MPI_Irecv(
         _receiveBuffer[ _currentReceiveBuffer ].at(_currentReceiveBufferPage),
         messages,
-        Vertex::MPIDatatypeContainer::Datatype,
+        MPIDatatypeContainer::Datatype,
         _destinationNodeNumber,
         peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(),
         tarch::parallel::Node::getInstance().getCommunicator(),
@@ -417,7 +417,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::switchRec
     std::memcpy(
       _receiveBuffer[1-_currentReceiveBuffer].at(copyToDeployBufferPage),
       _receiveBuffer[_currentReceiveBuffer].at(currentPage),
-      numberOfElementsToCopyOnThisPage * sizeof(typename Vertex::MPIDatatypeContainer)
+      numberOfElementsToCopyOnThisPage * sizeof(MPIDatatypeContainer)
     );
     copyToDeployBufferPage++;
   }
@@ -467,7 +467,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::sendBuffe
   MPI_Isend(
     _sendBuffer,
     _sendBufferCurrentPageElement,
-    Vertex::MPIDatatypeContainer::Datatype,
+    MPIDatatypeContainer::Datatype,
     _destinationNodeNumber,
     peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(),
     tarch::parallel::Node::getInstance().getCommunicator(),
@@ -534,8 +534,8 @@ Vertex peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::getVert
   );
 
   Vertex result;
-  typename Vertex::MPIDatatypeContainer receivedData = _receiveBuffer[ 1-_currentReceiveBuffer ].at(_currentDeployBufferPage)[_currentDeployBufferElement];
-  #if defined(ParallelExchangePackedRecords)
+  MPIDatatypeContainer receivedData = _receiveBuffer[ 1-_currentReceiveBuffer ].at(_currentDeployBufferPage)[_currentDeployBufferElement];
+  #if defined(ParallelExchangePackedRecordsAtBoundary)
   result.setVertexData( receivedData.convert() );
   #else
   result.setVertexData( receivedData );

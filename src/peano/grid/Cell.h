@@ -68,7 +68,7 @@ class peano::grid::Cell {
     static void shutdownDatatype();
     #endif
 
-    #if defined(ParallelExchangePackedRecords)
+    #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
     typedef typename CellData::Packed       MPIDatatypeContainer;
     #else
     typedef CellData                        MPIDatatypeContainer;

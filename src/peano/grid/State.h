@@ -64,7 +64,7 @@ class peano::grid::State {
     static void shutdownDatatype();
     #endif
 
-    #if defined(ParallelExchangePackedRecords)
+    #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
     typedef typename StateData::Packed       MPIDatatypeContainer;
     #else
     typedef StateData                        MPIDatatypeContainer;

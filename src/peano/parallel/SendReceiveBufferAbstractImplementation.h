@@ -5,6 +5,7 @@
 
 
 #include "peano/parallel/SendReceiveBuffer.h"
+#include "peano/utils/PeanoOptimisations.h"
 
 #include <vector>
 
@@ -18,7 +19,7 @@ namespace peano {
 }
 
 
-#ifdef ParallelExchangePackedRecords
+#ifdef ParallelExchangePackedRecordsAtBoundary
    #pragma pack (push, 1)
 #endif
 
@@ -114,7 +115,13 @@ class peano::parallel::SendReceiveBufferAbstractImplementation: public peano::pa
     /**
      * Send buffer.
      */
-    typename Vertex::MPIDatatypeContainer* _sendBuffer;
+    #if defined(ParallelExchangePackedRecordsAtBoundary)
+    typedef typename Vertex::Records::Packed       MPIDatatypeContainer;
+    #else
+    typedef typename Vertex::Records               MPIDatatypeContainer;
+    #endif
+
+    MPIDatatypeContainer* _sendBuffer;
 
     /**
      * Determines how many elements within the current send buffer page are
@@ -130,7 +137,7 @@ class peano::parallel::SendReceiveBufferAbstractImplementation: public peano::pa
      * Each buffer is a sequence of arrays. Each array has the size
      * _bufferPageSize.
      */
-    std::vector<typename Vertex::MPIDatatypeContainer*> _receiveBuffer[2];
+    std::vector<MPIDatatypeContainer*> _receiveBuffer[2];
 
     /**
      * Number of the node this send / receive buffer is communicating with.
@@ -327,7 +334,7 @@ class peano::parallel::SendReceiveBufferAbstractImplementation: public peano::pa
     virtual void releaseReceivedMessages(bool);
 };
 
-#ifdef ParallelExchangePackedRecords
+#ifdef ParallelExchangePackedRecordsAtBoundary
 #pragma pack (pop)
 #endif
 
