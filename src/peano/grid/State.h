@@ -453,7 +453,7 @@ class peano::grid::State {
      * Node::updateCellsParallelStateBeforeStore() for a discussion on the
      * technical reasons.
      */
-    bool reduceStateAndCell() const;
+    bool reduceDataToMaster() const;
 
     /**
      * May fork in this traversal

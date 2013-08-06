@@ -342,7 +342,7 @@ template <class Vertex, class Cell, class State, class VertexStack, class CellSt
 bool peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::sendLocalDataToMaster(
   const State&  state
 ) {
-  return state.reduceStateAndCell() &&
+  return state.reduceDataToMaster() &&
       !tarch::parallel::Node::getInstance().isGlobalMaster();
 }
 
@@ -356,7 +356,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 ) {
   logTraceIn( "sendCellAndVerticesToMaster(...)" );
 
-  if ( sendLocalDataToMaster(state) ) {
+  if (!tarch::parallel::Node::getInstance().isGlobalMaster()) {
     Base::_eventHandle.prepareSendToMaster(
       centralFineGridCell,
       fineGridVertices,
@@ -366,7 +366,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       _coarseGridCell,
       _positionOfRootCellRelativeToCoarserCellOnMaster
     );
+  }
 
+  if ( sendLocalDataToMaster(state) ) {
     logDebug( "sendCellAndVerticesToMaster(...)", "send cell " << centralFineGridCell.toString() << " to master" );
     centralFineGridCell.send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)

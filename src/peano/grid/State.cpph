@@ -734,7 +734,7 @@ void peano::grid::State<StateData>::setReduceStateAndCell( bool value ) {
 
 
 template <class StateData>
-bool peano::grid::State<StateData>::reduceStateAndCell() const {
+bool peano::grid::State<StateData>::reduceDataToMaster() const {
   return _stateData.getReduceStateAndCell() && _loadRebalancingState != JoiningWithMaster && _loadRebalancingState != IsNewWorkerDueToForkOfExistingDomain;
 }
 

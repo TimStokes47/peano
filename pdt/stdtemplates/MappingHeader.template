@@ -733,6 +733,11 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * remote ranks, i.e. the pointers are invalid though seem to be set.
      * Receive heap data instead separately without taking the pointers in 
      * the arguments into account.      
+     *
+     * @param workerGridCell      Valid object iff data reduction is switched on. See State::reduceDataToMaster().
+     * @param workerGridVertices  Valid object iff data reduction is switched on. See State::reduceDataToMaster().
+     * @param workerEnumerator    Valid object iff data reduction is switched on. See State::reduceDataToMaster().
+     * @param workerState         Valid object iff data reduction is switched on. See State::reduceDataToMaster().
      */
     void mergeWithMaster(
       const __NAMESPACE__::Cell&                       workerGridCell,
@@ -781,6 +786,18 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * from master before this operation is invoked for the first time. See 
      * Node::updateCellsParallelStateBeforeStore() for details on the technical 
      * reasons for this assymetry.
+     *
+     * !!! Skip sends to master
+     *
+     * If you switch off the global reduction, i.e. if you call iterate() on 
+     * the repository with the parameter false, Peano does not send any data 
+     * up along the spacetree. It does not reduce the cell, state, and vertex 
+     * data. See State::reduceDataToMaster(). However, this operation is called 
+     * nevertheless. This allows you to send data to the master (heap data, 
+     * e.g.) even though Peano's kernel does not reduce. If you wanna pick up 
+     * the reduction behaviour of Peano, you can still store the result of 
+     * reduceDataToMaster() from beginIteration() in your mapping and wrap your 
+     * implementation of this routine into an if. 
      */
     void prepareSendToMaster(
       __NAMESPACE__::Cell&                       localCell,
