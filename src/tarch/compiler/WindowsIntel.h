@@ -87,3 +87,12 @@
  */
 //#define DaStGenPackedPadding 1      // 32 bit version
 // #define DaStGenPackedPadding 2   // 64 bit version
+
+
+
+/**
+ * Some platforms profit from a specialisation of the linear algebra vectors of
+ * small sizes (typically 2 and 3) when the specialisation explicitly loads the
+ * unknowns into register variables.
+ */
+//#define SpecialiseVectorTemplatesForIntegers
