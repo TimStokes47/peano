@@ -62,11 +62,13 @@ void tarch::la::VectorTest:: testConstruction() {
   validateEquals (vector2[1], 1);
 
   // Test construction with direct individual initialization
-  Vector<2,int> vector3(1, 2);
+  Vector<2,int> vector3;
+  tarch::la::assignList(vector3) = 1, 2;
   validateEquals (vector3[0], 1);
   validateEquals (vector3[1], 2);
 
-  Vector<3,int> vector4(1, 2, 3);
+  Vector<3,int> vector4;
+  tarch::la::assignList(vector4) = 1, 2, 3;
   validateEquals (vector4[0], 1);
   validateEquals (vector4[1], 2);
   validateEquals (vector4[2], 3);
@@ -243,8 +245,10 @@ void tarch::la::VectorTest:: testVectorVectorOperations() {
   validateEquals (dotresult, 29);
 
   // Cross product (only works for same types)
-  Vector<3,int> b(2, 3, 4);
-  Vector<3,int> a(1, 2, 3);
+  Vector<3,int> b;
+  tarch::la::assignList(b) = 2, 3, 4;
+  Vector<3,int> a;
+  tarch::la::assignList(a) = 1, 2, 3;
   Vector<3,int> crossresult(0);
   crossresult = cross(a, b);
   validateEquals (crossresult[0], a[1]*b[2] - a[2]*b[1]);
