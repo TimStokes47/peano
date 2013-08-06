@@ -87,7 +87,9 @@ void tarch::timing::Watch::stopTimer() {
   clock_get_time(cclock, &mts);
   _startTime = (double)mts.tv_sec + (double)mts.tv_nsec * 1e-09;
   #elif defined(CompilerHasTimespec)
-  _elapsedTime         = ((double)ts.tv_sec + (double)ts.tv_nsec * 1e-09)-_startTime;
+  if( clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
+    _elapsedTime         = ((double)ts.tv_sec + (double)ts.tv_nsec * 1e-09)-_startTime;
+  }
   #else
   _elapsedTime = -1;
   #endif
