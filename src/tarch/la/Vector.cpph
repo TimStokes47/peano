@@ -48,47 +48,6 @@ tarch::la::Vector<Size,Scalar>::Vector(
   }
 }
 
-template<int Size, typename Scalar>
-tarch::la::Vector<Size,Scalar>::Vector(
-  const Scalar& initialValue0,
-  const Scalar& initialValue1
-):
-  _values() {
-  assertion (Size == 2);
-  _values[0] = initialValue0;
-  _values[1] = initialValue1;
-}
-
-
-template<int Size, typename Scalar>
-tarch::la::Vector<Size,Scalar>::Vector(
-  const Scalar& initialValue0,
-  const Scalar& initialValue1,
-  const Scalar& initialValue2
-):
-  _values() {
-  assertion (Size == 3);
-  _values[0] = initialValue0;
-  _values[1] = initialValue1;
-  _values[2] = initialValue2;
-}
-
-
-template<int Size, typename Scalar>
-tarch::la::Vector<Size,Scalar>::Vector(
-  const Scalar& initialValue0,
-  const Scalar& initialValue1,
-  const Scalar& initialValue2,
-  const Scalar& initialValue3
-):
-  _values() {
-  assertion (Size == 4);
-  _values[0] = initialValue0;
-  _values[1] = initialValue1;
-  _values[2] = initialValue2;
-  _values[3] = initialValue3;
-}
-
 
 template<int Size, typename Scalar>
 int tarch::la::Vector<Size,Scalar>::size() const {
@@ -98,12 +57,9 @@ int tarch::la::Vector<Size,Scalar>::size() const {
 
 template<int Size, typename Scalar>
 const Scalar& tarch::la::Vector<Size,Scalar>::operator[] ( int index ) const {
-//#pragma GCC diagnostic push // Save Warning configuration
-//#pragma GCC diagnostic ignored "-Warray-bounds"
   assertion ( index >= 0 );
   assertion ( index < Size );
   return _values[index];
-//#pragma GCC diagnostic pop
 }
 
 template<int Size, typename Scalar>

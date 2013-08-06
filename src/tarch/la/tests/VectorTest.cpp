@@ -252,7 +252,8 @@ void tarch::la::VectorTest:: testVectorVectorOperations() {
   validateEquals (crossresult[2], a[0]*b[1] - a[1]*b[0]);
 
   // Comparisons
-  Vector<3,double> vec0(1.0, 2.0, 3.0);
+  Vector<3,double> vec0;
+  tarch::la::assignList(vec0) = 1.0, 2.0, 3.0;
   Vector<3,double> vec1(vec0);
   validate (equals(vec0,vec1));
   validate (! oneGreater(vec0,vec1));
@@ -340,10 +341,14 @@ void tarch::la::VectorTest::testVectorCompare () {
   typedef Vector<2,double> Vector;
   std::map<Vector,int,VectorCompare<2> > vectors;
   double eps = NUMERICAL_ZERO_DIFFERENCE;
-  Vector vec0 (1.0, 2.0);
-  Vector vec1 (1.0 + 10.0 * eps, 1.0);
-  Vector vec2 (1.0 + 10.0 * eps, 1.5);
-  Vector vec3 (2.0, 0.0);
+  Vector vec0;
+  tarch::la::assignList(vec0) = 1.0, 2.0;
+  Vector vec1;
+  tarch::la::assignList(vec1) = 1.0 + 10.0 * eps, 1.0;
+  Vector vec2;
+  tarch::la::assignList(vec2) = 1.0 + 10.0 * eps, 1.5;
+  Vector vec3;
+  tarch::la::assignList(vec3) = 2.0, 0.0;
 //  vectors[vec2] = 2;
 //  vectors[vec3] = 3;
 //  vectors[vec0] = 0;
