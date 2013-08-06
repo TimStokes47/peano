@@ -49,7 +49,6 @@ tarch::la::VectorAssignList<2,int> tarch::la::Vector<2,int>::operator=(
   const int& value
 ) {
   _values0 = value;
-  _values1 = value;
   return VectorAssignList<2,int>(*this,1);
 }
 
@@ -58,8 +57,6 @@ tarch::la::VectorAssignList<3,int> tarch::la::Vector<3,int>::operator=(
   const int& value
 ) {
   _values0 = value;
-  _values1 = value;
-  _values2 = value;
   return VectorAssignList<3,int>(*this,1);
 }
 
@@ -68,37 +65,34 @@ tarch::la::VectorAssignList<4,int> tarch::la::Vector<4,int>::operator=(
   const int& value
 ) {
   _values0 = value;
-  _values1 = value;
-  _values2 = value;
-  _values3 = value;
   return VectorAssignList<4,int>(*this,1);
 }
 
 
 tarch::la::Vector<2,int>::Vector (
   const Vector<2,int>& toCopy
-) {
-  _values0 = toCopy._values0;
-  _values1 = toCopy._values1;
+):
+  _values0( toCopy._values0 ),
+  _values1( toCopy._values1 ) {
 }
 
 
 tarch::la::Vector<3,int>::Vector (
   const Vector<3,int>& toCopy
-) {
-  _values0 = toCopy._values0;
-  _values1 = toCopy._values1;
-  _values2 = toCopy._values2;
+):
+  _values0( toCopy._values0 ),
+  _values1( toCopy._values1 ),
+  _values2( toCopy._values2 ) {
 }
 
 
 tarch::la::Vector<4,int>::Vector (
   const Vector<4,int>& toCopy
-) {
-  _values0 = toCopy._values0;
-  _values1 = toCopy._values1;
-  _values2 = toCopy._values2;
-  _values3 = toCopy._values3;
+):
+  _values0( toCopy._values0 ),
+  _values1( toCopy._values1 ),
+  _values2( toCopy._values2 ),
+  _values3( toCopy._values3 ) {
 }
 
 
@@ -167,6 +161,16 @@ tarch::la::Vector<4,int>::Vector(
 
 int tarch::la::Vector<2,int>::size() const {
   return 2;
+}
+
+
+int tarch::la::Vector<3,int>::size() const {
+  return 3;
+}
+
+
+int tarch::la::Vector<4,int>::size() const {
+  return 4;
 }
 
 
