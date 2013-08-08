@@ -137,12 +137,12 @@ namespace peano {
 template <class Data>
 class peano::heap::Heap: public tarch::services::Service {
   private:
-
-    #if defined(ParallelExchangePackedRecordsInHeaps)
-    typedef peano::heap::records::MetaInformation::Packed  MetaInformation;
-    #else
+    /**
+     * We always use the plain meta information as record, i.e. we do not pack
+     * anything here as the meta information usually is one integer only
+     * anyway.
+     */
     typedef peano::heap::records::MetaInformation          MetaInformation;
-    #endif
 
     /**
      * Wrapper for a send or receive task
@@ -424,6 +424,16 @@ class peano::heap::Heap: public tarch::services::Service {
       int                                           level
     );
 
+    /**
+     *
+     * !!! Implementation remarks
+     *
+     * The implementation is somehow redundant as we could skip the first if
+     * statement and jump directly into the while loop. However, this routine
+     * is very sensitiv to (software) latency and thus we avoid the deadlock
+     * timing, e.g., if the message is already available. Only if the message
+     * isn't available yet, we do the standard polling/deadlock check loop.
+     */
     std::vector< Data > receiveMasterWorkerOrForkJoinData(
       int fromRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,

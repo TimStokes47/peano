@@ -604,44 +604,45 @@ std::vector< Data > peano::heap::Heap<Data>::receiveMasterWorkerOrForkJoinData(
 
   std::vector< Data >  result;
   #ifdef Parallel
-  const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-  const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-  bool           triggeredTimeoutWarning = false;
-  int            resultTask              = -1;
-
-  int mpiTag = getTagForMessageType(messageType,false,0);
-
+  const int                     mpiTag       = getTagForMessageType(messageType,false,0);
   std::vector<SendReceiveTask>& receiveTasks = (messageType == MasterWorkerCommunication) ? _masterWorkerDataReceiveTasks : _forkJoinDataReceiveTasks;
+  int                           resultTask   = findMessageFromRankInMasterWorkerOrForkJoinDataBuffer(fromRank, receiveTasks);
 
   logDebug("receiveMasterWorkerOrForkJoinData", "Receiving data synchronously with mpiTag: " << mpiTag << ", fork/join-tag=" << _mpiTagToExchangeForkJoinData << ", neighbour-data-tag=" << _mpiTagForNeighbourDataExchange << ", master/worker-tag=" <<  _mpiTagForMasterWorkerDataExchange);
 
-  while (resultTask == -1) {
-    resultTask = findMessageFromRankInMasterWorkerOrForkJoinDataBuffer(fromRank, receiveTasks);
+  if (resultTask == -1) {
+    const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+    const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+    bool           triggeredTimeoutWarning = false;
 
-    // deadlock aspect
-    if (
-       tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
-       (clock()>timeOutWarning) &&
-       (!triggeredTimeoutWarning)
-    ) {
-       tarch::parallel::Node::getInstance().writeTimeOutWarning(
-         "peano::heap::Heap",
-         "receiveMasterWorkerOrForkJoinData()", fromRank,
-         mpiTag, -1
-       );
-       triggeredTimeoutWarning = true;
+    while (resultTask == -1) {
+      resultTask = findMessageFromRankInMasterWorkerOrForkJoinDataBuffer(fromRank, receiveTasks);
+
+      // deadlock aspect
+      if (
+         tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+         (clock()>timeOutWarning) &&
+         (!triggeredTimeoutWarning)
+      ) {
+         tarch::parallel::Node::getInstance().writeTimeOutWarning(
+           "peano::heap::Heap",
+           "receiveMasterWorkerOrForkJoinData()", fromRank,
+           mpiTag, -1
+         );
+         triggeredTimeoutWarning = true;
+      }
+      if (
+         tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+         (clock()>timeOutShutdown)
+      ) {
+         tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+           "peano::heap::Heap",
+           "receiveMasterWorkerOrForkJoinData()", fromRank,
+           mpiTag, -1
+         );
+      }
+      tarch::parallel::Node::getInstance().receiveDanglingMessages();
     }
-    if (
-       tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
-       (clock()>timeOutShutdown)
-    ) {
-       tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-         "peano::heap::Heap",
-         "receiveMasterWorkerOrForkJoinData()", fromRank,
-         mpiTag, -1
-       );
-    }
-    tarch::parallel::Node::getInstance().receiveDanglingMessages();
   }
 
   result = extractMessageFromTaskQueue(resultTask, receiveTasks, position, level);
