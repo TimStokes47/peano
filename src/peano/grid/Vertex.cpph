@@ -21,6 +21,8 @@ peano::grid::Vertex<VertexData>::Vertex():
   #ifdef Parallel
   _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
   #endif
+
+  _vertexData.setAdjacentRanks( tarch::parallel::Node::getInstance().getRank() );
 }
 
 

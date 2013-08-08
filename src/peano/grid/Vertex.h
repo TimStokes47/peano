@@ -94,6 +94,18 @@ class peano::grid::Vertex {
      *
      * The created vertex by default is an outer vertex, and it is not
      * persistent, i.e. a hanging node.
+     *
+     * !!! Asserts mode
+     *
+     * Usually, all adjacent ranks are set by a create event in 
+     * LoadVertexLoopBody. It is either create for the hanging 
+     * nodes or they are created as persistent nodes and afterwards taken 
+     * from the input stream. The thing is slightly different for the 
+     * 'hanging' nodes at the boundary of the whole spacetree. Those 
+     * guys always are outside and they are never created. To avoid 
+     * confusion (which seems to pop up only for hand-written integer 
+     * vectors), I thus initialise all vertices with the right adjacent 
+     * rank information. 
      */
     Vertex();
 
