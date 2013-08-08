@@ -259,7 +259,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     _fineGridPositionOfCell + positionInLocalCell
   );
 
-  logTraceOut( "createHangingNode(...)" );
+  logTraceOutWith1Argument( "createHangingNode(...)", _fineGridVertices[positionInVertexArray].toString() );
 }
 
 
