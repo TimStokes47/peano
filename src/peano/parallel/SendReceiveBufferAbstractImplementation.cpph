@@ -46,15 +46,11 @@ peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::SendReceiveBuf
 
 template <class Vertex>
 peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::~SendReceiveBufferAbstractImplementation() {
-  assertion1(
+  assertion2(
     _sendBufferRequestHandle==0,
-    tarch::parallel::Node::getInstance().getRank()
+    tarch::parallel::Node::getInstance().getRank(),
+    _destinationNodeNumber
   );
-  assertion1(
-    _receiveBufferRequestHandle==0,
-    tarch::parallel::Node::getInstance().getRank()
-  );
-
 
   while ( _receiveBufferRequestHandle != 0 ) {
     receivePageIfAvailable();
