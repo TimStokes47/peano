@@ -134,7 +134,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   typedef peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>                       DescendTask;
 
   {
-    int SplitLoadVerticesTask =
+    const int SplitLoadVerticesTask =
     transformOracleResult(
       peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
         growStack,
@@ -165,7 +165,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 
 
   {
-    int SplitStoreVerticesTask =
+    const int SplitStoreVerticesTask =
       transformOracleResult(
       peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
         growStack,
