@@ -558,15 +558,15 @@ bool peano::grid::RegularGridContainer<Vertex,Cell>::LevelData::init(
   uninitalisedThreeTimeThreePatchesCells    = NumberOfCells / THREE_POWER_D;
   haveCalledAllEventsOnThisLevel            = true;
 
-  assertion(rawVertex==0);
-  assertion(rawCell==0);
-  assertion(rawCounter==0);
-  assertion(rawIsReadFromTemp==0);
-  assertion(rawIsToBeWrittenToTemp==0);
-
   logDebug( "LevelData::init(int)", "no-of-vertices=" << NumberOfVertices << ", no-of-cells=" << NumberOfCells );
 
   #if defined(RegularGridContainerUsesPlainArrays)
+  assertion(vertex==0);
+  assertion(cell==0);
+  assertion(counter==0);
+  assertion(isReadFromTemp==0);
+  assertion(isToBeWrittenToTemp==0);
+
   vertex              = new (std::nothrow) Vertex[NumberOfVertices];
   cell                = new (std::nothrow) Cell[NumberOfCells];
   counter             = new (std::nothrow) int[NumberOfVertices];
@@ -575,6 +575,18 @@ bool peano::grid::RegularGridContainer<Vertex,Cell>::LevelData::init(
 
   const bool IsValid = vertex!=0 && cell!=0 && counter!=0 && isReadFromTemp!=0 && isToBeWrittenToTemp!=0;
   #elif defined(RegularGridContainerUsesRawArrays)
+  assertion(vertex==0);
+  assertion(cell==0);
+  assertion(counter==0);
+  assertion(isReadFromTemp==0);
+  assertion(isToBeWrittenToTemp==0);
+
+  assertion(rawVertex==0);
+  assertion(rawCell==0);
+  assertion(rawCounter==0);
+  assertion(rawIsReadFromTemp==0);
+  assertion(rawIsToBeWrittenToTemp==0);
+
   rawVertex               = operator new [] (NumberOfVertices*sizeof(Vertex), std::nothrow);
   rawCell                 = operator new [] (NumberOfCells   *sizeof(Cell),   std::nothrow);
   rawCounter              = operator new [] (NumberOfVertices*sizeof(int),    std::nothrow);
@@ -604,12 +616,6 @@ bool peano::grid::RegularGridContainer<Vertex,Cell>::LevelData::init(
   #endif
 
   if (IsValid) {
-    assertion(rawVertex!=0);
-    assertion(rawCell!=0);
-    assertion(rawCounter!=0);
-    assertion(rawIsReadFromTemp!=0);
-    assertion(rawIsToBeWrittenToTemp!=0);
-
     #if defined(RegularGridContainerUsesPlainArrays) || defined(RegularGridContainerUsesRawArrays)
     std::fill_n( counter, NumberOfVertices, peano::grid::nodes::CounterPersistentNode );
     #endif
