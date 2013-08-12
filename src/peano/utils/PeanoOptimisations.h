@@ -111,4 +111,17 @@
 #endif
 
 
+/**
+ * The regular grid container has three different realisations to handle
+ * regular grids. You can pick one of them. In my experiments, the plain
+ * arrays outperformed all other realisations despite the fact that the
+ * std variant uses tbb's memory allocators. Might nevertheless be worth
+ * a try to study different variants as well.
+ *
+ * Please select only one out of these three variants.
+ */
+#define RegularGridContainerUsesPlainArrays
+//#define RegularGridContainerUsesRawArrays
+//#define RegularGridContainerUsesSTDArrays
+
 #endif
