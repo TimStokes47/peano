@@ -7,6 +7,7 @@
 #include <limits>
 
 
+
 template < class Vertex, class Cell >
 tarch::logging::Log peano::grid::RegularGridContainer<Vertex,Cell>::_log( "peano::grid::RegularGridContainer" );
 
@@ -358,7 +359,11 @@ const Cell& peano::grid::RegularGridContainer<Vertex,Cell>::getCell( int level, 
 template < class Vertex, class Cell >
 Cell* peano::grid::RegularGridContainer<Vertex,Cell>::getCell( int level ) {
   validateThatRegularSubtreeIsAvailable( level );
+  #if defined(RegularGridContainerUsesSTDArrays)
+  return _data[level]->cell.data();
+  #else
   return _data[level]->cell;
+  #endif
 }
 
 
@@ -430,7 +435,11 @@ Vertex* peano::grid::RegularGridContainer<Vertex,Cell>::getVertex( int level ) {
 
   logTraceOut( "getVertex(int)");
 
+  #if defined(RegularGridContainerUsesSTDArrays)
+  return _data[level]->vertex.data();
+  #else
   return _data[level]->vertex;
+  #endif
 }
 
 
@@ -495,39 +504,23 @@ bool peano::grid::RegularGridContainer<Vertex,Cell>::isToBeWrittenToTemporarySta
 
 template < class Vertex, class Cell >
 peano::grid::RegularGridContainer<Vertex,Cell>::LevelData::LevelData():
-  vertex(0),
-  cell(0),
-  counter(0),
-  isReadFromTemp(0),
-  isToBeWrittenToTemp(0),
   usedPerTraversal(0),
   enumerator(0.0,0.0,0,1,1) {
+  #if defined(RegularGridContainerUsesPlainArrays) || defined(RegularGridContainerUsesRawArrays)
+  vertex = 0;
+  cell = 0;
+  counter = 0;
+  isReadFromTemp = 0;
+  isToBeWrittenToTemp = 0;
+  #endif
 }
 
 
 template < class Vertex, class Cell >
 peano::grid::RegularGridContainer<Vertex,Cell>::LevelData::~LevelData() {
-  if (vertex!=0) {
-    delete[] vertex;
-    vertex = 0;
-  }
-  if (cell!=0) {
-    delete[] cell;
-    cell = 0;
-  }
-  if (counter!=0) {
-    delete counter;
-    counter = 0;
-  }
-  if (isReadFromTemp!=0) {
-    delete isReadFromTemp;
-    isReadFromTemp = 0;
-  }
-  if (isToBeWrittenToTemp!=0) {
-    delete isToBeWrittenToTemp;
-    isToBeWrittenToTemp = 0;
-  }
+  freeHeap();
 }
+
 
 template < class Vertex, class Cell >
 tarch::la::Vector<DIMENSIONS,int> peano::grid::RegularGridContainer<Vertex,Cell>::getNumberOfCells( int level ) {
@@ -565,30 +558,133 @@ bool peano::grid::RegularGridContainer<Vertex,Cell>::LevelData::init(
   uninitalisedThreeTimeThreePatchesCells    = NumberOfCells / THREE_POWER_D;
   haveCalledAllEventsOnThisLevel            = true;
 
-  assertion(vertex==0);
-  assertion(cell==0);
-  assertion(counter==0);
+  assertion(rawVertex==0);
+  assertion(rawCell==0);
+  assertion(rawCounter==0);
+  assertion(rawIsReadFromTemp==0);
+  assertion(rawIsToBeWrittenToTemp==0);
 
   logDebug( "LevelData::init(int)", "no-of-vertices=" << NumberOfVertices << ", no-of-cells=" << NumberOfCells );
 
-  vertex  = new (std::nothrow) Vertex[NumberOfVertices];
-  cell    = new (std::nothrow) Cell[NumberOfCells];
-  counter = new (std::nothrow) int[NumberOfVertices];
-  isReadFromTemp = new (std::nothrow) bool[NumberOfVertices];
+  #if defined(RegularGridContainerUsesPlainArrays)
+  vertex              = new (std::nothrow) Vertex[NumberOfVertices];
+  cell                = new (std::nothrow) Cell[NumberOfCells];
+  counter             = new (std::nothrow) int[NumberOfVertices];
+  isReadFromTemp      = new (std::nothrow) bool[NumberOfVertices];
   isToBeWrittenToTemp = new (std::nothrow) bool[NumberOfVertices];
 
   const bool IsValid = vertex!=0 && cell!=0 && counter!=0 && isReadFromTemp!=0 && isToBeWrittenToTemp!=0;
+  #elif defined(RegularGridContainerUsesRawArrays)
+  rawVertex               = operator new [] (NumberOfVertices*sizeof(Vertex), std::nothrow);
+  rawCell                 = operator new [] (NumberOfCells   *sizeof(Cell),   std::nothrow);
+  rawCounter              = operator new [] (NumberOfVertices*sizeof(int),    std::nothrow);
+  rawIsReadFromTemp       = operator new [] (NumberOfVertices*sizeof(bool),   std::nothrow);
+  rawIsToBeWrittenToTemp  = operator new [] (NumberOfVertices*sizeof(bool),   std::nothrow);
+
+  vertex               = static_cast<Vertex*>(rawVertex);
+  cell                 = static_cast<Cell*>(rawCell);
+  counter              = static_cast<int*>(rawCounter);
+  isReadFromTemp       = static_cast<bool*>(rawIsReadFromTemp);
+  isToBeWrittenToTemp  = static_cast<bool*>(rawIsToBeWrittenToTemp);
+
+  const bool IsValid = rawVertex!=0 && rawCell!=0 && rawCounter!=0 && rawIsReadFromTemp!=0 && rawIsToBeWrittenToTemp!=0;
+  #elif defined(RegularGridContainerUsesSTDArrays)
+
+  bool IsValid = true;
+  try {
+    vertex.resize(NumberOfVertices,Vertex(typename Vertex::DoNotCallStandardConstructor()));
+    cell.resize(NumberOfCells,Cell(typename Cell::DoNotCallStandardConstructor()));
+    counter.resize(NumberOfVertices,peano::grid::nodes::CounterPersistentNode);
+    isReadFromTemp.resize(NumberOfVertices);
+    isToBeWrittenToTemp.resize(NumberOfVertices);
+  }
+  catch (std::bad_alloc) {
+    IsValid = false;
+  }
+  #endif
 
   if (IsValid) {
-    for (int i=0; i<NumberOfVertices; i++) {
-      counter[i]        = peano::grid::nodes::CounterPersistentNode;
-    }
+    assertion(rawVertex!=0);
+    assertion(rawCell!=0);
+    assertion(rawCounter!=0);
+    assertion(rawIsReadFromTemp!=0);
+    assertion(rawIsToBeWrittenToTemp!=0);
+
+    #if defined(RegularGridContainerUsesPlainArrays) || defined(RegularGridContainerUsesRawArrays)
+    std::fill_n( counter, NumberOfVertices, peano::grid::nodes::CounterPersistentNode );
+    #endif
+  }
+  else {
+    freeHeap();
   }
 
   logTraceOutWith1Argument( "LevelData::init(int)", IsValid );
 
   return IsValid;
 }
+
+
+template < class Vertex, class Cell >
+void peano::grid::RegularGridContainer<Vertex,Cell>::LevelData::freeHeap() {
+  #if defined(RegularGridContainerUsesPlainArrays)
+    if (vertex!=0) {
+      delete[] vertex;
+    }
+    if (cell!=0) {
+      delete[] cell;
+    }
+    if (counter!=0) {
+      delete[] counter;
+    }
+    if (isReadFromTemp!=0) {
+      delete[] isReadFromTemp;
+    }
+    if (isToBeWrittenToTemp!=0) {
+      delete[] isToBeWrittenToTemp;
+    }
+
+    vertex               = 0;
+    cell                 = 0;
+    counter              = 0;
+    isReadFromTemp       = 0;
+    isToBeWrittenToTemp  = 0;
+  #elif defined(RegularGridContainerUsesRawArrays)
+    if (rawVertex!=0) {
+      operator delete[] (rawVertex);
+    }
+    if (rawCell!=0) {
+      operator delete[] (rawCell);
+    }
+    if (rawCounter!=0) {
+      operator delete[] (rawCounter);
+    }
+    if (rawIsReadFromTemp!=0) {
+      operator delete[] (rawIsReadFromTemp);
+    }
+    if (rawIsToBeWrittenToTemp!=0) {
+      operator delete[] (rawIsToBeWrittenToTemp);
+    }
+
+    rawVertex               = 0;
+    rawCell                 = 0;
+    rawCounter              = 0;
+    rawIsReadFromTemp       = 0;
+    rawIsToBeWrittenToTemp  = 0;
+
+    vertex               = 0;
+    cell                 = 0;
+    counter              = 0;
+    isReadFromTemp       = 0;
+    isToBeWrittenToTemp  = 0;
+  #elif defined(RegularGridContainerUsesSTDArrays)
+    vertex.clear();
+    cell.clear();
+    counter.clear();
+    isReadFromTemp.clear();
+    isToBeWrittenToTemp.clear();
+  #endif
+}
+
 
 
 template < class Vertex, class Cell >

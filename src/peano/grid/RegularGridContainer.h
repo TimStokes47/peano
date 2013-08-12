@@ -12,9 +12,48 @@
 
 #include "peano/grid/SingleLevelEnumerator.h"
 #include "peano/grid/UnrolledLevelEnumerator.h"
-
+#include "peano/utils/PeanoOptimisations.h"
 
 #include <vector>
+
+#ifdef SharedTBB
+#include <tbb/cache_aligned_allocator.h>
+#endif
+
+
+
+
+/**
+ * Consistency checks
+ */
+#if ( \
+  !defined(RegularGridContainerUsesPlainArrays) && \
+  !defined(RegularGridContainerUsesRawArrays) && \
+  !defined(RegularGridContainerUsesSTDArrays) \
+  )
+  #error No regular grid realisation chosen
+#endif
+
+#if ( \
+  defined(RegularGridContainerUsesPlainArrays) && \
+  (defined(RegularGridContainerUsesRawArrays)  || defined(RegularGridContainerUsesSTDArrays)) \
+  )
+  #error Multiple regular grid realisations chosen
+#endif
+
+#if ( \
+  defined(RegularGridContainerUsesRawArrays) && \
+  (defined(RegularGridContainerUsesPlainArrays)  || defined(RegularGridContainerUsesSTDArrays)) \
+  )
+  #error Multiple regular grid realisations chosen
+#endif
+
+#if ( \
+  defined(RegularGridContainerUsesSTDArrays) && \
+  (defined(RegularGridContainerUsesRawArrays)  || defined(RegularGridContainerUsesPlainArrays)) \
+  )
+  #error Multiple regular grid realisations chosen
+#endif
 
 
 namespace peano {
@@ -63,74 +102,138 @@ class peano::grid::RegularGridContainer {
 
     /**
      * Holds the data of one level of the regularly refined subtree
+     *
+     * !!! Memory management
+     *
+     * The level data object is a manager for five arrays representing regular
+     * Cartesian meshes. They will after allocation be filled with data from
+     * the stacks. Either by one thread or multiple threads (split tree
+     * strategy).
+     *
+     * In the construction phase (cmp. operation init()), we always try to
+     * allocate the required memory. Try means that we use new with
+     * std::nothrow. If the allocation fails, init() returns false and the
+     * calling algorithmic phase then knows that the grid container cannot be
+     * used for that big regular subgrids, i.e. it cannot use recursion
+     * unrolling here. In that sense, the container is memory safe.
+     *
+     * As all the elements of the Cartesian regular mesh are befilled with
+     * data from the input stream, it does not make any sense to call the
+     * default constructor for the entries. Using the default constructor not
+     * only requires time, it also induces problems in a shared memory
+     * environment if the system relies on a touch-first placement strategy.
+     * In this case, the master thread initialises the Cartesian mesh, i.e. it
+     * calls the default constructor, i.e. all memory is paged to thread 0.
+     *
+     * For these reasons, we use non-initialised memory and the placement-new
+     * strategy, and hence need two pointers per administered array. Please
+     * consult Scott Meyers' More Effective C++ Chapter 1.4 for more details
+     * on this technique.
      */
     struct LevelData {
-      /**
-       * Vertices
-       */
-      Vertex*  vertex;
+      public:
+        #if defined(RegularGridContainerUsesSTDArrays) && !defined(SharedTBB)
+          std::vector<Vertex>  vertex;
+          std::vector<Cell>    cell;
+          std::vector<int>     counter;
+          std::vector<bool>    isReadFromTemp;
+          std::vector<bool>    isToBeWrittenToTemp;
+        #elif defined(RegularGridContainerUsesSTDArrays) && defined(SharedTBB)
+          std::vector<Vertex,tbb::cache_aligned_allocator<Vertex> >  vertex;
+          std::vector<Cell,tbb::cache_aligned_allocator<Cell> >      cell;
+          std::vector<int,tbb::cache_aligned_allocator<int> >        counter;
+          std::vector<bool,tbb::cache_aligned_allocator<bool> >      isReadFromTemp;
+          std::vector<bool,tbb::cache_aligned_allocator<bool> >      isToBeWrittenToTemp;
+        #else
+        /**
+         * Vertices
+         */
+        Vertex*  vertex;
 
-      /**
-       * Cells
-       */
-      Cell*    cell;
+        /**
+         * Cells
+         */
+        Cell*    cell;
 
-      /**
-       * Counter
-       *
-       * The counters here always start to count from persistent vertex
-       * upwards. However, they are not always increased/decreased
-       * @f$ 2^d @f$ times - if inner subtrees are deployed to separate
-       * threads, their increases/decreases are not conducted.
-       */
-      int*     counter;
+        /**
+         * Counter
+         *
+         * The counters here always start to count from persistent vertex
+         * upwards. However, they are not always increased/decreased
+         * @f$ 2^d @f$ times - if inner subtrees are deployed to separate
+         * threads, their increases/decreases are not conducted.
+         */
+        int*     counter;
 
-      /**
-       * I need this flag to determine later whether I have to call
-       * touchVertexFirstTime() or not.
-       */
-      bool*    isReadFromTemp;
+        /**
+         * I need this flag to determine later whether I have to call
+         * touchVertexFirstTime() or not.
+         */
+        bool*    isReadFromTemp;
 
-      /**
-       * I need this flag to determine later whether I have to call
-       * touchVertexLastTime() or not.
-       */
-      bool*    isToBeWrittenToTemp;
+        /**
+         * I need this flag to determine later whether I have to call
+         * touchVertexLastTime() or not.
+         */
+        bool*    isToBeWrittenToTemp;
+        #endif
 
-      /**
-       * Holds some statistics how often a level is needed. Besides the
-       * statistics, the container also deletes the finest level data if it
-       * has not been used in the iteration before. This way, I try to reduce
-       * the total memory footprint if possible.
-       */
-      int      usedPerTraversal;
+        /**
+         * Holds some statistics how often a level is needed. Besides the
+         * statistics, the container also deletes the finest level data if it
+         * has not been used in the iteration before. This way, I try to reduce
+         * the total memory footprint if possible.
+         */
+        int      usedPerTraversal;
 
-      /**
-       * Each level has @f$ 3^d @f$ patches inside that are befilled en block
-       * by Peano. This counter holds how many of them are not set yet.
-       */
-      int      uninitalisedThreeTimeThreePatchesVertices;
-      int      uninitalisedThreeTimeThreePatchesCells;
+        /**
+         * Each level has @f$ 3^d @f$ patches inside that are befilled en block
+         * by Peano. This counter holds how many of them are not set yet.
+         */
+        int      uninitalisedThreeTimeThreePatchesVertices;
+        int      uninitalisedThreeTimeThreePatchesCells;
 
-      /**
-       * Is protected by the vertex semaphore
-       */
-      bool     haveCalledAllEventsOnThisLevel;
+        /**
+         * Is protected by the vertex semaphore
+         */
+        bool     haveCalledAllEventsOnThisLevel;
 
-      UnrolledLevelEnumerator  enumerator;
+        UnrolledLevelEnumerator  enumerator;
 
-      LevelData();
-      ~LevelData();
+        /**
+         * NOP
+         *
+         * Use init() instead.
+         */
+        LevelData();
 
-      /**
-       * Allocates and initialises the data structures but does not set the
-       * enumerator as the enumerator's state depends on the actual spatial
-       * position of the patch, i.e. might change several times throughout each
-       * traversal.
-       */
-      bool init( int level );
+        /**
+         * Counterpart of init().
+         */
+        ~LevelData();
 
-      static double getApproximateMemoryFootprint(int level);
+        /**
+         * Init
+         *
+         * Allocates and initialises the data structures but does not set the
+         * enumerator as the enumerator's state depends on the actual spatial
+         * position of the patch, i.e. might change several times throughout each
+         * traversal.
+         */
+        bool init( int level );
+
+        static double getApproximateMemoryFootprint(int level);
+      private:
+        #if defined(RegularGridContainerUsesRawArrays)
+          void*    rawVertex;
+          void*    rawCell;
+          void*    rawCounter;
+          void*    rawIsReadFromTemp;
+          void*    rawIsToBeWrittenToTemp;
+        #endif
+
+
+        void freeHeap();
     };
 
     /**
