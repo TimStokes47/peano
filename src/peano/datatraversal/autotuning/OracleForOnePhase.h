@@ -43,7 +43,7 @@ namespace peano {
        * speak about adapter no 5 given you by the repository statistics, it is
        * actually the 8th adapter.
        */
-      const int NumberOfPredefinedAdapters = 3;
+      const int NumberOfPredefinedAdapters = 4;
 
       std::string toString( const MethodTrace& methodTrace );
       MethodTrace toMethodTrace(int value);
