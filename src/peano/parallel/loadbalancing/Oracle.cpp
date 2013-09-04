@@ -1,4 +1,5 @@
 #include "peano/parallel/loadbalancing/Oracle.h"
+#include "peano/datatraversal/autotuning/OracleForOnePhase.h"
 #include "tarch/parallel/Node.h"
 #include "tarch/Assertions.h"
 #include "tarch/mpianalysis/Analysis.h"
@@ -171,8 +172,6 @@ int peano::parallel::loadbalancing::Oracle::getNumberOfWorkers() const {
 
 
 void peano::parallel::loadbalancing::Oracle::plotStatistics() {
-  const int AdapterStatesReservedForRepostorySteering = 4; // such as terminate, write-checkpoint, etc.
-
   int i=0;
   for (
     OracleDatabase::iterator p = _oracles.begin();
@@ -181,7 +180,7 @@ void peano::parallel::loadbalancing::Oracle::plotStatistics() {
   ) {
     i++;
 
-    if (i>AdapterStatesReservedForRepostorySteering) {
+    if (i>peano::datatraversal::autotuning::NumberOfPredefinedAdapters) {
       (*p)->plotStatistics();
     }
   }
