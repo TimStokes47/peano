@@ -56,19 +56,6 @@ class peano::grid::nodes::tasks::Descend {
     EnterCellLoopBody             _enterCellLoopBody;
     DescendLoopBody               _descendLoopBody;
 
-    /**
-     * Are other tasks running in parallel?
-     *
-     * Other tasks may run in parallel
-     *
-     * - if the load vertices, load cells, and descend task may run in parallel
-     * - or if the load vertices task may fork.
-     *
-     * The latter fork relies on asynchronous spawning, i.e. if the load process
-     * may fork, we never can be sure without a check that all vertices are
-     * loaded even though the main load vertex thread has terminated.
-     */
-    const bool                   _precedingLoadProcessMayFork;
     const bool                   _descendProcessRunsInParallelToOtherTasks;
 
     void touchVerticesFirstTime(int level);
@@ -80,7 +67,6 @@ public:
       State&                 state,
       EventHandle&           eventHandle,
       RegularGridContainer&  gridContainer,
-      bool                   precedingLoadProcessMayFork,
       bool                   descendProcessRunsInParallelToOtherTasks
     );
 

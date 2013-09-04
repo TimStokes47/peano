@@ -13,7 +13,6 @@ peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::Descend(
   State&                 state,
   EventHandle&           eventHandle,
   RegularGridContainer&  gridContainer,
-  bool                   precedingLoadProcessMayFork,
   bool                   descendProcessRunsInParallelToOtherTasks
 ):
   _treeDepth(treeDepth),
@@ -23,7 +22,6 @@ peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::Descend(
   _touchVertexFirstTimeLoopBody(_state, _eventHandle, _gridContainer),
   _enterCellLoopBody(_state, _eventHandle, _gridContainer),
   _descendLoopBody(_eventHandle, _gridContainer ),
-  _precedingLoadProcessMayFork(precedingLoadProcessMayFork),
   _descendProcessRunsInParallelToOtherTasks(descendProcessRunsInParallelToOtherTasks) {
   assertion( treeDepth>=1 );
 }
@@ -132,19 +130,19 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::operator() () {
-  #if defined(SharedMemoryParallelisation)
-  while (
-     _precedingLoadProcessMayFork &&
-     !_descendProcessRunsInParallelToOtherTasks &&
-     !_gridContainer.isLevelInitialised(_treeDepth)
-  ) {
-    sendThisTaskToBackgroundWith1Argument(
-      "peano::grid::nodes::tasks::Descend::operator()",
-      _treeDepth
-    );
-  }
-  tarch::multicore::BooleanSemaphore::continueWithTask();
-  #endif
+//  #if defined(SharedMemoryParallelisation)
+//  while (
+//     _precedingLoadProcessMayFork &&
+//     !_descendProcessRunsInParallelToOtherTasks &&
+//     !_gridContainer.isLevelInitialised(_treeDepth)
+//  ) {
+//    sendThisTaskToBackgroundWith1Argument(
+//      "peano::grid::nodes::tasks::Descend::operator()",
+//      _treeDepth
+//    );
+//  }
+//  tarch::multicore::BooleanSemaphore::continueWithTask();
+//  #endif
 
 
   const bool skipCoarseLevelsCompletely =
