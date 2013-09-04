@@ -8,70 +8,78 @@
 tarch::logging::Log  peano::datatraversal::autotuning::OracleForOnePhaseDummy::_log( "peano::datatraversal::autotuning::OracleForOnePhaseDummy" );
 
 
-/**
-
-                      grainsize     concurrency   local speedup   global speedup
- enterCell/leaveCell: (3*3)^d/2^d   400%          3.5-4           <1
-                      12/2^d        220%          
-                      16/2^d        230%          3.7             1.03 bzw 1.06
-                      (3*3*3)^d/2^d <200%         3.5-4           <1 jedoch besser
-
-
-
-
- */
 peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy(
-  bool                useMultithreading,
-  bool                measureAlsoSerialProgramParts,
-  int                 splitTheTree,
-  bool                pipelineDescendProcessing,
-  bool                pipelineAscendProcessing,
-  int                 smallestGrainSize1DForCellEvents,
-  int                 smallestGrainSize1DForVertexEvents,
-  int                 smallestGrainSizeForLoadStoreSplits,
-  const MethodTrace&  methodTrace
+  bool useMultithreading                  ,
+  bool measureAlsoSerialProgramParts      ,
+  int  splitTheTree                       ,
+  bool pipelineDescendProcessing          ,
+  bool pipelineAscendProcessing           ,
+  int  smallestGrainSizeForAscendDescend  ,
+  int  grainSizeForAscendDescend          ,
+  int  smallestGrainSizeForEnterLeaveCell ,
+  int  grainSizeForEnterLeaveCell         ,
+  int  smallestGrainSizeForTouchFirstLast ,
+  int  grainSizeForTouchFirstLast         ,
+  int  smallestGrainSizeForSplitLoadStore ,
+  int  grainSizeForSplitLoadStore         ,
+  int  adapterNumber                      ,
+  const MethodTrace& methodTrace
 ):
   _useMulticore(useMultithreading),
   _measureAlsoSerialProgramParts(measureAlsoSerialProgramParts),
   _executionTime(),
+  _adapterNumber(adapterNumber),
   _methodTrace(methodTrace),
   _splitTheTree(splitTheTree),
   _pipelineDescendProcessing(pipelineDescendProcessing),
   _pipelineAscendProcessing(pipelineAscendProcessing),
-  _smallestGrainSize(std::numeric_limits<int>::max()),
+  _grainSize(std::numeric_limits<int>::max()),
+  _smallestProblemSize(std::numeric_limits<int>::max()),
   _lastProblemSize(-1),
-  _smallestGrainSize1DForCellEvents(smallestGrainSize1DForCellEvents),
-  _smallestGrainSize1DForVertexEvents(smallestGrainSize1DForVertexEvents),
-  _smallestGrainSizeForLoadStoreSplits(smallestGrainSizeForLoadStoreSplits) {
-  if (
-    ( _methodTrace==CallEnterCellOnRegularStationaryGrid ||
-      _methodTrace==CallLeaveCellOnRegularStationaryGrid ||
-      _methodTrace==AscendOnRegularStationaryGrid        ||
+  _smallestGrainSizeForAscendDescend(smallestGrainSizeForAscendDescend),
+  _grainSizeForAscendDescend(grainSizeForAscendDescend),
+  _smallestGrainSizeForEnterLeaveCell(smallestGrainSizeForEnterLeaveCell),
+  _grainSizeForEnterLeaveCell(grainSizeForEnterLeaveCell),
+  _smallestGrainSizeForTouchFirstLast(smallestGrainSizeForTouchFirstLast),
+  _grainSizeForTouchFirstLast(grainSizeForTouchFirstLast),
+  _smallestGrainSizeForSplitLoadStore(smallestGrainSizeForSplitLoadStore),
+  _grainSizeForSplitLoadStore(grainSizeForSplitLoadStore) {
+
+  if ( _pipelineAscendProcessing && _methodTrace == PipelineAscendTask ) {
+    _grainSize           = 1;
+    _smallestProblemSize = 0;
+  }
+  else if ( _pipelineDescendProcessing && _methodTrace == PipelineDescendTask ) {
+    _grainSize           = 1;
+    _smallestProblemSize = 0;
+  }
+  else if (
+    ( _methodTrace==AscendOnRegularStationaryGrid        ||
       _methodTrace==DescendOnRegularStationaryGrid
     ) &&
     _splitTheTree !=2
   ) {
-    _smallestGrainSize            = 1;
-    const int smallestGrainSize1D = _smallestGrainSize1DForCellEvents;
-    for (int d=0; d<DIMENSIONS; d++) {
-      _smallestGrainSize *= smallestGrainSize1D;
-    }
-    _smallestGrainSize /= TWO_POWER_D;
+    _grainSize           = grainSizeForAscendDescend;
+    _smallestProblemSize = smallestGrainSizeForAscendDescend;
   }
-  else
-  if (
+  else if (
+    ( _methodTrace==CallEnterCellOnRegularStationaryGrid ||
+      _methodTrace==CallLeaveCellOnRegularStationaryGrid
+    ) &&
+    _splitTheTree !=2
+  ) {
+    _grainSize           = grainSizeForEnterLeaveCell;
+    _smallestProblemSize = smallestGrainSizeForEnterLeaveCell;
+  }
+  else if (
     (
       _methodTrace==CallTouchFirstTimeOnRegularStationaryGrid ||
       _methodTrace==CallTouchLastTimeOnRegularStationaryGrid
     ) &&
     _splitTheTree !=2
   ) {
-    _smallestGrainSize            = 1;
-    const int smallestGrainSize1D = _smallestGrainSize1DForVertexEvents;
-    for (int d=0; d<DIMENSIONS; d++) {
-      _smallestGrainSize *= smallestGrainSize1D;
-    }
-    _smallestGrainSize /= 2;
+    _grainSize           = grainSizeForTouchFirstLast;
+    _smallestProblemSize = smallestGrainSizeForTouchFirstLast;
   }
   else if (
     _splitTheTree > 0  &&
@@ -80,17 +88,8 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
       _methodTrace == SplitStoreVerticesTaskOnRegularStationaryGrid
     )
   ) {
-    _smallestGrainSize  = _smallestGrainSizeForLoadStoreSplits;
-  }
-  else if ( _pipelineAscendProcessing && _methodTrace == PipelineAscendTask ) {
-    _smallestGrainSize = 1;
-  }
-  else if ( _pipelineDescendProcessing && _methodTrace == PipelineDescendTask ) {
-    _smallestGrainSize = 1;
-  }
-
-  if (_smallestGrainSize==0) {
-    _smallestGrainSize = 1;
+    _grainSize           = grainSizeForSplitLoadStore;
+    _smallestProblemSize = smallestGrainSizeForSplitLoadStore;
   }
 }
 
@@ -98,13 +97,13 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
 std::pair<int,bool> peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelise(int problemSize) {
   assertionEquals1( _lastProblemSize, -1, peano::datatraversal::autotuning::toString(_methodTrace) );
   if (_useMulticore) {
-    if (problemSize < _smallestGrainSize) {
+    if (problemSize < _smallestProblemSize) {
       if (_measureAlsoSerialProgramParts) _lastProblemSize = problemSize;
       return std::pair<int,bool>(0,_measureAlsoSerialProgramParts);
     }
     else {
       _lastProblemSize = problemSize;
-      return std::pair<int,bool>(_smallestGrainSize,true);
+      return std::pair<int,bool>(_grainSize,true);
     }
   }
   else {
@@ -128,6 +127,7 @@ void peano::datatraversal::autotuning::OracleForOnePhaseDummy::plotStatistics() 
       logInfo(
         "plotRuntimes()",
         "averaged runtime for " << peano::datatraversal::autotuning::toString(_methodTrace)
+        << " in " << _adapterNumber-peano::datatraversal::autotuning::NumberOfPredefinedAdapters+1 << "th adapter "
         << " for problem size " << p->first << ": " <<
         p->second.toString()
       );
@@ -147,9 +147,15 @@ peano::datatraversal::autotuning::OracleForOnePhase* peano::datatraversal::autot
     _splitTheTree,
     _pipelineDescendProcessing,
     _pipelineAscendProcessing,
-    _smallestGrainSize1DForCellEvents,
-    _smallestGrainSize1DForVertexEvents,
-    _smallestGrainSizeForLoadStoreSplits,
+    _smallestGrainSizeForAscendDescend,
+    _grainSizeForAscendDescend,
+    _smallestGrainSizeForEnterLeaveCell,
+    _grainSizeForEnterLeaveCell,
+    _smallestGrainSizeForTouchFirstLast,
+    _grainSizeForTouchFirstLast,
+    _smallestGrainSizeForSplitLoadStore,
+    _grainSizeForSplitLoadStore,
+    adapterNumber,
     methodTrace
   );
 }
@@ -164,15 +170,14 @@ std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString()
 
   msg << "(multicore="           << _useMulticore
       << ",measure-serial="      << _measureAlsoSerialProgramParts
+      << ",adapter-number="      << _adapterNumber
       << ",method="              << peano::datatraversal::autotuning::toString(_methodTrace)
       << ",split-tree="          << _splitTheTree
       << ",pipeline-descend="    << _pipelineDescendProcessing
       << ",pipeline-ascend="     << _pipelineAscendProcessing
-      << ",smallest-grain-size=" << _smallestGrainSize
+      << ",grain-size="            << _grainSize
+      << ",smallest-problem-size=" << _smallestProblemSize
       << ",last-problem-size="   << _lastProblemSize
-      << ",1d-cell-events="      << _smallestGrainSize1DForCellEvents
-      << ",1d-vertex-events="    << _smallestGrainSize1DForVertexEvents
-      << ",store-splits-grain="  << _smallestGrainSizeForLoadStoreSplits
       << ")";
 
   return msg.str();

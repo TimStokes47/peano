@@ -7,6 +7,7 @@
 #include "tarch/logging/Log.h"
 #include "peano/datatraversal/autotuning/OracleForOnePhase.h"
 #include "tarch/timing/Measurement.h"
+#include "tarch/la/ScalarOperations.h"
 #include "peano/utils/Globals.h"
 
 
@@ -32,38 +33,63 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
     const bool                                 _useMulticore;
     const bool                                 _measureAlsoSerialProgramParts;
     std::map<int, tarch::timing::Measurement>  _executionTime;
+    const int                                  _adapterNumber;
     const MethodTrace                          _methodTrace;
     const int                                  _splitTheTree;
     const bool                                 _pipelineDescendProcessing;
     const bool                                 _pipelineAscendProcessing;
 
-    int                                        _smallestGrainSize;
+    int                                        _grainSize;
+    int                                        _smallestProblemSize;
 
     int                                        _lastProblemSize;
 
-    const int                                  _smallestGrainSize1DForCellEvents;
-    const int                                  _smallestGrainSize1DForVertexEvents;
-    const int                                  _smallestGrainSizeForLoadStoreSplits;
+    const int                                  _smallestGrainSizeForAscendDescend;
+    const int                                  _grainSizeForAscendDescend;
+
+    const int                                  _smallestGrainSizeForEnterLeaveCell;
+    const int                                  _grainSizeForEnterLeaveCell;
+
+    const int                                  _smallestGrainSizeForTouchFirstLast;
+    const int                                  _grainSizeForTouchFirstLast;
+
+    const int                                  _smallestGrainSizeForSplitLoadStore;
+    const int                                  _grainSizeForSplitLoadStore;
   public:
     /**
      * Dummy oracle
      *
-     * @param splitTheTree (0=no, 1=yes and parallelise, 2=yes, but do not parallelise any events on the regular subgrid
-     * @param smallestGrainSize1DForCellEvents    Magic number. (Sub-)Grids smaller than this size (in 1d) should not be parallelised.
-     * @param smallestGrainSize1DForVertexEvents  Magic number.
-     * @param smallestGrainSizeForLoadStoreSplits Magic number.
+     * The magic numbers in the default arguments are taken from the following
+     * table:
      *
+     *
+|| dim || Phase/trace                        ||    p=2   ||    p=4    ||   p=6   ||    p=8    ||   p=16    || choice
+|| 2   || ascend-regular-stationary          | 1640/4    |  1640/8,12 | 1640/12  | 1640/64    | 1640/3     || 1640/3
+||     || call-enter-cell-regular-stationary |   20/1-8  |    20/2    |   20/2   |   20/2     |   20/2-6   ||   20/2
+||     || touch-first-regular-stationary     | 6724/2-8  |  6724/64   | 6724/18  | 6724/12    | 6724/2-7   || 6724/64
+||     || touch-last-regular-stationary      | 6724/2,8  |  6724/8    | 6724/12  | 6724/10    | 6724/3,4,5 || 6724/64
+||     || split-load                         |  900/2,8  |   900/3,8  |  900/2,4 |  900/40,2  |  900/8,24  ||  900/8
+||     || split-store                        |  900/~128 |   900/128  |  900/18  |  900/18    |  900/18    ||  900/8
+     *
+     *
+     * @param splitTheTree (0=no, 1=yes and parallelise, 2=yes, but do not parallelise any events on the regular subgrid
      */
     OracleForOnePhaseDummy(
-      bool useMultithreading             = true,
-      bool measureAlsoSerialProgramParts = false,
-      int  splitTheTree                  = 1,
-      bool pipelineDescendProcessing     = false,
-      bool pipelineAscendProcessing      = false,
-      int  smallestGrainSize1DForCellEvents    = 12,
-      int  smallestGrainSize1DForVertexEvents  = 3*3*3 + 1,
-      int  smallestGrainSizeForLoadStoreSplits = THREE_POWER_D,
-      const MethodTrace& methodTrace     = NumberOfDifferentMethodsCalling
+      bool useMultithreading                  = true,
+      bool measureAlsoSerialProgramParts      = false,
+      int  splitTheTree                       = 1,
+      bool pipelineDescendProcessing          = false,
+      bool pipelineAscendProcessing           = false,
+      int  smallestGrainSizeForAscendDescend  = tarch::la::aPowI(DIMENSIONS,3*3*3*3/2),
+      int  grainSizeForAscendDescend          = 3,
+      int  smallestGrainSizeForEnterLeaveCell = tarch::la::aPowI(DIMENSIONS,9/2),
+      int  grainSizeForEnterLeaveCell         = 2,
+      int  smallestGrainSizeForTouchFirstLast = tarch::la::aPowI(DIMENSIONS,3*3*3*3+1),
+      int  grainSizeForTouchFirstLast         = 64,
+      int  smallestGrainSizeForSplitLoadStore = tarch::la::aPowI(DIMENSIONS,3*3*3),
+      int  grainSizeForSplitLoadStore         = 8,
+      int  adapterNumber                      = -1,
+      const MethodTrace& methodTrace          = NumberOfDifferentMethodsCalling
     );
 
     virtual ~OracleForOnePhaseDummy();
