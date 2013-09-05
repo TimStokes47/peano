@@ -49,6 +49,8 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
      */
     bool                        _joinsAllowed;
 
+    bool                        _forksAllowed;
+
     /**
      * Set of all the workers that are idle, i.e. have no cells to handle
      * anymore.
@@ -56,7 +58,7 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
     std::set<int>               _idleWorkers;
 
   public:
-    OracleForOnePhaseWithGreedyPartitioning(bool joinsAllowed);
+    OracleForOnePhaseWithGreedyPartitioning(bool joinsAllowed, bool forkIsAllowed = true);
     virtual ~OracleForOnePhaseWithGreedyPartitioning();
 
     virtual void receivedStartCommand(int commandFromMaster );
