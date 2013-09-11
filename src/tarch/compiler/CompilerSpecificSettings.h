@@ -14,8 +14,10 @@
     #include "tarch/compiler/LinuxGCC.h"
   #elif defined (__xlC__)
     #include "tarch/compiler/IBMXLC.h"
+  #elif defined(__GNUC__) && defined(__APPLE__)
+    #include "tarch/compiler/MacOSGCC.h"
   #elif defined(__APPLE__)
-    #error CompilerSpecificSettings.h for Apple missing
+    #error Builds on MacOS are only supported with GCC, yet. Please adopt CompilerSpecificSettings.h
   #else
     #error Unknown compiler target. Please adopt CompilerSpecificSettings.h
   #endif
