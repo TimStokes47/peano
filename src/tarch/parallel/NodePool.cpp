@@ -78,10 +78,14 @@ int tarch::parallel::NodePool::getNumberOfWorkingNodes() const {
 
 
 bool tarch::parallel::NodePool::areAllNodesWorking() const {
+  #ifdef Parallel
   assertion1( Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
   assertion1( _strategy!=0, Node::getInstance().getRank() );
 
   return _strategy->getNumberOfIdleNodes()==0;
+  #else
+  return true;
+  #endif
 }
 
 

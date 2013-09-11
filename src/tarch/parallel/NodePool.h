@@ -372,6 +372,11 @@ class tarch::parallel::NodePool: public tarch::services::Service {
     int getNumberOfWorkingNodes() const;
 
     /**
+     * Are all nodes working
+     *
+     * If this operation is called for a code compiled without -DParallel,
+     * it returns true always.
+     *
      * @return true If there are not idle workers left
      */
     bool areAllNodesWorking() const;
