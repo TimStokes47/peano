@@ -65,10 +65,14 @@ void tarch::parallel::NodePool::restart() {
 
 
 int tarch::parallel::NodePool::getNumberOfWorkingNodes() const {
+  #ifdef Parallel
   assertion1( Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
   assertion1( _strategy!=0, Node::getInstance().getRank() );
 
   return _strategy->getNumberOfRegisteredNodes() - _strategy->getNumberOfIdleNodes();
+  #else
+  return 1;
+  #endif
 }
 
 

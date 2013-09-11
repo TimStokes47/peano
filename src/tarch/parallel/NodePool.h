@@ -363,8 +363,11 @@ class tarch::parallel::NodePool: public tarch::services::Service {
     void shutdown();
 
     /**
+     * Get Number of Working Nodes
+     *
      * This operation returns the number of non-idle nodes including the node
-     * pool rank itself.
+     * pool rank itself. If you run the code without the -DParallel flag, this
+     * operations always returns 1.
      */
     int getNumberOfWorkingNodes() const;
 
