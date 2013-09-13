@@ -11,6 +11,13 @@
 #include "tarch/services/Service.h"
 
 
+
+
+#ifndef noPackedEmptyHeapMessages
+  #define PackedEmptyHeapMessages
+#endif
+
+
 #ifdef ParallelExchangePackedRecordsInHeaps
    #pragma pack (push, 1)
 #endif
@@ -203,14 +210,12 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     int _nextIndex;
 
-    #ifdef Parallel
     /**
      * MPI tag used for sending data.
      */
     int _mpiTagForNeighbourDataExchange;
     int _mpiTagForMasterWorkerDataExchange;
     int _mpiTagToExchangeForkJoinData;
-    #endif
 
     std::vector<SendReceiveTask>   _neighbourDataSendTasks;
     std::vector<SendReceiveTask>   _masterWorkerDataSendTasks;
@@ -279,6 +284,27 @@ class peano::heap::Heap: public tarch::services::Service {
     bool  _wasTraversalInvertedThroughoutLastSendReceiveTraversal;
 
     bool  _heapIsCurrentlySentReceived;
+
+    #ifdef PackedEmptyHeapMessages
+    /**
+     * Stores the number of zero-length messages that should be compressed
+     * into one message before the next non-zero-length message is sent.
+     *
+     * For each send-call with a zero-length message this counter is increased
+     * and no message is sent. As soon as a non-zero-length message should be
+     * sent or the current iteration ends, this counter is sent as one message
+     * and the counter is reset to zero.
+     */
+    std::map<int, int> _numberOfNeighbourDataCompressedEmptyMessages;
+    /**
+     * @see _numberOfNeighbourDataCompressedEmptyMessages;
+     */
+    std::map<int, int> _numberOfMasterWorkerDataCompressedEmptyMessages;
+    /**
+     * @see _numberOfNeighbourDataCompressedEmptyMessages;
+     */
+    std::map<int, int> _numberOfForkJoinDataCompressedEmptyMessages;
+    #endif
 
     /**
      * Private constructor to hide the possibility
@@ -449,6 +475,30 @@ class peano::heap::Heap: public tarch::services::Service {
      * Operation is not const as it updates internal statistics.
      */
     int getTagForMessageType(MessageType messageType, bool isSendTask, int messageSize);
+
+    /**
+     * Compresses one zero-length message for sending it later.
+     */
+    void compressZeroLengthMessage(
+      int         toRank,
+      MessageType messageType
+    );
+
+    /**
+     * Sends all zero-length messages that have been accumulated for the given message
+     * type and resets the according counter.
+     */
+    void sendCompressedEmptyMessages(
+      int                                           toRank,
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level,
+      MessageType messageType
+    );
+
+    /**
+     * Sends all zero-length messages that have not been sent, yet.
+     */
+    void sendAllCompressedEmptyMessages();
 
   public:
     /**
