@@ -47,9 +47,9 @@ peano::heap::Heap<Data>::Heap()
   ,_wasTraversalInvertedThroughoutLastSendReceiveTraversal(false)
   ,_heapIsCurrentlySentReceived(false)
   #ifdef PackedEmptyHeapMessages
-  ,_numberOfNeighbourDataCompressedEmptyMessages(0)
-  ,_numberOfMasterWorkerDataCompressedEmptyMessages(0)
-  ,_numberOfForkJoinDataCompressedEmptyMessages(0)
+  ,_numberOfNeighbourDataCompressedEmptyMessages()
+  ,_numberOfMasterWorkerDataCompressedEmptyMessages()
+  ,_numberOfForkJoinDataCompressedEmptyMessages()
   #endif
 {
   #ifdef Parallel
