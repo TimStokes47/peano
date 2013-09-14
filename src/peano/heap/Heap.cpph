@@ -963,8 +963,6 @@ void peano::heap::Heap<Data>::sendCompressedEmptyMessages(
   }
 
   if(numberOfCompressedMessages > 0) {
-
-    int mpiTag = getTagForMessageType(messageType,true,0);
     SendReceiveTask sendTask;
     sendTask._rank = toRank;
     sendTask._metaInformation.setLength(static_cast<int>( -numberOfCompressedMessages ));
@@ -974,10 +972,11 @@ void peano::heap::Heap<Data>::sendCompressedEmptyMessages(
     sendTask._metaInformation.setLevel(level);
     #endif
     #ifdef Parallel
+    const int mpiTag = getTagForMessageType(messageType,true,0);
     sendTask._metaInformation.send(toRank, mpiTag, true);
+    logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with mpiTag: " << mpiTag << ", neighbour-data-tag: " << _mpiTagForNeighbourDataExchange << ", master/worker-tag=" << _mpiTagForMasterWorkerDataExchange << ", fork/join-tag=" << _mpiTagToExchangeForkJoinData);
     #endif
 
-    logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with mpiTag: " << mpiTag << ", neighbour-data-tag: " << _mpiTagForNeighbourDataExchange << ", master/worker-tag=" << _mpiTagForMasterWorkerDataExchange << ", fork/join-tag=" << _mpiTagToExchangeForkJoinData);
     if (messageType == NeighbourCommunication) {
       _neighbourDataSendTasks.push_back(sendTask);
     } else if (messageType == MasterWorkerCommunication) {
