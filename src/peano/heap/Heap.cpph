@@ -879,7 +879,7 @@ void peano::heap::Heap<Data>::sendCompressedEmptyMessages(
   const tarch::la::Vector<DIMENSIONS, double>&  position,
   int                                           level
 ) {
-  logTraceInWith4Arguments("sendCompressedEmptyMessages", toRank, position, level, messageType);
+  logTraceInWith3Arguments("sendCompressedEmptyMessages", toRank, position, level);
 
   if(_numberOfNeighbourDataCompressedEmptyMessages.find(toRank) == _numberOfNeighbourDataCompressedEmptyMessages.end()) {
     _numberOfNeighbourDataCompressedEmptyMessages[toRank] = 0;
