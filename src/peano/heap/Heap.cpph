@@ -48,8 +48,6 @@ peano::heap::Heap<Data>::Heap()
   ,_heapIsCurrentlySentReceived(false)
   #ifdef PackedEmptyHeapMessages
   ,_numberOfNeighbourDataCompressedEmptyMessages()
-  ,_numberOfMasterWorkerDataCompressedEmptyMessages()
-  ,_numberOfForkJoinDataCompressedEmptyMessages()
   #endif
 {
   #ifdef Parallel
@@ -256,68 +254,24 @@ void peano::heap::Heap<Data>::sendData(
   logTraceInWith6Arguments( "sendData(...)", _name, toRank, position, level, messageType, data.size() );
 
   #ifdef Parallel
-    #ifdef PackedEmptyHeapMessages
-    if(data.size() == 0) {
-      compressZeroLengthMessage(toRank, messageType);
-    } else {
-      sendCompressedEmptyMessages(toRank, position, level, messageType);
-    #endif
-
-    int mpiTag = getTagForMessageType(messageType,true,data.size());
-    SendReceiveTask sendTask;
-    sendTask._rank = toRank;
-    #ifdef Asserts
-    //Set debug information
-    sendTask._metaInformation.setPosition(position);
-    sendTask._metaInformation.setLevel(level);
-    #endif
-
-    logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with mpiTag: " << mpiTag << ", neighbour-data-tag: " << _mpiTagForNeighbourDataExchange << ", master/worker-tag=" << _mpiTagForMasterWorkerDataExchange << ", fork/join-tag=" << _mpiTagToExchangeForkJoinData);
-
-    sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
-    sendTask._metaInformation.send(toRank, mpiTag, true);
-
-    assertion((messageType==ForkOrJoinCommunication) || (messageType==MasterWorkerCommunication) || _heapIsCurrentlySentReceived);
-
-    #ifdef PackedEmptyHeapMessages
-    assertion(data.size() > 0);
-    #else
-    if(data.size() > 0) {
-    #endif
-    sendTask._data = new typename SendReceiveTask::MPIData[data.size()];
-    for (int i=0; i<static_cast<int>( data.size() ); i++) {
-      #if defined(ParallelExchangePackedRecordsInHeaps)
-      sendTask._data[i] = data[i].convert();
-      #else
-      sendTask._data[i] = data[i];
-      #endif
-    }
-    int result = MPI_Isend(
-      sendTask._data, sendTask._metaInformation.getLength(), SendReceiveTask::MPIData::Datatype, toRank,
-      mpiTag,
-      tarch::parallel::Node::getInstance().getCommunicator(), &sendTask._request
-    );
-
-    if ( result != MPI_SUCCESS ) {
-      logError(
-        "sendData(...)", "failed to send heap data to node "
-        << toRank << ": " << tarch::parallel::MPIReturnValueToString(result)
-      );
-    }
-    #ifndef PackedEmptyHeapMessages
-    }
-    #endif
-
-    if (messageType == NeighbourCommunication) {
-      _neighbourDataSendTasks.push_back(sendTask);
-    } else if (messageType == MasterWorkerCommunication) {
-      _masterWorkerDataSendTasks.push_back(sendTask);
-    } else {
-      _forkJoinDataSendTasks.push_back(sendTask);
-    }
   #ifdef PackedEmptyHeapMessages
+  if(messageType == NeighbourCommunication) {
+    if(data.size() == 0) {
+      compressZeroLengthMessage(toRank);
+      return;
+    } else {
+      sendCompressedEmptyMessages(toRank, position, level);
+    }
   }
   #endif
+
+  sendMessage(
+    data,
+    toRank,
+    position,
+    level,
+    messageType
+  );
   #endif
 
   logTraceOut( "sendData(...)" );
@@ -911,58 +865,30 @@ int peano::heap::Heap<Data>::getTagForMessageType(MessageType messageType, bool 
 #ifdef PackedEmptyHeapMessages
 template <class Data>
 void peano::heap::Heap<Data>::compressZeroLengthMessage(
-  int         toRank,
-  MessageType messageType
+  int         toRank
 ) {
-    if (messageType == NeighbourCommunication) {
-      if(_numberOfNeighbourDataCompressedEmptyMessages.find(toRank) == _numberOfNeighbourDataCompressedEmptyMessages.end()) {
-        _numberOfNeighbourDataCompressedEmptyMessages[toRank] = 0;
-      }
-      _numberOfNeighbourDataCompressedEmptyMessages[toRank]++;
-    } else if (messageType == MasterWorkerCommunication) {
-      if(_numberOfMasterWorkerDataCompressedEmptyMessages.find(toRank) == _numberOfMasterWorkerDataCompressedEmptyMessages.end()) {
-        _numberOfMasterWorkerDataCompressedEmptyMessages[toRank] = 0;
-      }
-      _numberOfMasterWorkerDataCompressedEmptyMessages[toRank]++;
-    } else {
-      if(_numberOfForkJoinDataCompressedEmptyMessages.find(toRank) == _numberOfForkJoinDataCompressedEmptyMessages.end()) {
-        _numberOfForkJoinDataCompressedEmptyMessages[toRank] = 0;
-      }
-      _numberOfForkJoinDataCompressedEmptyMessages[toRank]++;
-    }
+  if(_numberOfNeighbourDataCompressedEmptyMessages.find(toRank) == _numberOfNeighbourDataCompressedEmptyMessages.end()) {
+    _numberOfNeighbourDataCompressedEmptyMessages[toRank] = 0;
+  }
+  _numberOfNeighbourDataCompressedEmptyMessages[toRank]++;
 }
 
 template <class Data>
 void peano::heap::Heap<Data>::sendCompressedEmptyMessages(
   int                                           toRank,
   const tarch::la::Vector<DIMENSIONS, double>&  position,
-  int                                           level,
-  MessageType messageType
+  int                                           level
 ) {
   logTraceInWith4Arguments("sendCompressedEmptyMessages", toRank, position, level, messageType);
 
-  int numberOfCompressedMessages;
-  if (messageType == NeighbourCommunication) {
-    if(_numberOfNeighbourDataCompressedEmptyMessages.find(toRank) == _numberOfNeighbourDataCompressedEmptyMessages.end()) {
-      _numberOfNeighbourDataCompressedEmptyMessages[toRank] = 0;
-    }
-    numberOfCompressedMessages = _numberOfNeighbourDataCompressedEmptyMessages[toRank];
+  if(_numberOfNeighbourDataCompressedEmptyMessages.find(toRank) == _numberOfNeighbourDataCompressedEmptyMessages.end()) {
     _numberOfNeighbourDataCompressedEmptyMessages[toRank] = 0;
-  } else if (messageType == MasterWorkerCommunication) {
-    if(_numberOfMasterWorkerDataCompressedEmptyMessages.find(toRank) == _numberOfMasterWorkerDataCompressedEmptyMessages.end()) {
-      _numberOfMasterWorkerDataCompressedEmptyMessages[toRank] = 0;
-    }
-    numberOfCompressedMessages = _numberOfMasterWorkerDataCompressedEmptyMessages[toRank];
-    _numberOfMasterWorkerDataCompressedEmptyMessages[toRank] = 0;
-  } else {
-    if(_numberOfForkJoinDataCompressedEmptyMessages.find(toRank) == _numberOfForkJoinDataCompressedEmptyMessages.end()) {
-      _numberOfForkJoinDataCompressedEmptyMessages[toRank] = 0;
-    }
-    numberOfCompressedMessages = _numberOfForkJoinDataCompressedEmptyMessages[toRank];
-    _numberOfForkJoinDataCompressedEmptyMessages[toRank] = 0;
   }
+  int numberOfCompressedMessages = _numberOfNeighbourDataCompressedEmptyMessages[toRank];
+  _numberOfNeighbourDataCompressedEmptyMessages[toRank] = 0;
 
   if(numberOfCompressedMessages > 0) {
+    int mpiTag = getTagForMessageType(NeighbourCommunication,true,0);
     SendReceiveTask sendTask;
     sendTask._rank = toRank;
     sendTask._metaInformation.setLength(static_cast<int>( -numberOfCompressedMessages ));
@@ -971,19 +897,11 @@ void peano::heap::Heap<Data>::sendCompressedEmptyMessages(
     sendTask._metaInformation.setPosition(position);
     sendTask._metaInformation.setLevel(level);
     #endif
-    #ifdef Parallel
-    const int mpiTag = getTagForMessageType(messageType,true,0);
     sendTask._metaInformation.send(toRank, mpiTag, true);
-    logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with mpiTag: " << mpiTag << ", neighbour-data-tag: " << _mpiTagForNeighbourDataExchange << ", master/worker-tag=" << _mpiTagForMasterWorkerDataExchange << ", fork/join-tag=" << _mpiTagToExchangeForkJoinData);
-    #endif
 
-    if (messageType == NeighbourCommunication) {
-      _neighbourDataSendTasks.push_back(sendTask);
-    } else if (messageType == MasterWorkerCommunication) {
-      _masterWorkerDataSendTasks.push_back(sendTask);
-    } else {
-      _forkJoinDataSendTasks.push_back(sendTask);
-    }
+    logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with mpiTag: " << mpiTag << ", neighbour-data-tag: " << _mpiTagForNeighbourDataExchange << ", master/worker-tag=" << _mpiTagForMasterWorkerDataExchange << ", fork/join-tag=" << _mpiTagToExchangeForkJoinData);
+
+    _neighbourDataSendTasks.push_back(sendTask);
   }
 
   logTraceOut("sendCompressedEmptyMessages");
@@ -996,22 +914,76 @@ void peano::heap::Heap<Data>::sendAllCompressedEmptyMessages() {
   for(std::map<int, int>::iterator i = _numberOfNeighbourDataCompressedEmptyMessages.begin();
       i != _numberOfNeighbourDataCompressedEmptyMessages.end();
       i++) {
-    sendCompressedEmptyMessages(i->first, 0, 0, NeighbourCommunication);
-  }
-  for(std::map<int, int>::iterator i = _numberOfMasterWorkerDataCompressedEmptyMessages.begin();
-      i != _numberOfMasterWorkerDataCompressedEmptyMessages.end();
-      i++) {
-    sendCompressedEmptyMessages(i->first, 0, 0, MasterWorkerCommunication);
-  }
-  for(std::map<int, int>::iterator i = _numberOfForkJoinDataCompressedEmptyMessages.begin();
-      i != _numberOfForkJoinDataCompressedEmptyMessages.end();
-      i++) {
-    sendCompressedEmptyMessages(i->first, 0, 0, ForkOrJoinCommunication);
+    sendCompressedEmptyMessages(i->first, 0, 0);
   }
 
   logTraceOut("sendAllCompressedEmptyMessages");
 }
 #endif
+
+template <class Data>
+void peano::heap::Heap<Data>::sendMessage(
+  const std::vector<Data>&                      data,
+  int                                           toRank,
+  const tarch::la::Vector<DIMENSIONS, double>&  position,
+  int                                           level,
+  MessageType                                   messageType
+) {
+  int mpiTag = getTagForMessageType(messageType,true,data.size());
+  SendReceiveTask sendTask;
+  sendTask._rank = toRank;
+  #ifdef Asserts
+  //Set debug information
+  sendTask._metaInformation.setPosition(position);
+  sendTask._metaInformation.setLevel(level);
+  #endif
+
+  logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with mpiTag: " << mpiTag << ", neighbour-data-tag: " << _mpiTagForNeighbourDataExchange << ", master/worker-tag=" << _mpiTagForMasterWorkerDataExchange << ", fork/join-tag=" << _mpiTagToExchangeForkJoinData);
+
+  sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
+  sendTask._metaInformation.send(toRank, mpiTag, true);
+
+  assertion((messageType==ForkOrJoinCommunication) || (messageType==MasterWorkerCommunication) || _heapIsCurrentlySentReceived);
+
+  #ifdef PackedEmptyHeapMessages
+  assertion2(
+    messageType != NeighbourCommunication ||
+    data.size() > 0,
+    data.size(), messageType
+  );
+  #endif
+  if(data.size() > 0) {
+    sendTask._data = new typename SendReceiveTask::MPIData[data.size()];
+    for (int i=0; i<static_cast<int>( data.size() ); i++) {
+      #if defined(ParallelExchangePackedRecordsInHeaps)
+      sendTask._data[i] = data[i].convert();
+      #else
+      sendTask._data[i] = data[i];
+      #endif
+    }
+    int result = MPI_Isend(
+      sendTask._data, sendTask._metaInformation.getLength(), SendReceiveTask::MPIData::Datatype, toRank,
+      mpiTag,
+      tarch::parallel::Node::getInstance().getCommunicator(), &sendTask._request
+    );
+
+    if ( result != MPI_SUCCESS ) {
+      logError(
+        "sendData(...)", "failed to send heap data to node "
+        << toRank << ": " << tarch::parallel::MPIReturnValueToString(result)
+      );
+    }
+  }
+
+  if (messageType == NeighbourCommunication) {
+    _neighbourDataSendTasks.push_back(sendTask);
+  } else if (messageType == MasterWorkerCommunication) {
+    _masterWorkerDataSendTasks.push_back(sendTask);
+  } else {
+    _forkJoinDataSendTasks.push_back(sendTask);
+  }
+}
+
 
 template <class Data>
 int peano::heap::Heap<Data>::getSizeOfReceiveBuffer(int neighbourRank) const {

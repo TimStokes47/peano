@@ -294,16 +294,13 @@ class peano::heap::Heap: public tarch::services::Service {
      * and no message is sent. As soon as a non-zero-length message should be
      * sent or the current iteration ends, this counter is sent as one message
      * and the counter is reset to zero.
+     *
+     * RLE of zero-length messages for fork/join or master-worker-communication
+     * is not implemented, since synchronous communication implies the risk of
+     * deadlocks. Here, zero-length messages may be held back until after a
+     * message that, logically, should show up afterwards.
      */
     std::map<int, int> _numberOfNeighbourDataCompressedEmptyMessages;
-    /**
-     * @see _numberOfNeighbourDataCompressedEmptyMessages;
-     */
-    std::map<int, int> _numberOfMasterWorkerDataCompressedEmptyMessages;
-    /**
-     * @see _numberOfNeighbourDataCompressedEmptyMessages;
-     */
-    std::map<int, int> _numberOfForkJoinDataCompressedEmptyMessages;
     #endif
 
     /**
@@ -480,8 +477,7 @@ class peano::heap::Heap: public tarch::services::Service {
      * Compresses one zero-length message for sending it later.
      */
     void compressZeroLengthMessage(
-      int         toRank,
-      MessageType messageType
+      int toRank
     );
 
     /**
@@ -491,14 +487,24 @@ class peano::heap::Heap: public tarch::services::Service {
     void sendCompressedEmptyMessages(
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
-      int                                           level,
-      MessageType messageType
+      int                                           level
     );
 
     /**
      * Sends all zero-length messages that have not been sent, yet.
      */
     void sendAllCompressedEmptyMessages();
+
+    /**
+     * Sends a message encapsulating a heap dataset.
+     */
+    void sendMessage(
+      const std::vector<Data>&                      data,
+      int                                           toRank,
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level,
+      MessageType                                   messageType
+    );
 
   public:
     /**
