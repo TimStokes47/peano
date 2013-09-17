@@ -699,7 +699,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
 
 
     /**
-     * Perpare startup send to worker
+     * Prepare startup send to worker
      *
      * This operation is called always when we send data to a worker. It is not 
      * called when we are right in a join or fork. The operation is kind of the 
