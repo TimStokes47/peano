@@ -3,19 +3,30 @@
 #ifndef _PEANO_HEAP_HEAP_H_
 #define _PEANO_HEAP_HEAP_H_
 
-#include "peano/heap/records/MetaInformation.h"
 #include <map>
 #include <vector>
 #include <list>
+
+#include "peano/utils/PeanoOptimisations.h"
+
+#include "peano/heap/SendReceiveTask.h"
+#include "peano/heap/SynchronousDataExchanger.h"
+#include "peano/heap/BoundaryDataExchanger.h"
+#include "peano/heap/RLEBoundaryDataExchanger.h"
+
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
 
 
 
 
-#ifndef noPackedEmptyHeapMessages
-  #define PackedEmptyHeapMessages
-#endif
+/**
+ * @todo Rename weil packed ja was anderes ist bei Peano
+ */
+//#ifndef noPackedEmptyHeapMessages
+//  #define PackedEmptyHeapMessages
+//#endif
+
 
 
 #ifdef ParallelExchangePackedRecordsInHeaps
@@ -25,7 +36,12 @@
 
 namespace peano {
   namespace heap {
-    template<class Data>
+    template<
+      class Data,
+      class MasterWorkerExchanger  = SynchronousDataExchanger< Data >,
+      class JoinForkExchanger      = SynchronousDataExchanger< Data >,
+      class NeighbourDataExchanger = BoundaryDataExchanger< Data >
+    >
     class Heap;
 
     /**
@@ -141,53 +157,9 @@ namespace peano {
  *
  * @author Kristof Unterweger, Tobias Weinzierl
  */
-template <class Data>
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 class peano::heap::Heap: public tarch::services::Service {
   private:
-    /**
-     * We always use the plain meta information as record, i.e. we do not pack
-     * anything here as the meta information usually is one integer only
-     * anyway.
-     */
-    typedef peano::heap::records::MetaInformation          MetaInformation;
-
-    /**
-     * Wrapper for a send or receive task
-     *
-     * Holds the information for a send or receive task, i.e. it holds the MPI
-     * request to check weather the task has been finished (both sends and
-     * receives are realised as non-blocking MPI data exchange) as well as a
-     * pointer to the allocated data where the copy of the data is
-     * stored (send task) or is to be stored (receive task).
-     */
-    struct SendReceiveTask {
-      #ifdef Parallel
-      MPI_Request     _request;
-      #endif
-      MetaInformation _metaInformation;
-      /**
-       * Without semantics for send tasks but important for receive tasks as we
-       * have to store from which rank the data arrived from.
-       */
-      int             _rank;
-
-      #if defined(Parallel) && defined(ParallelExchangePackedRecordsInHeaps)
-      typedef typename Data::Packed  MPIData;
-      #else
-      typedef Data    MPIData;
-      #endif
-
-      /**
-       * Pointer to the actual data. If meta data marks a message without
-       * content, this pointer is 0.
-       */
-      MPIData*        _data;
-
-      #ifdef Asserts
-      SendReceiveTask();
-      #endif
-    };
-
     /**
      * Logging device.
      */
@@ -217,13 +189,13 @@ class peano::heap::Heap: public tarch::services::Service {
     int _mpiTagForMasterWorkerDataExchange;
     int _mpiTagToExchangeForkJoinData;
 
-    std::vector<SendReceiveTask>   _neighbourDataSendTasks;
-    std::vector<SendReceiveTask>   _masterWorkerDataSendTasks;
-    std::vector<SendReceiveTask>   _forkJoinDataSendTasks;
+    std::vector<SendReceiveTask<Data> >  _neighbourDataSendTasks;
+    std::vector<SendReceiveTask<Data> >   _masterWorkerDataSendTasks;
+    std::vector<SendReceiveTask<Data> >   _forkJoinDataSendTasks;
 
-    std::vector<SendReceiveTask>   _neighbourDataReceiveTasks[2];
-    std::vector<SendReceiveTask>   _masterWorkerDataReceiveTasks;
-    std::vector<SendReceiveTask>   _forkJoinDataReceiveTasks;
+    std::vector<SendReceiveTask<Data> >   _neighbourDataReceiveTasks[2];
+    std::vector<SendReceiveTask<Data> >   _masterWorkerDataReceiveTasks;
+    std::vector<SendReceiveTask<Data> >   _forkJoinDataReceiveTasks;
 
     int  _numberOfRecordsSentToNeighbour;
     int  _numberOfRecordsSentToMasterWorker;
@@ -336,13 +308,13 @@ class peano::heap::Heap: public tarch::services::Service {
      *
      * @return -1 if no message found
      */
-    int findMessageFromRankInMasterWorkerOrForkJoinDataBuffer(int ofRank, std::vector<SendReceiveTask>& tasks);
+    int findMessageFromRankInMasterWorkerOrForkJoinDataBuffer(int ofRank, std::vector<SendReceiveTask<Data> >& tasks);
 
-    void removeMessageFromBuffer(int messageNumber, std::vector<SendReceiveTask>& tasks);
+    void removeMessageFromBuffer(int messageNumber, std::vector<SendReceiveTask<Data> >& tasks);
 
     std::vector< Data > extractMessageFromTaskQueue(
       int                                           messageNumber,
-      std::vector<SendReceiveTask>&                 tasks,
+      std::vector<SendReceiveTask<Data> >&          tasks,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level
     );
@@ -382,7 +354,7 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     void releaseAndClearSentForkJoinAndMasterWorkerMessages();
 
-    void releaseSentMessages(std::vector<SendReceiveTask>& tasks);
+    void releaseSentMessages(std::vector<SendReceiveTask<Data> >& tasks);
 
     /**
      * Wait until number of received messages equals sent messages
@@ -464,7 +436,7 @@ class peano::heap::Heap: public tarch::services::Service {
       MessageType                                   messageType
     );
 
-    void receiveDanglingMessages(int tag, std::vector<SendReceiveTask>& taskQueue);
+    void receiveDanglingMessages(int tag, std::vector<SendReceiveTask<Data> >& taskQueue);
 
     /**
      * Returns the correct MPI tag for the given message type.

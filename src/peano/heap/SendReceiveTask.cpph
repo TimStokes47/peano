@@ -1,0 +1,7 @@
+#ifdef Asserts
+template <class Data>
+peano::heap::SendReceiveTask<Data>::SendReceiveTask():
+  _rank(-1),
+  _data(0) {
+}
+#endif
