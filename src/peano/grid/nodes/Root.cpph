@@ -356,7 +356,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 ) {
   logTraceIn( "sendCellAndVerticesToMaster(...)" );
 
-  if (!tarch::parallel::Node::getInstance().isGlobalMaster()) {
+  if ( sendLocalDataToMaster(state) ) {
     Base::_eventHandle.prepareSendToMaster(
       centralFineGridCell,
       fineGridVertices,
@@ -366,9 +366,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       _coarseGridCell,
       _positionOfRootCellRelativeToCoarserCellOnMaster
     );
-  }
 
-  if ( sendLocalDataToMaster(state) ) {
     logDebug( "sendCellAndVerticesToMaster(...)", "send cell " << centralFineGridCell.toString() << " to master" );
     centralFineGridCell.send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)
