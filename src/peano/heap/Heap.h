@@ -12,7 +12,6 @@
 #include "peano/heap/SendReceiveTask.h"
 #include "peano/heap/SynchronousDataExchanger.h"
 #include "peano/heap/BoundaryDataExchanger.h"
-#include "peano/heap/RLEBoundaryDataExchanger.h"
 
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
@@ -22,6 +21,8 @@
 
 /**
  * @todo Rename weil packed ja was anderes ist bei Peano
+ *
+ * @todo einmal erst einschalten so, damit man sieht, was nicht uebersetzt
  */
 //#ifndef noPackedEmptyHeapMessages
 //  #define PackedEmptyHeapMessages
@@ -155,6 +156,13 @@ namespace peano {
  *   the same but each vertex that wants to receive data also has to send a
  *   (probably empty) record the the corresponding neighbour.
  *
+ * !!! Rationale
+ *
+ * SynchronousDataExchange hier ist nix symmetrisch. Deshalb koennen wir keine map verwenden - da wuerden uns daten entgehen
+ * Stattdessen muessen wir all ranks testen und einfuegen
+ *
+ * Boundary ist immer symmetrisch
+ *
  * @author Kristof Unterweger, Tobias Weinzierl
  */
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
@@ -166,6 +174,7 @@ class peano::heap::Heap: public tarch::services::Service {
     static tarch::logging::Log _log;
 
     typedef std::map<int, std::vector<Data>*>  HeapContainer;
+
     /**
      * Map that holds all data that is stored on the heap
      * via this class.
@@ -182,38 +191,13 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     int _nextIndex;
 
-    /**
-     * MPI tag used for sending data.
-     */
-    int _mpiTagForNeighbourDataExchange;
-    int _mpiTagForMasterWorkerDataExchange;
-    int _mpiTagToExchangeForkJoinData;
+    #ifdef Parallel
+    int                                    _neighbourDataExchangerTag;
 
-    std::vector<SendReceiveTask<Data> >  _neighbourDataSendTasks;
-    std::vector<SendReceiveTask<Data> >   _masterWorkerDataSendTasks;
-    std::vector<SendReceiveTask<Data> >   _forkJoinDataSendTasks;
-
-    std::vector<SendReceiveTask<Data> >   _neighbourDataReceiveTasks[2];
-    std::vector<SendReceiveTask<Data> >   _masterWorkerDataReceiveTasks;
-    std::vector<SendReceiveTask<Data> >   _forkJoinDataReceiveTasks;
-
-    int  _numberOfRecordsSentToNeighbour;
-    int  _numberOfRecordsSentToMasterWorker;
-    int  _numberOfRecordsSentDueToForkJoin;
-
-    int  _numberOfMessagesSentToNeighbour;
-    int  _numberOfMessagesSentToMasterWorker;
-    int  _numberOfMessagesSentDueToForkJoin;
-
-    int  _numberOfMessagesReceivedFromNeighbour;
-    int  _numberOfMessagesReceivedFromMasterWorker;
-    int  _numberOfMessagesReceivedDueToForkJoin;
-
-    /**
-     * Is either 0 or 1 and identifies which element of _receiveDeployTasks
-     * currently is the receive buffer and which one is the deploy buffer.
-     */
-    int                          _currentReceiveBuffer;
+    MasterWorkerExchanger                  _masterWorkerExchanger;
+    JoinForkExchanger                      _joinForkExchanger;
+    std::map<int, NeighbourDataExchanger>  _neighbourDataExchanger;
+    #endif
 
     /**
      * Stores the maximum number of heap objects that was stored
@@ -234,29 +218,7 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     std::string _name;
 
-    /**
-     * Shall the deploy buffer data be read in reverse order?
-     *
-     * Usually, the elements of the deploy buffer are delivered in reverse
-     * order compared to the order they are received. See the class
-     * documentation for the rationale and a reasoning. That means that this
-     * flag usually is set. However, if you send out data in an adapter, then
-     * do an iteration without communication, and then receive the data from
-     * the heap, this flag has to be set to false.
-     *
-     * As a consequence, this flag is by default true. If you finishedToSendOrReceiveHeapData()
-     * and the content of the receive buffer is moved to the buffer (due
-     * to a transition of _currentReceiveBuffer to 1 or 0, respectively), this
-     * flag also is set true. If no switching is performed in
-     * relesaseMessages() as the buffer still was filled but the receive
-     * buffer was empty, solely this flag is inverted.
-     */
-    bool  _readDeployBufferInReverseOrder;
-
-    bool  _wasTraversalInvertedThroughoutLastSendReceiveTraversal;
-
-    bool  _heapIsCurrentlySentReceived;
-
+    // @todo raus
     #ifdef PackedEmptyHeapMessages
     /**
      * Stores the number of zero-length messages that should be compressed
@@ -286,198 +248,60 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     ~Heap();
 
-    int findMessageFromRankInNeighbourDataDeployBuffer(int ofRank) const;
 
-    /**
-     * Find Message in Buffer for Master Worker or Fork Join Data
-     *
-     * !!! Realisation Details
-     *
-     * If we find a message from the right sender, we have to check whether the
-     * corresponding message exchange already has finished. If it has not
-     * finished, we may not continue to search in the queue for fitting tasks.
-     * We we searched, we might find a newer message from the same rank that
-     * already has been completed. If we returned this message's index, we
-     * would invalidate the message order.
-     *
-     * !!! Const
-     *
-     * This operation is not const as it has to test whether an assynchronous
-     * message exchange has already finished. For this, it uses MPI_Test.
-     * MPI_Test in turn is not const.
-     *
-     * @return -1 if no message found
-     */
-    int findMessageFromRankInMasterWorkerOrForkJoinDataBuffer(int ofRank, std::vector<SendReceiveTask<Data> >& tasks);
+//    std::vector< Data > receiveNeighbourData(
+//      int fromRank,
+//      const tarch::la::Vector<DIMENSIONS, double>&  position,
+//      int                                           level
+//    );
 
-    void removeMessageFromBuffer(int messageNumber, std::vector<SendReceiveTask<Data> >& tasks);
+//    /**
+//     *
+//     * !!! Implementation remarks
+//     *
+//     * The implementation is somehow redundant as we could skip the first if
+//     * statement and jump directly into the while loop. However, this routine
+//     * is very sensitiv to (software) latency and thus we avoid the deadlock
+//     * timing, e.g., if the message is already available. Only if the message
+//     * isn't available yet, we do the standard polling/deadlock check loop.
+//     */
+//    std::vector< Data > receiveMasterWorkerOrForkJoinData(
+//      int fromRank,
+//      const tarch::la::Vector<DIMENSIONS, double>&  position,
+//      int                                           level,
+//      MessageType                                   messageType
+//    );
 
-    std::vector< Data > extractMessageFromTaskQueue(
-      int                                           messageNumber,
-      std::vector<SendReceiveTask<Data> >&          tasks,
-      const tarch::la::Vector<DIMENSIONS, double>&  position,
-      int                                           level
-    );
-
-    /**
-     * Release all sent messages
-     *
-     * @see releaseAndClearSentForkJoinAndMasterWorkerMessages for general information
-     *
-     * Different to releaseAndClearSentForkJoinAndMasterWorkerMessages(), this
-     * operation returns some statistics which rank was sent how many messages.
-     *
-     * @result Mapping from ranks onto message numbers
-     */
-    std::map<int,int> releaseSentNeighbourMessages();
-
-    /**
-     * Release all sent messages
-     *
-     * This operation runs through all sent messages and waits for each sent
-     * message until the corresponding non-blocking MPI request is freed, i.e.
-     * until the message has left the system. As the underlying MPI_Test
-     * modifies the MPI handles, the operation is not const. The method also
-     * has some deadlock detection.
-     *
-     * When it terminates, all messages successfully have left this node, and
-     * you may clear the send buffer. The operation itself however does not
-     * invoke the clear, as you might need the number of sent messages before
-     * you continue in a different context.
-     *
-     * I originally intended to call the release within
-     * finishedToSendOrReceiveHeapData(). However, this introduces a deadlock
-     * on many MPI installations: For big (heap) data, they wait until the
-     * corresponding receive is called. And this receive is not called before
-     * the receiving traversal begins. So I moved it into an operation called
-     * later.
-     */
-    void releaseAndClearSentForkJoinAndMasterWorkerMessages();
-
-    void releaseSentMessages(std::vector<SendReceiveTask<Data> >& tasks);
-
-    /**
-     * Wait until number of received messages equals sent messages
-     *
-     * The operation is a big while loop around receiveDanglingMessages() with
-     * some deadlocking aspects added, i.e. it can time out. It is not const as
-     * receiveDanglingMessages() cannot be const.
-     *
-     * Besides waiting for MPI to release some handles, the operation also
-     * invokes all the services to receive any dangling messages.
-     *
-     * @param statistics Mapping from ranks to number of messages that
-     *                   specifies for how many messages we have to wait.
-     */
-    void waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages(const std::map<int,int>&  statistics);
-
-    /**
-     * Switches receive and deploy buffer between two iterations.
-     *
-     * This method switches receive and deploy buffer for heap data
-     * exchanged between neighbours. This happens between two iterations
-     * in which heap data is exchanged and results in a situation where
-     * the former receive buffer is the deploy buffer afterwards and vice
-     * versa.
-     *
-     * Due to the polling mechanism in receiveDanglingMessages(...) it
-     * might happen that the receive buffer before the switch contains
-     * messages which belong to the following iteration, since a
-     * neighbouring rank may already be an iteration ahead. These
-     * messages need to reside in the new receive buffer (i.e. the
-     * former deploy buffer). Thus, after switching both buffers the
-     * information of the statistics map is used to copy all messages
-     * that do not belong to the previous iteration to the new receive
-     * buffer.
-     *
-     * @param statistics This map contains the number of messages that
-     * where sent to every neighbouring rank. That means the key for the
-     * map is a neighbouring rank and the according value is the number
-     * of messages sent to this rank in the last grid iteration. If a
-     * key (i.e. a rank) does not exist in this map, this means it is
-     * either no neighbouring rank or no messages have been sent to it.
-     */
-    void switchReceiveAndDeployBuffer(std::map<int,int>  statistics);
-
-    /**
-     * Release Requests for Received Messages
-     *
-     * This operation runs through all received messages. For each one it
-     * waits until the receive operation has been finished. The operation
-     * basically should be const. However, it calls MPI_Test/MPI_Wait on the
-     * request objects associated to the heap. This test modifies the request
-     * object which makes the operation (basically via a callback) non-const.
-     *
-     * Besides waiting for MPI to release some handles, the operation also
-     * invokes all the services to receive any dangling messages.
-     */
-    void releaseReceivedNeighbourMessagesRequests();
-
-    std::vector< Data > receiveNeighbourData(
-      int fromRank,
-      const tarch::la::Vector<DIMENSIONS, double>&  position,
-      int                                           level
-    );
-
-    /**
-     *
-     * !!! Implementation remarks
-     *
-     * The implementation is somehow redundant as we could skip the first if
-     * statement and jump directly into the while loop. However, this routine
-     * is very sensitiv to (software) latency and thus we avoid the deadlock
-     * timing, e.g., if the message is already available. Only if the message
-     * isn't available yet, we do the standard polling/deadlock check loop.
-     */
-    std::vector< Data > receiveMasterWorkerOrForkJoinData(
-      int fromRank,
-      const tarch::la::Vector<DIMENSIONS, double>&  position,
-      int                                           level,
-      MessageType                                   messageType
-    );
-
-    void receiveDanglingMessages(int tag, std::vector<SendReceiveTask<Data> >& taskQueue);
+//    void receiveDanglingMessages(int tag, std::vector<SendReceiveTask<Data> >& taskQueue);
 
     /**
      * Returns the correct MPI tag for the given message type.
      *
      * Operation is not const as it updates internal statistics.
      */
-    int getTagForMessageType(MessageType messageType, bool isSendTask, int messageSize);
+//    int getTagForMessageType(MessageType messageType, bool isSendTask, int messageSize);
+//
+//    /**
+//     * Compresses one zero-length message for sending it later.
+//     */
+//    void compressZeroLengthMessage(
+//      int toRank
+//    );
 
-    /**
-     * Compresses one zero-length message for sending it later.
-     */
-    void compressZeroLengthMessage(
-      int toRank
-    );
-
-    /**
-     * Sends all zero-length messages that have been accumulated for the given message
-     * type and resets the according counter.
-     */
-    void sendCompressedEmptyMessages(
-      int                                           toRank,
-      const tarch::la::Vector<DIMENSIONS, double>&  position,
-      int                                           level
-    );
+//    /**
+//     * Sends all zero-length messages that have been accumulated for the given message
+//     * type and resets the according counter.
+//     */
+//    void sendCompressedEmptyMessages(
+//      int                                           toRank,
+//      const tarch::la::Vector<DIMENSIONS, double>&  position,
+//      int                                           level
+//    );
 
     /**
      * Sends all zero-length messages that have not been sent, yet.
      */
-    void sendAllCompressedEmptyMessages();
-
-    /**
-     * Sends a message encapsulating a heap dataset.
-     */
-    void sendMessage(
-      const std::vector<Data>&                      data,
-      int                                           toRank,
-      const tarch::la::Vector<DIMENSIONS, double>&  position,
-      int                                           level,
-      MessageType                                   messageType
-    );
-
+//    void sendAllCompressedEmptyMessages();
   public:
     /**
      * The HeapData class is a singleton, thus one needs to
@@ -573,8 +397,8 @@ class peano::heap::Heap: public tarch::services::Service {
     /**
      * Sends heap data associated to one index to one rank.
      *
-     * To avoid overcrowded MPI buffers, send also calls receiveDanglingMessages()
-     * once.
+     * Please note that these sends are assynchronous, i.e. if you change the
+     * vertices afterwards, you might run into problems
      */
     void sendData(
       int                                           index,
@@ -637,37 +461,62 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     virtual void receiveDanglingMessages();
 
-    int getSizeOfForkJoinDataBuffer() const;
-    int getSizeOfMasterWorkerDataBuffer() const;
-    int getSizeOfDeployBuffer() const;
-    int getSizeOfReceiveBuffer(int neighbourRank) const;
-    int getSizeOfSendBuffer() const;
-
     std::string toString() const;
 
     /**
-     * Start to send or receive data
+     * Start to send data
      *
      * Please hand in the state's traversal bool that informs the heap about
-     * the direction of the Peano space-filling curve. This operation should
-     * be called in beginIteration().
+     * the direction of the Peano space-filling curve. This operation is
+     * typically called in beginIteration(). However, please be aware that the
+     * data from the master is received and merged before.
+     *
+     * This operation is idempotent, i.e. you may call it several times.
+     *
+     * This operation is to be re-called in each traversal and should be
+     * followed by a finishedToSendData() call in the each traversal as well.
+     *
+     * You are not allowed to send heap data before this operation has been
+     * called.
      */
-    void startToSendOrReceiveHeapData(bool isTraversalInverted);
+    void startToSendData(bool isTraversalInverted);
 
     /**
-     * Stop to send or receive data
+     * Stop to send data
      *
-     * Counterpart of startToSendOrReceiveHeapData() that should be called in
-     * the endIteration() event.
+     * Counterpart of startToSendData(). Should be called around in each
+     * traversal where you've also called startToSendData(). When this
+     * operation is called, you are not allowed to send heap data anymore.
+     *
+     * This operation runs through all sent master-worker and join-fork
+     * messages and waits for each sent
+     * message until the corresponding non-blocking MPI request is freed, i.e.
+     * until the message has left the system. As the underlying MPI_Test
+     * modifies the MPI handles, the operation is not const. The method also
+     * has some deadlock detection.
+     *
+     * This operation is idempotent, i.e. you may call it several times.
+     *
+     * !!! Frequently Done Bug
+     *
+     * Please note that the event prepareSendToMaster() is invoked by Peano
+     * after endIteration() is called. Many heap users send data to the master
+     * in prepareSendToMaster(). For such codes, you may not call
+     * finishedToSendData() in endIteration(). Instead, you have to notify the
+     * heap that you finished to send in prepareSendToMaster().
+     *
+     * This induces an error on the global master where prepareSendToMaster()
+     * is never called. So, you have to call finish in endIteration() as well -
+     * but if and only if you are on the global master.
      *
      * @see releaseSentMessages()
      */
-    void finishedToSendOrReceiveHeapData();
+    void finishedToSendData();
 
     /**
      * Plots statistics for this heap data.
      */
-    void plotStatistics();
+    void plotStatistics() const;
 
     void clearStatistics();
 };

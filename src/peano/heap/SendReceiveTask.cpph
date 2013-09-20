@@ -1,3 +1,7 @@
+template <class Data>
+tarch::logging::Log  peano::heap::SendReceiveTask<Data>::_log( "peano::heap::SendReceiveTask" );
+
+
 #ifdef Asserts
 template <class Data>
 peano::heap::SendReceiveTask<Data>::SendReceiveTask():
@@ -5,3 +9,71 @@ peano::heap::SendReceiveTask<Data>::SendReceiveTask():
   _data(0) {
 }
 #endif
+
+
+template <class Data>
+void peano::heap::SendReceiveTask<Data>::wrapDataAndTriggerSend(const std::vector<Data>& data, int tag) {
+  assertion( !data.empty() );
+  assertion( _data==0 );
+
+  _data = new MPIData[data.size()];
+  for (int i=0; i<static_cast<int>( data.size() ); i++) {
+    #if defined(ParallelExchangePackedRecordsInHeaps)
+    _data[i] = data[i].convert();
+    #else
+    _data[i] = data[i];
+    #endif
+  }
+
+  int result = MPI_Isend(
+    _data, _metaInformation.getLength(), MPIData::Datatype, _rank,
+    tag,
+    tarch::parallel::Node::getInstance().getCommunicator(), &_request
+  );
+
+  if ( result != MPI_SUCCESS ) {
+    logError(
+      "sendData(...)", "failed to send heap data to node "
+      << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+    );
+  }
+}
+
+
+template <class Data>
+void peano::heap::SendReceiveTask<Data>::triggerReceive(int tag) {
+  assertion( _rank >= 0 );
+  assertion( _data==0 );
+
+  _data = new typename SendReceiveTask<Data>::MPIData[ _metaInformation.getLength() ];
+
+  int   result = MPI_Irecv(
+    _data, _metaInformation.getLength(), MPIData::Datatype,
+    _rank, tag, tarch::parallel::Node::getInstance().getCommunicator(),
+    &_request
+  );
+  if ( result != MPI_SUCCESS ) {
+    logError(
+      "receiveDanglingMessages()",
+      "failed to receive heap data from node "
+      << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+    );
+  }
+}
+
+
+template <class Data>
+std::vector<Data> peano::heap::SendReceiveTask<Data>::unwrapDataAndFreeMemory() {
+  std::vector<Data> result;
+
+  for (int i=0; i<_metaInformation.getLength(); i++) {
+    #if defined(ParallelExchangePackedRecordsInHeaps)
+    result.push_back(_data[i].convert());
+    #else
+    result.push_back(_data[i]);
+    #endif
+  }
+
+  delete[] _data;
+  return result;
+}

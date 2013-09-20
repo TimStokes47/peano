@@ -32,6 +32,9 @@ namespace peano {
  */
 template<class Data>
 struct peano::heap::SendReceiveTask {
+  static tarch::logging::Log _log;
+
+
   /**
    * We always use the plain meta information as record, i.e. we do not pack
    * anything here as the meta information usually is one integer only
@@ -66,6 +69,15 @@ struct peano::heap::SendReceiveTask {
   #ifdef Asserts
   SendReceiveTask();
   #endif
+
+  /**
+   * Please note that you have to call delete[] on _data afterwards.
+   */
+  void wrapDataAndTriggerSend(const std::vector<Data>& data, int tag);
+
+  void triggerReceive(int tag);
+
+  std::vector<Data> unwrapDataAndFreeMemory();
 };
 
 
