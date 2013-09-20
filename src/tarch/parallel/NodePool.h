@@ -370,6 +370,7 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * operations always returns 1.
      */
     int getNumberOfWorkingNodes() const;
+    int getNumberOfIdleNodes() const;
 
     /**
      * Are all nodes working
