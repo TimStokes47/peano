@@ -14,7 +14,11 @@ peano::heap::SynchronousDataExchanger<Data>::SynchronousDataExchanger(
   _numberOfSentMessages(0),
   _numberOfSentRecords(0),
   _numberOfReceivedMessages(0),
-  _numberOfReceivedRecords(0) {
+  _numberOfReceivedRecords(0)
+  #ifdef Asserts
+  ,_isCurrentlySending(false)
+  #endif
+  {
 }
 
 
@@ -22,6 +26,11 @@ template<class Data>
 void peano::heap::SynchronousDataExchanger<Data>::startToSendData() {
   logTraceInWith1Argument( "startToSendData()", _identifier );
   assertion( _sendTasks.empty() );
+
+  #ifdef Asserts
+  _isCurrentlySending = true;
+  #endif
+
   logTraceOut( "startToSendData()" );
 }
 
@@ -29,6 +38,10 @@ void peano::heap::SynchronousDataExchanger<Data>::startToSendData() {
 template<class Data>
 void peano::heap::SynchronousDataExchanger<Data>::finishedToSendData() {
   logTraceInWith1Argument( "finishedToSendData()", _sendTasks.size() );
+
+  #ifdef Asserts
+  _isCurrentlySending = false;
+  #endif
 
   for(typename std::vector<SendReceiveTask<Data> >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
     MPI_Status status;
@@ -143,6 +156,8 @@ void peano::heap::SynchronousDataExchanger<Data>::sendData(
   const tarch::la::Vector<DIMENSIONS, double>&  position,
   int                                           level
 ) {
+  assertion( _isCurrentlySending );
+
   SendReceiveTask<Data> sendTask;
   sendTask._rank = toRank;
   #ifdef Asserts
@@ -226,7 +241,7 @@ std::vector< Data > peano::heap::SynchronousDataExchanger<Data>::receiveData(
 
   result = extractMessageFromReceiveBuffer(resultTask, position, level);
 
-  logTraceOutWith1Argument( "receiveMasterWorkerOrForkJoinData(...)", result.size() );
+  logTraceOutWith1Argument( "receiveData(...)", result.size() );
   return result;
 }
 

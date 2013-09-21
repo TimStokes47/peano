@@ -60,6 +60,10 @@ class peano::heap::BoundaryDataExchanger {
 
     bool  _wasTraversalInvertedThroughoutLastSendReceiveTraversal;
 
+    #ifdef Asserts
+    bool _isCurrentlySending;
+    #endif
+
     int findMessageFromRankInNeighbourDataDeployBuffer(int ofRank) const;
 
     /**
@@ -132,12 +136,37 @@ class peano::heap::BoundaryDataExchanger {
     BoundaryDataExchanger();
 
     /**
+     *
+     * !!! The parameter _isCurrentlySending
+     *
+     * _isCurrentlySending primarily acts as assertion. If we try to send
+     * something while the flag is not set, Peano quits with an assertion.
+     * This however is only half of the story.
+     *
+     * We have to know when a new traversal starts to be able to take all
+     * data received, remove those that belong to the last iteration (while
+     * we might already have received data from the current iteration), and
+     * move them to the deploy buffer. For the deploy buffer, we have to know
+     * whether to read it FIFO or LIFO. For this, we analyse the traversal
+     * direction.
+     *
+     * For the very first iteration, we typically cannot invoke the start
+     * communication operation: Even if we do, most buffers won't get this
+     * information as they are not created yet. It is here absolutely
+     * irrelevant that the heap communication channels have been opened
+     * before - if we open the channel, no data is received yet and we will
+     * not move data or analyse read directions. Therefore, the start property
+     * of this assertion flag is true - we can start to send data right away.
+     *
+     * Den Assert Parameter unbedingt auf ja, sonst geht erste Iteration schief, weil da
+     * ja Eintrag in Map noch nicht existiert
+     *
      * @param identifier Only required by the plot
      */
     BoundaryDataExchanger(const std::string& identifier, int tag, int rank);
 
     void startToSendData(bool isTraversalInverted);
-    void finishedToSendData();
+    void finishedToSendData(bool isTraversalInverted);
 
     void receiveDanglingMessages();
 

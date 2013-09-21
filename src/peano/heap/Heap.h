@@ -474,18 +474,23 @@ class peano::heap::Heap: public tarch::services::Service {
      * This operation is idempotent, i.e. you may call it several times.
      *
      * This operation is to be re-called in each traversal and should be
-     * followed by a finishedToSendData() call in the each traversal as well.
+     * followed by a finish call in the each traversal as well.
      *
      * You are not allowed to send heap data before this operation has been
      * called.
      */
-    void startToSendData(bool isTraversalInverted);
+    void startToSendSynchronousData();
+
+    /**
+     * Equivalent to startToSendSynchronousData() for master-worker and join-fork data
+     */
+    void startToSendBoundaryData(bool isTraversalInverted);
 
     /**
      * Stop to send data
      *
-     * Counterpart of startToSendData(). Should be called around in each
-     * traversal where you've also called startToSendData(). When this
+     * Counterpart of startToSendSynchronousData(). Should be called around in each
+     * traversal where you've also called startToSendSynchronousData(). When this
      * operation is called, you are not allowed to send heap data anymore.
      *
      * This operation runs through all sent master-worker and join-fork
@@ -508,10 +513,15 @@ class peano::heap::Heap: public tarch::services::Service {
      * This induces an error on the global master where prepareSendToMaster()
      * is never called. So, you have to call finish in endIteration() as well -
      * but if and only if you are on the global master.
-     *
-     * @see releaseSentMessages()
      */
-    void finishedToSendData();
+    void finishedToSendSynchronousData();
+
+    /**
+     * Finish boundary data exchange
+     *
+     * Counterpart of start operation. Should be called in endIteration().
+     */
+    void finishedToSendBoundaryData(bool isTraversalInverted);
 
     /**
      * Plots statistics for this heap data.

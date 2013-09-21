@@ -32,6 +32,10 @@ class peano::heap::SynchronousDataExchanger {
     int  _numberOfReceivedMessages;
     int  _numberOfReceivedRecords;
 
+    #ifdef Asserts
+    bool _isCurrentlySending;
+    #endif
+
     /**
      * Find Message in Buffer
      *

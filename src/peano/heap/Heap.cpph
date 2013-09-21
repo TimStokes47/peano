@@ -371,13 +371,23 @@ std::string peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Ne
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
-void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::startToSendData(bool isTraversalInverted) {
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::startToSendSynchronousData() {
   logTraceInWith1Argument( "startToSendData(bool)", _name );
 
   #ifdef Parallel
   _masterWorkerExchanger.startToSendData();
   _joinForkExchanger.startToSendData();
+  #endif
 
+  logTraceOut( "startToSendData(bool)" );
+}
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::startToSendBoundaryData(bool isTraversalInverted) {
+  logTraceInWith1Argument( "startToSendData(bool)", _name );
+
+  #ifdef Parallel
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
     p != _neighbourDataExchanger.end();
@@ -392,8 +402,8 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
-void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::finishedToSendData() {
-  logTraceInWith1Argument( "finishedToSendData()", _name );
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::finishedToSendSynchronousData() {
+  logTraceInWith1Argument( "finishedToSendSynchronousData()", _name );
 
   #ifdef PackedEmptyHeapMessages
   sendAllCompressedEmptyMessages();
@@ -402,15 +412,29 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   #ifdef Parallel
   _masterWorkerExchanger.finishedToSendData();
   _joinForkExchanger.finishedToSendData();
+  #endif
 
+  logTraceOut( "finishedToSendSynchronousData()" );
+}
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::finishedToSendBoundaryData(bool isTraversalInverted) {
+  logTraceInWith1Argument( "finishedToSendBoundaryData()", _name );
+
+  #ifdef PackedEmptyHeapMessages
+  sendAllCompressedEmptyMessages();
+  #endif
+
+  #ifdef Parallel
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
     p != _neighbourDataExchanger.end();
     p++
   ) {
-    p->second.finishedToSendData();
+    p->second.finishedToSendData(isTraversalInverted);
   }
   #endif
 
-  logTraceOut( "finishedToSendData()" );
+  logTraceOut( "finishedToSendBoundaryData()" );
 }
