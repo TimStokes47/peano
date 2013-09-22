@@ -73,11 +73,26 @@ struct peano::heap::SendReceiveTask {
   /**
    * Please note that you have to call delete[] on _data afterwards.
    */
-  void wrapDataAndTriggerSend(const std::vector<Data>& data, int tag);
+  void wrapData(const std::vector<Data>& data);
+
+  void triggerSend(int tag);
 
   void triggerReceive(int tag);
 
   std::vector<Data> unwrapDataAndFreeMemory();
+
+  void setInvalid();
+
+  /**
+   * A task fits if it is
+   *
+   * - either invalid (see setInvalid())
+   * - or position and level coincide.
+   */
+  bool fits(
+    const tarch::la::Vector<DIMENSIONS, double>&  position,
+    int                                           level
+  ) const;
 };
 
 

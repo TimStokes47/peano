@@ -1,5 +1,28 @@
+#include "tarch/la/VectorCompare.h"
+
 template <class Data>
 tarch::logging::Log  peano::heap::SendReceiveTask<Data>::_log( "peano::heap::SendReceiveTask" );
+
+
+template<class Data>
+bool peano::heap::SendReceiveTask<Data>::fits(
+  const tarch::la::Vector<DIMENSIONS, double>&  position,
+  int                                           level
+) const {
+  return
+    (_metaInformation.getLevel() == -1) ||
+    (
+      _metaInformation.getLevel() == level &&
+      tarch::la::equals(_metaInformation.getPosition(), position)
+    );
+}
+
+
+template<class Data>
+void peano::heap::SendReceiveTask<Data>::setInvalid() {
+  _metaInformation.setLevel(-1);
+  _data = 0;
+}
 
 
 #ifdef Asserts
@@ -12,7 +35,7 @@ peano::heap::SendReceiveTask<Data>::SendReceiveTask():
 
 
 template <class Data>
-void peano::heap::SendReceiveTask<Data>::wrapDataAndTriggerSend(const std::vector<Data>& data, int tag) {
+void peano::heap::SendReceiveTask<Data>::wrapData(const std::vector<Data>& data) {
   assertion( !data.empty() );
   assertion( _data==0 );
 
@@ -24,6 +47,12 @@ void peano::heap::SendReceiveTask<Data>::wrapDataAndTriggerSend(const std::vecto
     _data[i] = data[i];
     #endif
   }
+}
+
+
+template <class Data>
+void peano::heap::SendReceiveTask<Data>::triggerSend(int tag) {
+  assertion( _data!=0 );
 
   int result = MPI_Isend(
     _data, _metaInformation.getLength(), MPIData::Datatype, _rank,
@@ -33,7 +62,7 @@ void peano::heap::SendReceiveTask<Data>::wrapDataAndTriggerSend(const std::vecto
 
   if ( result != MPI_SUCCESS ) {
     logError(
-      "sendData(...)", "failed to send heap data to node "
+      "triggerSend(int)", "failed to send heap data to node "
       << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }

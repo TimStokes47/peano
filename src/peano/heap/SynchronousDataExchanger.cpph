@@ -180,7 +180,8 @@ void peano::heap::SynchronousDataExchanger<Data>::sendData(
       #endif
 
   if(data.size() > 0) {
-    sendTask.wrapDataAndTriggerSend(data,_tag);
+    sendTask.wrapData(data);
+    sendTask.triggerSend(_tag);
   }
 
   _sendTasks.push_back(sendTask);

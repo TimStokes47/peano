@@ -20,6 +20,7 @@ class peano::heap::BoundaryDataExchanger {
      */
     static tarch::logging::Log _log;
 
+  protected:
     const std::string    _identifier;
     const int            _tag;
     const int            _rank;
@@ -63,8 +64,6 @@ class peano::heap::BoundaryDataExchanger {
     #ifdef Asserts
     bool _isCurrentlySending;
     #endif
-
-    int findMessageFromRankInNeighbourDataDeployBuffer(int ofRank) const;
 
     /**
      * Wait until number of received messages equals sent messages
@@ -124,14 +123,33 @@ class peano::heap::BoundaryDataExchanger {
      * Release all sent messages
      *
      * This operation waits until all messages are successfully sent. Then, it
-     * clears the send buffer and finally returns the number of messages
-     * delivered. This number might differ from the _numberOfSentMessages, as
-     * the latter is cleared only if you call clearStatistics(). Otherwise, it
-     * can also accumulate throughout multiple iterations.
-     *
-     * @return Number of messages sent
+     * clears the send buffer.
      */
-    int releaseSentMessages();
+    void releaseSentMessages();
+
+    /**
+     * Exchanger has to know how many messages should be in the receive buffer at least.
+     */
+    virtual int getNumberOfSentMessages() const = 0;
+
+    /**
+     * Hook in for finishToSendData(). Is called when the abstract superclass
+     * has finished its operatios.
+     */
+    virtual void postprocessFinishedToSendData() = 0;
+
+    virtual void postprocessStartToSendData() = 0;
+
+    /**
+     * There has been a receive task in the mpi queue. This one is received and
+     * then passed to this operation.
+     */
+    virtual void handleAndQueueReceivedTask( SendReceiveTask<Data> receivedTask ) = 0;
+
+    /**
+     * No mpi operation done yet.
+     */
+    virtual void handleAndQueueSendTask( SendReceiveTask<Data> sendTask, const std::vector<Data>& data ) = 0;
   public:
     BoundaryDataExchanger();
 
@@ -164,6 +182,8 @@ class peano::heap::BoundaryDataExchanger {
      * @param identifier Only required by the plot
      */
     BoundaryDataExchanger(const std::string& identifier, int tag, int rank);
+
+    virtual ~BoundaryDataExchanger();
 
     void startToSendData(bool isTraversalInverted);
     void finishedToSendData(bool isTraversalInverted);

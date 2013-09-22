@@ -11,23 +11,13 @@
 
 #include "peano/heap/SendReceiveTask.h"
 #include "peano/heap/SynchronousDataExchanger.h"
-#include "peano/heap/BoundaryDataExchanger.h"
+#include "peano/heap/PlainBoundaryDataExchanger.h"
+
+// @todo raus
+#include "peano/heap/RLEBoundaryDataExchanger.h"
 
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
-
-
-
-
-/**
- * @todo Rename weil packed ja was anderes ist bei Peano
- *
- * @todo einmal erst einschalten so, damit man sieht, was nicht uebersetzt
- */
-//#ifndef noPackedEmptyHeapMessages
-//  #define PackedEmptyHeapMessages
-//#endif
-
 
 
 #ifdef ParallelExchangePackedRecordsInHeaps
@@ -39,11 +29,37 @@ namespace peano {
   namespace heap {
     template<
       class Data,
-      class MasterWorkerExchanger  = SynchronousDataExchanger< Data >,
-      class JoinForkExchanger      = SynchronousDataExchanger< Data >,
-      class NeighbourDataExchanger = BoundaryDataExchanger< Data >
+      class MasterWorkerExchanger,
+      class JoinForkExchanger,
+      class NeighbourDataExchanger
     >
     class Heap;
+
+    /**
+     * Heap with standard configurations to enable users to work only with
+     * one template arguments instead of four.
+     */
+    template<class Data>
+    class PlainHeap: public Heap<
+      Data,
+      SynchronousDataExchanger< Data >,
+      SynchronousDataExchanger< Data >,
+      PlainBoundaryDataExchanger< Data >
+    > {
+    };
+
+
+    template<class Data>
+    class RLEHeap: public Heap<
+      Data,
+      SynchronousDataExchanger< Data >,
+      SynchronousDataExchanger< Data >,
+      PlainBoundaryDataExchanger< Data >
+    > {
+    };
+
+//    template<class Data>
+//    typedef Heap<Data, SynchronousDataExchanger< Data >, SynchronousDataExchanger< Data >, RLEBoundaryDataExchanger< Data > >    RLEHeap;
 
     /**
      * Flags to specify which kind of message is sent or
@@ -218,25 +234,6 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     std::string _name;
 
-    // @todo raus
-    #ifdef PackedEmptyHeapMessages
-    /**
-     * Stores the number of zero-length messages that should be compressed
-     * into one message before the next non-zero-length message is sent.
-     *
-     * For each send-call with a zero-length message this counter is increased
-     * and no message is sent. As soon as a non-zero-length message should be
-     * sent or the current iteration ends, this counter is sent as one message
-     * and the counter is reset to zero.
-     *
-     * RLE of zero-length messages for fork/join or master-worker-communication
-     * is not implemented, since synchronous communication implies the risk of
-     * deadlocks. Here, zero-length messages may be held back until after a
-     * message that, logically, should show up afterwards.
-     */
-    std::map<int, int> _numberOfNeighbourDataCompressedEmptyMessages;
-    #endif
-
     /**
      * Private constructor to hide the possibility
      * to instantiate an object of this class.
@@ -248,60 +245,6 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     ~Heap();
 
-
-//    std::vector< Data > receiveNeighbourData(
-//      int fromRank,
-//      const tarch::la::Vector<DIMENSIONS, double>&  position,
-//      int                                           level
-//    );
-
-//    /**
-//     *
-//     * !!! Implementation remarks
-//     *
-//     * The implementation is somehow redundant as we could skip the first if
-//     * statement and jump directly into the while loop. However, this routine
-//     * is very sensitiv to (software) latency and thus we avoid the deadlock
-//     * timing, e.g., if the message is already available. Only if the message
-//     * isn't available yet, we do the standard polling/deadlock check loop.
-//     */
-//    std::vector< Data > receiveMasterWorkerOrForkJoinData(
-//      int fromRank,
-//      const tarch::la::Vector<DIMENSIONS, double>&  position,
-//      int                                           level,
-//      MessageType                                   messageType
-//    );
-
-//    void receiveDanglingMessages(int tag, std::vector<SendReceiveTask<Data> >& taskQueue);
-
-    /**
-     * Returns the correct MPI tag for the given message type.
-     *
-     * Operation is not const as it updates internal statistics.
-     */
-//    int getTagForMessageType(MessageType messageType, bool isSendTask, int messageSize);
-//
-//    /**
-//     * Compresses one zero-length message for sending it later.
-//     */
-//    void compressZeroLengthMessage(
-//      int toRank
-//    );
-
-//    /**
-//     * Sends all zero-length messages that have been accumulated for the given message
-//     * type and resets the according counter.
-//     */
-//    void sendCompressedEmptyMessages(
-//      int                                           toRank,
-//      const tarch::la::Vector<DIMENSIONS, double>&  position,
-//      int                                           level
-//    );
-
-    /**
-     * Sends all zero-length messages that have not been sent, yet.
-     */
-//    void sendAllCompressedEmptyMessages();
   public:
     /**
      * The HeapData class is a singleton, thus one needs to
@@ -471,8 +414,6 @@ class peano::heap::Heap: public tarch::services::Service {
      * typically called in beginIteration(). However, please be aware that the
      * data from the master is received and merged before.
      *
-     * This operation is idempotent, i.e. you may call it several times.
-     *
      * This operation is to be re-called in each traversal and should be
      * followed by a finish call in the each traversal as well.
      *
@@ -499,8 +440,6 @@ class peano::heap::Heap: public tarch::services::Service {
      * until the message has left the system. As the underlying MPI_Test
      * modifies the MPI handles, the operation is not const. The method also
      * has some deadlock detection.
-     *
-     * This operation is idempotent, i.e. you may call it several times.
      *
      * !!! Frequently Done Bug
      *

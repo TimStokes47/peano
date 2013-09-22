@@ -26,9 +26,6 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
   ,_numberOfHeapAllocations(0)
   ,_numberOfHeapFrees(0)
   ,_name("<heap name not set>")
-  #ifdef PackedEmptyHeapMessages
-  ,_numberOfNeighbourDataCompressedEmptyMessages()
-  #endif
 {
   #ifdef Parallel
   if (SendReceiveTask<Data>::MPIData::Datatype==0) {
@@ -262,19 +259,6 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
       _masterWorkerExchanger.sendData(data,toRank,position,level);
       break;
   }
-
-
-
-  #ifdef PackedEmptyHeapMessages
-  if(messageType == NeighbourCommunication) {
-    if(data.size() == 0) {
-      compressZeroLengthMessage(toRank);
-      return;
-    } else {
-      sendCompressedEmptyMessages(toRank, position, level);
-    }
-  }
-  #endif
   #endif
 
   logTraceOut( "sendData(...)" );
@@ -405,10 +389,6 @@ template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, clas
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::finishedToSendSynchronousData() {
   logTraceInWith1Argument( "finishedToSendSynchronousData()", _name );
 
-  #ifdef PackedEmptyHeapMessages
-  sendAllCompressedEmptyMessages();
-  #endif
-
   #ifdef Parallel
   _masterWorkerExchanger.finishedToSendData();
   _joinForkExchanger.finishedToSendData();
@@ -421,10 +401,6 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::finishedToSendBoundaryData(bool isTraversalInverted) {
   logTraceInWith1Argument( "finishedToSendBoundaryData()", _name );
-
-  #ifdef PackedEmptyHeapMessages
-  sendAllCompressedEmptyMessages();
-  #endif
 
   #ifdef Parallel
   for (

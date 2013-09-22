@@ -45,6 +45,11 @@ peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger(
 
 
 template<class Data>
+peano::heap::BoundaryDataExchanger<Data>::~BoundaryDataExchanger() {
+}
+
+
+template<class Data>
 void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalInverted) {
   assertion(_receiveTasks[1-_currentReceiveBuffer].empty());
   assertion(_currentReceiveBuffer>=0);
@@ -54,10 +59,11 @@ void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalI
   _isCurrentlySending = true;
   #endif
 
-  const int numberOfSentMessages = releaseSentMessages();
+  const int numberOfSentMessages = getNumberOfSentMessages();
 
-  // @todo umbauen
-  logInfo(
+  releaseSentMessages();
+
+  logDebug(
     "startToSendData(int)",
     "sent " << numberOfSentMessages <<
     " message(s)"
@@ -77,6 +83,7 @@ void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalI
   _readDeployBufferInReverseOrder                         = _wasTraversalInvertedThroughoutLastSendReceiveTraversal != isTraversalInverted;
 
   switchReceiveAndDeployBuffer(numberOfSentMessages);
+  postprocessStartToSendData();
 }
 
 
@@ -125,8 +132,7 @@ void peano::heap::BoundaryDataExchanger<Data>::waitUntilNumberOfReceivedNeighbou
 
 
 template<class Data>
-int peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
-  const int result = static_cast<int>( _sendTasks.size() );
+void peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
   for(typename std::vector<SendReceiveTask<Data> >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
     MPI_Status status;
 
@@ -172,7 +178,6 @@ int peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
   }
 
   _sendTasks.clear();
-  return result;
 }
 
 
@@ -183,6 +188,8 @@ void peano::heap::BoundaryDataExchanger<Data>::finishedToSendData(bool isTravers
   #endif
 
   _wasTraversalInvertedThroughoutLastSendReceiveTraversal = isTraversalInverted;
+
+  postprocessFinishedToSendData();
 }
 
 
@@ -214,27 +221,7 @@ void peano::heap::BoundaryDataExchanger<Data>::receiveDanglingMessages() {
     _numberOfReceivedMessages += 1;
     _numberOfSentRecords      += receiveTask._metaInformation.getLength();
 
-    if(receiveTask._metaInformation.getLength() > 0) {
-      receiveTask.triggerReceive(_tag);
-      logDebug(
-        "receiveDanglingMessages(...)",
-        "started to receive " << _receiveTasks[_currentReceiveBuffer].size() << "th message from rank " << receiveTask._rank << " with " << receiveTask._metaInformation.getLength() << " entries and data pointing to " << receiveTask._data
-      );
-    #ifdef PackedEmptyHeapMessages
-    } else if(receiveTask._metaInformation.getLength() < 0) {
-      for(int i = 0; i < -receiveTask._metaInformation.getLength(); i++) {
-        SendReceiveTask<Data> zeroLengthReceiveTask;
-        zeroLengthReceiveTask._metaInformation = receiveTask._metaInformation;
-        zeroLengthReceiveTask._rank = receiveTask._rank;
-        zeroLengthReceiveTask._metaInformation.setLength(0);
-        zeroLengthReceiveTask._data = 0;
-
-        taskQueue.push_back(zeroLengthReceiveTask);
-      }
-    }
-    #endif
-    }
-    _receiveTasks[_currentReceiveBuffer].push_back( receiveTask );
+    handleAndQueueReceivedTask( receiveTask );
 
     logTraceOut( "receiveDanglingMessages(...)" );
   }
@@ -260,21 +247,8 @@ void peano::heap::BoundaryDataExchanger<Data>::sendData(
   logDebug("sendData", "Sending data at " << position << " to Rank " << _rank << " with tag " << _tag  );
 
   sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
-  sendTask._metaInformation.send(_rank, _tag, true);
 
-      #ifdef PackedEmptyHeapMessages
-      assertion2(
-        messageType != NeighbourCommunication ||
-        data.size() > 0,
-        data.size(), messageType
-      );
-      #endif
-
-  if(data.size() > 0) {
-    sendTask.wrapDataAndTriggerSend(data,_tag);
-  }
-
-  _sendTasks.push_back(sendTask);
+  handleAndQueueSendTask( sendTask, data );
 
   _numberOfSentMessages += 1;
   _numberOfSentRecords  += data.size();
@@ -294,23 +268,13 @@ std::vector< Data > peano::heap::BoundaryDataExchanger<Data>::receiveData(
   assertion2( _receiveTasks[currentDeployBuffer].size()>0, tarch::parallel::Node::getInstance().getRank(), "if the neighbour data buffer is empty, you have perhaps forgotten to call releaseMessages() on the heap in the traversal before" );
 
   assertion6(
-    _receiveTasks[currentDeployBuffer][readElement]._metaInformation.getLevel() == level,
+    _receiveTasks[currentDeployBuffer][readElement].fits(position,level),
     readElement,
     level,  position,
     _receiveTasks[currentDeployBuffer].front()._metaInformation.toString(),
     _receiveTasks[currentDeployBuffer].back()._metaInformation.toString(),
     tarch::parallel::Node::getInstance().getRank()
   );
-  for (int d=0; d<DIMENSIONS; d++) {
-    assertion7(
-      tarch::la::equals(_receiveTasks[currentDeployBuffer][readElement]._metaInformation.getPosition(d), position(d)),
-      readElement,
-      level,  position,  d,
-      _receiveTasks[currentDeployBuffer].front()._metaInformation.toString(),
-      _receiveTasks[currentDeployBuffer].back()._metaInformation.toString(),
-      tarch::parallel::Node::getInstance().getRank()
-    );
-  }
 
   const int numberOfElementsOfThisEntry = _receiveTasks[currentDeployBuffer][readElement]._metaInformation.getLength();
   assertion2(numberOfElementsOfThisEntry >= 0, position, level);
@@ -438,8 +402,7 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
   assertion(sizeOfReceiveBuffer>=numberOfMessagesSentThisIteration);
 
   if (numberOfMessagesSentThisIteration < sizeOfReceiveBuffer) {
-    // @todo raus
-    logInfo(
+    logDebug(
       "switchReceiveAndDeployBuffer(map)",
       "have to copy back " << sizeOfReceiveBuffer-numberOfMessagesSentThisIteration <<
       " messages from the deploy buffer to the receive buffer"
@@ -455,8 +418,7 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
     }
   }
   else {
-    // @todo raus
-    logInfo(
+    logDebug(
       "switchReceiveAndDeployBuffer(map)",
       "number of received messages equals number of sent messages"
     );
@@ -464,63 +426,3 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
 
   assertionEquals( static_cast<int>(_receiveTasks[1-_currentReceiveBuffer].size()), numberOfMessagesSentThisIteration);
 }
-
-
-#ifdef PackedEmptyHeapMessages
-template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
-void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::compressZeroLengthMessage(
-  int         toRank
-) {
-  if(_numberOfNeighbourDataCompressedEmptyMessages.find(toRank) == _numberOfNeighbourDataCompressedEmptyMessages.end()) {
-    _numberOfNeighbourDataCompressedEmptyMessages[toRank] = 0;
-  }
-  _numberOfNeighbourDataCompressedEmptyMessages[toRank]++;
-}
-
-template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
-void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::sendCompressedEmptyMessages(
-  int                                           toRank,
-  const tarch::la::Vector<DIMENSIONS, double>&  position,
-  int                                           level
-) {
-  logTraceInWith3Arguments("sendCompressedEmptyMessages", toRank, position, level);
-
-  if(_numberOfNeighbourDataCompressedEmptyMessages.find(toRank) == _numberOfNeighbourDataCompressedEmptyMessages.end()) {
-    _numberOfNeighbourDataCompressedEmptyMessages[toRank] = 0;
-  }
-  int numberOfCompressedMessages = _numberOfNeighbourDataCompressedEmptyMessages[toRank];
-  _numberOfNeighbourDataCompressedEmptyMessages[toRank] = 0;
-
-  if(numberOfCompressedMessages > 0) {
-    int mpiTag = getTagForMessageType(NeighbourCommunication,true,0);
-    SendReceiveTask<Data> sendTask;
-    sendTask._rank = toRank;
-    sendTask._metaInformation.setLength(static_cast<int>( -numberOfCompressedMessages ));
-    #ifdef Asserts
-    //Set debug information
-    sendTask._metaInformation.setPosition(position);
-    sendTask._metaInformation.setLevel(level);
-    #endif
-    sendTask._metaInformation.send(toRank, mpiTag, true);
-
-    logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with mpiTag: " << mpiTag << ", neighbour-data-tag: " << _mpiTagForNeighbourDataExchange << ", master/worker-tag=" << _mpiTagForMasterWorkerDataExchange << ", fork/join-tag=" << _mpiTagToExchangeForkJoinData);
-
-    _neighbourDataSendTasks.push_back(sendTask);
-  }
-
-  logTraceOut("sendCompressedEmptyMessages");
-}
-
-template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
-void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::sendAllCompressedEmptyMessages() {
-  logTraceIn("sendAllCompressedEmptyMessages");
-
-  for(std::map<int, int>::iterator i = _numberOfNeighbourDataCompressedEmptyMessages.begin();
-      i != _numberOfNeighbourDataCompressedEmptyMessages.end();
-      i++) {
-    sendCompressedEmptyMessages(i->first, 0, 0);
-  }
-
-  logTraceOut("sendAllCompressedEmptyMessages");
-}
-#endif

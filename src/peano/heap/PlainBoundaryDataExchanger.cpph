@@ -1,0 +1,71 @@
+#include "tarch/Assertions.h"
+
+
+template<class Data>
+tarch::logging::Log  peano::heap::PlainBoundaryDataExchanger<Data>::_log( "peano::heap::PlainBoundaryDataExchanger" );
+
+
+
+template<class Data>
+peano::heap::PlainBoundaryDataExchanger<Data>::PlainBoundaryDataExchanger():
+  BoundaryDataExchanger<Data>() {
+}
+
+
+template<class Data>
+peano::heap::PlainBoundaryDataExchanger<Data>::PlainBoundaryDataExchanger(
+  const std::string& identifier,
+  int tag,
+  int rank
+):
+  BoundaryDataExchanger<Data>(identifier,tag,rank) {
+}
+
+
+template<class Data>
+peano::heap::PlainBoundaryDataExchanger<Data>::~PlainBoundaryDataExchanger() {
+}
+
+
+template<class Data>
+int peano::heap::PlainBoundaryDataExchanger<Data>::getNumberOfSentMessages() const {
+  return static_cast<int>( Base::_sendTasks.size() );
+}
+
+
+template<class Data>
+void peano::heap::PlainBoundaryDataExchanger<Data>::postprocessStartToSendData() {
+}
+
+
+template<class Data>
+void peano::heap::PlainBoundaryDataExchanger<Data>::postprocessFinishedToSendData() {
+}
+
+
+template<class Data>
+void peano::heap::PlainBoundaryDataExchanger<Data>::handleAndQueueReceivedTask( SendReceiveTask<Data> receivedTask ) {
+  if(receivedTask._metaInformation.getLength() > 0) {
+    receivedTask.triggerReceive(Base::_tag);
+    logDebug(
+      "receiveDanglingMessages(...)",
+      "started to receive " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() <<
+      "th message from rank " << receivedTask._rank << " with " << receivedTask._metaInformation.getLength() <<
+      " entries and data pointing to " << receivedTask._data
+    );
+  }
+  Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
+}
+
+
+template<class Data>
+void peano::heap::PlainBoundaryDataExchanger<Data>::handleAndQueueSendTask( SendReceiveTask<Data> sendTask, const std::vector<Data>& data ) {
+  sendTask._metaInformation.send(Base::_rank, Base::_tag, true);
+
+  if(data.size() > 0) {
+    sendTask.wrapData(data);
+    sendTask.triggerSend(Base::_tag);
+  }
+
+  Base::_sendTasks.push_back(sendTask);
+}
