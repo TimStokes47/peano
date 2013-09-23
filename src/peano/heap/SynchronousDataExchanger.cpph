@@ -127,19 +127,6 @@ void peano::heap::SynchronousDataExchanger<Data>::receiveDanglingMessages() {
         "receiveDanglingMessages(...)",
         "started to receive " << _receiveTasks.size() << "th message from rank " << receiveTask._rank << " with " << receiveTask._metaInformation.getLength() << " entries and data pointing to " << receiveTask._data
       );
-    #ifdef PackedEmptyHeapMessages
-    } else if(receiveTask._metaInformation.getLength() < 0) {
-      for(int i = 0; i < -receiveTask._metaInformation.getLength(); i++) {
-        SendReceiveTask<Data> zeroLengthReceiveTask;
-        zeroLengthReceiveTask._metaInformation = receiveTask._metaInformation;
-        zeroLengthReceiveTask._rank = receiveTask._rank;
-        zeroLengthReceiveTask._metaInformation.setLength(0);
-        zeroLengthReceiveTask._data = 0;
-
-        taskQueue.push_back(zeroLengthReceiveTask);
-      }
-    }
-    #endif
     }
 
     _receiveTasks.push_back( receiveTask );
@@ -170,14 +157,6 @@ void peano::heap::SynchronousDataExchanger<Data>::sendData(
 
   sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
   sendTask._metaInformation.send(toRank, _tag, true);
-
-      #ifdef PackedEmptyHeapMessages
-      assertion2(
-        messageType != NeighbourCommunication ||
-        data.size() > 0,
-        data.size(), messageType
-      );
-      #endif
 
   if(data.size() > 0) {
     sendTask.wrapData(data);
