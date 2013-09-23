@@ -54,12 +54,9 @@ namespace peano {
       Data,
       SynchronousDataExchanger< Data >,
       SynchronousDataExchanger< Data >,
-      PlainBoundaryDataExchanger< Data >
+      RLEBoundaryDataExchanger< Data >
     > {
     };
-
-//    template<class Data>
-//    typedef Heap<Data, SynchronousDataExchanger< Data >, SynchronousDataExchanger< Data >, RLEBoundaryDataExchanger< Data > >    RLEHeap;
 
     /**
      * Flags to specify which kind of message is sent or
