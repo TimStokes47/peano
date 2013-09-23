@@ -21,6 +21,7 @@ bool peano::heap::SendReceiveTask<Data>::fits(
 template<class Data>
 void peano::heap::SendReceiveTask<Data>::setInvalid() {
   _metaInformation.setLevel(-1);
+  _metaInformation.setLength(0);
   _data = 0;
 }
 
@@ -103,6 +104,9 @@ std::vector<Data> peano::heap::SendReceiveTask<Data>::unwrapDataAndFreeMemory() 
     #endif
   }
 
-  delete[] _data;
+  if (_data!=0) {
+    delete[] _data;
+  }
+
   return result;
 }
