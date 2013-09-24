@@ -107,6 +107,7 @@ void peano::heap::RLEBoundaryDataExchanger<Data>::handleAndQueueSendTask( SendRe
   else {
     sendAllCompressedEmptyMessages();
 
+    sendTask._metaInformation.send(Base::_rank, Base::_tag, true);
     sendTask.wrapData(data);
     sendTask.triggerSend(Base::_tag);
 
