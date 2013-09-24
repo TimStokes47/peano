@@ -9,12 +9,16 @@ bool peano::heap::SendReceiveTask<Data>::fits(
   const tarch::la::Vector<DIMENSIONS, double>&  position,
   int                                           level
 ) const {
+  #ifdef Asserts
   return
     (_metaInformation.getLevel() == -1) ||
     (
       _metaInformation.getLevel() == level &&
       tarch::la::equals(_metaInformation.getPosition(), position)
     );
+  #else
+  return true;
+  #endif
 }
 
 

@@ -88,6 +88,10 @@ struct peano::heap::SendReceiveTask {
    *
    * - either invalid (see setInvalid())
    * - or position and level coincide.
+   *
+   * Fits should only be called in assert mode. However, some compiler seem to
+   * translate it also if the function is not used at all. For them, I provide
+   * a non-asserts version returning true all the time.
    */
   bool fits(
     const tarch::la::Vector<DIMENSIONS, double>&  position,
