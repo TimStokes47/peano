@@ -20,7 +20,9 @@ bool peano::heap::SendReceiveTask<Data>::fits(
 
 template<class Data>
 void peano::heap::SendReceiveTask<Data>::setInvalid() {
+   #if defined(Asserts)
   _metaInformation.setLevel(-1);
+  #endif
   _metaInformation.setLength(0);
   _data = 0;
 }
