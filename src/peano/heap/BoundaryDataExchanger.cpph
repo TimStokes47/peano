@@ -398,19 +398,19 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
 
   _currentReceiveBuffer = 1-_currentReceiveBuffer;
 
-  const int sizeOfReceiveBuffer = static_cast<int>(_receiveTasks[1-_currentReceiveBuffer].size());
-  assertion(sizeOfReceiveBuffer>=numberOfMessagesSentThisIteration);
+  const int sizeOfNewDeployBuffer = static_cast<int>(_receiveTasks[1-_currentReceiveBuffer].size());
+  assertion(sizeOfNewDeployBuffer>=numberOfMessagesSentThisIteration);
 
-  if (numberOfMessagesSentThisIteration < sizeOfReceiveBuffer) {
+  if (numberOfMessagesSentThisIteration < sizeOfNewDeployBuffer) {
     logDebug(
       "switchReceiveAndDeployBuffer(map)",
-      "have to copy back " << sizeOfReceiveBuffer-numberOfMessagesSentThisIteration <<
+      "have to copy back " << sizeOfNewDeployBuffer-numberOfMessagesSentThisIteration <<
       " messages from the deploy buffer to the receive buffer"
     );
 
     typename std::vector<SendReceiveTask<Data> >::iterator p = _receiveTasks[1-_currentReceiveBuffer].begin();
 
-    p += sizeOfReceiveBuffer;
+    p += numberOfMessagesSentThisIteration;
 
     while (p != _receiveTasks[1-_currentReceiveBuffer].end()) {
       _receiveTasks[_currentReceiveBuffer].push_back(*p);

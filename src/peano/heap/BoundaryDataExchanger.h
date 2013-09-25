@@ -96,12 +96,19 @@ class peano::heap::BoundaryDataExchanger {
      * that do not belong to the previous iteration to the new receive
      * buffer.
      *
-     * @param statistics This map contains the number of messages that
-     * where sent to every neighbouring rank. That means the key for the
-     * map is a neighbouring rank and the according value is the number
-     * of messages sent to this rank in the last grid iteration. If a
-     * key (i.e. a rank) does not exist in this map, this means it is
-     * either no neighbouring rank or no messages have been sent to it.
+     * !!! Realisation
+     *
+     * We assume that all message in the receive buffer are already unpacked/in
+     * a state that we can directly extract them from the receive buffer. If
+     * you use sophisticated packing/coding mechanisms, all data in the receive
+     * buffer is assumed to be uncompressed. See receiveDanglingMessages() for
+     * details. This operation is really based upon the actual value of the
+     * field _receiveTasks[1-_currentReceiveBuffer].size().
+     *
+     * @param numberOfMessagesSentThisIteration The switch mechanism has to be
+     *   know how many data have to be in the new receive buffer. If there are
+     *   more messages available, those additional ones belong to next
+     *   traversal already and have to be places back.
      */
     void switchReceiveAndDeployBuffer(int numberOfMessagesSentThisIteration);
 
