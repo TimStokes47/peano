@@ -50,7 +50,6 @@ void peano::heap::RLEBoundaryDataExchanger<Data>::sendAllCompressedEmptyMessages
     zeroLengthReceiveTask._data = 0;
 
     zeroLengthReceiveTask._metaInformation.send(Base::_rank, Base::_tag, true);
-    Base::_sendTasks.push_back(zeroLengthReceiveTask);
 
     _numberOfEmptyMessagesSinceLastNonEmptySendCall = 0;
     logTraceOut( "sendAllCompressedEmptyMessages()" );
