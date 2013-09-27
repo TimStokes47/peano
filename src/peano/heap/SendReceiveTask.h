@@ -100,7 +100,9 @@ struct peano::heap::SendReceiveTask {
 };
 
 
+#ifdef Parallel
 #include "peano/heap/SendReceiveTask.cpph"
+#endif
 
 
 #endif

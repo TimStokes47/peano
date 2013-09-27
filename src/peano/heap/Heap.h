@@ -46,6 +46,8 @@ namespace peano {
       SynchronousDataExchanger< Data >,
       PlainBoundaryDataExchanger< Data >
     > {
+      public:
+        virtual ~PlainHeap() {}
     };
 
 
@@ -56,6 +58,8 @@ namespace peano {
       SynchronousDataExchanger< Data >,
       RLEBoundaryDataExchanger< Data >
     > {
+      public:
+        virtual ~RLEHeap() {}
     };
 
     /**
