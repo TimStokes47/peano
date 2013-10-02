@@ -123,7 +123,6 @@ void peano::heap::BoundaryDataExchanger<Data>::waitUntilNumberOfReceivedNeighbou
        );
     }
 
-    receiveDanglingMessages();
     tarch::parallel::Node::getInstance().receiveDanglingMessages();
   }
 
