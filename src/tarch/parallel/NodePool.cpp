@@ -433,6 +433,7 @@ void tarch::parallel::NodePool::replyToRegistrationMessages() {
 
 
 void tarch::parallel::NodePool::replyToJobRequestMessages() {
+  logTraceIn( "replyToJobRequestMessage() ");
   assertion1( _strategy!=0, Node::getInstance().getRank() );
 
   #ifdef Parallel
@@ -443,7 +444,7 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
     assertion1( queryMessage.getSenderRank() !=Node::getInstance().getGlobalMasterRank(), Node::getInstance().getRank() );
 
     if ( !_strategy->isRegisteredNode(queryMessage.getSenderRank()) ) {
-      logDebug(
+      logWarning(
         "replyToJobRequestMessages()",
         "node pool does not contain entry for rank " << queryMessage.getSenderRank()
          << ". Message from rank " << queryMessage.getSenderRank()
@@ -471,6 +472,7 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
     logStatistics();
   }
   #endif
+  logTraceOut( "replyToJobRequestMessage() ");
 }
 
 
