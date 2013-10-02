@@ -135,7 +135,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       fineGridVerticesEnumerator.getLevel()
     );
 
-    if ( state.reduceDataToMaster() ) {
+    if ( state.reduceDataFromWorker(currentWorker) ) {
       peano::parallel::loadbalancing::Oracle::getInstance().masterStartsToWaitForWorkers();
 
       receivedWorkerCell.receive(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);

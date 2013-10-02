@@ -455,6 +455,8 @@ class peano::grid::State {
      */
     bool reduceDataToMaster() const;
 
+    bool reduceDataFromWorker( int rank ) const;
+
     /**
      * May fork in this traversal
      *

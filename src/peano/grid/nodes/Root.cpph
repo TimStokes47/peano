@@ -339,15 +339,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
-bool peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::sendLocalDataToMaster(
-  const State&  state
-) {
-  return state.reduceDataToMaster() &&
-      !tarch::parallel::Node::getInstance().isGlobalMaster();
-}
-
-
-template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::sendCellAndVerticesToMaster(
   const State&                                 state,
   Cell&                                        centralFineGridCell,
@@ -356,7 +347,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 ) {
   logTraceIn( "sendCellAndVerticesToMaster(...)" );
 
-  if ( sendLocalDataToMaster(state) ) {
+  if ( state.reduceDataToMaster() ) {
     Base::_eventHandle.prepareSendToMaster(
       centralFineGridCell,
       fineGridVertices,
@@ -379,6 +370,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       assertion2( fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet(), fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString() );
       fineGridVertices[ centralFineGridVerticesEnumerator(k) ].send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     enddforx
+  }
+  else {
+    logDebug( "sendCellAndVerticesToMaster(...)", "do not send data as reduction is locally switched off. state=" << state.toString() );
   }
 
   logTraceOut( "sendCellAndVerticesToMaster(...)" );
