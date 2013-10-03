@@ -735,6 +735,9 @@ void peano::grid::State<StateData>::setReduceStateAndCell( bool value ) {
 
 template <class StateData>
 bool peano::grid::State<StateData>::reduceDataToMaster() const {
+  // @todo raus
+  assertion(_stateData.getReduceStateAndCell());
+
   return _stateData.getReduceStateAndCell() &&
          _loadRebalancingState != JoiningWithMaster &&
          _loadRebalancingState != IsNewWorkerDueToForkOfExistingDomain &&
@@ -744,6 +747,9 @@ bool peano::grid::State<StateData>::reduceDataToMaster() const {
 
 template <class StateData>
 bool peano::grid::State<StateData>::reduceDataFromWorker( int rank ) const {
+    // @todo raus
+    assertion(_stateData.getReduceStateAndCell());
+
   assertion( _loadRebalancingState != JoiningWithMaster );
   assertion( _loadRebalancingState != IsNewWorkerDueToForkOfExistingDomain );
   return _stateData.getReduceStateAndCell();

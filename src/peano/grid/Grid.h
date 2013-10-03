@@ -107,13 +107,8 @@ class peano::grid::Grid {
      * Root::receiveCellAndVerticesFromMaster().
      *
      * The counterpart of this operation is Node::updateCellsParallelStateAfterLoadForRootOfDeployedSubtree().
-     *
-     * @param reduceState This is the reduce flag passed by the repository, i.e.
-     *        it is neglected if this operation is invoked on a worker. On workers,
-     *        the master decides whether to reduce or not. The repository does not
-     *        have this influence.
      */
-    void receiveStartupDataFromMaster(bool reduceState);
+    void receiveStartupDataFromMaster();
 
     /**
      * Is invoked if and only if
@@ -183,13 +178,8 @@ class peano::grid::Grid {
      * data. Therefore, it is important that the master releases the stream
      * data to enable the worker to finish and to send out all the boundary
      * information.
-     *
-     * @todo TW: I'm pretty sure that this model to release the join data so
-     *           late slows down the application throughout the join process.
-     *           Hence, it might make sense to speed-up this stuff, e.g.
-     *           release message on-the-fly throughout the traversal.
      */
-    void iterate(bool reduceState);
+    void iterate();
 
     /**
      * nop

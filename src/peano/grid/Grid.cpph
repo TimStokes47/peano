@@ -83,15 +83,13 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::res
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
-void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::receiveStartupDataFromMaster(bool reduceState) {
+void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::receiveStartupDataFromMaster() {
   #ifdef Parallel
-  logTraceInWith2Arguments( "receiveStartupDataFromMaster()", _state.toString(), reduceState );
+  logTraceInWith1Argument( "receiveStartupDataFromMaster()", _state.toString() );
   if ( tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    _state.setReduceStateAndCell(reduceState);
+    _state.setReduceStateAndCell(true);
   }
-  else if (
-    !_state.isJoiningWithMaster()
-  ) {
+  else if ( !_state.isJoiningWithMaster() ) {
     peano::parallel::messages::LoadBalancingMessage loadBalancingMessage;
     loadBalancingMessage.receive(
       tarch::parallel::NodePool::getInstance().getMasterRank(),
@@ -153,12 +151,12 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::sen
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
-void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::iterate(bool reduceState) {
-  logTraceInWith2Arguments( "iterate(State)", _state.toString(), reduceState );
+void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::iterate() {
+  logTraceInWith1Argument( "iterate(State)", _state.toString() );
 
   tarch::mpianalysis::Analysis::getInstance().beginIteration();
 
-  receiveStartupDataFromMaster(reduceState);
+  receiveStartupDataFromMaster();
 
   _state.resetStateAtBeginOfIteration();
 
