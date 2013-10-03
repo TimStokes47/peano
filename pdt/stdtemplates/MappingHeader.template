@@ -707,8 +707,11 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * of.
      *
      * @see peano::kernel::spacetreegrid::nodes::Node::updateCellsParallelStateAfterLoad()
+     * @return Whether the worker shall send back its data from the coarsest rank and its 
+     *         state. Due to the result, you can control which subtrees reduce data along  
+     *         the spacetree. The default value is true.
      */
-    void prepareSendToWorker(
+    bool prepareSendToWorker(
       __NAMESPACE__::Cell&                       fineGridCell,
       __NAMESPACE__::Vertex * const              fineGridVertices,
       const peano::grid::VertexEnumerator&       fineGridVerticesEnumerator,

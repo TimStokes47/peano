@@ -186,7 +186,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
       int                                       level
     );
 
-    void prepareSendToWorker(
+    bool prepareSendToWorker(
       __NAMESPACE__::Cell&                 fineGridCell,
       __NAMESPACE__::Vertex * const        fineGridVertices,
       const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,

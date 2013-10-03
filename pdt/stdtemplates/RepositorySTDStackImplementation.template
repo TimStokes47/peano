@@ -120,19 +120,15 @@ __NAMESPACE__::State& __NAMESPACE__::repositories::RepositorySTDStack::getState(
 }
 
 
-void __NAMESPACE__::repositories::RepositorySTDStack::iterate(bool reduceState) {
+void __NAMESPACE__::repositories::RepositorySTDStack::iterate() {
   tarch::timing::Watch watch( "__NAMESPACE__::repositories::RepositorySTDStack", "iterate(bool)", false);
   
   #ifdef Parallel
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    _repositoryState.setReduceState(reduceState);
     tarch::parallel::NodePool::getInstance().broadcastToWorkingNodes(
       _repositoryState,
       peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
     );
-  }
-  else {
-    reduceState = _repositoryState.getReduceState();
   }
   #endif
   
@@ -143,7 +139,7 @@ void __NAMESPACE__::repositories::RepositorySTDStack::iterate(bool reduceState) 
   
   
   switch ( _repositoryState.getAction()) {
-__x__NONQUALIFIED_ADAPTER_TYPE__    case __NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__: watch.startTimer(); _gridWith__NONQUALIFIED_ADAPTER_TYPE__.iterate(reduceState); watch.stopTimer(); _measure__NONQUALIFIED_ADAPTER_TYPE__CPUTime.setValue( watch.getCPUTime() ); _measure__NONQUALIFIED_ADAPTER_TYPE__CalendarTime.setValue( watch.getCalendarTime() ); break;
+__x__NONQUALIFIED_ADAPTER_TYPE__    case __NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__: watch.startTimer(); _gridWith__NONQUALIFIED_ADAPTER_TYPE__.iterate(); watch.stopTimer(); _measure__NONQUALIFIED_ADAPTER_TYPE__CPUTime.setValue( watch.getCPUTime() ); _measure__NONQUALIFIED_ADAPTER_TYPE__CalendarTime.setValue( watch.getCalendarTime() ); break;
     case __NAMESPACE__::records::RepositoryState::Terminate:
       assertionMsg( false, "this branch/state should never be reached" ); 
       break;

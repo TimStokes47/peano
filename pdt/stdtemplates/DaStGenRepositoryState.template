@@ -3,6 +3,4 @@
 class __NAMESPACE__::records::RepositoryState { 
   __REPOSITORY_ACTION_ENUM__;
   persistent parallelise Action action;
-
-  persistent parallelise bool reduceState;
 };

@@ -263,7 +263,7 @@ void __THIS_QUALIFIED_TYPENAME__::mergeWithRemoteDataDueToForkOrJoin(
   logTraceOut( "mergeWithRemoteDataDueToForkOrJoin(...)" );
 }
 
-void __THIS_QUALIFIED_TYPENAME__::prepareSendToWorker(
+bool __THIS_QUALIFIED_TYPENAME__::prepareSendToWorker(
   __NAMESPACE__::Cell&                 fineGridCell,
   __NAMESPACE__::Vertex * const        fineGridVertices,
   const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -275,7 +275,8 @@ void __THIS_QUALIFIED_TYPENAME__::prepareSendToWorker(
 ) {
   logTraceIn( "prepareSendToWorker(...)" );
   // @todo Insert your code here
-  logTraceOut( "prepareSendToWorker(...)" );
+  logTraceOutWith1Argument( "prepareSendToWorker(...)", true );
+  return true;
 }
 
 void __THIS_QUALIFIED_TYPENAME__::prepareSendToMaster(
