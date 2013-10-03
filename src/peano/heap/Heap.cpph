@@ -291,7 +291,7 @@ std::vector< Data > peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExcha
   #ifdef Parallel
   switch (messageType) {
     case NeighbourCommunication:
-      assertion4( _neighbourDataExchanger.count(fromRank)==1, fromRank, position, level, messageType );
+      assertion4( _neighbourDataExchanger.count(fromRank)==1, fromRank, position, level, "tried to receive heap data from neighbour but never sent heap data to this neighbour" );
       return _neighbourDataExchanger[fromRank].receiveData(position,level);
       break;
     case ForkOrJoinCommunication:
