@@ -15,6 +15,10 @@
  pointers to records. This page describes how to make a vertex hold multiple 
  instances of class A. The cardinality of this aggregation hereby might change.
  
+ The same pattern can be applied to cells holding patches of regular grids, 
+ cells holding particle-like data structures, vertices pointing to complex 
+ boundary descriptions, and so forth.
+ 
  
  !!! Modelling A
  
@@ -67,7 +71,7 @@
  Please regenerate your vertices either due to an additional DaStGen call or 
  due to a new run of the prototyping tool.    
       
- !!! Behaviour (Sequential)
+ !!! Sequential behaviour
  
  Finally, we have to add behaviour. In the constructor of the vertex V, we should 
  set the value of myAggregateWithArbitraryCardinality to -1 or another dummy value
@@ -90,9 +94,35 @@
  - You fetch the aggregate's number from your vertex due to a $vertex.getMyAggregateWithArbitraryCardinality()$ call.
  - With the result you ask the data heap $peano::kernel::heap::Heap$ for the vector of aggregates.   
  
- !!! MPI Parallelisation
+ !!! MPI Parallelisation - General remarks
  
- For the parallelisation you basically have to implement 
+ Technically, there are two different types of communication in Peano: Masters communicate with 
+ their workers, workers send back data to masters, masters stream data to new workers due to a 
+ fork of the domain, or former workers stream data back to their masters due to joins. The other 
+ type of communication are nodes exchanging their boundaries with their 
+ neighbours. The first type of communication is synchronous, i.e. data sent is 
+ immediately received in the same iteration. Exchange along the boundaries is 
+ asynchronous and spreads over two iterations always. 
+ 
+ Both parallel communication schemes follow the same programming pattern:
+ 
+ - The user has to inform the heap prior to any sends that there will be sends. For this, the 
+   heap provides startToSend operations. One for synchronous data exchange, one for exchange 
+   along the boundaries.
+ - The user then can send data.
+ - The user has to inform the heap at the end of the traversal that all sends now are done. 
+   For this, the heap provides operations as well. Please consult their documentation for 
+   the correct usage.
+ - Receives are independent of all these operations, i.e. there's no need to inform the heap 
+   that there are receives.
+
+ With this information, you can send data from the heaps to the workers and back.
+ The asynchronous data exchange along the boundary however demands for further 
+ explanation:
+   
+ !!! MPI data exchange along domain boundaries
+ 
+ For this parallelisation, you basically have to implement 
  prepareSendToNeighbour() and mergeWithNeighbour() and decide there whether you 
  wanna exchange the aggregates or not. While the decision is up to you, the 
  actual exchange is provided by the heap object:   
