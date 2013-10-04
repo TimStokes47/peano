@@ -28,7 +28,7 @@ std::string peano::parallel::loadbalancing::convertLoadBalancingFlagToString(int
       result << "ForkAllChildrenAndBecomeAdministrativeRank";
       break;
     default:
-      result << "integer-lb-flag=" << static_cast<int>(flag);
+      result << "Fork-" << static_cast<int>(flag) << "-Times";
       break;
   }
   return result.str();
