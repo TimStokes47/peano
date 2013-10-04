@@ -12,8 +12,6 @@
 #include "peano/heap/SendReceiveTask.h"
 #include "peano/heap/SynchronousDataExchanger.h"
 #include "peano/heap/PlainBoundaryDataExchanger.h"
-
-// @todo raus
 #include "peano/heap/RLEBoundaryDataExchanger.h"
 
 #include "tarch/logging/Log.h"
@@ -247,6 +245,8 @@ class peano::heap::Heap: public tarch::services::Service {
     ~Heap();
 
   public:
+    typedef std::vector<Data>  HeapEntries;
+
     /**
      * The HeapData class is a singleton, thus one needs to
      * use the getInstance() method to retrieve the single
@@ -410,9 +410,7 @@ class peano::heap::Heap: public tarch::services::Service {
     /**
      * Start to send data
      *
-     * Please hand in the state's traversal bool that informs the heap about
-     * the direction of the Peano space-filling curve. This operation is
-     * typically called in beginIteration(). However, please be aware that the
+     * This operation is typically called in beginIteration(). However, please be aware that the
      * data from the master is received and merged before.
      *
      * This operation is to be re-called in each traversal and should be
@@ -424,7 +422,10 @@ class peano::heap::Heap: public tarch::services::Service {
     void startToSendSynchronousData();
 
     /**
-     * Equivalent to startToSendSynchronousData() for master-worker and join-fork data
+     * Equivalent to startToSendSynchronousData() for master-worker and join-fork data.
+     *
+     * Please hand in the state's traversal bool that informs the heap about
+     * the direction of the Peano space-filling curve.
      */
     void startToSendBoundaryData(bool isTraversalInverted);
 

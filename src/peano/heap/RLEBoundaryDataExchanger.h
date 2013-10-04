@@ -39,9 +39,9 @@ class peano::heap::RLEBoundaryDataExchanger: public peano::heap::BoundaryDataExc
 
     virtual void postprocessStartToSendData();
 
-    virtual void handleAndQueueReceivedTask( SendReceiveTask<Data>  receivedTask );
+    virtual void handleAndQueueReceivedTask( const SendReceiveTask<Data>&  receivedTask );
 
-    virtual void handleAndQueueSendTask( SendReceiveTask<Data> sendTask, const std::vector<Data>& data );
+    virtual void handleAndQueueSendTask( const SendReceiveTask<Data>&  sendTask, const std::vector<Data>& data );
   public:
     RLEBoundaryDataExchanger();
 

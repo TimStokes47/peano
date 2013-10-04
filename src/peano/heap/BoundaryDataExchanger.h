@@ -151,12 +151,12 @@ class peano::heap::BoundaryDataExchanger {
      * There has been a receive task in the mpi queue. This one is received and
      * then passed to this operation.
      */
-    virtual void handleAndQueueReceivedTask( SendReceiveTask<Data> receivedTask ) = 0;
+    virtual void handleAndQueueReceivedTask( const SendReceiveTask<Data>& receivedTask ) = 0;
 
     /**
      * No mpi operation done yet.
      */
-    virtual void handleAndQueueSendTask( SendReceiveTask<Data> sendTask, const std::vector<Data>& data ) = 0;
+    virtual void handleAndQueueSendTask( const SendReceiveTask<Data>& sendTask, const std::vector<Data>& data ) = 0;
   public:
     BoundaryDataExchanger();
 

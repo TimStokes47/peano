@@ -44,28 +44,31 @@ void peano::heap::PlainBoundaryDataExchanger<Data>::postprocessFinishedToSendDat
 
 
 template<class Data>
-void peano::heap::PlainBoundaryDataExchanger<Data>::handleAndQueueReceivedTask( SendReceiveTask<Data> receivedTask ) {
+void peano::heap::PlainBoundaryDataExchanger<Data>::handleAndQueueReceivedTask( const SendReceiveTask<Data>&  receivedTask ) {
+  Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
   if(receivedTask._metaInformation.getLength() > 0) {
-    receivedTask.triggerReceive(Base::_tag);
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_tag);
     logDebug(
       "receiveDanglingMessages(...)",
       "started to receive " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() <<
       "th message from rank " << receivedTask._rank << " with " << receivedTask._metaInformation.getLength() <<
-      " entries and data pointing to " << receivedTask._data
+      " entries and data pointing to " << Base::_receiveTasks[Base::_currentReceiveBuffer].back()._data
     );
   }
-  Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
 }
 
 
 template<class Data>
-void peano::heap::PlainBoundaryDataExchanger<Data>::handleAndQueueSendTask( SendReceiveTask<Data> sendTask, const std::vector<Data>& data ) {
-  sendTask._metaInformation.send(Base::_rank, Base::_tag, true);
-
-  if(data.size() > 0) {
-    sendTask.wrapData(data);
-    sendTask.triggerSend(Base::_tag);
-  }
+void peano::heap::PlainBoundaryDataExchanger<Data>::handleAndQueueSendTask( const SendReceiveTask<Data>&  sendTask, const std::vector<Data>& data ) {
+  logTraceIn( "handleAndQueueSendTask(...)" );
 
   Base::_sendTasks.push_back(sendTask);
+  Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true);
+
+  if(data.size() > 0) {
+    Base::_sendTasks.back().wrapData(data);
+    Base::_sendTasks.back().triggerSend(Base::_tag);
+  }
+
+  logTraceOut( "handleAndQueueSendTask(...)" );
 }

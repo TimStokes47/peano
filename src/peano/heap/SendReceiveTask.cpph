@@ -60,8 +60,9 @@ void peano::heap::SendReceiveTask<Data>::wrapData(const std::vector<Data>& data)
 template <class Data>
 void peano::heap::SendReceiveTask<Data>::triggerSend(int tag) {
   assertion( _data!=0 );
+  assertion( _metaInformation.getLength()>0 );
 
-  int result = MPI_Isend(
+  const int result = MPI_Isend(
     _data, _metaInformation.getLength(), MPIData::Datatype, _rank,
     tag,
     tarch::parallel::Node::getInstance().getCommunicator(), &_request
@@ -81,9 +82,10 @@ void peano::heap::SendReceiveTask<Data>::triggerReceive(int tag) {
   assertion( _rank >= 0 );
   assertion( _data==0 );
 
+  logTraceInWith2Arguments( "triggerReceive(int)", tag, _metaInformation.toString() );
   _data = new typename SendReceiveTask<Data>::MPIData[ _metaInformation.getLength() ];
 
-  int   result = MPI_Irecv(
+  const int  result = MPI_Irecv(
     _data, _metaInformation.getLength(), MPIData::Datatype,
     _rank, tag, tarch::parallel::Node::getInstance().getCommunicator(),
     &_request
@@ -95,14 +97,19 @@ void peano::heap::SendReceiveTask<Data>::triggerReceive(int tag) {
       << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }
+  logTraceOut( "triggerReceive(int)" );
 }
 
 
 template <class Data>
 std::vector<Data> peano::heap::SendReceiveTask<Data>::unwrapDataAndFreeMemory() {
+  logTraceInWith1Argument( "unwrapDataAndFreeMemory()", _metaInformation.toString() );
+
   std::vector<Data> result;
 
+  assertion( _metaInformation.getLength()>=0 );
   if (_metaInformation.getLength()>0) {
+    assertion( _data!=0 );
     for (int i=0; i<_metaInformation.getLength(); i++) {
       #if defined(ParallelExchangePackedRecordsInHeaps)
       result.push_back(_data[i].convert());
@@ -111,9 +118,9 @@ std::vector<Data> peano::heap::SendReceiveTask<Data>::unwrapDataAndFreeMemory() 
       #endif
     }
 
-    assertion( _data!=0 );
     delete[] _data;
   }
 
+  logTraceOutWith1Argument( "unwrapDataAndFreeMemory()", result.size() );
   return result;
 }

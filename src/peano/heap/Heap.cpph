@@ -135,7 +135,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   assertionMsg(_heapData.find(index) != _heapData.end(), "insertion of heap data not successful.");
   assertion(index >= 0);
 
-  _numberOfHeapAllocations += 1.0;
+  _numberOfHeapAllocations += 1;
 
   if(static_cast<int>(_heapData.size()) > _maximumNumberOfHeapEntries) {
     _maximumNumberOfHeapEntries = static_cast<int>(_heapData.size());
@@ -356,20 +356,20 @@ std::string peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Ne
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::startToSendSynchronousData() {
-  logTraceInWith1Argument( "startToSendData(bool)", _name );
+  logTraceInWith1Argument( "startToSendSynchronousData(bool)", _name );
 
   #ifdef Parallel
   _masterWorkerExchanger.startToSendData();
   _joinForkExchanger.startToSendData();
   #endif
 
-  logTraceOut( "startToSendData(bool)" );
+  logTraceOut( "startToSendSynchronousData(bool)" );
 }
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::startToSendBoundaryData(bool isTraversalInverted) {
-  logTraceInWith1Argument( "startToSendData(bool)", _name );
+  logTraceInWith1Argument( "startToSendBoundaryData(bool)", _name );
 
   #ifdef Parallel
   for (
@@ -381,7 +381,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   }
   #endif
 
-  logTraceOut( "startToSendData(bool)" );
+  logTraceOut( "startToSendBoundaryData(bool)" );
 }
 
 

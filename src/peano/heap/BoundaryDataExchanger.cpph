@@ -51,9 +51,13 @@ peano::heap::BoundaryDataExchanger<Data>::~BoundaryDataExchanger() {
 
 template<class Data>
 void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalInverted) {
+  logTraceInWith1Argument( "startToSendData(int)", isTraversalInverted );
+
   assertion(_receiveTasks[1-_currentReceiveBuffer].empty());
   assertion(_currentReceiveBuffer>=0);
   assertion(_currentReceiveBuffer<=1);
+
+  assertion3(!_isCurrentlySending, _identifier, _rank, "call once per traversal" );
 
   #ifdef Asserts
   _isCurrentlySending = true;
@@ -62,12 +66,6 @@ void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalI
   const int numberOfSentMessages = getNumberOfSentMessages();
 
   releaseSentMessages();
-
-  logDebug(
-    "startToSendData(int)",
-    "sent " << numberOfSentMessages <<
-    " message(s)"
-  );
 
   waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages(numberOfSentMessages);
 
@@ -80,10 +78,12 @@ void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalI
     _currentReceiveBuffer
   );
 
-  _readDeployBufferInReverseOrder                         = _wasTraversalInvertedThroughoutLastSendReceiveTraversal != isTraversalInverted;
+  _readDeployBufferInReverseOrder = _wasTraversalInvertedThroughoutLastSendReceiveTraversal != isTraversalInverted;
 
   switchReceiveAndDeployBuffer(numberOfSentMessages);
   postprocessStartToSendData();
+
+  logTraceOut( "startToSendData(int)" );
 }
 
 
@@ -126,12 +126,13 @@ void peano::heap::BoundaryDataExchanger<Data>::waitUntilNumberOfReceivedNeighbou
     tarch::parallel::Node::getInstance().receiveDanglingMessages();
   }
 
-  logTraceOutWith1Argument( "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", _identifier );
+  logTraceOutWith2Arguments( "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", _identifier, _receiveTasks[_currentReceiveBuffer].size() );
 }
 
 
 template<class Data>
 void peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
+  logTraceInWith1Argument( "releaseSentMessages()", _sendTasks.size() );
   for(typename std::vector<SendReceiveTask<Data> >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
     MPI_Status status;
 
@@ -177,11 +178,13 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
   }
 
   _sendTasks.clear();
+  logTraceOutWith2Arguments( "releaseSentMessages()", _numberOfSentMessages, _numberOfSentRecords );
 }
 
 
 template<class Data>
 void peano::heap::BoundaryDataExchanger<Data>::finishedToSendData(bool isTraversalInverted) {
+  assertion3(_isCurrentlySending, _identifier, _rank, "call once per traversal" );
   #ifdef Asserts
   _isCurrentlySending = false;
   #endif
@@ -222,7 +225,7 @@ void peano::heap::BoundaryDataExchanger<Data>::receiveDanglingMessages() {
 
     handleAndQueueReceivedTask( receiveTask );
 
-    logTraceOut( "receiveDanglingMessages(...)" );
+    logTraceOutWith1Argument( "receiveDanglingMessages(...)", receiveTask._metaInformation.toString() );
   }
 }
 
@@ -243,7 +246,7 @@ void peano::heap::BoundaryDataExchanger<Data>::sendData(
   sendTask._metaInformation.setLevel(level);
   #endif
 
-  logDebug("sendData", "Sending data at " << position << " to Rank " << _rank << " with tag " << _tag  );
+  logDebug("sendData", "sending data at " << position << " to Rank " << _rank << " with tag " << _tag  );
 
   sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
 
@@ -261,9 +264,12 @@ std::vector< Data > peano::heap::BoundaryDataExchanger<Data>::receiveData(
 ) {
   logTraceInWith4Arguments( "receiveData(...)", _identifier, _rank, position, level );
 
+  assertion( _currentReceiveBuffer>=0 );
+  assertion( _currentReceiveBuffer<=1 );
+
   const int currentDeployBuffer = 1-_currentReceiveBuffer;
   const int readElement         = _readDeployBufferInReverseOrder ? static_cast<int>(_receiveTasks[currentDeployBuffer].size())-1 : 0;
-//  const int readElement         = _readDeployBufferInReverseOrder ? 0 : static_cast<int>(_receiveTasks[currentDeployBuffer].size())-1;
+
   assertion2( _receiveTasks[currentDeployBuffer].size()>0, tarch::parallel::Node::getInstance().getRank(), "if the neighbour data buffer is empty, you have perhaps forgotten to call releaseMessages() on the heap in the traversal before" );
 
   assertion6(
@@ -341,6 +347,7 @@ void peano::heap::BoundaryDataExchanger<Data>::clearStatistics() {
 
 template <class Data>
 void peano::heap::BoundaryDataExchanger<Data>::releaseReceivedNeighbourMessagesRequests() {
+  logTraceIn( "releaseReceivedNeighbourMessagesRequests()" );
   bool allMessageCommunicationsAreFinished = false;
 
   const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -350,6 +357,9 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseReceivedNeighbourMessagesR
 
   while (!allMessageCommunicationsAreFinished) {
     allMessageCommunicationsAreFinished = true;
+
+    logDebug( "releaseReceivedNeighbourMessagesRequests()", "check all " << _receiveTasks[_currentReceiveBuffer].size() << " messages from rank " << _rank );
+
     for(
       typename std::vector<SendReceiveTask<Data> >::iterator i = _receiveTasks[_currentReceiveBuffer].begin();
       i != _receiveTasks[_currentReceiveBuffer].end();
@@ -386,8 +396,13 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseReceivedNeighbourMessagesR
        );
     }
 
-    tarch::parallel::Node::getInstance().receiveDanglingMessages();
+    // evtl eine ganz bloede Idee: Nachher schaufeln wir um und das
+    // duerfen wir nicht, wenn MPI noch ein Handle hat. Ausserdem
+    // kann hier kein echter Deadlock mehr stattfinden, da die Daten
+    // eigentlich schon alle da sind.
+//    tarch::parallel::Node::getInstance().receiveDanglingMessages();
   }
+  logTraceOut( "releaseReceivedNeighbourMessagesRequests()" );
 }
 
 
@@ -402,7 +417,7 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
 
   if (numberOfMessagesSentThisIteration < sizeOfNewDeployBuffer) {
     logDebug(
-      "switchReceiveAndDeployBuffer(map)",
+      "switchReceiveAndDeployBuffer(int)",
       "have to copy back " << sizeOfNewDeployBuffer-numberOfMessagesSentThisIteration <<
       " messages from the deploy buffer to the receive buffer"
     );
@@ -418,8 +433,8 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
   }
   else {
     logDebug(
-      "switchReceiveAndDeployBuffer(map)",
-      "number of received messages equals number of sent messages"
+      "switchReceiveAndDeployBuffer(int)",
+      "number of received messages equals number of sent messages: " << numberOfMessagesSentThisIteration
     );
   }
 

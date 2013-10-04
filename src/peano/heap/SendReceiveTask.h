@@ -75,8 +75,15 @@ struct peano::heap::SendReceiveTask {
    */
   void wrapData(const std::vector<Data>& data);
 
+  /**
+   * @see triggerReceive() for implementation remarks.
+   */
   void triggerSend(int tag);
 
+  /**
+   * If you use the task in combination with containers, please push or pop
+   * data first and then call trigger.
+   */
   void triggerReceive(int tag);
 
   std::vector<Data> unwrapDataAndFreeMemory();

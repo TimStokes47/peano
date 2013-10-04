@@ -66,17 +66,17 @@ void peano::heap::RLEBoundaryDataExchanger<Data>::postprocessFinishedToSendData(
 
 
 template<class Data>
-void peano::heap::RLEBoundaryDataExchanger<Data>::handleAndQueueReceivedTask( SendReceiveTask<Data>  receivedTask ) {
+void peano::heap::RLEBoundaryDataExchanger<Data>::handleAndQueueReceivedTask( const SendReceiveTask<Data>&  receivedTask ) {
   assertion(receivedTask._metaInformation.getLength() != 0);
   if(receivedTask._metaInformation.getLength() > 0) {
-    receivedTask.triggerReceive(Base::_tag);
+    Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_tag);
     logDebug(
       "receiveDanglingMessages(...)",
       "started to receive " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() <<
       "th message from rank " << receivedTask._rank << " with " << receivedTask._metaInformation.getLength() <<
       " entries and data pointing to " << receivedTask._data
     );
-    Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
   }
   else {
     for (int i=0; i<-receivedTask._metaInformation.getLength(); i++) {
@@ -97,7 +97,8 @@ void peano::heap::RLEBoundaryDataExchanger<Data>::postprocessStartToSendData() {
 
 
 template<class Data>
-void peano::heap::RLEBoundaryDataExchanger<Data>::handleAndQueueSendTask( SendReceiveTask<Data> sendTask, const std::vector<Data>& data ) {
+void peano::heap::RLEBoundaryDataExchanger<Data>::handleAndQueueSendTask( const SendReceiveTask<Data>&  sendTask, const std::vector<Data>& data ) {
+  logTraceIn( "handleAndQueueSendTask(...)" );
   _totalNumberOfSentMessagesThisTraversal++;
 
   if (data.empty()) {
@@ -106,10 +107,11 @@ void peano::heap::RLEBoundaryDataExchanger<Data>::handleAndQueueSendTask( SendRe
   else {
     sendAllCompressedEmptyMessages();
 
-    sendTask._metaInformation.send(Base::_rank, Base::_tag, true);
-    sendTask.wrapData(data);
-    sendTask.triggerSend(Base::_tag);
-
     Base::_sendTasks.push_back(sendTask);
+
+    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true);
+    Base::_sendTasks.back().wrapData(data);
+    Base::_sendTasks.back().triggerSend(Base::_tag);
   }
+  logTraceOut( "handleAndQueueSendTask(...)" );
 }
