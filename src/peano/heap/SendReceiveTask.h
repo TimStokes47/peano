@@ -82,7 +82,9 @@ struct peano::heap::SendReceiveTask {
 
   /**
    * If you use the task in combination with containers, please push or pop
-   * data first and then call trigger.
+   * data first and then call trigger. Trigger uses MPI and MPI uses memory
+   * references. If you move the tasks around later on, MPI references invalid
+   * memory addresses and data consistency is not given anymore.
    */
   void triggerReceive(int tag);
 
