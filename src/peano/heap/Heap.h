@@ -104,8 +104,17 @@ namespace peano {
  *
  * If an adapter sends or received data, it has first to inform the heap that
  * is will communicate due to MPI. For this, you have to call
- * startToSendOrReceiveHeapData() - typically in beginIteration(). At the end
- * of the iteration, you have to call finishedToSendOrReceiveHeapData().
+ * startToSend... - typically in beginIteration(). At the end
+ * of the iteration, you have to call the corresponing finishedToSend...().
+ * Of both operations there are two variants: One for the exchange of boundary
+ * data and one for the exchange between masters and workers. Internally, these
+ * two communication modes differ significantly and thus have to be handled
+ * separately. From the user point of view, it is important to note that
+ * boundary data is not available at the neighbour node before the next
+ * iteration - it might indeed make sense to wait several iterations before one
+ * works with exchanged data again. Master-worker data is availble in exactly
+ * the same traversal. For more information see the general heap information
+ * in heap.doxys.
  *
  * A send operation triggered due to sendData() for a given heap element is
  * a process with three steps. First, the data is copied into a temporary array
@@ -410,19 +419,29 @@ class peano::heap::Heap: public tarch::services::Service {
     /**
      * Start to send data
      *
-     * This operation is typically called in beginIteration(). However, please be aware that the
-     * data from the master is received and merged before.
+     * This operation is typically called in beginIteration(). However, please
+     * be aware that the data from the master is received and merged before.
      *
      * This operation is to be re-called in each traversal and should be
      * followed by a finish call in the each traversal as well.
      *
-     * You are not allowed to send heap data before this operation has been
-     * called.
+     * You are not allowed to send heap data from the master to the worker or
+     * back before this operation has been called. This holds also for joins
+     * and merges - if they exchange heap data, this operation has to be called
+     * before. Synchronous means that you receive all sent data in the very
+     * same iteration.
      */
     void startToSendSynchronousData();
 
     /**
-     * Equivalent to startToSendSynchronousData() for master-worker and join-fork data.
+     * Counterpart of startToSendSynchronousData().
+     *
+     * If you exchange data along the boundaries, you have to call this variant
+     * of start to send together with its finish operation later on. It opens
+     * a kind of communication channel for boundary data exchange. Boundary
+     * data is not received on the addressee side before the next iteration.
+     * You even might decide to wait a couple of iterations before you receive
+     * the boundary records.
      *
      * Please hand in the state's traversal bool that informs the heap about
      * the direction of the Peano space-filling curve.
