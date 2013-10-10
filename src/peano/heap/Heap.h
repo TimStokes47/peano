@@ -321,6 +321,9 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     void moveData( int toIndex, int fromIndex );
 
+    void addData( int index, const HeapEntries& entries );
+    void addData( int index, const Data&        entry );
+
     /**
      * This method discards all heap data and prepares the HeapData
      * management to handle new data requests. After calling this

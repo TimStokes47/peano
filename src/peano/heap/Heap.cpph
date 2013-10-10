@@ -179,6 +179,22 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::addData( int index, const HeapEntries& entries ) {
+  assertion3(_heapData.find(index) != _heapData.end(), _name, index, _heapData.size());
+
+  _heapData[index]->insert( _heapData[index]->end(), entries.begin(), entries.end() );
+}
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::addData( int index, const Data&  entry ) {
+  assertion3(_heapData.find(index) != _heapData.end(), _name, index, _heapData.size());
+
+  _heapData[index]->push_back(entry);
+}
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 bool peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::isValidIndex(int index) const {
   return _heapData.find(index) != _heapData.end();
 }
