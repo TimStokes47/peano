@@ -261,12 +261,7 @@ bool tarch::la::operator!= (
   const Vector<Size,Scalar>&  lhs,
   const Vector<Size,Scalar>&  rhs
 ) {
-  for (int i=0; i < Size; i++) {
-    if (lhs(i) == rhs(i)) {
-      return false;
-    }
-  }
-  return true;
+  return !(lhs==rhs);
 }
 
 
