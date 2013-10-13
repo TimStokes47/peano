@@ -7,8 +7,6 @@
 #include <vector>
 #include <list>
 
-#include "peano/utils/PeanoOptimisations.h"
-
 #include "peano/heap/SendReceiveTask.h"
 #include "peano/heap/SynchronousDataExchanger.h"
 #include "peano/heap/PlainBoundaryDataExchanger.h"
@@ -16,11 +14,6 @@
 
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
-
-
-#ifdef ParallelExchangePackedRecordsInHeaps
-   #pragma pack (push, 1)
-#endif
 
 
 namespace peano {
@@ -493,11 +486,6 @@ class peano::heap::Heap: public tarch::services::Service {
 
     void clearStatistics();
 };
-
-
-#ifdef ParallelExchangePackedRecordsInHeaps
-#pragma pack (pop)
-#endif
 
 
 #include "peano/heap/Heap.cpph"

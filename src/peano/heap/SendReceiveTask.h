@@ -4,6 +4,7 @@
 #define _PEANO_HEAP_SEND_RECEIVE_TASK_H_
 
 
+#include "peano/utils/PeanoOptimisations.h"
 #include "peano/heap/records/MetaInformation.h"
 
 
@@ -60,11 +61,19 @@ struct peano::heap::SendReceiveTask {
   typedef Data    MPIData;
   #endif
 
+  #ifdef ParallelExchangePackedRecordsInHeaps
+   #pragma pack (push, 1)
+  #endif
+
   /**
    * Pointer to the actual data. If meta data marks a message without
    * content, this pointer is 0.
    */
   MPIData*        _data;
+
+  #ifdef ParallelExchangePackedRecordsInHeaps
+  #pragma pack (pop)
+  #endif
 
   #ifdef Asserts
   SendReceiveTask();
