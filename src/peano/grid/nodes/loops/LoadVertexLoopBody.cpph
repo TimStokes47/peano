@@ -549,12 +549,20 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   );
 
   #ifdef Debug
-  assertion1(
-    !(CaseLoadPersistentVertex || CaseLoadOfDeleteVertex) ||
-    !StaticGridWithParallelBoundary ||
-    _fineGridVertices[positionInArray].getRefinementControl() != Vertex::Records::EraseTriggered,
-    _fineGridVertices[positionInArray].toString()
-  );
+  if ( !(CaseLoadPersistentVertex || CaseLoadOfDeleteVertex || CaseTakeFromTempStacks) ) {
+    // if we haven't loaded the vertex yet, we cannot make any statement
+    // on its state
+    assertion5(
+      !StaticGridWithParallelBoundary ||
+      _fineGridVertices[positionInArray].getRefinementControl() == Vertex::Records::Refined ||
+      _fineGridVertices[positionInArray].getRefinementControl() == Vertex::Records::Unrefined,
+      _fineGridVertices[positionInArray].toString(),
+      CaseLoadPersistentVertex,
+      CaseLoadOfDeleteVertex,
+      StaticGridWithParallelBoundary,
+      positionInArray
+    );
+  }
   #endif
 
   if ( CaseLoadPersistentVertex || CaseLoadOfDeleteVertex ) {

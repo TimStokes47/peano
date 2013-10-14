@@ -87,7 +87,7 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
      *
      * This type keeps track of some statistics such as the number of inner
      * vertices. These bookkeeping records are reduced in the destructor of the
-     * class which in turn holds a sempahore (see destructor comments).
+     * class which in turn holds a semaphore (see destructor comments).
      * Consequently, my copy constructor has to inherit all the aggregated
      * data, but the bookkeeping records have to be reset to zero in the
      * copy constructor - otherwise partial results are reduced twice.

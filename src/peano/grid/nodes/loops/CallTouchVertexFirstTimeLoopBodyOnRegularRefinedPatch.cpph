@@ -43,17 +43,19 @@ peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch
   _numberOfInnerLeafVertices(0.0),
   _numberOfBoundaryLeafVertices(0.0),
   _numberOfOuterLeafVertices(0.0),
-  _fineGridEnumerator(copy._regularGridContainer.getVertexEnumerator(1)),
-  _coarseGridEnumerator(copy._regularGridContainer.getVertexEnumerator(0)) {
+  _fineGridEnumerator(copy._fineGridEnumerator),
+  _coarseGridEnumerator(copy._coarseGridEnumerator) {
 }
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::setLevel(int level) {
+  logTraceInWith1Argument( "setLevel(int)", level );
   assertion( level>=1 );
   _level = level;
   _fineGridEnumerator    = _regularGridContainer.getVertexEnumerator(level);
   _coarseGridEnumerator  = _regularGridContainer.getVertexEnumerator(level-1);
+  logTraceOut( "setLevel(int)" );
 }
 
 
