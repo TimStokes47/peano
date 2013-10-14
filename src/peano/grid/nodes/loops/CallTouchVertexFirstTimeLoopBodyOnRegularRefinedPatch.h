@@ -21,6 +21,14 @@ namespace peano {
         template <class Vertex, class Cell, class State, class EventHandle>
         class CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch;
       }
+
+      namespace tasks {
+        /**
+         * Forward declaration
+         */
+        template <class Vertex, class Cell, class State, class EventHandle>
+        class Descend;
+      }
     }
   }
 }
@@ -45,8 +53,6 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
     int                                        _level;
 
     State&                                     _state;
-
-    static tarch::multicore::BooleanSemaphore  _semaphore;
 
 #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
@@ -77,6 +83,20 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
     );
 
     /**
+     * Copy constructor
+     *
+     * This type keeps track of some statistics such as the number of inner
+     * vertices. These bookkeeping records are reduced in the destructor of the
+     * class which in turn holds a sempahore (see destructor comments).
+     * Consequently, my copy constructor has to inherit all the aggregated
+     * data, but the bookkeeping records have to be reset to zero in the
+     * copy constructor - otherwise partial results are reduced twice.
+     */
+    CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch(
+      const CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch& copy
+    );
+
+    /**
      * Destructor
      *
      * !!! Multithreading
@@ -84,10 +104,12 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
      * We may not use a semaphore of our own, as there's always two different
      * classes involved on regular patches (besides the fact that these classes
      * themselves might be forked among multiple threads): For cells and for
-     * vertices. Therefore, these two types of multithreaded loop bodies have
-     * to share one semaphore. For this, I added a friend declaration to the
-     * cell loop bodies, and the vertex loop bodies also use this semaphore
-     * before they reduce thread-local data.
+     * vertices. Furthermore, there is also an ascend loop and we do not know
+     * when this type's destructor is called.
+     *
+     * Therefore, these three loop bodies have to share one semaphore. I could
+     * assign it to one of these classes but decided to move it do the overall
+     * task, i.e. to ascend/descend.
      */
     ~CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch();
 

@@ -41,11 +41,17 @@ namespace peano {
  */
 template <class Vertex, class Cell, class State, class EventHandle>
 class peano::grid::nodes::tasks::Descend {
+  public:
+    /**
+     * @see Destructor of any of the loop bodies.
+     */
+    static tarch::multicore::BooleanSemaphore  _semaphore;
   private:
     typedef peano::grid::RegularGridContainer<Vertex,Cell>                                                                    RegularGridContainer;
+
     typedef peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>              EnterCellLoopBody;
     typedef peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>   TouchVertexFirstTimeLoopBody;
-    typedef peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>                      DescendLoopBody;
+    typedef peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>                DescendLoopBody;
 
     const int              _treeDepth;
     State&                 _state;

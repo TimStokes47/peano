@@ -1,12 +1,8 @@
 #include "peano/grid/nodes/Constants.h"
 
 
-template <class Vertex, class Cell, class EventHandle>
-tarch::logging::Log peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>::_log( "peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch" );
-
-
-template <class Vertex, class Cell, class EventHandle>
-tarch::multicore::BooleanSemaphore peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>::_semaphore;
+template <class Vertex, class Cell, class State, class EventHandle>
+tarch::logging::Log peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::_log( "peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch" );
 
 
 #ifdef Parallel
@@ -16,8 +12,8 @@ tarch::multicore::BooleanSemaphore peano::grid::nodes::loops::CallAscendLoopBody
 #endif
 
 
-template <class Vertex, class Cell, class EventHandle>
-peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>::CallAscendLoopBodyOnRegularRefinedPatch(
+template <class Vertex, class Cell, class State, class EventHandle>
+peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::CallAscendLoopBodyOnRegularRefinedPatch(
   EventHandle&                                     eventHandle,
   peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
 ):
@@ -30,8 +26,8 @@ peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,E
 }
 
 
-template <class Vertex, class Cell, class EventHandle>
-void peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>::setCoarseGridLevel(int level) {
+template <class Vertex, class Cell, class State, class EventHandle>
+void peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::setCoarseGridLevel(int level) {
   assertion1( level>=0, level );
   _coarseLevel = level;
   _fineGridEnumerator   = _regularGridContainer.getVertexEnumerator(_coarseLevel+1);
@@ -39,9 +35,9 @@ void peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,C
 }
 
 
-template <class Vertex, class Cell, class EventHandle>
-peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>::~CallAscendLoopBodyOnRegularRefinedPatch() {
-  tarch::multicore::Lock lock(_semaphore);
+template <class Vertex, class Cell, class State, class EventHandle>
+peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::~CallAscendLoopBodyOnRegularRefinedPatch() {
+  tarch::multicore::Lock lock(peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::_semaphore);
 
   #if defined(SharedMemoryParallelisation)
   _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
@@ -49,8 +45,8 @@ peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,E
 }
 
 
-template <class Vertex, class Cell, class EventHandle>
-void peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>::operator() (const tarch::la::Vector<DIMENSIONS, int>& i) {
+template <class Vertex, class Cell, class State, class EventHandle>
+void peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::operator() (const tarch::la::Vector<DIMENSIONS, int>& i) {
   logTraceInWith2Arguments( "operator()", i, _coarseLevel );
 
   _fineGridEnumerator.setOffset(i*3);
@@ -82,7 +78,7 @@ void peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,C
 }
 
 
-template <class Vertex, class Cell, class EventHandle>
-int peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>::getCoarseGridLevel() const {
+template <class Vertex, class Cell, class State, class EventHandle>
+int peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::getCoarseGridLevel() const {
   return _coarseLevel;
 }

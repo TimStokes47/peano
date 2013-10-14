@@ -20,14 +20,17 @@ namespace peano {
   namespace grid {
     namespace nodes {
       namespace loops {
-        template <class Vertex, class Cell, class EventHandle>
+        template <class Vertex, class Cell, class State, class EventHandle>
         class CallAscendLoopBodyOnRegularRefinedPatch;
+      }
 
+
+      namespace tasks {
         /**
          * Forward declaration
          */
-        template <class Vertex, class Cell, class EventHandle>
-        class CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch;
+        template <class Vertex, class Cell, class State, class EventHandle>
+        class Ascend;
       }
     }
   }
@@ -45,12 +48,10 @@ namespace peano {
  *
  * @author Tobias Weinzierl
  */
-template <class Vertex, class Cell, class EventHandle>
+template <class Vertex, class Cell, class State, class EventHandle>
 class peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch {
   private:
     static tarch::logging::Log _log;
-
-    static tarch::multicore::BooleanSemaphore  _semaphore;
 
     int                                        _coarseLevel;
 
@@ -74,6 +75,21 @@ class peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch {
       peano::grid::RegularGridContainer<Vertex,Cell>&   regularGridContainer
     );
 
+    /**
+     * Destructor
+     *
+     * !!! Multithreading
+     *
+     * We may not use a semaphore of our own, as there's always two different
+     * classes involved on regular patches (besides the fact that these classes
+     * themselves might be forked among multiple threads): For cells and for
+     * vertices. Furthermore, there is also an ascend loop and we do not know
+     * when this type's destructor is called.
+     *
+     * Therefore, these three loop bodies have to share one semaphore. I could
+     * assign it to one of these classes but decided to move it do the overall
+     * task, i.e. to ascend/descend.
+     */
     ~CallAscendLoopBodyOnRegularRefinedPatch();
 
     void setCoarseGridLevel(int value);

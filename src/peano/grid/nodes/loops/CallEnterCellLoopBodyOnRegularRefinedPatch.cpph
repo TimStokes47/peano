@@ -5,10 +5,6 @@ template <class Vertex, class Cell, class State, class EventHandle>
 tarch::logging::Log peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::_log( "peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch" );
 
 
-template <class Vertex, class Cell, class State, class EventHandle>
-tarch::multicore::BooleanSemaphore peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::_semaphore;
-
-
 #ifdef Parallel
 #include <set>
 
@@ -65,7 +61,7 @@ void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Verte
 
 template <class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::~CallEnterCellLoopBodyOnRegularRefinedPatch() {
-  tarch::multicore::Lock lock(_semaphore);
+  tarch::multicore::Lock lock(peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::_semaphore);
 
   _state.incNumberOfInnerCells(_numberOfInnerCells);
   _state.incNumberOfOuterCells(_numberOfOuterCells);

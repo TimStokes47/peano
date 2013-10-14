@@ -424,12 +424,14 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       _numberOfBoundaryVertices += 1.0;
     }
     else if (_fineGridVertices[positionInVertexArray].isBoundary()) {
+      _numberOfBoundaryVertices     += 1.0;
       _numberOfBoundaryLeafVertices += 1.0;
     }
     else if (_fineGridVertices[positionInVertexArray].getRefinementControl()!=Vertex::Records::Unrefined) {
       _numberOfInnerVertices += 1.0;
     }
     else {
+      _numberOfInnerVertices     += 1.0;
       _numberOfInnerLeafVertices += 1.0;
     }
   }
@@ -438,6 +440,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       _numberOfOuterVertices += 1.0;
     }
     else {
+      _numberOfOuterVertices     += 1.0;
       _numberOfOuterLeafVertices += 1.0;
     }
   }

@@ -8,6 +8,10 @@ tarch::logging::Log  peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHa
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
+tarch::multicore::BooleanSemaphore  peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::_semaphore;
+
+
+template <class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::Ascend(
   const int              treeDepth,
   State&                 state,

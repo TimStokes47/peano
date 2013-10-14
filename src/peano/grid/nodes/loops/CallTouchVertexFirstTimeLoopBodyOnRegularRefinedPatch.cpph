@@ -5,9 +5,6 @@
 template <class Vertex, class Cell, class State, class EventHandle>
 tarch::logging::Log peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::_log( "peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch" );
 
-template <class Vertex, class Cell, class State, class EventHandle>
-tarch::multicore::BooleanSemaphore peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::_semaphore;
-
 
 template <class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch(
@@ -32,6 +29,26 @@ peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
+peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch(
+  const CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch& copy
+):
+  _level(copy._level),
+  _state(copy._state),
+  _eventHandle(copy._eventHandle),
+  _threadLocalEventHandle(copy._eventHandle),
+  _regularGridContainer(copy._regularGridContainer),
+  _numberOfInnerVertices(0.0),
+  _numberOfBoundaryVertices(0.0),
+  _numberOfOuterVertices(0.0),
+  _numberOfInnerLeafVertices(0.0),
+  _numberOfBoundaryLeafVertices(0.0),
+  _numberOfOuterLeafVertices(0.0),
+  _fineGridEnumerator(copy._regularGridContainer.getVertexEnumerator(1)),
+  _coarseGridEnumerator(copy._regularGridContainer.getVertexEnumerator(0)) {
+}
+
+
+template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::setLevel(int level) {
   assertion( level>=1 );
   _level = level;
@@ -42,7 +59,7 @@ void peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefined
 
 template <class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::~CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch() {
-  tarch::multicore::Lock lock(_semaphore);
+  tarch::multicore::Lock lock(peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::_semaphore);
 
   _state.incNumberOfInnerVertices(_numberOfInnerVertices);
   _state.incNumberOfBoundaryVertices(_numberOfBoundaryVertices);
@@ -88,12 +105,14 @@ void peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefined
       _numberOfBoundaryVertices += 1.0;
     }
     else if (currentVertex.isBoundary()) {
+      _numberOfBoundaryVertices     += 1.0;
       _numberOfBoundaryLeafVertices += 1.0;
     }
     else if (currentVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
       _numberOfInnerVertices += 1.0;
     }
     else {
+      _numberOfInnerVertices     += 1.0;
       _numberOfInnerLeafVertices += 1.0;
     }
   }
@@ -102,6 +121,7 @@ void peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefined
       _numberOfOuterVertices += 1.0;
     }
     else {
+      _numberOfOuterVertices     += 1.0;
       _numberOfOuterLeafVertices += 1.0;
     }
   }

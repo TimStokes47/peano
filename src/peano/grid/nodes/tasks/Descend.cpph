@@ -8,6 +8,10 @@
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
+tarch::multicore::BooleanSemaphore  peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::_semaphore;
+
+
+template <class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::Descend(
   const int              treeDepth,
   State&                 state,

@@ -35,11 +35,17 @@ namespace peano {
  */
 template <class Vertex, class Cell, class State, class EventHandle>
 class peano::grid::nodes::tasks::Ascend {
+  public:
+    /**
+     * @see Destructor of any of the loop bodies.
+     */
+    static tarch::multicore::BooleanSemaphore  _semaphore;
   private:
     typedef peano::grid::RegularGridContainer<Vertex,Cell>                                                             RegularGridContainer;
-    typedef peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>             LeaveCellLoopBody;
-    typedef peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>   TouchVertexLastTimeLoopBody;
-    typedef peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,EventHandle>                AscendLoopBody;
+
+    typedef peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>             LeaveCellLoopBody;
+    typedef peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>   TouchVertexLastTimeLoopBody;
+    typedef peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>                AscendLoopBody;
 
     static tarch::logging::Log  _log;
 
