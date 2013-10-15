@@ -139,7 +139,7 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
     const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
     const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
     bool           triggeredTimeoutWarning = false;
-    int            finishedWait            = i->_metaInformation.getLength()==0 || i->_request;
+    int            finishedWait            = i->_metaInformation.getLength()==0;
 
     while (!finishedWait) {
       MPI_Test(&(i->_request), &finishedWait, &status);
