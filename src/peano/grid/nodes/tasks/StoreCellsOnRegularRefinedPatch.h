@@ -51,6 +51,20 @@ class peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch {
      * properties might be required by the store vertex process. Instead, this
      * process graps a copy of the cells and streams the copy to the output
      * stack.
+     *
+     * !!! Inefficiency patterns
+     *
+     * If the cell storage is ran in parallel to the cell processing
+     * (pipelining), it can happen that the process waits quite some time
+     * before it can start to store the cells actually. In this case, it does
+     * not permanently poll the cell state, but it moves to the background
+     * several times (see the macro sendThisTaskToBackground).
+     *
+     * If it has to wait too long, it writes a warning. In this case, it
+     * might make sense to switch off pipelining for the store process -
+     * obviously the store process has to wait that long before it can start
+     * that it does make more sense to invest all computational ressources no
+     * the processing and afterwards run the store process serially.
      */
     void storeCells(
       peano::utils::LoopDirection               loopDirection,
