@@ -46,7 +46,11 @@ void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string
   else {
     if (_pauseCounter>_counterThresholdForWarning && _pauseCounter != std::numeric_limits<int>::max()) {
       _pauseCounter = std::numeric_limits<int>::max();
-      logWarning( "sendCurrentTaskToBack(string)", "probably running into deadlock or inefficient behaviour in " << methodTrace );
+      logWarning(
+        "sendCurrentTaskToBack(string)",
+        "probably running into deadlock or inefficient behaviour in " << methodTrace <<
+        ". Consult method's documentation for more information"
+      );
     }
     else {
       _pauseCounter++;
