@@ -116,12 +116,17 @@ void __NAMESPACE__::repositories::RepositoryArrayStack::terminate() {
   #endif
   
  __x__NONQUALIFIED_ADAPTER_TYPE__ _gridWith__NONQUALIFIED_ADAPTER_TYPE__.terminate();
+ 
   logTraceOut( "terminate()" );
 }
 
 
 __NAMESPACE__::State& __NAMESPACE__::repositories::RepositoryArrayStack::getState() {
-  logInfo( "terminate()", "rank has terminated" );
+  return _solverState;
+}
+
+
+const __NAMESPACE__::State& __NAMESPACE__::repositories::RepositoryArrayStack::getState() const {
   return _solverState;
 }
 

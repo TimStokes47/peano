@@ -77,6 +77,7 @@ class __NAMESPACE__::repositories::RepositorySTDStack: public __NAMESPACE__::rep
     virtual void terminate();
         
     virtual __NAMESPACE__::State& getState();
+    virtual const __NAMESPACE__::State& getState() const;
 	
     virtual void iterate();
 

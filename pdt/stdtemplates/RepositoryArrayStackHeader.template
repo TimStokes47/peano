@@ -83,6 +83,7 @@ class __NAMESPACE__::repositories::RepositoryArrayStack: public __NAMESPACE__::r
     virtual void terminate();
         
     virtual __NAMESPACE__::State& getState();
+    virtual const __NAMESPACE__::State& getState() const;
 
     virtual void iterate();
     

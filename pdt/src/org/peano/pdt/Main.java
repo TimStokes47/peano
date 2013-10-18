@@ -2,6 +2,9 @@
 // use, please see the copyright notice at www.peano-framework.org.
 package org.peano.pdt;
 
+import java.util.Arrays;
+import java.util.Vector;
+
 public class Main {
   public static void printUsage() {
     System.out.println("Peano Developement Toolkit (PDT)");
@@ -11,7 +14,7 @@ public class Main {
     System.out.println("  peano-specification-file    Mandatory; specification file describing your project. " );
     System.out.println("  component-output-directory  Mandatory; typically the directory holding the spec file as well. All paths" );
     System.out.println("                              within the spec file are relative to the output directory." );
-    System.out.println("  template-directory          Optional; points to the directory holding user-defined templates. " );
+    System.out.println("  template-directorise        Optional; points to the directories holding user-defined templates. Multiple directories are separated by colon" );
   }
 
   /**
@@ -33,14 +36,25 @@ public class Main {
           System.exit(-1);
         }
 
-        java.io.File templateDirectory = null;
+        java.util.Vector<String> templateDirectory = new java.util.Vector<String>();
         if (templateDirectoryName != null) {
-          templateDirectory = new java.io.File(templateDirectoryName);
-          if (!templateDirectory.isDirectory()) {
-            System.err.println("template directory "
-                + templateDirectory.getAbsolutePath()
-                + " is no valid directory");
-            System.exit(-1);
+          System.out.println("parse template directory specification "
+              + templateDirectoryName );
+          templateDirectory = new Vector<String>( Arrays.asList(templateDirectoryName.split(":")) );
+          
+          for (String d: templateDirectory) {
+            java.io.File checkFile = new java.io.File(d);
+            if (checkFile.isDirectory()) {
+              System.out.println("template directory "
+                  + checkFile.getAbsolutePath()
+                  + " added to user-defined template search path");
+            }
+            else {
+              System.err.println("template directory "
+                  + checkFile.getAbsolutePath()
+                  + " is no valid directory");
+              System.exit(-1);
+            }
           }
         }
 

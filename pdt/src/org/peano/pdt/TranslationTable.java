@@ -1,10 +1,10 @@
 package org.peano.pdt;
 
 
+import java.io.File;
 import java.io.FileNotFoundException;
 
 import org.peano.pdt.analysis.DepthFirstAdapter;
-
 import org.peano.pdt.node.*;
 
 
@@ -52,7 +52,7 @@ public class TranslationTable extends DepthFirstAdapter {
   
   private static final String _KEYWORD_NUMBER_OF_ADAPTERS_ = "__NUMBER_OF_ADAPTERS__";
 
-  private java.io.File _templateDirectory;
+  private java.util.Vector<String> _templateDirectory;
 
   /**
    * All the mappings from keywords to concrete names.
@@ -69,7 +69,7 @@ public class TranslationTable extends DepthFirstAdapter {
    */
   private java.util.Vector<String> _adapters;
 
-  public TranslationTable(java.io.File templateDirectory) {
+  public TranslationTable(java.util.Vector<String> templateDirectory) {
     _mapping = new java.util.HashMap<String, String>();
     _templateDirectory = templateDirectory;
     for (String p : _mapping.keySet()) {
@@ -435,16 +435,21 @@ public class TranslationTable extends DepthFirstAdapter {
 
   private java.io.BufferedReader getBufferedReaderForUserTemplate(String templateFile)
 		throws FileNotFoundException {
-  if (_templateDirectory!=null) {
-    templateFile = _templateDirectory + "/" + templateFile;
-  }
-  else {
-    System.err.println( "\nwarning: No user template directory passed, search for templates in current directory" );
-  }
-	templateFile = templateFile.replaceAll("\\\\", "/");
-	java.io.BufferedReader reader = new java.io.BufferedReader(
-			new java.io.FileReader(new java.io.File(templateFile)));
-	return reader;
+
+    String qualifiedTemplateFile = templateFile;
+    
+    for(String d: _templateDirectory) {
+      String fullQualifiedPath = d + "/" + templateFile;
+      fullQualifiedPath = fullQualifiedPath.replaceAll("\\\\", "/");
+      java.io.File testFile = new java.io.File( fullQualifiedPath );
+      if (testFile.isFile()) {
+        qualifiedTemplateFile = fullQualifiedPath;
+      }
+    }
+    
+  	java.io.BufferedReader reader = new java.io.BufferedReader(
+			new java.io.FileReader(new java.io.File(qualifiedTemplateFile)));
+	  return reader;
   }
 
   /**

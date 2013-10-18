@@ -36,6 +36,7 @@ class __NAMESPACE__::repositories::Repository {
     virtual void iterate() = 0;
 
     virtual __NAMESPACE__::State& getState() = 0;
+    virtual const __NAMESPACE__::State& getState() const = 0;
 
     /**
      * Switch to another event handle.

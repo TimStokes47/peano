@@ -110,12 +110,16 @@ void __NAMESPACE__::repositories::RepositorySTDStack::terminate() {
 
  __x__NONQUALIFIED_ADAPTER_TYPE__ _gridWith__NONQUALIFIED_ADAPTER_TYPE__.terminate();
 
-  logInfo( "terminate()", "rank has terminated" );
   logTraceOut( "terminate()" );
 }
 
 
 __NAMESPACE__::State& __NAMESPACE__::repositories::RepositorySTDStack::getState() {
+  return _solverState;
+}
+
+
+const __NAMESPACE__::State& __NAMESPACE__::repositories::RepositorySTDStack::getState() const {
   return _solverState;
 }
 
