@@ -1,6 +1,5 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
 // This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
+// use, please see the copyright notice at www.peano-framework.org
 #ifndef _TARCH_PLOTTER_GRIDDATA_WRITER_H_
 #define _TARCH_PLOTTER_GRIDDATA_WRITER_H_
 
