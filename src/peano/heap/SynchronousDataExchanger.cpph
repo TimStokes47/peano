@@ -121,15 +121,15 @@ void peano::heap::SynchronousDataExchanger<Data>::receiveDanglingMessages() {
     _numberOfReceivedMessages += 1;
     _numberOfSentRecords      += receiveTask._metaInformation.getLength();
 
+    _receiveTasks.push_back( receiveTask );
+
     if(receiveTask._metaInformation.getLength() > 0) {
-      receiveTask.triggerReceive(_tag);
+      _receiveTasks.back().triggerReceive(_tag);
       logDebug(
         "receiveDanglingMessages(...)",
         "started to receive " << _receiveTasks.size() << "th message from rank " << receiveTask._rank << " with " << receiveTask._metaInformation.getLength() << " entries and data pointing to " << receiveTask._data
       );
     }
-
-    _receiveTasks.push_back( receiveTask );
 
     logTraceOut( "receiveDanglingMessages(...)" );
   }
