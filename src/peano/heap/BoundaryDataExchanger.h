@@ -25,8 +25,8 @@ class peano::heap::BoundaryDataExchanger {
     const int            _tag;
     const int            _rank;
 
-    std::vector<SendReceiveTask<Data> >   _sendTasks;
-    std::vector<SendReceiveTask<Data> >   _receiveTasks[2];
+    std::list<SendReceiveTask<Data> >   _sendTasks;
+    std::list<SendReceiveTask<Data> >   _receiveTasks[2];
 
     int  _numberOfSentMessages;
     int  _numberOfSentRecords;

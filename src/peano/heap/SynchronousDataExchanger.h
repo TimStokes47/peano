@@ -23,8 +23,8 @@ class peano::heap::SynchronousDataExchanger {
     const std::string    _identifier;
     const int            _tag;
 
-    std::vector<SendReceiveTask<Data> >   _sendTasks;
-    std::vector<SendReceiveTask<Data> >   _receiveTasks;
+    std::list<SendReceiveTask<Data> >   _sendTasks;
+    std::list<SendReceiveTask<Data> >   _receiveTasks;
 
     int  _numberOfSentMessages;
     int  _numberOfSentRecords;
@@ -56,12 +56,12 @@ class peano::heap::SynchronousDataExchanger {
      *
      * @return -1 if no message found
      */
-    int findMessageFromRankInReceiveBuffer(int ofRank);
+    typename std::list< SendReceiveTask<Data> >::iterator findMessageFromRankInReceiveBuffer(int ofRank);
 
     std::vector< Data > extractMessageFromReceiveBuffer(
-      int                                           messageNumber,
-      const tarch::la::Vector<DIMENSIONS, double>&  position,
-      int                                           level
+      typename std::list< SendReceiveTask<Data> >::iterator messageTask,
+      const tarch::la::Vector<DIMENSIONS, double>&          position,
+      int                                                   level
     );
   public:
     /**

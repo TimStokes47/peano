@@ -43,7 +43,7 @@ void peano::heap::SynchronousDataExchanger<Data>::finishedToSendData() {
   _isCurrentlySending = false;
   #endif
 
-  for(typename std::vector<SendReceiveTask<Data> >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
+  for(typename std::list<SendReceiveTask<Data> >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
     MPI_Status status;
 
     const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -180,16 +180,16 @@ std::vector< Data > peano::heap::SynchronousDataExchanger<Data>::receiveData(
 
   std::vector< Data >  result;
 
-  int                  resultTask = findMessageFromRankInReceiveBuffer(fromRank);
+  typename std::list< SendReceiveTask<Data> >::iterator resultTask = findMessageFromRankInReceiveBuffer(fromRank);
 
-  if (resultTask == -1) {
+  if (resultTask == _receiveTasks.end()) {
     logDebug( "receiveData", "data either not found or records not available yet" );
 
     const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
     const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
     bool           triggeredTimeoutWarning = false;
 
-    while (resultTask == -1) {
+    while (resultTask == _receiveTasks.end()) {
       resultTask = findMessageFromRankInReceiveBuffer(fromRank);
 
       // deadlock aspect
@@ -264,13 +264,13 @@ void peano::heap::SynchronousDataExchanger<Data>::clearStatistics() {
 
 
 template <class Data>
-int peano::heap::SynchronousDataExchanger<Data>::findMessageFromRankInReceiveBuffer( int ofRank ) {
-  for (int i=0; i<static_cast<int>(_receiveTasks.size()); i++) {
-    if (_receiveTasks[i]._rank==ofRank) {
+typename std::list< peano::heap::SendReceiveTask<Data> >::iterator peano::heap::SynchronousDataExchanger<Data>::findMessageFromRankInReceiveBuffer( int ofRank ) {
+  for (typename std::list<SendReceiveTask<Data> >::iterator i = _receiveTasks.begin(); i != _receiveTasks.end(); i++) {
+    if (i->_rank==ofRank) {
       MPI_Status status;
       int        finishedWait = false;
-      if (_receiveTasks[i]._metaInformation.getLength() > 0) {
-        MPI_Test(&(_receiveTasks[i]._request), &finishedWait, &status);
+      if (i->_metaInformation.getLength() > 0) {
+        MPI_Test(&(i->_request), &finishedWait, &status);
       }
       else {
         finishedWait = true;
@@ -280,48 +280,47 @@ int peano::heap::SynchronousDataExchanger<Data>::findMessageFromRankInReceiveBuf
         return i;
       }
       else {
-        return -1;
+        return _receiveTasks.end();
       }
     }
   }
-  return -1;
+  return _receiveTasks.end();
 }
 
 
 template <class Data>
 std::vector< Data > peano::heap::SynchronousDataExchanger<Data>::extractMessageFromReceiveBuffer(
-  int                                           messageNumber,
-  const tarch::la::Vector<DIMENSIONS, double>&  position,
-  int                                           level
+  typename std::list< SendReceiveTask<Data> >::iterator messageTask,
+  const tarch::la::Vector<DIMENSIONS, double>&          position,
+  int                                                   level
 ) {
-  assertion( messageNumber>=0 );
-  assertion( messageNumber<static_cast<int>(_receiveTasks.size()) );
+  assertion( messageTask != _receiveTasks.end() );
 
-  const int numberOfElementsOfThisEntry = _receiveTasks[messageNumber]._metaInformation.getLength();
+  #ifdef Asserts
+  const int numberOfElementsOfThisEntry = messageTask->_metaInformation.getLength();
   assertion2(numberOfElementsOfThisEntry >= 0, position, level);
+  #endif
 
   assertion4(
-    (_receiveTasks[messageNumber]._metaInformation.getLevel() == level) || numberOfElementsOfThisEntry == 0,
-    _receiveTasks[messageNumber]._metaInformation.toString(),
+    (messageTask->_metaInformation.getLevel() == level) || numberOfElementsOfThisEntry == 0,
+    messageTask->_metaInformation.toString(),
     level,  position,
     tarch::parallel::Node::getInstance().getRank()
   );
   for (int d=0; d<DIMENSIONS; d++) {
     assertion5(
-      tarch::la::equals(_receiveTasks[messageNumber]._metaInformation.getPosition(d), position(d)),
-      _receiveTasks[messageNumber]._metaInformation.toString(),
+      tarch::la::equals(messageTask->_metaInformation.getPosition(d), position(d)),
+      messageTask->_metaInformation.toString(),
       level,  position,  d,
       tarch::parallel::Node::getInstance().getRank()
     );
   }
 
-  assertion(_receiveTasks[messageNumber]._data!=0 || numberOfElementsOfThisEntry==0);
+  assertion(messageTask->_data!=0 || numberOfElementsOfThisEntry==0);
 
-  const std::vector< Data > result = _receiveTasks[messageNumber].unwrapDataAndFreeMemory();
+  const std::vector< Data > result = messageTask->unwrapDataAndFreeMemory();
 
-  typename std::vector<SendReceiveTask<Data> >::iterator it = _receiveTasks.begin();
-  it+=messageNumber;
-  _receiveTasks.erase(it);
+  _receiveTasks.erase(messageTask);
 
   return result;
 }
