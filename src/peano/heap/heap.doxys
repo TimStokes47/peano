@@ -240,4 +240,15 @@
   
   \image html MPIEvents.png
     
+    
+  !!! Regenerate all message data
+
+  To regenerate all DaStGen records provided by the heap component, change into 
+  the heap directory and call 
+  \code
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator dastgen/MetaInformation.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator dastgen/DoubleHeapData.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator dastgen/IntegerHeapData.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator dastgen/FloatHeapData.def records
+  \endcode
  */

@@ -12,6 +12,10 @@
 #include "peano/heap/PlainBoundaryDataExchanger.h"
 #include "peano/heap/RLEBoundaryDataExchanger.h"
 
+#include "peano/heap/records/FloatHeapData.h"
+#include "peano/heap/records/DoubleHeapData.h"
+#include "peano/heap/records/IntegerHeapData.h"
+
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
 
@@ -41,7 +45,6 @@ namespace peano {
         virtual ~PlainHeap() {}
     };
 
-
     template<class Data>
     class RLEHeap: public Heap<
       Data,
@@ -52,6 +55,15 @@ namespace peano {
       public:
         virtual ~RLEHeap() {}
     };
+
+    typedef PlainHeap<peano::heap::records::IntegerHeapData>  PlainIntegerHeap;
+    typedef RLEHeap<peano::heap::records::IntegerHeapData>    RLEIntegerHeap;
+
+    typedef PlainHeap<peano::heap::records::DoubleHeapData>   PlainDoubleHeap;
+    typedef RLEHeap<peano::heap::records::DoubleHeapData>     RLEDoubleHeap;
+
+    typedef PlainHeap<peano::heap::records::FloatHeapData>    PlainFloatHeap;
+    typedef RLEHeap<peano::heap::records::FloatHeapData>      RLEFloatHeap;
 
     /**
      * Flags to specify which kind of message is sent or
@@ -274,9 +286,14 @@ class peano::heap::Heap: public tarch::services::Service {
      *        gonna store for this heap entry, use this constructor. You can
      *        always add more elements later, but using this parameter should
      *        be faster and leads to a lower memory fragmentation
+     * @param initialCapacity Has to be bigger/equal than numberOfEntries or
+     *        zero. It tells the heap how much entries you expect to be stored
+     *        for this index. You can always use more elements later on, so
+     *        this is just a tuning parameter to avoid frequent reallocation.
+     *
      * @return The index return is always a non-negativ number.
      */
-    int createData(int numberOfEntries=0);
+    int createData(int numberOfEntries=0, int initialCapacity=0);
 
     /**
      * Returns, if the given index is a known index and, thus,

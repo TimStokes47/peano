@@ -116,8 +116,11 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
-int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::createData(int numberOfEntries) {
-  logTraceInWith1Argument( "createData()", numberOfEntries );
+int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::createData(int numberOfEntries, int initialCapacity) {
+  logTraceInWith2Arguments( "createData()", numberOfEntries, initialCapacity );
+
+  assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
+  assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
   int index;
   if (_freedHeapIndices.empty()) {
@@ -131,6 +134,9 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
 
   assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry does exist already.");
   _heapData.insert( typename HeapContainer::value_type(index,new std::vector<Data>(numberOfEntries)) );
+  if (initialCapacity>0) {
+    _heapData[index]->reserve(initialCapacity);
+  }
 
   assertionMsg(_heapData.find(index) != _heapData.end(), "insertion of heap data not successful.");
   assertion(index >= 0);

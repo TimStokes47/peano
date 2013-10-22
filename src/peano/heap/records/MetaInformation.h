@@ -19,11 +19,11 @@
 
 namespace peano {
    namespace heap {
-         namespace records {
-            class MetaInformation;
-            class MetaInformationPacked;
-         }
+      namespace records {
+         class MetaInformation;
+         class MetaInformationPacked;
       }
+   }
 }
 
 #if defined(Asserts)
@@ -33,11 +33,11 @@ namespace peano {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 17-10-2012 11:27
+    * 		   build date: 22-10-2013 20:59
     *
-    * @date   17/10/2012 11:32
+    * @date   22/10/2013 21:03
     */
-   class peano::heap::records::MetaInformation {
+   class peano::heap::records::MetaInformation { 
       
       public:
          
@@ -158,7 +158,7 @@ namespace peano {
          protected:
             static tarch::logging::Log _log;
             
-            int _senderRank;
+            int _senderDestinationRank;
             
          public:
             
@@ -196,11 +196,11 @@ namespace peano {
        * 		   2007-2009 Wolfgang Eckhardt
        * 		   2012      Tobias Weinzierl
        *
-       * 		   build date: 17-10-2012 11:27
+       * 		   build date: 22-10-2013 20:59
        *
-       * @date   17/10/2012 11:32
+       * @date   22/10/2013 21:03
        */
-      class peano::heap::records::MetaInformationPacked {
+      class peano::heap::records::MetaInformationPacked { 
          
          public:
             
@@ -319,7 +319,7 @@ namespace peano {
             protected:
                static tarch::logging::Log _log;
                
-               int _senderRank;
+               int _senderDestinationRank;
                
             public:
                
@@ -359,11 +359,11 @@ namespace peano {
           * 		   2007-2009 Wolfgang Eckhardt
           * 		   2012      Tobias Weinzierl
           *
-          * 		   build date: 17-10-2012 11:27
+          * 		   build date: 22-10-2013 20:59
           *
-          * @date   17/10/2012 11:32
+          * @date   22/10/2013 21:03
           */
-         class peano::heap::records::MetaInformation {
+         class peano::heap::records::MetaInformation { 
             
             public:
                
@@ -450,7 +450,7 @@ namespace peano {
                protected:
                   static tarch::logging::Log _log;
                   
-                  int _senderRank;
+                  int _senderDestinationRank;
                   
                public:
                   
@@ -488,11 +488,11 @@ namespace peano {
              * 		   2007-2009 Wolfgang Eckhardt
              * 		   2012      Tobias Weinzierl
              *
-             * 		   build date: 17-10-2012 11:27
+             * 		   build date: 22-10-2013 20:59
              *
-             * @date   17/10/2012 11:32
+             * @date   22/10/2013 21:03
              */
-            class peano::heap::records::MetaInformationPacked {
+            class peano::heap::records::MetaInformationPacked { 
                
                public:
                   
@@ -577,7 +577,7 @@ namespace peano {
                   protected:
                      static tarch::logging::Log _log;
                      
-                     int _senderRank;
+                     int _senderDestinationRank;
                      
                   public:
                      
