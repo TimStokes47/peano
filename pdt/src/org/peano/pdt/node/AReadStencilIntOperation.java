@@ -5,16 +5,16 @@ package org.peano.pdt.node;
 import org.peano.pdt.analysis.*;
 
 @SuppressWarnings("nls")
-public final class AReadVectorTwoPowDOperation extends POperation
+public final class AReadStencilIntOperation extends POperation
 {
     private TIdentifier _name_;
 
-    public AReadVectorTwoPowDOperation()
+    public AReadStencilIntOperation()
     {
         // Constructor
     }
 
-    public AReadVectorTwoPowDOperation(
+    public AReadStencilIntOperation(
         @SuppressWarnings("hiding") TIdentifier _name_)
     {
         // Constructor
@@ -25,13 +25,13 @@ public final class AReadVectorTwoPowDOperation extends POperation
     @Override
     public Object clone()
     {
-        return new AReadVectorTwoPowDOperation(
+        return new AReadStencilIntOperation(
             cloneNode(this._name_));
     }
 
     public void apply(Switch sw)
     {
-        ((Analysis) sw).caseAReadVectorTwoPowDOperation(this);
+        ((Analysis) sw).caseAReadStencilIntOperation(this);
     }
 
     public TIdentifier getName()

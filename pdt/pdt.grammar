@@ -34,11 +34,16 @@ Tokens
   token_read                  = 'read';
   token_write                 = 'write';
   
-  token_scalar                = 'scalar:';
-  token_vector_d              = 'vector:';
-  token_vector_two_pow_d      = 'vector2PowD:';
-  token_vector_five_pow_d     = 'intergrid-operator:';
-  token_stencil               = 'stencil:';
+  token_scalar_double             = 'scalar(double):';
+  token_scalar_int                = 'scalar(int):';
+  token_vector_d_double           = 'vector(double):';
+  token_vector_d_int              = 'vector(int):';
+  token_vector_two_pow_d_double   = 'vector2PowD(double):';
+  token_vector_two_pow_d_int      = 'vector2PowD(int):';
+  token_vector_five_pow_d_double  = 'intergrid-operator(double):';
+  token_vector_five_pow_d_int     = 'intergrid-operator(int):';
+  token_stencil_double            = 'stencil(double):';
+  token_stencil_int               = 'stencil(int):';
   	
   token_name                  = 'name:';
   token_dastgen_file          = 'dastgen-file:';
@@ -88,46 +93,88 @@ Productions
       { -> New cell( filename) };
   
   operation_list { -> operation* } =
-      {single_read_scalar} token_read token_scalar identifier
-        { -> [New operation.read_scalar(identifier) ] }
-    | {list_read_scalar}   token_read token_scalar identifier operation_list
-        { -> [New operation.read_scalar(identifier),operation_list.operation] }
-    | {single_read_vector} token_read token_vector_d identifier
-        { -> [New operation.read_vector(identifier) ] }
-    | {list_read_vector}   token_read token_vector_d identifier operation_list
-        { -> [New operation.read_vector(identifier),operation_list.operation] }
-    | {single_read_token_vector_two_pow_d} token_read token_vector_two_pow_d identifier
-        { -> [New operation.read_vector_two_pow_d(identifier) ] }
-    | {list_read_token_vector_two_pow_d}   token_read token_vector_two_pow_d identifier operation_list
-        { -> [New operation.read_vector_two_pow_d(identifier),operation_list.operation] }
-    | {single_read_stencil} token_read token_stencil identifier
-        { -> [New operation.read_stencil(identifier) ] }
-    | {list_read_stencil}   token_read token_stencil identifier operation_list
-        { -> [New operation.read_stencil(identifier),operation_list.operation] }
-    | {single_read_intergrid_operator}   token_read token_vector_five_pow_d identifier 
-        { -> [New operation.read_intergrid_operator(identifier) ] }
-    | {list_read_intergrid_operator}   token_read token_vector_five_pow_d identifier operation_list
-        { -> [New operation.read_intergrid_operator(identifier),operation_list.operation] }
-    | {single_write_scalar} token_write token_scalar identifier
-        { -> [New operation.write_scalar(identifier) ] }
-    | {list_write_scalar}   token_write token_scalar identifier operation_list
-        { -> [New operation.write_scalar(identifier),operation_list.operation] }
-    | {single_write_vector_two_pow_d} token_write token_vector_two_pow_d identifier
-        { -> [New operation.write_vector_two_pow_d(identifier) ] }
-    | {list_write_vector_two_pow_d}   token_write token_vector_two_pow_d identifier operation_list
-        { -> [New operation.write_vector_two_pow_d(identifier),operation_list.operation] }
-    | {single_write_vector} token_write token_vector_d identifier
-        { -> [New operation.write_vector(identifier) ] }
-    | {list_write_vector}   token_write token_vector_d identifier operation_list
-        { -> [New operation.write_vector(identifier),operation_list.operation] }
-    | {single_write_stencil} token_write token_stencil identifier
-        { -> [New operation.write_stencil(identifier) ] }
-    | {list_write_stencil}   token_write token_stencil identifier operation_list
-        { -> [New operation.write_stencil(identifier),operation_list.operation] }
-    | {single_write_intergrid_operator}   token_write token_vector_five_pow_d identifier 
-        { -> [New operation.write_intergrid_operator(identifier) ] }
-    | {list_write_intergrid_operator}   token_write token_vector_five_pow_d identifier operation_list
-        { -> [New operation.write_intergrid_operator(identifier),operation_list.operation] };
+      {single_read_scalar_double} token_read token_scalar_double identifier
+        { -> [New operation.read_scalar_double(identifier) ] }
+    | {list_read_scalar_double}   token_read token_scalar_double identifier operation_list
+        { -> [New operation.read_scalar_double(identifier),operation_list.operation] }
+    | {single_read_vector_double} token_read token_vector_d_double identifier
+        { -> [New operation.read_vector_double(identifier) ] }
+    | {list_read_vector_double}   token_read token_vector_d_double identifier operation_list
+        { -> [New operation.read_vector_double(identifier),operation_list.operation] }
+    | {single_read_token_vector_two_pow_d_double} token_read token_vector_two_pow_d_double identifier
+        { -> [New operation.read_vector_two_pow_d_double(identifier) ] }
+    | {list_read_token_vector_two_pow_d_double}   token_read token_vector_two_pow_d_double identifier operation_list
+        { -> [New operation.read_vector_two_pow_d_double(identifier),operation_list.operation] }
+    | {single_read_stencil_double} token_read token_stencil_double identifier
+        { -> [New operation.read_stencil_double(identifier) ] }
+    | {list_read_stencil_double}   token_read token_stencil_double identifier operation_list
+        { -> [New operation.read_stencil_double(identifier),operation_list.operation] }
+    | {single_read_intergrid_operator_double}   token_read token_vector_five_pow_d_double identifier 
+        { -> [New operation.read_intergrid_operator_double(identifier) ] }
+    | {list_read_intergrid_operator_double}   token_read token_vector_five_pow_d_double identifier operation_list
+        { -> [New operation.read_intergrid_operator_double(identifier),operation_list.operation] }
+    | {single_write_scalar_double} token_write token_scalar_double identifier
+        { -> [New operation.write_scalar_double(identifier) ] }
+    | {list_write_scalar_double}   token_write token_scalar_double identifier operation_list
+        { -> [New operation.write_scalar_double(identifier),operation_list.operation] }
+    | {single_write_vector_two_pow_d_double} token_write token_vector_two_pow_d_double identifier
+        { -> [New operation.write_vector_two_pow_d_double(identifier) ] }
+    | {list_write_vector_two_pow_d_double}   token_write token_vector_two_pow_d_double identifier operation_list
+        { -> [New operation.write_vector_two_pow_d_double(identifier),operation_list.operation] }
+    | {single_write_vector_double} token_write token_vector_d_double identifier
+        { -> [New operation.write_vector_double(identifier) ] }
+    | {list_write_vector_double}   token_write token_vector_d_double identifier operation_list
+        { -> [New operation.write_vector_double(identifier),operation_list.operation] }
+    | {single_write_stencil_double} token_write token_stencil_double identifier
+        { -> [New operation.write_stencil_double(identifier) ] }
+    | {list_write_stencil_double}   token_write token_stencil_double identifier operation_list
+        { -> [New operation.write_stencil_double(identifier),operation_list.operation] }
+    | {single_write_intergrid_operator_double}   token_write token_vector_five_pow_d_double identifier 
+        { -> [New operation.write_intergrid_operator_double(identifier) ] }
+    | {list_write_intergrid_operator_double}   token_write token_vector_five_pow_d_double identifier operation_list
+        { -> [New operation.write_intergrid_operator_double(identifier),operation_list.operation] }
+        
+    | {single_read_scalar_int} token_read token_scalar_int identifier
+        { -> [New operation.read_scalar_int(identifier) ] }
+    | {list_read_scalar_int}   token_read token_scalar_int identifier operation_list
+        { -> [New operation.read_scalar_int(identifier),operation_list.operation] }
+    | {single_read_vector_int} token_read token_vector_d_int identifier
+        { -> [New operation.read_vector_int(identifier) ] }
+    | {list_read_vector_int}   token_read token_vector_d_int identifier operation_list
+        { -> [New operation.read_vector_int(identifier),operation_list.operation] }
+    | {single_read_token_vector_two_pow_d_int} token_read token_vector_two_pow_d_int identifier
+        { -> [New operation.read_vector_two_pow_d_int(identifier) ] }
+    | {list_read_token_vector_two_pow_d_int}   token_read token_vector_two_pow_d_int identifier operation_list
+        { -> [New operation.read_vector_two_pow_d_int(identifier),operation_list.operation] }
+    | {single_read_stencil_int} token_read token_stencil_int identifier
+        { -> [New operation.read_stencil_int(identifier) ] }
+    | {list_read_stencil_int}   token_read token_stencil_int identifier operation_list
+        { -> [New operation.read_stencil_int(identifier),operation_list.operation] }
+    | {single_read_intergrid_operator_int}   token_read token_vector_five_pow_d_int identifier 
+        { -> [New operation.read_intergrid_operator_int(identifier) ] }
+    | {list_read_intergrid_operator_int}   token_read token_vector_five_pow_d_int identifier operation_list
+        { -> [New operation.read_intergrid_operator_int(identifier),operation_list.operation] }
+    | {single_write_scalar_int} token_write token_scalar_int identifier
+        { -> [New operation.write_scalar_int(identifier) ] }
+    | {list_write_scalar_int}   token_write token_scalar_int identifier operation_list
+        { -> [New operation.write_scalar_int(identifier),operation_list.operation] }
+    | {single_write_vector_two_pow_d_int} token_write token_vector_two_pow_d_int identifier
+        { -> [New operation.write_vector_two_pow_d_int(identifier) ] }
+    | {list_write_vector_two_pow_d_int}   token_write token_vector_two_pow_d_int identifier operation_list
+        { -> [New operation.write_vector_two_pow_d_int(identifier),operation_list.operation] }
+    | {single_write_vector_int} token_write token_vector_d_int identifier
+        { -> [New operation.write_vector_int(identifier) ] }
+    | {list_write_vector_int}   token_write token_vector_d_int identifier operation_list
+        { -> [New operation.write_vector_int(identifier),operation_list.operation] }
+    | {single_write_stencil_int} token_write token_stencil_int identifier
+        { -> [New operation.write_stencil_int(identifier) ] }
+    | {list_write_stencil_int}   token_write token_stencil_int identifier operation_list
+        { -> [New operation.write_stencil_int(identifier),operation_list.operation] }
+    | {single_write_intergrid_operator_int}   token_write token_vector_five_pow_d_int identifier 
+        { -> [New operation.write_intergrid_operator_int(identifier) ] }
+    | {list_write_intergrid_operator_int}   token_write token_vector_five_pow_d_int identifier operation_list
+        { -> [New operation.write_intergrid_operator_int(identifier),operation_list.operation] }
+        ;
   
   event_mapping_list {->event_mapping*} =
       {single}  token_event_mapping token_name identifier 
@@ -174,16 +221,26 @@ Abstract Syntax Tree
   vertex = [filename]:filename operation*;
 
   operation = 
-      {read_scalar}       [name]:identifier
-    | {read_vector}       [name]:identifier
-    | {read_vector_two_pow_d}  [name]:identifier
-    | {read_stencil}      [name]:identifier
-    | {read_intergrid_operator}      [name]:identifier
-    | {write_scalar}      [name]:identifier
-    | {write_vector}      [name]:identifier
-    | {write_vector_two_pow_d} [name]:identifier
-    | {write_stencil}     [name]:identifier
-    | {write_intergrid_operator}     [name]:identifier
+      {read_scalar_double}              [name]:identifier
+    | {read_vector_double}              [name]:identifier
+    | {read_vector_two_pow_d_double}    [name]:identifier
+    | {read_stencil_double}             [name]:identifier
+    | {read_intergrid_operator_double}  [name]:identifier
+    | {write_scalar_double}             [name]:identifier
+    | {write_vector_double}             [name]:identifier
+    | {write_vector_two_pow_d_double}   [name]:identifier
+    | {write_stencil_double}            [name]:identifier
+    | {write_intergrid_operator_double} [name]:identifier
+    | {read_scalar_int}              [name]:identifier
+    | {read_vector_int}              [name]:identifier
+    | {read_vector_two_pow_d_int}    [name]:identifier
+    | {read_stencil_int}             [name]:identifier
+    | {read_intergrid_operator_int}  [name]:identifier
+    | {write_scalar_int}             [name]:identifier
+    | {write_vector_int}             [name]:identifier
+    | {write_vector_two_pow_d_int}   [name]:identifier
+    | {write_stencil_int}            [name]:identifier
+    | {write_intergrid_operator_int} [name]:identifier
     ;
     
   cell = [filename]:filename;

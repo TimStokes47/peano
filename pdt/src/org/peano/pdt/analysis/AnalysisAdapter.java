@@ -84,52 +84,102 @@ public class AnalysisAdapter implements Analysis
         defaultCase(node);
     }
 
-    public void caseAReadScalarOperation(AReadScalarOperation node)
+    public void caseAReadScalarDoubleOperation(AReadScalarDoubleOperation node)
     {
         defaultCase(node);
     }
 
-    public void caseAReadVectorOperation(AReadVectorOperation node)
+    public void caseAReadVectorDoubleOperation(AReadVectorDoubleOperation node)
     {
         defaultCase(node);
     }
 
-    public void caseAReadVectorTwoPowDOperation(AReadVectorTwoPowDOperation node)
+    public void caseAReadVectorTwoPowDDoubleOperation(AReadVectorTwoPowDDoubleOperation node)
     {
         defaultCase(node);
     }
 
-    public void caseAReadStencilOperation(AReadStencilOperation node)
+    public void caseAReadStencilDoubleOperation(AReadStencilDoubleOperation node)
     {
         defaultCase(node);
     }
 
-    public void caseAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node)
+    public void caseAReadIntergridOperatorDoubleOperation(AReadIntergridOperatorDoubleOperation node)
     {
         defaultCase(node);
     }
 
-    public void caseAWriteScalarOperation(AWriteScalarOperation node)
+    public void caseAWriteScalarDoubleOperation(AWriteScalarDoubleOperation node)
     {
         defaultCase(node);
     }
 
-    public void caseAWriteVectorOperation(AWriteVectorOperation node)
+    public void caseAWriteVectorDoubleOperation(AWriteVectorDoubleOperation node)
     {
         defaultCase(node);
     }
 
-    public void caseAWriteVectorTwoPowDOperation(AWriteVectorTwoPowDOperation node)
+    public void caseAWriteVectorTwoPowDDoubleOperation(AWriteVectorTwoPowDDoubleOperation node)
     {
         defaultCase(node);
     }
 
-    public void caseAWriteStencilOperation(AWriteStencilOperation node)
+    public void caseAWriteStencilDoubleOperation(AWriteStencilDoubleOperation node)
     {
         defaultCase(node);
     }
 
-    public void caseAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node)
+    public void caseAWriteIntergridOperatorDoubleOperation(AWriteIntergridOperatorDoubleOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAReadScalarIntOperation(AReadScalarIntOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAReadVectorIntOperation(AReadVectorIntOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAReadVectorTwoPowDIntOperation(AReadVectorTwoPowDIntOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAReadStencilIntOperation(AReadStencilIntOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAReadIntergridOperatorIntOperation(AReadIntergridOperatorIntOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteScalarIntOperation(AWriteScalarIntOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteVectorIntOperation(AWriteVectorIntOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteVectorTwoPowDIntOperation(AWriteVectorTwoPowDIntOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteStencilIntOperation(AWriteStencilIntOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteIntergridOperatorIntOperation(AWriteIntergridOperatorIntOperation node)
     {
         defaultCase(node);
     }
@@ -194,27 +244,52 @@ public class AnalysisAdapter implements Analysis
         defaultCase(node);
     }
 
-    public void caseTTokenScalar(TTokenScalar node)
+    public void caseTTokenScalarDouble(TTokenScalarDouble node)
     {
         defaultCase(node);
     }
 
-    public void caseTTokenVectorD(TTokenVectorD node)
+    public void caseTTokenScalarInt(TTokenScalarInt node)
     {
         defaultCase(node);
     }
 
-    public void caseTTokenVectorTwoPowD(TTokenVectorTwoPowD node)
+    public void caseTTokenVectorDDouble(TTokenVectorDDouble node)
     {
         defaultCase(node);
     }
 
-    public void caseTTokenVectorFivePowD(TTokenVectorFivePowD node)
+    public void caseTTokenVectorDInt(TTokenVectorDInt node)
     {
         defaultCase(node);
     }
 
-    public void caseTTokenStencil(TTokenStencil node)
+    public void caseTTokenVectorTwoPowDDouble(TTokenVectorTwoPowDDouble node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseTTokenVectorTwoPowDInt(TTokenVectorTwoPowDInt node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseTTokenVectorFivePowDDouble(TTokenVectorFivePowDDouble node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseTTokenVectorFivePowDInt(TTokenVectorFivePowDInt node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseTTokenStencilDouble(TTokenStencilDouble node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseTTokenStencilInt(TTokenStencilInt node)
     {
         defaultCase(node);
     }

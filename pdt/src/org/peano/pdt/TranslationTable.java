@@ -32,16 +32,27 @@ public class TranslationTable extends DepthFirstAdapter {
   private static final String _MULTIPLE_LINE_KEYWORD_FULL_QUALIFIED_ADAPTER_TYPE = "__FULL_QUALIFIED_ADAPTER_TYPE__";
   private static final String _MULTIPLE_LINE_KEYWORD_NONQUALIFIED_ADAPTER_TYPE = "__NONQUALIFIED_ADAPTER_TYPE__";
 
-  private static final String _MULTIPLE_LINE_KEYWORD_READ_SCALAR_OPERATION = "__READ_SCALAR_OPERATION__";
-  private static final String _MULTIPLE_LINE_KEYWORD_READ_VECTOR_OPERATION = "__READ_VECTOR_OPERATION__";
-  private static final String _MULTIPLE_LINE_KEYWORD_READ_VECTOR_TWO_POW_D_OPERATION = "__READ_VECTOR_TWO_POW_D_OPERATION__";
-  private static final String _MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION = "__READ_STENCIL_OPERATION__";
-  private static final String _MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION = "__READ_INTERGRID_OPERATOR_OPERATION__";
-  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION = "__WRITE_SCALAR_OPERATION__";
-  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION = "__WRITE_VECTOR_OPERATION__";
-  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION = "__WRITE_VECTOR_TWO_POW_D_OPERATION__";
-  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION = "__WRITE_STENCIL_OPERATION__";
-  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION = "__WRITE_INTERGRID_OPERATOR_OPERATION__";
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_SCALAR_OPERATION_DOUBLE               = "__READ_SCALAR_OPERATION_DOUBLE__";
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_VECTOR_OPERATION_DOUBLE               = "__READ_VECTOR_OPERATION_DOUBLE__";
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_VECTOR_TWO_POW_D_OPERATION_DOUBLE     = "__READ_VECTOR_TWO_POW_D_OPERATION_DOUBLE__";
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION_DOUBLE              = "__READ_STENCIL_OPERATION_DOUBLE__";
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION_DOUBLE   = "__READ_INTERGRID_OPERATOR_OPERATION_DOUBLE__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION_DOUBLE              = "__WRITE_SCALAR_OPERATION_DOUBLE__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION_DOUBLE              = "__WRITE_VECTOR_OPERATION_DOUBLE__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION_DOUBLE    = "__WRITE_VECTOR_TWO_POW_D_OPERATION_DOUBLE__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION_DOUBLE             = "__WRITE_STENCIL_OPERATION_DOUBLE__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION_DOUBLE  = "__WRITE_INTERGRID_OPERATOR_OPERATION_DOUBLE__";
+
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_SCALAR_OPERATION_INT               = "__READ_SCALAR_OPERATION_INT__";
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_VECTOR_OPERATION_INT               = "__READ_VECTOR_OPERATION_INT__";
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_VECTOR_TWO_POW_D_OPERATION_INT     = "__READ_VECTOR_TWO_POW_D_OPERATION_INT__";
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION_INT              = "__READ_STENCIL_OPERATION_INT__";
+  private static final String _MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION_INT   = "__READ_INTERGRID_OPERATOR_OPERATION_INT__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION_INT              = "__WRITE_SCALAR_OPERATION_INT__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION_INT              = "__WRITE_VECTOR_OPERATION_INT__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION_INT    = "__WRITE_VECTOR_TWO_POW_D_OPERATION_INT__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION_INT             = "__WRITE_STENCIL_OPERATION_INT__";
+  private static final String _MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION_INT  = "__WRITE_INTERGRID_OPERATOR_OPERATION_INT__";
 
   private static final String _MULTIPLE_LINE_KEYWORD_MAPPINGS = "__MAPPINGS__";
   private static final String _KEYWORD_IF_MAPPING_EXISTS_AND_PREDEFINED_MAPPING_EXISTS_INSERT_COMMA = "__IF_MAPPINGS_EXIST_AND_PREDEFINED_MAPPINGS_EXIST_INSERT_COMMA__";
@@ -78,79 +89,153 @@ public class TranslationTable extends DepthFirstAdapter {
     _adapters = new java.util.Vector<String>();
     _multiMappings = new java.util.HashMap<String, java.util.Vector<String>>();
 
-    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_SCALAR_OPERATION,
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_SCALAR_OPERATION_DOUBLE,
         new java.util.Vector<String>());
-    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_OPERATION,
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_OPERATION_DOUBLE,
         new java.util.Vector<String>());
-    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_TWO_POW_D_OPERATION,
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_TWO_POW_D_OPERATION_DOUBLE,
             new java.util.Vector<String>());
-    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION,
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION_DOUBLE,
         new java.util.Vector<String>());
-    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION,
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION_DOUBLE,
         new java.util.Vector<String>());
-    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION,
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION_DOUBLE,
         new java.util.Vector<String>());
-    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION,
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION_DOUBLE,
         new java.util.Vector<String>());
-    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION,
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION_DOUBLE,
             new java.util.Vector<String>());
-    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION,
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION_DOUBLE,
         new java.util.Vector<String>());
-    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION,
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION_DOUBLE,
+        new java.util.Vector<String>());
+    
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_SCALAR_OPERATION_INT,
+        new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_OPERATION_INT,
+        new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_TWO_POW_D_OPERATION_INT,
+            new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION_INT,
+        new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION_INT,
+        new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION_INT,
+        new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION_INT,
+        new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION_INT,
+            new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION_INT,
+        new java.util.Vector<String>());
+    _multiMappings.put(_MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION_INT,
         new java.util.Vector<String>());
   }
 
-  public void inAReadScalarOperation(AReadScalarOperation node) {
-    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_SCALAR_OPERATION).add(
+  public void inAReadScalarDoubleOperationDouble(AReadScalarDoubleOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_SCALAR_OPERATION_DOUBLE).add(
         node.getName().toString().trim());
   }
 
-  public void inAReadVectorOperation(AReadVectorOperation node) {
-    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_OPERATION).add(
+  public void inAReadVectorDoubleOperation(AReadVectorDoubleOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_OPERATION_DOUBLE).add(
         node.getName().toString().trim());
   }
 
-  public void  inAReadVectorTwoPowDOperation(AReadVectorTwoPowDOperation node) {
-    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_TWO_POW_D_OPERATION).add(
+  public void  inAReadVectorTwoPowDDoubleOperation(AReadVectorTwoPowDDoubleOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_TWO_POW_D_OPERATION_DOUBLE).add(
         node.getName().toString().trim());
   }
 
-  public void inAReadStencilOperation(AReadStencilOperation node) {
-    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION).add(
+  public void inAReadStencilDoubleOperation(AReadStencilDoubleOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION_DOUBLE).add(
         node.getName().toString().trim());
   }
   
-  public void inAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node) {
-    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION).add(
+  public void inAReadIntergridOperatorDoubleOperation(AReadIntergridOperatorDoubleOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION_DOUBLE).add(
         node.getName().toString().trim());
   }
 
   
-  public void inAWriteVectorOperation(AWriteVectorOperation node) {
-    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION).add(
+  public void inAWriteVectorDoubleOperation(AWriteVectorDoubleOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION_DOUBLE).add(
         node.getName().toString().trim());
   }
   
-  public void inAWriteVectorTwoPowDOperation(AWriteVectorTwoPowDOperation node) {
-    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION).add(
+  public void inAWriteVectorTwoPowDDoubleOperation(AWriteVectorTwoPowDDoubleOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION_DOUBLE).add(
         node.getName().toString().trim());
   }
 
-  public void inAWriteScalarOperation(AWriteScalarOperation node) {
-    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION).add(
+  public void inAWriteScalarDoubleOperation(AWriteScalarDoubleOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION_DOUBLE).add(
         node.getName().toString().trim());
   }
 
-  public void inAWriteStencilOperation(AWriteStencilOperation node) {
-    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION).add(
+  public void inAWriteStencilDoubleOperation(AWriteStencilDoubleOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION_DOUBLE).add(
         node.getName().toString().trim());
   }
   
-  public void inAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node) {
-    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION
+  public void inAWriteIntergridOperatorDoubleOperation(AWriteIntergridOperatorDoubleOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION_DOUBLE
         ).add(
         node.getName().toString().trim());
   }
+    
+  public void inAReadScalarIntOperationInt(AReadScalarIntOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_SCALAR_OPERATION_INT).add(
+        node.getName().toString().trim());
+  }
+
+  public void inAReadVectorIntOperation(AReadVectorIntOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_OPERATION_INT).add(
+        node.getName().toString().trim());
+  }
+
+  public void  inAReadVectorTwoPowDIntOperation(AReadVectorTwoPowDIntOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_VECTOR_TWO_POW_D_OPERATION_INT).add(
+        node.getName().toString().trim());
+  }
+
+  public void inAReadStencilIntOperation(AReadStencilIntOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_STENCIL_OPERATION_INT).add(
+        node.getName().toString().trim());
+  }
+  
+  public void inAReadIntergridOperatorIntOperation(AReadIntergridOperatorIntOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_READ_INTERGRID_OPERATOR_OPERATION_INT).add(
+        node.getName().toString().trim());
+  }
+
+  
+  public void inAWriteVectorIntOperation(AWriteVectorIntOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_OPERATION_INT).add(
+        node.getName().toString().trim());
+  }
+  
+  public void inAWriteVectorTwoPowDIntOperation(AWriteVectorTwoPowDIntOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_VECTOR_TWO_POW_D_OPERATION_INT).add(
+        node.getName().toString().trim());
+  }
+
+  public void inAWriteScalarIntOperation(AWriteScalarIntOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_SCALAR_OPERATION_INT).add(
+        node.getName().toString().trim());
+  }
+
+  public void inAWriteStencilIntOperation(AWriteStencilIntOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_STENCIL_OPERATION_INT).add(
+        node.getName().toString().trim());
+  }
+  
+  public void inAWriteIntergridOperatorIntOperation(AWriteIntergridOperatorIntOperation node) {
+    _multiMappings.get(_MULTIPLE_LINE_KEYWORD_WRITE_INTERGRID_OPERATOR_OPERATION_INT
+        ).add(
+        node.getName().toString().trim());
+  }
+    
 
   public void setThisTypenameToMappingTypename(String typename) {
     _mapping.put(_TEMPORARY_KEYWORD_TYPENAME, typename);

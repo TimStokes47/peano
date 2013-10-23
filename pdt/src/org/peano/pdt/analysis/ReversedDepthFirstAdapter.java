@@ -139,214 +139,424 @@ public class ReversedDepthFirstAdapter extends AnalysisAdapter
         outAVertex(node);
     }
 
-    public void inAReadScalarOperation(AReadScalarOperation node)
+    public void inAReadScalarDoubleOperation(AReadScalarDoubleOperation node)
     {
         defaultIn(node);
     }
 
-    public void outAReadScalarOperation(AReadScalarOperation node)
+    public void outAReadScalarDoubleOperation(AReadScalarDoubleOperation node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAReadScalarOperation(AReadScalarOperation node)
+    public void caseAReadScalarDoubleOperation(AReadScalarDoubleOperation node)
     {
-        inAReadScalarOperation(node);
+        inAReadScalarDoubleOperation(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
         }
-        outAReadScalarOperation(node);
+        outAReadScalarDoubleOperation(node);
     }
 
-    public void inAReadVectorOperation(AReadVectorOperation node)
+    public void inAReadVectorDoubleOperation(AReadVectorDoubleOperation node)
     {
         defaultIn(node);
     }
 
-    public void outAReadVectorOperation(AReadVectorOperation node)
+    public void outAReadVectorDoubleOperation(AReadVectorDoubleOperation node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAReadVectorOperation(AReadVectorOperation node)
+    public void caseAReadVectorDoubleOperation(AReadVectorDoubleOperation node)
     {
-        inAReadVectorOperation(node);
+        inAReadVectorDoubleOperation(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
         }
-        outAReadVectorOperation(node);
+        outAReadVectorDoubleOperation(node);
     }
 
-    public void inAReadVectorTwoPowDOperation(AReadVectorTwoPowDOperation node)
+    public void inAReadVectorTwoPowDDoubleOperation(AReadVectorTwoPowDDoubleOperation node)
     {
         defaultIn(node);
     }
 
-    public void outAReadVectorTwoPowDOperation(AReadVectorTwoPowDOperation node)
+    public void outAReadVectorTwoPowDDoubleOperation(AReadVectorTwoPowDDoubleOperation node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAReadVectorTwoPowDOperation(AReadVectorTwoPowDOperation node)
+    public void caseAReadVectorTwoPowDDoubleOperation(AReadVectorTwoPowDDoubleOperation node)
     {
-        inAReadVectorTwoPowDOperation(node);
+        inAReadVectorTwoPowDDoubleOperation(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
         }
-        outAReadVectorTwoPowDOperation(node);
+        outAReadVectorTwoPowDDoubleOperation(node);
     }
 
-    public void inAReadStencilOperation(AReadStencilOperation node)
+    public void inAReadStencilDoubleOperation(AReadStencilDoubleOperation node)
     {
         defaultIn(node);
     }
 
-    public void outAReadStencilOperation(AReadStencilOperation node)
+    public void outAReadStencilDoubleOperation(AReadStencilDoubleOperation node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAReadStencilOperation(AReadStencilOperation node)
+    public void caseAReadStencilDoubleOperation(AReadStencilDoubleOperation node)
     {
-        inAReadStencilOperation(node);
+        inAReadStencilDoubleOperation(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
         }
-        outAReadStencilOperation(node);
+        outAReadStencilDoubleOperation(node);
     }
 
-    public void inAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node)
+    public void inAReadIntergridOperatorDoubleOperation(AReadIntergridOperatorDoubleOperation node)
     {
         defaultIn(node);
     }
 
-    public void outAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node)
+    public void outAReadIntergridOperatorDoubleOperation(AReadIntergridOperatorDoubleOperation node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAReadIntergridOperatorOperation(AReadIntergridOperatorOperation node)
+    public void caseAReadIntergridOperatorDoubleOperation(AReadIntergridOperatorDoubleOperation node)
     {
-        inAReadIntergridOperatorOperation(node);
+        inAReadIntergridOperatorDoubleOperation(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
         }
-        outAReadIntergridOperatorOperation(node);
+        outAReadIntergridOperatorDoubleOperation(node);
     }
 
-    public void inAWriteScalarOperation(AWriteScalarOperation node)
+    public void inAWriteScalarDoubleOperation(AWriteScalarDoubleOperation node)
     {
         defaultIn(node);
     }
 
-    public void outAWriteScalarOperation(AWriteScalarOperation node)
+    public void outAWriteScalarDoubleOperation(AWriteScalarDoubleOperation node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAWriteScalarOperation(AWriteScalarOperation node)
+    public void caseAWriteScalarDoubleOperation(AWriteScalarDoubleOperation node)
     {
-        inAWriteScalarOperation(node);
+        inAWriteScalarDoubleOperation(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
         }
-        outAWriteScalarOperation(node);
+        outAWriteScalarDoubleOperation(node);
     }
 
-    public void inAWriteVectorOperation(AWriteVectorOperation node)
+    public void inAWriteVectorDoubleOperation(AWriteVectorDoubleOperation node)
     {
         defaultIn(node);
     }
 
-    public void outAWriteVectorOperation(AWriteVectorOperation node)
+    public void outAWriteVectorDoubleOperation(AWriteVectorDoubleOperation node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAWriteVectorOperation(AWriteVectorOperation node)
+    public void caseAWriteVectorDoubleOperation(AWriteVectorDoubleOperation node)
     {
-        inAWriteVectorOperation(node);
+        inAWriteVectorDoubleOperation(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
         }
-        outAWriteVectorOperation(node);
+        outAWriteVectorDoubleOperation(node);
     }
 
-    public void inAWriteVectorTwoPowDOperation(AWriteVectorTwoPowDOperation node)
+    public void inAWriteVectorTwoPowDDoubleOperation(AWriteVectorTwoPowDDoubleOperation node)
     {
         defaultIn(node);
     }
 
-    public void outAWriteVectorTwoPowDOperation(AWriteVectorTwoPowDOperation node)
+    public void outAWriteVectorTwoPowDDoubleOperation(AWriteVectorTwoPowDDoubleOperation node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAWriteVectorTwoPowDOperation(AWriteVectorTwoPowDOperation node)
+    public void caseAWriteVectorTwoPowDDoubleOperation(AWriteVectorTwoPowDDoubleOperation node)
     {
-        inAWriteVectorTwoPowDOperation(node);
+        inAWriteVectorTwoPowDDoubleOperation(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
         }
-        outAWriteVectorTwoPowDOperation(node);
+        outAWriteVectorTwoPowDDoubleOperation(node);
     }
 
-    public void inAWriteStencilOperation(AWriteStencilOperation node)
+    public void inAWriteStencilDoubleOperation(AWriteStencilDoubleOperation node)
     {
         defaultIn(node);
     }
 
-    public void outAWriteStencilOperation(AWriteStencilOperation node)
+    public void outAWriteStencilDoubleOperation(AWriteStencilDoubleOperation node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAWriteStencilOperation(AWriteStencilOperation node)
+    public void caseAWriteStencilDoubleOperation(AWriteStencilDoubleOperation node)
     {
-        inAWriteStencilOperation(node);
+        inAWriteStencilDoubleOperation(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
         }
-        outAWriteStencilOperation(node);
+        outAWriteStencilDoubleOperation(node);
     }
 
-    public void inAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node)
+    public void inAWriteIntergridOperatorDoubleOperation(AWriteIntergridOperatorDoubleOperation node)
     {
         defaultIn(node);
     }
 
-    public void outAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node)
+    public void outAWriteIntergridOperatorDoubleOperation(AWriteIntergridOperatorDoubleOperation node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAWriteIntergridOperatorOperation(AWriteIntergridOperatorOperation node)
+    public void caseAWriteIntergridOperatorDoubleOperation(AWriteIntergridOperatorDoubleOperation node)
     {
-        inAWriteIntergridOperatorOperation(node);
+        inAWriteIntergridOperatorDoubleOperation(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
         }
-        outAWriteIntergridOperatorOperation(node);
+        outAWriteIntergridOperatorDoubleOperation(node);
+    }
+
+    public void inAReadScalarIntOperation(AReadScalarIntOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadScalarIntOperation(AReadScalarIntOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadScalarIntOperation(AReadScalarIntOperation node)
+    {
+        inAReadScalarIntOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadScalarIntOperation(node);
+    }
+
+    public void inAReadVectorIntOperation(AReadVectorIntOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadVectorIntOperation(AReadVectorIntOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadVectorIntOperation(AReadVectorIntOperation node)
+    {
+        inAReadVectorIntOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadVectorIntOperation(node);
+    }
+
+    public void inAReadVectorTwoPowDIntOperation(AReadVectorTwoPowDIntOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadVectorTwoPowDIntOperation(AReadVectorTwoPowDIntOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadVectorTwoPowDIntOperation(AReadVectorTwoPowDIntOperation node)
+    {
+        inAReadVectorTwoPowDIntOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadVectorTwoPowDIntOperation(node);
+    }
+
+    public void inAReadStencilIntOperation(AReadStencilIntOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadStencilIntOperation(AReadStencilIntOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadStencilIntOperation(AReadStencilIntOperation node)
+    {
+        inAReadStencilIntOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadStencilIntOperation(node);
+    }
+
+    public void inAReadIntergridOperatorIntOperation(AReadIntergridOperatorIntOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadIntergridOperatorIntOperation(AReadIntergridOperatorIntOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadIntergridOperatorIntOperation(AReadIntergridOperatorIntOperation node)
+    {
+        inAReadIntergridOperatorIntOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadIntergridOperatorIntOperation(node);
+    }
+
+    public void inAWriteScalarIntOperation(AWriteScalarIntOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteScalarIntOperation(AWriteScalarIntOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteScalarIntOperation(AWriteScalarIntOperation node)
+    {
+        inAWriteScalarIntOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteScalarIntOperation(node);
+    }
+
+    public void inAWriteVectorIntOperation(AWriteVectorIntOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteVectorIntOperation(AWriteVectorIntOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteVectorIntOperation(AWriteVectorIntOperation node)
+    {
+        inAWriteVectorIntOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteVectorIntOperation(node);
+    }
+
+    public void inAWriteVectorTwoPowDIntOperation(AWriteVectorTwoPowDIntOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteVectorTwoPowDIntOperation(AWriteVectorTwoPowDIntOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteVectorTwoPowDIntOperation(AWriteVectorTwoPowDIntOperation node)
+    {
+        inAWriteVectorTwoPowDIntOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteVectorTwoPowDIntOperation(node);
+    }
+
+    public void inAWriteStencilIntOperation(AWriteStencilIntOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteStencilIntOperation(AWriteStencilIntOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteStencilIntOperation(AWriteStencilIntOperation node)
+    {
+        inAWriteStencilIntOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteStencilIntOperation(node);
+    }
+
+    public void inAWriteIntergridOperatorIntOperation(AWriteIntergridOperatorIntOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteIntergridOperatorIntOperation(AWriteIntergridOperatorIntOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteIntergridOperatorIntOperation(AWriteIntergridOperatorIntOperation node)
+    {
+        inAWriteIntergridOperatorIntOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteIntergridOperatorIntOperation(node);
     }
 
     public void inACell(ACell node)

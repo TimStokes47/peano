@@ -5,16 +5,16 @@ package org.peano.pdt.node;
 import org.peano.pdt.analysis.*;
 
 @SuppressWarnings("nls")
-public final class TTokenVectorD extends Token
+public final class TTokenScalarDouble extends Token
 {
-    public TTokenVectorD()
+    public TTokenScalarDouble()
     {
-        super.setText("vector:");
+        super.setText("scalar(double):");
     }
 
-    public TTokenVectorD(int line, int pos)
+    public TTokenScalarDouble(int line, int pos)
     {
-        super.setText("vector:");
+        super.setText("scalar(double):");
         setLine(line);
         setPos(pos);
     }
@@ -22,17 +22,17 @@ public final class TTokenVectorD extends Token
     @Override
     public Object clone()
     {
-      return new TTokenVectorD(getLine(), getPos());
+      return new TTokenScalarDouble(getLine(), getPos());
     }
 
     public void apply(Switch sw)
     {
-        ((Analysis) sw).caseTTokenVectorD(this);
+        ((Analysis) sw).caseTTokenScalarDouble(this);
     }
 
     @Override
     public void setText(@SuppressWarnings("unused") String text)
     {
-        throw new RuntimeException("Cannot change TTokenVectorD text.");
+        throw new RuntimeException("Cannot change TTokenScalarDouble text.");
     }
 }
