@@ -1,0 +1,34 @@
+#include "tarch/multicore/Lock.h"
+
+
+template <typename T>
+void tarch::plotter::griddata::blockstructured::PatchWriter::SinglePatchWriter::plotPatch(
+  const tarch::la::Vector<2,double>& offset,
+  const tarch::la::Vector<2,double>& size,
+  const tarch::la::Vector<2,int>&    cells,
+  T const *                      cellValues,
+  const tarch::la::Vector<2,int>&    paddingInBytes,
+  CellDataWriter&                    writer
+) {
+  tarch::multicore::Lock lock(_semaphore);
+
+  int  currentCellIndex = plotPatch(offset,size,cells).second;
+
+  assertion( currentCellIndex>=0 );
+
+  assertion( paddingInBytes(0)>0 );
+  assertion( paddingInBytes(1)>0 );
+  assertion( paddingInBytes(1)>=paddingInBytes(0) * cells(0) );
+
+  char const * currentValue = reinterpret_cast<const char*>(cellValues);
+  for (int y=0; y<cells(1); y++) {
+    for (int x=0; x<cells(0); x++) {
+      writer.plotCell(currentCellIndex,*(reinterpret_cast<const T*>(currentValue)));
+      currentCellIndex++;
+      currentValue += paddingInBytes(0);
+    }
+    currentValue -= cells(0) * paddingInBytes(0);
+    currentValue += paddingInBytes(1);
+  }
+}
+
