@@ -145,6 +145,16 @@ class tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter:
         std::ostringstream _out;
 
         VertexWriter(VTKTextFileWriter& writer);
+
+        /**
+         * Do not copy a vertex writer.
+         */
+        VertexWriter(const VertexWriter& writer):
+          _currentVertexNumber(writer._currentVertexNumber),
+          _myWriter(writer._myWriter),
+          _out() {
+          assertion(false);
+        }
       public:
         virtual ~VertexWriter();
 
@@ -197,6 +207,15 @@ class tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter:
         std::ostringstream _cellTypeOut;
 
         CellWriter(VTKTextFileWriter& writer);
+
+        CellWriter(const CellWriter& writer):
+          _currentCellNumber(writer._currentCellNumber),
+          _myWriter(writer._myWriter),
+          _cellListEntries(writer._cellListEntries),
+          _cellOut(),
+          _cellTypeOut() {
+          assertion(false);
+        }
       public:
         virtual ~CellWriter();
 
@@ -246,6 +265,11 @@ class tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter:
           double _minValue;
           double _maxValue;
           CellDataWriter(const std::string& dataIdentifier, VTKTextFileWriter& writer, int recordsPerCell);
+
+          CellDataWriter(const CellDataWriter& copy):
+            _myWriter(copy._myWriter) {
+            assertion(false);
+          }
       public:
         virtual ~CellDataWriter();
 
@@ -297,6 +321,11 @@ class tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter:
          */
         std::string  _dataIdentifier;
         #endif
+
+        VertexDataWriter(const VertexDataWriter& copy):
+          _myWriter(copy._myWriter) {
+          assertion(false);
+        }
       public:
         virtual ~VertexDataWriter();
 
