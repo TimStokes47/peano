@@ -35,7 +35,7 @@ namespace peano {
     *
     * 		   build date: 22-10-2013 20:59
     *
-    * @date   22/10/2013 21:03
+    * @date   24/10/2013 10:16
     */
    class peano::heap::records::MetaInformation { 
       
@@ -198,7 +198,7 @@ namespace peano {
        *
        * 		   build date: 22-10-2013 20:59
        *
-       * @date   22/10/2013 21:03
+       * @date   24/10/2013 10:16
        */
       class peano::heap::records::MetaInformationPacked { 
          
@@ -361,7 +361,7 @@ namespace peano {
           *
           * 		   build date: 22-10-2013 20:59
           *
-          * @date   22/10/2013 21:03
+          * @date   24/10/2013 10:16
           */
          class peano::heap::records::MetaInformation { 
             
@@ -490,7 +490,7 @@ namespace peano {
              *
              * 		   build date: 22-10-2013 20:59
              *
-             * @date   22/10/2013 21:03
+             * @date   24/10/2013 10:16
              */
             class peano::heap::records::MetaInformationPacked { 
                

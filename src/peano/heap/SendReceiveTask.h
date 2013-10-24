@@ -21,6 +21,10 @@ namespace peano {
 }
 
 
+#ifdef ParallelExchangePackedRecordsInHeaps
+ #pragma pack (push, 1)
+#endif
+
 
 /**
  * Wrapper for a send or receive task
@@ -61,19 +65,11 @@ struct peano::heap::SendReceiveTask {
   typedef Data    MPIData;
   #endif
 
-  #ifdef ParallelExchangePackedRecordsInHeaps
-   #pragma pack (push, 1)
-  #endif
-
   /**
    * Pointer to the actual data. If meta data marks a message without
    * content, this pointer is 0.
    */
   MPIData*        _data;
-
-  #ifdef ParallelExchangePackedRecordsInHeaps
-  #pragma pack (pop)
-  #endif
 
   #ifdef Asserts
   SendReceiveTask();
@@ -116,6 +112,10 @@ struct peano::heap::SendReceiveTask {
     int                                           level
   ) const;
 };
+
+#ifdef ParallelExchangePackedRecordsInHeaps
+#pragma pack (pop)
+#endif
 
 
 #ifdef Parallel

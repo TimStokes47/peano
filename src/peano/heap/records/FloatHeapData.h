@@ -34,7 +34,7 @@ namespace peano {
  *
  * 		   build date: 22-10-2013 20:59
  *
- * @date   22/10/2013 21:03
+ * @date   24/10/2013 10:16
  */
 class peano::heap::records::FloatHeapData { 
    
@@ -93,7 +93,7 @@ class peano::heap::records::FloatHeapData {
       /**
        * Generated
        */
-      virtual ~FloatHeapData();
+      ~FloatHeapData();
       
       /**
        * Generated
@@ -167,7 +167,7 @@ class peano::heap::records::FloatHeapData {
     *
     * 		   build date: 22-10-2013 20:59
     *
-    * @date   22/10/2013 21:03
+    * @date   24/10/2013 10:16
     */
    class peano::heap::records::FloatHeapDataPacked { 
       
@@ -220,7 +220,7 @@ class peano::heap::records::FloatHeapData {
          /**
           * Generated
           */
-         virtual ~FloatHeapDataPacked();
+         ~FloatHeapDataPacked();
          
          /**
           * Generated

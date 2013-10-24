@@ -247,8 +247,9 @@
   the heap directory and call 
   \code
   java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator dastgen/MetaInformation.def records
-  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator dastgen/DoubleHeapData.def records
-  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator dastgen/IntegerHeapData.def records
-  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator dastgen/FloatHeapData.def records
+  
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoHeapNameTranslator dastgen/DoubleHeapData.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoHeapNameTranslator dastgen/IntegerHeapData.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoHeapNameTranslator dastgen/FloatHeapData.def records
   \endcode
  */

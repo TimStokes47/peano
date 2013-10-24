@@ -259,6 +259,7 @@ class peano::heap::Heap: public tarch::services::Service {
     ~Heap();
 
   public:
+    typedef Data               HeapData;
     typedef std::vector<Data>  HeapEntries;
 
     /**
