@@ -292,19 +292,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       peano::parallel::JoinDataBufferPool::getInstance().createCellBufferManually<Cell>( true, currentWorker );
     }
 
-    logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send balancing message " << loadBalancingMessage.toString() << " to rank " << currentWorker );
-    loadBalancingMessage.send(
-      currentWorker,
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      true
-    );
-
-    logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send state " << state.toString() << " to rank " << currentWorker );
-    state.send(
-      currentWorker,
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
-    );
-
+    bool eventHandlesRequestReduction =
     _eventHandle.prepareSendToWorker(
       fineGridCell,
       fineGridVertices,
@@ -316,6 +304,34 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       currentWorker
     );
 
+    if (loadBalancingMessage.getLoadBalancingFlag()!=peano::parallel::loadbalancing::Continue) {
+      eventHandlesRequestReduction = true;
+      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "reset worker's reduction flag due to load balancing" );
+    }
+
+    State stateCopy = state;
+
+    if (eventHandlesRequestReduction) {
+      stateCopy.setReduceStateAndCell(true);
+      state.setReduceStateAndCell(currentWorker,true);
+    }
+    else {
+      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "will skip reduction from rank " << currentWorker );
+      stateCopy.setReduceStateAndCell(false);
+      state.setReduceStateAndCell(currentWorker,false);
+    }
+
+    logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send balancing message " << loadBalancingMessage.toString() << " to rank " << currentWorker );
+    loadBalancingMessage.send(
+      currentWorker,
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      true
+    );
+    logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send state " << state.toString() << " to rank " << currentWorker );
+    stateCopy.send(
+      currentWorker,
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
+    );
     logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send cell " << fineGridCell.toString() << " to rank " << currentWorker );
     coarseGridCell.send(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
     dfor2(k)
