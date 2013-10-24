@@ -108,6 +108,12 @@ class peano::grid::State {
     LoadBalancingState  _loadRebalancingState;
 
     /**
+     * Stores for each state whether to reduce or not. We reset it
+     * at the beginning of each traversal.
+     */
+    std::map<int,bool>  _stateWillReduce;
+
+    /**
      * We may fork/join only every third iteration.
      *
      * The reason for this is tricky: Lets study two vertices a and
@@ -429,32 +435,38 @@ class peano::grid::State {
 
     bool getCouldNotEraseDueToDecompositionFlag() const;
 
-
     /**
-     * This operation should not be called by any user. It was created for the
-     * repositories and the kernel only. If you want to switch off the global 
-     * reduction, use the repository's iterate() method and set the argument to 
-     * false.
+     * Switch on/off reduction locally
      */
     void setReduceStateAndCell( bool value );
+
+    /**
+     * Switch on/off reduction for one worker
+     */
+    void setReduceStateAndCell( int worker, bool value );
 
     /**
      * Shall we reduce data after the traversal or is the reduction switched off?
      *
      * The result of this attribute depends first of all on the internal flag
-     * telling the state whether to reduce or not. Even if the state is asked
-     * to reduce, this operation however might return false. This is the case
-     * if the state is set to joining or if the state belongs to a node that
-     * just is about to be forked.
+     * telling the state whether to reduce or not. If you are currently joining
+     * with the master or a brand new worker due to a fork, you are not allowed
+     * to ask this question as you are not supposed even to think about a
+     * reduction. As discussed, the reduction is switched off in the first step
+     * of the fork process. See Node::updateCellsParallelStateBeforeStore() for
+     * a discussion on the technical reasons.
      *
-     * !!! Remark
-     *
-     * The reduction is switched off in the first step of the fork process. See
-     * Node::updateCellsParallelStateBeforeStore() for a discussion on the
-     * technical reasons.
+     * @todo Doku ist Bloadsinn, alle war besser
      */
     bool reduceDataToMaster() const;
 
+    /**
+     * Shall we reduce data from rank rank?
+     *
+     * This operation is to be called for workers only. It basically returns the
+     * flag from the internal data base. If no entry exists for rank, this rank
+     * just has been forked. We hence return true.
+     */
     bool reduceDataFromWorker( int rank ) const;
 
     /**

@@ -120,6 +120,13 @@ void peano::grid::State<StateData>::toString(std::ostream& out) const {
   #ifdef Asserts
   out << ",previous-lb-state=" << toString( _previousLoadRebalancingState );
   #endif
+  for (
+    std::map<int,bool>::const_iterator p=_stateWillReduce.begin();
+    p!=_stateWillReduce.end();
+    p++
+  ) {
+    out << ",reduce-from-" << p->first << "=" << p->second;
+  }
   out << "]";
   #endif
 }
@@ -292,6 +299,8 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
   #ifdef Asserts
   _previousLoadRebalancingState = _loadRebalancingState;
   #endif
+
+  _stateWillReduce.clear();
 
   if (
     _loadRebalancingState == NoRebalancing &&
@@ -734,10 +743,13 @@ void peano::grid::State<StateData>::setReduceStateAndCell( bool value ) {
 
 
 template <class StateData>
-bool peano::grid::State<StateData>::reduceDataToMaster() const {
-  // @todo raus
-  assertion(_stateData.getReduceStateAndCell());
+void peano::grid::State<StateData>::setReduceStateAndCell( int worker, bool value ) {
+  _stateWillReduce[worker] = value;
+}
 
+
+template <class StateData>
+bool peano::grid::State<StateData>::reduceDataToMaster() const {
   return _stateData.getReduceStateAndCell() &&
          _loadRebalancingState != JoiningWithMaster &&
          _loadRebalancingState != IsNewWorkerDueToForkOfExistingDomain &&
@@ -747,12 +759,19 @@ bool peano::grid::State<StateData>::reduceDataToMaster() const {
 
 template <class StateData>
 bool peano::grid::State<StateData>::reduceDataFromWorker( int rank ) const {
-    // @todo raus
-    assertion(_stateData.getReduceStateAndCell());
+  assertion1(
+    _stateWillReduce.count(rank)==1
+    ||
+    _previousLoadRebalancingState==Forking,
+    toString()
+  );
 
-  assertion( _loadRebalancingState != JoiningWithMaster );
-  assertion( _loadRebalancingState != IsNewWorkerDueToForkOfExistingDomain );
-  return _stateData.getReduceStateAndCell();
+  if ( _stateWillReduce.count(rank)==0) {
+    return true;
+  }
+  else {
+    return _stateWillReduce.at(rank);
+  }
 }
 
 
