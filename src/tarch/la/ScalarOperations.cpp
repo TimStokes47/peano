@@ -75,3 +75,13 @@ int tarch::la::sign (double number, double tolerance) {
   }
   return 0;
 }
+
+
+int tarch::la::round(double value) {
+  return static_cast<int>(std::roundf(value));
+}
+
+
+int tarch::la::round(float value) {
+  return static_cast<int>(std::roundf(value));
+}

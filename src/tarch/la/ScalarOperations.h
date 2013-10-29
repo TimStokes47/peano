@@ -34,6 +34,9 @@ namespace tarch {
      * @return -10, or 1 depending on the sign of value
      */
     int sign(double value, double tolerance = NUMERICAL_ZERO_DIFFERENCE);
+
+    int round(double value);
+    int round(float value);
   }
 }
 

@@ -57,8 +57,8 @@ int tarch::la::Vector<Size,Scalar>::size() const {
 
 template<int Size, typename Scalar>
 const Scalar& tarch::la::Vector<Size,Scalar>::operator[] ( int index ) const {
-  assertion ( index >= 0 );
-  assertion ( index < Size );
+  assertion3 ( index >= 0, index, Size, toString() );
+  assertion3 ( index < Size, index, Size, toString() );
   return _values[index];
 }
 
