@@ -6,7 +6,7 @@ void tarch::plotter::griddata::blockstructured::PatchWriter::SinglePatchWriter::
   const tarch::la::Vector<2,double>& offset,
   const tarch::la::Vector<2,double>& size,
   const tarch::la::Vector<2,int>&    cells,
-  T const *                      cellValues,
+  T const *                          cellValues,
   const tarch::la::Vector<2,int>&    paddingInBytes,
   CellDataWriter&                    writer
 ) {
@@ -32,3 +32,50 @@ void tarch::plotter::griddata::blockstructured::PatchWriter::SinglePatchWriter::
   }
 }
 
+
+
+
+template <typename T>
+void tarch::plotter::griddata::blockstructured::PatchWriter::SinglePatchWriter::plotPatch(
+  const tarch::la::Vector<2,double>& offset,
+  const tarch::la::Vector<2,double>& size,
+  const tarch::la::Vector<2,int>&    cells,
+  T const * const                    cellValuesA,
+  T const * const                    cellValuesB,
+  T const * const                    cellValuesC,
+  const tarch::la::Vector<2,int>&    paddingInBytes,
+  CellDataWriter&                    writerA,
+  CellDataWriter&                    writerB,
+  CellDataWriter&                    writerC
+) {
+  tarch::multicore::Lock lock(_semaphore);
+
+  int  currentCellIndex = plotPatch(offset,size,cells).second;
+
+  assertion( currentCellIndex>=0 );
+
+  assertion( paddingInBytes(0)>0 );
+  assertion( paddingInBytes(1)>0 );
+  assertion( paddingInBytes(1)>=paddingInBytes(0) * cells(0) );
+
+  char const * currentValueA = reinterpret_cast<const char*>(cellValuesA);
+  char const * currentValueB = reinterpret_cast<const char*>(cellValuesB);
+  char const * currentValueC = reinterpret_cast<const char*>(cellValuesC);
+  for (int y=0; y<cells(1); y++) {
+    for (int x=0; x<cells(0); x++) {
+      writerA.plotCell(currentCellIndex,*(reinterpret_cast<const T*>(currentValueA)));
+      writerB.plotCell(currentCellIndex,*(reinterpret_cast<const T*>(currentValueB)));
+      writerC.plotCell(currentCellIndex,*(reinterpret_cast<const T*>(currentValueC)));
+      currentCellIndex++;
+      currentValueA += paddingInBytes(0);
+      currentValueB += paddingInBytes(0);
+      currentValueC += paddingInBytes(0);
+    }
+    currentValueA -= cells(0) * paddingInBytes(0);
+    currentValueB -= cells(0) * paddingInBytes(0);
+    currentValueC -= cells(0) * paddingInBytes(0);
+    currentValueA += paddingInBytes(1);
+    currentValueB += paddingInBytes(1);
+    currentValueC += paddingInBytes(1);
+  }
+}

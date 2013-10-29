@@ -64,6 +64,13 @@ class tarch::plotter::griddata::blockstructured::PatchWriter:
         ) = 0;
 
         /**
+         * Write data
+         *
+         * This operation works if and only if the passed data are the only
+         * unknowns plotted for this grid. If you wanna visualise several
+         * unknowns, you have to use a different plot wrapper or visualise
+         * your data manually.
+         *
          * Simple wrapper around plotPatch that takes a data writer as well
          * as a data array and pipes the data directly into the patch.
          *
@@ -91,6 +98,20 @@ class tarch::plotter::griddata::blockstructured::PatchWriter:
           T const * const                    cellValues,
           const tarch::la::Vector<2,int>&    paddingInBytes,
           CellDataWriter&                    writer
+        );
+
+        template <typename T>
+        void plotPatch(
+          const tarch::la::Vector<2,double>& offset,
+          const tarch::la::Vector<2,double>& size,
+          const tarch::la::Vector<2,int>&    cells,
+          T const * const                    cellValuesA,
+          T const * const                    cellValuesB,
+          T const * const                    cellValuesC,
+          const tarch::la::Vector<2,int>&    paddingInBytes,
+          CellDataWriter&                    writerA,
+          CellDataWriter&                    writerB,
+          CellDataWriter&                    writerC
         );
 
         /**
