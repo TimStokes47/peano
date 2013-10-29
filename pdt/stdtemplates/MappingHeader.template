@@ -706,10 +706,20 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * replacement of enterCell() on the master, i.e. called for this one instead 
      * of.
      *
+     * !!! Reduction
+     *
+     * With the result, you can control whether the worker shall send back its 
+     * data from the master rank or not. In accordance, prepareSendToMaster() and 
+     * corresponding receive are then not called if reduction is switched off.  
+     * However, the result is only a recommendation: On the one hand, the 
+     * results of all the active mappings is combined. If one of them requires 
+     * reduction, Peano does reduce data to the master. On the other hand, Peano 
+     * itself might decide that it reduces nevertheless. The latter case 
+     * happens if the master decides that load balancing should be made. 
+     *
+     *
      * @see peano::kernel::spacetreegrid::nodes::Node::updateCellsParallelStateAfterLoad()
-     * @return Whether the worker shall send back its data from the coarsest rank and its 
-     *         state. Due to the result, you can control which subtrees reduce data along  
-     *         the spacetree. The default value is true.
+     * @return Whether this node needs to send back data to its master.
      */
     bool prepareSendToWorker(
       __NAMESPACE__::Cell&                       fineGridCell,
