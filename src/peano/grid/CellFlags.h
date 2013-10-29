@@ -10,24 +10,29 @@
 namespace peano {
     namespace grid {
       /**
-       * Extension of the superclass' cell flags
+       * Subtree identifier
+       *
+       * Characterises for a cell's vertex enumerator or a vertex its
+       * underlying tree or the 2^d adjacent trees:
+       *
+       * - If the flag equals Leaf, the vertex enumerator corresponds to a leaf or
+       *   all adjacent cells of a vertex are leaves, respectively.
+       * - If the flag is positive, its specifies the size of the tree induced
+       *   by the current vertex enumerator, i.e. the vertex enumerator
+       *   describes size and offset of a regular tree's root element. If the
+       *   flag of a vertex is greater Leaf, all 2^d adjacent trees are regular
+       *   and have the same height.
+       * - If the flag is StationaryButIrregular, the induced tree or the 2^d
+       *   adjacent trees, respectively, are stationary yet are not regular, i.e.
+       *   define adaptive grids.
+       * - The remaining flags are self-explaining.
        */
       enum CellFlags {
-        /**
-         * Is set by safe and clear.
-         */
-        Undefined                      = 65536,
-        Leaf                           = 0,
-        /**
-         * Only assigned to hanging nodes (see default constructor).
-         */
+        Undefined                       = 65536,
+        Leaf                            = 0,
         StationaryButIrregular          = -1,
         StationaryWithParallelBoundary  = -2,
         NotStationary                   = -3,
-        /**
-         * Basically, this should be NotStationary, but I prefer to see in the
-         * visualisation where the not-stationary flag comes from.
-         */
         NotStationaryDueToInvalidation  = -4
       };
 
