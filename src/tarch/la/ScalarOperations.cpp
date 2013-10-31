@@ -78,10 +78,10 @@ int tarch::la::sign (double number, double tolerance) {
 
 
 int tarch::la::round(double value) {
-  return static_cast<int>(std::round(value));
+  return static_cast<int>(std::ceil(value+0.5));
 }
 
 
 int tarch::la::round(float value) {
-  return static_cast<int>(std::round(value));
+  return static_cast<int>(std::ceil(value+0.5));
 }
