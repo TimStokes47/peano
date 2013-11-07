@@ -281,6 +281,8 @@ class tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter:
 
         virtual double getMinValue() const;
         virtual double getMaxValue() const;
+
+        virtual void assignRemainingCellsDefaultValues();
     };
 
     class VertexDataWriter:
@@ -337,6 +339,8 @@ class tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter:
 
         virtual double getMinValue() const;
         virtual double getMaxValue() const;
+
+        virtual void assignRemainingVerticesDefaultValues();
     };
 };
 

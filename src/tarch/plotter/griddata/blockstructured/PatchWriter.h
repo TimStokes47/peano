@@ -114,6 +114,22 @@ class tarch::plotter::griddata::blockstructured::PatchWriter:
           CellDataWriter&                    writerC
         );
 
+        template <typename T>
+        void plotPatch(
+          const tarch::la::Vector<2,double>& offset,
+          const tarch::la::Vector<2,double>& size,
+          const tarch::la::Vector<2,int>&    cells,
+          T const * const                    cellValuesA,
+          T const * const                    cellValuesB,
+          T const * const                    cellValuesC,
+          T const * const                    cellValuesD,
+          const tarch::la::Vector<2,int>&    paddingInBytes,
+          CellDataWriter&                    writerA,
+          CellDataWriter&                    writerB,
+          CellDataWriter&                    writerC,
+          CellDataWriter&                    writerD
+        );
+
         /**
          * Pleaes close the patch writer before you close any data writer.
          */

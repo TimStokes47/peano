@@ -84,7 +84,17 @@ class tarch::plotter::griddata::Writer {
         virtual double getMinValue() const = 0;
         virtual double getMaxValue() const = 0;
 
+        /**
+         * If you close your writer, each cell/vertex has to be assigned a
+         * value, i.e. you may not add less data than you have cells. See
+         *
+         */
         virtual void close() = 0;
+
+        /**
+         * @see close()
+         */
+        virtual void assignRemainingCellsDefaultValues() = 0;
     };
 
     /**
@@ -110,6 +120,11 @@ class tarch::plotter::griddata::Writer {
         virtual double getMaxValue() const = 0;
 
         virtual void close() = 0;
+
+        /**
+         * @see close()
+         */
+        virtual void assignRemainingVerticesDefaultValues() = 0;
     };
 
     /**

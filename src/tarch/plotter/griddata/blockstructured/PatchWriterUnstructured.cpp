@@ -121,6 +121,14 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PatchWriterUnstruc
 ) {
   int firstVertex = -1;
 
+  assertion3( size(0)>0.0, offset, size, cells );
+  assertion3( size(1)>0.0, offset, size, cells );
+  assertion3( size(2)>0.0, offset, size, cells );
+
+  assertion3( cells(0)>0.0, offset, size, cells );
+  assertion3( cells(1)>0.0, offset, size, cells );
+  assertion3( cells(2)>0.0, offset, size, cells );
+
   for (int z=0; z<cells(2)+1; z++)
   for (int y=0; y<cells(1)+1; y++)
   for (int x=0; x<cells(0)+1; x++) {
@@ -159,36 +167,4 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PatchWriterUnstruc
 void tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::SinglePatchWriter::close() {
   _vertexWriter.close();
   _cellWriter.close();
-};
-
-
-
-//tarch::logging::Log peanoclaw::PatchPlotter::_log( "peanoclaw::PatchPlotter" );
-//
-//peanoclaw::PatchPlotter::PatchPlotter(
-//  tarch::plotter::plotter::griddata::unstructured::vtk::VTKTextFileWriter& vtkWriter,
-//  int unknownsPerSubcell,
-//  int auxFieldsPerSubcell
-//) : _vtkWriter(vtkWriter), _gap(0.01) {
-//
-//  _vertex2IndexMap.clear();
-//  _vertexWriter     = _vtkWriter.createVertexWriter();
-//  _cellWriter       = _vtkWriter.createCellWriter();
-//
-//  _cellSubdivisionFactorWriter = _vtkWriter.createCellDataWriter("SubdivisionFactor",1);
-//  _cellGhostLayerWidthWriter   = _vtkWriter.createCellDataWriter("GhostlayerWidth",1);
-//  for(int i = 0; i < unknownsPerSubcell; i++) {
-//    std::stringstream stringstream;
-//    stringstream << "q" << i;
-//    _cellQWriter.push_back( _vtkWriter.createCellDataWriter(stringstream.str(), 1) );
-//  }
-//  for(int i = 0; i < auxFieldsPerSubcell; i++) {
-//    std::stringstream stringstream;
-//    stringstream << "aux" << i;
-//    _cellAuxWriter.push_back( _vtkWriter.createCellDataWriter(stringstream.str(), 1) );
-//  }
-//  _cellTimeOldWriter           = _vtkWriter.createCellDataWriter("timeOld", 1);
-//  _cellTimeNewWriter           = _vtkWriter.createCellDataWriter("timeNew", 1);
-//  _cellDemandedMeshWidthWriter = _vtkWriter.createCellDataWriter("demandedMeshWidth", 1);
-//  _cellAgeWriter               = _vtkWriter.createCellDataWriter("age", 1);
-//}
+}

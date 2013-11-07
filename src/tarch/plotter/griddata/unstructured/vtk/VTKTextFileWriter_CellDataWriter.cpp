@@ -33,9 +33,32 @@ tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::
 }
 
 
+void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::assignRemainingCellsDefaultValues() {
+  assertion4(
+    _lastWriteCommandCellNumber <= _myWriter._numberOfCells-1,
+    _lastWriteCommandCellNumber, _myWriter._numberOfCells,
+    _identifier,
+    "please call close on the cell/vertex writer before"
+  );
+
+  while (_lastWriteCommandCellNumber<_myWriter._numberOfCells-1) {
+    plotCell(_lastWriteCommandCellNumber+1,0.0);
+  }
+}
+
+
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::close() {
-  assertionEquals2( _lastWriteCommandCellNumber, _myWriter._numberOfCells-1, _identifier, _myWriter._numberOfCells );
-  assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
+  assertion2(
+    _lastWriteCommandCellNumber>=0,
+    _identifier,
+    "no data written"
+  );
+  assertionEquals2(
+    _lastWriteCommandCellNumber, _myWriter._numberOfCells-1,
+    _identifier,
+    "one record has to be written per cell"
+  );
+  assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() or assignRemainingCellsDefaultValues() on a data writer before you destroy your writer?" );
 
   if (_lastWriteCommandCellNumber>=-1) {
     _out << std::endl;
