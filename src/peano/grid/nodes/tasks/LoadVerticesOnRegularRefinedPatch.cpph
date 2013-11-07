@@ -109,16 +109,18 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   #endif
   #endif
 
-  for (int currentStepInPath=0; currentStepInPath < readVertexSequence.getMaximumPath(); currentStepInPath++) {
-    assertionEquals(readVertexSequence.getActionSet(currentStepInPath).getNumberOfParallelActions(),1);
-    const int                               actionFlag         = readVertexSequence.getActionSet(currentStepInPath).getAction(0)._id;
-    const tarch::la::Vector<DIMENSIONS,int> currentVertex      = readVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition;
+  const int maximumPath = readVertexSequence.getMaximumPath();
+  for (int currentStepInPath=0; currentStepInPath < maximumPath; currentStepInPath++) {
+    const peano::datatraversal::ActionSet&  actionSet          = readVertexSequence.getActionSet(currentStepInPath);
+    assertionEquals(actionSet.getNumberOfParallelActions(),1);
+    const int                               actionFlag         = actionSet.getAction(0)._id;
+    const tarch::la::Vector<DIMENSIONS,int> currentVertex      = actionSet.getAction(0)._cartesianPosition;
     const int                               positionInArray    = cellsVertexEnumerator(currentVertex);
 
     for (int d=0; d<DIMENSIONS; d++) {
       assertionEquals4(
-        readVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition(d), writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition(d),
-        readVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition, writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition,
+        actionSet.getAction(0)._cartesianPosition(d), writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition(d),
+        actionSet.getAction(0)._cartesianPosition, writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition,
         currentStepInPath, d
       );
     }
@@ -243,18 +245,20 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #endif
 
-  for (int currentStepInPath=0; currentStepInPath < readVertexSequence.getMaximumPath(); currentStepInPath++) {
+  const int maximumPath = readVertexSequence.getMaximumPath();
+  for (int currentStepInPath=0; currentStepInPath < maximumPath; currentStepInPath++) {
+    const peano::datatraversal::ActionSet&  actionSet             = readVertexSequence.getActionSet(currentStepInPath);
     assertionEquals(readVertexSequence.getActionSet(currentStepInPath).getNumberOfParallelActions(),1);
-    const int                               actionFlag            = readVertexSequence.getActionSet(currentStepInPath).getAction(0)._id;
-    const tarch::la::Vector<DIMENSIONS,int> currentVertex         = readVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition;
+    const int                               actionFlag            = actionSet.getAction(0)._id;
+    const tarch::la::Vector<DIMENSIONS,int> currentVertex         = actionSet.getAction(0)._cartesianPosition;
     const tarch::la::Vector<DIMENSIONS,int> currentVertexInPatch  = currentVertex + cellsPositionWithinUnrolledTreeLevel;
     const int                               positionInArray       = cellsVertexEnumerator(currentVertex);
     const int                               actionFlagForWrite    = writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._id;
 
     for (int d=0; d<DIMENSIONS; d++) {
       assertionEquals4(
-        readVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition(d), writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition(d),
-        readVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition, writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition,
+        actionSet.getAction(0)._cartesianPosition(d), writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition(d),
+        actionSet.getAction(0)._cartesianPosition, writeVertexSequence.getActionSet(currentStepInPath).getAction(0)._cartesianPosition,
         currentStepInPath, d
       );
     }

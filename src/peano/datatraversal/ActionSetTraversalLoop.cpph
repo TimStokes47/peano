@@ -36,7 +36,8 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopSequential(
   const peano::datatraversal::ActionSetTraversal&  traversal,
   LoopBody&                                        loopBody
 ) {
-  for (int currentStepInPath=0; currentStepInPath<traversal.getMaximumPath(); currentStepInPath++ ) {
+  const int maximumPath = traversal.getMaximumPath();
+  for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
     for (int j=0; j<traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
       loopBody(traversal.getActionSet(currentStepInPath).getAction(j));
     }
@@ -50,7 +51,8 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
   const LoopBody&                                  loopBody,
   int                                              grainSize
 ) {
-  for (int currentStepInPath=0; currentStepInPath<traversal.getMaximumPath(); currentStepInPath++ ) {
+  const int maximumPath = traversal.getMaximumPath();
+  for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
     #ifdef SharedTBB
     ActionSetTraversalLoopInstance loopInstance(loopBody,traversal.getActionSet(currentStepInPath));
     tbb::parallel_reduce(

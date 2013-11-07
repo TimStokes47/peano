@@ -144,11 +144,13 @@ void peano::grid::nodes::loops::SetCounterLoopBody<Vertex>::analyseFineGridVerte
   assertion(dimension<DIMENSIONS);
 
   if (dimension<0) {
-    oneFatherCarriesDeleteFlag                                               |= coarseVertices[ coarseGridVerticesEnumerator(parentCoordinates) ].getRefinementControl() == Vertex::Records::Erasing;
-    oneFatherCarriesRefiningFlag                                             |= coarseVertices[ coarseGridVerticesEnumerator(parentCoordinates) ].getRefinementControl() == Vertex::Records::Refining;
-    oneFatherCarriesRefinedFlag                                              |= coarseVertices[ coarseGridVerticesEnumerator(parentCoordinates) ].getRefinementControl() == Vertex::Records::Refined;
-    oneFatherCarriesRefinedFlag                                              |= coarseVertices[ coarseGridVerticesEnumerator(parentCoordinates) ].getRefinementControl() == Vertex::Records::EraseTriggered;
-    oneFatherCarriesNewNodeRefineDueToJoinThoughWorkerIsAlreadyErasingFlag   |= coarseVertices[ coarseGridVerticesEnumerator(parentCoordinates) ].getRefinementControl() == Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing;
+    typename Vertex::Records::RefinementControl coarseRefinementControl = coarseVertices[ coarseGridVerticesEnumerator(parentCoordinates) ].getRefinementControl();
+
+    oneFatherCarriesDeleteFlag                                               |= coarseRefinementControl == Vertex::Records::Erasing;
+    oneFatherCarriesRefiningFlag                                             |= coarseRefinementControl == Vertex::Records::Refining;
+    oneFatherCarriesRefinedFlag                                              |= coarseRefinementControl == Vertex::Records::Refined;
+    oneFatherCarriesRefinedFlag                                              |= coarseRefinementControl == Vertex::Records::EraseTriggered;
+    oneFatherCarriesNewNodeRefineDueToJoinThoughWorkerIsAlreadyErasingFlag   |= coarseRefinementControl == Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing;
   }
   else {
     if ( coordinates(dimension)==0 ) {

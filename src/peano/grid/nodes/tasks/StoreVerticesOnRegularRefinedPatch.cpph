@@ -148,13 +148,14 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
   peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #endif
 
-  for (int currentStepInPath=0; currentStepInPath < writeVertexSequence.getMaximumPath(); currentStepInPath++) {
+  const int maximumPath = writeVertexSequence.getMaximumPath();
+  for (int currentStepInPath=0; currentStepInPath < maximumPath; currentStepInPath++) {
     for (int j=0; j<writeVertexSequence.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
-      const int                               actionFlag      = writeVertexSequence.getActionSet(currentStepInPath).getAction(j)._id;
-      const tarch::la::Vector<DIMENSIONS,int> currentVertex   = writeVertexSequence.getActionSet(currentStepInPath).getAction(j)._cartesianPosition;
-      const int                               positionInArray = cellsVertexEnumerator(currentVertex);
+      const peano::datatraversal::ActionSet&  currentWriteActionSet = writeVertexSequence.getActionSet(currentStepInPath);
+      const int                               actionFlag            = currentWriteActionSet.getAction(j)._id;
+      const tarch::la::Vector<DIMENSIONS,int> currentVertex         = currentWriteActionSet.getAction(j)._cartesianPosition;
+      const int                               positionInArray       = cellsVertexEnumerator(currentVertex);
 
-      // @todo das kann ich auch abfragen, da brauch ich gar keine Grammatik mehr
       const bool CaseStorePersistentVertex = actionFlag==peano::stacks::Constants::InOutStack;
       if ( CaseStorePersistentVertex ) {
         _regularGridContainer.getVertex(currentLevel,positionInArray).updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
@@ -231,7 +232,8 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
   peano::datatraversal::ActionSetTraversal writeVertexSequence = peano::grid::aspects::CellLocalPeanoCurve::getWriteVertexSequenceForStaticSubtree(currentCell,_isTraversalInverted,false);
   #endif
 
-  for (int currentStepInPath=0; currentStepInPath < writeVertexSequence.getMaximumPath(); currentStepInPath++) {
+  const int maximumPath = writeVertexSequence.getMaximumPath();
+  for (int currentStepInPath=0; currentStepInPath < maximumPath; currentStepInPath++) {
     for (int j=0; j<writeVertexSequence.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
       const int                               actionFlag      = writeVertexSequence.getActionSet(currentStepInPath).getAction(j)._id;
       const tarch::la::Vector<DIMENSIONS,int> currentVertex   = writeVertexSequence.getActionSet(currentStepInPath).getAction(j)._cartesianPosition;
