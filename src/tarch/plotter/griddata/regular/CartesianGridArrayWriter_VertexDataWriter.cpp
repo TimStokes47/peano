@@ -76,3 +76,8 @@ bool tarch::plotter::griddata::regular::CartesianGridArrayWriter::VertexDataWrit
 bool tarch::plotter::griddata::regular::CartesianGridArrayWriter::VertexDataWriter::containsVertex( const tarch::la::Vector<2,double>& position ) const {
   return _parent.containsVertex( position );
 }
+
+
+void tarch::plotter::griddata::regular::CartesianGridArrayWriter::VertexDataWriter::assignRemainingVerticesDefaultValues() {
+  assertionMsg( false, "not implemented yet" );
+}

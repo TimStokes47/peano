@@ -209,6 +209,8 @@ class tarch::plotter::griddata::regular::CartesianGridArrayWriter:
         virtual int getCellIndex( const tarch::la::Vector<3,double>& position );
         virtual bool containsCell( const tarch::la::Vector<2,double>& offset, const tarch::la::Vector<2,double>& boundingBox ) const;
         virtual bool containsCell( const tarch::la::Vector<3,double>& offset, const tarch::la::Vector<3,double>& boundingBox ) const;
+
+        virtual void assignRemainingCellsDefaultValues();
     };
 
     class VertexDataWriter: public tarch::plotter::griddata::regular::CartesianGridWriter::VertexDataWriter {
@@ -245,6 +247,8 @@ class tarch::plotter::griddata::regular::CartesianGridArrayWriter:
         virtual int getVertexIndex( const tarch::la::Vector<3,double>& position );
         virtual bool containsVertex( const tarch::la::Vector<3,double>& position ) const;
         virtual bool containsVertex( const tarch::la::Vector<2,double>& position ) const;
+
+        virtual void assignRemainingVerticesDefaultValues();
     };
 };
 

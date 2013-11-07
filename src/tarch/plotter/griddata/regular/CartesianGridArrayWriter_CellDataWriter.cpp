@@ -76,3 +76,8 @@ bool tarch::plotter::griddata::regular::CartesianGridArrayWriter::CellDataWriter
 bool tarch::plotter::griddata::regular::CartesianGridArrayWriter::CellDataWriter::containsCell( const tarch::la::Vector<3,double>& offset, const tarch::la::Vector<3,double>& boundingBox ) const {
   return _parent.containsCell( offset, boundingBox );
 }
+
+
+void tarch::plotter::griddata::regular::CartesianGridArrayWriter::CellDataWriter::assignRemainingCellsDefaultValues() {
+  assertionMsg( false, "not implemented yet" );
+}
