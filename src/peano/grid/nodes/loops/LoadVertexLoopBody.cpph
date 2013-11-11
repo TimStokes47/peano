@@ -554,8 +554,26 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       invalidateVertexIfGeometryHasChanged(positionInArray,action._cartesianPosition);
       updateGeometry(positionInArray,action._cartesianPosition);
     }
+
+    #ifdef Parallel
+    const bool shallUpdateRefinementFlags =
+      !StaticGridWithParallelBoundary
+      &&
+      (
+        !_fineGridVertices[positionInArray].isAdjacentToRemoteRank()
+        ||
+        (
+          _fineGridVertices[positionInArray].getRefinementControl() != Vertex::Records::Unrefined
+          &&
+          _fineGridVertices[positionInArray].getRefinementControl() != Vertex::Records::Refined
+        )
+      );
+    #else
+    const bool shallUpdateRefinementFlags = !StaticGridWithParallelBoundary;
+    #endif
+
     invokeLoadVertexEvents(positionInArray,action._cartesianPosition);
-    if (!StaticGridWithParallelBoundary) {
+    if (shallUpdateRefinementFlags) {
       updateRefinementFlagsOfVertexAfterLoad(positionInArray,_counter[positionInArray]==CounterPersistentNodeDelete);
     }
     logDebug( "operator()", "vertex at " << positionInArray << " is a persistent vertex from in/out stacks: " << _fineGridVertices[positionInArray].toString() );

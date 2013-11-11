@@ -266,6 +266,32 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      * Different to the standard grid generation, this generation is controlled
      * by a remote data source. There is consequently no need to realise an
      * immediate refine.
+     *
+     * !!! Immediate refines
+     *
+     * In the serial mode, we load data from the input stream, call
+     * touchVertexFirstTime() and afterwards update the vertex refinement
+     * states. This way, we can refine a grid immediately after the refine()
+     * call. This is important to avoid that Peano has to sweep the grid once
+     * per new additional level. There are however two restrictions:
+     *
+     * If we'd assumed that the grid was stationary throughout the descend, i.e.
+     * if the tree grammar says it is static, we may not conduct any refinement
+     * immediately. Otherwise, we'd load an instationary subtree though our
+     * automaton assumes it is stationary. In this case, we just have to wait
+     * one iteration, i.e. we have to postpone the refinement. In the subsequent iteration,
+     * the stationary flag is reset and we can conduct the refinement/erase.
+     *
+     * In the parallel state, we might not be allowed to refine or coarse even
+     * though the grammar assumes an instationary tree: Here, we have always to
+     * wait one iteration for vertices along the parallel boundary, as the
+     * refine/coarse command first has to be exchanged with all neighbours. We
+     * thus need another check:
+     * - If the vertex is not adjacent to a remote rank, we may refine.
+     * - Otherwise, the vertex can be refined/coarsened if and only if it has
+     *   been set to a triggered state before touchVertexFirstTime() has been
+     *   called, i.e. refine()/erase() calls from within touchVertexFirstTime() explicitly
+     *   are blocked.
      */
     void operator() (const peano::datatraversal::Action& action);
 };
