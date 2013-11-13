@@ -49,9 +49,9 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWri
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::close() {
   assertion2(
-    _lastWriteCommandCellNumber>=0,
+    _lastWriteCommandCellNumber>-2,
     _identifier,
-    "no data written"
+    "closed twice"
   );
   assertionEquals2(
     _lastWriteCommandCellNumber, _myWriter._numberOfCells-1,

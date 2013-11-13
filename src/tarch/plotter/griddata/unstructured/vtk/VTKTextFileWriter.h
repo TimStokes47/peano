@@ -246,7 +246,8 @@ class tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter:
           const std::string _identifier;
 
           /**
-           *
+           * Is set to -1 in the beginning and then incremented by each data
+           * plot call. If we close the writer, the counter is reset to -2.
            */
           int _lastWriteCommandCellNumber;
 

@@ -52,14 +52,14 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataWriter::close() {
   assertion2(
-    _lastWriteCommandVertexNumber>=0,
-    _dataIdentifier,
-    "no data written"
+    _lastWriteCommandCellNumber>-2,
+    _identifier,
+    "closed twice"
   );
   assertionEquals2(
     _lastWriteCommandVertexNumber, _myWriter._numberOfVertices-1,
     _dataIdentifier,
-    "one record has to be written per cell"
+    "one record has to be written per vertex"
   );
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() or assignRemainingVerticesDefaultValues() on a data writer before you destroy your writer for value " << _dataIdentifier );
 
