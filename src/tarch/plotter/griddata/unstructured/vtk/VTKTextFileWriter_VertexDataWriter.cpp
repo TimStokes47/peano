@@ -52,8 +52,8 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataWriter::close() {
   assertion2(
-    _lastWriteCommandCellNumber>-2,
-    _identifier,
+    _lastWriteCommandVertexNumber>-2,
+    _dataIdentifier,
     "closed twice"
   );
   assertionEquals2(
