@@ -9,6 +9,7 @@
 
 
 #include <set>
+#include <map>
 
 
 namespace peano {
