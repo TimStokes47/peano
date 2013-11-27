@@ -53,18 +53,16 @@ peano::grid::Cell<CellData>::Cell(const PersistentCell& argument):
   _cellData( argument ) {
 
   #ifdef Parallel
-  assertion5(
+  assertion4(
     _cellData.getResponsibleRank()>=0,
     toString(),
-    argument.getLevel(),
     argument.getAccessNumber(),
     argument.getResponsibleRank(),
     tarch::parallel::Node::getInstance().getRank()
   );
-  assertion5(
+  assertion4(
     _cellData.getResponsibleRank()<tarch::parallel::Node::getInstance().getNumberOfNodes(),
     toString(),
-    argument.getLevel(),
     argument.getAccessNumber(),
     argument.getResponsibleRank(),
     tarch::parallel::Node::getInstance().getRank()
