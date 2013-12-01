@@ -17,10 +17,18 @@
  * statement with a parallel loop fragment. Please take care that all
  * three arguments have exactly the same time, i.e. avoid to mix integer
  * with signed integer or similar things.
+ *
+ * @param counter   Name of the counter (identifier).
+ * @param from      Start value of counter (integer).
+ * @param to        End value of counter (integer).
+ * @param minGrainSize Smallest grain size (integer). If the loop is split up
+ *                  into subloops, none of them has less than minGrainSize
+ *                  entries. In the serial version, this parameter has no
+ *                  impact/meaning.
  */
 #ifndef SharedMemoryParallelisation
-#define pfor(counter,from,to) \
-  for (int counter=from; i<to; counter++) {
+#define pfor(counter,from,to,minGrainSize) \
+  for (int counter=from; counter<to; counter++) {
 
 
 #define endpfor }
