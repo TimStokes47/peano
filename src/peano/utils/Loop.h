@@ -362,7 +362,6 @@ namespace peano {
   BB##counter = !(AA##counter ^ BB##counter); \
   CC##counter = CC##counter || (!AA##counter && !BB##counter && !CC##counter);  
                            
-#define pdfor2(counter)  dfor2(counter)
 #elif DIMENSIONS == 4
 #define dfor2(counter) \
   for( int counter##Scalar=0, AA##counter = 0, BB##counter = 0, CC##counter = 0, DD##counter = 0; counter##Scalar<TWO_POWER_D; counter##Scalar++) { \
@@ -376,7 +375,6 @@ namespace peano {
   CC##counter = CC##counter || (!AA##counter && !BB##counter && !CC##counter); \
   DD##counter = DD##counter || (!AA##counter && !BB##counter && !CC##counter && !DD##counter); 
 
-#define pdfor2(counter)  dfor2(counter)
 #else 
 #define dfor2(counter) \
   for( int counter##Scalar=0; counter##Scalar<TWO_POWER_D; counter##Scalar++) { \
@@ -392,7 +390,6 @@ namespace peano {
       copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \
       }}
 
-#define pdfor2(counter)  dfor2(counter)
 #endif
 
 
