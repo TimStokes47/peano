@@ -40,6 +40,9 @@ std::string peano::MappingSpecification::toString() const {
     case AvoidCoarseGridRaces:
       msg << "avoid-coarse-grid-races";
       break;
+    case RunConcurrentlyOnFineGrid:
+      msg << "concurrently on fine grid";
+      break;
   }
   msg << ",restartable=" << restartable
       << ")";
@@ -51,11 +54,13 @@ peano::MappingSpecification operator&(const peano::MappingSpecification& lhs, co
   static tarch::logging::Log _log( "peano::MappingSpecification" );
   logTraceInWith2Arguments("operator&(...)", lhs.toString(), rhs.toString() );
 
-  if (lhs.manipulates==peano::MappingSpecification::Nop && lhs.multithreading!=peano::MappingSpecification::AvoidFineGridRaces) {
-    logWarning( "operator&(...)", "lhs is nop though is not only avoid-fine-grid-races: " << lhs.toString() );
+  if (lhs.manipulates==peano::MappingSpecification::Nop ) {
+    logTraceOutWith1Argument("operator&(...)","take rhs");
+    return rhs;
   }
-  if (rhs.manipulates==peano::MappingSpecification::Nop && rhs.multithreading!=peano::MappingSpecification::AvoidFineGridRaces) {
-    logWarning( "operator&(...)", "rhs is nop though is not only avoid-fine-grid-races: " << rhs.toString() );
+  if (rhs.manipulates==peano::MappingSpecification::Nop ) {
+    logTraceOutWith1Argument("operator&(...)","take lhs");
+    return lhs;
   }
 
   peano::MappingSpecification::Manipulates manipulates =
@@ -63,10 +68,30 @@ peano::MappingSpecification operator&(const peano::MappingSpecification& lhs, co
     (rhs.manipulates==peano::MappingSpecification::OnlyLeaves || lhs.manipulates==peano::MappingSpecification::OnlyLeaves) ? peano::MappingSpecification::OnlyLeaves :
     peano::MappingSpecification::Nop;
 
-  peano::MappingSpecification::Multithreading multithreading =
-    (rhs.multithreading==peano::MappingSpecification::Serial || lhs.multithreading==peano::MappingSpecification::Serial) ? peano::MappingSpecification::Serial :
-    (rhs.multithreading==peano::MappingSpecification::AvoidCoarseGridRaces || lhs.multithreading==peano::MappingSpecification::AvoidCoarseGridRaces) ? peano::MappingSpecification::AvoidCoarseGridRaces :
-    peano::MappingSpecification::AvoidFineGridRaces;
+  peano::MappingSpecification::Multithreading multithreading;
+
+  if (rhs.multithreading==peano::MappingSpecification::Serial || lhs.multithreading==peano::MappingSpecification::Serial) {
+    multithreading = peano::MappingSpecification::Serial;
+  }
+  else if (
+    rhs.multithreading==peano::MappingSpecification::AvoidCoarseGridRaces || lhs.multithreading==peano::MappingSpecification::AvoidCoarseGridRaces
+  ) {
+    multithreading = peano::MappingSpecification::AvoidCoarseGridRaces;
+  }
+  else if (
+    rhs.multithreading==peano::MappingSpecification::AvoidFineGridRaces || lhs.multithreading==peano::MappingSpecification::AvoidFineGridRaces
+  ) {
+    multithreading = peano::MappingSpecification::AvoidFineGridRaces;
+  }
+  else if (
+    rhs.multithreading==peano::MappingSpecification::RunConcurrentlyOnFineGrid || lhs.multithreading==peano::MappingSpecification::RunConcurrentlyOnFineGrid
+  ) {
+    multithreading = peano::MappingSpecification::RunConcurrentlyOnFineGrid;
+  }
+  else {
+    logError( "operator&(...)", "trying to combine " << rhs.toString() << " with " << lhs.toString() << ". Fall back to serial code" );
+    multithreading = peano::MappingSpecification::Serial;
+  }
 
   bool restartable    = lhs.restartable    && rhs.restartable;
 

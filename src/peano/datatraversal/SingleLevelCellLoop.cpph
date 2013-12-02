@@ -1,4 +1,5 @@
 #include "peano/datatraversal/ActionSetTraversalLoop.h"
+#include "peano/datatraversal/dForLoop.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "peano/utils/PeanoOptimisations.h"
 
@@ -8,16 +9,28 @@ peano::datatraversal::SingleLevelCellLoop<LoopBody>::SingleLevelCellLoop(
   const tarch::la::Vector<DIMENSIONS,int>&  range,
   LoopBody&                                 loopBody,
   int                                       grainSize,
-  bool                                      useSixPowerDColouring
+  ParallelisationStrategy                   parallelisationStrategy
 ) {
   assertion( tarch::la::volume(range)!=0 );
 
   #if defined(SharedMemoryParallelisation)
-  if (grainSize>0 && tarch::la::volume(range)>1 ) {
-    runParallel(loopBody,range,grainSize,useSixPowerDColouring);
+  if (grainSize==0) {
+    parallelisationStrategy = Serial;
   }
-  else {
-    runSequentially(loopBody,range);
+
+  switch (parallelisationStrategy) {
+    case Serial:
+      runSequentially(loopBody,range);
+      break;
+    case NoColouring:
+      runParallelWithoutColouring(loopBody,range,grainSize);
+      break;
+    case TwoPowerDColouring:
+      runParallelWithColouring(loopBody,range,grainSize,false);
+      break;
+    case SixPowerDColouring:
+      runParallelWithColouring(loopBody,range,grainSize,true);
+      break;
   }
   #else
   runSequentially(loopBody,range);
@@ -37,7 +50,17 @@ void peano::datatraversal::SingleLevelCellLoop<LoopBody>::runSequentially(
 
 
 template <class LoopBody>
-void peano::datatraversal::SingleLevelCellLoop<LoopBody>::runParallel(
+void peano::datatraversal::SingleLevelCellLoop<LoopBody>::runParallelWithoutColouring(
+  LoopBody&                                 loopBody,
+  const tarch::la::Vector<DIMENSIONS,int>&  range,
+  int                                       grainSize
+) {
+  typename peano::datatraversal::dForLoop< LoopBody>::dForLoop( range, loopBody, grainSize, false );
+}
+
+
+template <class LoopBody>
+void peano::datatraversal::SingleLevelCellLoop<LoopBody>::runParallelWithColouring(
   LoopBody&                                 loopBody,
   const tarch::la::Vector<DIMENSIONS,int>&  range,
   int                                       grainSize,

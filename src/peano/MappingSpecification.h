@@ -23,6 +23,7 @@ namespace peano {
 ||             || OnlyLeaves | Algorithm's semantics is preserved, if Peano kicks out the whole function call for refined vertices of cells that have solely refined vertices around them.
 ||             || WholeTree  | No events are eliminated.
 || multithreading || Serial | Do not run these operation in parallel on a shared memory machine. Application hence doesn't need semaphores.
+||                || RunConcurrentlyOnFineGrid | Peano runs the events in parallel on the finest grid, i.e. doesn't care about any data dependencies.
 ||                || AvoidFineGridRaces  | Peano can try to speed up the application due to multithreading. It ensures that events are invoked such that the coarse grid data (of enterCell, e.g.) is not shared with another thread. Is stronger than AVOID_COARSE_GRID_RACES, i.e. ensures this data consistency as well.
 ||                || AvoidCoarseGridRaces  | Peano can try to speed up the application due to multithreading. However, Peano ensures that events are invoked such that the fine grid data (of enterCell, e.g.) is not shared with another thread.
 || restartable    || false | May not try to recover if core fails.
@@ -38,7 +39,7 @@ struct peano::MappingSpecification {
   };
 
   enum Multithreading {
-    Serial, AvoidCoarseGridRaces, AvoidFineGridRaces
+    Serial, RunConcurrentlyOnFineGrid, AvoidCoarseGridRaces, AvoidFineGridRaces
   };
 
   Manipulates     manipulates;

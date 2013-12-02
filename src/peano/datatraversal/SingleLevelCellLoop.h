@@ -19,8 +19,8 @@ namespace peano {
 /**
  * Loop over set of cells on a single level
  *
- * Realises a @f$ 2^d @f$ red-black Gauss-Seidel-type traversal of the
- * Cartesian grid. Its realisation follows dForLoop.
+ * Realises either a @f$ 2^d @f$ red-black Gauss-Seidel-type traversal of the
+ * Cartesian grid or a plain parallel loop as well as a serial version.
  *
  * @author Tobias Weinzierl
  */
@@ -33,14 +33,20 @@ class peano::datatraversal::SingleLevelCellLoop {
       const tarch::la::Vector<DIMENSIONS,int>&  range
     );
 
-    void runParallel(
+    void runParallelWithColouring(
       LoopBody&                                 loopBody,
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       int                                       grainSize,
       bool                                      useSixPowerDColouring
     );
 
-     class dForLoopInstance {
+    void runParallelWithoutColouring(
+      LoopBody&                                 loopBody,
+      const tarch::la::Vector<DIMENSIONS,int>&  range,
+      int                                       grainSize
+    );
+
+    class dForLoopInstance {
        private:
          LoopBody                           _loopBody;
          tarch::la::Vector<DIMENSIONS,int>  _offset;
@@ -96,6 +102,14 @@ class peano::datatraversal::SingleLevelCellLoop {
      };
 
   public:
+    enum ParallelisationStrategy {
+      Serial,
+      NoColouring,
+      TwoPowerDColouring,
+      SixPowerDColouring
+    };
+
+
     /**
      * Run in Red-black Manner Through All Cells of One Level
      *
@@ -107,7 +121,7 @@ class peano::datatraversal::SingleLevelCellLoop {
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       LoopBody&                                 loopBody,
       int                                       grainSize,
-      bool                                      useSixPowerDColouring
+      ParallelisationStrategy                   parallelisationStrategy
     );
 
     /**
