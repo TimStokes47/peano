@@ -85,7 +85,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
     const tarch::la::Vector<DIMENSIONS,int> NumberOfCells         = _gridContainer.getNumberOfCells(level);
 
     int  sharedMemoryGrainSize = 0;
-    typename peano::datatraversal::SingleLevelCellLoop<EnterCellLoopBody>::ParallelisationStrategy  parallelisationStrategy;
+    typename peano::datatraversal::SingleLevelCellLoop<EnterCellLoopBody>::ParallelisationStrategy  parallelisationStrategy = peano::datatraversal::SingleLevelCellLoop<EnterCellLoopBody>::Serial;
     switch (_eventHandle.enterCellSpecification().multithreading) {
       case peano::MappingSpecification::Serial:
         sharedMemoryGrainSize   = 0;
@@ -138,7 +138,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
     const tarch::la::Vector<DIMENSIONS,int> NumberOfCoarseGridCells = _gridContainer.getNumberOfCells(fineGridLevel-1);
 
     int  sharedMemoryGrainSize = 0;
-    typename peano::datatraversal::SingleLevelCellLoop<DescendLoopBody>::ParallelisationStrategy  parallelisationStrategy;
+    typename peano::datatraversal::SingleLevelCellLoop<DescendLoopBody>::ParallelisationStrategy  parallelisationStrategy = peano::datatraversal::SingleLevelCellLoop<DescendLoopBody>::Serial;
     switch (_eventHandle.descendSpecification().multithreading) {
       case peano::MappingSpecification::Serial:
         sharedMemoryGrainSize   = 0;
