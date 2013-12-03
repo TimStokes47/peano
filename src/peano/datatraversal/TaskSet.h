@@ -96,7 +96,7 @@ class peano::datatraversal::TaskSet {
      * to the current thread.
      */
     template <class Functor>
-    TaskSet(
+    inline TaskSet(
       Functor&  task
     );
 
@@ -121,7 +121,7 @@ class peano::datatraversal::TaskSet {
      * @param parallelise             Either 0 or 1.
      */
     template <class Functor0, class Functor1>
-    TaskSet(
+    inline TaskSet(
       Functor0&  task0,
       Functor1&  task1,
       int        parallelise
@@ -142,7 +142,7 @@ class peano::datatraversal::TaskSet {
      * @param parallelise             Either 0 or 1.
      */
     template <class Functor0, class Functor1, class Functor2>
-    TaskSet(
+    inline TaskSet(
       Functor0&  task0,
       Functor1&  task1,
       Functor2&  task2,

@@ -184,7 +184,7 @@ class peano::datatraversal::dForLoop {
      *                   multithreading is switched off. Another term for grain
      *                   size is chunk size (OpenMP prefers this term).
      */
-    dForLoop(
+    inline dForLoop(
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       LoopBody&                                 body,
       int                                       grainSize,

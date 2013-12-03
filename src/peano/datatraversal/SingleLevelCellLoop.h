@@ -117,7 +117,7 @@ class peano::datatraversal::SingleLevelCellLoop {
      * traversal is only @f$ 2^{-d} @f$ of the whole problem size as we are 
      * using red-black colouring.
      */
-    SingleLevelCellLoop(
+    inline SingleLevelCellLoop(
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       LoopBody&                                 loopBody,
       int                                       grainSize,
