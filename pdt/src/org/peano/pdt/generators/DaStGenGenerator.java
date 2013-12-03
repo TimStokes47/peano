@@ -10,7 +10,7 @@ public class DaStGenGenerator extends DepthFirstAdapter {
   private org.peano.pdt.generators.DirectoryGenerator _directoryGenerator;
   private org.peano.pdt.TranslationTable              _translationTable;
 
-  final private boolean                                  _QuietDaStGen = true;
+  final private boolean                                _QuietDaStGen = true;
 
   public DaStGenGenerator(
     org.peano.pdt.generators.DirectoryGenerator directoryGenerator,
@@ -44,8 +44,6 @@ public class DaStGenGenerator extends DepthFirstAdapter {
           _directoryGenerator.getRecordsDirectory()
       };
 
-      printArguments(args);
-
       return args;
     }
   }
@@ -73,6 +71,8 @@ public class DaStGenGenerator extends DepthFirstAdapter {
       true, true
     );
 
+    printArguments(getDaStGenArguments(fileName));
+
     de.tum.in.dast.DaStGen.main( getDaStGenArguments(fileName) );
   }
 
@@ -89,6 +89,8 @@ public class DaStGenGenerator extends DepthFirstAdapter {
       vertexFileName, 
       true, true
     );
+
+    printArguments(getDaStGenArguments(vertexFileName));
 
     de.tum.in.dast.DaStGen.main( getDaStGenArguments(vertexFileName) );
   }
@@ -107,6 +109,8 @@ public class DaStGenGenerator extends DepthFirstAdapter {
       true, true
     );
 
+    printArguments(getDaStGenArguments(cellFileName));
+
     de.tum.in.dast.DaStGen.main( getDaStGenArguments(cellFileName) );
   }
 
@@ -124,6 +128,8 @@ public class DaStGenGenerator extends DepthFirstAdapter {
       true, true
     );
     
+    printArguments(getDaStGenArguments(stateFileName));
+
     de.tum.in.dast.DaStGen.main( getDaStGenArguments(stateFileName) );
   }     
 }
