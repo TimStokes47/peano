@@ -610,14 +610,6 @@ bool peano::grid::aspects::ParallelMerge::mergeWithJoinedCellFromWorker(
   const bool result                             = !localCell._cellData.getIsInside() && workerCell._cellData.getIsInside();
 
   assertion5(
-    !WorkerJoinsThisElementToLocalRank || localCell._cellData.getIsInside()==workerCell._cellData.getIsInside(),
-    localCell.toString(),
-    workerCell.toString(),
-    workerRank,
-    tarch::parallel::Node::getInstance().getRank(),
-    tarch::parallel::NodePool::getInstance().getMasterRank()
-  );
-  assertion5(
     !WorkerIsRefinedLocalCellIsNot || WorkerJoinsThisElementToLocalRank || !WorkerJoinsThisElementToLocalRank,
     localCell.toString(), workerCell.toString(),
     workerRank,

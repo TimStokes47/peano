@@ -245,6 +245,17 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     fineGridCell.isRemote(state,false,true) &&
     state.isJoiningRank(fineGridCell.getRankOfRemoteNode())
   ) {
+    if (!fineGridCell.isAssignedToRemoteRank()) {
+      _eventHandle.destroyCell(
+        fineGridCell,
+        fineGridVertices,
+        fineGridVerticesEnumerator,
+        coarseGridVertices,
+        coarseGridVerticesEnumerator,
+        coarseGridCell,
+        fineGridPositionOfCell
+      );
+    }
     fineGridCell.assignToLocalNode();
   }
   #endif
@@ -696,18 +707,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         fineGridVerticesEnumerator.getLevel()
       );
       peano::parallel::JoinDataBufferPool::getInstance().sendCell(fineGridCell,adjacencyBitset,tarch::parallel::NodePool::getInstance().getMasterRank());
-
-      if (!fineGridCell.isAssignedToRemoteRank()) {
-        _eventHandle.destroyCell(
-          fineGridCell,
-          fineGridVertices,
-          fineGridVerticesEnumerator,
-          coarseGridVertices,
-          coarseGridVerticesEnumerator,
-          coarseGridCell,
-          fineGridPositionOfCell
-        );
-      }
 
       logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithMaster()", "due to join sent cell " << fineGridCell.toString() << " with flag (" << adjacencyBitset << ") to rank " << tarch::parallel::NodePool::getInstance().getMasterRank() );
       dfor2(k)
