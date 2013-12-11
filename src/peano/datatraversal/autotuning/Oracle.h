@@ -23,9 +23,6 @@ namespace peano {
 /**
  * Oracle for the Autotuning
  *
- * @todo Doku ueber multithreading
- *
- *
  * The oracle holds a set of OraceForOnePhase instances. If the respositories
  * switch to another adapter, they notify the oracle that they wanna switched
  * (switchToOracle()).

@@ -1,6 +1,7 @@
 #include "peano/datatraversal/dForLoop.h"
 #include "peano/datatraversal/SingleLevelCellLoop.h"
 #include "peano/MappingSpecification.h"
+#include "peano/datatraversal/autotuning/KernelGrainSizes.h"
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
@@ -37,18 +38,19 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::touchVert
     (_eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::OnlyLeaves && level == _treeDepth);
 
   if (runOperation) {
-    assertionMsg( _eventHandle.touchVertexFirstTimeSpecification().multithreading != peano::MappingSpecification::AvoidFineGridRaces, "avoid fine grid races not supported. Use avoid coarse grid races instead" );
+    assertionMsg( _eventHandle.touchVertexLastTimeSpecification().multithreading != peano::MappingSpecification::AvoidFineGridRaces, "avoid fine grid races not supported. Use avoid coarse grid races instead" );
+
 
     const tarch::la::Vector<DIMENSIONS,int> NumberOfVertices      = _gridContainer.getNumberOfVertices(level);
     const int                               sharedMemoryGrainSize =
       _eventHandle.touchVertexLastTimeSpecification().multithreading == peano::MappingSpecification::Serial ? 0 :
       peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-        _eventHandle.touchVertexLastTimeSpecification().multithreading == peano::MappingSpecification::RunConcurrentlyOnFineGrid ? tarch::la::volume(NumberOfVertices) / SEVEN_POWER_D :
-        tarch::la::volume(NumberOfVertices),
+        _eventHandle.touchVertexLastTimeSpecification().multithreading == peano::MappingSpecification::RunConcurrentlyOnFineGrid ?
+          tarch::la::volume(NumberOfVertices) : tarch::la::volume(NumberOfVertices) / SEVEN_POWER_D,
         peano::datatraversal::autotuning::CallTouchLastTimeOnRegularStationaryGrid
       );
     _touchVertexLastTimeLoopBody.setLevel( level );
-    peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>( NumberOfVertices, _touchVertexLastTimeLoopBody, sharedMemoryGrainSize, _eventHandle.touchVertexLastTimeSpecification().multithreading == peano::MappingSpecification::RunConcurrentlyOnFineGrid );
+    peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>( NumberOfVertices, _touchVertexLastTimeLoopBody, sharedMemoryGrainSize, _eventHandle.touchVertexLastTimeSpecification().multithreading != peano::MappingSpecification::RunConcurrentlyOnFineGrid );
 
     if (_eventHandle.touchVertexLastTimeSpecification().multithreading != peano::MappingSpecification::Serial) {
       peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallTouchLastTimeOnRegularStationaryGrid);
@@ -212,14 +214,15 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
   }
 
   if (_eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop) {
-    const int                                level            = _treeDepth;
-    const tarch::la::Vector<DIMENSIONS,int>  NumberOfVertices = _gridContainer.getNumberOfVertices(level);
-    for (int i=0; i<tarch::la::volume(NumberOfVertices); i++) {
+    const int level            = _treeDepth;
+    const int NumberOfVertices = tarch::la::volume(_gridContainer.getNumberOfVertices(level));
+
+    pfor(i,0,NumberOfVertices,peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings)
       if (!_gridContainer.isToBeWrittenToTemporaryStack(level,i) ) {
         Vertex&   currentVertex  = _gridContainer.getVertex(level,i);
         _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,level);
       }
-    }
+    endpfor
   }
 
   if (
@@ -227,17 +230,16 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
     ||
     _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop
   ) {
-    for (int level=_treeDepth-1; level>=1; level--) {
-      const tarch::la::Vector<DIMENSIONS,int> NumberOfVertices      = _gridContainer.getNumberOfVertices(level);
-      for (int i=0; i<tarch::la::volume(NumberOfVertices); i++) {
+    pfor(level,1,_treeDepth,peano::datatraversal::autotuning::KernelGrainSizes::RunResetVertexRegularityStateInAscendForNopMappingsInParallelForIndividualLevels)
+      const int NumberOfVertices      = tarch::la::volume(_gridContainer.getNumberOfVertices(level));
+      pfor(i,0,NumberOfVertices,peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings)
         if (!_gridContainer.isToBeWrittenToTemporaryStack(level,i) ) {
           Vertex&   currentVertex  = _gridContainer.getVertex(level,i);
           _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,level);
         }
-      }
-    }
+      endpfor
+    endpfor
   }
-
 
   // The original loop body is not destroyed yet, i.e. has not merged. Furthermore,
   // if _calledTouchVertexLastTime does not hold, this is the only body that has any

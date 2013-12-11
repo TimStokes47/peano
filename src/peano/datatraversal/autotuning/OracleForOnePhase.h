@@ -21,21 +21,20 @@ namespace peano {
         StoreVertices                                    = 4,
         StoreVerticesOnRegularStationaryGrid             = 5, // not unrolled
         StoreVerticesOnIrregularStationaryGrid           = 6,
-        SetCounter                                       = 7,
         CallEnterCellAndLoadSubCellsWithinTraverse       = 8,
-        CallLeaveCellAndStoreSubCellsWithinTraverse      = 9,
-        CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid = 10,
-        CallTouchFirstTimeOnRegularStationaryGrid        = 11,
-        CallTouchLastTimeOnRegularStationaryGrid         = 12,
-        CallEnterCellOnRegularStationaryGrid             = 13,
-        CallLeaveCellOnRegularStationaryGrid             = 14,
-        PipelineAscendTask                               = 15,
-        PipelineDescendTask                              = 16,
-        SplitLoadVerticesTaskOnRegularStationaryGrid     = 17,
-        SplitStoreVerticesTaskOnRegularStationaryGrid    = 18,
-        AscendOnRegularStationaryGrid                    = 19,
-        DescendOnRegularStationaryGrid                   = 20,
-        NumberOfDifferentMethodsCalling                  = 21
+        CallLeaveCellAndStoreSubCellsWithinTraverse      = 7,
+        CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid = 9,
+        CallTouchFirstTimeOnRegularStationaryGrid        = 10,
+        CallTouchLastTimeOnRegularStationaryGrid         = 11,
+        CallEnterCellOnRegularStationaryGrid             = 12,
+        CallLeaveCellOnRegularStationaryGrid             = 13,
+        PipelineAscendTask                               = 14,
+        PipelineDescendTask                              = 15,
+        SplitLoadVerticesTaskOnRegularStationaryGrid     = 16,
+        SplitStoreVerticesTaskOnRegularStationaryGrid    = 17,
+        AscendOnRegularStationaryGrid                    = 18,
+        DescendOnRegularStationaryGrid                   = 19,
+        NumberOfDifferentMethodsCalling                  = 20
       };
 
       /**

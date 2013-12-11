@@ -21,5 +21,13 @@
  start page of the sources. The canonical starting point to write a 
  PDE-specific shared memory strategy is the OracleForOnePhase interface.     
 
+
+ !!! Kernel parallelisation
+ 
+ Besides PDE-specific concurrent routines, Peano also parallelises parts of its 
+ kernel. Here, grain sizes are required as well. For those parts, the file 
+ KernelGrainSizes.h encodes the grain sizes, as they are PDE independent 
+ (though they depend on the architecture for sure).
+  
  */
  

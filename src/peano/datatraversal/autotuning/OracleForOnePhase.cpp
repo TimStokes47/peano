@@ -18,8 +18,6 @@ std::string peano::datatraversal::autotuning::toString( const MethodTrace& metho
       return "store-vertices-on-irregular-stationary-grid";
     case StoreVerticesOnRegularStationaryGrid:
       return "store-vertices-on-regular-stationary-grid";
-    case SetCounter:
-      return "set-counter";
     case CallEnterCellAndLoadSubCellsWithinTraverse:
       return "enter-cell-and-load-sub-cells";
     case CallLeaveCellAndStoreSubCellsWithinTraverse:
@@ -72,8 +70,6 @@ peano::datatraversal::autotuning::MethodTrace peano::datatraversal::autotuning::
       return StoreVerticesOnRegularStationaryGrid;
     case static_cast<int>(StoreVerticesOnIrregularStationaryGrid):
       return StoreVerticesOnIrregularStationaryGrid;
-    case static_cast<int>(SetCounter):
-      return SetCounter;
     case static_cast<int>(CallEnterCellAndLoadSubCellsWithinTraverse):
       return CallEnterCellAndLoadSubCellsWithinTraverse;
     case static_cast<int>(CallLeaveCellAndStoreSubCellsWithinTraverse):

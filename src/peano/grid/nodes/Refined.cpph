@@ -17,6 +17,7 @@
 #include "peano/datatraversal/dForLoop.h"
 #include "peano/datatraversal/TaskSet.h"
 #include "peano/datatraversal/autotuning/Oracle.h"
+#include "peano/datatraversal/autotuning/KernelGrainSizes.h"
 
 #include "peano/utils/PeanoOptimisations.h"
 
@@ -360,13 +361,9 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     peano::datatraversal::dForLoop<LoopBody>(
       tarch::la::Vector<DIMENSIONS,int>(4),
       loopBody,
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-        FOUR_POWER_D,
-        peano::datatraversal::autotuning::SetCounter
-      ),
+      peano::datatraversal::autotuning::KernelGrainSizes::SpawnSetCounter,
       false
     );
-    peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::SetCounter);
   #if !defined(Asserts)
   }
   #endif

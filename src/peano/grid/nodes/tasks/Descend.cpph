@@ -6,6 +6,8 @@
 #include "tarch/multicore/BooleanSemaphore.h"
 #endif
 
+#include "peano/datatraversal/autotuning/KernelGrainSizes.h"
+
 
 template <class Vertex, class Cell, class State, class EventHandle>
 tarch::multicore::BooleanSemaphore  peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::_semaphore;
@@ -56,8 +58,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
     const int                               sharedMemoryGrainSize =
       _eventHandle.touchVertexFirstTimeSpecification().multithreading == peano::MappingSpecification::Serial ? 0 :
       peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-        _eventHandle.touchVertexFirstTimeSpecification().multithreading == peano::MappingSpecification::RunConcurrentlyOnFineGrid ? tarch::la::volume(NumberOfVertices) / SEVEN_POWER_D :
-        tarch::la::volume(NumberOfVertices),
+        _eventHandle.touchVertexFirstTimeSpecification().multithreading == peano::MappingSpecification::RunConcurrentlyOnFineGrid ?
+          tarch::la::volume(NumberOfVertices) : tarch::la::volume(NumberOfVertices) / SEVEN_POWER_D,
         peano::datatraversal::autotuning::CallTouchFirstTimeOnRegularStationaryGrid
       );
     _touchVertexFirstTimeLoopBody.setLevel(level);
@@ -65,7 +67,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
       NumberOfVertices,
       _touchVertexFirstTimeLoopBody,
       sharedMemoryGrainSize,
-      _eventHandle.touchVertexFirstTimeSpecification().multithreading == peano::MappingSpecification::RunConcurrentlyOnFineGrid
+      _eventHandle.touchVertexFirstTimeSpecification().multithreading != peano::MappingSpecification::RunConcurrentlyOnFineGrid
     );
     if (_eventHandle.touchVertexFirstTimeSpecification().multithreading != peano::MappingSpecification::Serial) {
       peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallTouchFirstTimeOnRegularStationaryGrid);
@@ -218,21 +220,6 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::operator() () {
-//  #if defined(SharedMemoryParallelisation)
-//  while (
-//     _precedingLoadProcessMayFork &&
-//     !_descendProcessRunsInParallelToOtherTasks &&
-//     !_gridContainer.isLevelInitialised(_treeDepth)
-//  ) {
-//    sendThisTaskToBackgroundWith1Argument(
-//      "peano::grid::nodes::tasks::Descend::operator()",
-//      _treeDepth
-//    );
-//  }
-//  tarch::multicore::BooleanSemaphore::continueWithTask();
-//  #endif
-
-
   const bool skipCoarseLevelsCompletely =
     (_eventHandle.touchVertexFirstTimeSpecification().manipulates != peano::MappingSpecification::WholeTree) &&
     (_eventHandle.enterCellSpecification().manipulates            != peano::MappingSpecification::WholeTree) &&
