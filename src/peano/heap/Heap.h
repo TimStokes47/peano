@@ -280,8 +280,10 @@ class peano::heap::Heap: public tarch::services::Service {
     const std::vector<Data>& getData(int index) const;
 
     /**
-     * Creates new data on the heap and returns the
-     * corresponding index.
+     * Create new heap entry
+     *
+     * Creates new data on the heap and returns the corresponding index. The
+     * counterpart of this operation is deleteData().
      *
      * @param numberOfEntries If you know a priori how many elements you'll
      *        gonna store for this heap entry, use this constructor. You can
