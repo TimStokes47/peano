@@ -84,9 +84,10 @@ void __THIS_QUALIFIED_TYPENAME__::createHangingVertex(
       __NAMESPACE__::Cell&       coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
 ) {
+ __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.createHangingVertex(fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
 
  __x__MAPPINGS__ _map2__MAPPINGS__.createHangingVertex(fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
- __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.createHangingVertex(fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
+
 }
 
 
@@ -99,8 +100,8 @@ void __THIS_QUALIFIED_TYPENAME__::destroyHangingVertex(
       __NAMESPACE__::Cell&           coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
 ) {
-
  __x__MAPPINGS__ _map2__MAPPINGS__.destroyHangingVertex(fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
+
  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.destroyHangingVertex(fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
 }
 
@@ -114,9 +115,9 @@ void __THIS_QUALIFIED_TYPENAME__::createInnerVertex(
       __NAMESPACE__::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
+ __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.createInnerVertex(fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
 
  __x__MAPPINGS__ _map2__MAPPINGS__.createInnerVertex(fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
- __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.createInnerVertex(fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
 }
 
 
@@ -129,9 +130,9 @@ void __THIS_QUALIFIED_TYPENAME__::createBoundaryVertex(
       __NAMESPACE__::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
+ __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.createBoundaryVertex( fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
 
  __x__MAPPINGS__ _map2__MAPPINGS__.createBoundaryVertex( fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
- __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.createBoundaryVertex( fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
 }
 
 
@@ -159,9 +160,9 @@ void __THIS_QUALIFIED_TYPENAME__::createCell(
       __NAMESPACE__::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
+ __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.createCell( fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfCell );
 
  __x__MAPPINGS__ _map2__MAPPINGS__.createCell( fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfCell );
- __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.createCell( fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfCell );
 }
 
 
@@ -188,9 +189,9 @@ void __THIS_QUALIFIED_TYPENAME__::mergeWithNeighbour(
   const tarch::la::Vector<DIMENSIONS,double>&   fineGridH,
   int                                           level
 ) {
+  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.mergeWithNeighbour( vertex, neighbour, fromRank, fineGridX, fineGridH, level );
 
   __x__MAPPINGS__ _map2__MAPPINGS__.mergeWithNeighbour( vertex, neighbour, fromRank, fineGridX, fineGridH, level );
-  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.mergeWithNeighbour( vertex, neighbour, fromRank, fineGridX, fineGridH, level );
 }
 
 void __THIS_QUALIFIED_TYPENAME__::prepareSendToNeighbour(
@@ -200,7 +201,6 @@ void __THIS_QUALIFIED_TYPENAME__::prepareSendToNeighbour(
   const tarch::la::Vector<DIMENSIONS,double>&   h,
   int                                           level
 ) {
-
   __x__MAPPINGS__ _map2__MAPPINGS__.prepareSendToNeighbour( vertex, toRank, x, h, level );
   __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.prepareSendToNeighbour( vertex, toRank, x, h, level );
 }
@@ -212,7 +212,6 @@ void __THIS_QUALIFIED_TYPENAME__::prepareCopyToRemoteNode(
   const tarch::la::Vector<DIMENSIONS,double>&   h,
   int                                           level
 ) {
-
   __x__MAPPINGS__ _map2__MAPPINGS__.prepareCopyToRemoteNode( localVertex, toRank, x, h, level );
   __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.prepareCopyToRemoteNode( localVertex, toRank, x, h, level );
 }
@@ -224,7 +223,6 @@ void __THIS_QUALIFIED_TYPENAME__::prepareCopyToRemoteNode(
       const tarch::la::Vector<DIMENSIONS,double>&   h,
       int                                           level
 ) {
-
   __x__MAPPINGS__ _map2__MAPPINGS__.prepareCopyToRemoteNode( localCell, toRank, x, h, level );
   __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.prepareCopyToRemoteNode( localCell, toRank, x, h, level );
 }
@@ -237,9 +235,9 @@ void __THIS_QUALIFIED_TYPENAME__::mergeWithRemoteDataDueToForkOrJoin(
   const tarch::la::Vector<DIMENSIONS,double>&  h,
   int                                       level
 ) {
+  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.mergeWithRemoteDataDueToForkOrJoin( localVertex, masterOrWorkerVertex, fromRank, x, h, level );
 
   __x__MAPPINGS__ _map2__MAPPINGS__.mergeWithRemoteDataDueToForkOrJoin( localVertex, masterOrWorkerVertex, fromRank, x, h, level );
-  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.mergeWithRemoteDataDueToForkOrJoin( localVertex, masterOrWorkerVertex, fromRank, x, h, level );
 }
 
 void __THIS_QUALIFIED_TYPENAME__::mergeWithRemoteDataDueToForkOrJoin(
@@ -250,9 +248,9 @@ void __THIS_QUALIFIED_TYPENAME__::mergeWithRemoteDataDueToForkOrJoin(
   const tarch::la::Vector<DIMENSIONS,double>&  h,
   int                                       level
 ) {
+  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.mergeWithRemoteDataDueToForkOrJoin( localCell, masterOrWorkerCell, fromRank, x, h, level );
 
   __x__MAPPINGS__ _map2__MAPPINGS__.mergeWithRemoteDataDueToForkOrJoin( localCell, masterOrWorkerCell, fromRank, x, h, level );
-  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.mergeWithRemoteDataDueToForkOrJoin( localCell, masterOrWorkerCell, fromRank, x, h, level );
 }
 
 bool __THIS_QUALIFIED_TYPENAME__::prepareSendToWorker(
@@ -300,9 +298,9 @@ void __THIS_QUALIFIED_TYPENAME__::mergeWithMaster(
     const __NAMESPACE__::State&          workerState,
   __NAMESPACE__::State&                masterState
 ) {
+  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.mergeWithMaster( workerGridCell, workerGridVertices, workerEnumerator, fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfCell, worker, workerState, masterState );
 
   __x__MAPPINGS__ _map2__MAPPINGS__.mergeWithMaster( workerGridCell, workerGridVertices, workerEnumerator, fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfCell, worker, workerState, masterState );
-  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.mergeWithMaster( workerGridCell, workerGridVertices, workerEnumerator, fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfCell, worker, workerState, masterState );
 }
 
 void __THIS_QUALIFIED_TYPENAME__::receiveDataFromMaster(
@@ -317,9 +315,9 @@ void __THIS_QUALIFIED_TYPENAME__::receiveDataFromMaster(
       __NAMESPACE__::Cell&                        workersCoarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&    fineGridPositionOfCell
 ) {
+  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.receiveDataFromMaster( receivedCell, receivedVertices, receivedVerticesEnumerator, receivedCoarseGridVertices, receivedCoarseGridVerticesEnumerator, receivedCoarseGridCell, workersCoarseGridVertices, workersCoarseGridVerticesEnumerator, workersCoarseGridCell, fineGridPositionOfCell );
 
   __x__MAPPINGS__ _map2__MAPPINGS__.receiveDataFromMaster( receivedCell, receivedVertices, receivedVerticesEnumerator, receivedCoarseGridVertices, receivedCoarseGridVerticesEnumerator, receivedCoarseGridCell, workersCoarseGridVertices, workersCoarseGridVerticesEnumerator, workersCoarseGridCell, fineGridPositionOfCell );
-  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.receiveDataFromMaster( receivedCell, receivedVertices, receivedVerticesEnumerator, receivedCoarseGridVertices, receivedCoarseGridVerticesEnumerator, receivedCoarseGridCell, workersCoarseGridVertices, workersCoarseGridVerticesEnumerator, workersCoarseGridCell, fineGridPositionOfCell );
 }
 
 
@@ -330,9 +328,9 @@ void __THIS_QUALIFIED_TYPENAME__::mergeWithWorker(
   const tarch::la::Vector<DIMENSIONS,double>&  cellSize,
   int                                          level
 ) {
+  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.mergeWithWorker( localCell, receivedMasterCell, cellCentre, cellSize, level );
 
   __x__MAPPINGS__ _map2__MAPPINGS__.mergeWithWorker( localCell, receivedMasterCell, cellCentre, cellSize, level );
-  __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.mergeWithWorker( localCell, receivedMasterCell, cellCentre, cellSize, level );
 }
 
 void __THIS_QUALIFIED_TYPENAME__::mergeWithWorker(
@@ -357,9 +355,9 @@ void __THIS_QUALIFIED_TYPENAME__::touchVertexFirstTime(
       __NAMESPACE__::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
+ __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.touchVertexFirstTime( fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
 
  __x__MAPPINGS__ _map2__MAPPINGS__.touchVertexFirstTime( fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
- __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.touchVertexFirstTime( fineGridVertex, fineGridX, fineGridH, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfVertex );
 }
 
 
@@ -387,9 +385,9 @@ void __THIS_QUALIFIED_TYPENAME__::enterCell(
       __NAMESPACE__::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
+ __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.enterCell( fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfCell );
 
  __x__MAPPINGS__ _map2__MAPPINGS__.enterCell( fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfCell );
- __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.enterCell( fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell, fineGridPositionOfCell );
 }
 
 
@@ -411,9 +409,9 @@ void __THIS_QUALIFIED_TYPENAME__::leaveCell(
 void __THIS_QUALIFIED_TYPENAME__::beginIteration(
   __NAMESPACE__::State&  solverState
 ) {
+ __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.beginIteration( solverState );
 
  __x__MAPPINGS__ _map2__MAPPINGS__.beginIteration( solverState );
- __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.beginIteration( solverState );
 }
 
 
@@ -436,9 +434,9 @@ void __THIS_QUALIFIED_TYPENAME__::descend(
   const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
   __NAMESPACE__::Cell&                 coarseGridCell
 ) {
+ __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.descend( fineGridCells, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell );
 
  __x__MAPPINGS__ _map2__MAPPINGS__.descend( fineGridCells, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell );
- __x__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__.descend( fineGridCells, fineGridVertices, fineGridVerticesEnumerator, coarseGridVertices, coarseGridVerticesEnumerator, coarseGridCell );
 }
 
 
