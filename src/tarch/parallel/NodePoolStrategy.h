@@ -110,6 +110,13 @@ class tarch::parallel::NodePoolStrategy {
     virtual int reserveNode(int forMaster) = 0;
 
     /**
+     * Only used by the node pool to wake up particular ranks for global
+     * communication. They will be sent idle afterwards immediately. Hence,
+     * this operation doesn't really take part in the mpi balancing.
+     */
+    virtual void reserveParticularNode(int rank) = 0;
+
+    /**
      * Remove Next Idle Node
      *
      * May be called only if there are still idle nodes. It takes one idle node,

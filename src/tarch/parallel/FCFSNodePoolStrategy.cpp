@@ -195,6 +195,23 @@ int tarch::parallel::FCFSNodePoolStrategy::reserveNode(int forMaster) {
 }
 
 
+void tarch::parallel::FCFSNodePoolStrategy::reserveParticularNode(int rank) {
+  assertion1( isIdleNode(rank), rank );
+
+  for (
+    NodeContainer::iterator p = _nodes.begin();
+    p != _nodes.end();
+    p++
+  ) {
+    if ( p->getRank() == rank ) {
+      p->activate();
+    }
+  }
+
+  _nodes.sort();
+}
+
+
 void tarch::parallel::FCFSNodePoolStrategy::setNodePoolTag(int tag) {
   _tag = tag;
 }

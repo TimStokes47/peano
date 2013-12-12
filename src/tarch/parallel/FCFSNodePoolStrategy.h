@@ -177,6 +177,7 @@ class tarch::parallel::FCFSNodePoolStrategy: public tarch::parallel::NodePoolStr
     virtual int getNumberOfIdleNodes() const;
     virtual void setNodeIdle( int rank );
     virtual int reserveNode(int forMaster);
+    virtual void reserveParticularNode(int rank);
     virtual bool isRegisteredNode(int rank) const;
     virtual bool isIdleNode(int rank) const;
     virtual int getNumberOfRegisteredNodes() const;
