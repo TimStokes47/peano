@@ -32,7 +32,8 @@ peano::parallel::loadbalancing::Oracle::Oracle():
   _watch( "peano::parallel::loadbalancing::Oracle", "Oracle()", false),
   _oraclePrototype(0),
   _workers(),
-  _startCommand(Continue) {
+  _startCommand(Continue),
+  _loadBalancingActivated(true) {
 }
 
 
@@ -287,10 +288,19 @@ int peano::parallel::loadbalancing::Oracle::getCommandForWorker(
     result = peano::parallel::loadbalancing::Continue;
   }
   else {
-    result = _oracles[_currentOracle]->getCommandForWorker(workerRank, forkIsAllowed, joinIsAllowed);
+    result = _oracles[_currentOracle]->getCommandForWorker(
+      workerRank,
+      forkIsAllowed & _loadBalancingActivated,
+      joinIsAllowed & _loadBalancingActivated
+    );
   }
   logTraceOutWith1Argument( "getCommandForWorker(int)", convertLoadBalancingFlagToString(result) );
   return result;
+}
+
+
+void peano::parallel::loadbalancing::Oracle::activateLoadBalancing(bool value) {
+  _loadBalancingActivated = value;
 }
 
 

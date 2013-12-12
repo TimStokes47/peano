@@ -90,6 +90,8 @@ class peano::parallel::loadbalancing::Oracle {
      */
     int                                      _startCommand;
 
+    bool                                     _loadBalancingActivated;
+
     void createOracles(int numberOfOracles);
     void deleteOracles();
 
@@ -270,6 +272,11 @@ class peano::parallel::loadbalancing::Oracle {
      * distributed before the domain change actually happens.
      */
     int getCoarsestRegularInnerAndOuterGridLevel() const;
+
+    /**
+     * You can switch off the load balancing via this value.
+     */
+    void activateLoadBalancing(bool value);
 };
 
 
