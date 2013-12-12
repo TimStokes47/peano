@@ -105,10 +105,11 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   logDebug( "loadVertexFromInputStream(...)", "got vertex " << _fineGridVertices[positionInVertexArray].toString() );
 
   #ifdef Debug
-  assertionNumericalEquals8(
+  assertionNumericalEquals9(
     _fineGridVertices[positionInVertexArray].getX(), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
     _fineGridVertices[positionInVertexArray], _fineGridVerticesEnumerator(0),
     CellFlagsFromEnumerator, _fineGridVerticesEnumerator.toString(),
+    positionInVertexArray,
     _coarseGridVertices[ _coarseGridVerticesEnumerator(0) ].toString(),
     _coarseGridVertices[ _coarseGridVerticesEnumerator(1) ].toString(),
     _coarseGridVertices[ _coarseGridVerticesEnumerator(2) ].toString(),
@@ -558,16 +559,8 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     #ifdef Parallel
     const bool shallUpdateRefinementFlags =
       !StaticGridWithParallelBoundary
-      &&
-      (
-        !_fineGridVertices[positionInArray].isAdjacentToRemoteRank()
-        ||
-        (
-          _fineGridVertices[positionInArray].getRefinementControl() != Vertex::Records::Unrefined
-          &&
-          _fineGridVertices[positionInArray].getRefinementControl() != Vertex::Records::Refined
-        )
-      );
+      ||
+      _fineGridVertices[positionInArray].isAdjacentToRemoteRank();
     #else
     const bool shallUpdateRefinementFlags = !StaticGridWithParallelBoundary;
     #endif
@@ -579,6 +572,15 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     logDebug( "operator()", "vertex at " << positionInArray << " is a persistent vertex from in/out stacks: " << _fineGridVertices[positionInArray].toString() );
     if (_counter[positionInArray]==CounterPersistentNodeDelete) {
       logDebug( "operator()", "it will be deleted later on" );
+      // if a vertex is to be deleted, it is important that also its refinement
+      // flags have been updated, as updateRefinementFlagsOfVertexAfterLoad()
+      // propagates down delete commands through several levels.
+      assertion3(
+        shallUpdateRefinementFlags,
+        _fineGridVertices[positionInArray].toString(),
+        StaticGridWithParallelBoundary,
+        positionInArray
+      );
     }
   }
   else if ( CaseCreateHangingNode ) {
