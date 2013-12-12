@@ -563,7 +563,7 @@ void tarch::parallel::NodePool::activateIdleNodes(int tag) {
 
   for (int rank=1; rank<Node::getInstance().getNumberOfNodes(); rank++) {
     if (_strategy->isIdleNode(rank)) {
-      _strategy->reserveParticularNode(NodePoolStrategy::AnyMaster);
+      _strategy->reserveParticularNode(rank);
       message.send(rank,tag, true);
       logDebug( "activateIdleNodes(int)", "sent message " << message.toString() << " to node " << rank << " on tag " << tag );
     }
