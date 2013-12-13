@@ -119,8 +119,9 @@ class tarch::parallel::NodePoolStrategy {
     /**
      * Remove Next Idle Node
      *
-     * May be called only if there are still idle nodes. It takes one idle node,
-     * removes it from the strategy, and returns the rank of this node.
+     * Takes one idle node, removes it from the strategy, and returns the rank
+     * of this node. This operation is used by the node pool if it is already
+     * shut down. It is not used throughout the simulation run.
      */
     virtual int removeNextIdleNode() = 0;
 
