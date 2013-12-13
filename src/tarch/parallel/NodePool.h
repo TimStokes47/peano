@@ -339,6 +339,8 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * Consequently, it might happen that the fork message overtakes the
      * fork and join data and this leads to a break down of the algorithm.
      *
+     * This is by the way the same tag that is also used to inform a
+     *
      * @return Tag for fork messages and fork and join data.
      */
     int getTagForForkMessages() const;
@@ -406,7 +408,7 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * the flag RunAllNodes. Typically they do something and then immediately
      * afterwards register themselves as idle again.
      */
-    void activateIdleNodes(int tag);
+    void activateIdleNodes();
 
     /**
      * Update statistics

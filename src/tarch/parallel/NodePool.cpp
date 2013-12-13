@@ -237,10 +237,16 @@ tarch::parallel::NodePool::JobRequestMessageAnswer tarch::parallel::NodePool::wa
   }
 
   if ( answer.getNewMaster() == JobRequestMessageAnswerValues::Terminate ) {
-  	logDebug("waitForJob()", "node received termination signal");
-  	_isAlive = false;
+    logDebug("waitForJob()", "node received termination signal");
+    _isAlive = false;
     logTraceOutWith1Argument( "waitForJob()", "terminate" );
-  	return JobRequestMessageAnswerValues::Terminate;
+    return JobRequestMessageAnswerValues::Terminate;
+  }
+  else if ( answer.getNewMaster() == JobRequestMessageAnswerValues::RunAllNodes ) {
+    logDebug("waitForJob()", "node received run code on all nodes signal. Will wake up for global step and then ask for new job again");
+    _isAlive = true;
+    logTraceOutWith1Argument( "waitForJob()", "run global step" );
+    return JobRequestMessageAnswerValues::RunAllNodes;
   }
   else {
     _masterNode = answer.getNewMaster();
@@ -274,7 +280,14 @@ void tarch::parallel::NodePool::terminate() {
       answerMessage.send( rank, _jobManagementTag, true );
     }
 
-    logDebug( "terminate()", "still working: " << _strategy->getNumberOfRegisteredNodes() << " node(s)" );
+    if (_strategy->getNumberOfRegisteredNodes()>0) {
+      logInfo(
+        "terminate()",
+        "there are still " << _strategy->getNumberOfRegisteredNodes() <<
+        " registered nodes alive and not idle"
+      );
+      logInfo( "terminate()", _strategy->toString() );
+    }
 
     clock_t      timeOutWarning   = Node::getInstance().getDeadlockWarningTimeStamp();
     clock_t      timeOutShutdown  = Node::getInstance().getDeadlockTimeOutTimeStamp();
@@ -551,21 +564,20 @@ void tarch::parallel::NodePool::emptyWorkerRequestMessageBuffer() {
 }
 
 
-void tarch::parallel::NodePool::activateIdleNodes(int tag) {
+void tarch::parallel::NodePool::activateIdleNodes() {
   #ifdef Parallel
   assertion1( Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
   assertion1( _isAlive, Node::getInstance().getRank() );
   assertion1( _strategy!=0, Node::getInstance().getRank() );
 
-  logTraceInWith1Argument( "activateIdleNodes(int)", tag );
+  logTraceIn( "activateIdleNodes(int)" );
 
   tarch::parallel::messages::ActivationMessage message( JobRequestMessageAnswerValues::RunAllNodes );
 
   for (int rank=1; rank<Node::getInstance().getNumberOfNodes(); rank++) {
     if (_strategy->isIdleNode(rank)) {
       _strategy->reserveParticularNode(rank);
-      message.send(rank,tag, true);
-      logDebug( "activateIdleNodes(int)", "sent message " << message.toString() << " to node " << rank << " on tag " << tag );
+      message.send(rank,getTagForForkMessages(), true);
     }
   }
   logTraceOut( "activateIdleNodes(int)" );
