@@ -115,10 +115,19 @@ class peano::datatraversal::dForLoop {
 
     class dForLoopInstance {
       private:
-        LoopBody  _loopBody;
+        LoopBody                           _loopBody;
+
+        tarch::la::Vector<DIMENSIONS,int>  _offset;
+        const int                          _padding;
 
       public:
-        dForLoopInstance( const LoopBody& loopBody );
+        dForLoopInstance(
+          const LoopBody&                    loopBody,
+          tarch::la::Vector<DIMENSIONS,int>  offset,
+          const int                          padding
+        );
+
+        void setOffset(const tarch::la::Vector<DIMENSIONS,int>&  offset);
 
         #if defined(SharedTBB)
         typedef tbb::split   SplitFlag;
@@ -159,11 +168,6 @@ class peano::datatraversal::dForLoop {
          */
         void join(const dForLoopInstance&  with);
     };
-
-    #ifdef SharedTBB
-    class HandleSubrangeWithBiPartitioning {
-    };
-    #endif
 
     #ifdef SharedCobra
     /**

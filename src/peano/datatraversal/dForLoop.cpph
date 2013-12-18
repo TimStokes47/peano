@@ -31,19 +31,35 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
 	if (grainSize>0) {
     #ifdef SharedTBB
 	  if (useSevenPowerDColouring) {
-	    assertionMsg( "dForLoop(...)", "not implemented yet" );
+      logTraceInWith4Arguments( "dForLoop(...)", range, grainSize, "tbb", "7^d colouring" );
+      dForLoopInstance loopInstance(body,0,7);
+      dfor(k,7) {
+        tarch::la::Vector<DIMENSIONS,int> localRange = range;
+        for (int d=0; d<DIMENSIONS; d++) {
+          const int rangeModColouring = localRange(d)%7;
+          if (rangeModColouring!=0 && k(d)<rangeModColouring) {
+            localRange(d) = localRange(d) / 7 + 1;
+          }
+          else {
+            localRange(d) /= 7;
+          }
+          assertion4( localRange(d)>=1, range, localRange, k, grainSize );
+        }
+        loopInstance.setOffset(k);
+        tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance );
+      }
 	  }
 	  else {
       logTraceInWith4Arguments( "dForLoop(...)", range, grainSize, "tbb", "embarassingly parallel" );
-      dForLoopInstance loopInstance(body);
+      dForLoopInstance loopInstance(body,0,1);
       tbb::parallel_reduce(
         dForRange( range, grainSize ),
         loopInstance
       );
 	  }
     #elif SharedOMP
-    if (useSixPowerDColouring) {
-      assertionMsg( "dForLoop(...)", "not implemented yet" );
+    if (useSevenPowerDColouring) {
+      assertionMsg( false, "not implemented yet" );
     }
     else {
       logTraceInWith4Arguments( "dForLoop(...)", range, grainSize, "omp", "embarassingly parallel" );
@@ -143,14 +159,24 @@ std::vector<peano::datatraversal::dForRange> peano::datatraversal::dForLoop<Loop
 
 
 template <class LoopBody>
-peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::dForLoopInstance( const LoopBody& loopBody ):
-  _loopBody(loopBody) {
+peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::dForLoopInstance(
+  const LoopBody&                    loopBody,
+  tarch::la::Vector<DIMENSIONS,int>  offset,
+  const int                          padding
+):
+  _loopBody(loopBody),
+  _offset(offset),
+  _padding(padding) {
+  assertion2( tarch::la::allGreaterEquals(_offset,0), _offset, _padding );
+  assertion2( tarch::la::allSmaller(_offset,_padding), _offset, _padding );
 }
 
 
 template <class LoopBody>
 peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::dForLoopInstance( const dForLoopInstance& loopBody, SplitFlag ):
-  _loopBody(loopBody._loopBody) {
+  _loopBody(loopBody._loopBody),
+  _offset(loopBody._offset),
+  _padding(loopBody._padding) {
 }
 
 
@@ -159,7 +185,7 @@ void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::operator() (con
 	logTraceInWith1Argument( "dForLoopInstance::operator()", range.toString() );
 
   dfor(i,range.getRange()) {
-	  _loopBody(i + range.getOffset());
+    _loopBody( (i + range.getOffset())*_padding + _offset );
 	}
 
   logTraceOutWith1Argument( "dForLoopInstance::operator()", range.toString() );
@@ -168,4 +194,10 @@ void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::operator() (con
 
 template <class LoopBody>
 void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::join(const dForLoopInstance&  with) {
+}
+
+
+template <class LoopBody>
+void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::setOffset(const tarch::la::Vector<DIMENSIONS,int>&  offset) {
+  _offset = offset;
 }
