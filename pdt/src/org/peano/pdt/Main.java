@@ -10,7 +10,7 @@ public class Main {
     System.out.println("Peano Developement Toolkit (PDT)");
     System.out.println("(C) 2010 Tobias Weinzierl");
     System.out.println("");
-    System.out.println("Usage: de.tum.peano.pdt.Main  peano-specification-file component-output-directory [template-directories]" );
+    System.out.println("Usage: java -jar pdt.jar peano-specification-file component-output-directory [template-directories]" );
     System.out.println("  peano-specification-file    Mandatory; specification file describing your project. " );
     System.out.println("  component-output-directory  Mandatory; typically the directory holding the spec file as well. All paths" );
     System.out.println("                              within the spec file are relative to the output directory." );
