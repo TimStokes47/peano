@@ -114,13 +114,13 @@ all: header build
 files.mk:
 	touch files.mk
 	echo -n SOURCES= > files.mk
-	find $(PEANO_HOME) -name '*.cpp' -printf '%p ' >> files.mk
-	find $(PROJECT_ROOT)/$(PROJECT_HOME) -name '*.cpp' -printf '%p ' >> files.mk
-	find $(PEANO_HOME) -name '*.cpp' -printf 'COMPILE %p TO %p OBJECT FILE\n' >> compiler-minutes.txt
-	find $(PROJECT_ROOT)/$(PROJECT_HOME) -name '*.cpp' -printf 'COMPILE %p TO %p OBJECT FILE\n' >> compiler-minutes.txt
-	echo -n '\n\nLINK OBJECT FILES OF ' >> compiler-minutes.txt
-	find $(PEANO_HOME) -name '*.cpp' -printf '%p ' >> compiler-minutes.txt
-	find $(PROJECT_ROOT)/$(PROJECT_HOME) -name '*.cpp' -printf '%p ' >> compiler-minutes.txt
+	find $(PEANO_HOME) -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+	find $(PROJECT_ROOT)/$(PROJECT_HOME) -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+	# if you encouter problems with awk, use the following snippets (through they
+	# do in turn not work with all bash versions. In particular not with MACs:
+	#
+	# find $(PEANO_HOME) -name '*.cpp' -printf '%p ' >> files.mk
+	# find $(PROJECT_ROOT)/$(PROJECT_HOME) -name '*.cpp' -printf '%p ' >> files.mk
 
 
 
@@ -139,7 +139,6 @@ clean:
 	rm -f $(EXECUTABLE)
 	rm -f $(OBJECTS)
 	rm -f files.mk
-	rm -f compiler-minutes.txt
 
 
 $(OBJECTS): %.o : %.cpp
