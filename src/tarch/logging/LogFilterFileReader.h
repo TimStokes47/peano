@@ -21,13 +21,15 @@ namespace tarch {
  * Very simple utility class offering a couple of static operations to parse
  * different filter files for the command line logger.
  *
- * @author Tobias Weinzierl
+ * @author Tobias Weinzierl, Kristof Unterweger
  */
 class tarch::logging::LogFilterFileReader {
   private:
     static tarch::logging::Log  _log;
 
     static bool interpretTokens( const std::string& levelToken, const std::string& classNameToken, const std::string& rankToken, const std::string& onOffToken );
+
+    static bool parseLine(std::ifstream& file, const std::string& filename, const std::string& line, int linenumber);
   public:
     /**
      * Tries to parse a simple text file where each line contains an entry

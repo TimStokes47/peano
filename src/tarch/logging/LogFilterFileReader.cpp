@@ -3,7 +3,7 @@
 
 #include <fstream>
 #include <stdlib.h>
-
+#include <string>
 
 
 #include "tarch/logging/CommandLineLogger.h"
@@ -42,6 +42,40 @@ bool tarch::logging::LogFilterFileReader::interpretTokens( const std::string& le
   return result;
 }
 
+bool tarch::logging::LogFilterFileReader::parseLine(std::ifstream& file, const std::string& filename, const std::string& line, int linenumber) {
+  std::string lineWithNewline = line + '\n';
+
+  //Loop through line
+  int characterPosition = 0;
+  const int NumberOfTokensPerLine = 4;
+  std::string tokens[NumberOfTokensPerLine];
+  int currentToken = 0;
+  while (currentToken<NumberOfTokensPerLine && !file.eof() && characterPosition < lineWithNewline.length()) {
+    char buffer = lineWithNewline[characterPosition];
+
+    const bool bufferIsWhiteSpace =
+      buffer == ' '  ||
+      buffer == '\t' ||
+      buffer == '\n';
+    if (bufferIsWhiteSpace && !tokens[currentToken].empty()) {
+      currentToken++;
+    }
+    if (!bufferIsWhiteSpace) {
+      tokens[currentToken] += buffer;
+    }
+
+    characterPosition++;
+  }
+
+  if (currentToken != NumberOfTokensPerLine) {
+    logError( "parsePlainTextFile(string)", "syntax error in input file " << filename << ", line " << linenumber );
+    return false;
+  }
+  else {
+    return interpretTokens(tokens[0],tokens[1],tokens[2],tokens[3]);
+  }
+}
+
 
 bool tarch::logging::LogFilterFileReader::parsePlainTextFile( const std::string& filename ) {
   bool result = true;
@@ -55,36 +89,16 @@ bool tarch::logging::LogFilterFileReader::parsePlainTextFile( const std::string&
     result = false;
   }
 
-  int line = 0;
+  int linenumber = 0;
+  std::string line;
   while (!file.eof() && result) {
-    const int NumberOfTokensPerLine = 4;
-    std::string tokens[NumberOfTokensPerLine];
-    int currentToken = 0;
-    while (currentToken<NumberOfTokensPerLine && !file.eof()) {
-      char buffer;
-      file >> buffer;
-      const bool bufferIsWhiteSpace =
-        buffer == ' '   ||
-        buffer == '\t'  ||
-        buffer == '\n';
-      if (buffer=='\n') {
-        line++;
-      }
-      if (bufferIsWhiteSpace && !tokens[currentToken].empty()) {
-        currentToken++;
-      }
-      if (!bufferIsWhiteSpace) {
-        tokens[currentToken] += buffer;
-      }
+
+    std::getline(file, line);
+    if(line.length() > 0) {
+      result = parseLine(file, filename, line, linenumber);
     }
 
-    if (currentToken != NumberOfTokensPerLine) {
-      logError( "parsePlainTextFile(string)", "syntax error in input file " << filename << ", line " << line );
-      result = false;
-    }
-    else {
-      result = interpretTokens(tokens[0],tokens[1],tokens[2],tokens[3]);
-    }
+    linenumber++;
   }
 
   if (!result) {
@@ -95,3 +109,4 @@ bool tarch::logging::LogFilterFileReader::parsePlainTextFile( const std::string&
 
   return result;
 }
+
