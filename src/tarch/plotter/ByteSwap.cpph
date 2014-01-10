@@ -1,0 +1,14 @@
+template <class InType>
+InType tarch::plotter::ByteSwap(const InType inVal)
+{
+  InType retVal;
+  char *toConvert = ( char* ) & inVal;
+  char *returnVal = (char* ) & retVal;
+
+  // swap the bytes into a temporary buffer
+  int size = sizeof(InType);
+  for(int i = 0; i < size; i++)
+    returnVal[i] = toConvert[size - 1 - i];
+
+  return retVal;	
+}

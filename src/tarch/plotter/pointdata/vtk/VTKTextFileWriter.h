@@ -12,7 +12,9 @@
 namespace tarch {
   namespace plotter {
     namespace pointdata {
-      class VTKTextFileWriter;
+      namespace vtk {
+        class VTKTextFileWriter;
+      }
     }
   }
 }
@@ -26,7 +28,7 @@ namespace tarch {
  *
  * @author Tobias Weinzierl
  */
-class tarch::plotter::pointdata::VTKTextFileWriter: public tarch::plotter::pointdata::Writer {
+class tarch::plotter::pointdata::vtk::VTKTextFileWriter: public tarch::plotter::pointdata::Writer {
   private:
     tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter                  _vtkWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*   _vertexWriter;
