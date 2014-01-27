@@ -19,19 +19,24 @@ peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::SendReceiveBuf
 ):
   _bufferPageSize(bufferSize),
   _numberOfElementsSent(0),
-  _sendBufferRequestHandle(0),
-  _receiveBufferRequestHandle(0),
-  _sendBuffer(0),
+  _sendBufferRequestHandle(nullptr),
+  _receiveBufferRequestHandle(nullptr),
   _sendBufferCurrentPageElement(0),
+  _currentSendBuffer(0),
   _destinationNodeNumber(toRank),
   _currentReceiveBuffer(0),
   _sizeOfDeployBuffer(0),
   _sizeOfReceiveBuffer(0),
   _currentReceiveBufferPage(0),
   _sendDataWaitTime(0) {
+
+  _sendBuffer[0] = nullptr;
+  _sendBuffer[1] = nullptr;
+
   assertion1WithExplanation( _bufferPageSize > 0, _bufferPageSize, "Have you set the data exchange buffer size due to setBufferSize() for both the SendReceiveBufferPool and the JoinDataBufferPool?" );
 
-  _sendBuffer = new MPIDatatypeContainer[bufferSize];
+  _sendBuffer[0] = new MPIDatatypeContainer[bufferSize];
+  _sendBuffer[1] = new MPIDatatypeContainer[bufferSize];
 
   #ifdef Debug
   std::ostringstream out;
@@ -47,18 +52,18 @@ peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::SendReceiveBuf
 template <class Vertex>
 peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::~SendReceiveBufferAbstractImplementation() {
   assertion2(
-    _sendBufferRequestHandle==0,
+    _sendBufferRequestHandle==nullptr,
     tarch::parallel::Node::getInstance().getRank(),
     _destinationNodeNumber
   );
 
-  while ( _receiveBufferRequestHandle != 0 ) {
+  while ( _receiveBufferRequestHandle != nullptr ) {
     receivePageIfAvailable();
   }
 
-  if ( _sendBuffer != 0 ) {
-    delete[] _sendBuffer;
-  }
+  if ( _sendBuffer[0] != 0 )  delete[] _sendBuffer[0];
+  if ( _sendBuffer[1] != 0 )  delete[] _sendBuffer[1];
+
   int _numberOfReceivePages = static_cast<int>( _receiveBuffer[0].size() );
   for (int i=0; i<_numberOfReceivePages; i++) {
     delete[] _receiveBuffer[0].at(i);
@@ -70,7 +75,7 @@ peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::~SendReceiveBu
 template <class Vertex>
 void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::finishOngoingSendTask() {
   #ifdef Parallel
-  if ( _sendBufferRequestHandle != 0 ) {
+  if ( _sendBufferRequestHandle != nullptr ) {
     logDebug( "finishOngoingSendTask()", "start to finish ongoing send task" );
 
     MPI_Status  status;
@@ -109,7 +114,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::finishOng
     }
 
     delete _sendBufferRequestHandle;
-    _sendBufferRequestHandle = 0;
+    _sendBufferRequestHandle = nullptr;
 
     _sendDataWaitTime += clock() - timeStamp;
 
@@ -121,14 +126,12 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::finishOng
 
 template <class Vertex>
 void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::sendVertex( const Vertex& vertex ) {
-  finishOngoingSendTask();
-
   logTraceInWith2Arguments( "sendVertex(Vertex)", vertex, _destinationNodeNumber );
 
   #if defined(ParallelExchangePackedRecordsAtBoundary)
-  _sendBuffer[_sendBufferCurrentPageElement] = vertex.getVertexData().convert();
+  _sendBuffer[_currentSendBuffer][_sendBufferCurrentPageElement] = vertex.getVertexData().convert();
   #else
-  _sendBuffer[_sendBufferCurrentPageElement] = vertex.getVertexData();
+  _sendBuffer[_currentSendBuffer][_sendBufferCurrentPageElement] = vertex.getVertexData();
   #endif
 
   _sendBufferCurrentPageElement++;
@@ -254,15 +257,14 @@ template <class Vertex>
 void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::releaseSentMessages() {
   logDebug("releaseSentMessages()", "start to release messages for node " << _destinationNodeNumber );
 
+  if (_sendBufferCurrentPageElement>0) {
+    finishOngoingSendTask();
+    sendBuffer();
+  }
   finishOngoingSendTask();
 
-  if (_sendBufferCurrentPageElement>0) {
-    sendBuffer();
-    finishOngoingSendTask();
-  }
-
   assertion5(
-    _sendBufferRequestHandle==0,
+    _sendBufferRequestHandle==nullptr,
     _sizeOfReceiveBuffer, _numberOfElementsSent, _currentReceiveBufferPage,
     _destinationNodeNumber,
     tarch::parallel::Node::getInstance().getRank()
@@ -384,7 +386,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::switchRec
       logError( "switchReceiveAndDeployBuffer()", "received element " << i << " in receive buffer page " << _currentReceiveBufferPage-1 << ": " << _receiveBuffer[_currentReceiveBuffer].at(lastReceiveBufferPageBefilled)[i].toString() );
     }
     for (int i=0; i<sentElementsToPlot;i++) {
-      logError( "switchReceiveAndDeployBuffer()", "sent element " << i << ": " << _sendBuffer[i].toString() );
+      logError( "switchReceiveAndDeployBuffer()", "sent element " << i << ": " << _sendBuffer[_currentSendBuffer][i].toString() );
     }
 
     assertion9(
@@ -450,18 +452,19 @@ template <class Vertex>
 void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::sendBuffer() {
   assertion( _sendBufferCurrentPageElement > 0 );
   assertion( _sendBufferCurrentPageElement <= _bufferPageSize );
-  assertion( _sendBufferRequestHandle==0 );
 
+  finishOngoingSendTask();
+  assertion( _sendBufferRequestHandle==nullptr );
 
   #ifdef Parallel
   _sendBufferRequestHandle = new MPI_Request();
 
-  assertion( _sendBufferRequestHandle!=0 );
+  assertion( _sendBufferRequestHandle!=nullptr );
 
   int result = 0;
   result =
   MPI_Isend(
-    _sendBuffer,
+    _sendBuffer[_currentSendBuffer],
     _sendBufferCurrentPageElement,
     MPIDatatypeContainer::Datatype,
     _destinationNodeNumber,
@@ -489,6 +492,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::sendBuffe
 
   _numberOfElementsSent+=_sendBufferCurrentPageElement;
   _sendBufferCurrentPageElement = 0;
+  _currentSendBuffer = 1-_currentSendBuffer;
   #endif
 }
 

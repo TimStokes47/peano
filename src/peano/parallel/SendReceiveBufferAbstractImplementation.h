@@ -106,9 +106,15 @@ class peano::parallel::SendReceiveBufferAbstractImplementation: public peano::pa
     MPI_Request* _sendBufferRequestHandle;
 
     /**
+     * Handle for receive calls
+     *
      * Handle for the non-blocking receive calls. According to
      * http://www.netlib.org/utk/papers/mpi-book/node50.html#SECTION00383000000000000000
-     * one has to reallocate the request buffer whenever it is used.
+     * one has to reallocate the request buffer whenever it is used. Whenever
+     * receiveDanglingMessages() finds new messages in the mpi queue, it
+     * triggers the receive of those in the background. Afterward, no further
+     * messages are received until this data exchange has terminated, i.e. until
+     * the handle is released.
      */
     MPI_Request* _receiveBufferRequestHandle;
 
@@ -121,13 +127,23 @@ class peano::parallel::SendReceiveBufferAbstractImplementation: public peano::pa
     typedef typename Vertex::Records               MPIDatatypeContainer;
     #endif
 
-    MPIDatatypeContainer* _sendBuffer;
+    MPIDatatypeContainer* _sendBuffer[2];
 
     /**
      * Determines how many elements within the current send buffer page are
      * written. If this counter equals _bufferPageSize, the send buffer is sent.
      */
     int _sendBufferCurrentPageElement;
+
+    /**
+     * Current send buffer (0 or 1)
+     *
+     * The send buffer is actually two send buffers. Whenever one of them is
+     * full, Peano triggers the send and continues to work with the other
+     * buffer instead. This way, the send in the background can last until the
+     * buffers are to be swapped again.
+     */
+    int _currentSendBuffer;
 
     /**
      * There are two receive buffers: One the application reads from and one
@@ -201,7 +217,11 @@ class peano::parallel::SendReceiveBufferAbstractImplementation: public peano::pa
     void sendBuffer();
 
     /**
-     * Blocking operation that does implement the Peano communication aspect.
+     * Wait until all send tasks have finished.
+     *
+     * Actually, there's at most one send task active at a time, and it is
+     * always the one that's not corresponding to the active send buffer, as
+     * the active send buffer is flushed with messages.
      */
     void finishOngoingSendTask();
 
