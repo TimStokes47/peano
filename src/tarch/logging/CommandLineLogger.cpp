@@ -346,6 +346,8 @@ void tarch::logging::CommandLineLogger::indent( bool indent, const std::string& 
 
 
 void tarch::logging::CommandLineLogger::reopenOutputStream() {
+  tarch::multicore::Lock lock( _semaphore );
+
   if (_outputStream!=0 && _hasWrittenToOuputStream) {
     _outputStream->flush();
     delete _outputStream;
