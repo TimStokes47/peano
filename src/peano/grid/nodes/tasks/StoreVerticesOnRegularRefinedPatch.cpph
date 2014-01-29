@@ -2,6 +2,7 @@
 #include "peano/stacks/Stacks.h"
 #include "peano/grid/aspects/CellLocalPeanoCurve.h"
 #include "tarch/multicore/Lock.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
 
 
 
@@ -243,10 +244,12 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
       if (cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)) {
         if (isSubmanifoldVertexAdjacentToDeployedSubtree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)) {
           tarch::multicore::Lock lock(_semaphore);
+          assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)<=TWO_POWER_D,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
           _regularGridContainer.getCounter(currentLevel,positionInArray)--;
           assertion(_regularGridContainer.getCounter(currentLevel,positionInArray)>=CounterPersistentNode);
         }
         else {
+          assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)<=TWO_POWER_D,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
           _regularGridContainer.getCounter(currentLevel,positionInArray)--;
           assertion5(
             _regularGridContainer.getCounter(currentLevel,positionInArray)>=CounterPersistentNode,
