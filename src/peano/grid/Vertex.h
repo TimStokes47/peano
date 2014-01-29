@@ -369,6 +369,10 @@ class peano::grid::Vertex {
      * refine, or it is analysed throughout the steps up. As a consequence it
      * might always still be downgraded as long as the vertex is not written
      * to the output stream.
+     *
+     * This operation has primarily impact on the semantics of
+     * StoreVertexLoopBody::updateCoarseGridTreeHeightAttributes()
+     * where the adjacency information is restricted bottom-up in the spacetree.
      */
     void saveAndClearAdjacentCellsInformation();
 
