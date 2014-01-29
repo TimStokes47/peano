@@ -250,6 +250,14 @@ class peano::grid::RegularGridContainer {
     void validateThatRegularSubtreeIsAvailable( int level ) const;
 
     void validateInitialValuesUpToLevel( int level ) const;
+
+    /**
+     * Noone shall ever copy a grid container.
+     */
+    RegularGridContainer(const RegularGridContainer& copy):
+      _data(),
+      _maximumMemoryFootprintForTemporaryRegularGrid(1.0) {
+    }
   public:
     RegularGridContainer();
     ~RegularGridContainer();
