@@ -417,10 +417,14 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     if (cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)) {
       if (isSubmanifoldVertexAdjacentToDeployedSubtree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)) {
         tarch::multicore::Lock lock(_vertexCounterSemaphore);
+        assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)>=0,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
         _regularGridContainer.getCounter(currentLevel,positionInArray)++;
+        assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)<=TWO_POWER_D,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
       }
       else {
+        assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)>=0,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
         _regularGridContainer.getCounter(currentLevel,positionInArray)++;
+        assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)<=TWO_POWER_D,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
       }
     }
   }
