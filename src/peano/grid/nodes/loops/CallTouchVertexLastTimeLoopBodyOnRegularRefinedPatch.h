@@ -76,6 +76,10 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
     /**
      * Study refinement state of vertex. If the vertex does not change, the
      * operation sets the height of the adjacent
+     *
+     * !!! Thread safety
+     *
+     * This operation is not thread-safe.
      */
     void performVertexTransition( Vertex& vertex, int level );
 
