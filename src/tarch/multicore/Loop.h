@@ -18,6 +18,15 @@
  * three arguments have exactly the same time, i.e. avoid to mix integer
  * with signed integer or similar things.
  *
+ * !!! Catching
+ *
+ * My default pfor implementations catch the environment via references. Please
+ * also take into account that some older gcc versions (<=4.6.1) have a bug and
+ * do not capture const variables from outside:
+ *
+ * http://stackoverflow.com/questions/6529177/capturing-reference-variable-by-copy-in-c0x-lambda
+ *
+ *
  * @param counter   Name of the counter (identifier).
  * @param from      Start value of counter (integer).
  * @param to        End value of counter (integer).
