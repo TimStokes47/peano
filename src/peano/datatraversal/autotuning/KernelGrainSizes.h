@@ -14,7 +14,7 @@ namespace peano {
        */
       class KernelGrainSizes {
         public:
-          const static int SpawnSetCounter = 0;
+          const static int SetCounterOnRefinedNode = 0;
           const static int ResetVertexRegularityStateInAscendForNopMappings = 64;
           const static int RunResetVertexRegularityStateInAscendForNopMappingsInParallelForIndividualLevels = 3;
       };
