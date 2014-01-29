@@ -349,9 +349,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
       fineGridCounter[kScalar] = CounterPersistentNode;
     enddforx
   }
-  #if !defined(Asserts)
   else {
-  #endif
     typedef loops::SetCounterLoopBody<Vertex> LoopBody;
     LoopBody loopBody(
       coarseGridVertices,
@@ -361,12 +359,10 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     peano::datatraversal::dForLoop<LoopBody>(
       tarch::la::Vector<DIMENSIONS,int>(4),
       loopBody,
-      peano::datatraversal::autotuning::KernelGrainSizes::SpawnSetCounter,
+      peano::datatraversal::autotuning::KernelGrainSizes::SetCounterOnRefinedNode,
       false
     );
-  #if !defined(Asserts)
   }
-  #endif
 
   dfor4(k)
     assertion( coarseGridVerticesEnumerator.getCellFlags() <= peano::grid::Leaf || fineGridCounter[kScalar]==CounterPersistentNode);
