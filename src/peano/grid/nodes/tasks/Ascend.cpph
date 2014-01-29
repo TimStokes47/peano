@@ -213,17 +213,20 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
     }
   }
 
+  tarch::multicore::BooleanSemaphore performVertexTransitionSemaphore;
+
   if (_eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop) {
-    const int level            = _treeDepth;
-    const int NumberOfVertices = tarch::la::volume(_gridContainer.getNumberOfVertices(level));
+    const int NumberOfVertices = tarch::la::volume(_gridContainer.getNumberOfVertices(_treeDepth));
 
     pfor(i,0,NumberOfVertices,peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings)
-      if (!_gridContainer.isToBeWrittenToTemporaryStack(level,i) ) {
-        Vertex&   currentVertex  = _gridContainer.getVertex(level,i);
-        _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,level);
+      if (!_gridContainer.isToBeWrittenToTemporaryStack(_treeDepth,i) ) {
+        Vertex&   currentVertex  = _gridContainer.getVertex(_treeDepth,i);
+        tarch::multicore::Lock lock(performVertexTransitionSemaphore);
+        _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,_treeDepth);
       }
     endpfor
   }
+
 
   if (
     _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::OnlyLeaves
@@ -235,6 +238,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
       pfor(i,0,NumberOfVertices,peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings)
         if (!_gridContainer.isToBeWrittenToTemporaryStack(level,i) ) {
           Vertex&   currentVertex  = _gridContainer.getVertex(level,i);
+          tarch::multicore::Lock lock(performVertexTransitionSemaphore);
           _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,level);
         }
       endpfor
@@ -245,6 +249,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
   // if _calledTouchVertexLastTime does not hold, this is the only body that has any
   // static information.
   _treeRemainsStatic &= _touchVertexLastTimeLoopBody.getLocalTreeRemainsStatic();
+
 
   if (_treeRemainsStatic) {
     dfor2(i)
