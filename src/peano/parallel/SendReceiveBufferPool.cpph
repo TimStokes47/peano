@@ -10,6 +10,9 @@ Vertex peano::parallel::SendReceiveBufferPool::getVertex(int fromRank ) {
   logTraceInWith1Argument( "getVertex(int)", fromRank );
   assertion2( _map.count(fromRank) == 1, fromRank, tarch::parallel::Node::getInstance().getRank() );
 
+  // @todo raus
+  _backgroundThread.switchState(BackgroundThread::Suspend);
+
   typedef SendReceiveBufferAbstractImplementation<Vertex> MySendReceiveBuffer;
   std::map<int,SendReceiveBuffer*>::iterator bufferPointer = _map.find(fromRank);
   assertion2( bufferPointer != _map.end(), fromRank, tarch::parallel::Node::getInstance().getRank() );
@@ -23,6 +26,11 @@ Vertex peano::parallel::SendReceiveBufferPool::getVertex(int fromRank ) {
 template <class Vertex>
 void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, const BufferAccessType& bufferAccessType ) {
   if (_map.count(toRank)==0) {
+    logTraceInWith2Arguments( "createBufferManually(int,type)", toRank, bufferAccessType );
+    #ifdef SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA
+    _backgroundThread.switchState(BackgroundThread::Suspend);
+    #endif
+
     typedef SendReceiveBufferAbstractImplementation<Vertex> MySendReceiveBuffer;
     SendReceiveBuffer* newBuffer;
     if (bufferAccessType == FIFO ) {
@@ -36,6 +44,12 @@ void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, co
     _map.insert(
       std::pair<int,SendReceiveBuffer*>( toRank,newBuffer )
     );
+
+    #ifdef SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA
+    _backgroundThread.switchState(BackgroundThread::ReceiveDataInBackground);
+    #endif
+
+    logTraceOut( "createBufferManually(int,type)" );
   }
 }
 
@@ -44,6 +58,9 @@ template <class Vertex>
 void peano::parallel::SendReceiveBufferPool::sendVertex(const Vertex& vertex, int toRank, const BufferAccessType& bufferAccessType ) {
   assertion1( toRank >= 0, tarch::parallel::Node::getInstance().getRank() );
   assertion1( toRank != tarch::parallel::Node::getInstance().getRank(), tarch::parallel::Node::getInstance().getRank() );
+
+  // @todo raus
+  _backgroundThread.switchState(BackgroundThread::Suspend);
 
   if (_bufferSize<=0) {
     logError( "sendVertex(...)", "invalid buffer size. Probably buffer is not configured" );

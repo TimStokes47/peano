@@ -7,7 +7,18 @@
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
+
 #include "peano/parallel/SendReceiveBuffer.h"
+
+/**
+ * With this ifdef, we can define whether the pool shall use a dedicated
+ * thread to receive data in the background.
+ */
+#if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls)
+#define SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA
+#endif
 
 
 #include <map>
@@ -41,6 +52,34 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
       LIFO,FIFO
     };
   private:
+    struct BackgroundThread {
+      public:
+        enum State {
+          ReceiveDataInBackground,
+          Suspend,
+          Terminate
+        };
+
+        /**
+         * There is only one background thread object from the pool's point of
+         * view. However, we deploy the thread as a task of its own. Then, it
+         * is copied. However, as all copies of the thread shall share one state
+         * and one semaphore, I have to make all attributes static. As a
+         * consequence, any instance seems to be an object but indeed it is only
+         * a lightweight object wrapper around global data.
+         */
+        static tarch::multicore::BooleanSemaphore _semaphore;
+        static State                              _state;
+
+        void operator()();
+        std::string toString() const;
+        void switchState( State newState );
+    };
+
+    #ifdef SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA
+    BackgroundThread _backgroundThread;
+    #endif
+
     static tarch::logging::Log _log;
 
     /**
@@ -65,7 +104,10 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
 
     SendReceiveBufferPool();
 
-
+    /**
+     * Nobody is allowed to copy the pool.
+     */
+    SendReceiveBufferPool(const SendReceiveBufferPool& copy) {}
   public:
     /**
      * Delete all the buffers not yet deleted.
@@ -186,6 +228,13 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
      * code fragment and hope that the code does not run into a deadlock.
      */
     virtual void receiveDanglingMessages();
+
+    /**
+     * This operation is directly called from receiveDanglingMessages(). The reason
+     * I split it up is to enable a background thread permanently polling incoming
+     * data.
+     */
+    void receiveDanglingMessagesFromAllBuffersInPool();
 
     /**
      * Releases all the messages. Should be called after every iteration. The
