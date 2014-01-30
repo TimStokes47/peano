@@ -492,51 +492,24 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   const bool RegularStaticGrid               = CellFlagsFromEnumerator>=peano::grid::Leaf;
   const bool IrregularStaticGrid             = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
-  const bool StaticGridWithParallelBoundary  = CellFlagsFromEnumerator>=peano::grid::StationaryWithParallelBoundary;
 
   assertion1( !_state.isInvolvedInJoinOrFork() || !RegularStaticGrid,              _state.toString() );
   assertion1( !_state.isInvolvedInJoinOrFork() || !IrregularStaticGrid,            _state.toString() );
-  #ifdef Parallel
-  assertion1(
-    !(
-      _state.isForking() ||
-      _state.isJoinWithMasterTriggered() ||
-      _state.isJoiningWithWorker() ||
-      _state.isJoiningWithMaster() ||
-      _state.isNewWorkerDueToForkOfExistingDomain()
-    )
-    ||
-    !StaticGridWithParallelBoundary,
-    _state.toString()
-  );
-  #endif
 
   logTraceInWith7Arguments( "operator()", action._cartesianPosition, action._id, _counter[positionInArray], positionInArray, RegularStaticGrid, IrregularStaticGrid, StaticGridWithParallelBoundary );
 
-  if (RegularStaticGrid) {
-    assertion( !(_counter[positionInArray]==CounterHangingNode) );
-
-    assertion(IrregularStaticGrid);
-  }
-  if (IrregularStaticGrid) {
-    assertion(StaticGridWithParallelBoundary);
-  }
-  if (StaticGridWithParallelBoundary) {
-    assertion2( !(_counter[positionInArray]==CounterPersistentNodeDelete && action._id==peano::stacks::Constants::InOutStack), CellFlagsFromEnumerator, _fineGridVerticesEnumerator.toString() );
-    assertion2( !(_counter[positionInArray]==CounterNewNode && action._id==peano::stacks::Constants::InOutStack), CellFlagsFromEnumerator, _fineGridVerticesEnumerator.toString() );
-    assertion2( !(_counter[positionInArray]==CounterNewNode), CellFlagsFromEnumerator, _fineGridVerticesEnumerator.toString() );
-    assertion2( !(_counter[positionInArray]==CounterPersistentNodeDelete), CellFlagsFromEnumerator, _fineGridVerticesEnumerator.toString() );
-  }
+  assertion( !RegularStaticGrid || !(_counter[positionInArray]==CounterHangingNode) );
+  assertion( !RegularStaticGrid || IrregularStaticGrid );
 
   const bool CaseLoadPersistentVertex =                                     (_counter[positionInArray]==CounterPersistentNode && action._id==peano::stacks::Constants::InOutStack);
-  const bool CaseLoadOfDeleteVertex   =  !StaticGridWithParallelBoundary && (_counter[positionInArray]==CounterPersistentNodeDelete && action._id==peano::stacks::Constants::InOutStack);
+  const bool CaseLoadOfDeleteVertex   =  !IrregularStaticGrid            && (_counter[positionInArray]==CounterPersistentNodeDelete && action._id==peano::stacks::Constants::InOutStack);
   const bool CaseCreateHangingNode    =  !RegularStaticGrid              && (_counter[positionInArray]==CounterHangingNode);
-  const bool CaseCreateNewNode        =  !StaticGridWithParallelBoundary && (_counter[positionInArray]==CounterNewNode && action._id==peano::stacks::Constants::InOutStack);
+  const bool CaseCreateNewNode        =  !IrregularStaticGrid            && (_counter[positionInArray]==CounterNewNode && action._id==peano::stacks::Constants::InOutStack);
   #ifdef Parallel
-  const bool CaseCreateNewNodeTemporarily = !StaticGridWithParallelBoundary && (_counter[positionInArray]==CounterNewNodeRefineDueToJoinThoughWorkerIsAlreadyErasing && action._id==peano::stacks::Constants::InOutStack);
+  const bool CaseCreateNewNodeTemporarily = !IrregularStaticGrid && (_counter[positionInArray]==CounterNewNodeRefineDueToJoinThoughWorkerIsAlreadyErasing && action._id==peano::stacks::Constants::InOutStack);
   #endif
   const bool CaseTakeFromTempStacks   =  _counter[positionInArray]==CounterPersistentNode ||
-                                         (!StaticGridWithParallelBoundary && (_counter[positionInArray]==CounterNewNode || _counter[positionInArray]==CounterPersistentNodeDelete  || _counter[positionInArray]==CounterNewNodeRefineDueToJoinThoughWorkerIsAlreadyErasing));
+                                         (!IrregularStaticGrid && (_counter[positionInArray]==CounterNewNode || _counter[positionInArray]==CounterPersistentNodeDelete  || _counter[positionInArray]==CounterNewNodeRefineDueToJoinThoughWorkerIsAlreadyErasing));
 
 
   logDebug(
@@ -551,36 +524,18 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   if ( CaseLoadPersistentVertex || CaseLoadOfDeleteVertex ) {
     loadVertexFromInputStream(positionInArray, action._cartesianPosition);
-    if (!StaticGridWithParallelBoundary) {
+    if (!IrregularStaticGrid) {
       invalidateVertexIfGeometryHasChanged(positionInArray,action._cartesianPosition);
       updateGeometry(positionInArray,action._cartesianPosition);
     }
-
-    #ifdef Parallel
-    const bool shallUpdateRefinementFlags =
-      !StaticGridWithParallelBoundary
-      ||
-      _fineGridVertices[positionInArray].isAdjacentToRemoteRank();
-    #else
-    const bool shallUpdateRefinementFlags = !StaticGridWithParallelBoundary;
-    #endif
-
     invokeLoadVertexEvents(positionInArray,action._cartesianPosition);
-    if (shallUpdateRefinementFlags) {
+    assertion(!_fineGridVertices[positionInArray].isAdjacentToRemoteRank() || !IrregularStaticGrid);
+    if (!IrregularStaticGrid) {
       updateRefinementFlagsOfVertexAfterLoad(positionInArray,_counter[positionInArray]==CounterPersistentNodeDelete);
     }
     logDebug( "operator()", "vertex at " << positionInArray << " is a persistent vertex from in/out stacks: " << _fineGridVertices[positionInArray].toString() );
     if (_counter[positionInArray]==CounterPersistentNodeDelete) {
       logDebug( "operator()", "it will be deleted later on" );
-      // if a vertex is to be deleted, it is important that also its refinement
-      // flags have been updated, as updateRefinementFlagsOfVertexAfterLoad()
-      // propagates down delete commands through several levels.
-      assertion3(
-        shallUpdateRefinementFlags,
-        _fineGridVertices[positionInArray].toString(),
-        StaticGridWithParallelBoundary,
-        positionInArray
-      );
     }
   }
   else if ( CaseCreateHangingNode ) {
