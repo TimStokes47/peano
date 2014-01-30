@@ -17,24 +17,23 @@ namespace peano {
         LoadVertices                                     = 0,
         LoadVerticesOnRegularStationaryGrid              = 1, // not unrolled
         LoadVerticesOnIrregularStationaryGrid            = 2,
-        LoadVerticesOnStationaryGridWithParallelBoundary = 3,
-        StoreVertices                                    = 4,
-        StoreVerticesOnRegularStationaryGrid             = 5, // not unrolled
-        StoreVerticesOnIrregularStationaryGrid           = 6,
-        CallEnterCellAndLoadSubCellsWithinTraverse       = 8,
+        StoreVertices                                    = 3,
+        StoreVerticesOnRegularStationaryGrid             = 4, // not unrolled
+        StoreVerticesOnIrregularStationaryGrid           = 5,
+        CallEnterCellAndLoadSubCellsWithinTraverse       = 6,
         CallLeaveCellAndStoreSubCellsWithinTraverse      = 7,
-        CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid = 9,
-        CallTouchFirstTimeOnRegularStationaryGrid        = 10,
-        CallTouchLastTimeOnRegularStationaryGrid         = 11,
-        CallEnterCellOnRegularStationaryGrid             = 12,
-        CallLeaveCellOnRegularStationaryGrid             = 13,
-        PipelineAscendTask                               = 14,
-        PipelineDescendTask                              = 15,
-        SplitLoadVerticesTaskOnRegularStationaryGrid     = 16,
-        SplitStoreVerticesTaskOnRegularStationaryGrid    = 17,
-        AscendOnRegularStationaryGrid                    = 18,
-        DescendOnRegularStationaryGrid                   = 19,
-        NumberOfDifferentMethodsCalling                  = 20
+        CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid = 8,
+        CallTouchFirstTimeOnRegularStationaryGrid        = 9,
+        CallTouchLastTimeOnRegularStationaryGrid         = 10,
+        CallEnterCellOnRegularStationaryGrid             = 11,
+        CallLeaveCellOnRegularStationaryGrid             = 12,
+        PipelineAscendTask                               = 13,
+        PipelineDescendTask                              = 14,
+        SplitLoadVerticesTaskOnRegularStationaryGrid     = 15,
+        SplitStoreVerticesTaskOnRegularStationaryGrid    = 16,
+        AscendOnRegularStationaryGrid                    = 17,
+        DescendOnRegularStationaryGrid                   = 18,
+        NumberOfDifferentMethodsCalling                  = 19
       };
 
       /**
