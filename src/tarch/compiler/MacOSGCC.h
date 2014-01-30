@@ -74,3 +74,7 @@
  */
 //#define DaStGenPackedPadding 1      // 32 bit version
 // #define DaStGenPackedPadding 2   // 64 bit version
+
+#ifndef noMultipleThreadsMayTriggerMPICalls
+#define MultipleThreadsMayTriggerMPICalls
+#endif

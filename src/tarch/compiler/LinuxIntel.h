@@ -90,3 +90,7 @@
  * unknowns into register variables.
  */
 //#define SpecialiseVectorTemplatesForIntegers
+
+#ifndef noMultipleThreadsMayTriggerMPICalls
+#define MultipleThreadsMayTriggerMPICalls
+#endif
