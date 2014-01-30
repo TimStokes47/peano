@@ -169,7 +169,11 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
 ) {
   logTraceInWith2Arguments( "updateRefinementFlagsAndStoreVertexToOutputStream(...)", positionInVertexArray, positionInLocalCell );
 
-  assertion(!_fineGridVertices[positionInVertexArray].isHangingNode() );
+  assertion2(
+    !_fineGridVertices[positionInVertexArray].isHangingNode(),
+    _fineGridVertices[positionInVertexArray].toString(),
+    positionInVertexArray
+  );
 
   _hasTriggeredRefinementForNextIteration |= _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::RefinementTriggered;
   #ifdef Parallel
@@ -299,6 +303,15 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
     if (takeThisCoarseVertexIntoAccount) {
       peano::grid::CellFlags analysedValue = originalAnalysedValue;
 
+      #ifdef Parallel
+      if (
+        _fineGridVertices[positionInVertexArray].isAdjacentSubtreeForksIntoOtherRankFlagSet()
+      ) {
+        logDebug( "updateCoarseGridTreeHeightAttributes(int)", "set remote flag of coarse vertex due to " << _fineGridVertices[positionInVertexArray].toString() );
+        _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setAdjacentSubtreeForksIntoOtherRankFlag();
+      }
+      #endif
+
       if (analysedValue>= peano::grid::Leaf) {
         inc(analysedValue);
         if (
@@ -310,21 +323,16 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
       }
 
       #ifdef Parallel
-      if (
-        _fineGridVertices[positionInVertexArray].isAdjacentSubtreeForksIntoOtherRankFlagSet()
-      ) {
-        logDebug( "updateCoarseGridTreeHeightAttributes(int)", "set remote flag of coarse vertex due to " << _fineGridVertices[positionInVertexArray].toString() );
-        _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setAdjacentSubtreeForksIntoOtherRankFlag();
-      }
-      #endif
-
-      if (
+      const bool restrictInformation = true;
         !_fineGridVertices[positionInVertexArray].isOutside() ||
-        #ifdef Parallel
-        _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank() ||
-        #endif
-        _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].isOutside()
-      ) {
+        _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].isOutside() ||
+        _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank();
+      #else
+      const bool restrictInformation =
+        !_fineGridVertices[positionInVertexArray].isOutside() ||
+        _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].isOutside();
+      #endif
+      if (restrictInformation) {
         _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setCurrentAdjacentCellsHeight(analysedValue);
         logDebug( "updateCoarseGridTreeHeightAttributes(int)", "updated coarse grid vertex " << k << " with " << analysedValue << " to " << _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].toString() );
       }
@@ -350,7 +358,10 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   assertion( _counter[positionInArray]>=0 );
 
   const bool RegularStaticGrid   = CellFlagsFromEnumerator>=peano::grid::Leaf;
-  const bool StaticGrid          = CellFlagsFromEnumerator>=peano::grid::StationaryWithParallelBoundary;
+//  const bool StaticGrid          = CellFlagsFromEnumerator>=peano::grid::StationaryWithParallelBoundary;
+  const bool StaticGrid          = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
+
+
 
   // These assertions hold for the load. They do not hold for the store, as a
   // grid part might be static right now whereas some parts of it have been

@@ -529,7 +529,9 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       updateGeometry(positionInArray,action._cartesianPosition);
     }
     invokeLoadVertexEvents(positionInArray,action._cartesianPosition);
+    #ifdef Parallel
     assertion(!_fineGridVertices[positionInArray].isAdjacentToRemoteRank() || !IrregularStaticGrid);
+    #endif
     if (!IrregularStaticGrid) {
       updateRefinementFlagsOfVertexAfterLoad(positionInArray,_counter[positionInArray]==CounterPersistentNodeDelete);
     }

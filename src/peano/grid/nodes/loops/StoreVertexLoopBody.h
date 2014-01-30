@@ -280,6 +280,10 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * adjacentSubtreeForksIntoOtherRank. This flag is used at other places
      * to avoid starvation. See LoadVertexLoopBody::updateRefinementFlagsOfVertexAfterLoad()
      * for documentation on starvation.
+     *
+     * he tuning statement from above does hold in the parallel case. There,
+     * there can be wholes in an inner coarse domain induced by the finer grid
+     * where cells are deployed to another rank.
      */
     void updateCoarseGridTreeHeightAttributes(
       int                                       positionInVertexArray,
