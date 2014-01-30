@@ -7,6 +7,7 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/mpianalysis/Analysis.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
 
 
 /**
@@ -290,7 +291,19 @@ bool tarch::parallel::Node::init(int* argc, char*** argv) {
   #ifdef Parallel
   int result = MPI_SUCCESS;
 
+  #if defined( SharedMemoryParallelisation ) && defined( MultipleThreadsMayTriggerMPICalls )
+
+  int initThreadProvidedThreadLevelSupport;
+  result = MPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE, &initThreadProvidedThreadLevelSupport );
+  if (initThreadProvidedThreadLevelSupport!=MPI_THREAD_MULTIPLE ) {
+    std::cerr << "warning: MPI implementation does not support MPI_THREAD_MULTIPLE. Support multithreading level is "
+              << initThreadProvidedThreadLevelSupport << " instead of " << MPI_THREAD_MULTIPLE
+              << ". Disable MultipleThreadsMayTriggerMPICalls in the compiler-specific settings or via -DnoMultipleThreadsMayTriggerMPICalls."<< std::endl;
+  }
+  #else
   result = MPI_Init( argc, argv );
+  #endif
+
   if (result!=MPI_SUCCESS) {
     std::cerr << "init(int*,char***)\t initialisation failed: " + MPIReturnValueToString(result) + " (no logging available yet)";
     return false;
