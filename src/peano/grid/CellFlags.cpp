@@ -11,8 +11,6 @@ std::string toString( const peano::grid::CellFlags& cellFlags ) {
       return "leaf";
     case peano::grid::StationaryButIrregular:
       return "stationary-but-irregular";
-    case peano::grid::StationaryWithParallelBoundary:
-      return "stationary-with-parallel-boundary";
     case peano::grid::NotStationary:
       return "not-stationary";
     case peano::grid::NotStationaryDueToInvalidation:
@@ -54,11 +52,6 @@ std::string peano::grid::getCellFlagsLegend() {
       << static_cast<int>(NotStationary)
       << "="
       << toString(NotStationary)
-
-      << ","
-      << static_cast<int>(StationaryWithParallelBoundary)
-      << "="
-      << toString(StationaryWithParallelBoundary)
 
       << ","
       << static_cast<int>(StationaryButIrregular)

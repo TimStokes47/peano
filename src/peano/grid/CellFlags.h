@@ -31,9 +31,8 @@ namespace peano {
         Undefined                       = 65536,
         Leaf                            = 0,
         StationaryButIrregular          = -1,
-        StationaryWithParallelBoundary  = -2,
-        NotStationary                   = -3,
-        NotStationaryDueToInvalidation  = -4
+        NotStationary                   = -2,
+        NotStationaryDueToInvalidation  = -3
       };
 
       peano::grid::CellFlags min( const peano::grid::CellFlags& lhs, const peano::grid::CellFlags& rhs);
