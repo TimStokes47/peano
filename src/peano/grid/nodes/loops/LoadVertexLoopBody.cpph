@@ -496,7 +496,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   assertion1( !_state.isInvolvedInJoinOrFork() || !RegularStaticGrid,              _state.toString() );
   assertion1( !_state.isInvolvedInJoinOrFork() || !IrregularStaticGrid,            _state.toString() );
 
-  logTraceInWith7Arguments( "operator()", action._cartesianPosition, action._id, _counter[positionInArray], positionInArray, RegularStaticGrid, IrregularStaticGrid, StaticGridWithParallelBoundary );
+  logTraceInWith6Arguments( "operator()", action._cartesianPosition, action._id, _counter[positionInArray], positionInArray, RegularStaticGrid, IrregularStaticGrid );
 
   assertion( !RegularStaticGrid || !(_counter[positionInArray]==CounterHangingNode) );
   assertion( !RegularStaticGrid || IrregularStaticGrid );
