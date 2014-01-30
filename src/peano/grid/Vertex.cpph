@@ -54,18 +54,18 @@ void peano::grid::Vertex<VertexData>::saveAndClearAdjacentCellsInformation() {
   );
 
   int newFlag = peano::grid::Undefined;
+  #ifdef Parallel
+  if ( isAdjacentToRemoteRank() ) {
+    newFlag = peano::grid::NotStationary;
+  }
+  else
+  #endif
   if ( _vertexData.getRefinementControl()==VertexData::Unrefined ) {
     newFlag = peano::grid::Leaf;
   }
   else if ( _vertexData.getRefinementControl()!=VertexData::Refined ) {
     newFlag = peano::grid::NotStationary;
   }
-
-  #ifdef Parallel
-  if ( newFlag > peano::grid::NotStationary && isAdjacentToRemoteRank() && isAdjacentToDomainOf(tarch::parallel::Node::getInstance().getRank()) ) {
-    newFlag = peano::grid::StationaryWithParallelBoundary;
-  }
-  #endif
 
   _vertexData.setAdjacentCellsHeight( newFlag );
 }

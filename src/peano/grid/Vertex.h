@@ -373,6 +373,15 @@ class peano::grid::Vertex {
      * This operation has primarily impact on the semantics of
      * StoreVertexLoopBody::updateCoarseGridTreeHeightAttributes()
      * where the adjacency information is restricted bottom-up in the spacetree.
+     *
+     * !!! Parallel remarks
+     *
+     * The bottom-up vertex state analysis does not really work along parallel
+     * boundaries: Those vertices are sent away at the end of the traversal and
+     * their counterpart is not received before the subsequent traversal. As a
+     * result, we cannot say anything at the end of one traversal about the
+     * regularity of the subtree in the next traversal. As a consequence, all
+     * parallel boundary vertices are set to invalid.
      */
     void saveAndClearAdjacentCellsInformation();
 
