@@ -101,6 +101,13 @@ void tarch::mpianalysis::Analysis::dataWasNotReceivedInBackground( int fromRank,
 }
 
 
+void tarch::mpianalysis::Analysis::dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) {
+  assertion( _device!=0 );
+  _device->dataWasNotReceivedFromWorker(fromRank,calendarTime);
+}
+
+
+
 void tarch::mpianalysis::Analysis::logNodePoolStatistics(int registeredWorkers, int idleWorkers) {
   assertion( _device!=0 );
   _device->logNodePoolStatistics(registeredWorkers, idleWorkers);

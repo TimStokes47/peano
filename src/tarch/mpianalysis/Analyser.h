@@ -84,6 +84,8 @@ class tarch::mpianalysis::Analyser {
      */
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) = 0;
 
+    virtual void dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) = 0;
+
     /**
      * Log information about mpi resources.
      *
