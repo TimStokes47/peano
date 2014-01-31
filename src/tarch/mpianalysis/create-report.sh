@@ -2,7 +2,7 @@
 
 echo Create report of Peano run from Peano\'s DefaultAnalyser
 echo \(C\) 2014 Kristof Unterweger, Tobias Weinzierl, Roland Wittmann
-echo Usage: ./create-report.sh peano-output-file
+echo Usage: ./create-report.sh peano-output-file number-of-ranks
 echo   You have to switch the tracing information on to make the script work
 echo   You have to ensure that pydot is in your path due to environment 
 echo     variable PYTHONPATH 
@@ -28,4 +28,4 @@ gnuplot $script_dir/postprocess-default-analyser-forks-and-joins.gnuplot
 
 mv tmp.joins-and-forks.png $1.joins-and-forks.png
 
-python $script_dir/postprocess-default-analyser-statistics.py $1
+python $script_dir/postprocess-default-analyser-statistics.py $1 $2

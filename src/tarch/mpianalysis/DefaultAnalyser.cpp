@@ -5,7 +5,8 @@
 tarch::logging::Log  tarch::mpianalysis::DefaultAnalyser::_log( "tarch::mpianalysis::DefaultAnalyser" );
 
 
-tarch::mpianalysis::DefaultAnalyser::DefaultAnalyser() {
+tarch::mpianalysis::DefaultAnalyser::DefaultAnalyser():
+  _watch( "tarch::mpianalysis::DefaultAnalyser", "-", false ) {
 }
 
 
@@ -14,10 +15,32 @@ tarch::mpianalysis::DefaultAnalyser::~DefaultAnalyser() {
 
 
 void tarch::mpianalysis::DefaultAnalyser::beginIteration() {
+  _watch.stopTimer();
+
+  logInfo(
+    "beginIteration()",
+    "idle time=" <<
+    _watch.getCalendarTime() <<
+    ", idle cpu time=" <<
+    _watch.getCPUTime()
+  );
+
+  _watch.startTimer();
 }
 
 
 void tarch::mpianalysis::DefaultAnalyser::endIteration() {
+  _watch.stopTimer();
+
+  logInfo(
+    "beginIteration()",
+    "busy time=" <<
+    _watch.getCalendarTime() <<
+    ", busy cpu time=" <<
+    _watch.getCPUTime()
+  );
+
+  _watch.startTimer();
 }
 
 

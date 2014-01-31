@@ -51,10 +51,24 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
 
 
     /**
+     * =========================================================================
      * Everything below is inherited and forwards the call to the current device.
+     * =========================================================================
+     */
+
+
+    /**
+     * The grid informs the analyser when it start to traverse. At the end of
+     * the traversal, it invokes endIteration(). The time in-between
+     * endIteration() and beginIteration() consequently is idle time.
      */
     virtual void beginIteration();
+
+    /**
+     * @see beginIteration()
+     */
     virtual void endIteration();
+
     virtual void addWorker(
       int                                 workerRank,
       int                                 level,
@@ -79,6 +93,7 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
       const tarch::la::Vector<2,double>&  boundingBoxOffset,
       const tarch::la::Vector<2,double>&  boundingBoxSize
     );
+
     virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier );
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
     virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers);

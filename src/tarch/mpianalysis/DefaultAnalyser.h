@@ -6,6 +6,7 @@
 
 #include "tarch/mpianalysis/Analyser.h"
 #include "tarch/logging/Log.h"
+#include "tarch/timing/Watch.h"
 
 
 namespace tarch {
@@ -24,6 +25,8 @@ namespace tarch {
 class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
   private:
     static tarch::logging::Log     _log;
+
+    tarch::timing::Watch           _watch;
   public:
     DefaultAnalyser();
     virtual ~DefaultAnalyser();
