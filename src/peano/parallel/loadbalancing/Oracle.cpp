@@ -327,9 +327,11 @@ void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
 
   _watch.stopTimer();
 
+  const double elapsedTime = _watch.getCalendarTime();
+
   _oracles[_currentOracle]->receivedTerminateCommand(
     workerRank,
-    _watch.getCalendarTime(),
+    elapsedTime,
     workerNumberOfInnerVertices,
     workerNumberOfBoundaryVertices,
     workerNumberOfOuterVertices,
@@ -346,6 +348,11 @@ void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
     boundingBoxSize,
     workerCouldNotEraseDueToDecomposition
   );
+
+
+  if ( tarch::la::greater(elapsedTime,0.0) ) {
+    tarch::mpianalysis::Analysis::getInstance().dataWasNotReceivedFromWorker(  workerRank, _watch.getCalendarTime() );
+  }
 
   _watch.startTimer();
 }

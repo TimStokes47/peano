@@ -155,15 +155,24 @@ void tarch::mpianalysis::DefaultAnalyser::tagIsUsedFor( int tag, const std::stri
 }
 
 
+void tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) {
+  logInfo(
+    "dataWasNotReceivedFromWorker()",
+    "rank had to wait for worker " << fromRank <<
+    " for " << calendarTime <<
+    "s"
+  );
+}
+
+
 void tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {
-//  logInfo(
-//    "releaseMessages()",
-//    "rank had to wait from data "
-//    << "(" << watchTotal.getCPUTicks() << "," << watchTotal.getCPUTime() << "," << watchTotal.getCalendarTime() << ")"
-//    << ", hereof "
-//    << "(" << watchSend.getCPUTicks() << "," << watchSend.getCPUTime() << "," << watchSend.getCalendarTime() << ") "
-//    << "for send [cpu ticks, cpu time, calendar time]"
-//  );
+  logInfo(
+    "dataWasNotReceivedInBackground()",
+    "rank had to wait for " << cardinality <<
+    " record(s) from " << fromRank <<
+    " on tag " << tag <<
+    " with page size " << pageSize
+  );
 }
 
 

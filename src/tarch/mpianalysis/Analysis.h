@@ -95,7 +95,18 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
     );
 
     virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier );
+
+    /**
+     * Peano tries to receive all data from neighbours, i.e. boundary data, in
+     * the background. One idea is that once the traversal is done, already
+     * all/most of the records for the subsequent traversal are already
+     * available. If this is not the case, the buffers at least send a
+     * notification to the analysis.
+     */
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
+
+    virtual void dataWasNotReceivedFromWorker( int fromRank, double calendarTime );
+
     virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers);
 };
 
