@@ -14,6 +14,7 @@ echo     variable PYTHONPATH
 script_dir=$(dirname $0)
 
 
+echo Create overview statistics
 grep -o "tarch::mpianalysis::.*::addWorker.*" $1 | gawk -F" " '{ print $2 }' | sed 's|[0-9]*+||g' | sed 's|\->|,|g'  > $1.workertree
 python $script_dir/postprocess-default-analyser-workertree.py $1.workertree
 
@@ -24,12 +25,15 @@ python $script_dir/postprocess-default-analyser-forks-and-joins.py $1
 gnuplot $script_dir/postprocess-default-analyser-forks-and-joins.gnuplot
 mv tmp.joins-and-forks.png $1.joins-and-forks.png
 
+echo Create global communication profile
 python $script_dir/postprocess-default-analyser-runtimes.py $1 $2
 gnuplot $script_dir/postprocess-default-analyser-runtimes.gnuplot
 mv tmp.runtimes.png $1.runtimes.png
 mv tmp.runtimes.log.png $1.runtimes.log.png
 mv tmp.runtimes.master.png $1.runtimes.master.png
 mv tmp.runtimes.master.log.png $1.runtimes.master.log.png
+
+
 
 for (( r=2; r<$2; r++ ))
 do
@@ -40,6 +44,15 @@ do
 done
 
 
+
+
+echo Create late worker send analysis - might last long
+python $script_dir/postprocess-default-analyser-worker-master-sends.py $1 $2
+
+echo Create late neighbour send analysis - might last long
+python $script_dir/postprocess-default-analyser-boundary-exchange.py $1 $2
+
+echo Create main html page
 python $script_dir/postprocess-default-analyser-statistics.py $1 $2
 
-%rm tmp.*
+rm tmp.*

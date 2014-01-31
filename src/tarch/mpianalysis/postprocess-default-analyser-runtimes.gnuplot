@@ -26,7 +26,10 @@ set title "Overview"
 
 plot "tmp.data"  using  1:2  title "idle times"   with points ls 1, \
      "tmp.data"  using  1:3  title "busy times"   with points ls 2, \
-     "tmp.data"  using  1:(($2)+($3))   every :::1::1  title "total"  with lines ls 3
+     "tmp.data"  using  ($1):(($2)+($3))   every :::0::1  title "total"  with lines ls 3
+
+
+#     "tmp.data"  using  1:(($2)+($3))   every :::1::1  title "total"  with lines ls 3
      
 
 set terminal png font "/usr/share/fonts/dejavu/DejaVuSans.ttf" size 1200,900
@@ -43,9 +46,9 @@ unset log y
 
 set title "Global Master"
 
-plot "tmp.data"  using  1:2             every :::1::1  title "idle times"   with lines ls 1, \
-     "tmp.data"  using  1:3             every :::1::1  title "busy times"   with lines ls 2, \
-     "tmp.data"  using  1:(($2)+($3))   every :::1::1  title "total"  with lines ls 3
+plot "tmp.data"  using  1:2             every :::0::1  title "idle times"   with lines ls 1, \
+     "tmp.data"  using  1:3             every :::0::1  title "busy times"   with lines ls 2, \
+     "tmp.data"  using  1:(($2)+($3))   every :::0::1  title "total"  with lines ls 3
      
 
 set terminal png font "/usr/share/fonts/dejavu/DejaVuSans.ttf" size 1200,900

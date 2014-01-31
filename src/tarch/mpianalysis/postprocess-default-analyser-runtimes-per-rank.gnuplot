@@ -21,7 +21,7 @@ set key right top
 #set key left top 
 
 
-set title "Single rank profiling: ".RANK."nd working rank"
+set title "Rank ".RANK
 
 plot "tmp.data"  using  1:2             every :::RANK::RANK  title "idle times"   with lines ls 1, \
      "tmp.data"  using  1:3             every :::RANK::RANK  title "busy times"   with lines ls 2, \
