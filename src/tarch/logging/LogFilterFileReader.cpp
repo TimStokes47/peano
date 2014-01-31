@@ -50,7 +50,7 @@ bool tarch::logging::LogFilterFileReader::parseLine(std::ifstream& file, const s
   const int NumberOfTokensPerLine = 4;
   std::string tokens[NumberOfTokensPerLine];
   int currentToken = 0;
-  while (currentToken<NumberOfTokensPerLine && !file.eof() && characterPosition < lineWithNewline.length()) {
+  while (currentToken<NumberOfTokensPerLine && !file.eof() && characterPosition < static_cast<int>(lineWithNewline.length())) {
     char buffer = lineWithNewline[characterPosition];
 
     const bool bufferIsWhiteSpace =
