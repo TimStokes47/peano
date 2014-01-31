@@ -33,7 +33,7 @@ void tarch::mpianalysis::DefaultAnalyser::endIteration() {
   _watch.stopTimer();
 
   logInfo(
-    "beginIteration()",
+    "endIteration()",
     "busy time=" <<
     _watch.getCalendarTime() <<
     ", busy cpu time=" <<
