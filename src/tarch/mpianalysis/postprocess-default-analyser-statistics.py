@@ -58,7 +58,7 @@ outFile.write( "</p>" )
 outFile.write( "<center>" )
 outFile.write( "<table border=\"1\">" )
 outFile.write( "<tr>" )
-outFile.write( "<td>Ranks:</td><td>" + sys.argv[1] + "</td>" )
+outFile.write( "<td>Ranks:</td><td>" + sys.argv[2] + "</td>" )
 outFile.write( "<tr>" )
 outFile.write( "<td>Forks total:</td><td>" + str(forks) + "</td>" )
 outFile.write( "</tr><tr>" )
@@ -89,6 +89,7 @@ outFile.write( "<img src=\"" + inputFilename + ".joins-and-forks.png\" />" )
 
 
 outFile.write( "<h2>Worker tree</h2>" )
+outFile.write( "<p>The following diagram gives an overview of your logical topology. Snapshots at multiple time-steps are merged, i.e. it is a static representation. Image might not be available if pydot is not available to your Python installation.</p>" )
 outFile.write( "<img src=\"" + inputFilename + ".workertree.png\" />" )
 
 outFile.write( "<h2>Domain decomposition</h2>" )
@@ -96,6 +97,21 @@ outFile.write( "<p>The image below is a snapshot of the domain decomposition. In
 outFile.write( "illustrates the exact domain decomposition. For higher dimensions it shows "  )
 outFile.write( "a 2d cut.</p>" )
 outFile.write( "<img src=\"" + inputFilename + ".2d-dd.png\" />" )
+
+outFile.write( "<h2>Runtime profiles</h2>" )
+outFile.write( "<p>The diagram below gives a summative overview over all busy and idle times." )
+outFile.write( "It is once given with standard y-axis, and once with a logarithmically scaled axis.</p>" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.log.png\" />" )
+
+outFile.write( "<p>The diagrams below give a history of the times where each individual node spent " )
+outFile.write( "its time. Nodes that remain idle throughout the computation are not enlisted.</p>" )
+
+for i in range(1,int(sys.argv[2])):
+  outFile.write( "<img src=\"" + inputFilename + ".runtimes.rank-" + str(i) + ".png\" />" )
+  outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.rank-" + str(i) + ".png\" />" )
 
 outFile.write( "</body>" )
 outFile.write( "</html>" )
