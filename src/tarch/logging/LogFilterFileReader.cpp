@@ -68,7 +68,7 @@ bool tarch::logging::LogFilterFileReader::parseLine(std::ifstream& file, const s
   }
 
   if (currentToken != NumberOfTokensPerLine) {
-    logError( "parsePlainTextFile(string)", "syntax error in input file " << filename << ", line " << linenumber );
+    logError( "parsePlainTextFile(string)", "syntax error in input file " << filename << ", line " << linenumber << ":" << line );
     return false;
   }
   else {
@@ -89,12 +89,12 @@ bool tarch::logging::LogFilterFileReader::parsePlainTextFile( const std::string&
     result = false;
   }
 
-  int linenumber = 0;
+  int linenumber = 1;
   std::string line;
   while (!file.eof() && result) {
 
     std::getline(file, line);
-    if(line.length() > 0) {
+    if(line.length() > 0 && line[0]!='#') {
       result = parseLine(file, filename, line, linenumber);
     }
 
