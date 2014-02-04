@@ -15,9 +15,9 @@ sparseMaxGraph     = pydot.Dot(graph_type='digraph')
 sparseAverageGraph = pydot.Dot(graph_type='digraph')
 
 for rank in range(0,int(sys.argv[2])):
-  graph.add_node(pydot.Node( str(rank) ))
-  sparseMaxGraph.add_node(pydot.Node( str(rank) ))
-  sparseAverageGraph.add_node(pydot.Node( str(rank) ))
+  graph.add_node(pydot.Node( str(rank), style="filled", fillcolor="grey", fontcolor="blue" ))
+  sparseMaxGraph.add_node(pydot.Node( str(rank), style="filled", fillcolor="grey", fontcolor="blue" ))
+  sparseAverageGraph.add_node(pydot.Node( str(rank), style="filled", fillcolor="grey", fontcolor="blue" ))
 
 
 totalMax     = 0
@@ -36,7 +36,7 @@ for master in range(0,int(sys.argv[2])):
       if (
         re.search( "tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedFromWorker", data ) and 
         re.search( "rank:" + str(master) + " ", data ) and
-        re.search( "worker " + str(worker), data ) 
+        re.search( "worker " + str(worker) + " ", data ) 
       ):
         time = float(data.split( "for" )[-1].split("s")[0])
         count      = count + 1
@@ -49,7 +49,7 @@ for master in range(0,int(sys.argv[2])):
         totalAverage = totalAverage + time
 
     if count>2:
-      edge = pydot.Edge(worker,master, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")" )
+      edge = pydot.Edge(worker,master, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")", labelfontcolor="blue" )
       graph.add_edge(edge)
         
   
@@ -66,7 +66,7 @@ for master in range(0,int(sys.argv[2])):
       if (
         re.search( "tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedFromWorker", data ) and 
         re.search( "rank:" + str(master) + " ", data ) and
-        re.search( "worker " + str(worker), data ) 
+        re.search( "worker " + str(worker) + " ", data ) 
       ):
         time = float(data.split( "for" )[-1].split("s")[0])
         count      = count + 1
@@ -76,11 +76,11 @@ for master in range(0,int(sys.argv[2])):
 
 
     if count>2 and (float(average) / float(count) > float(totalAverage) / float(totalCount)):
-      edge = pydot.Edge(worker,master, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")" )
+      edge = pydot.Edge(worker,master, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")", labelfontcolor="blue" )
       sparseAverageGraph.add_edge(edge)
 
     if count>2 and ( float(max) > 0.9 * float(totalMax) ):
-      edge = pydot.Edge(worker,master, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")" )
+      edge = pydot.Edge(worker,master, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")", labelfontcolor="blue" )
       sparseMaxGraph.add_edge(edge)
       
         

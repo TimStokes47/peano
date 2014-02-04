@@ -14,6 +14,10 @@ echo     variable PYTHONPATH
 script_dir=$(dirname $0)
 
 
+
+echo Create main html page
+python $script_dir/postprocess-default-analyser-statistics.py $1 $2
+
 echo Create overview statistics
 grep -o "tarch::mpianalysis::.*::addWorker.*" $1 | gawk -F" " '{ print $2 }' | sed 's|[0-9]*+||g' | sed 's|\->|,|g'  > $1.workertree
 python $script_dir/postprocess-default-analyser-workertree.py $1.workertree
@@ -51,8 +55,5 @@ python $script_dir/postprocess-default-analyser-worker-master-sends.py $1 $2
 
 echo Create late neighbour send analysis - might last long
 python $script_dir/postprocess-default-analyser-boundary-exchange.py $1 $2
-
-echo Create main html page
-python $script_dir/postprocess-default-analyser-statistics.py $1 $2
 
 rm tmp.*

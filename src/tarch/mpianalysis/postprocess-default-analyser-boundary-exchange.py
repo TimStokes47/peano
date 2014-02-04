@@ -15,9 +15,9 @@ sparseAverageGraph = pydot.Dot(graph_type='digraph')
 sparseMaxGraph     = pydot.Dot(graph_type='digraph')
 
 for rank in range(0,int(sys.argv[2])):
-  graph.add_node(pydot.Node( str(rank) ))
-  sparseAverageGraph.add_node(pydot.Node( str(rank) ))
-  sparseMaxGraph.add_node(pydot.Node( str(rank) ))
+  graph.add_node(pydot.Node( str(rank), style="filled", fillcolor="grey", fontcolor="blue" ))
+  sparseAverageGraph.add_node(pydot.Node( str(rank), style="filled", fillcolor="grey", fontcolor="blue" ))
+  sparseMaxGraph.add_node(pydot.Node( str(rank), style="filled", fillcolor="grey", fontcolor="blue" ))
 
 
 totalMax     = 0
@@ -35,8 +35,8 @@ for receiver in range(0,int(sys.argv[2])):
       data = inFile.readline()
       if (
         re.search( "tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedInBackground", data ) and 
-        re.search( "rank:" + str(rank) + " ", data ) and
-        re.search( "from " + str(sender), data ) 
+        re.search( "rank:" + str(receiver) + " ", data ) and
+        re.search( "from " + str(sender) + " ", data ) 
       ):
         cardinality = int(data.split( " record(s)" )[0].split("for")[1])
         count      = count + 1
@@ -49,11 +49,11 @@ for receiver in range(0,int(sys.argv[2])):
         totalAverage = totalAverage + cardinality
 
     if count>2:
-      edge = pydot.Edge(sender,receiver, weight=cardinality, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")" )
+      edge = pydot.Edge(sender,receiver, weight=cardinality, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")", labelfontcolor="blue" )
       graph.add_edge(edge)
         
   
-graph.add_node(pydot.Node( "Summary=(" + str(totalCount) + "," + str(totalMax) + "," + str(float(totalAverage) / float(totalCount)) + ")" ))
+graph.add_node(pydot.Node( "Summary=(" + str(totalCount) + "," + str(totalMax) + "," + str(float(totalAverage) / float(totalCount)) + ")", labelfontcolor="blue" ))
 graph.write_png(sys.argv[1]+'.boundary-exchange.png', prog='fdp')
 
 
@@ -69,8 +69,8 @@ for receiver in range(0,int(sys.argv[2])):
       data = inFile.readline()
       if (
         re.search( "tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedInBackground", data ) and 
-        re.search( "rank:" + str(rank) + " ", data ) and
-        re.search( "from " + str(sender), data ) 
+        re.search( "rank:" + str(receiver) + " ", data ) and
+        re.search( "from " + str(sender) + " ", data ) 
       ):
         cardinality = int(data.split( " record(s)" )[0].split("for")[1])
         count      = count + 1
@@ -79,11 +79,11 @@ for receiver in range(0,int(sys.argv[2])):
         average      = average + cardinality
 
     if count>2 and (float(average) / float(count) > float(totalAverage) / float(totalCount)):
-      edge = pydot.Edge(sender,receiver, weight=cardinality, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")" )
+      edge = pydot.Edge(sender,receiver, weight=cardinality, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")", labelfontcolor="blue" )
       sparseAverageGraph.add_edge(edge)
 
     if count>2 and ( float(max) > 0.9 * float(totalMax) ):
-      edge = pydot.Edge(sender,receiver, weight=cardinality, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")" )
+      edge = pydot.Edge(sender,receiver, weight=cardinality, label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")", labelfontcolor="blue" )
       sparseMaxGraph.add_edge(edge)
       
 
