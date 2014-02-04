@@ -26,7 +26,7 @@ set key right bottom
 
 plot "tmp.data"  using  2  title "forks"         ls 1, \
      "tmp.data"  using  3  title "joins"         ls 2, \
-     "tmp.data"  using  4  title "working rank"  ls 3
+     "tmp.data"  using  4  title "working"  ls 3
 
 set terminal png font "/usr/share/fonts/dejavu/DejaVuSans.ttf" size 1200,900
 set output 'tmp.joins-and-forks.png'
