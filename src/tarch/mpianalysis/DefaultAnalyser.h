@@ -27,6 +27,9 @@ class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
     static tarch::logging::Log     _log;
 
     tarch::timing::Watch           _watch;
+
+    tarch::timing::Watch           _synchronousHeapWatch;
+    tarch::timing::Watch           _asynchronousHeapWatch;
   public:
     DefaultAnalyser();
     virtual ~DefaultAnalyser();
@@ -67,6 +70,12 @@ class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
     virtual void dataWasNotReceivedFromWorker( int fromRank, double calendarTime );
     virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers);
+    virtual void beginToReleaseSynchronousHeapData();
+    virtual void endToReleaseSynchronousHeapData();
+    virtual void beginToPrepareAsynchronousHeapDataExchange();
+    virtual void endToPrepareAsynchronousHeapDataExchange();
+    virtual void endReleaseOfJoinData();
+    virtual void endReleaseOfBoundaryData();
 };
 
 

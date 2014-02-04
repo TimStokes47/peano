@@ -6,7 +6,9 @@ tarch::logging::Log  tarch::mpianalysis::DefaultAnalyser::_log( "tarch::mpianaly
 
 
 tarch::mpianalysis::DefaultAnalyser::DefaultAnalyser():
-  _watch( "tarch::mpianalysis::DefaultAnalyser", "-", false ) {
+  _watch("tarch::mpianalysis::DefaultAnalyser", "-", false),
+  _synchronousHeapWatch("tarch::mpianalysis::DefaultAnalyser", "-", false),
+  _asynchronousHeapWatch("tarch::mpianalysis::DefaultAnalyser", "-", false) {
 }
 
 
@@ -177,4 +179,69 @@ void tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedInBackground( int fr
 
 
 void tarch::mpianalysis::DefaultAnalyser::logNodePoolStatistics(int registeredWorkers, int idleWorkers) {
+}
+
+void tarch::mpianalysis::DefaultAnalyser::beginToReleaseSynchronousHeapData() {
+  _synchronousHeapWatch.startTimer();
+}
+
+
+void tarch::mpianalysis::DefaultAnalyser::endToReleaseSynchronousHeapData() {
+  _synchronousHeapWatch.stopTimer();
+
+  logInfo(
+    "endToReleaseSynchronousHeapData()",
+    "time=" <<
+    _synchronousHeapWatch.getCalendarTime() <<
+    ", cpu time=" <<
+    _synchronousHeapWatch.getCPUTime()
+  );
+}
+
+
+void tarch::mpianalysis::DefaultAnalyser::beginToPrepareAsynchronousHeapDataExchange() {
+  _asynchronousHeapWatch.startTimer();
+}
+
+
+void tarch::mpianalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange() {
+  _asynchronousHeapWatch.stopTimer();
+
+  logInfo(
+    "endToPrepareAsynchronousHeapDataExchange()",
+    "time=" <<
+    _asynchronousHeapWatch.getCalendarTime() <<
+    ", cpu time=" <<
+    _asynchronousHeapWatch.getCPUTime()
+  );
+}
+
+
+void tarch::mpianalysis::DefaultAnalyser::endReleaseOfJoinData() {
+  _watch.stopTimer();
+
+  logInfo(
+    "endReleaseOfJoinData()",
+    "time=" <<
+    _watch.getCalendarTime() <<
+    ", cpu time=" <<
+    _watch.getCPUTime()
+  );
+
+  _watch.startTimer();
+}
+
+
+void tarch::mpianalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
+  _watch.stopTimer();
+
+  logInfo(
+    "endReleaseOfBoundaryData()",
+    "time=" <<
+    _watch.getCalendarTime() <<
+    ", cpu time=" <<
+    _watch.getCPUTime()
+  );
+
+  _watch.startTimer();
 }

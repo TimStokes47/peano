@@ -4,9 +4,10 @@
 
 #include "tarch/Assertions.h"
 #include "tarch/services/ServiceRepository.h"
-
-
 #include "tarch/services/ServiceFactory.h"
+
+
+#include "tarch/mpianalysis/Analysis.h"
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
@@ -394,6 +395,8 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   logTraceInWith1Argument( "startToSendBoundaryData(bool)", _name );
 
   #ifdef Parallel
+  tarch::mpianalysis::Analysis::getInstance().beginToPrepareAsynchronousHeapDataExchange();
+
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
     p != _neighbourDataExchanger.end();
@@ -401,6 +404,8 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   ) {
     p->second.startToSendData(isTraversalInverted);
   }
+
+  tarch::mpianalysis::Analysis::getInstance().endToPrepareAsynchronousHeapDataExchange();
   #endif
 
   logTraceOut( "startToSendBoundaryData(bool)" );
@@ -412,8 +417,12 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   logTraceInWith1Argument( "finishedToSendSynchronousData()", _name );
 
   #ifdef Parallel
+  tarch::mpianalysis::Analysis::getInstance().beginToReleaseSynchronousHeapData();
+
   _masterWorkerExchanger.finishedToSendData();
   _joinForkExchanger.finishedToSendData();
+
+  tarch::mpianalysis::Analysis::getInstance().endToReleaseSynchronousHeapData();
   #endif
 
   logTraceOut( "finishedToSendSynchronousData()" );

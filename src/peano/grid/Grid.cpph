@@ -175,7 +175,9 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
 
   #ifdef Parallel
   peano::parallel::JoinDataBufferPool::getInstance().releaseMessages();
+  tarch::mpianalysis::Analysis::getInstance().endReleaseOfJoinData();
   peano::parallel::SendReceiveBufferPool::getInstance().releaseMessages();
+  tarch::mpianalysis::Analysis::getInstance().endReleaseOfBoundaryData();
   #endif
 
   _state.resetStateAtEndOfIteration();

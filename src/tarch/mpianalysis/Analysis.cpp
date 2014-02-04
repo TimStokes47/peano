@@ -107,8 +107,43 @@ void tarch::mpianalysis::Analysis::dataWasNotReceivedFromWorker( int fromRank, d
 }
 
 
-
 void tarch::mpianalysis::Analysis::logNodePoolStatistics(int registeredWorkers, int idleWorkers) {
   assertion( _device!=0 );
   _device->logNodePoolStatistics(registeredWorkers, idleWorkers);
+}
+
+
+void tarch::mpianalysis::Analysis::beginToReleaseSynchronousHeapData() {
+  assertion( _device!=0 );
+  _device->beginToReleaseSynchronousHeapData();
+}
+
+
+void tarch::mpianalysis::Analysis::endToReleaseSynchronousHeapData() {
+  assertion( _device!=0 );
+  _device->endToReleaseSynchronousHeapData();
+}
+
+
+void tarch::mpianalysis::Analysis::beginToPrepareAsynchronousHeapDataExchange() {
+  assertion( _device!=0 );
+  _device->beginToPrepareAsynchronousHeapDataExchange();
+}
+
+
+void tarch::mpianalysis::Analysis::endToPrepareAsynchronousHeapDataExchange() {
+  assertion( _device!=0 );
+  _device->endToPrepareAsynchronousHeapDataExchange();
+}
+
+
+void tarch::mpianalysis::Analysis::endReleaseOfJoinData() {
+  assertion( _device!=0 );
+  _device->endReleaseOfJoinData();
+}
+
+
+void tarch::mpianalysis::Analysis::endReleaseOfBoundaryData() {
+  assertion( _device!=0 );
+  _device->endReleaseOfBoundaryData();
 }

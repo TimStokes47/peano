@@ -26,6 +26,11 @@ class tarch::mpianalysis::Analyser {
 
     /**
      * Indicates start of a new global iteration run
+     *
+     *
+     * The grid informs the analyser when it start to traverse. At the end of
+     * the traversal, it invokes endIteration(). The time in-between
+     * endIteration() and beginIteration() consequently is idle time.
      */
     virtual void beginIteration() = 0;
 
@@ -77,6 +82,12 @@ class tarch::mpianalysis::Analyser {
      * Inform analyser that there was data that should have been received in
      * background but that wasn't there, when we needed it.
      *
+     * Peano tries to receive all data from neighbours, i.e. boundary data, in
+     * the background. One idea is that once the traversal is done, already
+     * all/most of the records for the subsequent traversal are already
+     * available. If this is not the case, the buffers at least send a
+     * notification to the analysis.
+     *
      * @param fromRank     From which rank was data expected.
      * @param tag          On which tag was the data expected.
      * @param cardinality  How much data (i.e. how many integeres, e.g.) were expected.
@@ -94,6 +105,13 @@ class tarch::mpianalysis::Analyser {
      * NodePool::logStatistics().
      */
     virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers) = 0;
+
+    virtual void beginToReleaseSynchronousHeapData() = 0;
+    virtual void endToReleaseSynchronousHeapData() = 0;
+    virtual void beginToPrepareAsynchronousHeapDataExchange() = 0;
+    virtual void endToPrepareAsynchronousHeapDataExchange() = 0;
+    virtual void endReleaseOfJoinData() = 0;
+    virtual void endReleaseOfBoundaryData() = 0;
 };
 
 

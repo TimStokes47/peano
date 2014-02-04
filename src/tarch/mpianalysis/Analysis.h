@@ -58,9 +58,7 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
 
 
     /**
-     * The grid informs the analyser when it start to traverse. At the end of
-     * the traversal, it invokes endIteration(). The time in-between
-     * endIteration() and beginIteration() consequently is idle time.
+     * @see Analyser
      */
     virtual void beginIteration();
 
@@ -69,24 +67,39 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
      */
     virtual void endIteration();
 
+    /**
+     * @see Analyser
+     */
     virtual void addWorker(
       int                                 workerRank,
       int                                 level,
       const tarch::la::Vector<3,double>&  boundingBoxOffset,
       const tarch::la::Vector<3,double>&  boundingBoxSize
     );
+
+    /**
+     * @see Analyser
+     */
     virtual void removeWorker(
       int                                 workerRank,
       int                                 level,
       const tarch::la::Vector<3,double>&  boundingBoxOffset,
       const tarch::la::Vector<3,double>&  boundingBoxSize
     );
+
+    /**
+     * @see Analyser
+     */
     virtual void addWorker(
       int                                 workerRank,
       int                                 level,
       const tarch::la::Vector<2,double>&  boundingBoxOffset,
       const tarch::la::Vector<2,double>&  boundingBoxSize
     );
+
+    /**
+     * @see Analyser
+     */
     virtual void removeWorker(
       int                                 workerRank,
       int                                 level,
@@ -94,20 +107,32 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
       const tarch::la::Vector<2,double>&  boundingBoxSize
     );
 
+    /**
+     * @see Analyser
+     */
     virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier );
 
     /**
-     * Peano tries to receive all data from neighbours, i.e. boundary data, in
-     * the background. One idea is that once the traversal is done, already
-     * all/most of the records for the subsequent traversal are already
-     * available. If this is not the case, the buffers at least send a
-     * notification to the analysis.
+     * @see Analyser
      */
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
 
+    /**
+     * @see Analyser
+     */
     virtual void dataWasNotReceivedFromWorker( int fromRank, double calendarTime );
 
+    /**
+     * @see Analyser
+     */
     virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers);
+
+    virtual void beginToReleaseSynchronousHeapData();
+    virtual void endToReleaseSynchronousHeapData();
+    virtual void beginToPrepareAsynchronousHeapDataExchange();
+    virtual void endToPrepareAsynchronousHeapDataExchange();
+    virtual void endReleaseOfJoinData();
+    virtual void endReleaseOfBoundaryData();
 };
 
 
