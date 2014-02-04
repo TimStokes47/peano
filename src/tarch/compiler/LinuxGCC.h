@@ -89,6 +89,6 @@
  */
 #define SpecialiseVectorTemplatesForIntegers
 
-#ifndef noMultipleThreadsMayTriggerMPICalls
-#define MultipleThreadsMayTriggerMPICalls
-#endif
+//#ifndef noMultipleThreadsMayTriggerMPICalls
+//#define MultipleThreadsMayTriggerMPICalls
+//#endif
