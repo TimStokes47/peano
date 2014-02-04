@@ -226,10 +226,18 @@ there is usually always one edge pointing towards rank 0. This edge does not ill
 
 
 outFile.write( "<p>\
+Several researchers recommend to introduce pure administrative ranks in Peano, i.e. make some ranks deploy \
+all their workload to other nodes and act as administrator only. Such ranks always should have incoming \
+edges from all their children here. \
+</p>" )
+
+
+outFile.write( "<p>\
 <i>Performance hint: </i>\
-The edges here illustrate the critical communication path for one traversal, i.e. long graphs here indicate \
-that along these graphs the Peano traversal is partially serialised. Eliminate these edges by reducing the \
-workload of involved nodes. \
+The edges here illustrate the critical communication path for one traversal, i.e. long graphs running from a node to rank 0 indicate \
+that along these graphs the Peano traversal is serialised. Eliminate these edges by reducing the \
+workload of the involved nodes. See remark in wiki on 'Optimise worker-master communication' or \
+'Avoid reductions'. \
 </p>" )
 
 
