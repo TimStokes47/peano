@@ -242,9 +242,42 @@ workload of the involved nodes. See remark in wiki on 'Optimise worker-master co
 
 
 outFile.write( "<h2>Runtime profiles</h2>" )
-outFile.write( "<p>The diagram below gives a summative overview over all busy and idle times." )
-outFile.write( "It is once given with standard y-axis, and once with a logarithmically scaled axis.</p>" )
-outFile.write( "<p>As the rank iteration numbers are not synchronised (each worker counts locally how many traversals have been done), the individual measurements can be slightly translated to each other.</p>" )
+
+outFile.write( "<p> \
+The diagram below gives a summative overview over all busy and idle times. \
+It is once given with standard y-axis, and once with a logarithmically scaled \
+axis. As the rank iteration numbers are not synchronised (each worker counts \
+locally how many traversals have been done), the individual measurements can \
+be translated to each other. \
+</p>" )
+
+
+outFile.write( "<p> \
+Definition <i>Busy time</i>: This is the time the node is actually traversing the tree, i.e. \
+the time between a start message received from its master and the time until the finished \
+message is sent back to the master. Busy times also comprise message exchanges, but these \
+message exchanges (boundary, load balancing, and so forth) run parallel to or are merged \
+into the grid traversal. If the workload is homogeneous (i.e. roughly the same number of \
+operations per spacetree node or at least leaf), the busy time usually directly correlates \
+to the number of cells, i.e. to the workload distribution. \
+</p>" )
+
+outFile.write( "<p> \
+Definition <i>Idle time</i>: As soon as a node has sent the information back to the master \
+that it has finished its traversal, it starts to clean up all the pending sends of boundary \
+data to the neighbours, receives the boundary data from all adjacent ranks, switches local \
+data structures, and so forth. It prepares all the data for the subsequent iteration. As \
+soon as this is done, it waits for the next startup message from its master. This whole \
+time in-between a finished and the subsequent startup message is summarised as idle time \
+as no real computation is done here. Load imbalances induce big idle times on undersubscribed \
+ranks. \
+</p>" )
+
+
+outFile.write( "<p> \
+Definition <i>Total time</i>: Sum of idle time and busy time, i.e. averaged time per traversal. \
+</p>" )
+
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.png\" />" )

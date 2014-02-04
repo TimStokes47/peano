@@ -11,7 +11,7 @@ set grid
 set xlabel 'runtime'
 set ylabel 'time [t]=s'
 
-set key right top
+set key left top
 
 #set style data histogram
 #set style histogram cluster gap 1 
