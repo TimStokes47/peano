@@ -36,11 +36,11 @@
  The dastgen subdirectory holds these models and the generated C++ classes are 
  to be found in records. To regenerate the code, type in 
  \code
- java -jar releases/tools/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/ActivationMessage.def src/tarch/parallel/messages 
- java -jar releases/tools/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/JobRequestMessage.def src/tarch/parallel/messages 
- java -jar releases/tools/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/NodePoolAnswerMessage.def src/tarch/parallel/messages 
- java -jar releases/tools/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/RegisterAtNodePoolMessage.def src/tarch/parallel/messages 
- java -jar releases/tools/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/WorkerRequestMessage.def src/tarch/parallel/messages 
+ java -jar pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/ActivationMessage.def src/tarch/parallel/messages 
+ java -jar pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/JobRequestMessage.def src/tarch/parallel/messages 
+ java -jar pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/NodePoolAnswerMessage.def src/tarch/parallel/messages 
+ java -jar pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/RegisterAtNodePoolMessage.def src/tarch/parallel/messages 
+ java -jar pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/WorkerRequestMessage.def src/tarch/parallel/messages 
  \endcode 
  This is if your prompt is in the directory that also contains the src 
  directory. If you start from a different base directory, please adopt the paths 

@@ -101,3 +101,17 @@
 #ifndef noMultipleThreadsMayTriggerMPICalls
 #define MultipleThreadsMayTriggerMPICalls
 #endif
+
+
+
+/**
+ * Peano relies on synchronous and asynchronous messages. Synchronous messages
+ * are sent up and down the tree throughout the traversal or are used to
+ * communicate with the load balancing rank, e.g. By default, Peano also uses
+ * non-blocking methods for these messages and tries to receive dangling
+ * messages after the send has been triggered until it has completed. This way,
+ * Peano avoids deadlocks. However, you can observe a signficiant speedup if
+ * you switch from a non-blocking realisation (false as argument here) to plain
+ * MPI_Send or MPI_Recv, respectively.
+ */
+#define SendSynchronousMessagesBlocking false

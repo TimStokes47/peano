@@ -31,9 +31,9 @@ namespace tarch {
  * 		   2007-2009 Wolfgang Eckhardt
  * 		   2012      Tobias Weinzierl
  *
- * 		   build date: 17-10-2012 11:04
+ * 		   build date: 04-02-2014 16:40
  *
- * @date   17/10/2012 11:05
+ * @date   04/02/2014 16:42
  */
 class tarch::parallel::messages::NodePoolAnswerMessage { 
    
@@ -122,7 +122,7 @@ class tarch::parallel::messages::NodePoolAnswerMessage {
       protected:
          static tarch::logging::Log _log;
          
-         int _senderRank;
+         int _senderDestinationRank;
          
       public:
          
@@ -142,9 +142,9 @@ class tarch::parallel::messages::NodePoolAnswerMessage {
          
          static void shutdownDatatype();
          
-         void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+         void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
          
-         void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+         void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
          
          static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
          
@@ -160,9 +160,9 @@ class tarch::parallel::messages::NodePoolAnswerMessage {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 17-10-2012 11:04
+    * 		   build date: 04-02-2014 16:40
     *
-    * @date   17/10/2012 11:05
+    * @date   04/02/2014 16:42
     */
    class tarch::parallel::messages::NodePoolAnswerMessagePacked { 
       
@@ -249,7 +249,7 @@ class tarch::parallel::messages::NodePoolAnswerMessage {
          protected:
             static tarch::logging::Log _log;
             
-            int _senderRank;
+            int _senderDestinationRank;
             
          public:
             
@@ -269,9 +269,9 @@ class tarch::parallel::messages::NodePoolAnswerMessage {
             
             static void shutdownDatatype();
             
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
             
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             
