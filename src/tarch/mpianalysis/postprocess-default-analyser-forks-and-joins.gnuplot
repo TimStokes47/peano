@@ -8,7 +8,8 @@ set style line 3 lc rgb "#6600ff" lt 1 pt 11  lw 1.0 ps 1.6
 
 set grid
 
-set xlabel 't'
+set xlabel 'Simulation steps'
+set ylabel 'total number of working ranks, forks or joins respectively'
 
 set key right bottom
 #set xrange [80:120]
