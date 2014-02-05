@@ -32,10 +32,14 @@ mv tmp.joins-and-forks.png $1.joins-and-forks.png
 echo Create global communication profile
 python $script_dir/postprocess-default-analyser-runtimes.py $1 $2
 gnuplot $script_dir/postprocess-default-analyser-runtimes.gnuplot
-mv tmp.runtimes.png $1.runtimes.png
-mv tmp.runtimes.log.png $1.runtimes.log.png
-mv tmp.runtimes.master.png $1.runtimes.master.png
-mv tmp.runtimes.master.log.png $1.runtimes.master.log.png
+mv tmp.runtimes.cpu.png $1.runtimes.cpu.png
+mv tmp.runtimes.calendar.png $1.runtimes.calendar.png
+mv tmp.runtimes.log.cpu.png $1.runtimes.log.cpu.png
+mv tmp.runtimes.log.calendar.png $1.runtimes.log.calendar.png
+mv tmp.runtimes.master.cpu.png $1.runtimes.master.cpu.png
+mv tmp.runtimes.master.calendar.png $1.runtimes.master.calendar.png
+mv tmp.runtimes.master.log.cpu.png $1.runtimes.master.log.cpu.png
+mv tmp.runtimes.master.log.calendar.png $1.runtimes.master.log.calendar.png
 
 
 
@@ -43,8 +47,10 @@ for (( r=2; r<$2; r++ ))
 do
   echo Create communication profile for rank $r
   echo "RANK=$r; load '$script_dir/postprocess-default-analyser-runtimes-per-rank.gnuplot'" | gnuplot  
-  mv tmp.runtimes.png $1.runtimes.rank-$r.png
-  mv tmp.runtimes.log.png $1.runtimes.log.rank-$r.png
+  mv tmp.runtimes.cpu.png $1.runtimes.rank-$r.cpu.png
+  mv tmp.runtimes.calendar.png $1.runtimes.rank-$r.calendar.png
+  mv tmp.runtimes.log.cpu.png $1.runtimes.log.rank-$r.cpu.png
+  mv tmp.runtimes.log.calendar.png $1.runtimes.log.rank-$r.calendar.png
 done
 
 

@@ -248,47 +248,61 @@ The diagram below gives a summative overview over all busy and idle times. \
 It is once given with standard y-axis, and once with a logarithmically scaled \
 axis. As the rank iteration numbers are not synchronised (each worker counts \
 locally how many traversals have been done), the individual measurements can \
-be translated to each other. \
+be translated to each other. All timings are once given as cpu time stemming \
+from the clock tics, and once in calendar time. \
 </p>" )
 
 
 outFile.write( "<p> \
-Definition <i>Busy time</i>: This is the time the node is actually traversing the tree, i.e. \
-the time between a start message received from its master and the time until the finished \
-message is sent back to the master. Busy times also comprise message exchanges, but these \
-message exchanges (boundary, load balancing, and so forth) run parallel to or are merged \
-into the grid traversal. If the workload is homogeneous (i.e. roughly the same number of \
-operations per spacetree node or at least leaf), the busy time usually directly correlates \
-to the number of cells, i.e. to the workload distribution. \
+Each Peano traversal consists of the following phases: \
+<ul> \
+  <li> \
+    <i>Busy time</i>: This is the time the node is actually traversing the tree, i.e. \
+    the time between a start message received from its master and the time until the finished \
+    message is sent back to the master. Busy times also comprise message exchanges, but these \
+    message exchanges (boundary, load balancing, and so forth) run parallel to or are merged \
+    into the grid traversal. If the workload is homogeneous (i.e. roughly the same number of \
+    operations per spacetree node or at least leaf), the busy time usually directly correlates \
+    to the number of cells, i.e. to the workload distribution. \
+    The only fragment of the busy time that is illustrated separately is the time consumed by \
+    the heap data exchange. \
+  </li> \
+  <li> \
+    Definition <i>Communication time</i>: As soon as a node has sent the information back to the master \
+    that it has finished its traversal, it starts to clean up all the pending sends of boundary \
+    data to the neighbours, receives the boundary data from all adjacent ranks, switches local \
+    data structures, and so forth. It prepares all the data for the subsequent iteration. The \
+    communication time comprises the \
+    <ul> \
+      <li> exchange of <i>join</i> data and the </li>  \
+      <li> exchange of <i>boundary</i> vertices. </li> \
+    </ul> \
+  </li> \
+  <li> \
+    Definition <i>Idle time</i>: As soon as all data is communicated, the rank \
+    waits for the next startup message from its master. This waiting \
+    time is real idle time where nothing is done. \
+  </li> \
 </p>" )
 
-outFile.write( "<p> \
-Definition <i>Idle time</i>: As soon as a node has sent the information back to the master \
-that it has finished its traversal, it starts to clean up all the pending sends of boundary \
-data to the neighbours, receives the boundary data from all adjacent ranks, switches local \
-data structures, and so forth. It prepares all the data for the subsequent iteration. As \
-soon as this is done, it waits for the next startup message from its master. This whole \
-time in-between a finished and the subsequent startup message is summarised as idle time \
-as no real computation is done here. Load imbalances induce big idle times on undersubscribed \
-ranks. \
-</p>" )
 
-
-outFile.write( "<p> \
-Definition <i>Total time</i>: Sum of idle time and busy time, i.e. averaged time per traversal. \
-</p>" )
-
-outFile.write( "<img src=\"" + inputFilename + ".runtimes.png\" />" )
-outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.png\" />" )
-outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.png\" />" )
-outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.log.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.calendar.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.cpu.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.calendar.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.cpu.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.calendar.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.cpu.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.log.calendar.png\" />" )
+outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.log.cpu.png\" />" )
 
 outFile.write( "<p>The diagrams below give a history of the times where each individual node spent " )
 outFile.write( "its time. Nodes that remain idle throughout the computation are not enlisted.</p>" )
 
 for i in range(1,int(sys.argv[2])):
-  outFile.write( "<img src=\"" + inputFilename + ".runtimes.rank-" + str(i) + ".png\" />" )
-  outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.rank-" + str(i) + ".png\" />" )
+  outFile.write( "<img src=\"" + inputFilename + ".runtimes.rank-" + str(i) + ".calendar.png\" />" )
+  outFile.write( "<img src=\"" + inputFilename + ".runtimes.rank-" + str(i) + ".cpu.png\" />" )
+  outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.rank-" + str(i) + ".calendar.png\" />" )
+  outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.rank-" + str(i) + ".cpu.png\" />" )
 
 outFile.write( "</body>" )
 outFile.write( "</html>" )
