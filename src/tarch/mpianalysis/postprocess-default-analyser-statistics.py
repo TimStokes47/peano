@@ -290,6 +290,7 @@ outFile.write( "<img src=\"" + inputFilename + ".runtimes.calendar.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.cpu.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.calendar.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.cpu.png\" />" )
+outFile.write( "<h2>Global master node</h2>" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.calendar.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.cpu.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.log.calendar.png\" />" )
@@ -299,6 +300,7 @@ outFile.write( "<p>The diagrams below give a history of the times where each ind
 outFile.write( "its time. Nodes that remain idle throughout the computation are not enlisted.</p>" )
 
 for i in range(1,int(sys.argv[2])):
+  outFile.write( "<h2>Rank " + str(i) + "</h2>" )
   outFile.write( "<img src=\"" + inputFilename + ".runtimes.rank-" + str(i) + ".calendar.png\" />" )
   outFile.write( "<img src=\"" + inputFilename + ".runtimes.rank-" + str(i) + ".cpu.png\" />" )
   outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.rank-" + str(i) + ".calendar.png\" />" )
