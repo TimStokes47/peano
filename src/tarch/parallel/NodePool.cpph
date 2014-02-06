@@ -12,7 +12,7 @@ void tarch::parallel::NodePool::broadcastToWorkingNodes(Message& message, int ta
   assertionEquals(Node::getInstance().getGlobalMasterRank(),0);
   for (int rank=1; rank<Node::getInstance().getNumberOfNodes(); rank++) {
     if (!(_strategy->isIdleNode(rank))) {
-      message.send(rank,tag, true,false);
+      message.send(rank,tag, true,BroadcastToWorkingNodesBlocking);
       logDebug( "broadcastToWorkingNodes(Message, int tag)", "sent message " << message.toString() << " to node " << rank << " on tag " << tag );
     }
   }

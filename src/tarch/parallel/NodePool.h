@@ -398,9 +398,6 @@ class tarch::parallel::NodePool: public tarch::services::Service {
     template <class Message>
     void broadcastToWorkingNodes(Message& message, int tag);
 
-    template <class Message>
-    void broadcastToAllNodes(Message& message, int tag);
-
     /**
      * Activate all idle nodes
      *
