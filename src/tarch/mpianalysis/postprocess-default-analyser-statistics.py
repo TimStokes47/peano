@@ -124,13 +124,10 @@ outFile.write( "</center>" )
 
 outFile.write( "<p>\
 <i>Performance hint: </i>\
-Joins and forks are expensive operations in terms of walltime. Furthermore, they hinder involved ranks to benefit \
-from multithreading as Peano switches off multithreading temporarily whenever a node does rebalancing. As a \
-consequence, it often does make sense to switch off rebalancing for compute-intense algorithmic steps and do \
-the rebalancing throughout steps that are bandwidth-\data-bound. Those typically cannot benefit from multithreading \
-that much anyway. Whenever the partitioning remains invariant, it futhermore does make sense to exchange the \
-MPI oracle and work with no balancing. If an oracle tells Peano right from the beginning of a traversal that \
-no rebalancing may happen, Peano can omit many checks throughout this traversal. \
+Joins and forks are expensive operations in terms of walltime. Evaluating the load balancing \
+information also is not for free. Hence, try to reduce the number of joins and forks as you \
+switch on rebalancing only from time to time, and reduce the load balancing overhead. See \
+the section on 'Disable load balancing' in the wiki. \
 </p>" )
 
 
@@ -154,63 +151,10 @@ outFile.write( "a 2d cut. </p>" )
 outFile.write( "<img src=\"" + inputFilename + ".2d-dd.png\" />" )
 
 
-outFile.write( "<h2>Boundary exchange statistics - late senders</h2>" )
 
-outFile.write( "<p>\
-The follow diagrams display an edge whenever a node A had to wait for a neighbouring node B. \
-The first entry of the label counters how often it had to work, the second the maximum data \
-cardinality, i.e. vertices, and the last one the average wait cardinality. If A points to B, \
-B hat to wait for data coming from A. The directed edges illustrate the data flow. \
-</p>" )
-
-outFile.write( "<p>In all diagrams, singular events, i.e. events waits only once or twice, are omitted.</p>" )
-
-outFile.write( "<img src=\"" + inputFilename + ".boundary-exchange.png\" />" )
-outFile.write( "<p>The graph below holds only those edges that have an average that is bigger than the average of averages.</p>" )
-outFile.write( "<img src=\"" + inputFilename + ".boundary-exchange-sparse-average.png\" />" )
-outFile.write( "<p>The last graph illustrates those late senders that have max values that fall into the upper 10% of max values.</p>" )
-outFile.write( "<img src=\"" + inputFilename + ".boundary-exchange-sparse-max.png\" />" )
-
-
-outFile.write( "<p>\
-Peano is designed to exchange all boundary data in the background of the computation. \
-In the ideal case, the above graph hence should be empty or very sparse. \
-If it is pretty dense, your algorithm is bandwidth-bound. \
-</p>" )
-
-
-outFile.write( "<p>\
-<i>Performance hint: </i>\
-The global rank 0 should not have adjacent edges. If it has, ensure you've followed the 'Avoid communications \
-with rank 0' recipes from the wiki. \
-</p>" )
-
-outFile.write( "<p>\
-<i>Performance hint: </i>\
-If this graph is a clique, your mpi buffer sizes might be too small or too big. Cf. \
-SendReceiveBufferPool's setBufferSize(). Its default values might be ill-suited for your \
-application's memory footprint. \
-</p>" )
-
-outFile.write( "<p>\
-<i>Performance hint: </i>\
-If single nodes are the hot-spots making the others wait (only few nodes are in the centre), those nodes might either have \
-a significantly higher load than others (cf. balancing remark above) or they might have a significant higher surface to \
-other nodes that has to be exchanged. \
-</p>" )
-
-outFile.write( "<p>\
-<i>Performance hint: </i>\
-If edges point from workers to their direct parents, the local master-worker balancing might be ill-balanced. Such \
-edges are in the first place not that important - any node might have a severe workload where it can only deploy \
-smaller parts of the work. The involved worker than has, by definition, to be smaller than its master (it got only \
-a fragment of the total work) and then waits for the master's boundary data for the subsequent iteration. A \
-critical situation (from a performance point of view) would occur, if the master had to wait for the worker's \
-finished message. Cf. Master-worker statistics below. \
-</p>" )
 
 outFile.write( "<h2>Master-worker statistics - late worker</h2>" )
-outFile.write( "<p>If an edge points from a to b, it means that master b had to wait for its worker a.</p>" )
+outFile.write( "<p>If an edge points from a to b, it means that master b had to wait for its worker a. The labels are wait times in seconds. </p>" )
 outFile.write( "<img src=\"" + inputFilename + ".worker-master.png\" />" )
 outFile.write( "<p>The following graph holds only edges whose average is beyond the average of averages.</p>" )
 outFile.write( "<img src=\"" + inputFilename + ".worker-master-sparse-average.png\" />" )
@@ -239,6 +183,77 @@ that along these graphs the Peano traversal is serialised. Eliminate these edges
 workload of the involved nodes. See remark in wiki on 'Optimise worker-master communication' or \
 'Avoid reductions'. \
 </p>" )
+
+
+
+
+outFile.write( "<h2>Boundary exchange statistics - late senders</h2>" )
+
+outFile.write( "<p>\
+The follow diagrams display an edge whenever a node A had to wait for a neighbouring node B. \
+The first entry of the label counters how often it had to work, the second the maximum data \
+cardinality, i.e. vertices, and the last one the average wait cardinality. If A points to B, \
+B hat to wait for data coming from A. The directed edges illustrate the data flow. As mentioned, \
+all figures enlist data cardinalities. They are not wait times but number of records missing. \
+</p>" )
+
+outFile.write( "<p>In all diagrams, singular events, i.e. events waits only once or twice, are omitted.</p>" )
+
+outFile.write( "<img src=\"" + inputFilename + ".boundary-exchange.png\" />" )
+outFile.write( "<p>The graph below holds only those edges that have an average that is bigger than the average of averages.</p>" )
+outFile.write( "<img src=\"" + inputFilename + ".boundary-exchange-sparse-average.png\" />" )
+outFile.write( "<p>The last graph illustrates those late senders that have max values that fall into the upper 10% of max values.</p>" )
+outFile.write( "<img src=\"" + inputFilename + ".boundary-exchange-sparse-max.png\" />" )
+
+
+outFile.write( "<p>\
+Peano is designed to exchange all boundary data in the background of the computation. \
+In the ideal case, the above graph hence should be empty or very sparse. \
+If it is pretty dense, your algorithm is bandwidth-bound. This is not a problem \
+per se, if the bandwidth-bound nodes do not slow down their masters, i.e. \
+the diagrams above have to be read in context with the worker-master graphs. \
+</p>" )
+
+
+outFile.write( "<p>\
+<i>Performance hint: </i>\
+The global rank 0 should not have adjacent edges. If it has, ensure you've followed the 'Avoid communications \
+with rank 0' recipes from the wiki. \
+</p>" )
+
+outFile.write( "<p>\
+<i>Performance hint: </i>\
+If this graph is a clique, your mpi buffer sizes might be too small or too big. Cf. \
+SendReceiveBufferPool's setBufferSize(). Its default values might be ill-suited for your \
+application's memory footprint. \
+</p>" )
+
+outFile.write( "<p>\
+<i>Performance hint: </i>\
+If single nodes are the hot-spots making the others wait (many outgoing edges), those nodes might either have \
+a significantly higher load than others (cf. balancing remark above) or they might have a significant higher surface to \
+other nodes that has to be exchanged. Adopt load balancing and see 'Check the load balancing and node weights' \
+in the wiki. \
+</p>" )
+
+outFile.write( "<p>\
+<i>Performance hint: </i>\
+If edges point from workers to their direct parents (cf. logical topology), the local master-worker balancing might be ill-balanced. Such \
+edges are in the first place not that important - any node might have a severe workload where it can only deploy \
+smaller parts of the work. The involved worker then has, by definition, to be smaller than its master (it got only \
+a fragment of the total work) and then waits for the master's boundary data for the subsequent iteration. A \
+critical situation (from a performance point of view) would occur, if the master had to wait for the worker's \
+finished message. Cf. Master-worker statistics above. \
+</p>" )
+
+outFile.write( "<p>\
+<i>Performance hint: </i>\
+If nodes delay their masters but have no significant heavy edges in the boundary graph, study their individual runtime \
+profile carefully. If these profiles also indicate that the data exchange is not signficiant, your worker-master \
+data exchange suffers from worker-master latency. See section in wiki on 'Optimise worker-master communication'. \
+</p>" )
+
+
 
 
 outFile.write( "<h2>Runtime profiles</h2>" )
