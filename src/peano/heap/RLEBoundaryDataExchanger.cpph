@@ -1,4 +1,5 @@
 #include "tarch/Assertions.h"
+#include "tarch/compiler/CompilerSpecificSettings.h"
 
 
 template<class Data>
@@ -109,7 +110,7 @@ void peano::heap::RLEBoundaryDataExchanger<Data>::handleAndQueueSendTask( const 
 
     Base::_sendTasks.push_back(sendTask);
 
-    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true);
+    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true, SendAndReceiveHeapMetaDataBlocking);
     Base::_sendTasks.back().wrapData(data);
     Base::_sendTasks.back().triggerSend(Base::_tag);
   }
