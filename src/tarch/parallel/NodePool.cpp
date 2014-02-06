@@ -58,7 +58,7 @@ void tarch::parallel::NodePool::restart() {
     tarch::parallel::messages::RegisterAtNodePoolMessage registerMessage(
       tarch::parallel::StringTools::convert(_log.getMachineInformation())
     );
-    registerMessage.send( Node::getGlobalMasterRank(), _registrationTag, true, SendSynchronousMessagesBlocking);
+    registerMessage.send( Node::getGlobalMasterRank(), _registrationTag, true, SendLoadBalancingMessagesBlocking);
     logDebug( "restart()", "register message sent: " << registerMessage.toString() << " on tag " << _registrationTag );
   }
   #endif
@@ -220,7 +220,7 @@ tarch::parallel::NodePool::JobRequestMessageAnswer tarch::parallel::NodePool::wa
 
   #ifdef Parallel
   tarch::parallel::messages::JobRequestMessage message;
-  message.send(Node::getInstance().getGlobalMasterRank(),_jobManagementTag, true, SendSynchronousMessagesBlocking);
+  message.send(Node::getInstance().getGlobalMasterRank(),_jobManagementTag, true, SendLoadBalancingMessagesBlocking);
 
   MPI_Status   status;
   tarch::parallel::messages::ActivationMessage answer;
@@ -280,7 +280,7 @@ void tarch::parallel::NodePool::terminate() {
     while ( _strategy->hasIdleNode(NodePoolStrategy::AnyMaster) ) {
       int rank = _strategy->removeNextIdleNode();
       tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
-      answerMessage.send( rank, _jobManagementTag, true, SendSynchronousMessagesBlocking );
+      answerMessage.send( rank, _jobManagementTag, true, SendLoadBalancingMessagesBlocking );
     }
 
     if (_strategy->getNumberOfRegisteredNodes()>0) {
@@ -344,7 +344,7 @@ int tarch::parallel::NodePool::reserveFreeNodeForServer() {
   #ifdef Parallel
   if (activatedNode!=NoFreeNodesMessage) {
     tarch::parallel::messages::ActivationMessage message( Node::getInstance().getGlobalMasterRank() );
-    message.send( activatedNode, _jobManagementTag, true, SendSynchronousMessagesBlocking );
+    message.send( activatedNode, _jobManagementTag, true, SendLoadBalancingMessagesBlocking );
   }
   #endif
 
@@ -376,10 +376,10 @@ int tarch::parallel::NodePool::reserveFreeNodeForClient() {
 
   #ifdef Parallel
   tarch::parallel::messages::WorkerRequestMessage queryMessage;
-  queryMessage.send(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, SendSynchronousMessagesBlocking);
+  queryMessage.send(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, SendLoadBalancingMessagesBlocking);
 
   tarch::parallel::messages::NodePoolAnswerMessage answer;
-  answer.receive(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, SendSynchronousMessagesBlocking );
+  answer.receive(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, SendLoadBalancingMessagesBlocking );
 
   const int result = answer.getNewWorker();
   #else
@@ -437,7 +437,7 @@ void tarch::parallel::NodePool::replyToRegistrationMessages() {
 
   while ( tarch::parallel::messages::RegisterAtNodePoolMessage::isMessageInQueue(_registrationTag, true) ) {
     tarch::parallel::messages::RegisterAtNodePoolMessage message;
-    message.receive( MPI_ANY_SOURCE, _registrationTag, true, SendSynchronousMessagesBlocking );
+    message.receive( MPI_ANY_SOURCE, _registrationTag, true, SendLoadBalancingMessagesBlocking );
     logDebug(  "replyToRegistrationMessages()", "got registration from rank " << message.getSenderRank() );
     _strategy->addNode( message );
     logStatistics();
@@ -455,7 +455,7 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
   #ifdef Parallel
   while ( tarch::parallel::messages::JobRequestMessage::isMessageInQueue(_jobManagementTag, true) ) {
     tarch::parallel::messages::JobRequestMessage queryMessage;
-    queryMessage.receive( MPI_ANY_SOURCE, _jobManagementTag, true, SendSynchronousMessagesBlocking );
+    queryMessage.receive( MPI_ANY_SOURCE, _jobManagementTag, true, SendLoadBalancingMessagesBlocking );
 
     assertion1( queryMessage.getSenderRank() !=Node::getInstance().getGlobalMasterRank(), Node::getInstance().getRank() );
 
@@ -479,7 +479,7 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
       int rank = _strategy->removeNextIdleNode();
       assertionEquals1( rank, queryMessage.getSenderRank(), Node::getInstance().getRank() );
       tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
-      answerMessage.send( rank, _jobManagementTag, true, SendSynchronousMessagesBlocking );
+      answerMessage.send( rank, _jobManagementTag, true, SendLoadBalancingMessagesBlocking );
     }
     else {
       _strategy->setNodeIdle( queryMessage.getSenderRank() );
@@ -510,14 +510,14 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
         int activatedNode = _strategy->reserveNode(nextRequestToAnswer.getSenderRank());
 
         tarch::parallel::messages::NodePoolAnswerMessage answerMessage( activatedNode );
-        answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendSynchronousMessagesBlocking );
+        answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendLoadBalancingMessagesBlocking );
 
         tarch::parallel::messages::ActivationMessage activationMessage( nextRequestToAnswer.getSenderRank() );
-        activationMessage.send( activatedNode, _jobManagementTag, true, SendSynchronousMessagesBlocking );
+        activationMessage.send( activatedNode, _jobManagementTag, true, SendLoadBalancingMessagesBlocking );
       }
       else {
         tarch::parallel::messages::NodePoolAnswerMessage answerMessage( NoFreeNodesMessage );
-        answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendSynchronousMessagesBlocking );
+        answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendLoadBalancingMessagesBlocking );
       }
       _strategy->fillWorkerRequestQueue(queue);
       logStatistics();
@@ -541,7 +541,7 @@ void tarch::parallel::NodePool::emptyRegisterMessageReceiveBuffer() {
   #ifdef Parallel
   while ( tarch::parallel::messages::RegisterAtNodePoolMessage::isMessageInQueue(_registrationTag, true) ) {
     tarch::parallel::messages::RegisterAtNodePoolMessage message;
-    message.receive( MPI_ANY_SOURCE, _registrationTag, true, SendSynchronousMessagesBlocking );
+    message.receive( MPI_ANY_SOURCE, _registrationTag, true, SendLoadBalancingMessagesBlocking );
   }
   #endif
 }
@@ -551,7 +551,7 @@ void tarch::parallel::NodePool::emptyJobRequestMessageBuffer() {
   #ifdef Parallel
   while ( tarch::parallel::messages::JobRequestMessage::isMessageInQueue(_jobManagementTag, true) ) {
     tarch::parallel::messages::JobRequestMessage message;
-    message.receive( MPI_ANY_SOURCE, _jobManagementTag, true, SendSynchronousMessagesBlocking );
+    message.receive( MPI_ANY_SOURCE, _jobManagementTag, true, SendLoadBalancingMessagesBlocking );
   }
   #endif
 }
@@ -561,7 +561,7 @@ void tarch::parallel::NodePool::emptyWorkerRequestMessageBuffer() {
   #ifdef Parallel
   while ( tarch::parallel::messages::WorkerRequestMessage::isMessageInQueue(_jobServicesTag, true) ) {
     tarch::parallel::messages::WorkerRequestMessage message;
-    message.receive( MPI_ANY_SOURCE, _jobServicesTag, true, SendSynchronousMessagesBlocking );
+    message.receive( MPI_ANY_SOURCE, _jobServicesTag, true, SendLoadBalancingMessagesBlocking );
   }
   #endif
 }
@@ -580,7 +580,7 @@ void tarch::parallel::NodePool::activateIdleNodes() {
   for (int rank=1; rank<Node::getInstance().getNumberOfNodes(); rank++) {
     if (_strategy->isIdleNode(rank)) {
       _strategy->reserveParticularNode(rank);
-      message.send(rank,getTagForForkMessages(), true, SendSynchronousMessagesBlocking);
+      message.send(rank,getTagForForkMessages(), true, SendLoadBalancingMessagesBlocking);
     }
   }
   logTraceOut( "activateIdleNodes(int)" );

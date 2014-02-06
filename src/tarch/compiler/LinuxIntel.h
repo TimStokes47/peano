@@ -107,4 +107,6 @@
  * you switch from a non-blocking realisation (false as argument here) to plain
  * MPI_Send or MPI_Recv, respectively.
  */
-#define SendSynchronousMessagesBlocking false
+// #define SendSynchronousMessagesBlocking false      Gibt es nimmer
+#define SendMasterWorkerAndWorkerMasterMessagesBlocking false
+#define SendLoadBalancingMessagesBlocking false

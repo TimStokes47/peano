@@ -497,9 +497,9 @@ void peano::grid::Vertex<VertexData>::send(int destination, int tag, bool exchan
   assertion(MPIDatatypeContainer::Datatype!=0);
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
-  _vertexData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,SendSynchronousMessagesBlocking);
+  _vertexData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
   #else
-  _vertexData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,SendSynchronousMessagesBlocking);
+  _vertexData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
   #endif
 }
 
@@ -510,10 +510,10 @@ void peano::grid::Vertex<VertexData>::receive(int source, int tag, bool exchange
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
   MPIDatatypeContainer receivedMessage;
-  receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,SendSynchronousMessagesBlocking);
+  receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
   _vertexData = receivedMessage.convert();
   #else
-  _vertexData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,SendSynchronousMessagesBlocking);
+  _vertexData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
   #endif
 }
 
