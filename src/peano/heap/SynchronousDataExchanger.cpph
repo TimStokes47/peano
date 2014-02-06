@@ -118,7 +118,7 @@ void peano::heap::SynchronousDataExchanger<Data>::receiveDanglingMessages() {
 
     SendReceiveTask<Data> receiveTask;
 
-    receiveTask._metaInformation.receive(status.MPI_SOURCE, _tag, true);
+    receiveTask._metaInformation.receive(status.MPI_SOURCE, _tag, true, SendAndReceiveHeapMetaDataBlocking);
     receiveTask._rank = status.MPI_SOURCE;
 
     _numberOfReceivedMessages += 1;
