@@ -32,9 +32,9 @@ namespace peano {
  * 		   2007-2009 Wolfgang Eckhardt
  * 		   2012      Tobias Weinzierl
  *
- * 		   build date: 22-10-2013 20:59
+ * 		   build date: 04-02-2014 16:40
  *
- * @date   24/10/2013 10:16
+ * @date   06/02/2014 21:12
  */
 class peano::heap::records::DoubleHeapData { 
    
@@ -147,9 +147,9 @@ class peano::heap::records::DoubleHeapData {
          
          static void shutdownDatatype();
          
-         void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+         void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
          
-         void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+         void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
          
          static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
          
@@ -165,9 +165,9 @@ class peano::heap::records::DoubleHeapData {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 22-10-2013 20:59
+    * 		   build date: 04-02-2014 16:40
     *
-    * @date   24/10/2013 10:16
+    * @date   06/02/2014 21:12
     */
    class peano::heap::records::DoubleHeapDataPacked { 
       
@@ -274,9 +274,9 @@ class peano::heap::records::DoubleHeapData {
             
             static void shutdownDatatype();
             
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
             
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             
