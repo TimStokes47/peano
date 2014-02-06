@@ -111,7 +111,7 @@
 // #define SendSynchronousMessagesBlocking false      Gibt es nimmer
 
 // Default value is false
-#define SendMasterWorkerAndWorkerMasterMessagesBlocking false
+#define SendMasterWorkerAndWorkerMasterMessagesBlocking true
 
 /**
  * Exchange load balancing and global (iteration control) messages blocking
