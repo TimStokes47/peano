@@ -127,3 +127,8 @@
 #define ReceiveIterationControlMessagesBlocking        false
 #define BroadcastToIdleNodesBlocking                   false
 #define BroadcastToWorkingNodesBlocking                false
+
+
+#define SendAndReceiveHeapMetaDataBlocking             false
+#define SendAndReceiveHeapDataBlocking                 false
+

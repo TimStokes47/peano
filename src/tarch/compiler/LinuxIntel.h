@@ -132,3 +132,11 @@
 #define ReceiveIterationControlMessagesBlocking        false
 #define BroadcastToIdleNodesBlocking                   false
 #define BroadcastToWorkingNodesBlocking                false
+
+
+#define SendAndReceiveHeapMetaDataBlocking             false
+
+// @todo wird noch nicht genutzt. Dann kann man sich naemlich auch Kopiererei sparen
+// Daher vielleicht eher ifdef?
+#define SendAndReceiveHeapDataBlocking                 false
+

@@ -1,3 +1,6 @@
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
+
 template<class Data>
 tarch::logging::Log  peano::heap::SynchronousDataExchanger<Data>::_log( "peano::heap::SynchronousDataExchanger" );
 
@@ -156,7 +159,7 @@ void peano::heap::SynchronousDataExchanger<Data>::sendData(
   logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with tag " << _tag  );
 
   sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
-  sendTask._metaInformation.send(toRank, _tag, true);
+  sendTask._metaInformation.send(toRank, _tag, true, SendAndReceiveHeapMetaDataBlocking );
 
   if(data.size() > 0) {
     sendTask.wrapData(data);
