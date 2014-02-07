@@ -574,27 +574,27 @@ void peano::grid::State<StateData>::shutdownDatatype() {
 
 
 template <class StateData>
-void peano::grid::State<StateData>::send(int destination, int tag) {
+void peano::grid::State<StateData>::send(int destination, int tag, bool exchangeDataBlocking) {
   assertion(MPIDatatypeContainer::Datatype!=0);
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
-  _stateData.convert().send(destination,tag,true,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  _stateData.convert().send(destination,tag,true,exchangeDataBlocking);
   #else
-  _stateData.send(destination,tag,true,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  _stateData.send(destination,tag,true,exchangeDataBlocking);
   #endif
 }
 
 
 template <class StateData>
-void peano::grid::State<StateData>::receive(int source, int tag) {
+void peano::grid::State<StateData>::receive(int source, int tag, bool exchangeDataBlocking) {
   assertion(MPIDatatypeContainer::Datatype!=0);
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
   MPIDatatypeContainer receivedMessage;
-  receivedMessage.receive(source,tag,true,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  receivedMessage.receive(source,tag,true,exchangeDataBlocking);
   _stateData = receivedMessage.convert();
   #else
-  _stateData.receive(source,tag,true,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  _stateData.receive(source,tag,true,exchangeDataBlocking);
   #endif
 }
 

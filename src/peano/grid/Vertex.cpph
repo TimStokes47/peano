@@ -493,27 +493,27 @@ void peano::grid::Vertex<VertexData>::shutdownDatatype() {
 
 
 template <class VertexData>
-void peano::grid::Vertex<VertexData>::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel) {
+void peano::grid::Vertex<VertexData>::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking) {
   assertion(MPIDatatypeContainer::Datatype!=0);
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
-  _vertexData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  _vertexData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
   #else
-  _vertexData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  _vertexData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
   #endif
 }
 
 
 template <class VertexData>
-void peano::grid::Vertex<VertexData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel) {
+void peano::grid::Vertex<VertexData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking) {
   assertion(MPIDatatypeContainer::Datatype!=0);
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
   MPIDatatypeContainer receivedMessage;
-  receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
   _vertexData = receivedMessage.convert();
   #else
-  _vertexData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  _vertexData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
   #endif
 }
 

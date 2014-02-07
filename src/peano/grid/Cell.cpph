@@ -485,27 +485,27 @@ void peano::grid::Cell<CellData>::shutdownDatatype() {
 
 
 template <class CellData>
-void peano::grid::Cell<CellData>::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel) {
+void peano::grid::Cell<CellData>::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking) {
   assertion4(MPIDatatypeContainer::Datatype!=0,destination,tag,toString(),tarch::parallel::Node::getInstance().getRank());
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
-  _cellData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  _cellData.convert().send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
   #else
-  _cellData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  _cellData.send(destination,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
   #endif
 }
 
 
 template <class CellData>
-void peano::grid::Cell<CellData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel) {
+void peano::grid::Cell<CellData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking) {
   assertion4(MPIDatatypeContainer::Datatype!=0,source,tag,toString(),tarch::parallel::Node::getInstance().getRank());
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
   MPIDatatypeContainer receivedMessage;
-  receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  receivedMessage.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
   _cellData = receivedMessage.convert();
   #else
-  _cellData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,SendMasterWorkerAndWorkerMasterMessagesBlocking);
+  _cellData.receive(source,tag,exchangeOnlyAttributesMarkedWithParallel,exchangeDataBlocking);
   #endif
 }
 
