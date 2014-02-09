@@ -32,9 +32,9 @@ namespace peano {
  * 		   2007-2009 Wolfgang Eckhardt
  * 		   2012      Tobias Weinzierl
  *
- * 		   build date: 04-02-2014 16:40
+ * 		   build date: 09-02-2014 14:40
  *
- * @date   06/02/2014 21:12
+ * @date   09/02/2014 14:49
  */
 class peano::heap::records::IntegerHeapData { 
    
@@ -165,9 +165,9 @@ class peano::heap::records::IntegerHeapData {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 04-02-2014 16:40
+    * 		   build date: 09-02-2014 14:40
     *
-    * @date   06/02/2014 21:12
+    * @date   09/02/2014 14:49
     */
    class peano::heap::records::IntegerHeapDataPacked { 
       

@@ -262,7 +262,7 @@ void peano::heap::records::DoubleHeapData::receive(int source, int tag, bool exc
    if (communicateBlocking) {
    
       MPI_Status  status;
-      const int   result = MPI_Recv(this, 1, communicateBlocking ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
       _senderDestinationRank = status.MPI_SOURCE;
       if ( result != MPI_SUCCESS ) {
          std::ostringstream msg;
@@ -644,7 +644,7 @@ void peano::heap::records::DoubleHeapDataPacked::receive(int source, int tag, bo
 if (communicateBlocking) {
 
    MPI_Status  status;
-   const int   result = MPI_Recv(this, 1, communicateBlocking ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+   const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
    _senderDestinationRank = status.MPI_SOURCE;
    if ( result != MPI_SUCCESS ) {
       std::ostringstream msg;
