@@ -144,7 +144,11 @@ void peano::parallel::Partitioner::sendForkMessages(
         levelOfPatch+1
       );
       #ifdef Parallel
-      message.send(_ranks[assignedRemoteRanks],tarch::parallel::NodePool::getInstance().getTagForForkMessages(), true);
+      message.send(
+        _ranks[assignedRemoteRanks],
+        tarch::parallel::NodePool::getInstance().getTagForForkMessages(),
+        true, SendAndReceiveLoadBalancingMessagesBlocking
+      );
       #endif
       _assignedNodes[CellIndex] = _ranks[assignedRemoteRanks];
       assignedRemoteRanks++;

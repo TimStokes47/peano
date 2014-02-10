@@ -103,6 +103,13 @@ class peano::parallel::Partitioner {
      * Sends out all the fork messages. The partitioning takes the meander
      * direction of the Peano curve into account.
      *
+     * !!! Send protocol
+     *
+     * The partitioner could send its partitioning message either blocking or
+     * non-blocking. As the message is a direct follow-up to a job message
+     * resulting from re-balancing, I make the flag
+     * SendAndReceiveLoadBalancingMessagesBlocking determine the send protocol.
+     *
      * @param domainOffset Offset of original computational domain, i.e. the
      *                     @f$ 3^d @f$ patch, that is now split.
      * @param h            Mesh width. That is the fine grid mesh width, i.e.

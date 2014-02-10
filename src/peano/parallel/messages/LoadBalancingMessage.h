@@ -32,9 +32,9 @@ namespace peano {
  * 		   2007-2009 Wolfgang Eckhardt
  * 		   2012      Tobias Weinzierl
  *
- * 		   build date: 12-04-2013 09:18
+ * 		   build date: 09-02-2014 14:40
  *
- * @date   21/05/2013 13:39
+ * @date   09/02/2014 16:01
  */
 class peano::parallel::messages::LoadBalancingMessage { 
    
@@ -143,9 +143,9 @@ class peano::parallel::messages::LoadBalancingMessage {
          
          static void shutdownDatatype();
          
-         void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+         void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
          
-         void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+         void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
          
          static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
          
@@ -161,9 +161,9 @@ class peano::parallel::messages::LoadBalancingMessage {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 12-04-2013 09:18
+    * 		   build date: 09-02-2014 14:40
     *
-    * @date   21/05/2013 13:39
+    * @date   09/02/2014 16:01
     */
    class peano::parallel::messages::LoadBalancingMessagePacked { 
       
@@ -270,9 +270,9 @@ class peano::parallel::messages::LoadBalancingMessage {
             
             static void shutdownDatatype();
             
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking);
             
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             
