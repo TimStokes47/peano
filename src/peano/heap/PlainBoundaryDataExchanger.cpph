@@ -50,7 +50,7 @@ void peano::heap::PlainBoundaryDataExchanger<Data>::handleAndQueueReceivedTask( 
   if(receivedTask._metaInformation.getLength() > 0) {
     Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_tag);
     logDebug(
-      "receiveDanglingMessages(...)",
+      "handleAndQueueReceivedTask(...)",
       "started to receive " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() <<
       "th message from rank " << receivedTask._rank << " with " << receivedTask._metaInformation.getLength() <<
       " entries and data pointing to " << Base::_receiveTasks[Base::_currentReceiveBuffer].back()._data
