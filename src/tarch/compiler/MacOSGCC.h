@@ -75,12 +75,19 @@
 //#define DaStGenPackedPadding 1      // 32 bit version
 // #define DaStGenPackedPadding 2   // 64 bit version
 
+/**
+ * Peano can deploy the receive process of vertices along the domain
+ * boundary to a thread of its own if your MPI implementation supports
+ * multiple threadsd running in parallel. Most do not. Anyway, this
+ * flag seems not to have a major runtime impact.
+ */
 #ifndef noMultipleThreadsMayTriggerMPICalls
 #define MultipleThreadsMayTriggerMPICalls
 #endif
 
 
 /**
+ *
  * Peano relies on synchronous and asynchronous messages. Synchronous messages
  * are sent up and down the tree throughout the traversal or are used to
  * communicate with the load balancing rank, e.g. By default, Peano also uses
@@ -89,8 +96,61 @@
  * Peano avoids deadlocks. However, you can observe a signficiant speedup if
  * you switch from a non-blocking realisation (false as argument here) to plain
  * MPI_Send or MPI_Recv, respectively.
+ *
+ * @see Grid::sendStateToMaster()
  */
-#define SendMasterWorkerAndWorkerMasterMessagesBlocking false
+#define SendWorkerMasterMessagesBlocking     false
+
+
+/**
+ *
+ * Peano relies on synchronous and asynchronous messages. Synchronous messages
+ * are sent up and down the tree throughout the traversal or are used to
+ * communicate with the load balancing rank, e.g. By default, Peano also uses
+ * non-blocking methods for these messages and tries to receive dangling
+ * messages after the send has been triggered until it has completed. This way,
+ * Peano avoids deadlocks. However, you can observe a signficiant speedup if
+ * you switch from a non-blocking realisation (false as argument here) to plain
+ * MPI_Send or MPI_Recv, respectively.
+ *
+ * @see Node::updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()
+ */
+#define SendMasterWorkerMessagesBlocking     false
+
+/**
+ * Shall a master receive its worker messages due to blocking mpi operations.
+ *
+ *
+ * Peano relies on synchronous and asynchronous messages. Synchronous messages
+ * are sent up and down the tree throughout the traversal or are used to
+ * communicate with the load balancing rank, e.g. By default, Peano also uses
+ * non-blocking methods for these messages and tries to receive dangling
+ * messages after the send has been triggered until it has completed. This way,
+ * Peano avoids deadlocks. However, you can observe a signficiant speedup if
+ * you switch from a non-blocking realisation (false as argument here) to plain
+ * MPI_Send or MPI_Recv, respectively.
+ *
+ * @see Node::updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree()
+ */
+#define ReceiveWorkerMessagesBlocking        false
+
+/**
+ *
+ * Peano relies on synchronous and asynchronous messages. Synchronous messages
+ * are sent up and down the tree throughout the traversal or are used to
+ * communicate with the load balancing rank, e.g. By default, Peano also uses
+ * non-blocking methods for these messages and tries to receive dangling
+ * messages after the send has been triggered until it has completed. This way,
+ * Peano avoids deadlocks. However, you can observe a signficiant speedup if
+ * you switch from a non-blocking realisation (false as argument here) to plain
+ * MPI_Send or MPI_Recv, respectively.
+ *
+ * Recommendation: Do not switch to true to enable data exchange in background
+ * while nodes are waiting for their master's notification at the begin ob
+ * subsequent traversal.
+ */
+#define ReceiveMasterMessagesBlocking        false
+
 
 /**
  * Exchange load balancing and global (iteration control) messages blocking
@@ -113,6 +173,15 @@
 #define BroadcastToWorkingNodesBlocking                false
 
 
+/**
+ * Shall heap exchange its meta data blocking
+ *
+ * The heap sends and receives two types of data: meta data comprising message
+ * sizes, e.g., and the actual data. The meta data can be sent blocking or non
+ * blocking due to this switch. For different handling of the actual data, you
+ * have to study the heap implementations. Switching to a different
+ * send/receive protocol there is not just switching a flag but to select a
+ * completely different algorithm.
+ */
 #define SendAndReceiveHeapMetaDataBlocking             false
-#define SendAndReceiveHeapDataBlocking                 false
 
