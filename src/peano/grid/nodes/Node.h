@@ -357,6 +357,11 @@ class peano::grid::nodes::Node {
       * degeneration of remote workers, i.e. to avoid that a remote worker
       * holds the trivial tree with only one inner cell. This way, we preserve
       * a halo layer around each worker of at least depth one.
+      *
+      * !!! MPI communication mode
+      *
+      * Depending on the flag SendMasterWorkerMessagesBlocking, Peano exchanges
+      * the messages either blocking or non-blocking.
       */
      void updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(
        State&                                    state,
@@ -512,6 +517,23 @@ class peano::grid::nodes::Node {
      * this flag in this routine. However, if we switch off the reduction,
      * the operation never is called. Thus, I moved the update of the respective
      * flag to the startup operation.
+     *
+     * !!! MPI communication mode
+     *
+     * Semantically, the receive of worker data is a synchronous data exchange.
+     * It hence is straightforward to realise it with a blocking mpi call. If
+     * done that way, Peano however hangs. The reason is that - at least on the
+     * global master - load balancing requests have to be handled in the
+     * background. Rank 0 is by construction underbooked. When it waits for the
+     * workers, these are still running through their subdomains and triggering
+     * load balancing requests. These requests have to be handled.
+     *
+     * As a result, Peano supports that worker data is received blocking - which
+     * should be fast than polling for the worker's message. And speed here is
+     * essential as the worker-master communication typically is part of the
+     * critical (communication) path. However, I disable this feature (controlled
+     * via the compiler's ReceiveWorkerMessagesBlocking flag) explicitly on rank
+     * 0.
      */
     void updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(
       State&                                    state,
