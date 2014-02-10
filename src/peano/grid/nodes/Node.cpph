@@ -142,14 +142,14 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         currentWorker,
         peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
         true,
-        ReceiveWorkerMessagesBlocking & !tarch::parallel::Node::getInstance().isGlobalMaster()
+        false
       );
       for (int i=0; i<TWO_POWER_D; i++) {
         receivedWorkerVertices[i].receive(
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
           true,
-          ReceiveWorkerMessagesBlocking & !tarch::parallel::Node::getInstance().isGlobalMaster()
+          false
         );
 
         #ifdef Debug
@@ -168,7 +168,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       workerState.receive(
         currentWorker,
         peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-        ReceiveWorkerMessagesBlocking & !tarch::parallel::Node::getInstance().isGlobalMaster()
+        false
       );
       state.mergeWithWorkerState(workerState);
 

@@ -141,23 +141,6 @@
 #define SendMasterWorkerMessagesBlocking     false
 
 /**
- * Shall a master receive its worker messages due to blocking mpi operations.
- *
- *
- * Peano relies on synchronous and asynchronous messages. Synchronous messages
- * are sent up and down the tree throughout the traversal or are used to
- * communicate with the load balancing rank, e.g. By default, Peano also uses
- * non-blocking methods for these messages and tries to receive dangling
- * messages after the send has been triggered until it has completed. This way,
- * Peano avoids deadlocks. However, you can observe a signficiant speedup if
- * you switch from a non-blocking realisation (false as argument here) to plain
- * MPI_Send or MPI_Recv, respectively.
- *
- * @see Node::updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree()
- */
-#define ReceiveWorkerMessagesBlocking        false
-
-/**
  *
  * Peano relies on synchronous and asynchronous messages. Synchronous messages
  * are sent up and down the tree throughout the traversal or are used to

@@ -528,12 +528,9 @@ class peano::grid::nodes::Node {
      * workers, these are still running through their subdomains and triggering
      * load balancing requests. These requests have to be handled.
      *
-     * As a result, Peano supports that worker data is received blocking - which
-     * should be fast than polling for the worker's message. And speed here is
-     * essential as the worker-master communication typically is part of the
-     * critical (communication) path. However, I disable this feature (controlled
-     * via the compiler's ReceiveWorkerMessagesBlocking flag) explicitly on rank
-     * 0.
+     * A similar reasoning holds for any rank if heap data is exchanged. Soon,
+     * any blocking receive breaks down and makes the application hang. The
+     * receive hence is non-blocking always.
      */
     void updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(
       State&                                    state,
