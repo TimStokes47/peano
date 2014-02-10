@@ -3,6 +3,7 @@
 
 #ifdef Parallel
 #include "peano/utils/Globals.h"
+#include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/parallel/NodePool.h"
 #include "peano/parallel/messages/ForkMessage.h"
 #include "__PROJECT_PATH__/repositories/Repository.h"
@@ -13,7 +14,7 @@ int __NAMESPACE__::runners::Runner::runAsWorker(__NAMESPACE__::repositories::Rep
   while ( newMasterNode != tarch::parallel::NodePool::JobRequestMessageAnswerValues::Terminate ) {
     if ( newMasterNode >= tarch::parallel::NodePool::JobRequestMessageAnswerValues::NewMaster ) {
       peano::parallel::messages::ForkMessage forkMessage;
-      forkMessage.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),tarch::parallel::NodePool::getInstance().getTagForForkMessages(), true);
+      forkMessage.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),tarch::parallel::NodePool::getInstance().getTagForForkMessages(), true, ReceiveIterationControlMessagesBlocking);
 
       repository.restart(
         forkMessage.getH(),
