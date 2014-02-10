@@ -226,6 +226,7 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
     /**
      * @see Node::updateCellsParallelStateBeforeStore()
      * @see _verticesFromMaster
+     * @see Grid::sendStateToMaster() for a discussion on different send semantics.
      */
     void sendCellAndVerticesToMaster(
       const State&                                 state,

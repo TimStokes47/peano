@@ -236,20 +236,40 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     Cell    coarseGridCellFromMaster;
     Vertex  coarseVertexFromMaster[TWO_POWER_D];
 
-    coarseGridCellFromMaster.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
+    coarseGridCellFromMaster.receive(
+      tarch::parallel::NodePool::getInstance().getMasterRank(),
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      true,
+      ReceiveMasterMessagesBlocking
+    );
     logDebug( "receiveCellAndVerticesFromMaster(...)", "received cell " << coarseGridCellFromMaster.toString() << " from master" );
     dfor2(i)
-      coarseVertexFromMaster[iScalar].receive(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
+      coarseVertexFromMaster[iScalar].receive(
+        tarch::parallel::NodePool::getInstance().getMasterRank(),
+        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+        true,
+        ReceiveMasterMessagesBlocking
+      );
       logDebug(
         "receiveCellAndVerticesFromMaster(...)",
         "received vertex " << coarseVertexFromMaster[iScalar].toString() << " from master and stored it in coarseVertexFromMaster " << iScalar
       );
     }
 
-    _masterCell.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
+    _masterCell.receive(
+      tarch::parallel::NodePool::getInstance().getMasterRank(),
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      true,
+      ReceiveMasterMessagesBlocking
+    );
     logDebug( "receiveCellAndVerticesFromMaster(...)", "received cell " << _masterCell.toString() << " from master" );
     dfor2(i)
-      _masterVertices[iScalar].receive(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
+      _masterVertices[iScalar].receive(
+        tarch::parallel::NodePool::getInstance().getMasterRank(),
+        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+        true,
+        ReceiveMasterMessagesBlocking
+      );
       logDebug(
         "receiveCellAndVerticesFromMaster(...)",
         "received vertex " << _masterVertices[iScalar].toString() << " from master and stored it in _masterVertex " << iScalar
@@ -359,7 +379,13 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     );
 
     logDebug( "sendCellAndVerticesToMaster(...)", "send cell " << centralFineGridCell.toString() << " to master" );
-    centralFineGridCell.send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
+
+    centralFineGridCell.send(
+      tarch::parallel::NodePool::getInstance().getMasterRank(),
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      true,
+      SendWorkerMasterMessagesBlocking
+    );
     dfor2(k)
       logDebug( "sendCellAndVerticesToMaster(...)", "send vertex " << fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString() << " to master" );
       assertion2(
@@ -368,7 +394,12 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString()
       );
       assertion2( fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet(), fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString() );
-      fineGridVertices[ centralFineGridVerticesEnumerator(k) ].send(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),true);
+      fineGridVertices[ centralFineGridVerticesEnumerator(k) ].send(
+        tarch::parallel::NodePool::getInstance().getMasterRank(),
+        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+        true,
+        SendWorkerMasterMessagesBlocking
+      );
     enddforx
   }
   else {
