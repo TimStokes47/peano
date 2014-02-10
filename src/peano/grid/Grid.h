@@ -119,6 +119,13 @@ class peano::grid::Grid {
      * - the node has not just forked.
      *
      * For the rationale for the latter constraint, please see Node::updateCellsParallelStateBeforeStore()
+     *
+     * !!! Send protocol
+     *
+     * If the SendMasterWorkerAndWorkerMasterMessagesBlocking is set, the code
+     * sends its data blocking. It is typical among the most criticial
+     * communication routines. Thus, switching to a blocking send here is of
+     * value as any overhead elimination here pays off.
      */
     void sendStateToMaster();
   public:

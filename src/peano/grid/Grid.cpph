@@ -94,7 +94,8 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::rec
     loadBalancingMessage.receive(
       tarch::parallel::NodePool::getInstance().getMasterRank(),
       peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      true
+      true,
+      ReceiveMasterMessagesBlocking
     );
 
     assertion(
@@ -117,7 +118,8 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::rec
 
     _state.receive(
       tarch::parallel::NodePool::getInstance().getMasterRank(),
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      ReceiveMasterMessagesBlocking
     );
 
     logDebug( "receiveStartupDataFromMaster()", "received state " << _state.toString() );
@@ -135,7 +137,8 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::sen
   if (_state.reduceDataToMaster() ) {
     _state.send(
       tarch::parallel::NodePool::getInstance().getMasterRank(),
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      SendWorkerMasterMessagesBlocking
     );
     logDebug( "sendStateToMaster()", "sent state " << _state.toString() );
 

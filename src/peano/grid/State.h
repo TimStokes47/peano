@@ -366,7 +366,7 @@ class peano::grid::State {
      * bit-by-bit to the master. However, the WorkerHasWorkerFlag might be
      * changed throughout the call (not locally).
      */
-    void send(int destination, int tag, bool exchangeDataBlocking = SendMasterWorkerAndWorkerMasterMessagesBlocking);
+    void send(int destination, int tag, bool exchangeDataBlocking );
 
     /**
      * Blocking receive. initDatatype() has to be called before.
@@ -382,7 +382,7 @@ class peano::grid::State {
      * overwritten by the received state. As it shall be worker-local and shall
      * not be overwritten by the master's data, we restore it manually.
      */
-    void receive(int source, int tag, bool exchangeDataBlocking = SendMasterWorkerAndWorkerMasterMessagesBlocking);
+    void receive(int source, int tag, bool exchangeDataBlocking );
 
     /**
      * Notify state about join

@@ -181,12 +181,12 @@ class peano::grid::Cell {
     /**
      * Blocking send. initDatatype() has to be called before.
      */
-    void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking = SendMasterWorkerAndWorkerMasterMessagesBlocking);
+    void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking );
 
     /**
      * Blocking receive. initDatatype() has to be called before.
      */
-    void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking = SendMasterWorkerAndWorkerMasterMessagesBlocking);
+    void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking );
 
     void assignToRemoteNode( int rank );
 
