@@ -18,6 +18,8 @@ set style line 71 lc rgb "#667766" lt 1 pt 3   lw 1.0 ps 1.6
 set style line 72 lc rgb "#667766" lt 1 pt 2   lw 1.0 ps 1.6 
 set style line 81 lc rgb "#000000" lt 1 pt 2   lw 1.0 ps 1.6 
 set style line 82 lc rgb "#334433" lt 1 pt 1   lw 1.0 ps 1.6 
+set style line 91 lc rgb "#000000" lt 1 pt 11  lw 1.4 ps 2.2 
+set style line 92 lc rgb "#334433" lt 1 pt 12  lw 1.4 ps 2.2 
 
 
 set grid
@@ -44,6 +46,7 @@ plot "tmp.data"  using  1:3                       every :::RANK::RANK  notitle  
      "tmp.data"  using  1:9                       every :::RANK::RANK  notitle         with lines ls 42, \
      "tmp.data"  using  1:11                      every :::RANK::RANK  notitle               with lines ls 52, \
      "tmp.data"  using  1:13                      every :::RANK::RANK  notitle              with lines ls 62, \
+     "tmp.data"  using  1:15                      every :::RANK::RANK  notitle              with lines ls 92, \
      "tmp.data"  using  1:(($5)+($7)+($9))        every :::RANK::RANK  notitle               with lines ls 72, \
      "tmp.data"  using  1:(($2)+($4)+($6)+($8))   every :::RANK::RANK  notitle                                with lines ls 82, \
      "tmp.data"  using  1:3                       every 10:::RANK::RANK  title "busy "                                with points ls 12, \
@@ -78,6 +81,7 @@ plot "tmp.data"  using  1:2                       every :::RANK::RANK  notitle  
      "tmp.data"  using  1:8                       every :::RANK::RANK  notitle    with lines ls 41, \
      "tmp.data"  using  1:10                      every :::RANK::RANK  notitle           with lines ls 51, \
      "tmp.data"  using  1:12                      every :::RANK::RANK  notitle         with lines ls 61, \
+     "tmp.data"  using  1:14                      every :::RANK::RANK  notitle         with lines ls 91, \
      "tmp.data"  using  1:(($4)+($6)+($8))        every :::RANK::RANK  notitle          with lines ls 71, \
      "tmp.data"  using  1:(($2)+($4)+($6)+($8))   every :::RANK::RANK  notitle                           with lines ls 81, \
      "tmp.data"  using  1:2                       every 10:::RANK::RANK  title "busy "                           with points ls 11, \

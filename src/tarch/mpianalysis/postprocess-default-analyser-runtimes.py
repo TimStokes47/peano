@@ -25,6 +25,8 @@ currentSynchronousHeapDataCalendar  = "?0"
 currentSynchronousHeapDataCPU       = "?0"
 currentAsynchronousHeapDataCalendar = "?0"
 currentAsynchronousHeapDataCPU      = "?0"
+currentCentralElementCalendar       = "?0"
+currentCentralElementCPU            = "?0"
  
  
 maxSteps = 0
@@ -50,7 +52,9 @@ for rank in range(0,int(sys.argv[2])):
         str(currentSynchronousHeapDataCalendar) + " " + 
         str(currentSynchronousHeapDataCPU) + " " + 
         str(currentAsynchronousHeapDataCalendar) + " " +
-        str(currentAsynchronousHeapDataCPU) + 
+        str(currentAsynchronousHeapDataCPU) + " " 
+        str(currentCentralElementCalendar) + " " +
+        str(currentCentralElementCPU) + 
         "\n" 
       )
 
@@ -66,6 +70,8 @@ for rank in range(0,int(sys.argv[2])):
       currentSynchronousHeapDataCPU       = "?0"
       currentAsynchronousHeapDataCalendar = "?0"
       currentAsynchronousHeapDataCPU      = "?0"
+      currentCentralElementCalendar       = "?0"
+      currentCentralElementCPU            = "?0"
       
       try:
         currentIdleTimeCalendar = data.split( "=" )[1].split(",")[0]
@@ -125,13 +131,23 @@ for rank in range(0,int(sys.argv[2])):
         currentAsynchronousHeapDataCPU      = data.split( "=" )[2].strip()
       except:
         currentAsynchronousHeapDataCPU      = 0
+
+    if (re.search( "tarch::mpianalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree", data ) and re.search( "rank:" + str(rank) + " ", data )):
+      try:
+        currentCentralElementCalendar = data.split( "=" )[1].split(",")[0]
+      except:
+        currentCentralElementCalendar = 0
+      try:
+        currentCentralElementCPU      = data.split( "=" )[2].strip()
+      except:
+        currentCentralElementCPU      = 0
   
   if (step>maxSteps):
     maxSteps = step
     
   if (step==0):
     for s in range(1,maxSteps+1):
-       outFile.write( str(s) + " ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 \n" )
+       outFile.write( str(s) + " ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 \n" )
   
   outFile.write( "\n" )
   #outFile.write( "\n" )
