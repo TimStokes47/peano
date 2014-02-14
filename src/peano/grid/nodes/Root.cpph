@@ -1,4 +1,6 @@
 #include "tarch/Assertions.h"
+#include "tarch/mpianalysis/Analysis.h"
+
 #include "peano/grid/aspects/CellRefinement.h"
 #include "peano/utils/Loop.h"
 #include "peano/grid/nodes/Constants.h"
@@ -546,8 +548,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     assertion2( loadLoopCounter>traverseLoopCounter, loadLoopCounter, traverseLoopCounter);
 
     do {
-      tarch::la::Vector<DIMENSIONS,int> currentCellTraversal = _cellTraversal.getNextCellToTraverseOnLevelOne(traverseLoopCounter,state.isTraversalInverted());
-      Cell& currentCell = fineGridCells[SingleLevelEnumerator::lineariseCellIndex( currentCellTraversal )];
+      tarch::la::Vector<DIMENSIONS,int> currentCellTraversal           = _cellTraversal.getNextCellToTraverseOnLevelOne(traverseLoopCounter,state.isTraversalInverted());
+      const int                         linearisedCurrentCellTraversal = SingleLevelEnumerator::lineariseCellIndex( currentCellTraversal );
+      Cell& currentCell = fineGridCells[ linearisedCurrentCellTraversal ];
       logDebug( "traverse(State)", "traverse cell " << currentCell.toString() << " at " << currentCellTraversal );
       fineGridEnumerator.setOffset( currentCellTraversal );
 
@@ -556,6 +559,10 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         fineGridVertices,
         fineGridEnumerator
       );
+
+      if (linearisedCurrentCellTraversal==THREE_POWER_D/2) {
+        tarch::mpianalysis::Analysis::getInstance().enterCentralElementOfEnclosingSpacetree();
+      }
 
       _refinedNode.descendIntoASingleCell(
         state,
@@ -567,6 +574,10 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         coarseGridEnumerator,
         currentCellTraversal
       );
+
+      if (linearisedCurrentCellTraversal==THREE_POWER_D/2) {
+        tarch::mpianalysis::Analysis::getInstance().leaveCentralElementOfEnclosingSpacetree();
+      }
 
       traverseLoopCounter++;
     } while (traverseLoopCounter < loadLoopCounter);

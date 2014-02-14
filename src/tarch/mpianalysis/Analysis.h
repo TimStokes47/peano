@@ -133,6 +133,8 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
     virtual void endToPrepareAsynchronousHeapDataExchange();
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
+    virtual void enterCentralElementOfEnclosingSpacetree();
+    virtual void leaveCentralElementOfEnclosingSpacetree();
 };
 
 

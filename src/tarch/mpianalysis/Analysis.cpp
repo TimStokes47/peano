@@ -147,3 +147,13 @@ void tarch::mpianalysis::Analysis::endReleaseOfBoundaryData() {
   assertion( _device!=0 );
   _device->endReleaseOfBoundaryData();
 }
+
+void tarch::mpianalysis::Analysis::enterCentralElementOfEnclosingSpacetree() {
+  assertion( _device!=0 );
+  _device->enterCentralElementOfEnclosingSpacetree();
+}
+
+void tarch::mpianalysis::Analysis::leaveCentralElementOfEnclosingSpacetree() {
+  assertion( _device!=0 );
+  _device->leaveCentralElementOfEnclosingSpacetree();
+}

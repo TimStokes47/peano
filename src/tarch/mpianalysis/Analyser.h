@@ -106,6 +106,8 @@ class tarch::mpianalysis::Analyser {
      */
     virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers) = 0;
 
+    virtual void enterCentralElementOfEnclosingSpacetree() = 0;
+    virtual void leaveCentralElementOfEnclosingSpacetree() = 0;
     virtual void beginToReleaseSynchronousHeapData() = 0;
     virtual void endToReleaseSynchronousHeapData() = 0;
     virtual void beginToPrepareAsynchronousHeapDataExchange() = 0;

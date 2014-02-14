@@ -30,6 +30,7 @@ class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
 
     tarch::timing::Watch           _synchronousHeapWatch;
     tarch::timing::Watch           _asynchronousHeapWatch;
+    tarch::timing::Watch           _actualDomainTraversalWatch;
   public:
     DefaultAnalyser();
     virtual ~DefaultAnalyser();
@@ -76,6 +77,8 @@ class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
     virtual void endToPrepareAsynchronousHeapDataExchange();
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
+    virtual void enterCentralElementOfEnclosingSpacetree();
+    virtual void leaveCentralElementOfEnclosingSpacetree();
 };
 
 

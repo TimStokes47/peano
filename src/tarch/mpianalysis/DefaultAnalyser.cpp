@@ -8,7 +8,8 @@ tarch::logging::Log  tarch::mpianalysis::DefaultAnalyser::_log( "tarch::mpianaly
 tarch::mpianalysis::DefaultAnalyser::DefaultAnalyser():
   _watch("tarch::mpianalysis::DefaultAnalyser", "-", false),
   _synchronousHeapWatch("tarch::mpianalysis::DefaultAnalyser", "-", false),
-  _asynchronousHeapWatch("tarch::mpianalysis::DefaultAnalyser", "-", false) {
+  _asynchronousHeapWatch("tarch::mpianalysis::DefaultAnalyser", "-", false),
+  _actualDomainTraversalWatch("tarch::mpianalysis::DefaultAnalyser", "-", false) {
 }
 
 
@@ -244,4 +245,22 @@ void tarch::mpianalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
   );
 
   _watch.startTimer();
+}
+
+
+void tarch::mpianalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree() {
+  _actualDomainTraversalWatch.startTimer();
+}
+
+
+void tarch::mpianalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree() {
+  _actualDomainTraversalWatch.stopTimer();
+
+  logInfo(
+    "leaveCentralElementOfEnclosingSpacetree()",
+    "time=" <<
+    _actualDomainTraversalWatch.getCalendarTime() <<
+    ", cpu time=" <<
+    _actualDomainTraversalWatch.getCPUTime()
+  );
 }
