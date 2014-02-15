@@ -38,6 +38,36 @@ for rank in range(0,int(sys.argv[2])):
   while ( not data=="" ):
     data = inFile.readline()
     if (re.search( "tarch::mpianalysis::DefaultAnalyser::beginIteration", data ) and re.search( "rank:" + str(rank) + " ", data )):
+
+      if (currentIdleTimeCalendar=="0"):
+        currentIdleTimeCalendar             = "?0"
+      if (currentIdleTimeCPU=="0"):
+        currentIdleTimeCPU                  = "?0"
+      if (currentBusyTimeCalendar=="0"):
+        currentBusyTimeCalendar             = "?0"
+      if (currentBusyTimeCPU==currentBusyTimeCPU):
+        currentBusyTimeCPU                  = "?0"
+      if (currentJoinTimeCalendar=="0"):
+        currentJoinTimeCalendar             = "?0"
+      if (currentJoinTimeCPU=="0"):
+        currentJoinTimeCPU                  = "?0"
+      if (currentBoundaryTimeCalendar=="0"):
+        currentBoundaryTimeCalendar         = "?0"
+      if (currentBoundaryTimeCPU=="0"):
+        currentBoundaryTimeCPU              = "?0"
+      if (currentSynchronousHeapDataCalendar=="0"):
+        currentSynchronousHeapDataCalendar  = "?0"
+      if (currentSynchronousHeapDataCPU=="0"):
+        currentSynchronousHeapDataCPU       = "?0"
+      if (currentAsynchronousHeapDataCalendar=="0"):
+        currentAsynchronousHeapDataCalendar = "?0"
+      if (currentAsynchronousHeapDataCPU=="0"):
+        currentAsynchronousHeapDataCPU      = "?0"
+      if (currentCentralElementCalendar=="0"):
+        currentCentralElementCalendar       = "?0"
+      if (currentCentralElementCPU=="0"):
+        currentCentralElementCPU            = "?0"
+
       step  = step + 1
       outFile.write( 
         str(step) + " " + 
