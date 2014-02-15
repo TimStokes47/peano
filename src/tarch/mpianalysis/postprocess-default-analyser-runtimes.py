@@ -52,7 +52,7 @@ for rank in range(0,int(sys.argv[2])):
         str(currentSynchronousHeapDataCalendar) + " " + 
         str(currentSynchronousHeapDataCPU) + " " + 
         str(currentAsynchronousHeapDataCalendar) + " " +
-        str(currentAsynchronousHeapDataCPU) + " " 
+        str(currentAsynchronousHeapDataCPU) + " " +
         str(currentCentralElementCalendar) + " " +
         str(currentCentralElementCPU) + 
         "\n" 
