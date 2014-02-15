@@ -55,6 +55,7 @@ plot "tmp.data"  using  1:3                       every :::RANK::RANK  notitle  
      "tmp.data"  using  1:9                       every 13:::RANK::RANK  title "boundary exchange/management "        with points ls 42, \
      "tmp.data"  using  1:11                      every 14:::RANK::RANK  title "synchronous heap data  "              with points ls 52, \
      "tmp.data"  using  1:13                      every 15:::RANK::RANK  title "asynchronous heap data  "             with points ls 62, \
+     "tmp.data"  using  1:15                      every 19:::RANK::RANK  title "work within domain  "                 with points ls 92, \
      "tmp.data"  using  1:(($5)+($7)+($9))        every 16:::RANK::RANK  title "idle and communication "              with points ls 72, \
      "tmp.data"  using  1:(($2)+($4)+($6)+($8))   every 17:::RANK::RANK  title "total "                               with points ls 82
 
@@ -90,6 +91,7 @@ plot "tmp.data"  using  1:2                       every :::RANK::RANK  notitle  
      "tmp.data"  using  1:8                       every 13:::RANK::RANK  title "boundary exchange/management "   with points ls 41, \
      "tmp.data"  using  1:10                      every 14:::RANK::RANK  title "synchronous heap data "          with points ls 51, \
      "tmp.data"  using  1:12                      every 15:::RANK::RANK  title "asynchronous heap data  "        with points ls 61, \
+     "tmp.data"  using  1:14                      every 15:::RANK::RANK  title "work within domain  "            with points ls 91, \
      "tmp.data"  using  1:(($4)+($6)+($8))        every 16:::RANK::RANK  title "idle and communication "         with points ls 71, \
      "tmp.data"  using  1:(($2)+($4)+($6)+($8))   every 17:::RANK::RANK  title "total "                          with points ls 81
 
