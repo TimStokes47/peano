@@ -117,27 +117,12 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   _backgroundThread.switchState(BackgroundThread::Suspend);
   #endif
 
-    tarch::timing::Watch watchTotal( "peano::parallel::SendReceiveBufferPool", "releaseMessages()", false );
-  tarch::timing::Watch watchSend( "peano::parallel::SendReceiveBufferPool", "releaseMessages()", false );
-
   for ( std::map<int,SendReceiveBuffer*>::const_reverse_iterator p = _map.rbegin(); p != _map.rend(); p++ ) {
     p->second->releaseSentMessages();
   }
-  watchSend.stopTimer();
   for ( std::map<int,SendReceiveBuffer*>::const_reverse_iterator p = _map.rbegin(); p != _map.rend(); p++ ) {
     p->second->releaseReceivedMessages(true);
   }
-
-  watchTotal.stopTimer();
-
-  logInfo(
-    "releaseMessages()",
-    "rank had to wait from data "
-    << "(" << watchTotal.getCPUTicks() << "," << watchTotal.getCPUTime() << "," << watchTotal.getCalendarTime() << ")"
-    << ", hereof "
-    << "(" << watchSend.getCPUTicks() << "," << watchSend.getCPUTime() << "," << watchSend.getCalendarTime() << ") "
-    << "for send [cpu ticks, cpu time, calendar time]"
-  );
 
   #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
   _backgroundThread.switchState(BackgroundThread::ReceiveDataInBackground);
