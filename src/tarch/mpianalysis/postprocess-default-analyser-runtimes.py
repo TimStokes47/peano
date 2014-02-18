@@ -10,7 +10,11 @@ outputFilename = "tmp.data"
 outFile        = open( outputFilename, "w" )
 
 
+<<<<<<< .mine
+outFile.write( "Step Busy-time Idle-time Join-time Boundary-data-wait-time Synchronous-heap-data-wait-time Asynchronous-heap-data-wait-time Accumulated-worker-wait-time\n" )
+=======
 outFile.write( "Step Busy-time Idle-time Join-time Boundary-data-wait-time Synchronous-heap-data-wait-time Asynchronous-heap-data-wait-time Time-spent-working-in-central-element \n" )
+>>>>>>> .r1330
 
 
 currentIdleTimeCalendar             = "?0"
@@ -27,6 +31,7 @@ currentAsynchronousHeapDataCalendar = "?0"
 currentAsynchronousHeapDataCPU      = "?0"
 currentCentralElementCalendar       = "?0"
 currentCentralElementCPU            = "?0"
+currentWorkerWaitTimeCalendar       = 0
  
  
 maxSteps = 0
@@ -67,6 +72,8 @@ for rank in range(0,int(sys.argv[2])):
         currentCentralElementCalendar       = "?0"
       if (currentCentralElementCPU=="0"):
         currentCentralElementCPU            = "?0"
+      if (currentWorkerWaitTimeCalendar==0):
+        currentWorkerWaitTimeCalendar       = "?0"
 
       step  = step + 1
       outFile.write( 
@@ -84,9 +91,11 @@ for rank in range(0,int(sys.argv[2])):
         str(currentAsynchronousHeapDataCalendar) + " " +
         str(currentAsynchronousHeapDataCPU) + " " +
         str(currentCentralElementCalendar) + " " +
-        str(currentCentralElementCPU) + 
+        str(currentCentralElementCPU) + " " + 
+        str(currentWorkerWaitTimeCalendar) + " " +
         "\n" 
       )
+
 
       currentIdleTimeCalendar             = "?0"
       currentIdleTimeCPU                  = "?0"
@@ -102,6 +111,7 @@ for rank in range(0,int(sys.argv[2])):
       currentAsynchronousHeapDataCPU      = "?0"
       currentCentralElementCalendar       = "?0"
       currentCentralElementCPU            = "?0"
+      currentWorkerWaitTimeCalendar       = 0
       
       try:
         currentIdleTimeCalendar = data.split( "=" )[1].split(",")[0]
@@ -171,13 +181,19 @@ for rank in range(0,int(sys.argv[2])):
         currentCentralElementCPU      = data.split( "=" )[2].strip()
       except:
         currentCentralElementCPU      = 0
+
+    if (re.search( "tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedFromWorker", data ) and re.search( "rank:" + str(rank) + " ", data )):
+      try:
+        currentWorkerWaitTimeCalendar = currentWorkerWaitTimeCalendar+ float(data.split( "for " )[2].split("s")[0])
+      except:
+        currentWorkerWaitTimeCalendar = currentWorkerWaitTimeCalendar
   
   if (step>maxSteps):
     maxSteps = step
     
   if (step==0):
     for s in range(1,maxSteps+1):
-       outFile.write( str(s) + " ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 \n" )
+       outFile.write( str(s) + " ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 ?0 \n" )
   
   outFile.write( "\n" )
   #outFile.write( "\n" )

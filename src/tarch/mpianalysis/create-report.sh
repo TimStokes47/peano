@@ -42,7 +42,6 @@ mv tmp.runtimes.master.log.cpu.png $1.runtimes.master.log.cpu.png
 mv tmp.runtimes.master.log.calendar.png $1.runtimes.master.log.calendar.png
 
 
-
 for (( r=2; r<$2; r++ ))
 do
   echo Create communication profile for rank $r

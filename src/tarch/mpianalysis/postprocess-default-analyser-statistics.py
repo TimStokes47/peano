@@ -283,6 +283,13 @@ Each Peano traversal consists of the following phases: \
     the heap data exchange. \
   </li> \
   <li> \
+    Definition <i>Work within domain</i>: Part of the busy time where the inner domain's bounding \
+    box is traversed and not the embedding cells. Peano embeds all domains into a greater box to \
+    simplify the boundary handling. This means, a traversal has to run through the actual domain \
+    (work within domain time) and to run through boundary/shadow layers. Busy time comprises the \
+    whole run while work within domain is only a subset. \
+  </li> \
+  <li> \
     Definition <i>Communication time</i>: As soon as a node has sent the information back to the master \
     that it has finished its traversal, it starts to clean up all the pending sends of boundary \
     data to the neighbours, receives the boundary data from all adjacent ranks, switches local \
@@ -300,7 +307,12 @@ Each Peano traversal consists of the following phases: \
   </li> \
 </p>" )
 
+outFile.write( "<h2 id=\"runtime-rank-overview\">Links to individual reports</h2>" )
+for i in range(1,int(sys.argv[2])):
+  outFile.write( "<a href=\"#runtime-rank-" + str(i) + "\">Profile of rank " + str(i) + "</a> - " )
 
+
+outFile.write( "<h2>Overview</h2>" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.calendar.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.cpu.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.calendar.png\" />" )
@@ -315,11 +327,12 @@ outFile.write( "<p>The diagrams below give a history of the times where each ind
 outFile.write( "its time. Nodes that remain idle throughout the computation are not enlisted.</p>" )
 
 for i in range(1,int(sys.argv[2])):
-  outFile.write( "<h2>Rank " + str(i) + "</h2>" )
+  outFile.write( "<h2 id=\"runtime-rank-" + str(i) + "\">Rank " + str(i) + "</h2>" )
   outFile.write( "<img src=\"" + inputFilename + ".runtimes.rank-" + str(i) + ".calendar.png\" />" )
   outFile.write( "<img src=\"" + inputFilename + ".runtimes.rank-" + str(i) + ".cpu.png\" />" )
   outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.rank-" + str(i) + ".calendar.png\" />" )
   outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.rank-" + str(i) + ".cpu.png\" />" )
+  outFile.write( "<br /><br /><a href=\"#runtime-rank-overview\">To overview</a>" )
 
 outFile.write( "</body>" )
 outFile.write( "</html>" )

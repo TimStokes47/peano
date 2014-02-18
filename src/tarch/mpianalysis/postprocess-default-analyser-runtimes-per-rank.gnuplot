@@ -18,8 +18,10 @@ set style line 71 lc rgb "#667766" lt 1 pt 3   lw 1.0 ps 1.6
 set style line 72 lc rgb "#667766" lt 1 pt 2   lw 1.0 ps 1.6 
 set style line 81 lc rgb "#000000" lt 1 pt 2   lw 1.0 ps 1.6 
 set style line 82 lc rgb "#334433" lt 1 pt 1   lw 1.0 ps 1.6 
-set style line 91 lc rgb "#000000" lt 1 pt 11  lw 1.4 ps 2.2 
-set style line 92 lc rgb "#334433" lt 1 pt 12  lw 1.4 ps 2.2 
+set style line 91 lc rgb "#ff9933" lt 0 pt 6   lw 1.6 ps 2.2 
+set style line 92 lc rgb "#ff9933" lt 0 pt 7   lw 1.6 ps 2.2 
+set style line 101 lc rgb "#aa3300" lt 0 pt 8   lw 1.6 ps 2.2 
+set style line 102 lc rgb "#aa3300" lt 0 pt 9   lw 1.6 ps 2.2 
 
 
 set grid
@@ -83,6 +85,7 @@ plot "tmp.data"  using  1:2                       every :::RANK::RANK  notitle  
      "tmp.data"  using  1:10                      every :::RANK::RANK  notitle           with lines ls 51, \
      "tmp.data"  using  1:12                      every :::RANK::RANK  notitle         with lines ls 61, \
      "tmp.data"  using  1:14                      every :::RANK::RANK  notitle         with lines ls 91, \
+     "tmp.data"  using  1:16                      every :::RANK::RANK  notitle         with lines ls 101, \
      "tmp.data"  using  1:(($4)+($6)+($8))        every :::RANK::RANK  notitle          with lines ls 71, \
      "tmp.data"  using  1:(($2)+($4)+($6)+($8))   every :::RANK::RANK  notitle                           with lines ls 81, \
      "tmp.data"  using  1:2                       every 10:::RANK::RANK  title "busy "                           with points ls 11, \
@@ -92,6 +95,7 @@ plot "tmp.data"  using  1:2                       every :::RANK::RANK  notitle  
      "tmp.data"  using  1:10                      every 14:::RANK::RANK  title "synchronous heap data "          with points ls 51, \
      "tmp.data"  using  1:12                      every 15:::RANK::RANK  title "asynchronous heap data  "        with points ls 61, \
      "tmp.data"  using  1:14                      every 15:::RANK::RANK  title "work within domain  "            with points ls 91, \
+     "tmp.data"  using  1:16                      every 21:::RANK::RANK  title "wait time for workers (sum)"     with points ls 101, \
      "tmp.data"  using  1:(($4)+($6)+($8))        every 16:::RANK::RANK  title "idle and communication "         with points ls 71, \
      "tmp.data"  using  1:(($2)+($4)+($6)+($8))   every 17:::RANK::RANK  title "total "                          with points ls 81
 
