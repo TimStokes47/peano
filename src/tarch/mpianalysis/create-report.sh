@@ -21,6 +21,7 @@ python $script_dir/postprocess-default-analyser-statistics.py $1 $2
 echo Create overview statistics
 grep -o "tarch::mpianalysis::.*::addWorker.*" $1 | gawk -F" " '{ print $2 }' | sed 's|[0-9]*+||g' | sed 's|\->|,|g'  > $1.workertree
 python $script_dir/postprocess-default-analyser-workertree.py $1.workertree
+convert -resize 1024x768 $1.workertree.png $1.workertree.small.png
 
 grep -o "tarch::mpianalysis::.*::addWorker.*" $1 | gawk -F" " '{ print $4 }' | gawk -F":" '{ print $2 }'  | sed -e 's|,level||g' | sed -e 's|x|,|g' | sed -e 's|\[||g;s|\]||g'  > $1.2d-dd
 python $script_dir/postprocess-default-analyser-2d-dd.py $1.2d-dd
@@ -57,8 +58,16 @@ done
 
 echo Create late worker send analysis - might last long
 python $script_dir/postprocess-default-analyser-worker-master-sends.py $1 $2
+convert -resize 1024x768 $1.worker-master.png $1.worker-master.small.png
+convert -resize 1024x768 $1.worker-master-sparse-average.png $1.worker-master-sparse-average.small.png
+convert -resize 1024x768 $1.worker-master-sparse-max.png $1.worker-master-sparse-max.small.png
+
+
 
 echo Create late neighbour send analysis - might last long
 python $script_dir/postprocess-default-analyser-boundary-exchange.py $1 $2
+convert -resize 1024x768 $1.boundary-exchange.png $1.boundary-exchange.small.png
+convert -resize 1024x768 $1.boundary-exchange-sparse-average.png $1.boundary-exchange-sparse-average.small.png
+convert -resize 1024x768 $1.boundary-exchange-sparse-max.png $1.boundary-exchange-sparse-max.small.png
 
 rm tmp.*

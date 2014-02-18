@@ -44,10 +44,13 @@ outFile.write( "<h1>Report on " + inputFilename + "</h1>" )
 outFile.write( "<p>Peano mpianalysis default postprocessing<br />" )
 outFile.write( "   Authors: Kristof Unterweger, Tobias Weinzierl, Roland Wittmann</p>" )
 
+outFile.write( "<center><img src=\"http://www.peano-framework.org/logo.png\" />" )
+outFile.write( "<br /><a href=\"http://www.peano-framework.org\" >www.peano-framework.org</a></center>" )
+
 outFile.write( "<p>\
 The following data are extracted from the file " + inputFilename + ".\
-If you don't see any output, ensure that you have the tracing\
-enabled and that you do not filter out info information from the\
+If you don't see any output, ensure that you have the tracing \
+enabled and that you do not filter out info information from the \
 tarch::mpianalysis component.\
 Some postprocessing steps also require the pydot python module, i.e. \
 you have to ensure that the pydot path is set via PYTHONPATH.\
@@ -89,7 +92,7 @@ outFile.write( "<p>\
 If the maximal number of working ranks is significantly smaller than the total number of ranks, your application might \
 have ran into a weak scaling issue. The problem then was too small. If the problem is sufficiently big, and the number \
 if idle ranks still remains high, it might had happened that Peano was not able to fork on a coarse enough level. \
-See the section on MPI tuning in the wiki that discusses multiscale concurrency. In such a case, it often helps \
+See the section on MPI tuning in the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a> that discusses multiscale concurrency. In such a case, it often helps \
 to make the computational grid more regular to some degree, i.e. to prescribe a finer maximum mesh size. \
 </p>" )
 
@@ -127,20 +130,20 @@ outFile.write( "<p>\
 Joins and forks are expensive operations in terms of walltime. Evaluating the load balancing \
 information also is not for free. Hence, try to reduce the number of joins and forks as you \
 switch on rebalancing only from time to time, and reduce the load balancing overhead. See \
-the section on 'Disable load balancing' in the wiki. \
+the section on 'Disable load balancing' in the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a>. \
 </p>" )
 
 
 
 outFile.write( "<h2>Worker tree</h2>" )
 outFile.write( "<p>The following diagram gives an overview of your logical topology. Snapshots at multiple time-steps are merged, i.e. it is a static representation. Image might not be available if pydot is not available to your Python installation.</p>" )
-outFile.write( "<img src=\"" + inputFilename + ".workertree.png\" />" )
+outFile.write( "<a href=\"" + inputFilename + ".workertree.png\" target=\"_blank\"><img src=\"" + inputFilename + ".workertree.small.png\" /></a>" )
 
 
 outFile.write( "<p>\
 <i>Performance hint: </i>\
 Study this graph together with a visualisation of the real grid decomposition (such as the graph \
-below for 2d). Ensure that your decomposition is balanced any take the wiki's remarks on \
+below for 2d). Ensure that your decomposition is balanced any take the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a>'s remarks on \
 load balancing and node weights into account. \
 </p>" )
 
@@ -155,11 +158,11 @@ outFile.write( "<img src=\"" + inputFilename + ".2d-dd.png\" />" )
 
 outFile.write( "<h2>Master-worker statistics - late worker</h2>" )
 outFile.write( "<p>If an edge points from a to b, it means that master b had to wait for its worker a. The labels are wait times in seconds. </p>" )
-outFile.write( "<img src=\"" + inputFilename + ".worker-master.png\" />" )
+outFile.write( "<a href=\"" + inputFilename + ".worker-master.png\" target=\"_blank\" ><img src=\"" + inputFilename + ".worker-master.small.png\" /></a>" )
 outFile.write( "<p>The following graph holds only edges whose average is beyond the average of averages.</p>" )
-outFile.write( "<img src=\"" + inputFilename + ".worker-master-sparse-average.png\" />" )
+outFile.write( "<a href=\"" + inputFilename + ".worker-master-sparse-average.png\" target=\"_blank\" ><img src=\"" + inputFilename + ".worker-master-sparse-average.small.png\" /></a>" )
 outFile.write( "<p>The following graph holds only edges whose maximum weight is with 10% of the total maximum weight.</p>" )
-outFile.write( "<img src=\"" + inputFilename + ".worker-master-sparse-max.png\" />" )
+outFile.write( "<a href=\"" + inputFilename + ".worker-master-sparse-max.png\" target=\"_blank\" ><img src=\"" + inputFilename + ".worker-master-sparse-max.small.png\" /></a>" )
 
 
 outFile.write( "<p>\
@@ -180,7 +183,7 @@ outFile.write( "<p>\
 <i>Performance hint: </i>\
 The edges here illustrate the critical communication path for one traversal, i.e. long graphs running from a node to rank 0 indicate \
 that along these graphs the Peano traversal is serialised. Eliminate these edges by reducing the \
-workload of the involved nodes. See remark in wiki on 'Optimise worker-master communication' or \
+workload of the involved nodes. See remark in <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a> on 'Optimise worker-master communication' or \
 'Avoid reductions'. \
 </p>" )
 
@@ -199,11 +202,11 @@ all figures enlist data cardinalities. They are not wait times but number of rec
 
 outFile.write( "<p>In all diagrams, singular events, i.e. events waits only once or twice, are omitted.</p>" )
 
-outFile.write( "<img src=\"" + inputFilename + ".boundary-exchange.png\" />" )
+outFile.write( "<a href=\"" + inputFilename + ".boundary-exchange.png\" target=\"_blank\" ><img src=\"" + inputFilename + ".boundary-exchange.small.png\" /></a>" )
 outFile.write( "<p>The graph below holds only those edges that have an average that is bigger than the average of averages.</p>" )
-outFile.write( "<img src=\"" + inputFilename + ".boundary-exchange-sparse-average.png\" />" )
+outFile.write( "<a href=\"" + inputFilename + ".boundary-exchange-sparse-average.png\" target=\"_blank\" ><img src=\"" + inputFilename + ".boundary-exchange-sparse-average.small.png\" /></a>" )
 outFile.write( "<p>The last graph illustrates those late senders that have max values that fall into the upper 10% of max values.</p>" )
-outFile.write( "<img src=\"" + inputFilename + ".boundary-exchange-sparse-max.png\" />" )
+outFile.write( "<a href=\"" + inputFilename + ".boundary-exchange-sparse-max.png\" target=\"_blank\" ><img src=\"" + inputFilename + ".boundary-exchange-sparse-max.small.png\" /></a>" )
 
 
 outFile.write( "<p>\
@@ -218,7 +221,7 @@ the diagrams above have to be read in context with the worker-master graphs. \
 outFile.write( "<p>\
 <i>Performance hint: </i>\
 The global rank 0 should not have adjacent edges. If it has, ensure you've followed the 'Avoid communications \
-with rank 0' recipes from the wiki. \
+with rank 0' recipes from the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a>. \
 </p>" )
 
 outFile.write( "<p>\
@@ -233,7 +236,7 @@ outFile.write( "<p>\
 If single nodes are the hot-spots making the others wait (many outgoing edges), those nodes might either have \
 a significantly higher load than others (cf. balancing remark above) or they might have a significant higher surface to \
 other nodes that has to be exchanged. Adopt load balancing and see 'Check the load balancing and node weights' \
-in the wiki. \
+in the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a>. \
 </p>" )
 
 outFile.write( "<p>\
@@ -250,7 +253,7 @@ outFile.write( "<p>\
 <i>Performance hint: </i>\
 If nodes delay their masters but have no significant heavy edges in the boundary graph, study their individual runtime \
 profile carefully. If these profiles also indicate that the data exchange is not signficiant, your worker-master \
-data exchange suffers from worker-master latency. See section in wiki on 'Optimise worker-master communication'. \
+data exchange suffers from worker-master latency. See section in <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a> on 'Optimise worker-master communication'. \
 </p>" )
 
 

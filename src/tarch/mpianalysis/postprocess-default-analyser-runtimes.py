@@ -10,11 +10,7 @@ outputFilename = "tmp.data"
 outFile        = open( outputFilename, "w" )
 
 
-<<<<<<< .mine
-outFile.write( "Step Busy-time Idle-time Join-time Boundary-data-wait-time Synchronous-heap-data-wait-time Asynchronous-heap-data-wait-time Accumulated-worker-wait-time\n" )
-=======
-outFile.write( "Step Busy-time Idle-time Join-time Boundary-data-wait-time Synchronous-heap-data-wait-time Asynchronous-heap-data-wait-time Time-spent-working-in-central-element \n" )
->>>>>>> .r1330
+outFile.write( "Step Busy-time Idle-time Join-time Boundary-data-wait-time Synchronous-heap-data-wait-time Asynchronous-heap-data-wait-time Time-spent-working-in-central-element  Accumulated-worker-wait-time \n" )
 
 
 currentIdleTimeCalendar             = "?0"
