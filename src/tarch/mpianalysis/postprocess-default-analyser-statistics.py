@@ -188,6 +188,13 @@ workload of the involved nodes. See remark in <a href=\"http://sourceforge.net/p
 </p>" )
 
 
+outFile.write( "<p>\
+<i>Performance hint: </i>\
+If you have late workers that you cannot explain, also try to scale up the problem. Late \
+workers often are an indicator for classic strong scaling issues, i.e. too small problem sizes. \
+</p>" )
+
+
 
 
 outFile.write( "<h2>Boundary exchange statistics - late senders</h2>" )
@@ -282,8 +289,8 @@ Each Peano traversal consists of the following phases: \
     into the grid traversal. If the workload is homogeneous (i.e. roughly the same number of \
     operations per spacetree node or at least leaf), the busy time usually directly correlates \
     to the number of cells, i.e. to the workload distribution. \
-    The only fragment of the busy time that is illustrated separately is the time consumed by \
-    the heap data exchange. \
+    The only fragments of the busy time that are illustrated separately is the time consumed by \
+    the heap data exchange as well as the accumulated time a rank has to wait for the . \
   </li> \
   <li> \
     Definition <i>Work within domain</i>: Part of the busy time where the inner domain's bounding \
@@ -320,11 +327,6 @@ outFile.write( "<img src=\"" + inputFilename + ".runtimes.calendar.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.cpu.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.calendar.png\" />" )
 outFile.write( "<img src=\"" + inputFilename + ".runtimes.log.cpu.png\" />" )
-outFile.write( "<h2>Global master node</h2>" )
-outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.calendar.png\" />" )
-outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.cpu.png\" />" )
-outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.log.calendar.png\" />" )
-outFile.write( "<img src=\"" + inputFilename + ".runtimes.master.log.cpu.png\" />" )
 
 outFile.write( "<p>The diagrams below give a history of the times where each individual node spent " )
 outFile.write( "its time. Nodes that remain idle throughout the computation are not enlisted.</p>" )
