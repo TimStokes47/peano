@@ -61,7 +61,6 @@ for line in inFile:
     pair.average += cardinality
     totalAverage += cardinality
     
-    
 #Create graphs
 for receiver in range(0,numberOfRanks):
   for sender in range(0,numberOfRanks):
@@ -74,7 +73,7 @@ for receiver in range(0,numberOfRanks):
         edge = pydot.Edge(str(sender),str(receiver), label="(" + str(pair.count) + "," + str(pair.maxCardinality) + "," + str(float(pair.average) / float(pair.count)) + ")", fontsize=str(myfontsize), labelfontcolor="blue" )
         graph.add_edge(edge)
         
-      if pair.count>2 and (float(pair.average) / float(pair.count) > float(totalAverage) / float(totalCount)):
+      if totalCount>0 and pair.count>2 and (float(pair.average) / float(pair.count) > float(totalAverage) / float(totalCount)):
         edge = pydot.Edge(str(sender),str(receiver), label="(" + str(pair.count) + "," + str(pair.maxCardinality) + "," + str(float(pair.average) / float(pair.count)) + ")", fontsize=str(myfontsize), labelfontcolor="blue" )
         sparseAverageGraph.add_edge(edge)
   
@@ -82,16 +81,15 @@ for receiver in range(0,numberOfRanks):
         edge = pydot.Edge(str(sender),str(receiver), label="(" + str(pair.count) + "," + str(pair.maxCardinality) + "," + str(float(pair.average) / float(pair.count)) + ")", fontsize=str(myfontsize), labelfontcolor="blue" )
         sparseMaxGraph.add_edge(edge)
   
-graph.add_node(pydot.Node( "Summary=(" + str(totalCount) + "," + str(totalMaxCardinality) + "," + str(float(totalAverage) / float(totalCount)) + ")", labelfontcolor="blue" ))
-graph.write_png(sys.argv[1]+'.boundary-exchange.png', prog='fdp')
-
-if (  totalCount>0 ):
+if totalCount>0:
+  graph.add_node(pydot.Node( "Summary=(" + str(totalCount) + "," + str(totalMaxCardinality) + "," + str(float(totalAverage) / float(totalCount)) + ")", labelfontcolor="blue" ))
   sparseAverageGraph.add_node(pydot.Node( "Threshold on average graph weight=" + str(float(totalAverage) / float(totalCount))))
 else:
   sparseAverageGraph.add_node(pydot.Node( "No late boundary alerts dumped", labelfontcolor="blue" ))
 sparseAverageGraph.write_png(sys.argv[1]+'.boundary-exchange-sparse-average.png', prog='fdp')
 
-sparseMaxGraph.add_node(pydot.Node( "Threshold on max graph weight, 10% of " + str(totalMax) ))
+graph.write_png(sys.argv[1]+'.boundary-exchange.png', prog='fdp')
+sparseMaxGraph.add_node(pydot.Node( "Threshold on max graph weight, 10% of " + str(totalMaxCardinality) ))
 sparseMaxGraph.write_png(sys.argv[1]+'.boundary-exchange-sparse-max.png', prog='fdp')
 
 #dot
