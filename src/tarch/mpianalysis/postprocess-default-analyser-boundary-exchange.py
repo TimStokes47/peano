@@ -54,8 +54,12 @@ for receiver in range(0,numberOfRanks):
       edge = pydot.Edge(str(sender),str(receiver), label="(" + str(count) + "," + str(max) + "," + str(float(average) / float(count)) + ")", fontsize=myfontsize, labelfontcolor="blue" )
       graph.add_edge(edge)
         
-  
-graph.add_node(pydot.Node( "Summary=(" + str(totalCount) + "," + str(totalMax) + "," + str(float(totalAverage) / float(totalCount)) + ")", labelfontcolor="blue" ))
+
+if (  totalCount>0 ):
+  graph.add_node(pydot.Node( "Summary=(" + str(totalCount) + "," + str(totalMax) + "," + str(float(totalAverage) / float(totalCount)) + ")", labelfontcolor="blue" ))
+else:
+  graph.add_node(pydot.Node( "No late boundary alerts dumped", labelfontcolor="blue" ))
+
 graph.write_png(sys.argv[1]+'.boundary-exchange.png', prog='fdp')
 
 
@@ -89,7 +93,11 @@ for receiver in range(0,numberOfRanks):
       sparseMaxGraph.add_edge(edge)
       
 
-sparseAverageGraph.add_node(pydot.Node( "Threshold on average graph weight=" + str(float(totalAverage) / float(totalCount))))
+if (  totalCount>0 ):
+  sparseAverageGraph.add_node(pydot.Node( "Threshold on average graph weight=" + str(float(totalAverage) / float(totalCount))))
+else:
+  sparseAverageGraph.add_node(pydot.Node( "No late boundary alerts dumped", labelfontcolor="blue" ))
+
 sparseAverageGraph.write_png(sys.argv[1]+'.boundary-exchange-sparse-average.png', prog='fdp')
 
 sparseMaxGraph.add_node(pydot.Node( "Threshold on max graph weight, 10% of " + str(totalMax) ))
