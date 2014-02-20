@@ -35,7 +35,7 @@ totalAverage            = 0
 
 pairs = dict()
 
-waitingForNeighborLine = "tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedInBackground.*rank had to wait for (\d+) record\(s\)" \
+waitingForNeighborLine = "rank:(\d+)*tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedInBackground.*rank had to wait for (\d+) record\(s\)" \
                          + " from (\d+) on tag (\d) with page size (\d+)"
 
 #Extract data from input file
@@ -43,15 +43,15 @@ inFile  = open( inputFilename,  "r" )
 for line in inFile:
   m = re.search( waitingForNeighborLine, line )
   if(m):
-    sender = int(m.group(2))
-    receiver = int(m.group(3))
+    sender = int(m.group(0))
+    receiver = int(m.group(2))
     key = (sender, receiver)
     
     if not pairs.has_key(key):
       pairs[key] = Pair(sender, receiver)
     pair = pairs[key]
     
-    cardinality = int(m.group(2))
+    cardinality = int(m.group(1))
     pair.count += 1
     totalCount += 1 
     
