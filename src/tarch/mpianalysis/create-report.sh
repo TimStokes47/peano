@@ -37,10 +37,7 @@ mv tmp.runtimes.cpu.png $1.runtimes.cpu.png
 mv tmp.runtimes.calendar.png $1.runtimes.calendar.png
 mv tmp.runtimes.log.cpu.png $1.runtimes.log.cpu.png
 mv tmp.runtimes.log.calendar.png $1.runtimes.log.calendar.png
-mv tmp.runtimes.master.cpu.png $1.runtimes.master.cpu.png
-mv tmp.runtimes.master.calendar.png $1.runtimes.master.calendar.png
-mv tmp.runtimes.master.log.cpu.png $1.runtimes.master.log.cpu.png
-mv tmp.runtimes.master.log.calendar.png $1.runtimes.master.log.calendar.png
+
 
 
 for (( r=2; r<$2; r++ ))
