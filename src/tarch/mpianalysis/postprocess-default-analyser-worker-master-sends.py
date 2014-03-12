@@ -36,7 +36,7 @@ totalCount          = 0
 pairs = dict()
 
 floatPattern = "[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?"
-waitingForWorkerLine = "rank:(\d+) tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedFromWorker.*rank had to wait for worker (\d+) for ("+ floatPattern + ")s"
+waitingForWorkerLine = "rank:(\d+)*.*tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedFromWorker.+rank had to wait for worker (\d+) for ("+ floatPattern + ")s"
 
 #Extract data from input file
 inFile  = open( inputFilename,  "r" )
@@ -60,6 +60,8 @@ for line in inFile:
     
     pair.count += 1
     totalCount += 1 
+
+print "worker-master analysis found " + str( len(pairs) ) + " entries of interest in trace file" 
 
 #Create graphs    
 for master in range(0,numberOfRanks):
