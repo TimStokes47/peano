@@ -34,31 +34,6 @@ int tarch::la::Matrix<Rows,Cols,Scalar>::size() const {
 }
 
 
-template<int Rows, int Cols, typename Scalar>
-Scalar& tarch::la::Matrix<Rows,Cols,Scalar>::operator() (
-  int rowIndex,
-  int colIndex
-) {
-  assertion5( rowIndex >= 0, Rows, Cols, rowIndex, colIndex, toString() );
-  assertion5( colIndex >= 0, Rows, Cols, rowIndex, colIndex, toString() );
-  assertion5( rowIndex < Rows, Rows, Cols, rowIndex, colIndex, toString() );
-  assertion5( colIndex < Cols, Rows, Cols, rowIndex, colIndex, toString() );
-  return _values[rowIndex * Cols + colIndex];
-}
-
-
-template<int Rows, int Cols, typename Scalar>
-const Scalar & tarch::la::Matrix<Rows,Cols,Scalar>::operator() (
-  int rowIndex,
-  int colIndex
-) const {
-  assertion5( rowIndex >= 0, Rows, Cols, rowIndex, colIndex, toString() );
-  assertion5( colIndex >= 0, Rows, Cols, rowIndex, colIndex, toString() );
-  assertion5( rowIndex < Rows, Rows, Cols, rowIndex, colIndex, toString() );
-  assertion5( colIndex < Cols, Rows, Cols, rowIndex, colIndex, toString() );
-  return _values[rowIndex * Cols + colIndex];
-}
-
 
 template<int Rows, int Cols, typename Scalar>
 std::string tarch::la::Matrix<Rows,Cols,Scalar>::toString() const {
