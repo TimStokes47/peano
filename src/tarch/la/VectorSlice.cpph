@@ -7,7 +7,6 @@ tarch::la::Vector<SizeLhs,Scalar> tarch::la::slice(const tarch::la::Vector<SizeR
 
   #ifdef CompilerICC
   #pragma ivdep
-  #pragma simd
   #endif
   for (int i=0; i<SizeLhs; i++) {
     result(i) = vector(fromIndex+i*stride);
@@ -29,7 +28,6 @@ void tarch::la::slice(
 
   #ifdef CompilerICC
   #pragma ivdep
-  #pragma simd
   #endif
   for (int i=0; i<SizeRhs; i++) {
     toVector(fromIndexInToVector+i*strideInToVector) = fromVector(i);

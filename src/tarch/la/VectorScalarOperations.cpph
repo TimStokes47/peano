@@ -7,8 +7,7 @@ tarch::la::Vector<Size,Scalar>& tarch::la::operator*= (
   const Scalar&         scalar
 ) {
   #ifdef CompilerICC
-  #pragma ivdep
-  #pragma simd
+  #pragma forceinline recursive
   #endif
   for (int i=0; i < Size; i++) {
     vector(i) *= scalar;
@@ -23,8 +22,7 @@ tarch::la::Vector<Size,Scalar>& tarch::la::operator/= (
   const Scalar&         scalar
 ) {
   #ifdef CompilerICC
-  #pragma ivdep
-  #pragma simd
+  #pragma forceinline recursive
   #endif
   for (int i=0; i < Size; i++) {
     vector(i) /= scalar;
@@ -39,8 +37,7 @@ tarch::la::Vector<Size,Scalar>& tarch::la::operator+= (
   const Scalar&         scalar
 ) {
   #ifdef CompilerICC
-  #pragma ivdep
-  #pragma simd
+  #pragma forceinline recursive
   #endif
   for (int i=0; i < Size; i++) {
     vector(i) += scalar;
@@ -55,8 +52,7 @@ tarch::la::Vector<Size,Scalar>& tarch::la::operator-= (
   const Scalar&         scalar
 ) {
   #ifdef CompilerICC
-  #pragma ivdep
-  #pragma simd
+  #pragma forceinline recursive
   #endif
   for (int i=0; i < Size; i++) {
     vector(i) -= scalar;
@@ -72,8 +68,8 @@ tarch::la::Vector<Size,Scalar> tarch::la::operator/ (
 ) {
   Vector<Size,Scalar> result;
   #ifdef CompilerICC
+  #pragma forceinline recursive
   #pragma ivdep
-  #pragma simd
   #endif
   for (int i=0; i < Size; i++) {
     result(i) = vector(i) / scalar;
@@ -98,8 +94,8 @@ tarch::la::Vector<Size,Scalar> tarch::la::operator* (
 ) {
   Vector<Size,Scalar> result;
   #ifdef CompilerICC
+  #pragma forceinline recursive
   #pragma ivdep
-  #pragma simd
   #endif
   for (int i=0; i < Size; i++) {
     result(i) = vector(i) * scalar;
@@ -115,8 +111,7 @@ tarch::la::Vector<Size,Scalar> tarch::la::operator* (
 ) {
   Vector<Size,Scalar> result;
   #ifdef CompilerICC
-  #pragma ivdep
-  #pragma simd
+  #pragma forceinline recursive
   #endif
   for (int i=0; i < Size; i++) {
     result(i) = vector(i) * scalar;
@@ -132,8 +127,7 @@ tarch::la::Vector<Size,Scalar> tarch::la::operator+ (
 ) {
   Vector<Size,Scalar> result;
   #ifdef CompilerICC
-  #pragma ivdep
-  #pragma simd
+  #pragma forceinline recursive
   #endif
   for (int i=0; i < Size; i++) {
     result(i) = vector(i) + scalar;
@@ -149,8 +143,7 @@ tarch::la::Vector<Size,Scalar> tarch::la::operator- (
 ) {
   Vector<Size,Scalar> result;
   #ifdef CompilerICC
-  #pragma ivdep
-  #pragma simd
+  #pragma forceinline recursive
   #endif
   for (int i=0; i < Size; i++) {
     result(i) = vector(i)- scalar;
