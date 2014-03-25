@@ -11,6 +11,10 @@ template<int Size, typename Scalar>
 tarch::la::Vector<Size,Scalar>&  tarch::la::Vector<Size,Scalar>::operator= (
   const Vector<Size,Scalar>&  toAssign
 ) {
+  assertion(this != &toAssign);
+  #ifdef CompilerICC
+  #pragma ivdep
+  #endif
   for (int i=0; i<Size; i++) {
     _values[i] = toAssign._values[i];
   }
@@ -32,6 +36,10 @@ tarch::la::Vector<Size,Scalar>::Vector (
   const Vector<Size,Scalar>& toCopy
 ):
   _values() {
+  assertion(this != &toCopy);
+  #ifdef CompilerICC
+  #pragma ivdep
+  #endif
   for (int i=0; i<Size; i++) {
     _values[i] = toCopy._values[i];
   }
@@ -55,39 +63,6 @@ int tarch::la::Vector<Size,Scalar>::size() const {
 }
 
 
-template<int Size, typename Scalar>
-const Scalar& tarch::la::Vector<Size,Scalar>::operator[] ( int index ) const {
-  assertion3 ( index >= 0, index, Size, toString() );
-  assertion3 ( index < Size, index, Size, toString() );
-  return _values[index];
-}
-
-template<int Size, typename Scalar>
-Scalar& tarch::la::Vector<Size,Scalar>:: operator[] ( int index ) {
-  assertion ( index >= 0 );
-  assertion ( index < Size );
-  return _values[index];
-}
-
-
-template<int Size, typename Scalar>
-const Scalar&  tarch::la::Vector<Size,Scalar>::operator() ( int index ) const {
-  assertion ( index >= 0 );
-  assertion ( index < Size );
-  return _values[index];
-}
-
-
-template<int Size, typename Scalar>
-Scalar&  tarch::la::Vector<Size,Scalar>::operator() ( int index ) {
-  assertion ( index >= 0 );
-  assertion2 ( index < Size, index, Size );
-  return _values[index];
-}
-
-/**
- * Pipes the elements of a vector into a std::string and returns the string.
- */
 template<int Size, typename Scalar>
 std::string tarch::la::Vector<Size,Scalar>::toString() const {
   std::ostringstream os;

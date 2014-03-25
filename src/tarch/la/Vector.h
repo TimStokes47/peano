@@ -37,6 +37,11 @@ struct tarch::la::Vector {
 
     /**
      * Assignment operator for any vector type.
+     *
+     * !!! SSE
+     *
+     * We do not allow assignment of a vector this itself. Consequently, we can
+     * insert an ivdep statement and thus allow the compiler to optimise.
      */
     Vector<Size,Scalar>& operator= (const Vector<Size,Scalar>& toAssign);
 
@@ -52,6 +57,8 @@ struct tarch::la::Vector {
      *
      * The only way to accomplish this with enable-if is to specify a second
      * dummy argument with default value, which is (hopefully) optimized away.
+     *
+     * @see operator= for a discussion of SSE optimisation.
      */
     Vector(const Vector<Size,Scalar>&  toCopy);
 
@@ -68,24 +75,72 @@ struct tarch::la::Vector {
 
     /**
      * Returns read-only ref. to component of given index.
+     *
+     * !!! SSE Optimisation
+     *
+     * - We have to manually inline this operation. Otherwise, icc interprets operator
+     *   calls, i.e. vector element accesses, as function calls and does not vectorise
+     *   loops containing vector element accesses.
      */
-    const Scalar & operator[] (int index) const;
+    inline const Scalar & operator[] (int index) const
+      #ifdef UseManualInlining
+      __attribute__((always_inline))
+      #endif
+      {
+        assertion3 ( index >= 0, index, Size, toString() );
+        assertion3 ( index < Size, index, Size, toString() );
+        return _values[index];
+      }
+
 
     /**
      * Returns ref. to component of given index.
+     *
+     * @see operator[] for remarks on SSE
      */
-    Scalar & operator[] (int index);
+    inline Scalar & operator[] (int index)
+      #ifdef UseManualInlining
+      __attribute__((always_inline))
+      #endif
+      {
+        assertion3 ( index >= 0, index, Size, toString() );
+        assertion3 ( index < Size, index, Size, toString() );
+        return _values[index];
+      }
 
     /**
      * Returns read-only ref. to component of given index.
+     *
+     * @see operator[] for remarks on SSE
      */
-    const Scalar & operator() (int index) const;
+    inline const Scalar & operator() (int index) const
+      #ifdef UseManualInlining
+      __attribute__((always_inline))
+      #endif
+      {
+        assertion3 ( index >= 0, index, Size, toString() );
+        assertion3 ( index < Size, index, Size, toString() );
+        return _values[index];
+      }
 
     /**
      * Returns ref. to component of given index.
+     *
+     * @see operator[] for remarks on SSE
      */
-    Scalar & operator() (int index);
+   inline Scalar & operator() (int index)
+     #ifdef UseManualInlining
+     __attribute__((always_inline))
+     #endif
+     {
+       assertion3 ( index >= 0, index, Size, toString() );
+       assertion3 ( index < Size, index, Size, toString() );
+       return _values[index];
+     }
 
+   /**
+    * Pipes the elements of a vector into a std::string and returns the string.
+    */
     std::string toString() const;
 
     template <typename NewScalarType>
