@@ -44,7 +44,7 @@
  * Enable SSE vectorisation with a 16 bytes alignment
  */
 #define CompilerHasSSE
-#define VectorisationAlignment 16
+//#define VectorisationAlignment 16
 
 
 /**
@@ -185,3 +185,8 @@
  */
 #define SendAndReceiveHeapMetaDataBlocking             false
 
+
+
+#ifndef noManualInlining
+#define UseManualInlining
+#endif

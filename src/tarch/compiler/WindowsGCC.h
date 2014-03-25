@@ -180,3 +180,8 @@
  */
 #define SendAndReceiveHeapMetaDataBlocking             false
 
+
+
+#ifndef noManualInlining
+#define UseManualInlining
+#endif
