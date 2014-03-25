@@ -66,19 +66,41 @@ class tarch::la::Matrix {
 
   /**
    * Returns element at given row and column index (from 0..size-1).
+   *
+   * @see Vector::operator[] for remarks on SSE efficiency
    */
-  Scalar & operator() (
+  inline Scalar & operator() (
     int rowIndex,
     int colIndex
-  );
+  )
+    #ifdef UseManualInlining
+    __attribute__((always_inline))
+    #endif
+    {
+      assertion5( rowIndex >= 0, Rows, Cols, rowIndex, colIndex, toString() );
+      assertion5( colIndex >= 0, Rows, Cols, rowIndex, colIndex, toString() );
+      assertion5( rowIndex < Rows, Rows, Cols, rowIndex, colIndex, toString() );
+      assertion5( colIndex < Cols, Rows, Cols, rowIndex, colIndex, toString() );
+      return _values[rowIndex * Cols + colIndex];
+    }
 
   /**
    * Returns const element at given row and column index (from 0..size-1).
    */
-  const Scalar & operator() (
+  inline const Scalar & operator() (
     int rowIndex,
     int colIndex
-  ) const;
+  ) const
+    #ifdef UseManualInlining
+    __attribute__((always_inline))
+    #endif
+    {
+      assertion5( rowIndex >= 0, Rows, Cols, rowIndex, colIndex, toString() );
+      assertion5( colIndex >= 0, Rows, Cols, rowIndex, colIndex, toString() );
+      assertion5( rowIndex < Rows, Rows, Cols, rowIndex, colIndex, toString() );
+      assertion5( colIndex < Cols, Rows, Cols, rowIndex, colIndex, toString() );
+      return _values[rowIndex * Cols + colIndex];
+    }
 
   std::string toString() const;
 };
