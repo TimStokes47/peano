@@ -173,9 +173,11 @@ class peano::grid::State {
      */
      double getNumberOfBoundaryVertices() const;
 
-    /**
-     * @see getMaximumMeshWidth() for comments on the validity of the result
-     */
+
+     /**
+      * @see getNumberOfOuterCells() for a discussion on the validity of the
+      *        result if the code runs with mpi.
+      */
      double getNumberOfOuterVertices() const;
 
     /**
@@ -184,14 +186,45 @@ class peano::grid::State {
      double getNumberOfInnerCells() const;
 
     /**
+     *
+     * !!! Validity of result
+     *
+     * The operation returns the correct number of outer cells for non-mpi
+     * runs always.
+     *
      * @see getMaximumMeshWidth() for comments on the validity of the result
+     *
+     * On top of the discussion in getMaximumMeshWidth(), please consider the
+     * following:
+     *
+     * If you run with mpi, not all outer cells are traversed on a worker
+     * before it returns its results to its master: Every worker tries to send
+     * back all results as soon as possible even though there might be outer
+     * cells remaining that have to be traversed to make the internal data
+     * structures consistent for the subsequent traversal again. As a result,
+     * the state might have forgotten to count some outer cells and vertices.
+     * On the global spacetree, these count errors sum up.
+     *
+     * If you call the present operation on rank 0, you hence obtain only a
+     * lower estimate of outer cells/vertices on the global spacetree. The real
+     * number if higher.
      */
      double getNumberOfOuterCells() const;
 
      double getNumberOfInnerLeafVertices() const;
      double getNumberOfBoundaryLeafVertices() const;
+
+     /**
+      * @see getNumberOfOuterCells() for a discussion on the validity of the
+      *        result if the code runs with mpi.
+      */
      double getNumberOfOuterLeafVertices() const;
      double getNumberOfInnerLeafCells() const;
+
+     /**
+      * @see getNumberOfOuterCells() for a discussion on the validity of the
+      *        result if the code runs with mpi.
+      */
      double getNumberOfOuterLeafCells() const;
 
      /**
