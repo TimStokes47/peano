@@ -7,9 +7,7 @@
 
 namespace tarch {
   namespace multicore {
-    namespace openMP {
-      class Core;
-    }
+    class Core;
   }
 }
 
@@ -21,7 +19,7 @@ namespace tarch {
  *
  * @author Kristof Unterweger
  */
-class tarch::multicore::openMP::Core {
+class tarch::multicore::Core {
   private:
     Core();
 

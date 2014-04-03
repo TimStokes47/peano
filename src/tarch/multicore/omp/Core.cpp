@@ -9,29 +9,29 @@
 #include <omp.h>
 #endif
 
-tarch::multicore::openMP::Core::Core():
+tarch::multicore::Core::Core():
   _numberOfThreads(omp_get_num_procs()) {
   omp_set_num_threads(_numberOfThreads);
 }
 
 
-tarch::multicore::openMP::Core::~Core() {
+tarch::multicore::Core::~Core() {
 
 }
 
 
-tarch::multicore::openMP::Core& tarch::multicore::openMP::Core::getInstance() {
-  static tarch::multicore::openMP::Core singleton;
+tarch::multicore::Core& tarch::multicore::Core::getInstance() {
+  static tarch::multicore::Core singleton;
   return singleton;
 }
 
 
-void tarch::multicore::openMP::Core::shutDown() {
+void tarch::multicore::Core::shutDown() {
   _numberOfThreads = -1;
 }
 
 
-void tarch::multicore::openMP::Core::configure( int numberOfThreads ) {
+void tarch::multicore::Core::configure( int numberOfThreads ) {
   if (numberOfThreads==0) {
     _numberOfThreads = omp_get_num_procs();
   }
@@ -42,11 +42,11 @@ void tarch::multicore::openMP::Core::configure( int numberOfThreads ) {
 }
 
 
-int tarch::multicore::openMP::Core::getNumberOfThreads() const {
+int tarch::multicore::Core::getNumberOfThreads() const {
   return _numberOfThreads;
 }
 
-bool tarch::multicore::openMP::Core::isInitialised() const {
+bool tarch::multicore::Core::isInitialised() const {
   return _numberOfThreads > 0;
 }
 

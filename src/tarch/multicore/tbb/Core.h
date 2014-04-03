@@ -10,9 +10,7 @@
 
 namespace tarch {
   namespace multicore {
-    namespace tbb {
-      class Core;
-    }
+    class Core;
   }
 }
 
@@ -24,7 +22,7 @@ namespace tarch {
  *
  * @author Tobias Weinzierl
  */
-class tarch::multicore::tbb::Core {
+class tarch::multicore::Core {
   private:
     Core();
 
