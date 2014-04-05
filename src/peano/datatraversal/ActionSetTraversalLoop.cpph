@@ -39,6 +39,9 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopSequential(
   const int maximumPath = traversal.getMaximumPath();
   for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
     for (int j=0; j<traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
+      #ifdef CompilerICC
+      #pragma forceinline
+      #endif
       loopBody(traversal.getActionSet(currentStepInPath).getAction(j));
     }
   }
