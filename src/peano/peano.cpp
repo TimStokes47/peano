@@ -3,11 +3,8 @@
 
 #include "peano/peano.h"
 
-#ifdef SharedTBB
-#include "tarch/multicore/tbb/Core.h"
-#endif
-#ifdef SharedOMP
-#include "tarch/multicore/openMP/Core.h"
+#ifdef SharedMemoryParallelisation
+#include "tarch/multicore/Core.h"
 #endif
 
 
@@ -48,7 +45,7 @@ void peano::shutdownParallelEnvironment() {
 
 
 int peano::initSharedMemoryEnvironment() {
-  #ifdef SharedTBB
+  #ifdef SharedMemoryParallelisation
   if ( tarch::multicore::tbb::Core::getInstance().isInitialised() ) {
     return 0;
   }
@@ -62,9 +59,7 @@ int peano::initSharedMemoryEnvironment() {
 
 
 void peano::shutdownSharedMemoryEnvironment() {
-  #ifdef SharedTBB
-  tarch::multicore::tbb::Core::getInstance().shutDown();
-  #elif SharedOMP
-  tarch::multicore::openMP::Core::getInstance().shutDown();
+  #ifdef SharedMemoryParallelisation
+  tarch::multicore::Core::getInstance().shutDown();
   #endif
 }
