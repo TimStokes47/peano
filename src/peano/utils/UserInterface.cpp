@@ -181,13 +181,8 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
   int numberOfProcesses = 1;
   #endif
 
-  #ifdef SharedTBB
-  int numberOfThreads = tarch::multicore::tbb::Core::getInstance().getNumberOfThreads();
-  #elif SharedOMP
-  // @todo Das muss noch angepasst werden
-  int numberOfThreads = tarch::multicore::openMP::Core::getInstance().getNumberOfThreads();
-  #elif SharedCobra
-  int numberOfThreads = tarch::multicore::cobra::Core::getInstance().getNumberOfThreads();
+  #ifdef SharedMemoryParallelisation
+  int numberOfThreads = tarch::multicore::Core::getInstance().getNumberOfThreads();
   #else
   int numberOfThreads = 1;
   #endif
