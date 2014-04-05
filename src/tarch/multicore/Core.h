@@ -1,9 +1,13 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#include "tarch/multicore/MulticoreDefinitions.h"
-#if !defined( _TARCH_MULTICORE_CORE_H_) && !defined(SharedMemoryParallelisation)
+#ifndef _TARCH_MULTICORE_CORE_H_
 #define _TARCH_MULTICORE_CORE_H_
 
+#ifdef SharedTBB
+#include "tarch/multicore/tbb/Core.h"
+#elif SharedOMP
+#include "tarch/multicore/omp/Core.h"
+#else
 
 namespace tarch {
   namespace multicore {
@@ -71,4 +75,5 @@ class tarch::multicore::Core {
 };
 
 
+#endif
 #endif

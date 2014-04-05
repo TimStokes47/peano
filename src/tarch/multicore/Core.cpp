@@ -1,3 +1,7 @@
+#include "MulticoreDefinitions.h"
+
+#ifndef SharedMemoryParallelisation
+
 #include "tarch/multicore/Core.h"
 
 const int tarch::multicore::Core::UseDefaultNumberOfThreads = 0;
@@ -32,3 +36,5 @@ bool tarch::multicore::Core::isInitialised() const {
 int tarch::multicore::Core::getNumberOfThreads() const {
   return 1;
 }
+
+#endif
