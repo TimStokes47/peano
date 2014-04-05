@@ -1,14 +1,10 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-
-
-#include "tarch/multicore/MulticoreDefinitions.h"
-
 #ifdef SharedTBB
 #include "tarch/multicore/tbb/Loop.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Loop.h"
-#endif
+#else
 
 /**
  * Basically is a for loop that can be parallelised.
@@ -35,10 +31,11 @@
  *                  entries. In the serial version, this parameter has no
  *                  impact/meaning.
  */
-#ifndef SharedMemoryParallelisation
 #define pfor(counter,from,to,minGrainSize) \
   for (int counter=from; counter<to; counter++) {
 
 
 #define endpfor }
+
+
 #endif
