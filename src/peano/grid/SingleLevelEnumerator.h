@@ -130,9 +130,17 @@ class peano::grid::SingleLevelEnumerator: public peano::grid::VertexEnumerator {
 
     virtual int getLevel() const;
 
+    /**
+     * Get position of vertex witin cell on next coarser level
+     *
+     * Take a vertex within the current cell (localVertexNumber is from (0,1)^d), and return
+     * its position within the whole patch, i.e. as (0,1,2,3)^d vector.
+     */
     LocalVertexIntegerIndex getVertexPositionWithinCoarserPatch(const LocalVertexIntegerIndex& localVertexNumber ) const;
 
     /**
+     * Get position of vertex witin 3^d patch on next coarser level
+     *
      * Gives you the position of a vertex within the next coarser level. This
      * operation may only be called if isVertexPositionAtCoarseVertexsPosition()
      * does hold.
