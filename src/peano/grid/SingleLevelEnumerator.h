@@ -146,8 +146,19 @@ class peano::grid::SingleLevelEnumerator: public peano::grid::VertexEnumerator {
      * does hold.
      *
      * @return Coarse vertex's index (vector of zeros and ones).
+     * @see    getVertexPositionWithinCoarserPatch()
      */
     static LocalVertexIntegerIndex getVertexPositionOnCoarserLevel(const LocalVertexIntegerIndex& index );
+
+    /**
+     * Return parent vertex
+     *
+     * Takes the global enumeration of the vertex within the 3^d patch and
+     * returns the parent vertex. In 2d, here are some examples: You pass (0,0)
+     * and you get (0,0), you pass (1,1) and you get (0,0) as well. You pass (2,0)
+     * and you should get (1,0), you pass (1,3) and you get (0,1).
+     */
+    static LocalVertexIntegerIndex getParentVertex(const LocalVertexIntegerIndex& index );
 
     /**
      * @return Tells you whether a vertex coincides with a vertex on the next coarser level

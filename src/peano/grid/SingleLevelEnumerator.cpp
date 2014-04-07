@@ -180,6 +180,20 @@ int peano::grid::SingleLevelEnumerator::getLevel() const {
 
 
 peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex
+peano::grid::SingleLevelEnumerator::getParentVertex(const LocalVertexIntegerIndex& index ) {
+  peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex result;
+  for (int d=0; d<DIMENSIONS; d++ ) {
+    result(d) = index(d)/2;
+    assertion( index(d)!=0 || result(d)==0 );
+    assertion( index(d)!=1 || result(d)==0 );
+    assertion( index(d)!=2 || result(d)==1 );
+    assertion( index(d)!=3 || result(d)==1 );
+  }
+  return result;
+}
+
+
+peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex
 peano::grid::SingleLevelEnumerator::getVertexPositionOnCoarserLevel(const LocalVertexIntegerIndex& index ) {
   assertion1( isVertexPositionAlsoACoarseVertexPosition(index), index );
   peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex result;
