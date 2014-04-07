@@ -11,10 +11,21 @@
  *
  * If you have multicore switched on, the multicore variant replaces the
  * statement with a parallel loop fragment. Please take care that all
- * three arguments have exactly the same time, i.e. avoid to mix integer
+ * three arguments have exactly the same type, i.e. avoid to mix integer
  * with signed integer or similar things.
  *
- * !!! Catching
+ * !!! Grain size choice
+ *
+ * The choice of a proper grain size is a delicate art. For most cases, setting
+ * the grain size to
+ *
+ * \code
+ProblemSize/tarch::multicore::Core::getInstance().getNumberOfThreads()
+\endcode
+ *
+ * is however a reasonably good value.
+ *
+ * !!! Catching of variables
  *
  * My default pfor implementations catch the environment via references. Please
  * also take into account that some older gcc versions (<=4.6.1) have a bug and
