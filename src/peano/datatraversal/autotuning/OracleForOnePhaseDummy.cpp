@@ -102,7 +102,7 @@ std::pair<int,bool> peano::datatraversal::autotuning::OracleForOnePhaseDummy::pa
       return std::pair<int,bool>(0,_measureRuntimes);
     }
     else {
-      _lastProblemSize = problemSize;
+      if (_measureRuntimes) _lastProblemSize = problemSize;
       return std::pair<int,bool>(_grainSize,_measureRuntimes);
     }
   }
