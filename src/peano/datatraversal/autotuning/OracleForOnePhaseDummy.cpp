@@ -98,7 +98,7 @@ std::pair<int,bool> peano::datatraversal::autotuning::OracleForOnePhaseDummy::pa
   assertionEquals1( _lastProblemSize, -1, peano::datatraversal::autotuning::toString(_methodTrace) );
   if (_useMulticore) {
     if (problemSize < _smallestProblemSize) {
-      if (_measureAlsoSerialProgramParts) _lastProblemSize = problemSize;
+      if (_measureRuntimes) _lastProblemSize = problemSize;
       return std::pair<int,bool>(0,_measureRuntimes);
     }
     else {
@@ -107,7 +107,7 @@ std::pair<int,bool> peano::datatraversal::autotuning::OracleForOnePhaseDummy::pa
     }
   }
   else {
-    if (_measureAlsoSerialProgramParts) _lastProblemSize = problemSize;
+    if (_measureRuntimes) _lastProblemSize = problemSize;
     return std::pair<int,bool>(0,_measureRuntimes);
   }
 }
