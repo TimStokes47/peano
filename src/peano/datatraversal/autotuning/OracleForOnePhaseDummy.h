@@ -31,7 +31,7 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
     static tarch::logging::Log                 _log;
 
     const bool                                 _useMulticore;
-    const bool                                 _measureAlsoSerialProgramParts;
+    const bool                                 _measureRuntimes;
     std::map<int, tarch::timing::Measurement>  _executionTime;
     const int                                  _adapterNumber;
     const MethodTrace                          _methodTrace;
@@ -76,7 +76,7 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
      */
     OracleForOnePhaseDummy(
       bool useMultithreading                  = true,
-      bool measureAlsoSerialProgramParts      = false,
+      bool measureRuntimes                    = false,
       int  splitTheTree                       = 1,
       bool pipelineDescendProcessing          = false,
       bool pipelineAscendProcessing           = false,

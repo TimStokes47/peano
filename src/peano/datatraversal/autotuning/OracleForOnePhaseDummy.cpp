@@ -10,7 +10,7 @@ tarch::logging::Log  peano::datatraversal::autotuning::OracleForOnePhaseDummy::_
 
 peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy(
   bool useMultithreading                  ,
-  bool measureAlsoSerialProgramParts      ,
+  bool measureRuntimes                    ,
   int  splitTheTree                       ,
   bool pipelineDescendProcessing          ,
   bool pipelineAscendProcessing           ,
@@ -26,7 +26,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
   const MethodTrace& methodTrace
 ):
   _useMulticore(useMultithreading),
-  _measureAlsoSerialProgramParts(measureAlsoSerialProgramParts),
+  _measureRuntimes(measureRuntimes),
   _executionTime(),
   _adapterNumber(adapterNumber),
   _methodTrace(methodTrace),
@@ -99,16 +99,16 @@ std::pair<int,bool> peano::datatraversal::autotuning::OracleForOnePhaseDummy::pa
   if (_useMulticore) {
     if (problemSize < _smallestProblemSize) {
       if (_measureAlsoSerialProgramParts) _lastProblemSize = problemSize;
-      return std::pair<int,bool>(0,_measureAlsoSerialProgramParts);
+      return std::pair<int,bool>(0,_measureRuntimes);
     }
     else {
       _lastProblemSize = problemSize;
-      return std::pair<int,bool>(_grainSize,true);
+      return std::pair<int,bool>(_grainSize,_measureRuntimes);
     }
   }
   else {
     if (_measureAlsoSerialProgramParts) _lastProblemSize = problemSize;
-    return std::pair<int,bool>(0,_measureAlsoSerialProgramParts);
+    return std::pair<int,bool>(0,_measureRuntimes);
   }
 }
 
@@ -143,7 +143,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::~OracleForOnePhaseDumm
 peano::datatraversal::autotuning::OracleForOnePhase* peano::datatraversal::autotuning::OracleForOnePhaseDummy::createNewOracle(int adapterNumber, const MethodTrace& methodTrace) const {
   return new OracleForOnePhaseDummy(
     _useMulticore,
-    _measureAlsoSerialProgramParts,
+    _measureRuntimes,
     _splitTheTree,
     _pipelineDescendProcessing,
     _pipelineAscendProcessing,
@@ -169,7 +169,7 @@ std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString()
   std::ostringstream msg;
 
   msg << "(multicore="           << _useMulticore
-      << ",measure-serial="      << _measureAlsoSerialProgramParts
+      << ",measure-runtimes="    << _measureRuntimes
       << ",adapter-number="      << _adapterNumber
       << ",method="              << peano::datatraversal::autotuning::toString(_methodTrace)
       << ",split-tree="          << _splitTheTree
