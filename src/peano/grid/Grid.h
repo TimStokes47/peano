@@ -194,8 +194,8 @@ class peano::grid::Grid {
     void terminate();
 };
 
+//#include "peano/grid/Grid.cpph"
 
-#include "peano/grid/Grid.cpph"
 
 
 #endif
