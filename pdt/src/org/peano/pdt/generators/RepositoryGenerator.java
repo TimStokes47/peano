@@ -56,4 +56,17 @@ public class RepositoryGenerator extends DepthFirstAdapter {
       true, true
     );
   }
+  
+  
+  public void inAAdapter(AAdapter node) {
+    String  predefinedAdapterType = node.getName().toString().trim();
+    String  targetName            = "RepositoryExplicitGridTemplateInstantiation4" + predefinedAdapterType;
+    
+    _translationTable.setThisTypenameToAdapterTypename(predefinedAdapterType);
+    _translationTable.convertTemplateFile( 
+      "RepositoryExplicitGridTemplateInstantiationImplementation.template",
+      _directoryGenerator.getRepositoriesDirectory() + "/" + targetName + ".cpp",
+      true, true
+    );
+  }
 }

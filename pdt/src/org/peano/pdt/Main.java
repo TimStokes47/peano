@@ -8,7 +8,7 @@ import java.util.Vector;
 public class Main {
   public static void printUsage() {
     System.out.println("Peano Developement Toolkit (PDT)");
-    System.out.println("(C) 2010 Tobias Weinzierl");
+    System.out.println("(C) 2010-2014 Tobias Weinzierl");
     System.out.println("");
     System.out.println("Usage: java -jar pdt.jar peano-specification-file component-output-directory [template-directories]" );
     System.out.println("  peano-specification-file    Mandatory; specification file describing your project. " );
