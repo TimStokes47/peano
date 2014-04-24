@@ -16,7 +16,7 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
-#if !defined(IntelCompiler)
+#if !defined(CompilerICC)
 #include "peano/grid/Grid.cpph"
 #endif
 
