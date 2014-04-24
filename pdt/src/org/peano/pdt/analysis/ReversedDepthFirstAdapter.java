@@ -559,6 +559,216 @@ public class ReversedDepthFirstAdapter extends AnalysisAdapter
         outAWriteIntergridOperatorIntOperation(node);
     }
 
+    public void inAReadScalarComplexOperation(AReadScalarComplexOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadScalarComplexOperation(AReadScalarComplexOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadScalarComplexOperation(AReadScalarComplexOperation node)
+    {
+        inAReadScalarComplexOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadScalarComplexOperation(node);
+    }
+
+    public void inAReadVectorComplexOperation(AReadVectorComplexOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadVectorComplexOperation(AReadVectorComplexOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadVectorComplexOperation(AReadVectorComplexOperation node)
+    {
+        inAReadVectorComplexOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadVectorComplexOperation(node);
+    }
+
+    public void inAReadVectorTwoPowDComplexOperation(AReadVectorTwoPowDComplexOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadVectorTwoPowDComplexOperation(AReadVectorTwoPowDComplexOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadVectorTwoPowDComplexOperation(AReadVectorTwoPowDComplexOperation node)
+    {
+        inAReadVectorTwoPowDComplexOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadVectorTwoPowDComplexOperation(node);
+    }
+
+    public void inAReadStencilComplexOperation(AReadStencilComplexOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadStencilComplexOperation(AReadStencilComplexOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadStencilComplexOperation(AReadStencilComplexOperation node)
+    {
+        inAReadStencilComplexOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadStencilComplexOperation(node);
+    }
+
+    public void inAReadIntergridOperatorComplexOperation(AReadIntergridOperatorComplexOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAReadIntergridOperatorComplexOperation(AReadIntergridOperatorComplexOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAReadIntergridOperatorComplexOperation(AReadIntergridOperatorComplexOperation node)
+    {
+        inAReadIntergridOperatorComplexOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAReadIntergridOperatorComplexOperation(node);
+    }
+
+    public void inAWriteScalarComplexOperation(AWriteScalarComplexOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteScalarComplexOperation(AWriteScalarComplexOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteScalarComplexOperation(AWriteScalarComplexOperation node)
+    {
+        inAWriteScalarComplexOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteScalarComplexOperation(node);
+    }
+
+    public void inAWriteVectorComplexOperation(AWriteVectorComplexOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteVectorComplexOperation(AWriteVectorComplexOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteVectorComplexOperation(AWriteVectorComplexOperation node)
+    {
+        inAWriteVectorComplexOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteVectorComplexOperation(node);
+    }
+
+    public void inAWriteVectorTwoPowDComplexOperation(AWriteVectorTwoPowDComplexOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteVectorTwoPowDComplexOperation(AWriteVectorTwoPowDComplexOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteVectorTwoPowDComplexOperation(AWriteVectorTwoPowDComplexOperation node)
+    {
+        inAWriteVectorTwoPowDComplexOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteVectorTwoPowDComplexOperation(node);
+    }
+
+    public void inAWriteStencilComplexOperation(AWriteStencilComplexOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteStencilComplexOperation(AWriteStencilComplexOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteStencilComplexOperation(AWriteStencilComplexOperation node)
+    {
+        inAWriteStencilComplexOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteStencilComplexOperation(node);
+    }
+
+    public void inAWriteIntergridOperatorComplexOperation(AWriteIntergridOperatorComplexOperation node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAWriteIntergridOperatorComplexOperation(AWriteIntergridOperatorComplexOperation node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAWriteIntergridOperatorComplexOperation(AWriteIntergridOperatorComplexOperation node)
+    {
+        inAWriteIntergridOperatorComplexOperation(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAWriteIntergridOperatorComplexOperation(node);
+    }
+
     public void inACell(ACell node)
     {
         defaultIn(node);

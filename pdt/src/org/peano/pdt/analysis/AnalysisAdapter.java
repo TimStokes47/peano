@@ -184,6 +184,56 @@ public class AnalysisAdapter implements Analysis
         defaultCase(node);
     }
 
+    public void caseAReadScalarComplexOperation(AReadScalarComplexOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAReadVectorComplexOperation(AReadVectorComplexOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAReadVectorTwoPowDComplexOperation(AReadVectorTwoPowDComplexOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAReadStencilComplexOperation(AReadStencilComplexOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAReadIntergridOperatorComplexOperation(AReadIntergridOperatorComplexOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteScalarComplexOperation(AWriteScalarComplexOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteVectorComplexOperation(AWriteVectorComplexOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteVectorTwoPowDComplexOperation(AWriteVectorTwoPowDComplexOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteStencilComplexOperation(AWriteStencilComplexOperation node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAWriteIntergridOperatorComplexOperation(AWriteIntergridOperatorComplexOperation node)
+    {
+        defaultCase(node);
+    }
+
     public void caseACell(ACell node)
     {
         defaultCase(node);
@@ -254,12 +304,22 @@ public class AnalysisAdapter implements Analysis
         defaultCase(node);
     }
 
+    public void caseTTokenScalarComplex(TTokenScalarComplex node)
+    {
+        defaultCase(node);
+    }
+
     public void caseTTokenVectorDDouble(TTokenVectorDDouble node)
     {
         defaultCase(node);
     }
 
     public void caseTTokenVectorDInt(TTokenVectorDInt node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseTTokenVectorDComplex(TTokenVectorDComplex node)
     {
         defaultCase(node);
     }
@@ -274,6 +334,11 @@ public class AnalysisAdapter implements Analysis
         defaultCase(node);
     }
 
+    public void caseTTokenVectorTwoPowDComplex(TTokenVectorTwoPowDComplex node)
+    {
+        defaultCase(node);
+    }
+
     public void caseTTokenVectorFivePowDDouble(TTokenVectorFivePowDDouble node)
     {
         defaultCase(node);
@@ -284,12 +349,22 @@ public class AnalysisAdapter implements Analysis
         defaultCase(node);
     }
 
+    public void caseTTokenVectorFivePowDComplex(TTokenVectorFivePowDComplex node)
+    {
+        defaultCase(node);
+    }
+
     public void caseTTokenStencilDouble(TTokenStencilDouble node)
     {
         defaultCase(node);
     }
 
     public void caseTTokenStencilInt(TTokenStencilInt node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseTTokenStencilComplex(TTokenStencilComplex node)
     {
         defaultCase(node);
     }

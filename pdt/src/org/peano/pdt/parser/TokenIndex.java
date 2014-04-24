@@ -64,128 +64,158 @@ class TokenIndex extends AnalysisAdapter
     }
 
     @Override
-    public void caseTTokenVectorDDouble(@SuppressWarnings("unused") TTokenVectorDDouble node)
+    public void caseTTokenScalarComplex(@SuppressWarnings("unused") TTokenScalarComplex node)
     {
         this.index = 9;
     }
 
     @Override
-    public void caseTTokenVectorDInt(@SuppressWarnings("unused") TTokenVectorDInt node)
+    public void caseTTokenVectorDDouble(@SuppressWarnings("unused") TTokenVectorDDouble node)
     {
         this.index = 10;
     }
 
     @Override
-    public void caseTTokenVectorTwoPowDDouble(@SuppressWarnings("unused") TTokenVectorTwoPowDDouble node)
+    public void caseTTokenVectorDInt(@SuppressWarnings("unused") TTokenVectorDInt node)
     {
         this.index = 11;
     }
 
     @Override
-    public void caseTTokenVectorTwoPowDInt(@SuppressWarnings("unused") TTokenVectorTwoPowDInt node)
+    public void caseTTokenVectorDComplex(@SuppressWarnings("unused") TTokenVectorDComplex node)
     {
         this.index = 12;
     }
 
     @Override
-    public void caseTTokenVectorFivePowDDouble(@SuppressWarnings("unused") TTokenVectorFivePowDDouble node)
+    public void caseTTokenVectorTwoPowDDouble(@SuppressWarnings("unused") TTokenVectorTwoPowDDouble node)
     {
         this.index = 13;
     }
 
     @Override
-    public void caseTTokenVectorFivePowDInt(@SuppressWarnings("unused") TTokenVectorFivePowDInt node)
+    public void caseTTokenVectorTwoPowDInt(@SuppressWarnings("unused") TTokenVectorTwoPowDInt node)
     {
         this.index = 14;
     }
 
     @Override
-    public void caseTTokenStencilDouble(@SuppressWarnings("unused") TTokenStencilDouble node)
+    public void caseTTokenVectorTwoPowDComplex(@SuppressWarnings("unused") TTokenVectorTwoPowDComplex node)
     {
         this.index = 15;
     }
 
     @Override
-    public void caseTTokenStencilInt(@SuppressWarnings("unused") TTokenStencilInt node)
+    public void caseTTokenVectorFivePowDDouble(@SuppressWarnings("unused") TTokenVectorFivePowDDouble node)
     {
         this.index = 16;
     }
 
     @Override
-    public void caseTTokenName(@SuppressWarnings("unused") TTokenName node)
+    public void caseTTokenVectorFivePowDInt(@SuppressWarnings("unused") TTokenVectorFivePowDInt node)
     {
         this.index = 17;
     }
 
     @Override
-    public void caseTTokenDastgenFile(@SuppressWarnings("unused") TTokenDastgenFile node)
+    public void caseTTokenVectorFivePowDComplex(@SuppressWarnings("unused") TTokenVectorFivePowDComplex node)
     {
         this.index = 18;
     }
 
     @Override
-    public void caseTTokenEventMapping(@SuppressWarnings("unused") TTokenEventMapping node)
+    public void caseTTokenStencilDouble(@SuppressWarnings("unused") TTokenStencilDouble node)
     {
         this.index = 19;
     }
 
     @Override
-    public void caseTTokenOpenBracket(@SuppressWarnings("unused") TTokenOpenBracket node)
+    public void caseTTokenStencilInt(@SuppressWarnings("unused") TTokenStencilInt node)
     {
         this.index = 20;
     }
 
     @Override
-    public void caseTTokenCloseBracket(@SuppressWarnings("unused") TTokenCloseBracket node)
+    public void caseTTokenStencilComplex(@SuppressWarnings("unused") TTokenStencilComplex node)
     {
         this.index = 21;
     }
 
     @Override
-    public void caseTTokenComma(@SuppressWarnings("unused") TTokenComma node)
+    public void caseTTokenName(@SuppressWarnings("unused") TTokenName node)
     {
         this.index = 22;
     }
 
     @Override
-    public void caseTTokenAdapter(@SuppressWarnings("unused") TTokenAdapter node)
+    public void caseTTokenDastgenFile(@SuppressWarnings("unused") TTokenDastgenFile node)
     {
         this.index = 23;
     }
 
     @Override
-    public void caseTTokenMergeWithUserDefinedAdapter(@SuppressWarnings("unused") TTokenMergeWithUserDefinedAdapter node)
+    public void caseTTokenEventMapping(@SuppressWarnings("unused") TTokenEventMapping node)
     {
         this.index = 24;
     }
 
     @Override
-    public void caseTTokenMergeWithPredefinedAdapter(@SuppressWarnings("unused") TTokenMergeWithPredefinedAdapter node)
+    public void caseTTokenOpenBracket(@SuppressWarnings("unused") TTokenOpenBracket node)
     {
         this.index = 25;
     }
 
     @Override
-    public void caseTIdentifier(@SuppressWarnings("unused") TIdentifier node)
+    public void caseTTokenCloseBracket(@SuppressWarnings("unused") TTokenCloseBracket node)
     {
         this.index = 26;
     }
 
     @Override
-    public void caseTFilename(@SuppressWarnings("unused") TFilename node)
+    public void caseTTokenComma(@SuppressWarnings("unused") TTokenComma node)
     {
         this.index = 27;
     }
 
     @Override
-    public void caseTNamespace(@SuppressWarnings("unused") TNamespace node)
+    public void caseTTokenAdapter(@SuppressWarnings("unused") TTokenAdapter node)
     {
         this.index = 28;
     }
 
     @Override
-    public void caseEOF(@SuppressWarnings("unused") EOF node)
+    public void caseTTokenMergeWithUserDefinedAdapter(@SuppressWarnings("unused") TTokenMergeWithUserDefinedAdapter node)
     {
         this.index = 29;
+    }
+
+    @Override
+    public void caseTTokenMergeWithPredefinedAdapter(@SuppressWarnings("unused") TTokenMergeWithPredefinedAdapter node)
+    {
+        this.index = 30;
+    }
+
+    @Override
+    public void caseTIdentifier(@SuppressWarnings("unused") TIdentifier node)
+    {
+        this.index = 31;
+    }
+
+    @Override
+    public void caseTFilename(@SuppressWarnings("unused") TFilename node)
+    {
+        this.index = 32;
+    }
+
+    @Override
+    public void caseTNamespace(@SuppressWarnings("unused") TNamespace node)
+    {
+        this.index = 33;
+    }
+
+    @Override
+    public void caseEOF(@SuppressWarnings("unused") EOF node)
+    {
+        this.index = 34;
     }
 }

@@ -4,7 +4,7 @@
 #define ___INCLUDE_GUARD_PREFIX___VERTEX_OPERATIONS_H_
 
 
-#include "__PROJECT_PATH__/records/Vertex.h"
+#include "__PROJECT_PATH__/Vertex.h"
 #include "peano/grid/Vertex.h"
 #include "peano/grid/VertexEnumerator.h"
 #include "peano/utils/Globals.h"
@@ -54,6 +54,20 @@ class __NAMESPACE__::VertexOperations {
    __x__WRITE_VECTOR_TWO_POW_D_OPERATION_INT__ static void write__WRITE_VECTOR_TWO_POW_D_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D_TIMES_TWO_POWER_D,int>& values);
    __x__WRITE_STENCIL_OPERATION_INT__ static void write__WRITE_STENCIL_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,int>& values);
    __x__WRITE_INTERGRID_OPERATOR_OPERATION_INT__ static void write__WRITE_INTERGRID_OPERATOR_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D_TIMES_FIVE_POWER_D,int>& values);
+
+
+   __x__READ_SCALAR_OPERATION_COMPLEX__ static tarch::la::Vector<TWO_POWER_D,std::complex<double> >  read__READ_SCALAR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices);
+   __x__READ_VECTOR_OPERATION_COMPLEX__ static tarch::la::Vector<TWO_POWER_D_TIMES_D,std::complex<double> > read__READ_VECTOR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices);
+   __x__READ_VECTOR_TWO_POW_D_OPERATION_COMPLEX__ static tarch::la::Vector<TWO_POWER_D_TIMES_TWO_POWER_D,std::complex<double> > read__READ_VECTOR_TWO_POW_D_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices);
+   __x__READ_STENCIL_OPERATION_COMPLEX__ static tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,std::complex<double> > read__READ_STENCIL_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices);
+   __x__READ_INTERGRID_OPERATOR_OPERATION_COMPLEX__ static tarch::la::Vector<TWO_POWER_D_TIMES_FIVE_POWER_D,std::complex<double> > read__READ_INTERGRID_OPERATOR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices);
+
+
+   __x__WRITE_SCALAR_OPERATION_COMPLEX__ static void write__WRITE_SCALAR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D,std::complex<double> >& values );
+   __x__WRITE_VECTOR_OPERATION_COMPLEX__ static void write__WRITE_VECTOR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D_TIMES_D,std::complex<double> >& values);
+   __x__WRITE_VECTOR_TWO_POW_D_OPERATION_COMPLEX__ static void write__WRITE_VECTOR_TWO_POW_D_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D_TIMES_TWO_POWER_D,std::complex<double> >& values);
+   __x__WRITE_STENCIL_OPERATION_COMPLEX__ static void write__WRITE_STENCIL_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,std::complex<double> >& values);
+   __x__WRITE_INTERGRID_OPERATOR_OPERATION_COMPLEX__ static void write__WRITE_INTERGRID_OPERATOR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D_TIMES_FIVE_POWER_D,std::complex<double> >& values);
 };
 
 
