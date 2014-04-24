@@ -14,6 +14,12 @@
 
 #include "peano/datatraversal/autotuning/Oracle.h"
 
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
+#if !defined(IntelCompiler)
+#include "peano/grid/Grid.cpph"
+#endif
+
 
 tarch::logging::Log __NAMESPACE__::repositories::RepositorySTDStack::_log( "__NAMESPACE__::repositories::RepositorySTDStack" );
 
