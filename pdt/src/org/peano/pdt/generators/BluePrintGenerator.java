@@ -30,7 +30,16 @@ public class BluePrintGenerator extends DepthFirstAdapter {
 
     _translationTable.convertTemplateFile( headerTemplate,         headerFileName,         false, true);
     _translationTable.convertTemplateFile( implementationTemplate, implementationFileName, false, true);
-	}
+
+    final String headerOperationTemplate         = "VertexOperationsHeader.template";
+    final String implementationOperationTemplate = "VertexOperationsImplementation.template";
+    
+    final String headerOperationFileName         = _directoryGenerator.getProjectDirectoryAbsolute() + "/VertexOperations.h";
+    final String implementationOperationFileName = _directoryGenerator.getProjectDirectoryAbsolute() + "/VertexOperations.cpp";
+
+    _translationTable.convertTemplateFile( headerOperationTemplate,         headerOperationFileName,         true, true);
+    _translationTable.convertTemplateFile( implementationOperationTemplate, implementationOperationFileName, true, true);
+  }
   
 
   public void inACell(ACell node) {
