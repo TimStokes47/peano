@@ -7,6 +7,11 @@ int tarch::la::abs (int value) {
 }
 
 
+double tarch::la::abs( const std::complex<double>& value ) {
+  return std::sqrt( value.real()*value.real() + value.imag() * value.imag() );
+}
+
+
 double tarch::la::abs(double value) {
   return std::abs(value);
 }

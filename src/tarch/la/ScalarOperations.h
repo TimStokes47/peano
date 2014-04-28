@@ -3,7 +3,10 @@
 #ifndef _TARCH_LA_SCALAROPERATIONS_H_
 #define _TARCH_LA_SCALAROPERATIONS_H_
 
+
 #include "tarch/la/Scalar.h"
+
+#include <complex>
 
 
 namespace tarch {
@@ -18,6 +21,8 @@ namespace tarch {
      * Returns the absolute value of the given int.
      */
     int abs (int value);
+
+    double abs( const std::complex<double>& value );
 
     /**
      * Computes the i-th power of a in integer arithmetic.
