@@ -5,7 +5,7 @@
 
 
 #include "tarch/la/Matrix.h"
-
+#include "tarch/la/Vector.h"
 
 #include <sstream>
 #include <cmath>
@@ -21,6 +21,13 @@ namespace tarch {
 
     template<int Rows, int Cols, typename Scalar>
     Matrix<Cols,Rows,Scalar> transpose(const Matrix<Rows,Cols,Scalar>& matrix);
+
+
+    /**
+     * Extract diagonal vector from matrix
+     */
+    template<int Rows, typename Scalar>
+    Vector<Rows,Scalar> diag(const Matrix<Rows,Rows,Scalar>& matrix);
   }
 }
 
@@ -32,4 +39,4 @@ std::ostream&  operator<<(std::ostream& os, const tarch::la::Matrix<Rows,Cols,Sc
 
 #include "tarch/la/MatrixOperations.cpph"
 
-#endif /* _TARCH_LA_MATRIXOPERATIONS_H_ */
+#endif

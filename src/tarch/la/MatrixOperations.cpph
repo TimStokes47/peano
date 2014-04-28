@@ -36,3 +36,14 @@ std::ostream& operator<< (
   os << matrix.toString();
   return os;
 }
+
+
+template<int Rows, typename Scalar>
+tarch::la::Vector<Rows,Scalar> tarch::la::diag(const Matrix<Rows,Rows,Scalar>& matrix) {
+  tarch::la::Vector<Rows,Scalar> result;
+  for (int i=0; i<Rows; i++) {
+      result(i) = matrix(i,i);
+  }
+  return result;
+}
+

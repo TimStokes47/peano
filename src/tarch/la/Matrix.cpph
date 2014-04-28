@@ -55,3 +55,17 @@ std::string tarch::la::Matrix<Rows,Cols,Scalar>::toString() const {
   os << "]";
   return os.str();
 }
+
+
+
+template<int Rows, int Cols, typename Scalar>
+template <typename NewScalarType>
+tarch::la::Matrix<Rows,Cols,NewScalarType> tarch::la::Matrix<Rows,Cols,Scalar>::convertScalar() const {
+  tarch::la::Matrix<Rows,Cols,NewScalarType> result;
+  for (int i=0; i < Rows; i++) {
+    for (int j=0; j < Cols; j++) {
+      result(j,i) = operator()(j,i);
+    }
+  }
+  return result;
+}
