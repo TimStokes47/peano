@@ -298,6 +298,8 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     int createData(int numberOfEntries=0, int initialCapacity=0);
 
+    void createDataForIndex(int wantedIndex, int numberOfEntries=0, int initialCapacity=0);
+
     /**
      * Returns, if the given index is a known index and, thus,
      * refers to a valid heap data object.
