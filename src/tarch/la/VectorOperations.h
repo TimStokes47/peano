@@ -84,6 +84,26 @@ namespace tarch {
     Vector<Size,Scalar> invertEntries (
       const Vector<Size,Scalar>&  vector
     );
+
+    template<int Size>
+    Vector<Size,double> real(
+      const Vector<Size,std::complex<double> >&  vector
+    );
+
+    template<int Size>
+    Vector<Size,double> imag(
+      const Vector<Size,std::complex<double> >&  vector
+    );
+
+    template<int Size>
+    double maxReal(
+      const Vector<Size,std::complex<double> >&  vector
+    );
+
+    template<int Size>
+    double maxImag(
+      const Vector<Size,std::complex<double> >&  vector
+    );
   }
 }
 

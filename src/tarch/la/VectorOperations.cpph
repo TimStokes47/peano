@@ -1,3 +1,6 @@
+#include <limits>
+
+
 template<int Size, typename Scalar>
 tarch::la::Vector<Size,Scalar> tarch::la::invertEntries (
   const Vector<Size,Scalar>&  vector
@@ -125,6 +128,59 @@ Scalar tarch::la::maxAbs(
     }
   }
   return largest;
+}
+
+
+
+template<int Size>
+tarch::la::Vector<Size,double> tarch::la::real(
+  const Vector<Size,std::complex<double> >&  vector
+) {
+  tarch::la::Vector<Size,double> result;
+
+  for (int d=0; d<Size; d++) {
+    result(d) = vector(d).real();
+  }
+
+  return result;
+}
+
+
+template<int Size>
+tarch::la::Vector<Size,double> tarch::la::imag(
+  const Vector<Size,std::complex<double> >&  vector
+) {
+  tarch::la::Vector<Size,double> result;
+
+  for (int d=0; d<Size; d++) {
+    result(d) = vector(d).imag();
+  }
+
+  return result;
+}
+
+
+template<int Size>
+double tarch::la::maxReal(
+  const Vector<Size,std::complex<double> >&  vector
+) {
+  double result = std::numeric_limits<double>::min();
+  for (int i=0; i<Size; i++) {
+    result = result > vector(i).real() ? result : vector(i).real();
+  }
+  return result;
+}
+
+
+template<int Size>
+double tarch::la::maxImag(
+  const Vector<Size,std::complex<double> >&  vector
+) {
+  double result = std::numeric_limits<double>::min();
+  for (int i=0; i<Size; i++) {
+    result = result > vector(i).imag() ? result : vector(i).imag();
+  }
+  return result;
 }
 
 
