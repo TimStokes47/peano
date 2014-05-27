@@ -153,7 +153,7 @@ template <class Vertex, class Cell, class State, class VertexStack, class CellSt
 //void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::iterate(int numberOfIterations) {
 void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::iterate() {
 //  logTraceInWith2Arguments( "iterate(State)", _state.toString(), numberOfIterations );
-  logTraceInWith1Arguments( "iterate(State)", _state.toString() );
+  logTraceInWith1Argument( "iterate(State)", _state.toString() );
 
 //  assertion(numberOfIterations>=1);
 
