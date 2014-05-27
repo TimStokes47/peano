@@ -304,6 +304,11 @@ void peano::parallel::loadbalancing::Oracle::activateLoadBalancing(bool value) {
 }
 
 
+bool peano::parallel::loadbalancing::Oracle::isLoadBalancingActivated() const {
+  return _loadBalancingActivated;
+}
+
+
 void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
   int     workerRank,
   double  workerNumberOfInnerVertices,

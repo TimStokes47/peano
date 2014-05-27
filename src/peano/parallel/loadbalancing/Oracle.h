@@ -277,6 +277,8 @@ class peano::parallel::loadbalancing::Oracle {
      * You can switch off the load balancing via this value.
      */
     void activateLoadBalancing(bool value);
+
+    bool isLoadBalancingActivated() const;
 };
 
 
