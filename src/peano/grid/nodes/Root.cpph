@@ -5,6 +5,7 @@
 #include "peano/utils/Loop.h"
 #include "peano/grid/nodes/Constants.h"
 #include "peano/parallel/Partitioner.h"
+#include "peano/utils/PeanoOptimisations.h"
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
@@ -403,6 +404,16 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         SendWorkerMasterMessagesBlocking
       );
     enddforx
+
+    #if defined(RestrictStateImmediately)
+    State copyOfState(state);
+    copyOfState.send(
+      tarch::parallel::NodePool::getInstance().getMasterRank(),
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      SendWorkerMasterMessagesBlocking
+    );
+    logDebug( "sendCellAndVerticesToMaster(...)", "sent state " << _state.toString() );
+    #endif
   }
   else {
     logDebug( "sendCellAndVerticesToMaster(...)", "do not send data as reduction is locally switched off. state=" << state.toString() );
@@ -560,7 +571,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         fineGridEnumerator
       );
 
-      if (linearisedCurrentCellTraversal==THREE_POWER_D/2) {
+      const bool isCentralElementOfTree=linearisedCurrentCellTraversal==THREE_POWER_D/2;
+      if (isCentralElementOfTree) {
         tarch::mpianalysis::Analysis::getInstance().enterCentralElementOfEnclosingSpacetree();
       }
 
@@ -575,8 +587,21 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         currentCellTraversal
       );
 
-      if (linearisedCurrentCellTraversal==THREE_POWER_D/2) {
+      if (isCentralElementOfTree) {
         tarch::mpianalysis::Analysis::getInstance().leaveCentralElementOfEnclosingSpacetree();
+
+        #ifdef Parallel
+        if (!tarch::parallel::Node::getInstance().isGlobalMaster()) {
+          Base::_eventHandle.endIteration(state);
+        }
+        fineGridEnumerator.setOffset( tarch::la::Vector<DIMENSIONS,int>(1) );
+        sendCellAndVerticesToMaster(
+          state,
+          fineGridCells[THREE_POWER_D/2],
+          fineGridEnumerator,
+          fineGridVertices
+        );
+        #endif
       }
 
       traverseLoopCounter++;
@@ -604,17 +629,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     } while (storeLoopCounter < loadLoopCounter);
   } while (loadLoopCounter<THREE_POWER_D);
 
-  Base::_eventHandle.endIteration(state);
-
-  #ifdef Parallel
-  fineGridEnumerator.setOffset( tarch::la::Vector<DIMENSIONS,int>(1) );
-  sendCellAndVerticesToMaster(
-    state,
-    fineGridCells[THREE_POWER_D/2],
-    fineGridEnumerator,
-    fineGridVertices
-  );
-  #endif
+  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    Base::_eventHandle.endIteration(state);
+  }
 
   for (int i=THREE_POWER_D-1; i>=0; i--) {
     Base::_cellStack.push(peano::stacks::Constants::InOutStack, fineGridCells[i] );

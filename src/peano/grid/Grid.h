@@ -118,16 +118,38 @@ class peano::grid::Grid {
      * - the node is not joining, and
      * - the node has not just forked.
      *
+     * You may not call this operation is _state.reduceDataToMaster() does not hold.
+     *
      * For the rationale for the latter constraint, please see Node::updateCellsParallelStateBeforeStore()
      *
      * !!! Send protocol
      *
      * If the SendMasterWorkerAndWorkerMasterMessagesBlocking is set, the code
-     * sends its data blocking. It is typical among the most criticial
+     * sends its data blocking. It is typical among the most critical
      * communication routines. Thus, switching to a blocking send here is of
      * value as any overhead elimination here pays off.
+     *
+     * !!! Optimisation
+     *
+     * In an optimal world where reductions are on, we should send the state to
+     * the master when the worker has completed its whole traversal including the
+     * halo. The latter fact is the problem: the additional halo cells slow down
+     * the overall parallel efficiency. In the latter case, it is also convenient
+     * to make the grid invoke the reduction as it is also responsible for the
+     * counterpart operation, i.e. the state receive. Anyway, the state is the
+     * last thing sent up to the master after all the vertices and the cell data.
+     *
+     * Sometimes, 100% accurate statistics are not necessary but it is speed that
+     * matters though reductions cannot be switched off completely. In this case,
+     * it does make sense to send up the state information right after the worker
+     * has finished the traversal of its interior cells. But before it runs through
+     * all the remaining halo cells. This can be controlled by the optimisation
+     * flag. In the end, this operation has to be called at most once either right
+     * in by Root::sendCellAndVerticesToMaster() or by the Grid itself.
+     *
      */
     void sendStateToMaster();
+
   public:
     /**
      * Create new grid
@@ -171,6 +193,7 @@ class peano::grid::Grid {
     );
 
     /**
+     * Run over the grid k times
      *
      * !!! Implementation
      *
@@ -186,6 +209,7 @@ class peano::grid::Grid {
      * data to enable the worker to finish and to send out all the boundary
      * information.
      */
+//    void iterate(int numberOfIterations);
     void iterate();
 
     /**
