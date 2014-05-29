@@ -147,11 +147,21 @@ void __NAMESPACE__::repositories::RepositorySTDStack::iterate() {
   peano::datatraversal::autotuning::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
   #ifdef Parallel
   peano::parallel::loadbalancing::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
+  if (
+    _repositoryState.getNumberOfIterations() > 1 &&
+    (
+      peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated()
+      ||
+      _solverState.isInvolvedInJoinOrFork()
+    )
+  ) {
+    logWarning( "iterate()", "iterate invoked for multiple traversals though load balancing is switched on or grid is not balanced globally. Use activateLoadBalancing(false) to deactivate the load balancing before" );
+  }
   #endif
   
   
   switch ( _repositoryState.getAction()) {
-__x__NONQUALIFIED_ADAPTER_TYPE__    case __NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__: watch.startTimer(); _gridWith__NONQUALIFIED_ADAPTER_TYPE__.iterate(); watch.stopTimer(); _measure__NONQUALIFIED_ADAPTER_TYPE__CPUTime.setValue( watch.getCPUTime() ); _measure__NONQUALIFIED_ADAPTER_TYPE__CalendarTime.setValue( watch.getCalendarTime() ); break;
+__x__NONQUALIFIED_ADAPTER_TYPE__    case __NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__: watch.startTimer(); _gridWith__NONQUALIFIED_ADAPTER_TYPE__.iterate(_repositoryState.getNumberOfIterations()); watch.stopTimer(); _measure__NONQUALIFIED_ADAPTER_TYPE__CPUTime.setValue( watch.getCPUTime() ); _measure__NONQUALIFIED_ADAPTER_TYPE__CalendarTime.setValue( watch.getCalendarTime() ); break;
     case __NAMESPACE__::records::RepositoryState::Terminate:
       assertionMsg( false, "this branch/state should never be reached" ); 
       break;
@@ -170,7 +180,7 @@ __x__NONQUALIFIED_ADAPTER_TYPE__    case __NAMESPACE__::records::RepositoryState
   }
 }
 
-__x__NONQUALIFIED_ADAPTER_TYPE__ void __NAMESPACE__::repositories::RepositorySTDStack::switchTo__NONQUALIFIED_ADAPTER_TYPE__() { _repositoryState.setAction(__NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__); }
+__x__NONQUALIFIED_ADAPTER_TYPE__ void __NAMESPACE__::repositories::RepositorySTDStack::switchTo__NONQUALIFIED_ADAPTER_TYPE__(int numberOfIterations) { assertion(numberOfIterations>0); _repositoryState.setNumberOfIterations(numberOfIterations); _repositoryState.setAction(__NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__); }
 
 
 __x__NONQUALIFIED_ADAPTER_TYPE__ bool __NAMESPACE__::repositories::RepositorySTDStack::isActiveAdapter__NONQUALIFIED_ADAPTER_TYPE__() const { return _repositoryState.getAction() == __NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__; }

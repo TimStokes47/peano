@@ -91,7 +91,7 @@ class __NAMESPACE__::repositories::RepositoryArrayStack: public __NAMESPACE__::r
     virtual void readCheckpoint( peano::grid::Checkpoint<__NAMESPACE__::Vertex, __NAMESPACE__::Cell> const * const checkpoint );
     virtual peano::grid::Checkpoint<__NAMESPACE__::Vertex, __NAMESPACE__::Cell>* createEmptyCheckpoint(); 
 
-   __x__NONQUALIFIED_ADAPTER_TYPE__ virtual void switchTo__NONQUALIFIED_ADAPTER_TYPE__();    
+   __x__NONQUALIFIED_ADAPTER_TYPE__ virtual void switchTo__NONQUALIFIED_ADAPTER_TYPE__(int numberOfIterations=1);    
    __x__NONQUALIFIED_ADAPTER_TYPE__ virtual bool isActiveAdapter__NONQUALIFIED_ADAPTER_TYPE__() const;
      
     #ifdef Parallel
