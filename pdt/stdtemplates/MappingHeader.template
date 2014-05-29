@@ -9,6 +9,7 @@
 
 #include "peano/grid/VertexEnumerator.h"
 #include "peano/MappingSpecification.h"
+#include "peano/CommunicationSpecification.h"
 
 #include "tarch/multicore/MulticoreDefinitions.h"
 
@@ -53,6 +54,8 @@ class __THIS_QUALIFIED_TYPENAME__ {
     static peano::MappingSpecification   leaveCellSpecification();
     static peano::MappingSpecification   ascendSpecification();
     static peano::MappingSpecification   descendSpecification();
+
+    static peano::CommunicationSpecification   communicationSpecification();
 
 
     /**

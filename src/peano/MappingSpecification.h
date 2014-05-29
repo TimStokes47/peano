@@ -40,10 +40,11 @@ namespace peano {
 ||                ||                           | Introduces @f$ 2^d @f$ colouring.
 ||                ||                           | Variant is undefined (and thus may not be chosen) for inter-level
 ||                ||                           | events such as ascend.
-|| restartable    || false | May not try to recover if core fails.
-||                || true  | If the operation is deployed to a thread of its own and this thread creashes, Peano may reexecute this operation. Consequently, some operations might be called multiple times due to a hardware failure, but the code is resiliency safe, i.e. does not crash due to simple hardware errors.
+||                || RunConcurrentlyOnFineGrid | Peano does not care about dependencies
  *
- *
+ * The order is Serial>AvoidCoarseGridRaces>AvoidFineGridRaces>RunConcurrentlyOnFineGrid.
+ * If two mappings are combined one holding AvoidCoarseGridRaces and one holding
+ * RunConcurrentlyOnFineGrid, the combination holds AvoidCoarseGridRaces.
  *
  * @author Tobias Weinzierl
  */
@@ -52,22 +53,22 @@ struct peano::MappingSpecification {
     Nop, OnlyLeaves, WholeTree
   };
 
+  // @todo Noch mehr Varianten rein mit QuickSched
   enum Multithreading {
-    Serial, RunConcurrentlyOnFineGrid, AvoidCoarseGridRaces, AvoidFineGridRaces
+    Serial, AvoidCoarseGridRaces, AvoidFineGridRaces, RunConcurrentlyOnFineGrid
   };
 
   Manipulates     manipulates;
   Multithreading  multithreading;
-  bool            restartable;
 
-  MappingSpecification(Manipulates manipulates_, Multithreading _multithreading_, bool _restartable_);
+  MappingSpecification(Manipulates manipulates_, Multithreading multithreading_);
 
   /**
    * Most general specification
    *
    * Is used by the adapters to merge multiple specifications.
    */
-  static MappingSpecification getMostGeneralSpecification();
+  static MappingSpecification getMinimalSpecification();
 
   std::string toString() const;
 };

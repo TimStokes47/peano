@@ -6,11 +6,9 @@
 #include <sstream>
 
 
-peano::MappingSpecification::MappingSpecification(peano::MappingSpecification::Manipulates manipulates_, peano::MappingSpecification::Multithreading multithreading_, bool restartable_):
+peano::MappingSpecification::MappingSpecification(peano::MappingSpecification::Manipulates manipulates_, peano::MappingSpecification::Multithreading multithreading_):
   manipulates(manipulates_),
-  multithreading(multithreading_),
-  restartable(restartable_) {
-  assertion1(!restartable || multithreading, toString());
+  multithreading(multithreading_) {
 }
 
 
@@ -44,8 +42,7 @@ std::string peano::MappingSpecification::toString() const {
       msg << "concurrently on fine grid";
       break;
   }
-  msg << ",restartable=" << restartable
-      << ")";
+  msg << ")";
   return msg.str();
 }
 
@@ -93,14 +90,12 @@ peano::MappingSpecification operator&(const peano::MappingSpecification& lhs, co
     multithreading = peano::MappingSpecification::Serial;
   }
 
-  bool restartable    = lhs.restartable    && rhs.restartable;
-
-  peano::MappingSpecification result(manipulates,multithreading,restartable);
+  const peano::MappingSpecification result(manipulates,multithreading);
   logTraceOutWith1Argument("operator&(...)",result.toString());
   return result;
 }
 
 
-peano::MappingSpecification peano::MappingSpecification::getMostGeneralSpecification() {
-  return MappingSpecification(Nop,peano::MappingSpecification::AvoidFineGridRaces,true);
+peano::MappingSpecification peano::MappingSpecification::getMinimalSpecification() {
+  return MappingSpecification(Nop,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
 }

@@ -9,6 +9,7 @@
 
 #include "peano/grid/VertexEnumerator.h"
 #include "peano/MappingSpecification.h"
+#include "peano/CommunicationSpecification.h"
 
 #include "tarch/multicore/MulticoreDefinitions.h"
 
@@ -39,12 +40,13 @@ class __THIS_QUALIFIED_TYPENAME__ {
    __x__MAPPINGS__ __NAMESPACE__::mappings::__MAPPINGS__ _map2__MAPPINGS__;
    __x__PREDEFINED_MAPPINGS__ __NAMESPACE__::adapters::__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__;
   public:
-    static peano::MappingSpecification   touchVertexLastTimeSpecification();
-    static peano::MappingSpecification   touchVertexFirstTimeSpecification();
-    static peano::MappingSpecification   enterCellSpecification();
-    static peano::MappingSpecification   leaveCellSpecification();
-    static peano::MappingSpecification   ascendSpecification();
-    static peano::MappingSpecification   descendSpecification();
+    static peano::MappingSpecification         touchVertexLastTimeSpecification();
+    static peano::MappingSpecification         touchVertexFirstTimeSpecification();
+    static peano::MappingSpecification         enterCellSpecification();
+    static peano::MappingSpecification         leaveCellSpecification();
+    static peano::MappingSpecification         ascendSpecification();
+    static peano::MappingSpecification         descendSpecification();
+    static peano::CommunicationSpecification   communicationSpecification();
 
     __THIS_TYPENAME__();
 

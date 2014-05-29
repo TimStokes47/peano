@@ -11,6 +11,7 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
 
 #include "peano/MappingSpecification.h"
+#include "peano/CommunicationSpecification.h"
 #include "peano/grid/VertexEnumerator.h"
 
 #include "__PROJECT_PATH__/Vertex.h"
@@ -41,6 +42,8 @@ class __NAMESPACE__::adapters::__THIS_TYPENAME__ {
     static peano::MappingSpecification   leaveCellSpecification();
     static peano::MappingSpecification   ascendSpecification();
     static peano::MappingSpecification   descendSpecification();
+
+    static peano::CommunicationSpecification   communicationSpecification();
 
     __THIS_TYPENAME__();
 

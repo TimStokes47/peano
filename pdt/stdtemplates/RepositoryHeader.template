@@ -33,19 +33,15 @@ class __NAMESPACE__::repositories::Repository {
     /**
      * Iterate with current active event handle.
      */
-    virtual void iterate() = 0;
+    virtual void iterate(int numberOfIterations=1) = 0;
 
     virtual __NAMESPACE__::State& getState() = 0;
     virtual const __NAMESPACE__::State& getState() const = 0;
 
     /**
      * Switch to another event handle.
-     *
-     * @param numberOfIterations Number of iterations to be done with this adapter. Has to be greater or equal to 1. 
-     *                           Only the very last iteration enables load balancing, but the traversals themselves 
-     *                           might be significantly faster. 
      */
-   __x__NONQUALIFIED_ADAPTER_TYPE__ virtual void switchTo__NONQUALIFIED_ADAPTER_TYPE__(int numberOfIterations=1) = 0;    
+   __x__NONQUALIFIED_ADAPTER_TYPE__ virtual void switchTo__NONQUALIFIED_ADAPTER_TYPE__() = 0;    
    __x__NONQUALIFIED_ADAPTER_TYPE__ virtual bool isActiveAdapter__NONQUALIFIED_ADAPTER_TYPE__() const = 0;
 
     /**

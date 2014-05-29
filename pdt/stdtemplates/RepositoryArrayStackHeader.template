@@ -85,13 +85,13 @@ class __NAMESPACE__::repositories::RepositoryArrayStack: public __NAMESPACE__::r
     virtual __NAMESPACE__::State& getState();
     virtual const __NAMESPACE__::State& getState() const;
 
-    virtual void iterate();
+    virtual void iterate(int numberOfIterations=1);
     
     virtual void writeCheckpoint(peano::grid::Checkpoint<__NAMESPACE__::Vertex, __NAMESPACE__::Cell> * const checkpoint); 
     virtual void readCheckpoint( peano::grid::Checkpoint<__NAMESPACE__::Vertex, __NAMESPACE__::Cell> const * const checkpoint );
     virtual peano::grid::Checkpoint<__NAMESPACE__::Vertex, __NAMESPACE__::Cell>* createEmptyCheckpoint(); 
 
-   __x__NONQUALIFIED_ADAPTER_TYPE__ virtual void switchTo__NONQUALIFIED_ADAPTER_TYPE__(int numberOfIterations=1);    
+   __x__NONQUALIFIED_ADAPTER_TYPE__ virtual void switchTo__NONQUALIFIED_ADAPTER_TYPE__();    
    __x__NONQUALIFIED_ADAPTER_TYPE__ virtual bool isActiveAdapter__NONQUALIFIED_ADAPTER_TYPE__() const;
      
     #ifdef Parallel
