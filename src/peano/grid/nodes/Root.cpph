@@ -648,8 +648,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
   #endif
 
-  Das da oben muss auch den State hochschicken und nicht erst warten, weil sonst geht das Release nachher nicht durch?
-
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
     Base::_eventHandle.endIteration(state);
   }
