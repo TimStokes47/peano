@@ -88,11 +88,6 @@
 
 
 /**
- * @see Grid::sendStateToMaster()
- */
-//#define RestrictStateImmediately
-
-/**
  * Switch on manual alignment of vectors
  */
 // @todo raus
