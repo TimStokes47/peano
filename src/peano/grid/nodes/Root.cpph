@@ -4,6 +4,7 @@
 #include "peano/grid/aspects/CellRefinement.h"
 #include "peano/utils/Loop.h"
 #include "peano/grid/Grid.h"
+#include "peano/CommunicationSpecification.h"
 #include "peano/grid/nodes/Constants.h"
 #include "peano/parallel/Partitioner.h"
 #include "peano/utils/PeanoOptimisations.h"
