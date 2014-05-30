@@ -58,7 +58,7 @@ peano::CommunicationSpecification peano::CommunicationSpecification::getMinimalS
 
 
 bool peano::CommunicationSpecification::sendStateAtEndOfTraversal() const {
-  const bool result = _eventHandle.communicationSpecification().exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime || !sendStateAsLateAsPossible;
+  const bool result = exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime || !sendStateAsLateAsPossible;
 
   return result;
 }
