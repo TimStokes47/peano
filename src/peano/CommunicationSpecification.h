@@ -38,7 +38,7 @@ struct peano::CommunicationSpecification {
 
   static CommunicationSpecification getMinimalSpecification();
 
-  CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_ );
+  CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool sendStateAsLateAsPossible_ );
 
   bool sendStateAtEndOfTraversal() const;
 

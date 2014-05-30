@@ -6,7 +6,8 @@
 #include <sstream>
 
 
-peano::CommunicationSpecification::CommunicationSpecification(ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_):
+peano::CommunicationSpecification::CommunicationSpecification(ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool sendStateAsLateAsPossible_):
+  sendStateAsLateAsPossible(sendStateAsLateAsPossible_),
   exchangeMasterWorkerData( exchangeMasterWorkerData_ ),
   exchangeWorkerMasterData( exchangeWorkerMasterData_ ) {
 }
@@ -44,7 +45,8 @@ peano::CommunicationSpecification operator&(const peano::CommunicationSpecificat
 
   const peano::CommunicationSpecification result(
     lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ? peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime : rhs.exchangeMasterWorkerData,
-    lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime    ? peano::CommunicationSpecification::AfterLastTouchVertexLastTime    : rhs.exchangeWorkerMasterData
+    lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime    ? peano::CommunicationSpecification::AfterLastTouchVertexLastTime    : rhs.exchangeWorkerMasterData,
+    lhs.sendStateAsLateAsPossible | rhs.sendStateAsLateAsPossible
   );
 
   logTraceOutWith1Argument("operator&(...)",result.toString());
@@ -53,7 +55,7 @@ peano::CommunicationSpecification operator&(const peano::CommunicationSpecificat
 
 
 peano::CommunicationSpecification peano::CommunicationSpecification::getMinimalSpecification() {
-  return CommunicationSpecification(peano::CommunicationSpecification::BeforeDescendIntoLocalSubtree,peano::CommunicationSpecification::AfterProcessingOfLocalSubtree);
+  return CommunicationSpecification(peano::CommunicationSpecification::BeforeDescendIntoLocalSubtree,peano::CommunicationSpecification::AfterProcessingOfLocalSubtree,false);
 }
 
 
