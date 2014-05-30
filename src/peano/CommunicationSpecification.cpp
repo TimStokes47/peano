@@ -55,3 +55,10 @@ peano::CommunicationSpecification operator&(const peano::CommunicationSpecificat
 peano::CommunicationSpecification peano::CommunicationSpecification::getMinimalSpecification() {
   return CommunicationSpecification(peano::CommunicationSpecification::BeforeDescendIntoLocalSubtree,peano::CommunicationSpecification::AfterProcessingOfLocalSubtree);
 }
+
+
+bool peano::CommunicationSpecification::sendStateAtEndOfTraversal() const {
+  const bool result = _eventHandle.communicationSpecification().exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime || !sendStateAsLateAsPossible;
+
+  return result;
+}

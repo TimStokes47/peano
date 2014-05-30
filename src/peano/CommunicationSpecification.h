@@ -40,6 +40,8 @@ struct peano::CommunicationSpecification {
 
   CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_ );
 
+  bool sendStateAtEndOfTraversal() const;
+
   std::string toString() const;
 };
 

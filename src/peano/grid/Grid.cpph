@@ -106,8 +106,9 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
 
   #ifdef Parallel
   tarch::mpianalysis::Analysis::getInstance().endIteration();
-  if ( _eventHandle.communicationSpecification().exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime ) {
+  if ( _eventHandle.communicationSpecification().sendStateAtEndOfTraversal() ) {
     _state.sendStateToMaster();
+    std::cerr << "uups(d)";
   }
   peano::parallel::JoinDataBufferPool::getInstance().releaseMessages();
   tarch::mpianalysis::Analysis::getInstance().endReleaseOfJoinData();
