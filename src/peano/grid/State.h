@@ -657,7 +657,7 @@ class peano::grid::State {
      * instead of the grid. It depends on the mappings' communication
      * specification. Therefore, it also has to be static.
      */
-    void sendStateToMaster();
+    void sendStateToMaster() const;
     #else
     bool isInvolvedInJoinOrFork() const { return false; }
 

@@ -857,7 +857,7 @@ void peano::grid::State<StateData>::receiveStartupDataFromMaster() {
 
 
 template <class StateData>
-void peano::grid::State<StateData>::sendStateToMaster() {
+void peano::grid::State<StateData>::sendStateToMaster()  const {
   logTraceInWith1Argument( "sendStateToMaster()", toString() );
 
   if ( reduceDataToMaster() ) {
