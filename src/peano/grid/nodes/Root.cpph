@@ -3,6 +3,7 @@
 
 #include "peano/grid/aspects/CellRefinement.h"
 #include "peano/utils/Loop.h"
+#include "peano/grid/Grid.h"
 #include "peano/grid/nodes/Constants.h"
 #include "peano/parallel/Partitioner.h"
 #include "peano/utils/PeanoOptimisations.h"
@@ -407,7 +408,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
 
     if ( Base::_eventHandle.communicationSpecification().exchangeWorkerMasterData==peano::CommunicationSpecification::AfterProcessingOfLocalSubtree ) {
-      Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::sendStateToMaster(_state);
+      state.sendStateToMaster();
       logInfo( "sendCellAndVerticesToMaster(...)", "did it" );
     }
   }

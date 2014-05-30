@@ -808,5 +808,70 @@ bool peano::grid::State<StateData>::hasSubworkerRebalanced() const {
   return _stateData.getSubWorkerIsInvolvedInJoinOrFork();
 }
 
+
+
+template <class StateData>
+void peano::grid::State<StateData>::receiveStartupDataFromMaster() {
+  logTraceInWith1Argument( "receiveStartupDataFromMaster()", state.toString() );
+  if ( tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    setReduceStateAndCell(true);
+  }
+  else if ( !isJoiningWithMaster() ) {
+    peano::parallel::messages::LoadBalancingMessage loadBalancingMessage;
+    loadBalancingMessage.receive(
+      tarch::parallel::NodePool::getInstance().getMasterRank(),
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      true,
+      ReceiveMasterMessagesBlocking
+    );
+
+    assertion(
+      loadBalancingMessage.getLoadBalancingFlag()!=peano::parallel::loadbalancing::Join ||
+      !peano::parallel::loadbalancing::Oracle::getInstance().hasWorkers()
+    );
+
+    if ( isInvolvedInJoinOrFork() ) {
+      peano::parallel::loadbalancing::Oracle::getInstance().receivedStartCommand(
+        peano::parallel::loadbalancing::Continue
+      );
+    }
+    else {
+      peano::parallel::loadbalancing::Oracle::getInstance().receivedStartCommand(loadBalancingMessage.getLoadBalancingFlag());
+    }
+
+    if (peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()==peano::parallel::loadbalancing::Join) {
+      joinWithRank(tarch::parallel::NodePool::getInstance().getMasterRank());
+    }
+
+    receive(
+      tarch::parallel::NodePool::getInstance().getMasterRank(),
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      ReceiveMasterMessagesBlocking
+    );
+
+    logDebug( "receiveStartupDataFromMaster()", "received state " << toString() );
+  }
+
+  logTraceOutWith1Argument( "receiveStartupDataFromMaster()", toString() );
+}
+
+
+template <class StateData>
+void peano::grid::State<StateData>::sendStateToMaster() {
+  logTraceInWith1Argument( "sendStateToMaster()", toString() );
+
+  if ( reduceDataToMaster() ) {
+    send(
+      tarch::parallel::NodePool::getInstance().getMasterRank(),
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+      SendWorkerMasterMessagesBlocking
+    );
+    logDebug( "sendStateToMaster()", "sent state " << toString() );
+  }
+
+  tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
+  logTraceOut( "sendStateToMaster()" );
+}
+
 #endif
 

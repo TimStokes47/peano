@@ -84,80 +84,11 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::res
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
-void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::receiveStartupDataFromMaster(State& state) {
-  #ifdef Parallel
-  logTraceInWith1Argument( "receiveStartupDataFromMaster()", state.toString() );
-  if ( tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    state.setReduceStateAndCell(true);
-  }
-  else if ( !state.isJoiningWithMaster() ) {
-    peano::parallel::messages::LoadBalancingMessage loadBalancingMessage;
-    loadBalancingMessage.receive(
-      tarch::parallel::NodePool::getInstance().getMasterRank(),
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      true,
-      ReceiveMasterMessagesBlocking
-    );
-
-    assertion(
-      loadBalancingMessage.getLoadBalancingFlag()!=peano::parallel::loadbalancing::Join ||
-      !peano::parallel::loadbalancing::Oracle::getInstance().hasWorkers()
-    );
-
-    if ( state.isInvolvedInJoinOrFork() ) {
-      peano::parallel::loadbalancing::Oracle::getInstance().receivedStartCommand(
-        peano::parallel::loadbalancing::Continue
-      );
-    }
-    else {
-      peano::parallel::loadbalancing::Oracle::getInstance().receivedStartCommand(loadBalancingMessage.getLoadBalancingFlag());
-    }
-
-    if (peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()==peano::parallel::loadbalancing::Join) {
-      state.joinWithRank(tarch::parallel::NodePool::getInstance().getMasterRank());
-    }
-
-    state.receive(
-      tarch::parallel::NodePool::getInstance().getMasterRank(),
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      ReceiveMasterMessagesBlocking
-    );
-
-    logDebug( "receiveStartupDataFromMaster()", "received state " << state.toString() );
-  }
-
-  logTraceOutWith1Argument( "receiveStartupDataFromMaster()", _state.toString() );
-  #endif
-}
-
-
-template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
-void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::sendStateToMaster(State& state) {
-  #ifdef Parallel
-  logTraceInWith1Argument( "sendStateToMaster()", state.toString() );
-
-  if ( state.reduceDataToMaster() ) {
-    state.send(
-      tarch::parallel::NodePool::getInstance().getMasterRank(),
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      SendWorkerMasterMessagesBlocking
-    );
-    logDebug( "sendStateToMaster()", "sent state " << state.toString() );
-  }
-
-  tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
-  logTraceOut( "sendStateToMaster()" );
-  #endif
-}
-
-
-template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::iterate() {
   logTraceInWith1Argument( "iterate(State)", _state.toString() );
 
-  receiveStartupDataFromMaster(_state);
-
   #ifdef Parallel
+  _state.receiveStartupDataFromMaster();
   tarch::mpianalysis::Analysis::getInstance().beginIteration();
   #endif
 
@@ -171,17 +102,13 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
   _regularGridContainer.endOfIteration();
   #endif
 
-  #ifdef Parallel
-  tarch::mpianalysis::Analysis::getInstance().endIteration();
-  #endif
-
   logDebug( "iterate(State)", "called endOfIteration()" );
 
-  if ( _eventHandle.communicationSpecification().exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime ) {
-    sendStateToMaster(_state);
-  }
-
   #ifdef Parallel
+  tarch::mpianalysis::Analysis::getInstance().endIteration();
+  if ( _eventHandle.communicationSpecification().exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime ) {
+    _state.sendStateToMaster();
+  }
   peano::parallel::JoinDataBufferPool::getInstance().releaseMessages();
   tarch::mpianalysis::Analysis::getInstance().endReleaseOfJoinData();
   peano::parallel::SendReceiveBufferPool::getInstance().releaseMessages();
