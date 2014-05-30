@@ -595,13 +595,13 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
             fineGridEnumerator,
             fineGridVertices
           );
-          logError( "traverse(State)", "sent cell and vertices to master (eager version)";
+          logError( "traverse(State)", "sent cell and vertices to master (eager version)" );
           std::cerr << "uups(a)";
         }
 
         if ( !Base::_eventHandle.communicationSpecification().sendStateAtEndOfTraversal() ) {
           state.sendStateToMaster();
-          logError( "traverse(State)", "sent state to master (eager version)";
+          logError( "traverse(State)", "sent state to master (eager version)" );
         }
         #endif
       }
@@ -639,7 +639,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       fineGridEnumerator,
       fineGridVertices
     );
-    logError( "traverse(State)", "sent cell and vertices to master (late version)";
+    logError( "traverse(State)", "sent cell and vertices to master (late version)" );
   }
   #endif
 
