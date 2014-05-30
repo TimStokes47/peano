@@ -405,15 +405,11 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       );
     enddforx
 
-    #if defined(RestrictStateImmediately)
-    State copyOfState(state);
-    copyOfState.send(
-      tarch::parallel::NodePool::getInstance().getMasterRank(),
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      SendWorkerMasterMessagesBlocking
-    );
-    logDebug( "sendCellAndVerticesToMaster(...)", "sent state " << _state.toString() );
-    #endif
+
+    if ( Base::_eventHandle.communicationSpecification().exchangeWorkerMasterData==peano::CommunicationSpecification::AfterProcessingOfLocalSubtree ) {
+      Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::sendStateToMaster(_state);
+      logInfo( "sendCellAndVerticesToMaster(...)", "did it" );
+    }
   }
   else {
     logDebug( "sendCellAndVerticesToMaster(...)", "do not send data as reduction is locally switched off. state=" << state.toString() );

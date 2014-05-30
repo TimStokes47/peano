@@ -86,6 +86,7 @@ class peano::grid::Grid {
     RegularRefinedNode  _regularRefinedNode;
     RootNode            _root;
 
+  public:
     /**
      * Receive state and cell from the master
      *
@@ -107,8 +108,14 @@ class peano::grid::Grid {
      * Root::receiveCellAndVerticesFromMaster().
      *
      * The counterpart of this operation is Node::updateCellsParallelStateAfterLoadForRootOfDeployedSubtree().
+     *
+     * !!! Visibility
+     *
+     * Has to be visible to others as the Root might want to trigger this
+     * instead of the grid. It depends on the mappings' communication
+     * specification. Therefore, it also has to be static.
      */
-    void receiveStartupDataFromMaster();
+    static void receiveStartupDataFromMaster(State& state);
 
     /**
      * Is invoked if and only if
@@ -147,10 +154,14 @@ class peano::grid::Grid {
      * flag. In the end, this operation has to be called at most once either right
      * in by Root::sendCellAndVerticesToMaster() or by the Grid itself.
      *
+     * !!! Visibility
+     *
+     * Has to be visible to others as the Root might want to trigger this
+     * instead of the grid. It depends on the mappings' communication
+     * specification. Therefore, it also has to be static.
      */
-    void sendStateToMaster();
+    static void sendStateToMaster(State& state);
 
-  public:
     /**
      * Create new grid
      *
@@ -209,7 +220,6 @@ class peano::grid::Grid {
      * data to enable the worker to finish and to send out all the boundary
      * information.
      */
-//    void iterate(int numberOfIterations);
     void iterate();
 
     /**
@@ -217,9 +227,6 @@ class peano::grid::Grid {
      */
     void terminate();
 };
-
-//#include "peano/grid/Grid.cpph"
-
 
 
 #endif
