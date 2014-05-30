@@ -642,7 +642,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     logError( "traverse(State)", "sent cell and vertices to master (late version)" );
   }
 
-  if ( _eventHandle.communicationSpecification().sendStateAtEndOfTraversal() ) {
+  if ( Base::_eventHandle.communicationSpecification().sendStateAtEndOfTraversal() ) {
     state.sendStateToMaster();
     logError( "traverse(State)", "sent state to master (late version)" );
   }
