@@ -2,11 +2,9 @@
 
 #ifdef Parallel
 #include "tarch/parallel/Node.h"
-
 #include "peano/parallel/loadbalancing/Oracle.h"
-
 #include "tarch/parallel/NodePool.h"
-
+#include "tarch/parallel/SendReceiveBufferPool.h"
 #endif
 
 
