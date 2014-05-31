@@ -31,14 +31,14 @@ struct peano::CommunicationSpecification {
     AfterLastTouchVertexLastTime, AfterProcessingOfLocalSubtree
   };
 
-  bool sendStateAsLateAsPossible;
+  bool exchangeStateAsPreamblePostamble;
 
   ExchangeMasterWorkerData  exchangeMasterWorkerData;
   ExchangeWorkerMasterData  exchangeWorkerMasterData;
 
   static CommunicationSpecification getMinimalSpecification();
 
-  CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool sendStateAsLateAsPossible_ );
+  CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool exchangeStateAsPreamblePostamble_ );
 
   bool sendStateAtEndOfTraversal() const;
 

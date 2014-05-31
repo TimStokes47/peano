@@ -6,8 +6,8 @@
 #include <sstream>
 
 
-peano::CommunicationSpecification::CommunicationSpecification(ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool sendStateAsLateAsPossible_):
-  sendStateAsLateAsPossible(sendStateAsLateAsPossible_),
+peano::CommunicationSpecification::CommunicationSpecification(ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool exchangeStateAsPreamblePostamble_):
+exchangeStateAsPreamblePostamble(exchangeStateAsPreamblePostamble_),
   exchangeMasterWorkerData( exchangeMasterWorkerData_ ),
   exchangeWorkerMasterData( exchangeWorkerMasterData_ ) {
 }
@@ -46,7 +46,7 @@ peano::CommunicationSpecification operator&(const peano::CommunicationSpecificat
   const peano::CommunicationSpecification result(
     lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ? peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime : rhs.exchangeMasterWorkerData,
     lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime    ? peano::CommunicationSpecification::AfterLastTouchVertexLastTime    : rhs.exchangeWorkerMasterData,
-    lhs.sendStateAsLateAsPossible | rhs.sendStateAsLateAsPossible
+    lhs.exchangeStateAsPreamblePostamble | rhs.exchangeStateAsPreamblePostamble
   );
 
   logTraceOutWith1Argument("operator&(...)",result.toString());
@@ -60,7 +60,7 @@ peano::CommunicationSpecification peano::CommunicationSpecification::getMinimalS
 
 
 bool peano::CommunicationSpecification::sendStateAtEndOfTraversal() const {
-  const bool result = exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime || !sendStateAsLateAsPossible;
+  const bool result = exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime || exchangeStateAsPreamblePostamble;
 
   return result;
 }
