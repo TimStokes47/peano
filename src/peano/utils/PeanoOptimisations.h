@@ -3,6 +3,13 @@
 #ifndef _PEANO_UTILS_PEANO_OPTIMISATIONS
 #define _PEANO_UTILS_PEANO_OPTIMISATIONS
 
+
+/**
+ * This header provides multiple ways to tailor Peano algorithmically. However,
+ * it does not provide ifdefs to tailor Peano to the chosen compiler. If you
+ * wanna adopt your settings to your compiler, MPI installation, whatever,
+ * please consult the compiler-specific settings.
+ */
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
@@ -90,7 +97,7 @@
 /**
  * Switch on manual alignment of vectors
  */
-// @todo raus
+// @todo raus -> Wenn dann in Compiler Stuff
 #define noUseManualAlignment
 
 #ifdef noUseManualAlignment
