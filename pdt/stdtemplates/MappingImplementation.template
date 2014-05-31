@@ -6,7 +6,7 @@
  * @todo Please tailor the parameters to your mapping's properties.
  */
 peano::CommunicationSpecification   __THIS_QUALIFIED_TYPENAME__::communicationSpecification() {
-  return peano::CommunicationSpecification(peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::AfterLastTouchVertexLastTime,false);
+  return peano::CommunicationSpecification(peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::AfterLastTouchVertexLastTime,true);
 }
 
 
