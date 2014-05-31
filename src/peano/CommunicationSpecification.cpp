@@ -7,7 +7,7 @@
 
 
 peano::CommunicationSpecification::CommunicationSpecification(ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool exchangeStateAsPreamblePostamble_):
-exchangeStateAsPreamblePostamble(exchangeStateAsPreamblePostamble_),
+  exchangeStateAsPreamblePostamble(exchangeStateAsPreamblePostamble_),
   exchangeMasterWorkerData( exchangeMasterWorkerData_ ),
   exchangeWorkerMasterData( exchangeWorkerMasterData_ ) {
 }
