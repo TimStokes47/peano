@@ -38,12 +38,28 @@ namespace peano {
  * couple different grid hierarchies.
  *
  * !!! exchangeMasterWorkerData
+ *
+ * @todo I have to write this documentation.
+ *
  * !!! exchangeWorkerMasterData
  *
+ * Typically, all data of the coarsest level are sent back to the master after
+ * the very last touchVertexLastTime() call. If you do not depend on this
+ * touchVertexLastTime(), you may decide that the cell and the 2^d vertices on
+ * the coarsest level are sent back immediately when all local cells of a rank
+ * have been processed.
  *
  * !! exchangeStateAsPreamblePostamble
  *
- * If the flags
+ * If the flags for the vertex and cell data are set appropriately, one might
+ * have the idea to send the state to the worker also only prior to the
+ * traversal of local data and send it back immediately when all local cells
+ * have been processed. In this case, all the statistics about vertices and
+ * spacetree nodes however become wrong, as the state it sent 'too late' to the
+ * worker and 'too early' up again. It works only anyway if no lb is done.
+ *
+ * However, if it is speed that matters, you might decide to life with these
+ * corrumpted states.
  *
  * !!! Reduction
  *
