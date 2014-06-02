@@ -475,6 +475,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     receiveCellAndVerticesFromMaster( state );
     logError( "traverse(State)", "receive data early" );
   }
+  else {
+    logError( "traverse(State)", "postpone data receive" );
+  }
 
   Base::_eventHandle.beginIteration(state);
   #else
@@ -544,6 +547,16 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           currentCellTraversal
         );
         logError( "traverse(State)", "merge data early" );
+      }
+      else if (currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1)) {
+        receiveCellAndVerticesFromMaster( state );
+        mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
+          state,
+          currentCell,
+          fineGridVertices,
+          currentCellTraversal
+        );
+        logError( "traverse(State)", "receive and merge data late" );
       }
       #endif
       loadLoopCounter++;
