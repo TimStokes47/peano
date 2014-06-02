@@ -471,7 +471,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     logDebug( "traverse(State)", "reset state due to invalid/incomplete traversal: " << state.toString() );
   }
 
-  if ( Base::_eventHandle.communicationSpecification().exchangeMasterWorkerData==peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ) {
+  if ( Base::_eventHandle.communicationSpecification().receiveDataFromMasterPriorToTraversal(state.mayUseLazyStateAndDataReceives()) ) {
     receiveCellAndVerticesFromMaster( state );
     logError( "traverse(State)", "receive data early" );
   }
@@ -536,7 +536,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       }
 
       #ifdef Parallel
-      if ( Base::_eventHandle.communicationSpecification().exchangeMasterWorkerData==peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ) {
+      if ( Base::_eventHandle.communicationSpecification().receiveDataFromMasterPriorToTraversal(state.mayUseLazyStateAndDataReceives()) ) {
         mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
           state,
           currentCell,

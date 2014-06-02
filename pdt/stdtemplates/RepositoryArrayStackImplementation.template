@@ -148,6 +148,7 @@ void __NAMESPACE__::repositories::RepositoryArrayStack::iterate(int numberOfIter
   }
 
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    _repositoryState.setRunMultipleIterations(numberOfIterations>1);
     for (int i=0; i<numberOfIterations; i++) {
       tarch::parallel::NodePool::getInstance().broadcastToWorkingNodes(
         _repositoryState,
@@ -159,10 +160,11 @@ void __NAMESPACE__::repositories::RepositoryArrayStack::iterate(int numberOfIter
     numberOfIterations = 1;
   }
   #endif
-
+  
   peano::datatraversal::autotuning::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
   #ifdef Parallel
   peano::parallel::loadbalancing::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
+  peano::parallel::loadbalancing::Oracle::getInstance().activateLoadBalancing(!_repositoryState.getRunMultipleIterations());
   #endif
 
   for (int i=0; i<numberOfIterations; i++) {

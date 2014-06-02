@@ -649,6 +649,12 @@ bool peano::grid::State<StateData>::isInvolvedInJoinOrFork() const {
 
 
 template <class StateData>
+bool peano::grid::State<StateData>::mayUseLazyStateAndDataReceives() const {
+  return _loadRebalancingState == NoRebalancing & !peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated();
+}
+
+
+template <class StateData>
 bool peano::grid::State<StateData>::isForkTriggeredForRank(int rank) const {
   assertion( rank!=tarch::parallel::Node::getInstance().getRank() || _loadRebalancingRemoteRanks.count(rank)==0 );
   return _loadRebalancingState == ForkTriggered && _loadRebalancingRemoteRanks.count(rank)>0;

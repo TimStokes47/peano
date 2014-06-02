@@ -429,6 +429,13 @@ class peano::grid::State {
     bool isInvolvedInJoinOrFork() const;
 
     /**
+     * The user may optimise the traversals by using multiple iterations in a
+     * row in combination with lb switched off. In this case, one can exchange
+     * data lazy.
+     */
+    bool mayUseLazyStateAndDataReceives() const;
+
+    /**
      * Has a subworker rebalanced?
      *
      * This operation gives you information whether one of the workers has

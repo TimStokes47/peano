@@ -62,3 +62,8 @@ peano::CommunicationSpecification peano::CommunicationSpecification::getMinimalS
 bool peano::CommunicationSpecification::sendStateBackToMasterAtEndOfTraversal() const {
   return exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime || exchangeStateAsPreamblePostamble;
 }
+
+
+bool peano::CommunicationSpecification::receiveDataFromMasterPriorToTraversal(bool stateMayUseLazyStateAndDataReceives) const {
+  return exchangeMasterWorkerData==peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime | !stateMayUseLazyStateAndDataReceives;
+}

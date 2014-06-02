@@ -94,6 +94,8 @@ struct peano::CommunicationSpecification {
   CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool exchangeStateAsPreamblePostamble_ );
 
   bool sendStateBackToMasterAtEndOfTraversal() const;
+
+  bool receiveDataFromMasterPriorToTraversal(bool stateMayUseLazyStateAndDataReceives) const;
 //  bool sendStateAtEndOfTraversal() const;
 
   std::string toString() const;
