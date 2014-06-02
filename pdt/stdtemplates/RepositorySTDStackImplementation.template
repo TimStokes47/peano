@@ -141,23 +141,21 @@ void __NAMESPACE__::repositories::RepositorySTDStack::iterate(int numberOfIterat
   }
 
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    _repositoryState.setRunMultipleIterations(numberOfIterations>1);
-    for (int i=0; i<numberOfIterations; i++) {
-      tarch::parallel::NodePool::getInstance().broadcastToWorkingNodes(
-        _repositoryState,
-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
-      );
-    }
+    _repositoryState.setNumberOfIterations(numberOfIterations);
+    tarch::parallel::NodePool::getInstance().broadcastToWorkingNodes(
+      _repositoryState,
+      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag()
+    );
   }
   else {
-    numberOfIterations = 1;
+    assertionEquals( numberOfIterations, 1 );
+    numberOfIterations = _repositoryState.getNumberOfIterations();
   }
-  #endif
-  
-  peano::datatraversal::autotuning::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
-  #ifdef Parallel
+
   peano::parallel::loadbalancing::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
-  peano::parallel::loadbalancing::Oracle::getInstance().activateLoadBalancing(!_repositoryState.getRunMultipleIterations());
+  peano::parallel::loadbalancing::Oracle::getInstance().activateLoadBalancing(_repositoryState.getNumberOfIterations()==1);
+  #else
+  peano::datatraversal::autotuning::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
   #endif
   
   for (int i=0; i<numberOfIterations; i++) {
