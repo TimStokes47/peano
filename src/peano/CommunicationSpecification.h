@@ -96,7 +96,7 @@ struct peano::CommunicationSpecification {
   bool sendStateBackToMasterAtEndOfTraversal() const;
 
   bool receiveDataFromMasterPriorToTraversal(bool stateMayUseLazyStateAndDataReceives) const;
-//  bool sendStateAtEndOfTraversal() const;
+  bool receiveStateFromMasterPriorToTraversal(bool stateMayUseLazyStateAndDataReceives) const;
 
   std::string toString() const;
 };
