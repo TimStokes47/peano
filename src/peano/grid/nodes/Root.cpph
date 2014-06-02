@@ -461,10 +461,14 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   logTraceInWith1Argument( "traverse(State)", state );
 
   #ifdef Parallel
-  state.receiveStartupDataFromMaster();
-  logError( "traverse(State)", "receive state early" );
-
-  state.resetStateAtBeginOfIteration();
+  if ( Base::_eventHandle.communicationSpecification().receiveStateFromMasterPriorToTraversal(state.mayUseLazyStateAndDataReceives()) ) {
+    state.receiveStartupDataFromMaster();
+    state.resetStateAtBeginOfIteration();
+    logError( "traverse(State)", "receive state early" );
+  }
+  else {
+    logError( "traverse(State)", "postpone state receive" );
+  }
 
   if ( !_cellTraversal.isValid() ) {
     state.setIsNewWorkerDueToForkOfExistingDomain(true);
@@ -539,6 +543,16 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       }
 
       #ifdef Parallel
+      if (
+        !Base::_eventHandle.communicationSpecification().receiveStateFromMasterPriorToTraversal(state.mayUseLazyStateAndDataReceives())
+        &&
+        currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1)
+      ) {
+        state.receiveStartupDataFromMaster();
+        state.resetStateAtBeginOfIteration();
+        logError( "traverse(State)", "receive state late" );
+      }
+
       if ( Base::_eventHandle.communicationSpecification().receiveDataFromMasterPriorToTraversal(state.mayUseLazyStateAndDataReceives()) ) {
         mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
           state,
