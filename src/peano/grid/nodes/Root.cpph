@@ -464,10 +464,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   if ( Base::_eventHandle.communicationSpecification().receiveStateFromMasterPriorToTraversal(state.mayUseLazyStateAndDataReceives()) ) {
     state.receiveStartupDataFromMaster();
     state.resetStateAtBeginOfIteration();
-    logError( "traverse(State)", "receive state early" );
-  }
-  else {
-    logError( "traverse(State)", "postpone state receive" );
   }
 
   if ( !_cellTraversal.isValid() ) {
@@ -477,10 +473,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   if ( Base::_eventHandle.communicationSpecification().receiveDataFromMasterPriorToTraversal(state.mayUseLazyStateAndDataReceives()) ) {
     receiveCellAndVerticesFromMaster( state );
-    logError( "traverse(State)", "receive data early" );
-  }
-  else {
-    logError( "traverse(State)", "postpone data receive" );
   }
 
   Base::_eventHandle.beginIteration(state);
@@ -550,7 +542,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       ) {
         state.receiveStartupDataFromMaster();
         state.resetStateAtBeginOfIteration();
-        logError( "traverse(State)", "receive state late" );
       }
 
       if ( Base::_eventHandle.communicationSpecification().receiveDataFromMasterPriorToTraversal(state.mayUseLazyStateAndDataReceives()) ) {
@@ -560,7 +551,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           fineGridVertices,
           currentCellTraversal
         );
-        logError( "traverse(State)", "merge data early" );
       }
       else if (currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1)) {
         receiveCellAndVerticesFromMaster( state );
@@ -570,7 +560,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           fineGridVertices,
           currentCellTraversal
         );
-        logError( "traverse(State)", "receive and merge data late" );
       }
       #endif
       loadLoopCounter++;
