@@ -39,7 +39,10 @@ namespace peano {
  *
  * !!! exchangeMasterWorkerData
  *
- * @todo I have to write this documentation.
+ * If you set BeforeDescendIntoLocalSubtree, beginIteration() and multiple
+ * touchVertexFirstTime() are called before the state actually is received, as
+ * the state is received before the rank descends into its local partition not
+ * before it starts to traverse the data structures.
  *
  * !!! exchangeWorkerMasterData
  *
@@ -90,7 +93,8 @@ struct peano::CommunicationSpecification {
    */
   CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool exchangeStateAsPreamblePostamble_ );
 
-  bool sendStateAtEndOfTraversal() const;
+  bool sendStateBackToMasterAtEndOfTraversal() const;
+//  bool sendStateAtEndOfTraversal() const;
 
   std::string toString() const;
 };

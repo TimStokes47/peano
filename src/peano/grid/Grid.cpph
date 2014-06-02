@@ -92,8 +92,6 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
   tarch::mpianalysis::Analysis::getInstance().beginIteration();
   #endif
 
-  _state.resetStateAtBeginOfIteration();
-
   _root.traverse(_state);
 
   logDebug( "iterate(State)", "finished iterate" );

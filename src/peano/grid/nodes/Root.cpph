@@ -484,15 +484,19 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   SingleLevelEnumerator  coarseGridEnumerator( getCoarseGridEnumeratorForLocalData() );
   SingleLevelEnumerator  fineGridEnumerator( getLevelOneGridEnumeratorForLocalData() );
 
-  Base::_eventHandle.beginIteration(state);
-
   int  loadLoopCounter           = 0;
   int  traverseLoopCounter       = 0;
   int  storeLoopCounter          = 0;
 
   #ifdef Parallel
-  receiveCellAndVerticesFromMaster( state );
+  if ( Base::_eventHandle.communicationSpecification().exchangeMasterWorkerData!=peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ) {
+    receiveCellAndVerticesFromMaster( state );
+    state.resetStateAtBeginOfIteration();
+  }
+  #else
+  state.resetStateAtBeginOfIteration();
   #endif
+  Base::_eventHandle.beginIteration(state);
 
   do {
     logDebug( "traverse(State)", "start/continue to traverse with cell " << loadLoopCounter );
@@ -526,12 +530,14 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       }
 
       #ifdef Parallel
-      mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
-        state,
-        currentCell,
-        fineGridVertices,
-        currentCellTraversal
-      );
+      if ( Base::_eventHandle.communicationSpecification().exchangeMasterWorkerData!=peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ) {
+        mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
+          state,
+          currentCell,
+          fineGridVertices,
+          currentCellTraversal
+        );
+      }
       #endif
       loadLoopCounter++;
     } while ( loadLoopCounter<THREE_POWER_D && !_cellTraversal.descendBeforeContinuingWithCell(loadLoopCounter,state.isTraversalInverted()));
@@ -595,13 +601,10 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
             fineGridEnumerator,
             fineGridVertices
           );
-          logError( "traverse(State)", "sent cell and vertices to master (eager version)" );
-          std::cerr << "uups(a)";
         }
 
-        if ( !Base::_eventHandle.communicationSpecification().sendStateAtEndOfTraversal() ) {
+        if ( !Base::_eventHandle.communicationSpecification().sendStateBackToMasterAtEndOfTraversal() ) {
           state.sendStateToMaster();
-          logError( "traverse(State)", "sent state to master (eager version)" );
         }
         #endif
       }
@@ -639,12 +642,10 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       fineGridEnumerator,
       fineGridVertices
     );
-    logError( "traverse(State)", "sent cell and vertices to master (late version)" );
   }
 
-  if ( Base::_eventHandle.communicationSpecification().sendStateAtEndOfTraversal() ) {
+  if ( Base::_eventHandle.communicationSpecification().sendStateBackToMasterAtEndOfTraversal() ) {
     state.sendStateToMaster();
-    logError( "traverse(State)", "sent state to master (late version)" );
   }
   #endif
 
