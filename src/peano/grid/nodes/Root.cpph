@@ -489,9 +489,14 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   int  storeLoopCounter          = 0;
 
   #ifdef Parallel
+  state.receiveStartupDataFromMaster();
+  logError( "traverse(State)", "receive state early" );
+
+
   if ( Base::_eventHandle.communicationSpecification().exchangeMasterWorkerData!=peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ) {
     receiveCellAndVerticesFromMaster( state );
     state.resetStateAtBeginOfIteration();
+    logError( "traverse(State)", "receive data early" );
   }
   #else
   state.resetStateAtBeginOfIteration();
@@ -537,6 +542,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           fineGridVertices,
           currentCellTraversal
         );
+        logError( "traverse(State)", "merge data early" );
       }
       #endif
       loadLoopCounter++;

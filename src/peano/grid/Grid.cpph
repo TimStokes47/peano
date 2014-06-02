@@ -88,7 +88,6 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
   logTraceInWith1Argument( "iterate(State)", _state.toString() );
 
   #ifdef Parallel
-  _state.receiveStartupDataFromMaster();
   tarch::mpianalysis::Analysis::getInstance().beginIteration();
   #endif
 
