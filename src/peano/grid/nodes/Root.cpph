@@ -462,23 +462,25 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   #ifdef Parallel
   state.receiveStartupDataFromMaster();
-  state.resetStateAtBeginOfIteration();
   logError( "traverse(State)", "receive state early" );
 
-
-  if ( Base::_eventHandle.communicationSpecification().exchangeMasterWorkerData!=peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ) {
-    receiveCellAndVerticesFromMaster( state );
-    logError( "traverse(State)", "receive data early" );
-  }
+  state.resetStateAtBeginOfIteration();
 
   if ( !_cellTraversal.isValid() ) {
     state.setIsNewWorkerDueToForkOfExistingDomain(true);
     logDebug( "traverse(State)", "reset state due to invalid/incomplete traversal: " << state.toString() );
   }
+
+  if ( Base::_eventHandle.communicationSpecification().exchangeMasterWorkerData==peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ) {
+    receiveCellAndVerticesFromMaster( state );
+    logError( "traverse(State)", "receive data early" );
+  }
+
+  Base::_eventHandle.beginIteration(state);
   #else
   state.resetStateAtBeginOfIteration();
-  #endif
   Base::_eventHandle.beginIteration(state);
+  #endif
 
 
   Vertex  fineGridVertices[FOUR_POWER_D];
@@ -534,7 +536,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       }
 
       #ifdef Parallel
-      if ( Base::_eventHandle.communicationSpecification().exchangeMasterWorkerData!=peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ) {
+      if ( Base::_eventHandle.communicationSpecification().exchangeMasterWorkerData==peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ) {
         mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
           state,
           currentCell,
