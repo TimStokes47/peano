@@ -468,7 +468,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   #ifdef Parallel
   if ( Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early ) {
-    logError( "traverse(State)", "(a)" );
     state.receiveStartupDataFromMaster();
     state.resetStateAtBeginOfIteration();
   }
@@ -479,7 +478,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if ( Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early ) {
-    logError( "traverse(State)", "(b)" );
     receiveCellAndVerticesFromMaster( state, false );
   }
 
@@ -548,7 +546,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         &&
         currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1)
       ) {
-        logError( "traverse(State)", "(c)" );
         state.receiveStartupDataFromMaster();
         state.resetStateAtBeginOfIteration();
       }
@@ -559,7 +556,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         &&
         !tarch::parallel::Node::getInstance().isGlobalMaster()
       ) {
-        logError( "traverse(State)", "(c1)" );
         state.resetStateAtBeginOfIteration();
         receiveCellAndVerticesFromMaster( state, true );
         mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
@@ -571,7 +567,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       }
 
       if ( Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early ) {
-        logError( "traverse(State)", "(d)" );
         mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
           state,
           currentCell,
@@ -584,7 +579,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         &&
         currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1)
       ) {
-        logError( "traverse(State)", "(e)" );
         receiveCellAndVerticesFromMaster( state, false );
         mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
           state,
@@ -650,7 +644,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         fineGridEnumerator.setOffset( tarch::la::Vector<DIMENSIONS,int>(1) );
 
         if ( Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Early ) {
-          logError( "traverse(State)", "(f)" );
           sendCellAndVerticesToMaster(
             state,
             fineGridCells[THREE_POWER_D/2],
@@ -664,7 +657,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           &&
           !tarch::parallel::Node::getInstance().isGlobalMaster()
         ) {
-          logError( "traverse(State)", "(g)" );
           sendCellAndVerticesToMaster(
             state,
             fineGridCells[THREE_POWER_D/2],
@@ -675,7 +667,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         }
 
         if ( Base::_eventHandle.communicationSpecification().sendStateBackToMaster()==peano::CommunicationSpecification::Early ) {
-          logError( "traverse(State)", "(h)" );
           state.sendStateToMaster();
         }
         #endif
@@ -708,7 +699,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   #ifdef Parallel
   if ( Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Late ) {
-    logError( "traverse(State)", "(h)" );
     sendCellAndVerticesToMaster(
       state,
       fineGridCells[THREE_POWER_D/2],
@@ -719,7 +709,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if ( Base::_eventHandle.communicationSpecification().sendStateBackToMaster()==peano::CommunicationSpecification::Late ) {
-    logError( "traverse(State)", "(i)" );
     state.sendStateToMaster();
   }
   #endif
