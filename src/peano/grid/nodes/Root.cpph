@@ -546,6 +546,34 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         state.receiveStartupDataFromMaster();
         state.resetStateAtBeginOfIteration();
       }
+      else if (
+        Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Skip
+        &&
+        currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1)
+        &&
+        !tarch::parallel::Node::getInstance().isGlobalMaster()
+      ) {
+        logError( "traverse(State)", "(c1)" );
+        state.resetStateAtBeginOfIteration();
+        Base::_eventHandle.receiveDataFromMaster(
+          _masterCell,
+          _masterVertices,
+          getLevelOneGridEnumeratorForReceivedData(),
+          coarseVertexFromMaster,
+          getCoarseGridEnumeratorForReceivedData(),
+          coarseGridCellFromMaster,
+          _coarseGridVertices,
+          getCoarseGridEnumeratorForLocalData(),
+          _coarseGridCell,
+          _positionOfRootCellRelativeToCoarserCellOnMaster
+        );
+        mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
+          state,
+          currentCell,
+          fineGridVertices,
+          currentCellTraversal
+        );
+      }
 
       if ( Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early ) {
         logError( "traverse(State)", "(d)" );
@@ -635,8 +663,11 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
             fineGridVertices
           );
         }
-
-        if ( Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Skip ) {
+        else if (
+          Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Skip
+          &&
+          !tarch::parallel::Node::getInstance().isGlobalMaster()
+        ) {
           logError( "traverse(State)", "(g)" );
           Base::_eventHandle.prepareSendToMaster(
             centralFineGridCell,
