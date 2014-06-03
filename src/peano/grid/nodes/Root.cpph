@@ -536,7 +536,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
       #ifdef Parallel
       if (
-        Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Late)
+        Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Late
         &&
         currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1)
       ) {
@@ -544,7 +544,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         state.resetStateAtBeginOfIteration();
       }
 
-      if ( Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early) ) {
+      if ( Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early ) {
         mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
           state,
           currentCell,
@@ -553,7 +553,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         );
       }
       else if (
-        Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Late)
+        Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Late
         &&
         currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1)
       ) {
