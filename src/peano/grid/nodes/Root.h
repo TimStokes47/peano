@@ -210,7 +210,8 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
      * @see _verticesFromMaster
      */
     void receiveCellAndVerticesFromMaster(
-      State&  state
+      State&  state,
+      bool    skipMPICalls
     );
 
     /**
@@ -232,7 +233,8 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
       const State&                                 state,
       Cell&                                        fineGridCell,
       const SingleLevelEnumerator&                 fineGridVerticesEnumerator,
-      Vertex*                                      fineGridVertices
+      Vertex*                                      fineGridVertices,
+      bool                                         skipMPICalls
     );
     #endif
 
