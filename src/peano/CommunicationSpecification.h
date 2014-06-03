@@ -39,7 +39,7 @@ namespace peano {
  *
  * !!! exchangeMasterWorkerData
  *
- * If you set BeforeDescendIntoLocalSubtree, beginIteration() and multiple
+ * If you set SendDataBeforeDescendIntoLocalSubtree, beginIteration() and multiple
  * touchVertexFirstTime() are called before the state actually is received, as
  * the state is received before the rank descends into its local partition not
  * before it starts to traverse the data structures.
@@ -71,34 +71,49 @@ namespace peano {
  * specification is ignored.
  */
 struct peano::CommunicationSpecification {
-  enum ExchangeMasterWorkerData {
-    BeforeFirstTouchVertexFirstTime, BeforeDescendIntoLocalSubtree
-  };
+  public:
+    enum ExchangeMasterWorkerData {
+      SendDataAndStateBeforeFirstTouchVertexFirstTime,
+      SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime,
+      SendDataAndStateBeforeDescendIntoLocalSubtree,
+      MaskOutMasterWorkerDataAndStateExchange
+    };
 
-  enum ExchangeWorkerMasterData {
-    AfterLastTouchVertexLastTime, AfterProcessingOfLocalSubtree
-  };
+    enum ExchangeWorkerMasterData {
+      SendDataAndStateAfterLastTouchVertexLastTime,
+      SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime,
+      SendDataAndStateAfterProcessingOfLocalSubtree,
+      MaskOutWorkerMasterDataAndStateExchange
+    };
 
-  bool exchangeStateAsPreamblePostamble;
+    enum Action {
+      Early,
+      Late,
+      Skip
+    };
 
-  ExchangeMasterWorkerData  exchangeMasterWorkerData;
-  ExchangeWorkerMasterData  exchangeWorkerMasterData;
+    static CommunicationSpecification getMinimalSpecification();
 
-  static CommunicationSpecification getMinimalSpecification();
+    /**
+     * @param exchangeMasterWorkerData
+     * @param exchangeWorkerMasterData
+     * @param exchangeStateAsPreamblePostamble
+     */
+    CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_ );
 
-  /**
-   * @param exchangeMasterWorkerData
-   * @param exchangeWorkerMasterData
-   * @param exchangeStateAsPreamblePostamble
-   */
-  CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool exchangeStateAsPreamblePostamble_ );
 
-  bool sendStateBackToMasterAtEndOfTraversal() const;
+    Action sendStateBackToMaster() const;
+    Action sendDataBackToMaster() const;
 
-  bool receiveDataFromMasterPriorToTraversal(bool stateMayUseLazyStateAndDataReceives) const;
-  bool receiveStateFromMasterPriorToTraversal(bool stateMayUseLazyStateAndDataReceives) const;
+    Action receiveDataFromMaster(bool stateMayUseLazyStateAndDataReceives) const;
+    Action receiveStateFromMaster(bool stateMayUseLazyStateAndDataReceives) const;
 
-  std::string toString() const;
+    std::string toString() const;
+
+    static peano::CommunicationSpecification combine(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs);
+  private:
+    ExchangeMasterWorkerData  exchangeMasterWorkerData;
+    ExchangeWorkerMasterData  exchangeWorkerMasterData;
 };
 
 

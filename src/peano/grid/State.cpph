@@ -650,7 +650,13 @@ bool peano::grid::State<StateData>::isInvolvedInJoinOrFork() const {
 
 template <class StateData>
 bool peano::grid::State<StateData>::mayUseLazyStateAndDataReceives() const {
-  return _loadRebalancingState == NoRebalancing & !peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated();
+  return _loadRebalancingState == NoRebalancing & _currentlyRunsMultipleIterations;
+}
+
+
+template <class StateData>
+void peano::grid::State<StateData>::currentlyRunsMultipleIterations(bool value) {
+  _currentlyRunsMultipleIterations = value;
 }
 
 

@@ -6,8 +6,7 @@
 #include <sstream>
 
 
-peano::CommunicationSpecification::CommunicationSpecification(ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool exchangeStateAsPreamblePostamble_):
-  exchangeStateAsPreamblePostamble(exchangeStateAsPreamblePostamble_),
+peano::CommunicationSpecification::CommunicationSpecification(ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_ ):
   exchangeMasterWorkerData( exchangeMasterWorkerData_ ),
   exchangeWorkerMasterData( exchangeWorkerMasterData_ ) {
 }
@@ -18,20 +17,33 @@ std::string peano::CommunicationSpecification::toString() const {
 
   msg << "(exchange-master-worker-data_=";
   switch (exchangeMasterWorkerData) {
-    case BeforeFirstTouchVertexFirstTime:
-      msg << "before-first-touch-vertex-first-time";
+    case SendDataAndStateBeforeFirstTouchVertexFirstTime:
+      msg << "SendDataAndStateBeforeFirstTouchVertexFirstTime";
       break;
-    case BeforeDescendIntoLocalSubtree:
-      msg << "before-descend-into-local-subtree";
+    case SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime:
+      msg << "SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime";
+      break;
+    case SendDataAndStateBeforeDescendIntoLocalSubtree:
+      msg << "SendDataAndStateBeforeDescendIntoLocalSubtree";
+      break;
+    case MaskOutMasterWorkerDataAndStateExchange:
+      msg << "MaskOutMasterWorkerDataAndStateExchange";
       break;
   }
+
   msg << ",exchange-worker-master-data=";
   switch (exchangeWorkerMasterData) {
-    case AfterLastTouchVertexLastTime:
-      msg << "after-last-touch-vertex-last-time";
+    case SendDataAndStateAfterLastTouchVertexLastTime:
+      msg << "SendDataAndStateAfterLastTouchVertexLastTime";
       break;
-    case AfterProcessingOfLocalSubtree:
-      msg << "after-processing-of-local-subtree";
+    case SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime:
+      msg << "SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime";
+      break;
+    case SendDataAndStateAfterProcessingOfLocalSubtree:
+      msg << "SendDataAndStateAfterProcessingOfLocalSubtree";
+      break;
+    case MaskOutWorkerMasterDataAndStateExchange:
+      msg << "MaskOutWorkerMasterDataAndStateExchange";
       break;
   }
   msg << ")";
@@ -39,15 +51,54 @@ std::string peano::CommunicationSpecification::toString() const {
 }
 
 
+
 peano::CommunicationSpecification operator&(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs) {
+  return peano::CommunicationSpecification::combine(lhs,rhs);
+}
+
+
+
+peano::CommunicationSpecification peano::CommunicationSpecification::combine(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs) {
   static tarch::logging::Log _log( "peano::CommunicationSpecification" );
   logTraceInWith2Arguments("operator&(...)", lhs.toString(), rhs.toString() );
 
-  const peano::CommunicationSpecification result(
-    lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime ? peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime : rhs.exchangeMasterWorkerData,
-    lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime    ? peano::CommunicationSpecification::AfterLastTouchVertexLastTime    : rhs.exchangeWorkerMasterData,
-    lhs.exchangeStateAsPreamblePostamble | rhs.exchangeStateAsPreamblePostamble
-  );
+  peano::CommunicationSpecification::ExchangeMasterWorkerData exchangeMasterWorkerData;
+  peano::CommunicationSpecification::ExchangeWorkerMasterData exchangeWorkerMasterData;
+
+  if (rhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime | lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime) {
+    exchangeMasterWorkerData = peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime;
+  }
+  else
+  if (rhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime | lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime) {
+    exchangeMasterWorkerData = peano::CommunicationSpecification::SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime;
+  }
+  else
+  if (rhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeDescendIntoLocalSubtree | lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeDescendIntoLocalSubtree) {
+    exchangeMasterWorkerData = peano::CommunicationSpecification::SendDataAndStateBeforeDescendIntoLocalSubtree;
+  }
+  else {
+    exchangeMasterWorkerData = peano::CommunicationSpecification::MaskOutMasterWorkerDataAndStateExchange;
+  }
+
+
+  if (rhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime | lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime) {
+    exchangeWorkerMasterData = peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime;
+  }
+  else
+  if (rhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime | lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime) {
+    exchangeWorkerMasterData = peano::CommunicationSpecification::SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime;
+  }
+  else
+  if (rhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterProcessingOfLocalSubtree | lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterProcessingOfLocalSubtree) {
+    exchangeWorkerMasterData = peano::CommunicationSpecification::SendDataAndStateAfterProcessingOfLocalSubtree;
+  }
+  else {
+    exchangeWorkerMasterData = peano::CommunicationSpecification::MaskOutWorkerMasterDataAndStateExchange;
+  }
+
+
+
+  const peano::CommunicationSpecification result(exchangeMasterWorkerData,exchangeWorkerMasterData);
 
   logTraceOutWith1Argument("operator&(...)",result.toString());
   return result;
@@ -55,20 +106,85 @@ peano::CommunicationSpecification operator&(const peano::CommunicationSpecificat
 
 
 peano::CommunicationSpecification peano::CommunicationSpecification::getMinimalSpecification() {
-  return CommunicationSpecification(peano::CommunicationSpecification::BeforeDescendIntoLocalSubtree,peano::CommunicationSpecification::AfterProcessingOfLocalSubtree,false);
+  return CommunicationSpecification(peano::CommunicationSpecification::MaskOutMasterWorkerDataAndStateExchange,peano::CommunicationSpecification::MaskOutWorkerMasterDataAndStateExchange);
 }
 
 
-bool peano::CommunicationSpecification::sendStateBackToMasterAtEndOfTraversal() const {
-  return exchangeWorkerMasterData==peano::CommunicationSpecification::AfterLastTouchVertexLastTime | exchangeStateAsPreamblePostamble;
+peano::CommunicationSpecification::Action peano::CommunicationSpecification::sendStateBackToMaster() const {
+  switch (exchangeWorkerMasterData) {
+    case SendDataAndStateAfterLastTouchVertexLastTime:
+      return peano::CommunicationSpecification::Late;
+      break;
+    case SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime:
+      return peano::CommunicationSpecification::Late;
+      break;
+    case SendDataAndStateAfterProcessingOfLocalSubtree:
+      return peano::CommunicationSpecification::Early;
+      break;
+    case MaskOutWorkerMasterDataAndStateExchange:
+      return peano::CommunicationSpecification::Skip;
+      break;
+  }
+  assertion(false);
+  return peano::CommunicationSpecification::Late;
 }
 
 
-bool peano::CommunicationSpecification::receiveDataFromMasterPriorToTraversal(bool stateMayUseLazyStateAndDataReceives) const {
-  return exchangeMasterWorkerData==peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime | !stateMayUseLazyStateAndDataReceives;
+peano::CommunicationSpecification::Action peano::CommunicationSpecification::sendDataBackToMaster() const {
+  switch (exchangeWorkerMasterData) {
+    case SendDataAndStateAfterLastTouchVertexLastTime:
+      return peano::CommunicationSpecification::Late;
+      break;
+    case SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime:
+      return peano::CommunicationSpecification::Early;
+      break;
+    case SendDataAndStateAfterProcessingOfLocalSubtree:
+      return peano::CommunicationSpecification::Early;
+      break;
+    case MaskOutWorkerMasterDataAndStateExchange:
+      return peano::CommunicationSpecification::Skip;
+      break;
+  }
+  assertion(false);
+  return peano::CommunicationSpecification::Late;
 }
 
 
-bool peano::CommunicationSpecification::receiveStateFromMasterPriorToTraversal(bool stateMayUseLazyStateAndDataReceives) const {
-  return exchangeMasterWorkerData==peano::CommunicationSpecification::BeforeFirstTouchVertexFirstTime | !stateMayUseLazyStateAndDataReceives | exchangeStateAsPreamblePostamble;
+peano::CommunicationSpecification::Action peano::CommunicationSpecification::receiveDataFromMaster(bool stateMayUseLazyStateAndDataReceives) const {
+  switch (exchangeMasterWorkerData) {
+    case SendDataAndStateBeforeFirstTouchVertexFirstTime:
+      return peano::CommunicationSpecification::Early;
+      break;
+    case SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime:
+      return peano::CommunicationSpecification::Late;
+      break;
+    case SendDataAndStateBeforeDescendIntoLocalSubtree:
+      return peano::CommunicationSpecification::Late;
+      break;
+    case MaskOutMasterWorkerDataAndStateExchange:
+      return stateMayUseLazyStateAndDataReceives ? peano::CommunicationSpecification::Skip : peano::CommunicationSpecification::Early;
+      break;
+  }
+  assertion(false);
+  return peano::CommunicationSpecification::Early;
+}
+
+
+peano::CommunicationSpecification::Action peano::CommunicationSpecification::receiveStateFromMaster(bool stateMayUseLazyStateAndDataReceives) const {
+  switch (exchangeMasterWorkerData) {
+    case SendDataAndStateBeforeFirstTouchVertexFirstTime:
+      return peano::CommunicationSpecification::Early;
+      break;
+    case SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime:
+      return peano::CommunicationSpecification::Early;
+      break;
+    case SendDataAndStateBeforeDescendIntoLocalSubtree:
+      return stateMayUseLazyStateAndDataReceives? peano::CommunicationSpecification::Late : peano::CommunicationSpecification::Early;
+      break;
+    case MaskOutMasterWorkerDataAndStateExchange:
+      return stateMayUseLazyStateAndDataReceives ? peano::CommunicationSpecification::Skip : peano::CommunicationSpecification::Early;
+      break;
+  }
+  assertion(false);
+  return peano::CommunicationSpecification::Early;
 }

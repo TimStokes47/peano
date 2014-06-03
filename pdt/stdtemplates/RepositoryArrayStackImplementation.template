@@ -143,10 +143,6 @@ void __NAMESPACE__::repositories::RepositoryArrayStack::iterate(int numberOfIter
   tarch::timing::Watch watch( "__NAMESPACE__::repositories::RepositoryArrayStack", "iterate(bool)", false);
   
   #ifdef Parallel
-  if ( numberOfIterations > 1 && ( peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated() || _solverState.isInvolvedInJoinOrFork() )) {
-    logWarning( "iterate()", "iterate invoked for multiple traversals though load balancing is switched on or grid is not balanced globally. Use activateLoadBalancing(false) to deactivate the load balancing before" );
-  }
-
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
     _repositoryState.setNumberOfIterations(numberOfIterations);
     tarch::parallel::NodePool::getInstance().broadcastToWorkingNodes(
@@ -159,12 +155,20 @@ void __NAMESPACE__::repositories::RepositoryArrayStack::iterate(int numberOfIter
     numberOfIterations = _repositoryState.getNumberOfIterations();
   }
 
+  if ( numberOfIterations > 1 && ( peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated() || _solverState.isInvolvedInJoinOrFork() )) {
+    logWarning( "iterate()", "iterate invoked for multiple traversals though load balancing is switched on or grid is not balanced globally. Use activateLoadBalancing(false) to deactivate the load balancing before" );
+  }
+
+  peano::datatraversal::autotuning::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
+
   peano::parallel::loadbalancing::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
-  peano::parallel::loadbalancing::Oracle::getInstance().activateLoadBalancing(_repositoryState.getNumberOfIterations()==1);
+  peano::parallel::loadbalancing::Oracle::getInstance().activateLoadBalancing(_repositoryState.getNumberOfIterations()==1);  
+  
+  _solverState.currentlyRunsMultipleIterations(_repositoryState.getNumberOfIterations()>1);
   #else
   peano::datatraversal::autotuning::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
   #endif
-
+  
   for (int i=0; i<numberOfIterations; i++) {
     switch ( _repositoryState.getAction()) {
   __x__NONQUALIFIED_ADAPTER_TYPE__    case __NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__: watch.startTimer(); _gridWith__NONQUALIFIED_ADAPTER_TYPE__.iterate(); watch.stopTimer(); _measure__NONQUALIFIED_ADAPTER_TYPE__CPUTime.setValue( watch.getCPUTime() ); _measure__NONQUALIFIED_ADAPTER_TYPE__CalendarTime.setValue( watch.getCalendarTime() ); break;

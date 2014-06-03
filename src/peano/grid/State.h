@@ -145,6 +145,8 @@ class peano::grid::State {
      */
     int                          _maxForkLevel;
 
+    bool                         _currentlyRunsMultipleIterations;
+
     #ifdef Asserts
     LoadBalancingState           _previousLoadRebalancingState;
     #endif
@@ -434,6 +436,7 @@ class peano::grid::State {
      * data lazy.
      */
     bool mayUseLazyStateAndDataReceives() const;
+    void currentlyRunsMultipleIterations(bool value);
 
     /**
      * Has a subworker rebalanced?
