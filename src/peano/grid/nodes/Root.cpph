@@ -461,7 +461,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   logTraceInWith1Argument( "traverse(State)", state );
 
   #ifdef Parallel
-  if ( Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives()==peano::CommunicationSpecification::Early) ) {
+  if ( Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early ) {
     logError( "traverse(State)", "(a)" );
     state.receiveStartupDataFromMaster();
     state.resetStateAtBeginOfIteration();
@@ -472,7 +472,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     logDebug( "traverse(State)", "reset state due to invalid/incomplete traversal: " << state.toString() );
   }
 
-  if ( Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives()==peano::CommunicationSpecification::Early) ) {
+  if ( Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early ) {
     logError( "traverse(State)", "(b)" );
     receiveCellAndVerticesFromMaster( state );
   }
