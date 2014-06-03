@@ -52,8 +52,6 @@ namespace peano {
  * the coarsest level are sent back immediately when all local cells of a rank
  * have been processed.
  *
- * !! exchangeStateAsPreamblePostamble
- *
  * If the flags for the vertex and cell data are set appropriately, one might
  * have the idea to send the state to the worker also only prior to the
  * traversal of local data and send it back immediately when all local cells
@@ -69,6 +67,10 @@ namespace peano {
  * Please note that the reduction also interplays with the specification of the
  * worker-master communication. If the reduction is switched off, the
  * specification is ignored.
+ *
+ * !!! Optimistic tuning
+ *
+ * The most aggressive optimisations work if and only if you perform multiple
  */
 struct peano::CommunicationSpecification {
   public:
@@ -82,6 +84,10 @@ struct peano::CommunicationSpecification {
     enum ExchangeWorkerMasterData {
       SendDataAndStateAfterLastTouchVertexLastTime,
       SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime,
+      /**
+       * Please note that endIteration() is called when we leave the central element
+       * anyway.
+       */
       SendDataAndStateAfterProcessingOfLocalSubtree,
       MaskOutWorkerMasterDataAndStateExchange
     };

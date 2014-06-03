@@ -140,6 +140,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       peano::parallel::loadbalancing::Oracle::getInstance().masterStartsToWaitForWorkers();
 
       if (_eventHandle.communicationSpecification().sendDataBackToMaster()!=peano::CommunicationSpecification::Skip) {
+        logError( "node()", "(x1)" );
         receivedWorkerCell.receive(
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
@@ -350,6 +351,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     }
 
     if (_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())!=peano::CommunicationSpecification::Skip) {
+      logError( "node()", "(x2)" );
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send balancing message " << loadBalancingMessage.toString() << " to rank " << currentWorker );
       loadBalancingMessage.send(
         currentWorker,
