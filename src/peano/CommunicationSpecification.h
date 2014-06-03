@@ -71,6 +71,13 @@ namespace peano {
  * !!! Optimistic tuning
  *
  * The most aggressive optimisations work if and only if you perform multiple
+ * iterations which means in turn that you switch of the load balancing.
+ * Otherwise, the runner should/will complain. If lb were active, you cannot
+ * delay or even skip the exchange of the state, and thus these two things
+ * interfere. As such, the specification is a hint what Peano might do to
+ * tune the code. Sending the state late or even skipping whole data exchange
+ * then is up to Peano. It might optimise, it might also stick with the old
+ * version.
  */
 struct peano::CommunicationSpecification {
   public:
@@ -84,10 +91,6 @@ struct peano::CommunicationSpecification {
     enum ExchangeWorkerMasterData {
       SendDataAndStateAfterLastTouchVertexLastTime,
       SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime,
-      /**
-       * Please note that endIteration() is called when we leave the central element
-       * anyway.
-       */
       SendDataAndStateAfterProcessingOfLocalSubtree,
       MaskOutWorkerMasterDataAndStateExchange
     };
