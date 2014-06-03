@@ -1,6 +1,7 @@
 #include "peano/utils/Loop.h"
 #include "tarch/Assertions.h"
 #include "peano/geometry/GeometryHelper.h"
+#include "peano/CommunicationSpecification.h"
 
 
 #include <set>
