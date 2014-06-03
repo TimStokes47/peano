@@ -138,7 +138,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     if ( state.reduceDataFromWorker(currentWorker) ) {
       peano::parallel::loadbalancing::Oracle::getInstance().masterStartsToWaitForWorkers();
 
-      if (_eventHandle.communicationSpecification().sendDataBackToMaster() {
+      if (_eventHandle.communicationSpecification().sendDataBackToMaster()!=peano::CommunicationSpecification::Skip) {
         receivedWorkerCell.receive(
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
