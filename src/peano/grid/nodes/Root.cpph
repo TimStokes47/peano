@@ -636,8 +636,21 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           );
         }
 
-        if ( Base::_eventHandle.communicationSpecification().sendStateBackToMaster()==peano::CommunicationSpecification::Early ) {
+        if ( Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Skip ) {
           logError( "traverse(State)", "(g)" );
+          Base::_eventHandle.prepareSendToMaster(
+            centralFineGridCell,
+            fineGridVertices,
+            centralFineGridVerticesEnumerator,
+            _coarseGridVertices,
+            getCoarseGridEnumeratorForLocalData(),
+            _coarseGridCell,
+            _positionOfRootCellRelativeToCoarserCellOnMaster
+          );
+        }
+
+        if ( Base::_eventHandle.communicationSpecification().sendStateBackToMaster()==peano::CommunicationSpecification::Early ) {
+          logError( "traverse(State)", "(h)" );
           state.sendStateToMaster();
         }
         #endif
