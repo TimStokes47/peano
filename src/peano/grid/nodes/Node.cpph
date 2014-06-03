@@ -138,38 +138,40 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     if ( state.reduceDataFromWorker(currentWorker) ) {
       peano::parallel::loadbalancing::Oracle::getInstance().masterStartsToWaitForWorkers();
 
-      receivedWorkerCell.receive(
-        currentWorker,
-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-        true,
-        false
-      );
-      for (int i=0; i<TWO_POWER_D; i++) {
-        receivedWorkerVertices[i].receive(
+      if (_eventHandle.communicationSpecification().sendDataBackToMaster() {
+        receivedWorkerCell.receive(
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
           true,
           false
         );
+        for (int i=0; i<TWO_POWER_D; i++) {
+          receivedWorkerVertices[i].receive(
+            currentWorker,
+            peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+            true,
+            false
+          );
 
-        #ifdef Debug
-        assertionVectorNumericalEquals5(
-          receivedWorkerVertices[i].getX(),
-          fineGridVertices[ fineGridVerticesEnumerator(i) ].getX(),
-          receivedWorkerVertices[i].toString(),
-          fineGridVertices[ fineGridVerticesEnumerator(i) ].toString(),
-          i,
-          fineGridVerticesEnumerator.toString(),
-          tarch::parallel::Node::getInstance().getRank()
+          #ifdef Debug
+          assertionVectorNumericalEquals5(
+            receivedWorkerVertices[i].getX(),
+            fineGridVertices[ fineGridVerticesEnumerator(i) ].getX(),
+            receivedWorkerVertices[i].toString(),
+            fineGridVertices[ fineGridVerticesEnumerator(i) ].toString(),
+            i,
+            fineGridVerticesEnumerator.toString(),
+            tarch::parallel::Node::getInstance().getRank()
+          );
+          #endif
+        }
+
+        workerState.receive(
+          currentWorker,
+          peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+          false
         );
-        #endif
       }
-
-      workerState.receive(
-        currentWorker,
-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-        false
-      );
       state.mergeWithWorkerState(workerState);
 
       _eventHandle.mergeWithMaster(
@@ -346,52 +348,54 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       state.setReduceStateAndCell(currentWorker,false);
     }
 
-    logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send balancing message " << loadBalancingMessage.toString() << " to rank " << currentWorker );
-    loadBalancingMessage.send(
-      currentWorker,
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      true,
-      SendMasterWorkerMessagesBlocking
-    );
-    logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send state " << state.toString() << " to rank " << currentWorker );
-    stateCopy.send(
-      currentWorker,
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      SendMasterWorkerMessagesBlocking
-    );
-    logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send cell " << fineGridCell.toString() << " to rank " << currentWorker );
-    coarseGridCell.send(
-      currentWorker,
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      true,
-      SendMasterWorkerMessagesBlocking
-    );
-    dfor2(k)
-      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
+    if (_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())!=peano::CommunicationSpecification::Skip) {
+      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send balancing message " << loadBalancingMessage.toString() << " to rank " << currentWorker );
+      loadBalancingMessage.send(
+        currentWorker,
+        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+        true,
+        SendMasterWorkerMessagesBlocking
+      );
+      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send state " << state.toString() << " to rank " << currentWorker );
+      stateCopy.send(
+        currentWorker,
+        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+        SendMasterWorkerMessagesBlocking
+      );
+      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send cell " << fineGridCell.toString() << " to rank " << currentWorker );
+      coarseGridCell.send(
+        currentWorker,
+        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+        true,
+        SendMasterWorkerMessagesBlocking
+      );
+      dfor2(k)
+        logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
 
-      coarseGridVertices[ coarseGridVerticesEnumerator(k) ].send(
+        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].send(
+          currentWorker,
+          peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+          true,
+          SendMasterWorkerMessagesBlocking
+        );
+      enddforx
+      fineGridCell.send(
         currentWorker,
         peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
         true,
         SendMasterWorkerMessagesBlocking
       );
-    enddforx
-    fineGridCell.send(
-      currentWorker,
-      peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      true,
-      SendMasterWorkerMessagesBlocking
-    );
-    dfor2(k)
-      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
-      fineGridVertices[ fineGridVerticesEnumerator(k) ].send(
-        currentWorker,
-        peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-        true,
-        SendMasterWorkerMessagesBlocking
-      );
-      fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
-    enddforx
+      dfor2(k)
+        logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
+        fineGridVertices[ fineGridVerticesEnumerator(k) ].send(
+          currentWorker,
+          peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
+          true,
+          SendMasterWorkerMessagesBlocking
+        );
+        fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
+      enddforx
+    }
     logTraceOut( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(...)" );
   #endif
 }
