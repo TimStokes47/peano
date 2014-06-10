@@ -47,6 +47,9 @@ void tarch::parallel::Node::ensureThatMessageQueuesAreEmpty( int fromRank, int t
   MPI_Status   status;
   int          flag;
   MPI_Iprobe(fromRank, tag, _communicator, &flag, &status);
+  if (flag!=0) {
+    plotMessageQueues();
+  }
   assertion3( flag==0, fromRank, tag, getRank() );
   #endif
 }
