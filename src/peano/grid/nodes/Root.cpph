@@ -484,8 +484,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     !tarch::parallel::Node::getInstance().isGlobalMaster()
   ) {
     state.receiveStartupDataFromMaster();
-    state.resetStateAtBeginOfIteration();
   }
+  state.resetStateAtBeginOfIteration();
 
   if ( !_cellTraversal.isValid() ) {
     state.setIsNewWorkerDueToForkOfExistingDomain(true);
