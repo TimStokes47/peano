@@ -18,7 +18,7 @@ std::map<int,__THIS_QUALIFIED_TYPENAME__::LevelDataset>  __THIS_QUALIFIED_TYPENA
 
 
 peano::CommunicationSpecification   __THIS_QUALIFIED_TYPENAME__::communicationSpecification() {
-  return peano::CommunicationSpecification::getMinimalSpecification();
+  return peano::CommunicationSpecification::getPessimisticSpecification();
 }
 
 

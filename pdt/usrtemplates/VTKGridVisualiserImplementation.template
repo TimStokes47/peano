@@ -15,7 +15,7 @@ int __THIS_QUALIFIED_TYPENAME__::_snapshotCounter = 0;
 
 
 peano::CommunicationSpecification   __THIS_QUALIFIED_TYPENAME__::communicationSpecification() {
-  return peano::CommunicationSpecification::getMinimalSpecification();
+  return peano::CommunicationSpecification::getPessimisticSpecification();
 }
 
 
@@ -456,12 +456,12 @@ void __THIS_QUALIFIED_TYPENAME__::endIteration(
   delete _vertexAdjacentCellsHeight;
   delete _cellStateWriter;
   
-  _vertexWriter                  = 0;
-  _cellWriter                    = 0;
-  _vertexTypeWriter              = 0;
-  _vertexRefinementControlWriter = 0;
-  _vertexAdjacentCellsHeight     = 0;
-  _cellStateWriter               = 0;
+  _vertexWriter                  = nullptr;
+  _cellWriter                    = nullptr;
+  _vertexTypeWriter              = nullptr;
+  _vertexRefinementControlWriter = nullptr;
+  _vertexAdjacentCellsHeight     = nullptr;
+  _cellStateWriter               = nullptr;
   
   std::ostringstream snapshotFileName;
   snapshotFileName << "PARAM0"
@@ -477,7 +477,7 @@ void __THIS_QUALIFIED_TYPENAME__::endIteration(
   _vertex2IndexMap.clear();
   
   delete _vtkWriter;
-  _vtkWriter = 0;
+  _vtkWriter = nullptr;
 }
 
 

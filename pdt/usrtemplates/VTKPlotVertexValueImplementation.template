@@ -13,7 +13,7 @@ int __THIS_QUALIFIED_TYPENAME__::_snapshotCounter = 0;
 
 
 peano::CommunicationSpecification   __THIS_QUALIFIED_TYPENAME__::communicationSpecification() {
-  return peano::CommunicationSpecification::getMinimalSpecification();
+  return peano::CommunicationSpecification::getPessimisticSpecification();
 }
 
 

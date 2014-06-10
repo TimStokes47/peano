@@ -110,6 +110,11 @@ peano::CommunicationSpecification peano::CommunicationSpecification::getMinimalS
 }
 
 
+peano::CommunicationSpecification peano::CommunicationSpecification::getPessimisticSpecification() {
+  return CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime);
+}
+
+
 peano::CommunicationSpecification::Action peano::CommunicationSpecification::sendStateBackToMaster() const {
   switch (exchangeWorkerMasterData) {
     case SendDataAndStateAfterLastTouchVertexLastTime:

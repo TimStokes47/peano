@@ -104,6 +104,15 @@ struct peano::CommunicationSpecification {
     static CommunicationSpecification getMinimalSpecification();
 
     /**
+     * This is the maximum specification where everyting is absolutely
+     * synchronised and in order. The plotter mappings, e.g., require
+     * such a specification as they have to open an output stream prior
+     * to any other operation and they may not close it before everything
+     * has been written.
+     */
+    static CommunicationSpecification getPessimisticSpecification();
+
+    /**
      * @param exchangeMasterWorkerData
      * @param exchangeWorkerMasterData
      * @param exchangeStateAsPreamblePostamble
