@@ -409,7 +409,11 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           (fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::EraseTriggered && fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet()),
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString()
         );
-        assertion2( fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet(), fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString() );
+        assertion2(
+          fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isOutside() ||
+          fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet(),
+          fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString()
+        );
         fineGridVertices[ centralFineGridVerticesEnumerator(k) ].send(
           tarch::parallel::NodePool::getInstance().getMasterRank(),
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
