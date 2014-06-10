@@ -199,7 +199,8 @@ void __THIS_QUALIFIED_TYPENAME__::plotVertex(
     _dataset.insert( std::pair<int,LevelDataset>(level,LevelDataset()) );
   }
 
-  if ( _dataset[level]._vertex2IndexMap.find(fineGridX) == _dataset[level]._vertex2IndexMap.end() ) {  
+  if ( _dataset[level]._vertex2IndexMap.find(fineGridX) == _dataset[level]._vertex2IndexMap.end() ) {
+    assertion( _dataset[level]._vertexWriter!=nullptr );
     #if defined(Dim2) || defined(Dim3)
     _dataset[level]._vertex2IndexMap[fineGridX] = _dataset[level]._vertexWriter->plotVertex(fineGridX);
     #else
@@ -548,6 +549,8 @@ void __THIS_QUALIFIED_TYPENAME__::endIteration(
                      << ".vtk";
     p->second.close( snapshotFileName.str() );
   }
+  
+  _dataset.clear();
   
   _snapshotCounter++;                  
 }

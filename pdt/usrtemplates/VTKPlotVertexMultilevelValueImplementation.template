@@ -555,6 +555,8 @@ void __THIS_QUALIFIED_TYPENAME__::endIteration(
     p->second.close( snapshotFileName.str() );
   }
   
+  _dataset.clear();
+
   _snapshotCounter++;                  
 }
 
