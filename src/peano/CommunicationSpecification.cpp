@@ -65,15 +65,15 @@ peano::CommunicationSpecification peano::CommunicationSpecification::combine(con
   peano::CommunicationSpecification::ExchangeMasterWorkerData exchangeMasterWorkerData;
   peano::CommunicationSpecification::ExchangeWorkerMasterData exchangeWorkerMasterData;
 
-  if (rhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime | lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime) {
+  if ((rhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime) | (lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime)) {
     exchangeMasterWorkerData = peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime;
   }
   else
-  if (rhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime | lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime) {
+  if ((rhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime) | (lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime)) {
     exchangeMasterWorkerData = peano::CommunicationSpecification::SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime;
   }
   else
-  if (rhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeDescendIntoLocalSubtree | lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeDescendIntoLocalSubtree) {
+  if ((rhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeDescendIntoLocalSubtree) | (lhs.exchangeMasterWorkerData==peano::CommunicationSpecification::SendDataAndStateBeforeDescendIntoLocalSubtree)) {
     exchangeMasterWorkerData = peano::CommunicationSpecification::SendDataAndStateBeforeDescendIntoLocalSubtree;
   }
   else {
@@ -81,15 +81,15 @@ peano::CommunicationSpecification peano::CommunicationSpecification::combine(con
   }
 
 
-  if (rhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime | lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime) {
+  if ((rhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime) | (lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime)) {
     exchangeWorkerMasterData = peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime;
   }
   else
-  if (rhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime | lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime) {
+  if ((rhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime) | (lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime)) {
     exchangeWorkerMasterData = peano::CommunicationSpecification::SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime;
   }
   else
-  if (rhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterProcessingOfLocalSubtree | lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterProcessingOfLocalSubtree) {
+  if ((rhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterProcessingOfLocalSubtree) | (lhs.exchangeWorkerMasterData==peano::CommunicationSpecification::SendDataAndStateAfterProcessingOfLocalSubtree)) {
     exchangeWorkerMasterData = peano::CommunicationSpecification::SendDataAndStateAfterProcessingOfLocalSubtree;
   }
   else {
