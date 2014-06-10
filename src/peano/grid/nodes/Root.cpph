@@ -664,9 +664,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         tarch::mpianalysis::Analysis::getInstance().leaveCentralElementOfEnclosingSpacetree();
 
         #ifdef Parallel
-        if (!tarch::parallel::Node::getInstance().isGlobalMaster()) {
-          Base::_eventHandle.endIteration(state);
-        }
         fineGridEnumerator.setOffset( tarch::la::Vector<DIMENSIONS,int>(1) );
 
         if (
@@ -674,6 +671,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           &
           !tarch::parallel::Node::getInstance().isGlobalMaster()
         ) {
+          Base::_eventHandle.endIteration(state);
           sendCellAndVerticesToMaster(
             state,
             fineGridCells[THREE_POWER_D/2],
@@ -687,6 +685,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           &
           !tarch::parallel::Node::getInstance().isGlobalMaster()
         ) {
+          Base::_eventHandle.endIteration(state);
           sendCellAndVerticesToMaster(
             state,
             fineGridCells[THREE_POWER_D/2],
@@ -701,6 +700,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           &
           !tarch::parallel::Node::getInstance().isGlobalMaster()
         ) {
+          assertion( Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Early );
           state.sendStateToMaster();
         }
         #endif
@@ -737,6 +737,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     &
     !tarch::parallel::Node::getInstance().isGlobalMaster()
   ) {
+    Base::_eventHandle.endIteration(state);
     sendCellAndVerticesToMaster(
       state,
       fineGridCells[THREE_POWER_D/2],
