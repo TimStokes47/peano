@@ -882,7 +882,6 @@ void peano::grid::State<StateData>::sendStateToMaster() const {
     logDebug( "sendStateToMaster()", "sent state " << stateCopy.toString() );
   }
 
-  tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(tarch::parallel::NodePool::getInstance().getMasterRank(),peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
   logTraceOut( "sendStateToMaster()" );
 }
 
