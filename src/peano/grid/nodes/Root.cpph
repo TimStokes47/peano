@@ -398,7 +398,13 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       );
       dfor2(k)
         logDebug( "sendCellAndVerticesToMaster(...)", "send vertex " << fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString() << " to master" );
+        // In principle, this assertion holds without the outside check.
+        // However, on the very first node, given a certain enforced level of
+        // regular refinement, we have vertices at the global boundary (at
+        // [2,1], e.g.) that are sent to the master though they are hanging
+        // nodes
         assertion2(
+          fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isOutside() ||
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Refined ||
           (fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::EraseTriggered && fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet()),
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString()
