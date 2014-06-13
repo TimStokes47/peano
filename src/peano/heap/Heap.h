@@ -498,6 +498,16 @@ class peano::heap::Heap: public tarch::services::Service {
      * Finish boundary data exchange
      *
      * Counterpart of start operation. Should be called in endIteration().
+     *
+     * !!! Parallelisation with MPI
+     *
+     * If you parallelise with MPI, this operation has to be called by
+     * endIteration() at the end of the traversal of the whole grid and not
+     * only the local data structure. As a consequence, you may not combine
+     * this operation with the communication specification
+     * SendDataAndStateAfterProcessingOfLocalSubtree or
+     * MaskOutWorkerMasterDataAndStateExchange as these two guys call
+     * endIteration() too early.
      */
     void finishedToSendBoundaryData(bool isTraversalInverted);
 
