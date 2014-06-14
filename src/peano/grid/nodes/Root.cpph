@@ -739,6 +739,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     !tarch::parallel::Node::getInstance().isGlobalMaster()
   ) {
     Base::_eventHandle.endIteration(state);
+    fineGridEnumerator.setOffset( tarch::la::Vector<DIMENSIONS,int>(1) );
     sendCellAndVerticesToMaster(
       state,
       fineGridCells[THREE_POWER_D/2],
