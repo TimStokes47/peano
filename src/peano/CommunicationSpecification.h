@@ -91,7 +91,18 @@ struct peano::CommunicationSpecification {
     enum ExchangeWorkerMasterData {
       SendDataAndStateAfterLastTouchVertexLastTime,
       SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime,
+      /**
+       * Send data and state up to the master as soon as the local spacetree is
+       * processed. As a consequence, we call endIteration() and the
+       * prepareSendToMaster() at that time as well, i.e. the traversal is not
+       * yet finished when we do that.
+       */
       SendDataAndStateAfterProcessingOfLocalSubtree,
+      /**
+       * Do not send any data up to the master. As a consequence, we call
+       * endIteration() and the prepareSendToMaster() as soon as we leave the
+       * local subtree but not at the end of the traversal.
+       */
       MaskOutWorkerMasterDataAndStateExchange
     };
 
