@@ -50,6 +50,13 @@ namespace tarch {
     Scalar volume(const Vector<Size,Scalar>& vector);
 
     /**
+     * Computes the volume of the tetrahedron spanned by the Cartesian unit vectors
+     * scaled by the corresponding components of the given vector.
+     */
+    template<int Size, typename Scalar>
+    Scalar average(const Vector<Size,Scalar>& vector);
+
+    /**
      * Returns the index of the element with maximal value (NOT absolute value).
      */
     template<int Size, typename Scalar>

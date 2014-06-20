@@ -55,6 +55,12 @@ tarch::la::Vector<Size,Scalar> tarch::la::abs (
 
 
 template<int Size, typename Scalar>
+Scalar tarch::la::average(const Vector<Size,Scalar>& vector) {
+  return sum(vector) / static_cast<Scalar>(Size);
+}
+
+
+template<int Size, typename Scalar>
 Scalar tarch::la::sum (
   const Vector<Size,Scalar>&  vector
 ) {
