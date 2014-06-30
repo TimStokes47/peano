@@ -12,6 +12,21 @@ namespace peano {
 }
 
 
+/**
+ * Abstract superclass of all boundary data exchanges
+ *
+ * The important plugin points are
+ *
+ * - getNumberOfSentMessages()
+ * - postprocessFinishedToSendData()
+ * - postprocessStartToSendData()
+ * - handleAndQueueReceivedTask()
+ * - handleAndQueueSendTask()
+ *
+ * i.e. the abstract protected members.
+ *
+ * @author Tobias Weinzierl
+ */
 template<class Data>
 class peano::heap::BoundaryDataExchanger {
   private:
@@ -136,12 +151,20 @@ class peano::heap::BoundaryDataExchanger {
 
     /**
      * Exchanger has to know how many messages should be in the receive buffer at least.
+     *
+     * Keeps track of the logical number of sent messages. If you use fancy
+     * compression schemes, ensure that this number is the real number of
+     * messages prior to any pre-/postprocessing and that your receive
+     * operations decode all received data immediately. The result afterward is used
+     * by the abstract class to tell the actual implementation in
+     * waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()
+     * for how many messages it has to wait.
      */
     virtual int getNumberOfSentMessages() const = 0;
 
     /**
      * Hook in for finishToSendData(). Is called when the abstract superclass
-     * has finished its operatios.
+     * has finished its operations. If you use
      */
     virtual void postprocessFinishedToSendData() = 0;
 
@@ -149,12 +172,18 @@ class peano::heap::BoundaryDataExchanger {
 
     /**
      * There has been a receive task in the mpi queue. This one is received and
-     * then passed to this operation.
+     * then passed to this operation. It is the responsibility of the
+     * implementation ot trigger also receives for the corresponding data (if
+     * there is any), and to insert the resulting data structures into the
+     * queue _receiveTasks[Base::_currentReceiveBuffer].
      */
     virtual void handleAndQueueReceivedTask( const SendReceiveTask<Data>& receivedTask ) = 0;
 
     /**
-     * No mpi operation done yet.
+     * No mpi operation done yet. Ensure that data is wrapped and sent out (if
+     * necessary), but first insert sendTask into the send data structure if
+     * the buffer shall later check for completition. Each call increases the
+     * result of getNumberOfSentMessages().
      */
     virtual void handleAndQueueSendTask( const SendReceiveTask<Data>& sendTask, const std::vector<Data>& data ) = 0;
   public:
