@@ -1,0 +1,142 @@
+#include "tarch/Assertions.h"
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
+
+template<class Data>
+tarch::logging::Log  peano::heap::BufferedBoundaryDataExchanger<Data>::_log( "peano::heap::RLEBoundaryDataExchanger" );
+
+
+template<class Data>
+peano::heap::BufferedBoundaryDataExchanger<Data>::BufferedBoundaryDataExchanger():
+  _sizeOfMessages(),
+  _concatenatedSentData() {
+}
+
+
+template<class Data>
+peano::heap::BufferedBoundaryDataExchanger<Data>::BufferedBoundaryDataExchanger(const std::string& identifier, int tag, int rank):
+  _sizeOfMessages(),
+  _concatenatedSentData() {
+}
+
+
+template<class Data>
+peano::heap::BufferedBoundaryDataExchanger<Data>::~BufferedBoundaryDataExchanger() {
+  assertion( _sizeOfMessages.empty() );
+}
+
+
+template<class Data>
+int peano::heap::BufferedBoundaryDataExchanger<Data>::getNumberOfSentMessages() const {
+  return static_cast<int>( _sizeOfMessages.size() );
+}
+
+
+template<class Data>
+void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSendData() {
+  logTraceInWith2Arguments( "postprocessFinishedToSendData()", _sizeOfMessages.size(), _concatenatedSentData.size() );
+  assertion( Base::_sendTasks.empty() );
+
+  _sizeOfMessages.push_back(_concatenatedSentData.size);
+
+  Base::_sendTasks.push_back( SendReceiveTask<Data>() );
+  Base::_sendTasks.back()._metaInformation.setLength( _sizeOfMessages.size() );
+  Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true, SendAndReceiveHeapMetaDataBlocking);
+
+  logDebug( "postprocessFinishedToSendData()", "deployed one send task=" << Base::_sendTasks.back().toString() );
+
+  const int result = MPI_Send( _sizeOfMessages.data(), _sizeOfMessages.size(), MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
+  if ( result != MPI_SUCCESS ) {
+    logError(
+       "postprocessFinishedToSendData()", "failed to send heap data to node "
+      << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+    );
+  }
+
+  if (!_bufferedSentData.empty()) {
+    result = MPI_Send( _concatenatedSentData.data(), _concatenatedSentData.size(), Data::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
+    if ( result != MPI_SUCCESS ) {
+      logError(
+        "postprocessFinishedToSendData()", "failed to send heap data to node "
+        << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+      );
+    }
+  }
+  logTraceOut( "postprocessFinishedToSendData()" );
+}
+
+
+template<class Data>
+void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessStartToSendData() {
+  _sizeOfMessages.clear();
+  _concatenatedSentData.clear();
+}
+
+
+
+template<class Data>
+void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTask( const SendReceiveTask<Data>&  receivedTask ) {
+  logTraceInWith1Argument( "handleAndQueueReceivedTask(...)", receivedTask.toString() );
+
+  std::vector<int>    sizeOfReceivedMessages;
+  std::vector<Data>   concatenatedReceivedData;
+
+  sizeOfReceivedMessages.reserve(receivedTask._metaInformation.getLength());
+  MPI_Status status;
+  int        result;
+  logTraceInWith1Argument( "handleAndQueueReceivedTask(...)", "start to receive " <<  sizeOfReceivedMessages.data() << " integers through mpi");
+  result = MPI_Recv( sizeOfReceivedMessages.data(), _sizeOfMessages.size(), MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
+  if ( result != MPI_SUCCESS ) {
+    logError(
+       "postprocessFinishedToSendData()", "failed to send heap data to node "
+      << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+    );
+  }
+
+  const int totalNumberOfReceivedData = sizeOfReceivedMessages.back();
+  sizeOfReceivedMessages.pop_back();
+  if (totalNumberOfReceivedData>0) {
+    concatenatedReceivedData.reserve(totalNumberOfReceivedData);
+    logTraceInWith1Argument( "handleAndQueueReceivedTask(...)", "start to receive " <<  totalNumberOfReceivedData << " data records through mpi");
+    result = MPI_Recv( concatenatedReceivedData.data(), totalNumberOfReceivedData, Data::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
+    if ( result != MPI_SUCCESS ) {
+      logError(
+         "postprocessFinishedToSendData()", "failed to send heap data to node "
+        << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+      );
+    }
+  }
+
+  while (!sizeOfReceivedMessages.empty()) {
+    const int numberOfDataRecords = sizeOfReceivedMessages.front();
+    sizeOfReceivedMessages.pop_front();
+    SendReceiveTask<Data> newTask;
+    newTask._metaInformation.setLenth(numberOfDataRecords);
+    if (numberOfDataRecords>0) {
+      newTask._data = new Data[numberOfDataRecords];
+      for (int i=0; i<numberOfDataRecords; i++) {
+        newTask._data[i] = concatenatedReceivedData.front();
+        concatenatedReceivedData.pop_front();
+      }
+    }
+    else {
+      newTask._data = 0;
+    }
+    Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( newTask );
+  }
+
+  logTraceOut( "handleAndQueueReceivedTask(...)" );
+}
+
+
+template<class Data>
+void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueSendTask( const SendReceiveTask<Data>&  sendTask, const std::vector<Data>& data ) {
+  logTraceIn( "handleAndQueueSendTask(...)" );
+
+  assertionEquals(sendTask._metaInformation.getLength(), data.size());
+
+  _sizeOfMessages.push_back(data.size());
+  _concatenatedSentData.insert( _bufferedSentData.end(), data );
+
+  logTraceOut( "handleAndQueueSendTask(...)" );
+}
