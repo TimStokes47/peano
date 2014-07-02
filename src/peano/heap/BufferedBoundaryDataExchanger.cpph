@@ -113,7 +113,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
     SendReceiveTask<Data> newTask;
     newTask._metaInformation.setLenth(numberOfDataRecords);
     if (numberOfDataRecords>0) {
-      newTask._data = new Data[numberOfDataRecords];
+      newTask._data = new MPIData[numberOfDataRecords];
       for (int i=0; i<numberOfDataRecords; i++) {
         newTask._data[i] = concatenatedReceivedData.front();
         concatenatedReceivedData.erase(concatenatedReceivedData.begin());
