@@ -89,7 +89,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   if ( result != MPI_SUCCESS ) {
     logError(
        "postprocessFinishedToSendData()", "failed to send heap data to node "
-      << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+      << Base::_rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }
 
