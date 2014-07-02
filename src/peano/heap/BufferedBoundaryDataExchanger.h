@@ -50,9 +50,9 @@ class peano::heap::BufferedBoundaryDataExchanger: public peano::heap::BoundaryDa
 
 
     #if defined(Parallel) && defined(ParallelExchangePackedRecordsInHeaps)
-    std::vector<Data::Packed>   _concatenatedSentData;
+    std::vector<typename Data::Packed>   _concatenatedSentData;
     #else
-    std::vector<Data>           _concatenatedSentData;
+    std::vector<Data>                    _concatenatedSentData;
     #endif
 
     typedef BoundaryDataExchanger<Data> Base;
