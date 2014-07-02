@@ -109,7 +109,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
 
   while (!sizeOfReceivedMessages.empty()) {
     const int numberOfDataRecords = sizeOfReceivedMessages.front();
-    sizeOfReceivedMessages.pop_front();
+    sizeOfReceivedMessages.erase(concatenatedReceivedData.begin());
     SendReceiveTask<Data> newTask;
     newTask._metaInformation.setLength(numberOfDataRecords);
     if (numberOfDataRecords>0) {
