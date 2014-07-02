@@ -49,16 +49,16 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
   if ( result != MPI_SUCCESS ) {
     logError(
        "postprocessFinishedToSendData()", "failed to send heap data to node "
-      << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+      << Base::_rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }
 
-  if (!_bufferedSentData.empty()) {
+  if (!Base::_bufferedSentData.empty()) {
     result = MPI_Send( _concatenatedSentData.data(), _concatenatedSentData.size(), Data::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
     if ( result != MPI_SUCCESS ) {
       logError(
         "postprocessFinishedToSendData()", "failed to send heap data to node "
-        << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+        << Base::_rank << ": " << tarch::parallel::MPIReturnValueToString(result)
       );
     }
   }
