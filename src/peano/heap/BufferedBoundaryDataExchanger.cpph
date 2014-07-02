@@ -136,7 +136,14 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueSendTask( c
   assertionEquals(sendTask._metaInformation.getLength(), data.size());
 
   _sizeOfMessages.push_back(data.size());
+  #if defined(ParallelExchangePackedRecordsInHeaps)
+  for (int i=0; i<static_cast<int>(data.size()); i++ ) {
+    _concatenatedSentData.push_back( data[i].convert() );
+  }
+  #else
   _concatenatedSentData.insert( _bufferedSentData.end(), data );
+  #endif
+
 
   logTraceOut( "handleAndQueueSendTask(...)" );
 }
