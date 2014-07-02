@@ -54,7 +54,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
   }
 
   if (!_bufferedSentData.empty()) {
-    result = MPI_Send( _concatenatedSentData.data(), _concatenatedSentData.size(), Data::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
+    result = MPI_Send( _concatenatedSentData.data(), _concatenatedSentData.size(), MPIData::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
     if ( result != MPI_SUCCESS ) {
       logError(
         "postprocessFinishedToSendData()", "failed to send heap data to node "
@@ -78,8 +78,8 @@ template<class Data>
 void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTask( const SendReceiveTask<Data>&  receivedTask ) {
   logTraceInWith1Argument( "handleAndQueueReceivedTask(...)", receivedTask.toString() );
 
-  std::vector<int>    sizeOfReceivedMessages;
-  std::vector<Data>   concatenatedReceivedData;
+  std::vector<int>       sizeOfReceivedMessages;
+  std::vector<MPIData>   concatenatedReceivedData;
 
   sizeOfReceivedMessages.reserve(receivedTask._metaInformation.getLength());
   MPI_Status status;
@@ -98,7 +98,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   if (totalNumberOfReceivedData>0) {
     concatenatedReceivedData.reserve(totalNumberOfReceivedData);
     logTraceInWith1Argument( "handleAndQueueReceivedTask(...)", "start to receive " <<  totalNumberOfReceivedData << " data records through mpi");
-    result = MPI_Recv( concatenatedReceivedData.data(), totalNumberOfReceivedData, Data::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
+    result = MPI_Recv( concatenatedReceivedData.data(), totalNumberOfReceivedData, MPIData::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
     if ( result != MPI_SUCCESS ) {
       logError(
          "postprocessFinishedToSendData()", "failed to send heap data to node "
