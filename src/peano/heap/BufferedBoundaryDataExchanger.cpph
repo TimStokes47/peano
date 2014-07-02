@@ -53,7 +53,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
     );
   }
 
-  if (!_bufferedSentData.empty()) {
+  if (!_concatenatedSentData.empty()) {
     result = MPI_Send( _concatenatedSentData.data(), _concatenatedSentData.size(), MPIData::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
     if ( result != MPI_SUCCESS ) {
       logError(
