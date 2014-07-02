@@ -55,7 +55,7 @@ class peano::heap::BufferedBoundaryDataExchanger: public peano::heap::BoundaryDa
     typedef Data    MPIData;
     #endif
 
-    std::vector<typename MPIData>                    _concatenatedSentData;
+    std::vector<MPIData>                    _concatenatedSentData;
 
     typedef BoundaryDataExchanger<Data> Base;
   protected:
