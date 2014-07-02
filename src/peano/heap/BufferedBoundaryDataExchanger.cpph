@@ -37,7 +37,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
   logTraceInWith2Arguments( "postprocessFinishedToSendData()", _sizeOfMessages.size(), _concatenatedSentData.size() );
   assertion( Base::_sendTasks.empty() );
 
-  _sizeOfMessages.push_back(_concatenatedSentData.size);
+  _sizeOfMessages.push_back(_concatenatedSentData.size());
 
   Base::_sendTasks.push_back( SendReceiveTask<Data>() );
   Base::_sendTasks.back()._metaInformation.setLength( _sizeOfMessages.size() );
@@ -53,7 +53,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
     );
   }
 
-  if (!Base::_bufferedSentData.empty()) {
+  if (!_bufferedSentData.empty()) {
     result = MPI_Send( _concatenatedSentData.data(), _concatenatedSentData.size(), Data::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
     if ( result != MPI_SUCCESS ) {
       logError(
