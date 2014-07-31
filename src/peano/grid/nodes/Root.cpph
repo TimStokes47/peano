@@ -484,8 +484,14 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     !tarch::parallel::Node::getInstance().isGlobalMaster()
   ) {
     state.receiveStartupDataFromMaster();
+    state.resetStateAtBeginOfIteration();
+    Base::_eventHandle.beginIteration(state);
   }
-  state.resetStateAtBeginOfIteration();
+
+  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
+    state.resetStateAtBeginOfIteration();
+    Base::_eventHandle.beginIteration(state);
+  }
 
   if ( !_cellTraversal.isValid() ) {
     state.setIsNewWorkerDueToForkOfExistingDomain(true);
@@ -499,8 +505,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   ) {
     receiveCellAndVerticesFromMaster( state, false );
   }
-
-  Base::_eventHandle.beginIteration(state);
   #else
   state.resetStateAtBeginOfIteration();
   Base::_eventHandle.beginIteration(state);
@@ -569,6 +573,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       ) {
         state.receiveStartupDataFromMaster();
         state.resetStateAtBeginOfIteration();
+        Base::_eventHandle.beginIteration(state);
       }
       else if (
         Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Skip
