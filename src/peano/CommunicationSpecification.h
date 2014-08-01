@@ -37,31 +37,6 @@ namespace peano {
  * in each individual step though you might require reduction in the tree to
  * couple different grid hierarchies.
  *
- * !!! exchangeMasterWorkerData
- *
- * If you set SendDataBeforeDescendIntoLocalSubtree, beginIteration() and multiple
- * touchVertexFirstTime() are called before the state actually is received, as
- * the state is received before the rank descends into its local partition not
- * before it starts to traverse the data structures.
- *
- * !!! exchangeWorkerMasterData
- *
- * Typically, all data of the coarsest level are sent back to the master after
- * the very last touchVertexLastTime() call. If you do not depend on this
- * touchVertexLastTime(), you may decide that the cell and the 2^d vertices on
- * the coarsest level are sent back immediately when all local cells of a rank
- * have been processed.
- *
- * If the flags for the vertex and cell data are set appropriately, one might
- * have the idea to send the state to the worker also only prior to the
- * traversal of local data and send it back immediately when all local cells
- * have been processed. In this case, all the statistics about vertices and
- * spacetree nodes however become wrong, as the state it sent 'too late' to the
- * worker and 'too early' up again. It works only anyway if no lb is done.
- *
- * However, if it is speed that matters, you might decide to life with these
- * corrumpted states.
- *
  * !!! Reduction
  *
  * Please note that the reduction also interplays with the specification of the
@@ -78,24 +53,83 @@ namespace peano {
  * tune the code. Sending the state late or even skipping whole data exchange
  * then is up to Peano. It might optimise, it might also stick with the old
  * version.
+ *
+ * !!! Heaps, boundary data exchange and MPI communication tuning
+ *
+ * If you are exchanging data through the boundary via heaps, the MPI
+ * communication tuning soon becomes challenging. Heaps require the user to open
+ * communication windows explicitly and to close them again. This is typically
+ * done by the user in beginIteration() and endIteration(). If you decide to use a
+ * more 'aggressive' communication schemes such as
+ * SendDataAndStateAfterProcessingOfLocalSubtree, communication windows might close
+ * too early or be opened too late.
  */
 struct peano::CommunicationSpecification {
   public:
     enum ExchangeMasterWorkerData {
+      /**
+       * All data has to be available on the worker before it does anything.
+       * Should be default. Is typically slow as the worker cannot start to
+       * traverse its ghost layer until the master has accessed its actual
+       * tree.
+       */
       SendDataAndStateBeforeFirstTouchVertexFirstTime,
+      /**
+       * The state is sent to the worker before we do anything. This is
+       * important if the state object encodes statistics such as whether the grid has changed or
+       * coarsen calls went through. But the data, i.e. the vertices and the
+       * cell, may last a little bit longer to run through the network if this
+       * flag is set.
+       */
       SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime,
+      /**
+       * Wait for the master's state and its data not before the code has entered
+       * the local subtree. Besides masking out communication completely (cf.
+       * MaskOutMasterWorkerDataAndStateExchange) this is by far the fastest
+       * variant of master-worker communication as workers can immediately start
+       * to traverse the grid again after one sweep has finished. However, it has
+       * severe implications:
+       *
+       * - The right state is not available when touchVertexFirstTime() for vertices
+       *   along the parallel boundary is called.
+       * - The statistics held by the state (such as "have vertices refined") might
+       *   be corumpted as we lose the information of these boundary vertices.
+       * - The semantics beginIteration() changes: It might be called after lots
+       *   of touchVertexFirstTime() events have been triggered.
+       */
       SendDataAndStateBeforeDescendIntoLocalSubtree,
+      /**
+       * Do not receive any data from the master.
+       */
       MaskOutMasterWorkerDataAndStateExchange
     };
 
     enum ExchangeWorkerMasterData {
+      /**
+       * Send back both data and state after everything has completed locally.
+       *
+       * Typically, all data of the coarsest level are sent back to the master after
+       * the very last touchVertexLastTime() call. If you do not depend on this
+       * touchVertexLastTime(), you may decide that the cell and the 2^d vertices on
+       * the coarsest level are sent back immediately when all local cells of a rank
+       * have been processed. Then, use another flag.
+       */
       SendDataAndStateAfterLastTouchVertexLastTime,
+      /**
+       * Send data local data back as soon as possible. The state in turn is
+       * sent back when all operations on the worker have terminated. This
+       * flag anticipates that often the data of the vertices, cells (and maybe
+       * additional heap data) have a big cardinality and hang around in the
+       * network for some time. In contrast, states typically are small and can
+       * be exchanged later.
+       */
       SendDataAfterProcessingOfLocalSubtreeSendStateAfterLastTouchVertexLastTime,
       /**
        * Send data and state up to the master as soon as the local spacetree is
        * processed. As a consequence, we call endIteration() and the
        * prepareSendToMaster() at that time as well, i.e. the traversal is not
-       * yet finished when we do that.
+       * yet finished when we do that. Be aware that this changes the semantics
+       * of endIteration().
        */
       SendDataAndStateAfterProcessingOfLocalSubtree,
       /**
