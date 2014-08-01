@@ -126,6 +126,7 @@ std::vector<Data> peano::heap::SendReceiveTask<Data>::unwrapDataAndFreeMemory() 
 }
 
 
+template <class Data>
 std::string peano::heap::SendReceiveTask<Data>::toString() const {
   std::ostringstream out;
   out << "(" << _metaInformation.toString() << ",rank=" << _rank << ",data=" << (_data==nullptr ? "no" : "yes") << ")";
