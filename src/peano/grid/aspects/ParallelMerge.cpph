@@ -9,14 +9,16 @@ void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
   Vertex&        localVertex,
   const Vertex&  masterVertex
 ) {
-  assertionVectorNumericalEquals2( localVertex._vertexData.getX(), masterVertex._vertexData.getX(),     localVertex.toString(), masterVertex.toString() );
-  assertionEquals2( localVertex._vertexData.getLevel(),            masterVertex._vertexData.getLevel(), localVertex.toString(), masterVertex.toString() );
+  if ( tarch::parallel::Node::getInstance().getGlobalMasterRank() != tarch::parallel::NodePool::getInstance().getMasterRank() ) {
+    assertionVectorNumericalEquals2( localVertex._vertexData.getX(), masterVertex._vertexData.getX(),     localVertex.toString(), masterVertex.toString() );
+    assertionEquals2( localVertex._vertexData.getLevel(),            masterVertex._vertexData.getLevel(), localVertex.toString(), masterVertex.toString() );
 
-  assertion2( !localVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
-  assertion2( !masterVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
+    assertion2( !localVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
+    assertion2( !masterVertex.isHangingNode(), masterVertex.toString(), localVertex.toString() );
 
-  assertion2( localVertex._vertexData.getRefinementControl()!=Vertex::Records::Erasing,        masterVertex.toString(), localVertex.toString() );
-  assertion2( localVertex._vertexData.getRefinementControl()!=Vertex::Records::Unrefined,      masterVertex.toString(), localVertex.toString() );
+    assertion2( localVertex._vertexData.getRefinementControl()!=Vertex::Records::Erasing,        masterVertex.toString(), localVertex.toString() );
+    assertion2( localVertex._vertexData.getRefinementControl()!=Vertex::Records::Unrefined,      masterVertex.toString(), localVertex.toString() );
+  }
 
   localVertex.setAdjacentSubtreeForksIntoOtherRankFlag();
 }
