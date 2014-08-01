@@ -111,6 +111,8 @@ struct peano::heap::SendReceiveTask {
     const tarch::la::Vector<DIMENSIONS, double>&  position,
     int                                           level
   ) const;
+
+  std::string toString() const;
 };
 
 #ifdef ParallelExchangePackedRecordsInHeaps

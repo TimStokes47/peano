@@ -124,3 +124,10 @@ std::vector<Data> peano::heap::SendReceiveTask<Data>::unwrapDataAndFreeMemory() 
   logTraceOutWith1Argument( "unwrapDataAndFreeMemory()", result.size() );
   return result;
 }
+
+
+std::string peano::heap::SendReceiveTask<Data>::toString() const {
+  std::ostringstream out;
+  out << "(" << _metaInformation.toString() << ",rank=" << _rank << ",data=" << _data==nullptr ? "no" : "yes" << ")";
+  return out.str();
+}
