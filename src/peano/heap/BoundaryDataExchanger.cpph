@@ -237,7 +237,7 @@ void peano::heap::BoundaryDataExchanger<Data>::sendData(
   const tarch::la::Vector<DIMENSIONS, double>&  position,
   int                                           level
 ) {
-  assertion4( _isCurrentlySending, _identifier, data.size(), position, level );
+  assertion5( _isCurrentlySending, _identifier, data.size(), position, level, "forgot to call startToSendBoundaryData on heap?" );
 
   SendReceiveTask<Data> sendTask;
   sendTask._rank = _rank;
