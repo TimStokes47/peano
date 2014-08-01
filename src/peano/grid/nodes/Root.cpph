@@ -241,7 +241,12 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     Cell    coarseGridCellFromMaster;
     Vertex  coarseVertexFromMaster[TWO_POWER_D];
 
-    if (!skipMPICalls) {
+    if (skipMPICalls) {
+      dfor2(i)
+        _haveMergedMasterVertex[iScalar] = false;
+      enddforx
+    }
+    else {
       coarseGridCellFromMaster.receive(
         tarch::parallel::NodePool::getInstance().getMasterRank(),
         peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
