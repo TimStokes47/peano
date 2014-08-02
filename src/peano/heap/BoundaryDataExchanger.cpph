@@ -43,16 +43,9 @@ peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger(
   _readDeployBufferInReverseOrder(false),
   _wasTraversalInvertedThroughoutLastSendReceiveTraversal(false)
   #ifdef Asserts
-  ,_isCurrentlySending(true)
+  ,_isCurrentlySending(false)
   #endif
   {
-  assertion3(
-    _receiveTasks[0].empty() || _receiveTasks[1].empty(),
-    _receiveTasks[0].size(),
-    _receiveTasks[1].size(),
-    _currentReceiveBuffer
-  );
-  postprocessStartToSendData();
 }
 
 
