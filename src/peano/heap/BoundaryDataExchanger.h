@@ -215,6 +215,11 @@ class peano::heap::BoundaryDataExchanger {
      * Den Assert Parameter unbedingt auf ja, sonst geht erste Iteration schief, weil da
      * ja Eintrag in Map noch nicht existiert
      *
+     *
+     * !!! Erweitern der Doku
+     *
+     * Puffer wird bei Bedarf erstellt, d.h. durch send() deshalb muss flag auf true stehen
+     *
      * @param identifier Only required by the plot
      */
     BoundaryDataExchanger(const std::string& identifier, int tag, int rank);

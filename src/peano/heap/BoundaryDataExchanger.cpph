@@ -43,7 +43,7 @@ peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger(
   _readDeployBufferInReverseOrder(false),
   _wasTraversalInvertedThroughoutLastSendReceiveTraversal(false)
   #ifdef Asserts
-  ,_isCurrentlySending(false)
+  ,_isCurrentlySending(true)
   #endif
   {
 }

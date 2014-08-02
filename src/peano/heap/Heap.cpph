@@ -27,7 +27,6 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
   ,_numberOfHeapAllocations(0)
   ,_numberOfHeapFrees(0)
   ,_name("<heap name not set>")
-  ,_isTraversalInvertedSetAtLastStartToSendBoundaryDataCall(false)
 {
   #ifdef Parallel
   if (SendReceiveTask<Data>::MPIData::Datatype==0) {
@@ -317,7 +316,6 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
           )
         );
       }
-      _neighbourDataExchanger[toRank].startToSendData(_isTraversalInvertedSetAtLastStartToSendBoundaryDataCall);
       _neighbourDataExchanger[toRank].sendData(data,position,level);
       break;
     case ForkOrJoinCommunication:
@@ -438,8 +436,6 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::startToSendBoundaryData(bool isTraversalInverted) {
   logTraceInWith1Argument( "startToSendBoundaryData(bool)", _name );
-
-  _isTraversalInvertedSetAtLastStartToSendBoundaryDataCall = isTraversalInverted;
 
   #ifdef Parallel
   tarch::mpianalysis::Analysis::getInstance().beginToPrepareAsynchronousHeapDataExchange();
