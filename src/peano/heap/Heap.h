@@ -444,6 +444,9 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     virtual void receiveDanglingMessages();
 
+    /**
+     * @return Brief description of heap incl its identifier (if set)
+     */
     std::string toString() const;
 
     /**
@@ -529,6 +532,8 @@ class peano::heap::Heap: public tarch::services::Service {
     void plotStatistics() const;
 
     void clearStatistics();
+
+    void logContentToWarningDevice();
 };
 
 

@@ -48,6 +48,17 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::logContentToWarningDevice() {
+  for(typename HeapContainer::const_iterator i = _heapData.begin(); i != _heapData.end(); i++) {
+    for (typename HeapEntries::const_iterator j = i->second->begin(); j!=i->second->end(); j++) {
+      logWarning( "plotContentToWarningDevice()", j->toString() );
+    }
+  }
+}
+
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::deleteAllData() {
   for(typename std::map<int, std::vector<Data>*>::iterator i = _heapData.begin(); i != _heapData.end(); i++) {
     assertionMsg((*i).second != 0, _name << ": Null-pointer was stored in heap data map.");
@@ -129,7 +140,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
     _nextIndex = wantedIndex+1;
   }
 
-  assertionMsg(_heapData.find(wantedIndex) == _heapData.end(), "heap entry does exist already.");
+  assertion2(_heapData.find(wantedIndex) == _heapData.end(), "heap entry does exist already", wantedIndex);
   _heapData.insert( typename HeapContainer::value_type(wantedIndex,new std::vector<Data>(numberOfEntries)) );
   if (initialCapacity>0) {
     _heapData[wantedIndex]->reserve(initialCapacity);
