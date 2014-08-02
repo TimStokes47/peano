@@ -18,7 +18,11 @@ peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger():
   _numberOfReceivedRecords(-1),
   _currentReceiveBuffer(-1),
   _readDeployBufferInReverseOrder(false),
-  _wasTraversalInvertedThroughoutLastSendReceiveTraversal(false) {
+  _wasTraversalInvertedThroughoutLastSendReceiveTraversal(false)
+  #ifdef Asserts
+  ,_isCurrentlySending(false)
+  #endif
+{
 }
 
 
@@ -39,7 +43,7 @@ peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger(
   _readDeployBufferInReverseOrder(false),
   _wasTraversalInvertedThroughoutLastSendReceiveTraversal(false)
   #ifdef Asserts
-  ,_isCurrentlySending(true)
+  ,_isCurrentlySending(false)
   #endif
   {
 }
