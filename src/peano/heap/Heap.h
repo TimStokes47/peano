@@ -259,6 +259,8 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     std::string _name;
 
+    bool        _isTraversalInvertedSetAtLastStartToSendBoundaryDataCall;
+
     /**
      * Private constructor to hide the possibility
      * to instantiate an object of this class.
