@@ -1120,6 +1120,11 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * - endIteration()
      * - Send the state to the master if there is a master.
      *
+     * Please note that the beginIteration() time constraint is weakened in the 
+     * parallel case if you choose to receive data on the worker late. Then, 
+     * beginIteration() might not be called prior to any other event. See the 
+     * documentation of CommunicationSpecification for details.
+     *
      * @see __THIS_TYPENAME__()
      */
     void beginIteration(
@@ -1147,6 +1152,11 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * - Merge the states from the workers (if they exist) into the own state. 
      * - endIteration()
      * - Send the state to the master if there is a master.
+     *
+     * Please note that the endIteration() time constraint is weakened in the 
+     * parallel case if you choose to send back data eagerly. Then, endIteration()
+     * might not be called after all other events. See the documentation 
+     * of CommunicationSpecification for details.
      *
      * @see __THIS_TYPENAME__()
      */
