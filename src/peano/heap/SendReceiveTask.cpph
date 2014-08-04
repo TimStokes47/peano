@@ -59,7 +59,7 @@ void peano::heap::SendReceiveTask<Data>::wrapData(const std::vector<Data>& data)
 
 template <class Data>
 void peano::heap::SendReceiveTask<Data>::triggerSend(int tag) {
-  assertion( _data!=0 );
+  assertion( _data!=nullptr );
   assertion( _metaInformation.getLength()>0 );
 
   const int result = MPI_Isend(

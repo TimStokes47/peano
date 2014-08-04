@@ -74,7 +74,12 @@ class peano::heap::BufferedBoundaryDataExchanger: public peano::heap::BoundaryDa
      *
      * First, this operation sends out one dummy message with size zero. This
      * dummy message is only used for synchronisation, as it induces a receive
-     * on the receiver side. It does not actually carry any information at
+     * on the receiver side. It does not actually carry any information at all.
+     *
+     * Second, we send out one int message telling the receiver how many
+     * integer messages holding meta data are expected to come.
+     *
+     * Third, we send a list of integer messages.
      */
     virtual void postprocessFinishedToSendData();
 
