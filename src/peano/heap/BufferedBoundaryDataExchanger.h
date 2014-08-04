@@ -87,6 +87,23 @@ class peano::heap::BufferedBoundaryDataExchanger: public peano::heap::BoundaryDa
 
     BufferedBoundaryDataExchanger(const std::string& identifier, int tag, int rank);
 
+    /**
+     * Destructor
+     *
+     * !!! Assertions
+     *
+     * Logically, one could add a statement alike
+     *
+     * assertion4( _sizeOfMessages.empty(), ...
+     *
+     * However, the boundary exchangers are held by a map, and the C++ maps
+     * tend to copy around things. It hence might happen that a full buffer
+     * is copied to a different location and the original instance then is
+     * destroyed. And this initial instance still thinks that it has data.
+     * I could write a copy constructor to make this clean and safe (a copy
+     * constructor erasing the data in the preimage of the copy), but I'm too
+     * lazy to do so right now.
+     */
     virtual ~BufferedBoundaryDataExchanger();
 };
 

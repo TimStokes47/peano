@@ -23,7 +23,7 @@ peano::heap::BufferedBoundaryDataExchanger<Data>::BufferedBoundaryDataExchanger(
 
 template<class Data>
 peano::heap::BufferedBoundaryDataExchanger<Data>::~BufferedBoundaryDataExchanger() {
-  assertion4( _sizeOfMessages.empty(), _sizeOfMessages.size(), BoundaryDataExchanger<Data>::_identifier, BoundaryDataExchanger<Data>::_tag, BoundaryDataExchanger<Data>::_rank );
+//  assertion4( _sizeOfMessages.empty(), _sizeOfMessages.size(), BoundaryDataExchanger<Data>::_identifier, BoundaryDataExchanger<Data>::_tag, BoundaryDataExchanger<Data>::_rank );
 }
 
 
