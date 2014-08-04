@@ -152,6 +152,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( newTask );
   }
 
+  assertion(concatenatedReceivedData.empty());
   logTraceOutWith1Argument( "handleAndQueueReceivedTask(...)", Base::_receiveTasks[Base::_currentReceiveBuffer].size() );
 }
 
