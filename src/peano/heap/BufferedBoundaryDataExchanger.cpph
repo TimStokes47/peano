@@ -130,6 +130,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
     sizeOfReceivedMessages.erase(sizeOfReceivedMessages.begin());
     SendReceiveTask<Data> newTask;
     newTask._metaInformation.setLength(numberOfDataRecords);
+    newTaks._rank = Base::_rank;
     if (numberOfDataRecords>0) {
       newTask._data = new MPIData[numberOfDataRecords];
       for (int i=0; i<numberOfDataRecords; i++) {
@@ -141,7 +142,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
       newTask._data = nullptr;
     }
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( newTask );
-    logInfo( "postprocessFinishedToSendData(...)", "inserted receive task " << newTask.toString() );
+//    logInfo( "postprocessFinishedToSendData(...)", "inserted receive task " << newTask.toString() );
   }
 
   logTraceOut( "handleAndQueueReceivedTask(...)" );
