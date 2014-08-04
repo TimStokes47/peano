@@ -57,14 +57,19 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
     );
   }
 
-  result = MPI_Send( _concatenatedSentData.data(), _concatenatedSentData.size(), MPIData::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
-  if ( result != MPI_SUCCESS ) {
-    logError(
-      "postprocessFinishedToSendData()", "failed to send heap data to node "
-      << Base::_rank << ": " << tarch::parallel::MPIReturnValueToString(result)
-    );
+  if (  _concatenatedSentData.empty() ) {
+    logInfo( "postprocessFinishedToSendData()", "no data exchanged" );
   }
-  logInfo( "postprocessFinishedToSendData()", "sent out data. cardinality=" << _concatenatedSentData.size() << " (last entry reserved for length information)" );
+  else {
+    result = MPI_Send( _concatenatedSentData.data(), _concatenatedSentData.size(), MPIData::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
+    if ( result != MPI_SUCCESS ) {
+      logError(
+        "postprocessFinishedToSendData()", "failed to send heap data to node "
+        << Base::_rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+      );
+    }
+    logInfo( "postprocessFinishedToSendData()", "sent out data. cardinality=" << _concatenatedSentData.size() );
+  }
 
   logTraceOut( "postprocessFinishedToSendData()" );
 }
