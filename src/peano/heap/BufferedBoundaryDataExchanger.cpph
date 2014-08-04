@@ -112,7 +112,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   sizeOfReceivedMessages.pop_back();
   if (totalNumberOfReceivedData>0) {
     concatenatedReceivedData.resize(totalNumberOfReceivedData);
-    logInfo( "postprocessFinishedToSendData(...)", "start to receive " <<  totalNumberOfReceivedData.size() << " data records through mpi");
+    logInfo( "postprocessFinishedToSendData(...)", "start to receive " <<  totalNumberOfReceivedData << " data records through mpi");
     result = MPI_Recv( concatenatedReceivedData.data(), totalNumberOfReceivedData, MPIData::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
     if ( result != MPI_SUCCESS ) {
       logError(
