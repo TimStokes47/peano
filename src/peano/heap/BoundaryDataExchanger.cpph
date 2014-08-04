@@ -56,7 +56,7 @@ peano::heap::BoundaryDataExchanger<Data>::~BoundaryDataExchanger() {
 
 template<class Data>
 void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalInverted) {
-  logTraceInWith1Argument( "startToSendData(int)", isTraversalInverted );
+  logTraceInWith1Argument( "startToSendData(bool)", isTraversalInverted );
 
   assertion(_receiveTasks[1-_currentReceiveBuffer].empty());
   assertion(_currentReceiveBuffer>=0);
@@ -88,7 +88,7 @@ void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalI
   switchReceiveAndDeployBuffer(numberOfSentMessages);
   postprocessStartToSendData();
 
-  logTraceOut( "startToSendData(int)" );
+  logTraceOut( "startToSendData(bool)" );
 }
 
 
@@ -147,6 +147,7 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
     int            finishedWait            = i->_metaInformation.getLength()==0;
 
     while (!finishedWait) {
+      assertion2(i->_data!=nullptr, i->toString() );
       MPI_Test(&(i->_request), &finishedWait, &status);
 
       // deadlock aspect
@@ -189,6 +190,8 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
 
 template<class Data>
 void peano::heap::BoundaryDataExchanger<Data>::finishedToSendData(bool isTraversalInverted) {
+  logTraceInWith1Argument( "finishedToSendData(bool)", isTraversalInverted );
+
   assertion3(_isCurrentlySending, _identifier, _rank, "call once per traversal" );
   #ifdef Asserts
   _isCurrentlySending = false;
@@ -197,6 +200,7 @@ void peano::heap::BoundaryDataExchanger<Data>::finishedToSendData(bool isTravers
   _wasTraversalInvertedThroughoutLastSendReceiveTraversal = isTraversalInverted;
 
   postprocessFinishedToSendData();
+  logTraceOut( "finishedToSendData(bool)" );
 }
 
 

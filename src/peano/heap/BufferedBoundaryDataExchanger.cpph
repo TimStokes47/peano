@@ -43,7 +43,8 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
   _sizeOfMessages.push_back(_concatenatedSentData.size());
 
   Base::_sendTasks.push_back( SendReceiveTask<Data>() );
-  Base::_sendTasks.back()._metaInformation.setLength( _sizeOfMessages.size() );
+  Base::_sendTasks.back()._metaInformation.setLength( 0 );
+  Base::_sendTasks.back()._data = nullptr;
   Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true, SendAndReceiveHeapMetaDataBlocking);
 
   // @todo Wieder zurueck auf Debug und das andere auch
