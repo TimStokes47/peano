@@ -95,6 +95,14 @@ struct peano::heap::SendReceiveTask {
 
   std::vector<Data> unwrapDataAndFreeMemory();
 
+  /**
+   * Set a task invalid explicitly. Messages marked that way will pass the
+   * validation though their data is not in agreement with checks: it is
+   * explicilty known that the message is invalid and can be ignored. I use
+   * this for null messages, i.e. messages without content that are often
+   * squeezed (together with their meta data) by sophisticated communication
+   * schemes.
+   */
   void setInvalid();
 
   /**
