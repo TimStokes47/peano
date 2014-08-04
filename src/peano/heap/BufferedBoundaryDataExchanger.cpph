@@ -150,8 +150,9 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
       newTask.setInvalid();
     }
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( newTask );
-//    logInfo( "postprocessFinishedToSendData(...)", "inserted receive task " << newTask.toString() );
   }
+
+  logInfo( "postprocessFinishedToSendData(...)", "inserted " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() << " receive tasks" );
 
   logTraceOut( "handleAndQueueReceivedTask(...)" );
 }
