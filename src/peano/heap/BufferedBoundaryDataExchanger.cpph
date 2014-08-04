@@ -85,7 +85,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   sizeOfReceivedMessages.reserve(receivedTask._metaInformation.getLength());
   MPI_Status status;
   int        result;
-  logTraceInWith1Arguxment( "handleAndQueueReceivedTask(...)", "start to receive " <<  sizeOfReceivedMessages.size() << " integers through mpi");
+  logDebug( "handleAndQueueReceivedTask(...)", "start to receive " <<  sizeOfReceivedMessages.size() << " integers through mpi" );
   result = MPI_Recv( sizeOfReceivedMessages.data(), _sizeOfMessages.size(), MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
   if ( result != MPI_SUCCESS ) {
     logError(
@@ -98,7 +98,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   sizeOfReceivedMessages.pop_back();
   if (totalNumberOfReceivedData>0) {
     concatenatedReceivedData.reserve(totalNumberOfReceivedData);
-    logTraceInWith1Argument( "handleAndQueueReceivedTask(...)", "start to receive " <<  totalNumberOfReceivedData << " data records through mpi");
+    logDebug( "postprocessFinishedToSendData(...)", "start to receive " <<  totalNumberOfReceivedData.size() << " data records through mpi");
     result = MPI_Recv( concatenatedReceivedData.data(), totalNumberOfReceivedData, MPIData::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
     if ( result != MPI_SUCCESS ) {
       logError(
