@@ -48,7 +48,8 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
   logInfo( "postprocessFinishedToSendData()", "deployed one dummy send task=" << Base::_sendTasks.back().toString() );
 
   _sizeOfMessages.push_back(_concatenatedSentData.size());
-  int result = MPI_Send( & (_sizeOfMessages.size()), 1, MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
+  int tmp   = _sizeOfMessages.size();
+  int result = MPI_Send( &tmp, 1, MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
   logInfo( "postprocessFinishedToSendData()", "sent header=" << _sizeOfMessages.size() << " identifying number of meta messages (plus one header int)" );
 
   result = MPI_Send( _sizeOfMessages.data(), _sizeOfMessages.size(), MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
