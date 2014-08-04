@@ -44,13 +44,12 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
   Base::_sendTasks.back()._metaInformation.setLength( 0 );
   Base::_sendTasks.back()._data = nullptr;
   Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true, SendAndReceiveHeapMetaDataBlocking);
-  // @todo Wieder zurueck auf Debug und das andere auch
-  logInfo( "postprocessFinishedToSendData()", "deployed one dummy send task=" << Base::_sendTasks.back().toString() );
+  logDebug( "postprocessFinishedToSendData()", "deployed one dummy send task=" << Base::_sendTasks.back().toString() );
 
   _sizeOfMessages.push_back(_concatenatedSentData.size());
   int tmp   = _sizeOfMessages.size();
   int result = MPI_Send( &tmp, 1, MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
-  logInfo( "postprocessFinishedToSendData()", "sent header=" << _sizeOfMessages.size() << " identifying number of meta messages (plus one header int)" );
+  logDebug( "postprocessFinishedToSendData()", "sent header=" << _sizeOfMessages.size() << " identifying number of meta messages (plus one header int)" );
 
   result = MPI_Send( _sizeOfMessages.data(), _sizeOfMessages.size(), MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator() );
   if ( result != MPI_SUCCESS ) {
@@ -61,7 +60,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
   }
 
   if (  _concatenatedSentData.empty() ) {
-    logInfo( "postprocessFinishedToSendData()", "no data exchanged as all meta data records are zero" );
+    logDebug( "postprocessFinishedToSendData()", "no data exchanged as all meta data records are zero" );
     for (int i=0; i<_sizeOfMessages.size()-1; i++) {
       assertionEquals( _sizeOfMessages[i], 0 );
     }
@@ -75,7 +74,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
         << Base::_rank << ": " << tarch::parallel::MPIReturnValueToString(result)
       );
     }
-    logInfo( "postprocessFinishedToSendData()", "sent out data. cardinality=" << _concatenatedSentData.size() );
+    logDebug( "postprocessFinishedToSendData()", "sent out data. cardinality=" << _concatenatedSentData.size() );
   }
 
   logTraceOut( "postprocessFinishedToSendData()" );
@@ -105,7 +104,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
 
   int numberOfMetaMessages = 0;
   result = MPI_Recv( &numberOfMetaMessages, 1, MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
-  logInfo( "handleAndQueueReceivedTask(...)", "will receive " << numberOfMetaMessages << " meta (int) messages incl. one header int" );
+  logDebug( "handleAndQueueReceivedTask(...)", "will receive " << numberOfMetaMessages << " meta (int) messages incl. one header int" );
 
   sizeOfReceivedMessages.resize(numberOfMetaMessages);
   result = MPI_Recv( sizeOfReceivedMessages.data(), numberOfMetaMessages, MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
@@ -120,7 +119,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   sizeOfReceivedMessages.pop_back();
   if (totalNumberOfReceivedData>0) {
     concatenatedReceivedData.resize(totalNumberOfReceivedData);
-    logInfo( "postprocessFinishedToSendData(...)", "start to receive " <<  totalNumberOfReceivedData << " data records through mpi");
+    logDebug( "postprocessFinishedToSendData(...)", "start to receive " <<  totalNumberOfReceivedData << " data records through mpi");
     result = MPI_Recv( concatenatedReceivedData.data(), totalNumberOfReceivedData, MPIData::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
     if ( result != MPI_SUCCESS ) {
       logError(
@@ -130,7 +129,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
     }
   }
   else {
-    logInfo( "postprocessFinishedToSendData(...)", "skip data receive as no data exchanged (only meta data)");
+    logDebug( "postprocessFinishedToSendData(...)", "skip data receive as no data exchanged (only meta data)");
   }
 
   while (!sizeOfReceivedMessages.empty()) {
@@ -152,9 +151,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( newTask );
   }
 
-  logInfo( "postprocessFinishedToSendData(...)", "inserted " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() << " receive tasks" );
-
-  logTraceOut( "handleAndQueueReceivedTask(...)" );
+  logTraceOutWith1Argument( "handleAndQueueReceivedTask(...)", Base::_receiveTasks[Base::_currentReceiveBuffer].size() );
 }
 
 
