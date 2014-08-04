@@ -23,7 +23,7 @@ peano::heap::BufferedBoundaryDataExchanger<Data>::BufferedBoundaryDataExchanger(
 
 template<class Data>
 peano::heap::BufferedBoundaryDataExchanger<Data>::~BufferedBoundaryDataExchanger() {
-  assertion( _sizeOfMessages.empty() );
+  assertion4( _sizeOfMessages.empty(), _sizeOfMessages.size(), _identifier, _tag, _rank );
 }
 
 
@@ -85,7 +85,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   sizeOfReceivedMessages.reserve(receivedTask._metaInformation.getLength());
   MPI_Status status;
   int        result;
-  logTraceInWith1Argument( "handleAndQueueReceivedTask(...)", "start to receive " <<  sizeOfReceivedMessages.data() << " integers through mpi");
+  logTraceInWith1Arguxment( "handleAndQueueReceivedTask(...)", "start to receive " <<  sizeOfReceivedMessages.data() << " integers through mpi");
   result = MPI_Recv( sizeOfReceivedMessages.data(), _sizeOfMessages.size(), MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
   if ( result != MPI_SUCCESS ) {
     logError(
