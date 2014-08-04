@@ -85,7 +85,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   sizeOfReceivedMessages.reserve(receivedTask._metaInformation.getLength());
   MPI_Status status;
   int        result;
-  logTraceInWith1Arguxment( "handleAndQueueReceivedTask(...)", "start to receive " <<  sizeOfReceivedMessages.data() << " integers through mpi");
+  logTraceInWith1Arguxment( "handleAndQueueReceivedTask(...)", "start to receive " <<  sizeOfReceivedMessages.size() << " integers through mpi");
   result = MPI_Recv( sizeOfReceivedMessages.data(), _sizeOfMessages.size(), MPI_INT, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
   if ( result != MPI_SUCCESS ) {
     logError(
