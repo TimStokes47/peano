@@ -15,6 +15,7 @@ peano::heap::BufferedBoundaryDataExchanger<Data>::BufferedBoundaryDataExchanger(
 
 template<class Data>
 peano::heap::BufferedBoundaryDataExchanger<Data>::BufferedBoundaryDataExchanger(const std::string& identifier, int tag, int rank):
+  BoundaryDataExchanger<Data>(identifier,tag,rank),
   _sizeOfMessages(),
   _concatenatedSentData() {
 }
