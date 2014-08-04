@@ -29,7 +29,7 @@ peano::heap::BufferedBoundaryDataExchanger<Data>::~BufferedBoundaryDataExchanger
 
 template<class Data>
 int peano::heap::BufferedBoundaryDataExchanger<Data>::getNumberOfSentMessages() const {
-  return static_cast<int>( _sizeOfMessages.size() );
+  return static_cast<int>( _sizeOfMessages.size()-1 );
 }
 
 
