@@ -44,7 +44,8 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
   Base::_sendTasks.back()._metaInformation.setLength( 0 );
   Base::_sendTasks.back()._data = nullptr;
   Base::_sendTasks.back()._rank = Base::_rank;
-  Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true, SendAndReceiveHeapMetaDataBlocking);
+//  Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true, SendAndReceiveHeapMetaDataBlocking);
+  Base::_sendTasks.back().triggerSend();
   logDebug( "postprocessFinishedToSendData()", "deployed one dummy send task=" << Base::_sendTasks.back().toString() );
 
   _sizeOfMessages.push_back(_concatenatedSentData.size());
