@@ -65,7 +65,12 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::postprocessFinishedToSend
         << Base::_rank << ": " << tarch::parallel::MPIReturnValueToString(result)
       );
     }
+    logInfo( "postprocessFinishedToSendData()", "sent out data. cardinality=" << _concatenatedSentData.size() );
   }
+  else {
+    logInfo( "postprocessFinishedToSendData()", "skipped send of any data" );
+  }
+
   logTraceOut( "postprocessFinishedToSendData()" );
 }
 
@@ -112,6 +117,9 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
         << Base::_rank << ": " << tarch::parallel::MPIReturnValueToString(result)
       );
     }
+  }
+  else {
+    logDebug( "postprocessFinishedToSendData(...)", "skip data receive as no data exchanged (only meta data)");
   }
 
   while (!sizeOfReceivedMessages.empty()) {
