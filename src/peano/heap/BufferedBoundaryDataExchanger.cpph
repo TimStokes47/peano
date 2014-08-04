@@ -85,6 +85,8 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   std::vector<int>       sizeOfReceivedMessages;
   std::vector<MPIData>   concatenatedReceivedData;
 
+  assertion4( Base::_rank >=0, Base::_rank, Base::_identifier, Base::_tag, _concatenatedSentData.size() );
+
   sizeOfReceivedMessages.reserve(receivedTask._metaInformation.getLength());
   MPI_Status status;
   int        result;
