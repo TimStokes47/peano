@@ -204,21 +204,8 @@ class peano::heap::BoundaryDataExchanger {
      * whether to read it FIFO or LIFO. For this, we analyse the traversal
      * direction.
      *
-     * For the very first iteration, we typically cannot invoke the start
-     * communication operation: Even if we do, most buffers won't get this
-     * information as they are not created yet. It is here absolutely
-     * irrelevant that the heap communication channels have been opened
-     * before - if we open the channel, no data is received yet and we will
-     * not move data or analyse read directions. Therefore, the start property
-     * of this assertion flag is true - we can start to send data right away.
-     *
-     * Den Assert Parameter unbedingt auf ja, sonst geht erste Iteration schief, weil da
-     * ja Eintrag in Map noch nicht existiert
-     *
-     *
-     * !!! Erweitern der Doku
-     *
-     * Puffer wird bei Bedarf erstellt, d.h. durch send() deshalb muss flag auf true stehen
+     * The constructor sets the flag to false, but the Heap implementation will
+     * trigger startToSend() immediately afterwards.
      *
      * @param identifier Only required by the plot
      */
