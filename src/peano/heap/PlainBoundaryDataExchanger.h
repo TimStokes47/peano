@@ -52,6 +52,8 @@ class peano::heap::PlainBoundaryDataExchanger: public peano::heap::BoundaryDataE
      * if necessary.
      */
     virtual void handleAndQueueSendTask( const SendReceiveTask<Data>& sendTask, const std::vector<Data>& data );
+
+    virtual bool dataExchangerCommunicatesInBackground() const;
   public:
     PlainBoundaryDataExchanger();
 

@@ -29,6 +29,12 @@ peano::heap::PlainBoundaryDataExchanger<Data>::~PlainBoundaryDataExchanger() {
 
 
 template<class Data>
+bool peano::heap::PlainBoundaryDataExchanger<Data>::dataExchangerCommunicatesInBackground() const {
+  return true;
+}
+
+
+template<class Data>
 int peano::heap::PlainBoundaryDataExchanger<Data>::getNumberOfSentMessages() const {
   return static_cast<int>( Base::_sendTasks.size() );
 }

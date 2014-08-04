@@ -46,6 +46,10 @@ peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger(
   ,_isCurrentlySending(false)
   #endif
   {
+
+  #ifdef Asserts
+  assertionMsg( false, "buffered boundary data exchanger does not work in assert mode, as many assertions are weakened" );
+  #endif
 }
 
 
@@ -354,7 +358,7 @@ void peano::heap::BoundaryDataExchanger<Data>::clearStatistics() {
 template <class Data>
 void peano::heap::BoundaryDataExchanger<Data>::releaseReceivedNeighbourMessagesRequests() {
   logTraceIn( "releaseReceivedNeighbourMessagesRequests()" );
-  bool allMessageCommunicationsAreFinished = false;
+  bool allMessageCommunicationsAreFinished = !dataExchangerCommunicatesInBackground();
 
   const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
   const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();

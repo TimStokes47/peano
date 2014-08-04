@@ -186,6 +186,13 @@ class peano::heap::BoundaryDataExchanger {
      * result of getNumberOfSentMessages().
      */
     virtual void handleAndQueueSendTask( const SendReceiveTask<Data>& sendTask, const std::vector<Data>& data ) = 0;
+
+    /**
+     * Just identifies whether there are background receives possible. If not, the
+     * exchanger does not use MPI_Test. This is important, as an MPI_Test on the
+     * request handles otherwise yields a seg fault.
+     */
+    virtual bool dataExchangerCommunicatesInBackground() const = 0;
   public:
     BoundaryDataExchanger();
 

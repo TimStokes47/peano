@@ -77,9 +77,16 @@ class peano::heap::BufferedBoundaryDataExchanger: public peano::heap::BoundaryDa
      * on the receiver side. It does not actually carry any information at all.
      *
      * Second, we send out one int message telling the receiver how many
-     * integer messages holding meta data are expected to come.
+     * integer messages holding meta data are expected to come next.
      *
-     * Third, we send a list of integer messages.
+     * Third, we send a list of integer messages. This list holds per vertex
+     * one integer that says how many records are assigned to this vertex. The
+     * last entry then is another integer meta data field
+     *
+     * (Forth) identifying how much data records actually are exchanged.
+     *
+     * Exchange step four is optional - if no data is exchanged, we do not
+     * trigger any send.
      */
     virtual void postprocessFinishedToSendData();
 
@@ -88,9 +95,20 @@ class peano::heap::BufferedBoundaryDataExchanger: public peano::heap::BoundaryDa
      */
     virtual void postprocessStartToSendData();
 
+    /**
+     * Handle incoming message
+     *
+     * For this particular buffer, this operation is the counterpart to
+     * postprocessFinishedToSendData(). The latter sends out exactly one
+     * message per grid sweep. This message triggers this operation. As
+     * a consequence, its algorithm picks up the four steps (three as the
+     * original receive happened outside) from the sender's description.
+     */
     virtual void handleAndQueueReceivedTask( const SendReceiveTask<Data>& receivedTask );
 
     virtual void handleAndQueueSendTask( const SendReceiveTask<Data>& sendTask, const std::vector<Data>& data );
+
+    virtual bool dataExchangerCommunicatesInBackground() const;
   public:
     BufferedBoundaryDataExchanger();
 
