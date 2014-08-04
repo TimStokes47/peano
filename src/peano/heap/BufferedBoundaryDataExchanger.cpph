@@ -85,9 +85,10 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   std::vector<int>       sizeOfReceivedMessages;
   std::vector<MPIData>   concatenatedReceivedData;
 
-  assertion4( Base::_rank >=0, Base::_rank, Base::_identifier, Base::_tag, _concatenatedSentData.size() );
+  assertion5( Base::_rank >=0, Base::_rank, Base::_identifier, Base::_tag, _concatenatedSentData.size(), receivedTask.toString() );
+  assertion5( receivedTask._metaInformation.getLength() >0, Base::_rank, Base::_identifier, Base::_tag, _concatenatedSentData.size(), receivedTask.toString() );
 
-  sizeOfReceivedMessages.reserve(receivedTask._metaInformation.getLength());
+  sizeOfReceivedMessages.resize(receivedTask._metaInformation.getLength());
   MPI_Status status;
   int        result;
   logInfo( "handleAndQueueReceivedTask(...)", "start to receive " <<  sizeOfReceivedMessages.size() << " integers through mpi due to message " << receivedTask.toString() );
@@ -102,7 +103,7 @@ void peano::heap::BufferedBoundaryDataExchanger<Data>::handleAndQueueReceivedTas
   const int totalNumberOfReceivedData = sizeOfReceivedMessages.back();
   sizeOfReceivedMessages.pop_back();
   if (totalNumberOfReceivedData>0) {
-    concatenatedReceivedData.reserve(totalNumberOfReceivedData);
+    concatenatedReceivedData.resize(totalNumberOfReceivedData);
     logDebug( "postprocessFinishedToSendData(...)", "start to receive " <<  totalNumberOfReceivedData.size() << " data records through mpi");
     result = MPI_Recv( concatenatedReceivedData.data(), totalNumberOfReceivedData, MPIData::Datatype, Base::_rank, Base::_tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
     if ( result != MPI_SUCCESS ) {
