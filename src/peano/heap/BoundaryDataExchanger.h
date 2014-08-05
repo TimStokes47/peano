@@ -231,6 +231,14 @@ class peano::heap::BoundaryDataExchanger {
       int                                           level
     );
 
+    /**
+     * Receive data
+     *
+     * i.e. take data from the received buffer (it should be called deploy
+     * buffer), copy it into the result data structure and send it back. The
+     * copying might also induce some type conversion if only subsets of data
+     * are actually exchanged via mpi.
+     */
     std::vector< Data > receiveData(
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level

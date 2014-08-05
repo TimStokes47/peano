@@ -282,7 +282,7 @@ std::vector< Data > peano::heap::BoundaryDataExchanger<Data>::receiveData(
   assertion2( _receiveTasks[currentDeployBuffer].size()>0, tarch::parallel::Node::getInstance().getRank(), "if the neighbour data buffer is empty, you have perhaps forgotten to call releaseMessages() on the heap in the traversal before" );
 
   assertion6(
-    readElement->fits(position,level),
+    readElement->fits(position,level) | !dataExchangerCommunicatesInBackground(),
     _readDeployBufferInReverseOrder,
     level,  position,
     _receiveTasks[currentDeployBuffer].front()._metaInformation.toString(),
