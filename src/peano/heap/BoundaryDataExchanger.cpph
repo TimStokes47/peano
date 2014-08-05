@@ -46,10 +46,6 @@ peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger(
   ,_isCurrentlySending(false)
   #endif
   {
-
-  #ifdef Asserts
-  assertionMsg( false, "buffered boundary data exchanger does not work in assert mode, as many assertions are weakened" );
-  #endif
 }
 
 
