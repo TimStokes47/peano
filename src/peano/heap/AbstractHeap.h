@@ -12,11 +12,18 @@ namespace peano {
 }
 
 
+#include "tarch/logging/Log.h"
+
 #include <set>
 
 
 class peano::heap::AbstractHeap {
   protected:
+    /**
+     * Logging device.
+     */
+    static tarch::logging::Log _log;
+
     static std::set< AbstractHeap* >  _registeredHeaps;
 
     static void registerHeap( AbstractHeap* newHeap );
