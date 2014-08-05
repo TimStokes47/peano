@@ -238,6 +238,22 @@ class peano::heap::BoundaryDataExchanger {
      * buffer), copy it into the result data structure and send it back. The
      * copying might also induce some type conversion if only subsets of data
      * are actually exchanged via mpi.
+     *
+     * !!! Validation
+     *
+     * If you are in assert mode, the receive operation also validates the
+     * received data with the arguments you hand in, i.e. it looks whether the
+     * data in the receive buffer fits to the specification. These checks
+     * unfortunately have to fail with the buffered boundary exchanger as this
+     * one does remove all the additional meta data from the records that
+     * encode position and level. I hence make a kind of nasty assertion that
+     * is disabled if data is sent via the buffered exchanger, i.e. without any
+     * communication in the background.
+     *
+     * @param position Used for validation, i.e. to ensure that the right
+     *                 record is sent back
+     * @param level    Used for validation, i.e. to ensure that the right
+     *                 record is sent back
      */
     std::vector< Data > receiveData(
       const tarch::la::Vector<DIMENSIONS, double>&  position,
