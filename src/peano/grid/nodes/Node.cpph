@@ -214,6 +214,9 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
       tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
     }
+    else {
+      logInfo( "updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(...)", "skip reduction from rank " << currentWorker );
+    }
     logTraceOutWith1Argument( "updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(...)", state.toString() );
   #endif
 }
