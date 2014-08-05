@@ -210,8 +210,7 @@ void __THIS_QUALIFIED_TYPENAME__::plotVertex(
       !fineGridVertex.isOutside() &&
       fineGridVertex.isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() );
     #else
-    const bool plotValue =
-      !fineGridVertex.isOutside();
+    const bool plotValue = true;
     #endif
 
     const double value = plotValue ? fineGridVertex.PARAM1() : 0.0;
