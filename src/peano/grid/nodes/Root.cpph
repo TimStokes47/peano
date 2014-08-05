@@ -700,9 +700,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           !tarch::parallel::Node::getInstance().isGlobalMaster()
         ) {
           Base::_eventHandle.endIteration(state);
-          if ( Base::_eventHandle.communicationSpecification().shallKernelControlHeap() ) {
-            peano::heap::AbstractHeap::allHeapsFinishedToSendSynchronousData();
-          }
           sendCellAndVerticesToMaster(
             state,
             fineGridCells[THREE_POWER_D/2],
@@ -710,6 +707,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
             fineGridVertices,
             false
           );
+          if ( Base::_eventHandle.communicationSpecification().shallKernelControlHeap() ) {
+            peano::heap::AbstractHeap::allHeapsFinishedToSendSynchronousData();
+          }
         }
         else if (
           Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Skip
@@ -717,9 +717,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           !tarch::parallel::Node::getInstance().isGlobalMaster()
         ) {
           Base::_eventHandle.endIteration(state);
-          if ( Base::_eventHandle.communicationSpecification().shallKernelControlHeap() ) {
-            peano::heap::AbstractHeap::allHeapsFinishedToSendSynchronousData();
-          }
           sendCellAndVerticesToMaster(
             state,
             fineGridCells[THREE_POWER_D/2],
@@ -727,6 +724,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
             fineGridVertices,
             true
           );
+          if ( Base::_eventHandle.communicationSpecification().shallKernelControlHeap() ) {
+            peano::heap::AbstractHeap::allHeapsFinishedToSendSynchronousData();
+          }
         }
 
         if (
@@ -772,9 +772,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     !tarch::parallel::Node::getInstance().isGlobalMaster()
   ) {
     Base::_eventHandle.endIteration(state);
-    if ( Base::_eventHandle.communicationSpecification().shallKernelControlHeap() ) {
-      peano::heap::AbstractHeap::allHeapsFinishedToSendSynchronousData();
-    }
     fineGridEnumerator.setOffset( tarch::la::Vector<DIMENSIONS,int>(1) );
     sendCellAndVerticesToMaster(
       state,
@@ -783,6 +780,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       fineGridVertices,
       false
     );
+    if ( Base::_eventHandle.communicationSpecification().shallKernelControlHeap() ) {
+      peano::heap::AbstractHeap::allHeapsFinishedToSendSynchronousData();
+    }
   }
 
   if (
@@ -798,10 +798,10 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    Base::_eventHandle.endIteration(state);
     if ( Base::_eventHandle.communicationSpecification().shallKernelControlHeap() ) {
       peano::heap::AbstractHeap::allHeapsFinishedToSendSynchronousData();
     }
-    Base::_eventHandle.endIteration(state);
   }
   #else
   Base::_eventHandle.endIteration(state);
