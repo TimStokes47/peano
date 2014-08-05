@@ -158,11 +158,33 @@ struct peano::CommunicationSpecification {
     static CommunicationSpecification getPessimisticSpecification();
 
     /**
-     * @param exchangeMasterWorkerData
-     * @param exchangeWorkerMasterData
-     * @param exchangeStateAsPreamblePostamble
+     * !!! Kernel controls the heap
+     *
+     * One of the fundamental ideas of the heap is that the mappings are
+     * responsible to notify when data will be exchanged. This allows
+     * communication patterns that overlap multiple iterations and thus
+     * are fast: you may send away data and receive it ten iterations
+     * later.
+     *
+     * In practice, many applications cannot use this feature. They require
+     * data exchanged via heap in each iteration. Also, many applications
+     * prefer to have aggressive exchanges (read: multiple sweeps over the
+     * grid with beginIteration() as late as possible) and thus do not fit
+     * to the heap signature. As a solution, you may delegate the heap
+     * management to the kernel which frees you from calling the start and
+     * finished operations yourself. In turn, you have to implement a
+     * Jacobi-style data exchange pattern, i.e. if you send data through the
+     * heap in one iteration, you have to receive it right in the next one.
+     *
+     * If one mapping of an adapter sets this flag, it holds for the whole
+     * adapter. Please note that you may not open any communcation channel
+     * manually then.
+     *
+     * @param exchangeMasterWorkerData  See enum description for variants
+     * @param exchangeWorkerMasterData  See enum description for variants
+     * @param controlHeapInKernel       See documentation above
      */
-    CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_ );
+    CommunicationSpecification( ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool controlHeapInKernel_ );
 
 
     Action sendStateBackToMaster() const;
@@ -173,10 +195,14 @@ struct peano::CommunicationSpecification {
 
     std::string toString() const;
 
+    bool shallKernelControlHeap() const;
+
     static peano::CommunicationSpecification combine(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs);
   private:
     ExchangeMasterWorkerData  exchangeMasterWorkerData;
     ExchangeWorkerMasterData  exchangeWorkerMasterData;
+
+    bool                      controlHeapInKernel;
 };
 
 

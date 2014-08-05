@@ -38,6 +38,7 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
   #endif
 
   tarch::services::ServiceRepository::getInstance().addService( this, "peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>" );
+  registerHeap( this );
 }
 
 

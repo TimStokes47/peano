@@ -7,6 +7,7 @@
 #include <vector>
 #include <list>
 
+#include "peano/heap/AbstractHeap.h"
 #include "peano/heap/SendReceiveTask.h"
 #include "peano/heap/SynchronousDataExchanger.h"
 #include "peano/heap/PlainBoundaryDataExchanger.h"
@@ -207,7 +208,7 @@ namespace peano {
  * @author Kristof Unterweger, Tobias Weinzierl
  */
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
-class peano::heap::Heap: public tarch::services::Service {
+class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractHeap {
   private:
     /**
      * Logging device.
@@ -270,6 +271,83 @@ class peano::heap::Heap: public tarch::services::Service {
      */
     ~Heap();
 
+  protected:
+    /**
+     * Start to send data
+     *
+     * This operation is typically called in beginIteration(). However, please
+     * be aware that the data from the master is received and merged before.
+     *
+     * This operation is to be re-called in each traversal and should be
+     * followed by a finish call in the each traversal as well.
+     *
+     * You are not allowed to send heap data from the master to the worker or
+     * back before this operation has been called. This holds also for joins
+     * and merges - if they exchange heap data, this operation has to be called
+     * before. Synchronous means that you receive all sent data in the very
+     * same iteration.
+     */
+    virtual void startToSendSynchronousData();
+
+    /**
+     * Counterpart of startToSendSynchronousData().
+     *
+     * If you exchange data along the boundaries, you have to call this variant
+     * of start to send together with its finish operation later on. It opens
+     * a kind of communication channel for boundary data exchange. Boundary
+     * data is not received on the addressee side before the next iteration.
+     * You even might decide to wait a couple of iterations before you receive
+     * the boundary records.
+     *
+     * Please hand in the state's traversal bool that informs the heap about
+     * the direction of the Peano space-filling curve.
+     */
+    virtual void startToSendBoundaryData(bool isTraversalInverted);
+
+    /**
+     * Stop to send data
+     *
+     * Counterpart of startToSendSynchronousData(). Should be called around in each
+     * traversal where you've also called startToSendSynchronousData(). When this
+     * operation is called, you are not allowed to send heap data anymore.
+     *
+     * This operation runs through all sent master-worker and join-fork
+     * messages and waits for each sent
+     * message until the corresponding non-blocking MPI request is freed, i.e.
+     * until the message has left the system. As the underlying MPI_Test
+     * modifies the MPI handles, the operation is not const. The method also
+     * has some deadlock detection.
+     *
+     * !!! Frequently Done Bug
+     *
+     * Please note that the event prepareSendToMaster() is invoked by Peano
+     * after endIteration() is called. Many heap users send data to the master
+     * in prepareSendToMaster(). For such codes, you may not call
+     * finishedToSendData() in endIteration(). Instead, you have to notify the
+     * heap that you finished to send in prepareSendToMaster().
+     *
+     * This induces an error on the global master where prepareSendToMaster()
+     * is never called. So, you have to call finish in endIteration() as well -
+     * but if and only if you are on the global master.
+     */
+    virtual void finishedToSendSynchronousData();
+
+    /**
+     * Finish boundary data exchange
+     *
+     * Counterpart of start operation. Should be called in endIteration().
+     *
+     * !!! Parallelisation with MPI
+     *
+     * If you parallelise with MPI, this operation has to be called by
+     * endIteration() at the end of the traversal of the whole grid and not
+     * only the local data structure. As a consequence, you may not combine
+     * this operation with the communication specification
+     * SendDataAndStateAfterProcessingOfLocalSubtree or
+     * MaskOutWorkerMasterDataAndStateExchange as these two guys call
+     * endIteration() too early.
+     */
+    virtual void finishedToSendBoundaryData(bool isTraversalInverted);
   public:
     typedef Data               HeapData;
     typedef std::vector<Data>  HeapEntries;
@@ -361,12 +439,6 @@ class peano::heap::Heap: public tarch::services::Service {
     /**
      * Shuts down the memory management for heap data and frees all allocated
      * memory.
-     *
-     * There is a slight difference between
-     * terminate() and shutdown(). The counterpart of shutdown() is init() and
-     * both operations are called once throughout the whole application
-     * lifetime. In contrast, terminate() and restart() are called several
-     * times.
      */
     void shutdown();
 
@@ -448,83 +520,6 @@ class peano::heap::Heap: public tarch::services::Service {
      * @return Brief description of heap incl its identifier (if set)
      */
     std::string toString() const;
-
-    /**
-     * Start to send data
-     *
-     * This operation is typically called in beginIteration(). However, please
-     * be aware that the data from the master is received and merged before.
-     *
-     * This operation is to be re-called in each traversal and should be
-     * followed by a finish call in the each traversal as well.
-     *
-     * You are not allowed to send heap data from the master to the worker or
-     * back before this operation has been called. This holds also for joins
-     * and merges - if they exchange heap data, this operation has to be called
-     * before. Synchronous means that you receive all sent data in the very
-     * same iteration.
-     */
-    void startToSendSynchronousData();
-
-    /**
-     * Counterpart of startToSendSynchronousData().
-     *
-     * If you exchange data along the boundaries, you have to call this variant
-     * of start to send together with its finish operation later on. It opens
-     * a kind of communication channel for boundary data exchange. Boundary
-     * data is not received on the addressee side before the next iteration.
-     * You even might decide to wait a couple of iterations before you receive
-     * the boundary records.
-     *
-     * Please hand in the state's traversal bool that informs the heap about
-     * the direction of the Peano space-filling curve.
-     */
-    void startToSendBoundaryData(bool isTraversalInverted);
-
-    /**
-     * Stop to send data
-     *
-     * Counterpart of startToSendSynchronousData(). Should be called around in each
-     * traversal where you've also called startToSendSynchronousData(). When this
-     * operation is called, you are not allowed to send heap data anymore.
-     *
-     * This operation runs through all sent master-worker and join-fork
-     * messages and waits for each sent
-     * message until the corresponding non-blocking MPI request is freed, i.e.
-     * until the message has left the system. As the underlying MPI_Test
-     * modifies the MPI handles, the operation is not const. The method also
-     * has some deadlock detection.
-     *
-     * !!! Frequently Done Bug
-     *
-     * Please note that the event prepareSendToMaster() is invoked by Peano
-     * after endIteration() is called. Many heap users send data to the master
-     * in prepareSendToMaster(). For such codes, you may not call
-     * finishedToSendData() in endIteration(). Instead, you have to notify the
-     * heap that you finished to send in prepareSendToMaster().
-     *
-     * This induces an error on the global master where prepareSendToMaster()
-     * is never called. So, you have to call finish in endIteration() as well -
-     * but if and only if you are on the global master.
-     */
-    void finishedToSendSynchronousData();
-
-    /**
-     * Finish boundary data exchange
-     *
-     * Counterpart of start operation. Should be called in endIteration().
-     *
-     * !!! Parallelisation with MPI
-     *
-     * If you parallelise with MPI, this operation has to be called by
-     * endIteration() at the end of the traversal of the whole grid and not
-     * only the local data structure. As a consequence, you may not combine
-     * this operation with the communication specification
-     * SendDataAndStateAfterProcessingOfLocalSubtree or
-     * MaskOutWorkerMasterDataAndStateExchange as these two guys call
-     * endIteration() too early.
-     */
-    void finishedToSendBoundaryData(bool isTraversalInverted);
 
     /**
      * Plots statistics for this heap data.

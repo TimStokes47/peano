@@ -6,9 +6,10 @@
 #include <sstream>
 
 
-peano::CommunicationSpecification::CommunicationSpecification(ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_ ):
+peano::CommunicationSpecification::CommunicationSpecification(ExchangeMasterWorkerData  exchangeMasterWorkerData_, ExchangeWorkerMasterData  exchangeWorkerMasterData_, bool controlHeapInKernel_ ):
   exchangeMasterWorkerData( exchangeMasterWorkerData_ ),
-  exchangeWorkerMasterData( exchangeWorkerMasterData_ ) {
+  exchangeWorkerMasterData( exchangeWorkerMasterData_ ),
+  controlHeapInKernel(controlHeapInKernel_) {
 }
 
 
@@ -46,10 +47,18 @@ std::string peano::CommunicationSpecification::toString() const {
       msg << "MaskOutWorkerMasterDataAndStateExchange";
       break;
   }
+
+  msg << ",control-heap=" << controlHeapInKernel;
+
   msg << ")";
+
   return msg.str();
 }
 
+
+bool peano::CommunicationSpecification::shallKernelControlHeap() const {
+  return controlHeapInKernel;
+}
 
 
 peano::CommunicationSpecification operator&(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs) {
@@ -98,7 +107,7 @@ peano::CommunicationSpecification peano::CommunicationSpecification::combine(con
 
 
 
-  const peano::CommunicationSpecification result(exchangeMasterWorkerData,exchangeWorkerMasterData);
+  const peano::CommunicationSpecification result(exchangeMasterWorkerData,exchangeWorkerMasterData, lhs.controlHeapInKernel | rhs.controlHeapInKernel);
 
   logTraceOutWith1Argument("operator&(...)",result.toString());
   return result;
@@ -106,12 +115,12 @@ peano::CommunicationSpecification peano::CommunicationSpecification::combine(con
 
 
 peano::CommunicationSpecification peano::CommunicationSpecification::getMinimalSpecification() {
-  return CommunicationSpecification(peano::CommunicationSpecification::MaskOutMasterWorkerDataAndStateExchange,peano::CommunicationSpecification::MaskOutWorkerMasterDataAndStateExchange);
+  return CommunicationSpecification(peano::CommunicationSpecification::MaskOutMasterWorkerDataAndStateExchange,peano::CommunicationSpecification::MaskOutWorkerMasterDataAndStateExchange,false);
 }
 
 
 peano::CommunicationSpecification peano::CommunicationSpecification::getPessimisticSpecification() {
-  return CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime);
+  return CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime,false);
 }
 
 
