@@ -9,7 +9,7 @@ void peano::heap::AbstractHeap::registerHeap( AbstractHeap* newHeap ) {
 }
 
 
-void peano::heap::AbstractHeap::heapsStartToSendSynchronousData() {
+void peano::heap::AbstractHeap::allHeapsStartToSendSynchronousData() {
   for (
     std::set< peano::heap::AbstractHeap* >::iterator p = _registeredHeaps.begin();
     p != _registeredHeaps.end();
@@ -20,7 +20,7 @@ void peano::heap::AbstractHeap::heapsStartToSendSynchronousData() {
 }
 
 
-void peano::heap::AbstractHeap::heapsStartToSendBoundaryData(bool isTraversalInverted) {
+void peano::heap::AbstractHeap::allHeapsStartToSendBoundaryData(bool isTraversalInverted) {
   for (
     std::set< peano::heap::AbstractHeap* >::iterator p = _registeredHeaps.begin();
     p != _registeredHeaps.end();
@@ -31,7 +31,7 @@ void peano::heap::AbstractHeap::heapsStartToSendBoundaryData(bool isTraversalInv
 }
 
 
-void peano::heap::AbstractHeap::heapsFinishToSendSynchronousData() {
+void peano::heap::AbstractHeap::allHeapsFinishedToSendSynchronousData() {
   for (
     std::set< peano::heap::AbstractHeap* >::iterator p = _registeredHeaps.begin();
     p != _registeredHeaps.end();
@@ -42,7 +42,7 @@ void peano::heap::AbstractHeap::heapsFinishToSendSynchronousData() {
 }
 
 
-void peano::heap::AbstractHeap::heapsFinishToSendBoundaryData(bool isTraversalInverted) {
+void peano::heap::AbstractHeap::allHeapsFinishedToSendBoundaryData(bool isTraversalInverted) {
   for (
     std::set< peano::heap::AbstractHeap* >::iterator p = _registeredHeaps.begin();
     p != _registeredHeaps.end();

@@ -20,7 +20,7 @@ class peano::heap::AbstractHeap {
     static std::set< AbstractHeap* >  _registeredHeaps;
 
     static void registerHeap( AbstractHeap* newHeap );
-  protected:
+  public:
     /**
      * Start to send data
      *
@@ -35,6 +35,11 @@ class peano::heap::AbstractHeap {
      * and merges - if they exchange heap data, this operation has to be called
      * before. Synchronous means that you receive all sent data in the very
      * same iteration.
+     *
+     * !!! Communication specification
+     *
+     * If your communication specification makes the kernel responsible to
+     * manage the heaps, do not call this operation yourself.
      */
     virtual void startToSendSynchronousData() = 0;
 
@@ -50,6 +55,11 @@ class peano::heap::AbstractHeap {
      *
      * Please hand in the state's traversal bool that informs the heap about
      * the direction of the Peano space-filling curve.
+     *
+     * !!! Communication specification
+     *
+     * If your communication specification makes the kernel responsible to
+     * manage the heaps, do not call this operation yourself.
      */
     virtual void startToSendBoundaryData(bool isTraversalInverted) = 0;
 
@@ -78,6 +88,11 @@ class peano::heap::AbstractHeap {
      * This induces an error on the global master where prepareSendToMaster()
      * is never called. So, you have to call finish in endIteration() as well -
      * but if and only if you are on the global master.
+     *
+     * !!! Communication specification
+     *
+     * If your communication specification makes the kernel responsible to
+     * manage the heaps, do not call this operation yourself.
      */
     virtual void finishedToSendSynchronousData() = 0;
 
@@ -95,17 +110,21 @@ class peano::heap::AbstractHeap {
      * SendDataAndStateAfterProcessingOfLocalSubtree or
      * MaskOutWorkerMasterDataAndStateExchange as these two guys call
      * endIteration() too early.
+     *
+     * !!! Communication specification
+     *
+     * If your communication specification makes the kernel responsible to
+     * manage the heaps, do not call this operation yourself.
      */
     virtual void finishedToSendBoundaryData(bool isTraversalInverted) = 0;
 
-  public:
-    static void heapsStartToSendSynchronousData();
+    static void allHeapsStartToSendSynchronousData();
 
-    static void heapsStartToSendBoundaryData(bool isTraversalInverted);
+    static void allHeapsStartToSendBoundaryData(bool isTraversalInverted);
 
-    static void heapsFinishToSendSynchronousData();
+    static void allHeapsFinishedToSendSynchronousData();
 
-    static void heapsFinishToSendBoundaryData(bool isTraversalInverted);
+    static void allHeapsFinishedToSendBoundaryData(bool isTraversalInverted);
 };
 
 #endif
