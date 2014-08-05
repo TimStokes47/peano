@@ -484,7 +484,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   #ifdef Parallel
   if ( Base::_eventHandle.communicationSpecification().shallKernelControlHeap() ) {
-    peano::heap::AbstractHeap::allHeapsStartToSendBoundaryData(_stateData.getIsTraversalInverted());
+    peano::heap::AbstractHeap::allHeapsStartToSendBoundaryData(state.isTraversalInverted());
   }
 
   if (
@@ -794,7 +794,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if ( Base::_eventHandle.communicationSpecification().shallKernelControlHeap() ) {
-    peano::heap::AbstractHeap::allHeapsFinishedToSendBoundaryData(_stateData.getIsTraversalInverted());
+    peano::heap::AbstractHeap::allHeapsFinishedToSendBoundaryData( state.isTraversalInverted() );
   }
 
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
