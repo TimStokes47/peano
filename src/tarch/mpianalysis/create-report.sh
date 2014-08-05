@@ -6,7 +6,14 @@ echo Usage: ./create-report.sh peano-output-file number-of-ranks
 echo   You have to switch the tracing information on to make the script work
 echo   You have to ensure that pydot is in your path due to environment 
 echo     variable PYTHONPATH 
-
+echo
+echo PYTHONPATH is set to $PYTHONPATH
+echo Python version:
+python --version
+echo
+echo
+echo  Press return to start processing
+read -s
 
 
 
@@ -38,6 +45,8 @@ mv tmp.runtimes.calendar.png $1.runtimes.calendar.png
 mv tmp.runtimes.log.cpu.png $1.runtimes.log.cpu.png
 mv tmp.runtimes.log.calendar.png $1.runtimes.log.calendar.png
 
+echo  Press return to continue with profiles for individual ranks
+read -s
 
 
 for (( r=2; r<$2; r++ ))
