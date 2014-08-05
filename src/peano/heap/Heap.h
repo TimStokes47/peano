@@ -271,7 +271,10 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      */
     ~Heap();
 
-  protected:
+  public:
+    typedef Data               HeapData;
+    typedef std::vector<Data>  HeapEntries;
+
     /**
      * Start to send data
      *
@@ -348,9 +351,6 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      * endIteration() too early.
      */
     virtual void finishedToSendBoundaryData(bool isTraversalInverted);
-  public:
-    typedef Data               HeapData;
-    typedef std::vector<Data>  HeapEntries;
 
     /**
      * The HeapData class is a singleton, thus one needs to
