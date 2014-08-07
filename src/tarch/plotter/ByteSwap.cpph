@@ -1,6 +1,8 @@
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
+
 template <class InType>
-InType tarch::plotter::ByteSwap(const InType inVal)
-{
+InType tarch::plotter::byteSwap(const InType inVal) {
   InType retVal;
   char *toConvert = ( char* ) & inVal;
   char *returnVal = (char* ) & retVal;
@@ -11,4 +13,14 @@ InType tarch::plotter::ByteSwap(const InType inVal)
     returnVal[i] = toConvert[size - 1 - i];
 
   return retVal;	
+}
+
+
+template <class InType>
+InType tarch::plotter::byteSwapForParaviewBinaryFiles(const InType inVal) {
+  #if defined(LittleEndian)
+  return byteSwap(inVal);
+  #else
+  return inVal;
+  #endif
 }
