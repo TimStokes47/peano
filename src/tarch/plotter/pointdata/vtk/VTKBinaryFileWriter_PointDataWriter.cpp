@@ -97,27 +97,27 @@ void tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::PointDataWriter::plot(
   if (_myWriter._precision < 7){
     float tmp;
     tmp = value(0);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = value(1);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = 0.0;
     for (int i=2; i<_recordsPerPoint; i++) {
-      tmp = ByteSwap(tmp);
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
       _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     }
   } else {
     double tmp;
     tmp = value(0);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = value(1);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = 0.0;
     for (int i=2; i<_recordsPerPoint; i++) {
-      tmp = ByteSwap(tmp);
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
       _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     }
   }
@@ -151,24 +151,24 @@ void tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::PointDataWriter::plot(
   if (_myWriter._precision < 7){
     float tmp;
     tmp = value(0);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = value(1);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = value(2);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
   } else {
     double tmp;
     tmp = value(0);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = value(1);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = value(2);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
   }
 

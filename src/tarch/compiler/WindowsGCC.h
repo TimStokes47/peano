@@ -185,3 +185,5 @@
 #ifndef noManualInlining
 #define UseManualInlining
 #endif
+
+#define LittleEndian

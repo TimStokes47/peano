@@ -61,10 +61,10 @@ void tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::writeToFile( const std
 
     int itmp;
     int rone = 1;
-    rone = ByteSwap(rone);
+    rone = byteSwapForParaviewBinaryFiles(rone);
     for(int i = 0; i < _currentPointNumber; i++) {
       out.write( reinterpret_cast<char*>(&rone) , sizeof(float));
-      itmp = ByteSwap(i);
+      itmp = byteSwapForParaviewBinaryFiles(i);
       out.write( reinterpret_cast<char*>(&itmp) , sizeof(float));
     }
     out << std::endl << std::endl;
@@ -126,24 +126,24 @@ int tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::plotPoint(const tarch::
   if (_precision < 7){
     float tmp;
     tmp = position(0);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _streamPositions.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = position(1);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _streamPositions.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = position(2);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _streamPositions.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
   } else {
     double tmp;
     tmp = position(0);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _streamPositions.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = position(1);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _streamPositions.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = position(2);
-    tmp = ByteSwap(tmp);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
     _streamPositions.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
   }
 
