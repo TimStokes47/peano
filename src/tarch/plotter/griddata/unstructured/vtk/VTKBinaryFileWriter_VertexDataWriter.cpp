@@ -101,7 +101,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexDat
     tmp = byteSwapForParaviewBinaryFiles(tmp);
     _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     tmp = 0.0;
-    for (int i=2; i<_recordsPerVertex; i++) {
+    for (int i=1; i<_recordsPerVertex; i++) {
       tmp = byteSwapForParaviewBinaryFiles(tmp);
       _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
     }

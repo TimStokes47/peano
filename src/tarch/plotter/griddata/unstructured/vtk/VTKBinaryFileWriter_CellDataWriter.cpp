@@ -1,7 +1,5 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTKBinaryFileWriter.h"
-
-
-xxxx  Marion schmeisst mich grad raus
+#include "tarch/plotter/ByteSwap.h"
 
 #include <limits>
 #include <iomanip>
@@ -102,12 +100,27 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataW
   }
 
   _lastWriteCommandCellNumber = index;
-  _out << value << " ";
-  for (int i=1; i<_recordsPerCell; i++) {
-    _out << 0.0 << " ";
+  if (_myWriter._precision < 7){
+    float tmp;
+    tmp = value;
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = 0.0;
+    for (int i=1; i<_recordsPerCell; i++) {
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
+  } else {
+    double tmp;
+    tmp = value;
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = 0.0;
+    for (int i=1; i<_recordsPerCell; i++) {
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
   }
-
-  _out << std::endl;
 
   if (value<_minValue) _minValue = value;
   if (value>_maxValue) _maxValue = value;
@@ -129,12 +142,34 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataW
   }
 
   _lastWriteCommandCellNumber = index;
-  _out << value(0) << " ";
-  _out << value(1) << " ";
-  for (int i=2; i<_recordsPerCell; i++) {
-    _out << 0.0 << " ";
+
+  if (_myWriter._precision < 7){
+    float tmp;
+    tmp = value(0);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = value(1);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = 0.0;
+    for (int i=2; i<_recordsPerCell; i++) {
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
+  } else {
+    double tmp;
+    tmp = value(0);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = value(1);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = 0.0;
+    for (int i=2; i<_recordsPerCell; i++) {
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
   }
-  _out << std::endl;
 
   if (value(0)<_minValue) _minValue = value(0);
   if (value(0)>_maxValue) _maxValue = value(0);
@@ -161,13 +196,39 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataW
   }
 
   _lastWriteCommandCellNumber = index;
-  _out << value(0) << " ";
-  _out << value(1) << " ";
-  _out << value(2) << " ";
-  for (int i=3; i<_recordsPerCell; i++) {
-    _out << 0.0 << " ";
+  if (_myWriter._precision < 7){
+    float tmp;
+    tmp = value(0);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = value(1);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = value(2);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = 0.0;
+    for (int i=3; i<_recordsPerCell; i++) {
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
+  } else {
+    double tmp;
+    tmp = value(0);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = value(1);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = value(2);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = 0.0;
+    for (int i=3; i<_recordsPerCell; i++) {
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
   }
-  _out << std::endl;
 
   if (value(0)<_minValue) _minValue = value(0);
   if (value(0)>_maxValue) _maxValue = value(0);

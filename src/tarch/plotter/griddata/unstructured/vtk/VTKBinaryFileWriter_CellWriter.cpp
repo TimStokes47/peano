@@ -1,4 +1,5 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTKBinaryFileWriter.h"
+#include "tarch/plotter/ByteSwap.h"
 
 
 tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellWriter::CellWriter(VTKBinaryFileWriter& writer):
