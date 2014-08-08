@@ -267,7 +267,13 @@ class tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter:
           CellDataWriter(const std::string& dataIdentifier, VTKBinaryFileWriter& writer, int recordsPerCell);
 
           CellDataWriter(const CellDataWriter& copy):
-            _myWriter(copy._myWriter) {
+        	_identifier("undef"),
+        	_lastWriteCommandCellNumber(-1),
+            _myWriter(copy._myWriter),
+            _out(),
+            _recordsPerCell(-1),
+            _minValue(0.0),
+            _maxValue(0.0) {
             assertion(false);
           }
       public:
@@ -325,7 +331,12 @@ class tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter:
         #endif
 
         VertexDataWriter(const VertexDataWriter& copy):
-          _myWriter(copy._myWriter) {
+          _lastWriteCommandVertexNumber(-1),
+          _myWriter(copy._myWriter),
+          _out(),
+          _recordsPerVertex(-1),
+          _minValue(0.0),
+          _maxValue(0.0) {
           assertion(false);
         }
       public:
