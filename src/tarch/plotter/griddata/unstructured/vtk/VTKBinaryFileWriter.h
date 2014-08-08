@@ -80,11 +80,11 @@ class tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter:
      */
     int _numberOfCellEntries;
 
-    std::string _vertexDescription;
-    std::string _cellDescription;
-    std::string _cellTypeDescription;
-    std::string _vertexDataDescription;
-    std::string _cellDataDescription;
+    std::stringstream _vertexDescription;
+    std::stringstream _cellDescription;
+    std::stringstream _cellTypeDescription;
+    std::stringstream _vertexDataDescription;
+    std::stringstream _cellDataDescription;
 
     void validateDataWriterIdentifier( const std::string& identifier ) const;
 
@@ -141,7 +141,7 @@ class tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter:
         /**
          * Output stream
          */
-        std::ostringstream _out;
+        std::stringstream _out;
 
         VertexWriter(VTKBinaryFileWriter& writer);
 
@@ -198,12 +198,12 @@ class tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter:
         /**
          * Output stream
          */
-        std::ostringstream _cellOut;
+        std::stringstream _cellOut;
 
         /**
          * Output stream
          */
-        std::ostringstream _cellTypeOut;
+        std::stringstream _cellTypeOut;
 
         CellWriter(VTKBinaryFileWriter& writer);
 
@@ -258,7 +258,7 @@ class tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter:
           /**
            * Output stream
            */
-          std::ostringstream _out;
+          std::stringstream _out;
 
           int _recordsPerCell;
 
@@ -306,7 +306,7 @@ class tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter:
         /**
          * Output stream
          */
-        std::ostringstream _out;
+        std::stringstream _out;
 
         int _recordsPerVertex;
 

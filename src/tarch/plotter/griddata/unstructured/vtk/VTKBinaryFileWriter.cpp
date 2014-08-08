@@ -36,11 +36,11 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::clear() {
   _numberOfVertices    = 0;
   _numberOfCells       = 0;
   _numberOfCellEntries = 0;
-  _vertexDescription      = "";
-  _cellDescription        = "";
-  _cellTypeDescription    = "";
-  _vertexDataDescription  = "";
-  _cellDataDescription    = "";
+  _vertexDescription.clear();
+  _cellDescription.clear();
+  _cellTypeDescription.clear();
+  _vertexDataDescription.clear();
+  _cellDataDescription.clear();
 }
 
 
@@ -51,29 +51,28 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::writeToFi
   out.open( filename.c_str() );
   if ( (!out.fail()) && out.is_open() ) {
     _log.debug( "close()", "opened data file " + filename );
-    out << std::setprecision(_precision);
 
     out << HEADER << std::endl << std::endl;
 
     out << "DATASET UNSTRUCTURED_GRID" << std::endl
         << "POINTS " << _numberOfVertices << " " << _doubleOrFloat << std::endl << std::endl;
-    out << _vertexDescription << std::endl << std::endl;
+    out << _vertexDescription.rdbuf() << std::endl << std::endl;
 
     out << "CELLS " << _numberOfCells
         << " " << _numberOfCellEntries << std::endl << std::endl;
-    out << _cellDescription << std::endl << std::endl;
+    out << _cellDescription.rdbuf() << std::endl << std::endl;
 
     out << "CELL_TYPES " << _numberOfCells << std::endl << std::endl;
-    out << _cellTypeDescription << std::endl << std::endl;
+    out << _cellTypeDescription.rdbuf() << std::endl << std::endl;
 
-    if (_numberOfVertices>0 && !_vertexDataDescription.empty()) {
+    if (_numberOfVertices>0 ) {
       out << "POINT_DATA " << _numberOfVertices << std::endl << std::endl;
-      out << _vertexDataDescription << std::endl << std::endl;
+      out << _vertexDataDescription.rdbuf() << std::endl << std::endl;
     }
 
-    if (_numberOfCells>0 && !_cellDataDescription.empty() ) {
+    if (_numberOfCells>0 ) {
       out << "CELL_DATA " << _numberOfCells << std::endl << std::endl;
-      out << _cellDataDescription << std::endl << std::endl;
+      out << _cellDataDescription.rdbuf() << std::endl << std::endl;
     }
 
     _log.debug( "close()", "data written to " + filename );

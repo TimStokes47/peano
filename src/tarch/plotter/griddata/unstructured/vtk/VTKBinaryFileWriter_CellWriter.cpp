@@ -27,11 +27,17 @@ int tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellWriter
   _currentCellNumber++;
   _cellListEntries += 2;
 
-  _cellOut << "1" << " "
-           << vertexIndex << " "
-           << std::endl;
+  int tmp;
+  tmp = 1;
+  tmp = byteSwapForParaviewBinaryFiles(tmp);
+  _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+  tmp = vertexIndex;
+  tmp = byteSwapForParaviewBinaryFiles(tmp);
+  _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
 
-  _cellTypeOut << "1" << std::endl;
+  tmp = 1;
+  tmp = byteSwapForParaviewBinaryFiles(tmp);
+  _cellTypeOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
 
   return _currentCellNumber-1;
 }
@@ -53,9 +59,10 @@ int tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellWriter
     tmp = byteSwapForParaviewBinaryFiles(tmp);
     _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
   }
+
   tmp = 11;
   tmp = byteSwapForParaviewBinaryFiles(tmp);
-  _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+  _cellTypeOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
 
   return _currentCellNumber-1;
 }
@@ -77,9 +84,10 @@ int tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellWriter
     tmp = byteSwapForParaviewBinaryFiles(tmp);
     _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
   }
+
   tmp = 8;
   tmp = byteSwapForParaviewBinaryFiles(tmp);
-  _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+  _cellTypeOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
 
   return _currentCellNumber-1;
 }
@@ -101,9 +109,10 @@ int tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellWriter
     tmp = byteSwapForParaviewBinaryFiles(tmp);
     _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
   }
+
   tmp = 3;
   tmp = byteSwapForParaviewBinaryFiles(tmp);
-  _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+  _cellTypeOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
 
   return _currentCellNumber-1;
 }
@@ -125,9 +134,10 @@ int tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellWriter
     tmp = byteSwapForParaviewBinaryFiles(tmp);
     _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
   }
+
   tmp = 5;
   tmp = byteSwapForParaviewBinaryFiles(tmp);
-  _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+  _cellTypeOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
 
   return _currentCellNumber-1;
 }
@@ -141,8 +151,8 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellWrite
   _myWriter._numberOfCells       = _currentCellNumber;
   _myWriter._numberOfCellEntries = _cellListEntries;
 
-  _myWriter._cellDescription      = _cellOut.str();
-  _myWriter._cellTypeDescription  = _cellTypeOut.str();
+  _myWriter._cellDescription      << _cellOut;
+  _myWriter._cellTypeDescription  << _cellTypeOut;
 
   _currentCellNumber = -1;
   _cellListEntries   = -1;

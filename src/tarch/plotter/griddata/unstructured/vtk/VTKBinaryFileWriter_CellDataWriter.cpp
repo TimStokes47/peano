@@ -16,7 +16,6 @@ tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataWriter
   _maxValue(std::numeric_limits<double>::min()) {
   assertion(_recordsPerCell>0);
 
-  _out << std::setprecision(_myWriter._precision);
   if (_recordsPerCell!=3) {
     _out << "SCALARS " << dataIdentifier << " " << _myWriter._doubleOrFloat << " " << _recordsPerCell << std::endl
          << "LOOKUP_TABLE default" << std::endl;
@@ -29,7 +28,8 @@ tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataWriter
 
 tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataWriter::~CellDataWriter() {
   if (_lastWriteCommandCellNumber>=-1) {
-    close();
+    // @todo comment in again
+//    close();
   }
 }
 
@@ -63,7 +63,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataW
 
   if (_lastWriteCommandCellNumber>=-1) {
     _out << std::endl;
-    _myWriter._cellDataDescription += _out.str();
+    _myWriter._cellDataDescription << _out;
   }
   _lastWriteCommandCellNumber = -2;
 }

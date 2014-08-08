@@ -8,7 +8,6 @@ tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexWriter::
   _myWriter(writer),
   _out() {
   assertion( _myWriter._numberOfVertices==0 );
-  _out << std::setprecision(_myWriter._precision);
 }
 
 
@@ -75,6 +74,6 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexWri
 
 
   _myWriter._numberOfVertices  = _currentVertexNumber;
-  _myWriter._vertexDescription = _out.str();
+  _myWriter._vertexDescription << _out;
   _currentVertexNumber         = -1;
 }

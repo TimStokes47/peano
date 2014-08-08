@@ -15,7 +15,6 @@ tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexDataWrit
   _maxValue(std::numeric_limits<double>::min()) {
   assertion(_recordsPerVertex>0);
 
-  _out << std::setprecision(_myWriter._precision);
   if (_recordsPerVertex!=3) {
     _out << "SCALARS " << dataIdentifier << " " << _myWriter._doubleOrFloat << " " << _recordsPerVertex << std::endl
          << "LOOKUP_TABLE default" << std::endl;
@@ -32,7 +31,8 @@ tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexDataWrit
 
 tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexDataWriter::~VertexDataWriter() {
   if (_lastWriteCommandVertexNumber>=-1) {
-    close();
+    // @todo comment in again
+//    close();
   }
 }
 
@@ -66,7 +66,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexDat
 
   if (_lastWriteCommandVertexNumber>=-1) {
     _out << std::endl;
-    _myWriter._vertexDataDescription += _out.str();
+    _myWriter._vertexDataDescription << _out;
   }
   _lastWriteCommandVertexNumber = -2;
 }
