@@ -31,8 +31,7 @@ tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexDataWrit
 
 tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexDataWriter::~VertexDataWriter() {
   if (_lastWriteCommandVertexNumber>=-1) {
-    // @todo comment in again
-//    close();
+    close();
   }
 }
 
@@ -66,7 +65,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexDat
 
   if (_lastWriteCommandVertexNumber>=-1) {
     _out << std::endl;
-    _myWriter._vertexDataDescription << _out;
+    _myWriter._vertexDataDescription << _out.str();
   }
   _lastWriteCommandVertexNumber = -2;
 }

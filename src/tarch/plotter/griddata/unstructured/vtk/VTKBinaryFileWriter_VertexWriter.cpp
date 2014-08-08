@@ -73,7 +73,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexWri
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
 
 
-  _myWriter._numberOfVertices  = _currentVertexNumber;
-  _myWriter._vertexDescription << _out;
-  _currentVertexNumber         = -1;
+  _myWriter._numberOfVertices  =  _currentVertexNumber;
+  _myWriter._vertexDescription << _out.str();
+  _currentVertexNumber         =  -1;
 }

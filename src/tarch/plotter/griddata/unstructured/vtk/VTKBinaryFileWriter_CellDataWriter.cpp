@@ -28,8 +28,7 @@ tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataWriter
 
 tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataWriter::~CellDataWriter() {
   if (_lastWriteCommandCellNumber>=-1) {
-    // @todo comment in again
-//    close();
+    close();
   }
 }
 
@@ -63,7 +62,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataW
 
   if (_lastWriteCommandCellNumber>=-1) {
     _out << std::endl;
-    _myWriter._cellDataDescription << _out;
+    _myWriter._cellDataDescription << _out.str();
   }
   _lastWriteCommandCellNumber = -2;
 }

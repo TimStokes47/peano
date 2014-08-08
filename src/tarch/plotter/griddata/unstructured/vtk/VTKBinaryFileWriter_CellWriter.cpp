@@ -151,8 +151,8 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellWrite
   _myWriter._numberOfCells       = _currentCellNumber;
   _myWriter._numberOfCellEntries = _cellListEntries;
 
-  _myWriter._cellDescription      << _cellOut;
-  _myWriter._cellTypeDescription  << _cellTypeOut;
+  _myWriter._cellDescription      << _cellOut.str();
+  _myWriter._cellTypeDescription  << _cellTypeOut.str();
 
   _currentCellNumber = -1;
   _cellListEntries   = -1;

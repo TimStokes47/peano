@@ -1,8 +1,9 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTKBinaryFileWriter.h"
 
 #include <stdio.h>
-#include <fstream>
 #include <iomanip>
+#include <fstream>
+
 
 tarch::logging::Log tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::_log( "tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter" );
 
@@ -48,30 +49,30 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::writeToFi
   assertion( !_writtenToFile );
 
   std::ofstream out;
-  out.open( filename.c_str() );
+  out.open( filename.c_str(), std::ios::binary );
   if ( (!out.fail()) && out.is_open() ) {
     _log.debug( "close()", "opened data file " + filename );
 
     out << HEADER << std::endl << std::endl;
 
     out << "DATASET UNSTRUCTURED_GRID" << std::endl
-        << "POINTS " << _numberOfVertices << " " << _doubleOrFloat << std::endl << std::endl;
+        << "POINTS " << _numberOfVertices << " " << _doubleOrFloat << std::endl;
     out << _vertexDescription.rdbuf() << std::endl << std::endl;
 
     out << "CELLS " << _numberOfCells
-        << " " << _numberOfCellEntries << std::endl << std::endl;
+        << " " << _numberOfCellEntries << std::endl;
     out << _cellDescription.rdbuf() << std::endl << std::endl;
 
-    out << "CELL_TYPES " << _numberOfCells << std::endl << std::endl;
+    out << "CELL_TYPES " << _numberOfCells << std::endl;
     out << _cellTypeDescription.rdbuf() << std::endl << std::endl;
 
     if (_numberOfVertices>0 ) {
-      out << "POINT_DATA " << _numberOfVertices << std::endl << std::endl;
+      out << "POINT_DATA " << _numberOfVertices << std::endl;
       out << _vertexDataDescription.rdbuf() << std::endl << std::endl;
     }
 
     if (_numberOfCells>0 ) {
-      out << "CELL_DATA " << _numberOfCells << std::endl << std::endl;
+      out << "CELL_DATA " << _numberOfCells << std::endl;
       out << _cellDataDescription.rdbuf() << std::endl << std::endl;
     }
 
