@@ -21,24 +21,16 @@ namespace tarch {
  * macros included to check any assumption. All the test cases are managed by the
  * TestCaseCollection.
  *
- * Note that there is the subclass TestCaseWithScenario that has additional
- * creation methods for several (fluid) scenarios as well as some
- * comparison methods.
+ * If you implement your own tests, inherit from this class, implement
+ * run() and call the registration macro on the test case. See TestMacros.h
+ * for details.
  *
- * If you want setup test case data before you run your tests, you have to
- * overwrite setUp(). To clean up your test fixture use tearDown(). Both
- * operations are called before run() is invoked. run() on the other hand is
- * called if and only if setUp() has been successful. To overwrite both fixture
- * management routines is optional - if the operations are not redefined they
- * equal nop.
  *
- * \see TestCaseCollection
- * \see TestCaseWithScenario
- *
- * !!! Rationale
+ * !!! Implementation remarks
  *
  * Whenever you write a test case implementation, we recommend to add the
  * code block
+ *
  * \code
 #ifdef UseTestSpecificCompilerSettings
 #pragma optimize("",off)
@@ -50,6 +42,7 @@ namespace tarch {
 #pragma optimize("",on)
 #endif
    \endcode
+ *
  * at the end of the implementation file.
  * @author Tobias Weinzierl, Wolfgang Eckhardt
  * @version $Revision: 1.31 $
@@ -112,7 +105,8 @@ class tarch::tests::TestCase {
     virtual void run() = 0;
 
     /**
-     * Set the output directory.
+     * Set the output directory. Output files usually only are written by
+     * integration tests.
      */
     static void setOutputDirectory(const std::string & outputDirectory);
 };
