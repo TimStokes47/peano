@@ -71,6 +71,15 @@ bool tarch::la::equals (
 }
 
 
+bool tarch::la::equals (
+  const std::complex<double>& lhs,
+  const std::complex<double>& rhs,
+  double tolerance
+) {
+  return (std::abs(rhs.real() - lhs.real()) <= tolerance) & (std::abs(rhs.imag() - lhs.imag()) <= tolerance);
+}
+
+
 int tarch::la::sign (double number, double tolerance) {
   if ( greater(number, tolerance) ) {
      return 1;

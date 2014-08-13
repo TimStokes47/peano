@@ -35,6 +35,8 @@ namespace tarch {
     bool smaller( double lhs, double rhs, double tolerance = NUMERICAL_ZERO_DIFFERENCE);
     bool smallerEquals( double lhs, double rhs, double tolerance = NUMERICAL_ZERO_DIFFERENCE);
 
+    bool equals( const std::complex<double>& lhs, const std::complex<double>& rhs, double tolerance = NUMERICAL_ZERO_DIFFERENCE);
+
     /**
      * @return -10, or 1 depending on the sign of value
      */
