@@ -1054,7 +1054,9 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * you may not access the cell's adjacent vertices directly. Instead, you 
      * have to use the enumerator. For all adjacent vertices of this cell, 
      * touchVertexFirstTime() already has been called. touchVertexLastTime() has 
-     * not been called yet.
+     * not been called yet. 
+     * More information on the interplay with ascend() and 
+     * descend() can be found in peano::grid::nodes::Refined.
      * 
      * If you need the position of the vertices of the cell or its size, use the 
      * enumerator.
@@ -1185,6 +1187,9 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * the vertices in any case. In particular the VertexEnumerator's cell()
      * function is of relevance. It allows you to access the individual array
      * elements of the cell pointer.
+     *
+     * More information on the interplay of ascend() and 
+     * descend() with enterCell() and leaveCell() can be found in peano::grid::nodes::Refined.
      *
      * @see VertexEnumerator::cell()
      *

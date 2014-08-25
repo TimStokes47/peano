@@ -14,7 +14,18 @@
 /**
  * Refined Node
  *
- * t.b.d. This is the former RefinedEvent
+ * !!! Order of events on one cell level
+ *
+ * We study an arbitrary @f$ 3^d @f$ cell patch. The following statements on the
+ * (partial) event order hold:
+ *
+ * - touchVertexFirstTime() is called for each vertex.
+ * - The refined node invokes descend() for the @f$ 3^d @f$ patch plus its parent.
+ * - enterCell() is called for the @f$ 3^d @f$ fine patch cells.
+ * - Recursion
+ * - leaveCell() is called for the @f$ 3^d @f$ fine patch cells.
+ * - The refined node invokes ascend() for the @f$ 3^d @f$ patch plus its parent.
+ * - touchVertexLastTime() is invoked for those vertices that are not used anymore.
  *
  * @author Tobias Weinzierl
  */
