@@ -211,7 +211,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     , fineGridCell.getLevel()
     #endif
   );
-  peano::grid::nodes::tasks::InvokeEnterCell<Vertex,Cell,State,EventHandle>  enterCell(
+  peano::grid::nodes::tasks::InvokeEnterCell<Vertex,Cell,State,EventHandle>  enterRefinedCell(
     state,
     fineGridCell,
     fineGridVertices,
@@ -225,7 +225,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
 
   peano::datatraversal::TaskSet(
     loadSubCells,
-    enterCell,
+    enterRefinedCell,
     peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
       2,
       peano::datatraversal::autotuning::CallEnterCellAndLoadSubCellsWithinTraverse
@@ -247,7 +247,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     !elementIsNotErasing
   );
 
-  peano::grid::nodes::tasks::InvokeLeaveCell<Vertex,Cell,State,EventHandle>  leaveCell(
+  peano::grid::nodes::tasks::InvokeLeaveCell<Vertex,Cell,State,EventHandle>  leaveRefinedCell(
     state,
     fineGridCell,
     fineGridVertices,
@@ -279,7 +279,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
 
     peano::datatraversal::TaskSet(
       storeSubCells,
-      leaveCell,
+      leaveRefinedCell,
       peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
         2,
         peano::datatraversal::autotuning::CallLeaveCellAndStoreSubCellsWithinTraverse
@@ -297,7 +297,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
       fineGridVertices[ fineGridVerticesEnumerator(3) ].toString()
     );
     fineGridCell.switchToLeaf();
-    leaveCell();
+    leaveRefinedCell();
   }
 
   logTraceOut( "traverse(...)" );
