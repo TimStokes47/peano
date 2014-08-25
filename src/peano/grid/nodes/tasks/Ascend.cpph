@@ -200,15 +200,15 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
 
   for (int level=_treeDepth+1; level>=1; level--) {
     if (level==1) {
-      touchVerticesLastTime( level );
       ascend(level);
+      touchVerticesLastTime( level );
     }
     else if (level==_treeDepth+1) {
       leaveCells(level-1);
     }
     else {
-      touchVerticesLastTime( level );
       ascend(level);
+      touchVerticesLastTime( level );
       leaveCells(level-1);
     }
   }
