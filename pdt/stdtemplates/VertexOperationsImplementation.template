@@ -10,6 +10,8 @@
 __NAMESPACE__::VertexOperations::VertexOperations() { 
 }
 
+__x__READ_SCALAR_OPERATION_DOUBLE__ tarch::la::Vector<FOUR_POWER_D,double> __NAMESPACE__::VertexOperations::readAll__READ_SCALAR_OPERATION_DOUBLE__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices) { tarch::la::Vector<FOUR_POWER_D,double> result; dfor4(x) result(xScalar) = vertices[ enumerator(x) ]._vertexData.get__READ_SCALAR_OPERATION_DOUBLE__(); enddforx return result; }
+
 __x__READ_SCALAR_OPERATION_DOUBLE__ tarch::la::Vector<TWO_POWER_D,double> __NAMESPACE__::VertexOperations::read__READ_SCALAR_OPERATION_DOUBLE__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices) { tarch::la::Vector<TWO_POWER_D,double> result; dfor2(x) result(xScalar) = vertices[ enumerator(x) ]._vertexData.get__READ_SCALAR_OPERATION_DOUBLE__(); enddforx return result; }
 
 __x__READ_VECTOR_OPERATION_DOUBLE__ tarch::la::Vector<TWO_POWER_D_TIMES_D,double>  __NAMESPACE__::VertexOperations::read__READ_VECTOR_OPERATION_DOUBLE__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices)  { tarch::la::Vector<TWO_POWER_D_TIMES_D,double> result; dfor2(x) tarch::la::slice(result,vertices[ enumerator(x) ]._vertexData.get__READ_VECTOR_OPERATION_DOUBLE__(),xScalar*DIMENSIONS); enddforx return result; }
@@ -19,6 +21,8 @@ __x__READ_VECTOR_TWO_POW_D_OPERATION_DOUBLE__ tarch::la::Vector<TWO_POWER_D_TIME
 __x__READ_STENCIL_OPERATION_DOUBLE__ tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,double>  __NAMESPACE__::VertexOperations::read__READ_STENCIL_OPERATION_DOUBLE__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices)  { tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,double> result; dfor2(x) tarch::la::slice(result,vertices[ enumerator(x) ]._vertexData.get__READ_STENCIL_OPERATION_DOUBLE__(),xScalar*THREE_POWER_D); enddforx return result; }
 
 __x__READ_INTERGRID_OPERATOR_OPERATION_DOUBLE__ tarch::la::Vector<TWO_POWER_D_TIMES_FIVE_POWER_D,double>  __NAMESPACE__::VertexOperations::read__READ_INTERGRID_OPERATOR_OPERATION_DOUBLE__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices)  { tarch::la::Vector<TWO_POWER_D_TIMES_FIVE_POWER_D,double> result; dfor2(x) tarch::la::slice(result,vertices[ enumerator(x) ]._vertexData.get__READ_INTERGRID_OPERATOR_OPERATION_DOUBLE__(),xScalar*FIVE_POWER_D); enddforx return result; }
+
+__x__WRITE_SCALAR_OPERATION_DOUBLE__ void __NAMESPACE__::VertexOperations::writeAll__WRITE_SCALAR_OPERATION_DOUBLE__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<FOUR_POWER_D,double>& values ) { dfor4(x) vertices[ enumerator(x) ]._vertexData.set__WRITE_SCALAR_OPERATION_DOUBLE__( values(xScalar) ); enddforx }
 
 __x__WRITE_SCALAR_OPERATION_DOUBLE__ void __NAMESPACE__::VertexOperations::write__WRITE_SCALAR_OPERATION_DOUBLE__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D,double>& values ) { dfor2(x) vertices[ enumerator(x) ]._vertexData.set__WRITE_SCALAR_OPERATION_DOUBLE__( values(xScalar) ); enddforx }
 
@@ -32,6 +36,8 @@ __x__WRITE_INTERGRID_OPERATOR_OPERATION_DOUBLE__ void __NAMESPACE__::VertexOpera
 
 
 
+__x__READ_SCALAR_OPERATION_INT__ tarch::la::Vector<TWO_POWER_D,int> __NAMESPACE__::VertexOperations::readAll__READ_SCALAR_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices) { tarch::la::Vector<FOUR_POWER_D,int> result; dfor4(x) result(xScalar) = vertices[ enumerator(x) ]._vertexData.get__READ_SCALAR_OPERATION_INT__(); enddforx return result; }
+
 __x__READ_SCALAR_OPERATION_INT__ tarch::la::Vector<TWO_POWER_D,int> __NAMESPACE__::VertexOperations::read__READ_SCALAR_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices) { tarch::la::Vector<TWO_POWER_D,int> result; dfor2(x) result(xScalar) = vertices[ enumerator(x) ]._vertexData.get__READ_SCALAR_OPERATION_INT__(); enddforx return result; }
 
 __x__READ_VECTOR_OPERATION_INT__ tarch::la::Vector<TWO_POWER_D_TIMES_D,int>  __NAMESPACE__::VertexOperations::read__READ_VECTOR_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices)  { tarch::la::Vector<TWO_POWER_D_TIMES_D,int> result; dfor2(x) tarch::la::slice(result,vertices[ enumerator(x) ]._vertexData.get__READ_VECTOR_OPERATION_INT__(),xScalar*DIMENSIONS); enddforx return result; }
@@ -41,6 +47,8 @@ __x__READ_VECTOR_TWO_POW_D_OPERATION_INT__ tarch::la::Vector<TWO_POWER_D_TIMES_T
 __x__READ_STENCIL_OPERATION_INT__ tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,int>  __NAMESPACE__::VertexOperations::read__READ_STENCIL_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices)  { tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,int> result; dfor2(x) tarch::la::slice(result,vertices[ enumerator(x) ]._vertexData.get__READ_STENCIL_OPERATION_INT__(),xScalar*THREE_POWER_D); enddforx return result; }
 
 __x__READ_INTERGRID_OPERATOR_OPERATION_INT__ tarch::la::Vector<TWO_POWER_D_TIMES_FIVE_POWER_D,int>  __NAMESPACE__::VertexOperations::read__READ_INTERGRID_OPERATOR_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices)  { tarch::la::Vector<TWO_POWER_D_TIMES_FIVE_POWER_D,int> result; dfor2(x) tarch::la::slice(result,vertices[ enumerator(x) ]._vertexData.get__READ_INTERGRID_OPERATOR_OPERATION_INT__(),xScalar*FIVE_POWER_D); enddforx return result; }
+
+__x__WRITE_SCALAR_OPERATION_INT__ void __NAMESPACE__::VertexOperations::writeAll__WRITE_SCALAR_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<FOUR_POWER_D,int>& values ) { dfor4(x) vertices[ enumerator(x) ]._vertexData.set__WRITE_SCALAR_OPERATION_INT__( values(xScalar) ); enddforx }
 
 __x__WRITE_SCALAR_OPERATION_INT__ void __NAMESPACE__::VertexOperations::write__WRITE_SCALAR_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D,int>& values ) { dfor2(x) vertices[ enumerator(x) ]._vertexData.set__WRITE_SCALAR_OPERATION_INT__( values(xScalar) ); enddforx }
 
@@ -54,6 +62,8 @@ __x__WRITE_INTERGRID_OPERATOR_OPERATION_INT__ void __NAMESPACE__::VertexOperatio
 
 
 
+__x__READ_SCALAR_OPERATION_COMPLEX__ tarch::la::Vector<FOUR_POWER_D,std::complex<double> > __NAMESPACE__::VertexOperations::readAll__READ_SCALAR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices) { tarch::la::Vector<FOUR_POWER_D,std::complex<double> > result; dfor4(x) result(xScalar) = vertices[ enumerator(x) ]._vertexData.get__READ_SCALAR_OPERATION_COMPLEX__(); enddforx return result; }
+
 __x__READ_SCALAR_OPERATION_COMPLEX__ tarch::la::Vector<TWO_POWER_D,std::complex<double> > __NAMESPACE__::VertexOperations::read__READ_SCALAR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices) { tarch::la::Vector<TWO_POWER_D,std::complex<double> > result; dfor2(x) result(xScalar) = vertices[ enumerator(x) ]._vertexData.get__READ_SCALAR_OPERATION_COMPLEX__(); enddforx return result; }
 
 __x__READ_VECTOR_OPERATION_COMPLEX__ tarch::la::Vector<TWO_POWER_D_TIMES_D,std::complex<double> >  __NAMESPACE__::VertexOperations::read__READ_VECTOR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices)  { tarch::la::Vector<TWO_POWER_D_TIMES_D,std::complex<double> > result; dfor2(x) tarch::la::slice(result,vertices[ enumerator(x) ]._vertexData.get__READ_VECTOR_OPERATION_COMPLEX__(),xScalar*DIMENSIONS); enddforx return result; }
@@ -63,6 +73,8 @@ __x__READ_VECTOR_TWO_POW_D_OPERATION_COMPLEX__ tarch::la::Vector<TWO_POWER_D_TIM
 __x__READ_STENCIL_OPERATION_COMPLEX__ tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,std::complex<double> >  __NAMESPACE__::VertexOperations::read__READ_STENCIL_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices)  { tarch::la::Vector<TWO_POWER_D_TIMES_THREE_POWER_D,std::complex<double> > result; dfor2(x) tarch::la::slice(result,vertices[ enumerator(x) ]._vertexData.get__READ_STENCIL_OPERATION_COMPLEX__(),xScalar*THREE_POWER_D); enddforx return result; }
 
 __x__READ_INTERGRID_OPERATOR_OPERATION_COMPLEX__ tarch::la::Vector<TWO_POWER_D_TIMES_FIVE_POWER_D,std::complex<double> >  __NAMESPACE__::VertexOperations::read__READ_INTERGRID_OPERATOR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices)  { tarch::la::Vector<TWO_POWER_D_TIMES_FIVE_POWER_D,std::complex<double> > result; dfor2(x) tarch::la::slice(result,vertices[ enumerator(x) ]._vertexData.get__READ_INTERGRID_OPERATOR_OPERATION_COMPLEX__(),xScalar*FIVE_POWER_D); enddforx return result; }
+
+__x__WRITE_SCALAR_OPERATION_COMPLEX__ void __NAMESPACE__::VertexOperations::writeAll__WRITE_SCALAR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<FOUR_POWER_D,std::complex<double> >& values ) { dfor4(x) vertices[ enumerator(x) ]._vertexData.set__WRITE_SCALAR_OPERATION_COMPLEX__( values(xScalar) ); enddforx }
 
 __x__WRITE_SCALAR_OPERATION_COMPLEX__ void __NAMESPACE__::VertexOperations::write__WRITE_SCALAR_OPERATION_COMPLEX__(const peano::grid::VertexEnumerator& enumerator, Vertex* const vertices, const tarch::la::Vector<TWO_POWER_D,std::complex<double> >& values ) { dfor2(x) vertices[ enumerator(x) ]._vertexData.set__WRITE_SCALAR_OPERATION_COMPLEX__( values(xScalar) ); enddforx }
 
