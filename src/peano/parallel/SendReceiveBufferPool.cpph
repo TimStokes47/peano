@@ -28,7 +28,6 @@ void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, co
     _backgroundThread.switchState(BackgroundThread::Suspend);
     #endif
 
-    typedef SendReceiveBufferAbstractImplementation<Vertex> MySendReceiveBuffer;
     SendReceiveBuffer* newBuffer;
     if (bufferAccessType == FIFO ) {
       typedef SendReceiveBufferFIFO<Vertex> BufferType;
