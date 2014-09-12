@@ -200,6 +200,10 @@ class peano::grid::VertexEnumerator {
      * have exactly one cell, it might be the standard @f$ 3^d @f$ patch, or it
      * might be bigger due to recursion unrolling. Anyway, this operation tells
      * you whether the vertex at localVertexNumber is at the patch boundary.
+     *
+     * If you are interested in more intergrid index manipulations, please study
+     * the SingleLevelEnumerator. It comes along with a couple of additional static
+     * multigrid/multiscale operations.
      */
     virtual bool isVertexAtPatchBoundaryWithinRegularSubtree(const LocalVertexIntegerIndex& localVertexNumber) const = 0;
 };
