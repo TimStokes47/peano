@@ -16,6 +16,7 @@ tarch::la::Matrix<Rows,Cols,Scalar>& tarch::la::operator*=(
 }
 
 
+
 template<int Rows, int Cols, typename Scalar>
 tarch::la::Matrix<Rows,Cols,Scalar> tarch::la::operator* (
   const tarch::la::Matrix<Rows,Cols,Scalar>&  matrix,
@@ -32,4 +33,22 @@ tarch::la::Matrix<Rows,Cols,Scalar> tarch::la::operator* (
     }
   }
   return result;
+}
+
+
+template<int Rows, int Cols, typename Scalar>
+tarch::la::Matrix<Rows,Cols,Scalar> tarch::la::operator* (
+  const Scalar&                               scalar,
+  const tarch::la::Matrix<Rows,Cols,Scalar>&  matrix
+) {
+  return matrix * scalar;
+}
+
+
+template<int Rows, int Cols>
+tarch::la::Matrix<Rows,Cols,std::complex<double> > tarch::la::operator* (
+  const double&                                              scalar,
+  const tarch::la::Matrix<Rows,Cols,std::complex<double> >&  matrix
+) {
+  return std::complex<double>( scalar ) * matrix;
 }

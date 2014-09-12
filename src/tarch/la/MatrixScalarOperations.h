@@ -13,8 +13,7 @@ namespace tarch {
     );
 
     /**
-      * Multiplies every component of the vector with the scalar and assigns the
-      *  result to the vector.
+      * Multiplies every component of the matrix with the scalar
       *
       * No temporary objects are created during the operation.
      */
@@ -23,8 +22,29 @@ namespace tarch {
       const Matrix<Rows,Cols,Scalar>&  matrix,
       const Scalar&                    scalar
     );
+
+    /**
+      * Multiplies every component of the matrix with the scalar
+      *
+      * No temporary objects are created during the operation.
+     */
+    template<int Rows, int Cols, typename Scalar>
+    Matrix<Rows,Cols,Scalar> operator*(
+      const Scalar&                    scalar,
+      const Matrix<Rows,Cols,Scalar>&  matrix
+    );
+
+
+    template<int Rows, int Cols>
+    Matrix<Rows,Cols,std::complex<double> > operator*(
+      const double&                                  scalar,
+      const Matrix<Rows,Cols,std::complex<double> >&  matrix
+    );
+
   }
 }
+
+
 
 #include "tarch/la/MatrixScalarOperations.cpph"
 
