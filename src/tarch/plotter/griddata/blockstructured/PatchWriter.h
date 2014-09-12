@@ -34,6 +34,33 @@ class tarch::plotter::griddata::blockstructured::PatchWriter:
   public:
     /**
      * Writes patches
+     *
+     * Typically, you use this writer within enterCell as follows:
+     * \code
+    int unknownIndex = _patchWriter->plotPatch(
+      fineGridVerticesEnumerator.getVertexPosition(),
+      fineGridVerticesEnumerator.getCellSize(),
+      Experiment::getInstance().getNumberOfInnerCellsPerSpacetreeLeaf()
+    ).first;
+
+    const tarch::la::Vector<DIMENSIONS,int> offsetOfInnerDataWithinPatch = tarch::la::Vector<DIMENSIONS,int>(
+      Experiment::getInstance().getNumberOfGhostCellsPerSpacetreeLeaf()
+    );
+
+    dfor(i,Experiment::getInstance().getNumberOfInnerCellsPerSpacetreeLeaf()+1) {
+      const tarch::la::Vector<DIMENSIONS,int> currentVertex = offsetOfInnerDataWithinPatch + i;
+      const int linearisedCurrentVertex =
+        peano::utils::dLinearisedWithoutLookup(currentVertex,Experiment::getInstance().getNumberOfCellsPerSpacetreeLeaf()+1);
+
+      assertion( static_cast<int>( DataHeap::getInstance().getData(patchDescription.getU()).size() )>linearisedCurrentVertex);
+
+      _solutionWriter->plotVertex(
+        unknownIndex,
+        DataHeap::getInstance().getData(patchDescription.getU())[linearisedCurrentVertex]._persistentRecords._u
+      );
+      unknownIndex++;
+    }
+     \endcode
      */
     class SinglePatchWriter {
       private:
@@ -43,6 +70,8 @@ class tarch::plotter::griddata::blockstructured::PatchWriter:
         virtual ~SinglePatchWriter() {}
 
         /**
+         * Create grid structure for one patch
+         *
          * @param offset
          * @param size
          * @param cells
@@ -56,79 +85,23 @@ class tarch::plotter::griddata::blockstructured::PatchWriter:
           const tarch::la::Vector<2,double>& size,
           const tarch::la::Vector<2,int>&    cells
         ) = 0;
-
         virtual std::pair<int,int> plotPatch(
           const tarch::la::Vector<3,double>& offset,
           const tarch::la::Vector<3,double>& size,
           const tarch::la::Vector<3,int>&    cells
         ) = 0;
-
-        /**
-         * Write data
-         *
-         * This operation works if and only if the passed data are the only
-         * unknowns plotted for this grid. If you wanna visualise several
-         * unknowns, you have to use a different plot wrapper or visualise
-         * your data manually.
-         *
-         * Simple wrapper around plotPatch that takes a data writer as well
-         * as a data array and pipes the data directly into the patch.
-         *
-         * This operation is thread-safe.
-         *
-         * Padding describes the distance between two entries along each
-         * coordinate axis in bytes. An example: You have floats on the heap
-         * with 12x12 patches that are surrounded by a ghost layer of size
-         * two. If you wanna plot only the interior, the padding looks as
-         * follows:
-         * \code
-    tarch::la::Vector<2,int> padding;
-    padding(0) = sizeof(DataHeap::HeapData);
-    padding(1) = sizeof(DataHeap::HeapData)*12;
-           \endcode
-         * and you hand in the pointer of the 14th element of the patch.
-         *
-         * @param cellValues  Pointer to first data value to be plotted.
-         */
-        template <typename T>
-        void plotPatch(
+/*
+        virtual std::pair<int,int> plotPatch(
           const tarch::la::Vector<2,double>& offset,
           const tarch::la::Vector<2,double>& size,
-          const tarch::la::Vector<2,int>&    cells,
-          T const * const                    cellValues,
-          const tarch::la::Vector<2,int>&    paddingInBytes,
-          CellDataWriter&                    writer
-        );
-
-        template <typename T>
-        void plotPatch(
-          const tarch::la::Vector<2,double>& offset,
-          const tarch::la::Vector<2,double>& size,
-          const tarch::la::Vector<2,int>&    cells,
-          T const * const                    cellValuesA,
-          T const * const                    cellValuesB,
-          T const * const                    cellValuesC,
-          const tarch::la::Vector<2,int>&    paddingInBytes,
-          CellDataWriter&                    writerA,
-          CellDataWriter&                    writerB,
-          CellDataWriter&                    writerC
-        );
-
-        template <typename T>
-        void plotPatch(
-          const tarch::la::Vector<2,double>& offset,
-          const tarch::la::Vector<2,double>& size,
-          const tarch::la::Vector<2,int>&    cells,
-          T const * const                    cellValuesA,
-          T const * const                    cellValuesB,
-          T const * const                    cellValuesC,
-          T const * const                    cellValuesD,
-          const tarch::la::Vector<2,int>&    paddingInBytes,
-          CellDataWriter&                    writerA,
-          CellDataWriter&                    writerB,
-          CellDataWriter&                    writerC,
-          CellDataWriter&                    writerD
-        );
+          int                                cellsPerDimension
+        ) = 0;
+        virtual std::pair<int,int> plotPatch(
+          const tarch::la::Vector<3,double>& offset,
+          const tarch::la::Vector<3,double>& size,
+          int                                cellsPerDimension
+        ) = 0;
+*/
 
         /**
          * Pleaes close the patch writer before you close any data writer.
@@ -144,9 +117,5 @@ class tarch::plotter::griddata::blockstructured::PatchWriter:
 
     virtual ~PatchWriter();
 };
-
-
-#include "tarch/plotter/griddata/blockstructured/PatchWriter.cpph"
-
 
 #endif
