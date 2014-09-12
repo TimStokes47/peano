@@ -8,7 +8,7 @@
 #include "tarch/la/VectorCompare.h"
 #include "tarch/logging/Log.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
-#include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
+#include "tarch/plotter/griddata/unstructured/vtk/VTKBinaryFileWriter.h"
 
 #include "peano/MappingSpecification.h"
 #include "peano/CommunicationSpecification.h"
@@ -48,7 +48,7 @@ class __NAMESPACE__::adapters::__THIS_TYPENAME__ {
      */
     static std::map<tarch::la::Vector<DIMENSIONS,double> , int, tarch::la::VectorCompare<DIMENSIONS> >  _vertex2IndexMap;
     
-    tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter*                 _vtkWriter;
+    tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter*               _vtkWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*   _vertexWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*     _cellWriter;
     
