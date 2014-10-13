@@ -43,7 +43,7 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
 
     virtual void beginIteration();
 
-    virtual void endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells);
+    virtual void endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells, double numberOfInnerCells, double numberOfOuterCells);
 
     virtual void enterCentralElementOfEnclosingSpacetree();
     virtual void leaveCentralElementOfEnclosingSpacetree();

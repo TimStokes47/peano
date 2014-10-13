@@ -101,7 +101,9 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
 
   peano::performanceanalysis::Analysis::getInstance().endIteration(
     _state.getNumberOfInnerLeafCells(),
-    _state.getNumberOfOuterLeafCells()
+    _state.getNumberOfOuterLeafCells(),
+    _state.getNumberOfInnerCells(),
+    _state.getNumberOfOuterCells()
   );
   #ifdef Parallel
   peano::parallel::JoinDataBufferPool::getInstance().releaseMessages();

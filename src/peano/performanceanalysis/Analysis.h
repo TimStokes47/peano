@@ -65,7 +65,7 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
     /**
      * @see beginIteration()
      */
-    virtual void endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells);
+    virtual void endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells, double numberOfInnerCells, double numberOfOuterCells);
 
     virtual void enterCentralElementOfEnclosingSpacetree();
     virtual void leaveCentralElementOfEnclosingSpacetree();
