@@ -111,14 +111,6 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     tarch::multicore::BooleanSemaphore _semaphore;
 
     /**
-     * May not be const as it might write a warning itself
-     */
-    bool filterOut(
-      const std::string& targetName,
-      const std::string& className
-    );
-
-    /**
      * Test for the column separator of a string output.
      */
     std::string    _logColumnSeparator;
@@ -225,6 +217,17 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     virtual ~CommandLineLogger();
 
     static CommandLineLogger& getInstance();
+
+    /**
+     * May not be const as it might write a warning itself
+     *
+     * Is public as some analysis frameworks check explicitly whether these
+     * features are switched on.
+     */
+    bool filterOut(
+      const std::string& targetName,
+      const std::string& className
+    );
 
     /**
      * Is public as some analysis frameworks check explicitly whether these

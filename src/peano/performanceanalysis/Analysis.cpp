@@ -39,9 +39,9 @@ void peano::performanceanalysis::Analysis::beginIteration() {
 }
 
 
-void peano::performanceanalysis::Analysis::endIteration() {
+void peano::performanceanalysis::Analysis::endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells) {
   assertion( _device!=0 );
-  _device->endIteration();
+  _device->endIteration(numberOfInnerLeafCells,numberOfOuterLeafCells);
 }
 
 

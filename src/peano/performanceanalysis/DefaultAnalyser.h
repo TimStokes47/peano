@@ -18,7 +18,11 @@ namespace peano {
 
 
 /**
- * Analyser Interface
+ * Default Analyser
+ *
+ * This analyser pipes all data to the info output. It is usually used in
+ * combination with the Python script, i.e. you run the code with this
+ * analyser and afterwards postprocess the output with the script.
  *
  * @author Roland Wittmann, Tobias Weinzierl
  */
@@ -26,6 +30,7 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
   private:
     static tarch::logging::Log     _log;
 
+    tarch::timing::Watch           _totalWatch;
     tarch::timing::Watch           _traversalWatch;
     tarch::timing::Watch           _actualDomainTraversalWatch;
 /*
@@ -38,7 +43,10 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
 
     virtual void beginIteration();
 
-    virtual void endIteration();
+    virtual void endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells);
+
+    virtual void enterCentralElementOfEnclosingSpacetree();
+    virtual void leaveCentralElementOfEnclosingSpacetree();
 
     virtual void addWorker(
       int                                 workerRank,
@@ -76,8 +84,6 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     virtual void endToPrepareAsynchronousHeapDataExchange();
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
-    virtual void enterCentralElementOfEnclosingSpacetree();
-    virtual void leaveCentralElementOfEnclosingSpacetree();
 };
 
 

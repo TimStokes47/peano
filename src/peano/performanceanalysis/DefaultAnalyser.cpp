@@ -1,16 +1,25 @@
 #include "peano/performanceanalysis/DefaultAnalyser.h"
 #include "tarch/parallel/Node.h"
+#include "tarch/logging/CommandLineLogger.h"
 
 
 tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::performanceanalysis::DefaultAnalyser" );
 
 
 peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
+  _totalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _traversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
+  if (!tarch::logging::CommandLineLogger::getInstance().getLogMachineName()) {
+    logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of machine name is disabled. See command line logger" );
+  }
+  if (!tarch::logging::CommandLineLogger::getInstance().getLogTrace()) {
+    logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of trace is disabled. See command line logger" );
+  }
+  if (tarch::logging::CommandLineLogger::getInstance().filterOut("info","peano::performanceanalysis::DefaultAnalyser")) {
+    logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as log filters for peano::performanceanalysis::DefaultAnalyser are installed" );
+  }
 /*
-  ,
-}
   _synchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
@@ -23,59 +32,30 @@ peano::performanceanalysis::DefaultAnalyser::~DefaultAnalyser() {
 
 
 void peano::performanceanalysis::DefaultAnalyser::beginIteration() {
-  logInfo( "beginIteration()", "was here" );
-/*
-  _watch.stopTimer();
-
-  logInfo(
-    "beginIteration()",
-    "idle time=" <<
-    _watch.getCalendarTime() <<
-    ", idle cpu time=" <<
-    _watch.getCPUTime()
-  );
-
-  _watch.startTimer();
-*/
+  _traversalWatch.startTimer();
 }
 
 
-void peano::performanceanalysis::DefaultAnalyser::endIteration() {
-  logInfo( "beginIteration()", "was here" );
-/*
-  _watch.stopTimer();
+void peano::performanceanalysis::DefaultAnalyser::endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells) {
+  _traversalWatch.stopTimer();
+  _totalWatch.stopTimer();
 
-  logInfo(
-    "endIteration()",
-    "busy time=" <<
-    _watch.getCalendarTime(), <<
-    ", busy cpu time=" <<
-    _watch.getCPUTime()
-  );
+  logInfo( "endIteration()", "cells=(" << numberOfInnerLeafCells << "," << numberOfOuterLeafCells << ")" );
+  logInfo( "endIteration()", "t_total=(" << _totalWatch.getCalendarTime() << "," << _totalWatch.getCPUTime() << ")" );
+  logInfo( "endIteration()", "t_traversal=(" << _traversalWatch.getCalendarTime() << "," << _traversalWatch.getCPUTime() << ")" );
 
-  _watch.startTimer();
-*/
+  _totalWatch.startTimer();
 }
-
 
 
 void peano::performanceanalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree() {
-//  _actualDomainTraversalWatch.startTimer();
+  _actualDomainTraversalWatch.startTimer();
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree() {
-/*
   _actualDomainTraversalWatch.stopTimer();
-
-  logInfo(
-    "leaveCentralElementOfEnclosingSpacetree()",
-    "time=" <<
-    _actualDomainTraversalWatch.getCalendarTime() <<
-    ", cpu time=" <<
-    _actualDomainTraversalWatch.getCPUTime()
-  );
-*/
+  logInfo( "leaveCentralElementOfEnclosingSpacetree()", "t_central-tree-traversal=(" << _actualDomainTraversalWatch.getCalendarTime() << "," << _actualDomainTraversalWatch.getCPUTime() << ")" );
 }
 
 

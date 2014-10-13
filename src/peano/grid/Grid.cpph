@@ -99,7 +99,10 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
 
   logDebug( "iterate(State)", "called endOfIteration()" );
 
-  peano::performanceanalysis::Analysis::getInstance().endIteration();
+  peano::performanceanalysis::Analysis::getInstance().endIteration(
+    _state.getNumberOfInnerLeafCells(),
+    _state.getNumberOfOuterLeafCells()
+  );
   #ifdef Parallel
   peano::parallel::JoinDataBufferPool::getInstance().releaseMessages();
   tarch::mpianalysis::Analysis::getInstance().endReleaseOfJoinData();
