@@ -75,6 +75,24 @@ void tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::PointDataWriter::plot(
 
   if (value<_minValue) _minValue = value;
   if (value>_maxValue) _maxValue = value;
+
+  if (_myWriter._precision < 7){
+    float tmp = value;
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    for (int i=1; i<_recordsPerPoint; i++) {
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
+  } else {
+    double tmp = value;
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    for (int i=1; i<_recordsPerPoint; i++) {
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
+  }
 }
 
 
