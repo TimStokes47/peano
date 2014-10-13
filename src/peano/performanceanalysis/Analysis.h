@@ -1,14 +1,14 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _TARCH_MPIANALYIS_ANALYSIS_H_
-#define _TARCH_MPIANALYIS_ANALYSIS_H_
+#ifndef _PEANO_PERFORMANCE_ANALYIS_ANALYSIS_H_
+#define _PEANO_PERFORMANCE_ANALYIS_ANALYSIS_H_
 
 
-#include "tarch/mpianalysis/Analyser.h"
+#include "peano/performanceanalysis/Analyser.h"
 
 
-namespace tarch {
-  namespace mpianalysis {
+namespace peano {
+  namespace performanceanalysis {
     class Analysis;
   }
 }
@@ -30,7 +30,7 @@ namespace tarch {
  *
  * @author Roland Wittmann, Tobias Weinzierl
  */
-class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
+class peano::performanceanalysis::Analysis: public peano::performanceanalysis::Analyser {
   private:
     Analysis();
 
@@ -67,6 +67,9 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
      */
     virtual void endIteration();
 
+    virtual void enterCentralElementOfEnclosingSpacetree();
+    virtual void leaveCentralElementOfEnclosingSpacetree();
+
     /**
      * @see Analyser
      */
@@ -106,11 +109,6 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
       const tarch::la::Vector<2,double>&  boundingBoxOffset,
       const tarch::la::Vector<2,double>&  boundingBoxSize
     );
-
-    /**
-     * @see Analyser
-     */
-    virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier );
 
     /**
      * @see Analyser
@@ -122,19 +120,12 @@ class tarch::mpianalysis::Analysis: public tarch::mpianalysis::Analyser {
      */
     virtual void dataWasNotReceivedFromWorker( int fromRank, double calendarTime );
 
-    /**
-     * @see Analyser
-     */
-    virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers);
-
     virtual void beginToReleaseSynchronousHeapData();
     virtual void endToReleaseSynchronousHeapData();
     virtual void beginToPrepareAsynchronousHeapDataExchange();
     virtual void endToPrepareAsynchronousHeapDataExchange();
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
-    virtual void enterCentralElementOfEnclosingSpacetree();
-    virtual void leaveCentralElementOfEnclosingSpacetree();
 };
 
 

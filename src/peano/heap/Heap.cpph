@@ -7,7 +7,7 @@
 #include "tarch/services/ServiceFactory.h"
 
 
-#include "tarch/mpianalysis/Analysis.h"
+#include "peano/performanceanalysis/Analysis.h"
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>

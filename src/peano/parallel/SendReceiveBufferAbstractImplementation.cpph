@@ -2,7 +2,7 @@
 #include "peano/utils/PeanoOptimisations.h"
 #include "tarch/Assertions.h"
 #include "peano/parallel/SendReceiveBufferPool.h"
-#include "tarch/mpianalysis/Analysis.h"
+#include "peano/performanceanalysis/Analysis.h"
 
 
 #include <sstream>

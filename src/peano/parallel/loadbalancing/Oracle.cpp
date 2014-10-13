@@ -2,7 +2,7 @@
 #include "peano/datatraversal/autotuning/OracleForOnePhase.h"
 #include "tarch/parallel/Node.h"
 #include "tarch/Assertions.h"
-#include "tarch/mpianalysis/Analysis.h"
+#include "peano/performanceanalysis/Analysis.h"
 
 
 tarch::logging::Log  peano::parallel::loadbalancing::Oracle::_log( "peano::parallel::loadbalancing::Oracle" );
@@ -74,7 +74,7 @@ void peano::parallel::loadbalancing::Oracle::addWorker(
     _startCommand = Continue;
   }
 
-  tarch::mpianalysis::Analysis::getInstance().addWorker(rank,level,boundingBoxOffset,boundingBoxSize);
+  peano::performanceanalysis::Analysis::getInstance().addWorker(rank,level,boundingBoxOffset,boundingBoxSize);
 }
 
 
@@ -87,11 +87,11 @@ void peano::parallel::loadbalancing::Oracle::removeWorker(int rank) {
     p++
   ) {
     if (p->_rank == rank) {
-      tarch::mpianalysis::Analysis::getInstance().addWorker(
+      peano::performanceanalysis::Analysis::getInstance().addWorker(
         rank,p->_level,p->_boundingBoxOffset,p->_boundingBoxSize
       );
 
-      tarch::mpianalysis::Analysis::getInstance().removeWorker(
+      peano::performanceanalysis::Analysis::getInstance().removeWorker(
         p->_rank,
         p->_level,
         p->_boundingBoxOffset,
@@ -356,7 +356,7 @@ void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
 
 
   if ( tarch::la::greater(elapsedTime,0.0) ) {
-    tarch::mpianalysis::Analysis::getInstance().dataWasNotReceivedFromWorker(  workerRank, _watch.getCalendarTime() );
+    peano::performanceanalysis::Analysis::getInstance().dataWasNotReceivedFromWorker(  workerRank, _watch.getCalendarTime() );
   }
 
   _watch.startTimer();

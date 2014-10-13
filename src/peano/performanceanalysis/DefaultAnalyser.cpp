@@ -1,23 +1,30 @@
-#include "tarch/mpianalysis/DefaultAnalyser.h"
+#include "peano/performanceanalysis/DefaultAnalyser.h"
 #include "tarch/parallel/Node.h"
 
 
-tarch::logging::Log  tarch::mpianalysis::DefaultAnalyser::_log( "tarch::mpianalysis::DefaultAnalyser" );
+tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::performanceanalysis::DefaultAnalyser" );
 
 
-tarch::mpianalysis::DefaultAnalyser::DefaultAnalyser():
-  _watch("tarch::mpianalysis::DefaultAnalyser", "-", false),
-  _synchronousHeapWatch("tarch::mpianalysis::DefaultAnalyser", "-", false),
-  _asynchronousHeapWatch("tarch::mpianalysis::DefaultAnalyser", "-", false),
-  _actualDomainTraversalWatch("tarch::mpianalysis::DefaultAnalyser", "-", false) {
+peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
+  _traversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
+  _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
+/*
+  ,
+}
+  _synchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
+  _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
+  _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
+*/
 }
 
 
-tarch::mpianalysis::DefaultAnalyser::~DefaultAnalyser() {
+peano::performanceanalysis::DefaultAnalyser::~DefaultAnalyser() {
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::beginIteration() {
+void peano::performanceanalysis::DefaultAnalyser::beginIteration() {
+  logInfo( "beginIteration()", "was here" );
+/*
   _watch.stopTimer();
 
   logInfo(
@@ -29,31 +36,56 @@ void tarch::mpianalysis::DefaultAnalyser::beginIteration() {
   );
 
   _watch.startTimer();
+*/
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::endIteration() {
+void peano::performanceanalysis::DefaultAnalyser::endIteration() {
+  logInfo( "beginIteration()", "was here" );
+/*
   _watch.stopTimer();
 
   logInfo(
     "endIteration()",
     "busy time=" <<
-    _watch.getCalendarTime() <<
+    _watch.getCalendarTime(), <<
     ", busy cpu time=" <<
     _watch.getCPUTime()
   );
 
   _watch.startTimer();
+*/
 }
 
 
 
-void tarch::mpianalysis::DefaultAnalyser::addWorker(
+void peano::performanceanalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree() {
+//  _actualDomainTraversalWatch.startTimer();
+}
+
+
+void peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree() {
+/*
+  _actualDomainTraversalWatch.stopTimer();
+
+  logInfo(
+    "leaveCentralElementOfEnclosingSpacetree()",
+    "time=" <<
+    _actualDomainTraversalWatch.getCalendarTime() <<
+    ", cpu time=" <<
+    _actualDomainTraversalWatch.getCPUTime()
+  );
+*/
+}
+
+
+void peano::performanceanalysis::DefaultAnalyser::addWorker(
   int                                 workerRank,
   int                                 level,
   const tarch::la::Vector<2,double>&  boundingBoxOffset,
   const tarch::la::Vector<2,double>&  boundingBoxSize
 ) {
+/*
 
   logInfo(
     "addWorker(int,Vector,Vector)",
@@ -70,15 +102,17 @@ void tarch::mpianalysis::DefaultAnalyser::addWorker(
     << level
     << "]"
   );
+*/
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::addWorker(
+void peano::performanceanalysis::DefaultAnalyser::addWorker(
   int                                 workerRank,
   int                                 level,
   const tarch::la::Vector<3,double>&  boundingBoxOffset,
   const tarch::la::Vector<3,double>&  boundingBoxSize
 ) {
+/*
   logInfo(
     "addWorker(int,Vector,Vector)",
     tarch::parallel::Node::getInstance().getRank()
@@ -94,15 +128,17 @@ void tarch::mpianalysis::DefaultAnalyser::addWorker(
     << level
     << "]"
   );
+*/
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::removeWorker(
+void peano::performanceanalysis::DefaultAnalyser::removeWorker(
   int                                 workerRank,
   int                                 level,
   const tarch::la::Vector<3,double>&  boundingBoxOffset,
   const tarch::la::Vector<3,double>&  boundingBoxSize
 ) {
+/*
   logInfo(
     "removeWorker()",
     tarch::parallel::Node::getInstance().getRank()
@@ -118,15 +154,17 @@ void tarch::mpianalysis::DefaultAnalyser::removeWorker(
     << level
     << "]"
   );
+*/
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::removeWorker(
+void peano::performanceanalysis::DefaultAnalyser::removeWorker(
   int                                 workerRank,
   int                                 level,
   const tarch::la::Vector<2,double>&  boundingBoxOffset,
   const tarch::la::Vector<2,double>&  boundingBoxSize
 ) {
+/*
   logInfo(
     "removeWorker()",
     tarch::parallel::Node::getInstance().getRank()
@@ -142,33 +180,24 @@ void tarch::mpianalysis::DefaultAnalyser::removeWorker(
     << level
     << "]"
   );
+*/
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier ) {
-  if (
-    tarch::parallel::Node::getInstance().isInitialised() && tarch::parallel::Node::getInstance().isGlobalMaster()
-  ) {
-    logInfo(
-      "reserveFreeTag()",
-      "assigned message " << communicationTypeIdentifier
-       << " the free tag " << tag
-    );
-  }
-}
-
-
-void tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) {
+void peano::performanceanalysis::DefaultAnalyser::dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) {
+/*
   logInfo(
     "dataWasNotReceivedFromWorker()",
     "rank had to wait for worker " << fromRank <<
     " for " << calendarTime <<
     "s"
   );
+*/
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {
+void peano::performanceanalysis::DefaultAnalyser::dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {
+/*
   logInfo(
     "dataWasNotReceivedInBackground()",
     "rank had to wait for " << cardinality <<
@@ -176,18 +205,17 @@ void tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedInBackground( int fr
     " on tag " << tag <<
     " with page size " << pageSize
   );
+*/
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::logNodePoolStatistics(int registeredWorkers, int idleWorkers) {
-}
-
-void tarch::mpianalysis::DefaultAnalyser::beginToReleaseSynchronousHeapData() {
-  _synchronousHeapWatch.startTimer();
+void peano::performanceanalysis::DefaultAnalyser::beginToReleaseSynchronousHeapData() {
+//  _synchronousHeapWatch.startTimer();
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::endToReleaseSynchronousHeapData() {
+void peano::performanceanalysis::DefaultAnalyser::endToReleaseSynchronousHeapData() {
+/*
   _synchronousHeapWatch.stopTimer();
 
   logInfo(
@@ -197,15 +225,17 @@ void tarch::mpianalysis::DefaultAnalyser::endToReleaseSynchronousHeapData() {
     ", cpu time=" <<
     _synchronousHeapWatch.getCPUTime()
   );
+*/
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::beginToPrepareAsynchronousHeapDataExchange() {
-  _asynchronousHeapWatch.startTimer();
+void peano::performanceanalysis::DefaultAnalyser::beginToPrepareAsynchronousHeapDataExchange() {
+//  _asynchronousHeapWatch.startTimer();
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange() {
+void peano::performanceanalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange() {
+/*
   _asynchronousHeapWatch.stopTimer();
 
   logInfo(
@@ -215,10 +245,12 @@ void tarch::mpianalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDataExchan
     ", cpu time=" <<
     _asynchronousHeapWatch.getCPUTime()
   );
+*/
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::endReleaseOfJoinData() {
+void peano::performanceanalysis::DefaultAnalyser::endReleaseOfJoinData() {
+/*
   _watch.stopTimer();
 
   logInfo(
@@ -230,10 +262,12 @@ void tarch::mpianalysis::DefaultAnalyser::endReleaseOfJoinData() {
   );
 
   _watch.startTimer();
+*/
 }
 
 
-void tarch::mpianalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
+void peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
+/*
   _watch.stopTimer();
 
   logInfo(
@@ -245,22 +279,5 @@ void tarch::mpianalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
   );
 
   _watch.startTimer();
-}
-
-
-void tarch::mpianalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree() {
-  _actualDomainTraversalWatch.startTimer();
-}
-
-
-void tarch::mpianalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree() {
-  _actualDomainTraversalWatch.stopTimer();
-
-  logInfo(
-    "leaveCentralElementOfEnclosingSpacetree()",
-    "time=" <<
-    _actualDomainTraversalWatch.getCalendarTime() <<
-    ", cpu time=" <<
-    _actualDomainTraversalWatch.getCPUTime()
-  );
+*/
 }

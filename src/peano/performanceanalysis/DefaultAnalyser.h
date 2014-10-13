@@ -1,16 +1,16 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _TARCH_MPIANALYIS_DEFAULT_ANALYSER_H_
-#define _TARCH_MPIANALYIS_DEFAULT_ANALYSER_H_
+#ifndef _PEANO_PERFORMANCE_ANALYIS_DEFAULT_ANALYSER_H_
+#define _PEANO_PERFORMANCE_ANALYIS_DEFAULT_ANALYSER_H_
 
 
-#include "tarch/mpianalysis/Analyser.h"
+#include "peano/performanceanalysis/Analyser.h"
 #include "tarch/logging/Log.h"
 #include "tarch/timing/Watch.h"
 
 
-namespace tarch {
-  namespace mpianalysis {
+namespace peano {
+  namespace performanceanalysis {
     class DefaultAnalyser;
   }
 }
@@ -22,16 +22,17 @@ namespace tarch {
  *
  * @author Roland Wittmann, Tobias Weinzierl
  */
-class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
+class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanalysis::Analyser {
   private:
     static tarch::logging::Log     _log;
 
-    tarch::timing::Watch           _watch;
-
+    tarch::timing::Watch           _traversalWatch;
+    tarch::timing::Watch           _actualDomainTraversalWatch;
+/*
     tarch::timing::Watch           _synchronousHeapWatch;
     tarch::timing::Watch           _asynchronousHeapWatch;
-    tarch::timing::Watch           _actualDomainTraversalWatch;
-  public:
+*/
+ public:
     DefaultAnalyser();
     virtual ~DefaultAnalyser();
 
@@ -67,10 +68,8 @@ class tarch::mpianalysis::DefaultAnalyser: public tarch::mpianalysis::Analyser {
       const tarch::la::Vector<2,double>&  boundingBoxSize
     );
 
-    virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier );
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
     virtual void dataWasNotReceivedFromWorker( int fromRank, double calendarTime );
-    virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers);
     virtual void beginToReleaseSynchronousHeapData();
     virtual void endToReleaseSynchronousHeapData();
     virtual void beginToPrepareAsynchronousHeapDataExchange();

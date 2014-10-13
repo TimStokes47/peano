@@ -9,9 +9,6 @@
 #include "tarch/parallel/messages/JobRequestMessage.h"
 #include "tarch/parallel/messages/NodePoolAnswerMessage.h"
 
-#include "tarch/mpianalysis/Analysis.h"
-
-
 #include <sstream>
 
 #include "tarch/services/ServiceFactory.h"
@@ -526,14 +523,6 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
 
   logTraceOut( "replyToWorkerRequestMessages()" );
   #endif
-}
-
-
-void tarch::parallel::NodePool::logStatistics() {
-  tarch::mpianalysis::Analysis::getInstance().logNodePoolStatistics(
-    _strategy->getNumberOfRegisteredNodes(),
-    _strategy->getNumberOfIdleNodes()
-  );
 }
 
 

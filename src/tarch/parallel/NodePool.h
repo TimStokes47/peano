@@ -406,17 +406,6 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * afterwards register themselves as idle again.
      */
     void activateIdleNodes();
-
-    /**
-     * Update statistics
-     *
-     * The node pool pipes some statistics to the mpi analysis interface due to
-     * this operation. The node pool automatically calls this operation if its
-     * state changes. If the state does not change, this operation is not
-     * called and no statistics are logged. However, you are always free to
-     * call this operation additionally from a runner.
-     */
-    void logStatistics();
 };
 
 

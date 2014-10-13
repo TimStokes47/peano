@@ -1,14 +1,14 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _TARCH_MPIANALYIS_ANALYSER_H_
-#define _TARCH_MPIANALYIS_ANALYSER_H_
+#ifndef _PEANO_PERFORMANCE_ANALYIS_ANALYSER_H_
+#define _PEANO_PERFORMANCE_ANALYIS_ANALYSER_H_
 
 
 #include "tarch/la/Vector.h"
 
 
-namespace tarch {
-  namespace mpianalysis {
+namespace peano {
+  namespace performanceanalysis {
     class Analyser;
   }
 }
@@ -20,7 +20,7 @@ namespace tarch {
  *
  * @author Roland Wittmann, Tobias Weinzierl
  */
-class tarch::mpianalysis::Analyser {
+class peano::performanceanalysis::Analyser {
   public:
     virtual ~Analyser() {};
 
@@ -38,6 +38,17 @@ class tarch::mpianalysis::Analyser {
      * Counterpart of beginIteration()
      */
     virtual void endIteration() = 0;
+
+    /**
+     * Only a subpart of the total traversal time is spent in the central
+     * element. This is tracked via this operation.
+     */
+    virtual void enterCentralElementOfEnclosingSpacetree() = 0;
+
+    /**
+     * Counterpart of enterCentralElementOfEnclosingSpacetree()
+     */
+    virtual void leaveCentralElementOfEnclosingSpacetree() = 0;
 
     /**
      * Inform analysis device about a worker and its associated domain
@@ -74,11 +85,6 @@ class tarch::mpianalysis::Analyser {
     ) = 0;
 
     /**
-     * Inform analyser what an MPI tag is used for.
-     */
-    virtual void tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier ) = 0;
-
-    /**
      * Inform analyser that there was data that should have been received in
      * background but that wasn't there, when we needed it.
      *
@@ -96,18 +102,6 @@ class tarch::mpianalysis::Analyser {
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) = 0;
 
     virtual void dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) = 0;
-
-    /**
-     * Log information about mpi resources.
-     *
-     * This operation is invoked by node pools, i.e. by mpi ranks managing
-     * resources. They call this operation upon state changes. See
-     * NodePool::logStatistics().
-     */
-    virtual void logNodePoolStatistics(int registeredWorkers, int idleWorkers) = 0;
-
-    virtual void enterCentralElementOfEnclosingSpacetree() = 0;
-    virtual void leaveCentralElementOfEnclosingSpacetree() = 0;
     virtual void beginToReleaseSynchronousHeapData() = 0;
     virtual void endToReleaseSynchronousHeapData() = 0;
     virtual void beginToPrepareAsynchronousHeapDataExchange() = 0;

@@ -3,7 +3,7 @@
 #endif
 
 
-#include "tarch/mpianalysis/Analysis.h"
+#include "peano/performanceanalysis/Analysis.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "peano/utils/PeanoOptimisations.h"
 
@@ -87,9 +87,7 @@ template <class Vertex, class Cell, class State, class VertexStack, class CellSt
 void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::iterate() {
   logTraceInWith1Argument( "iterate(State)", _state.toString() );
 
-  #ifdef Parallel
-  tarch::mpianalysis::Analysis::getInstance().beginIteration();
-  #endif
+  peano::performanceanalysis::Analysis::getInstance().beginIteration();
 
   _root.traverse(_state);
 
@@ -101,8 +99,8 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
 
   logDebug( "iterate(State)", "called endOfIteration()" );
 
+  peano::performanceanalysis::Analysis::getInstance().endIteration();
   #ifdef Parallel
-  tarch::mpianalysis::Analysis::getInstance().endIteration();
   peano::parallel::JoinDataBufferPool::getInstance().releaseMessages();
   tarch::mpianalysis::Analysis::getInstance().endReleaseOfJoinData();
   peano::parallel::SendReceiveBufferPool::getInstance().releaseMessages();

@@ -1,51 +1,51 @@
-#include "tarch/mpianalysis/Analysis.h"
-#include "tarch/mpianalysis/DefaultAnalyser.h"
+#include "peano/performanceanalysis/Analysis.h"
+#include "peano/performanceanalysis/DefaultAnalyser.h"
 #include "tarch/Assertions.h"
 
 
-tarch::mpianalysis::Analysis::Analysis():
+peano::performanceanalysis::Analysis::Analysis():
   _device(0) {
   _device = new DefaultAnalyser();
 }
 
-tarch::mpianalysis::Analysis::~Analysis() {
+peano::performanceanalysis::Analysis::~Analysis() {
   deleteDevice();
 }
 
 
-tarch::mpianalysis::Analysis& tarch::mpianalysis::Analysis::getInstance() {
+peano::performanceanalysis::Analysis& peano::performanceanalysis::Analysis::getInstance() {
   static Analysis singleton;
   return singleton;
 }
 
 
-void tarch::mpianalysis::Analysis::deleteDevice() {
+void peano::performanceanalysis::Analysis::deleteDevice() {
   if (_device!=0) {
     delete _device;
   }
 }
 
 
-void tarch::mpianalysis::Analysis::setDevice( Analyser* device ) {
+void peano::performanceanalysis::Analysis::setDevice( Analyser* device ) {
   assertion( device!=0 );
   deleteDevice();
   _device = device;
 }
 
 
-void tarch::mpianalysis::Analysis::beginIteration() {
+void peano::performanceanalysis::Analysis::beginIteration() {
   assertion( _device!=0 );
   _device->beginIteration();
 }
 
 
-void tarch::mpianalysis::Analysis::endIteration() {
+void peano::performanceanalysis::Analysis::endIteration() {
   assertion( _device!=0 );
   _device->endIteration();
 }
 
 
-void tarch::mpianalysis::Analysis::addWorker(
+void peano::performanceanalysis::Analysis::addWorker(
   int                                 workerRank,
   int                                 level,
   const tarch::la::Vector<3,double>&  boundingBoxOffset,
@@ -56,7 +56,7 @@ void tarch::mpianalysis::Analysis::addWorker(
 }
 
 
-void tarch::mpianalysis::Analysis::removeWorker(
+void peano::performanceanalysis::Analysis::removeWorker(
   int                                 workerRank,
   int                                 level,
   const tarch::la::Vector<3,double>&  boundingBoxOffset,
@@ -67,7 +67,7 @@ void tarch::mpianalysis::Analysis::removeWorker(
 }
 
 
-void tarch::mpianalysis::Analysis::addWorker(
+void peano::performanceanalysis::Analysis::addWorker(
   int                                 workerRank,
   int                                 level,
   const tarch::la::Vector<2,double>&  boundingBoxOffset,
@@ -78,7 +78,7 @@ void tarch::mpianalysis::Analysis::addWorker(
 }
 
 
-void tarch::mpianalysis::Analysis::removeWorker(
+void peano::performanceanalysis::Analysis::removeWorker(
   int                                 workerRank,
   int                                 level,
   const tarch::la::Vector<2,double>&  boundingBoxOffset,
@@ -89,71 +89,59 @@ void tarch::mpianalysis::Analysis::removeWorker(
 }
 
 
-void tarch::mpianalysis::Analysis::tagIsUsedFor( int tag, const std::string& communicationTypeIdentifier ) {
-  assertion( _device!=0 );
-  _device->tagIsUsedFor(tag,communicationTypeIdentifier);
-}
-
-
-void tarch::mpianalysis::Analysis::dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {
+void peano::performanceanalysis::Analysis::dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {
   assertion( _device!=0 );
   _device->dataWasNotReceivedInBackground(fromRank,tag,cardinality,pageSize);
 }
 
 
-void tarch::mpianalysis::Analysis::dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) {
+void peano::performanceanalysis::Analysis::dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) {
   assertion( _device!=0 );
   _device->dataWasNotReceivedFromWorker(fromRank,calendarTime);
 }
 
 
-void tarch::mpianalysis::Analysis::logNodePoolStatistics(int registeredWorkers, int idleWorkers) {
-  assertion( _device!=0 );
-  _device->logNodePoolStatistics(registeredWorkers, idleWorkers);
-}
-
-
-void tarch::mpianalysis::Analysis::beginToReleaseSynchronousHeapData() {
+void peano::performanceanalysis::Analysis::beginToReleaseSynchronousHeapData() {
   assertion( _device!=0 );
   _device->beginToReleaseSynchronousHeapData();
 }
 
 
-void tarch::mpianalysis::Analysis::endToReleaseSynchronousHeapData() {
+void peano::performanceanalysis::Analysis::endToReleaseSynchronousHeapData() {
   assertion( _device!=0 );
   _device->endToReleaseSynchronousHeapData();
 }
 
 
-void tarch::mpianalysis::Analysis::beginToPrepareAsynchronousHeapDataExchange() {
+void peano::performanceanalysis::Analysis::beginToPrepareAsynchronousHeapDataExchange() {
   assertion( _device!=0 );
   _device->beginToPrepareAsynchronousHeapDataExchange();
 }
 
 
-void tarch::mpianalysis::Analysis::endToPrepareAsynchronousHeapDataExchange() {
+void peano::performanceanalysis::Analysis::endToPrepareAsynchronousHeapDataExchange() {
   assertion( _device!=0 );
   _device->endToPrepareAsynchronousHeapDataExchange();
 }
 
 
-void tarch::mpianalysis::Analysis::endReleaseOfJoinData() {
+void peano::performanceanalysis::Analysis::endReleaseOfJoinData() {
   assertion( _device!=0 );
   _device->endReleaseOfJoinData();
 }
 
 
-void tarch::mpianalysis::Analysis::endReleaseOfBoundaryData() {
+void peano::performanceanalysis::Analysis::endReleaseOfBoundaryData() {
   assertion( _device!=0 );
   _device->endReleaseOfBoundaryData();
 }
 
-void tarch::mpianalysis::Analysis::enterCentralElementOfEnclosingSpacetree() {
+void peano::performanceanalysis::Analysis::enterCentralElementOfEnclosingSpacetree() {
   assertion( _device!=0 );
   _device->enterCentralElementOfEnclosingSpacetree();
 }
 
-void tarch::mpianalysis::Analysis::leaveCentralElementOfEnclosingSpacetree() {
+void peano::performanceanalysis::Analysis::leaveCentralElementOfEnclosingSpacetree() {
   assertion( _device!=0 );
   _device->leaveCentralElementOfEnclosingSpacetree();
 }

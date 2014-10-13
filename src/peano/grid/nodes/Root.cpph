@@ -1,5 +1,5 @@
 #include "tarch/Assertions.h"
-#include "tarch/mpianalysis/Analysis.h"
+#include "peano/performanceanalysis/Analysis.h"
 
 #include "peano/grid/aspects/CellRefinement.h"
 #include "peano/utils/Loop.h"
@@ -674,7 +674,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
       const bool isCentralElementOfTree=linearisedCurrentCellTraversal==THREE_POWER_D/2;
       if (isCentralElementOfTree) {
-        tarch::mpianalysis::Analysis::getInstance().enterCentralElementOfEnclosingSpacetree();
+        peano::performanceanalysis::Analysis::getInstance().enterCentralElementOfEnclosingSpacetree();
       }
 
       _refinedNode.descendIntoASingleCell(
@@ -689,7 +689,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       );
 
       if (isCentralElementOfTree) {
-        tarch::mpianalysis::Analysis::getInstance().leaveCentralElementOfEnclosingSpacetree();
+        peano::performanceanalysis::Analysis::getInstance().leaveCentralElementOfEnclosingSpacetree();
 
         #ifdef Parallel
         fineGridEnumerator.setOffset( tarch::la::Vector<DIMENSIONS,int>(1) );

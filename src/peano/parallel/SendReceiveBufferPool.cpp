@@ -5,7 +5,6 @@
 #include "tarch/parallel/NodePool.h"
 #include "tarch/Assertions.h"
 #include "tarch/timing/Watch.h"
-#include "tarch/mpianalysis/Analyser.h"
 #include "tarch/multicore/Lock.h"
 
 #include "peano/datatraversal/TaskSet.h"

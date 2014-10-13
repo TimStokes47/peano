@@ -6,7 +6,6 @@
 #include <cstdlib>
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
-#include "tarch/mpianalysis/Analysis.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
@@ -30,8 +29,11 @@ int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessag
   result++;
   
   tarch::logging::Log _log("tarch::parallel::Node<static>");
-
-  tarch::mpianalysis::Analysis::getInstance().tagIsUsedFor(result,fullQualifiedMessageName);
+  logInfo(
+    "reserveFreeTag()",
+    "assigned message " << fullQualifiedMessageName
+     << " the free tag " << result
+  );
 
   return result;
 }
