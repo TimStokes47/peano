@@ -216,9 +216,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     std::string getLogColumnSeparator() const;
     bool        getLogTimeStamp() const;
     bool        getLogTimeStampHumanReadable() const;
-    bool        getLogMachineName() const;
     bool        getLogMessageType() const;
-    bool        getLogTrace() const;
 
     std::ostream& out();
 
@@ -227,6 +225,18 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     virtual ~CommandLineLogger();
 
     static CommandLineLogger& getInstance();
+
+    /**
+     * Is public as some analysis frameworks check explicitly whether these
+     * features are switched on.
+     */
+    bool        getLogMachineName() const;
+
+    /**
+     * Is public as some analysis frameworks check explicitly whether these
+     * features are switched on.
+     */
+    bool        getLogTrace() const;
 
     /**
      * Add one filter list entry
