@@ -1,0 +1,14 @@
+/**
+
+
+ @dir "Performance Analysis"
+ 
+ This directory is kind of a plotter for performance analysis data. It follows few guidelines:
+ 
+ - Logged data is application-specific, i.e. we do not focus on technical details.
+ - All passed data is built-in types. Strings are not passed.
+ - Watches, string construction, etc. all are used if and only if the corresponding log filters
+   are switched off, i.e. if the messages would pass through. 
+  
+ */
+ 
