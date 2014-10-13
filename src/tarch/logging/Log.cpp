@@ -79,6 +79,8 @@ std::string tarch::logging::Log::getMachineInformation() const {
   else {
     message << "rank:not-initialised-yet";
   }
+  #else
+  message << "rank:0";
   #endif
 
   return message.str();
