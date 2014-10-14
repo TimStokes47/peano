@@ -37,7 +37,7 @@ class peano::performanceanalysis::Analyser {
     /**
      * Counterpart of beginIteration()
      */
-    virtual void endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells, double numberOfInnerCells, double numberOfOuterCells) = 0;
+    virtual void endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells, double numberOfInnerCells, double numberOfOuterCells, double numberOfLocalCells, double numberOfLocalVertices) = 0;
 
     /**
      * Only a subpart of the total traversal time is spent in the central

@@ -61,6 +61,17 @@ class peano::grid::Grid {
      */
     static tarch::logging::Log _log;
 
+    /**
+     * Holds the vertex stack associated to this event.
+     */
+    VertexStack& _vertexStack;
+
+    /**
+     * Holds the cell stack associated to this event. This is important for
+     * all events events - even leaves need it as they might refine further.
+     */
+    CellStack&   _cellStack;
+
     State&  _state;
 
     /**

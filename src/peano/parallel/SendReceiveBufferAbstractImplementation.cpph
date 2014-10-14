@@ -293,7 +293,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::releaseRe
   bool         triggeredTimeoutWarning = false;
 
   if (getNumberOfReceivedMessages() < getNumberOfSentMessages()) {
-    tarch::mpianalysis::Analysis::getInstance().dataWasNotReceivedInBackground(
+    peano::performanceanalysis::Analysis::getInstance().dataWasNotReceivedInBackground(
       _destinationNodeNumber,
       peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(),
       getNumberOfSentMessages()-getNumberOfReceivedMessages(),

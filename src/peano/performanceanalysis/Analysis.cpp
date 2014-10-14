@@ -39,9 +39,9 @@ void peano::performanceanalysis::Analysis::beginIteration() {
 }
 
 
-void peano::performanceanalysis::Analysis::endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells, double numberOfInnerCells, double numberOfOuterCells) {
+void peano::performanceanalysis::Analysis::endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells, double numberOfInnerCells, double numberOfOuterCells, double numberOfLocalCells, double numberOfLocalVertices) {
   assertion( _device!=0 );
-  _device->endIteration(numberOfInnerLeafCells,numberOfOuterLeafCells,numberOfInnerCells,numberOfOuterCells);
+  _device->endIteration(numberOfInnerLeafCells,numberOfOuterLeafCells,numberOfInnerCells,numberOfOuterCells,numberOfLocalCells,numberOfLocalVertices);
 }
 
 
