@@ -440,7 +440,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   logTraceInWith1Argument( "startToSendBoundaryData(bool)", _name );
 
   #ifdef Parallel
-  tarch::mpianalysis::Analysis::getInstance().beginToPrepareAsynchronousHeapDataExchange();
+  peano::performanceanalysis::Analysis::getInstance().beginToPrepareAsynchronousHeapDataExchange();
 
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
@@ -450,7 +450,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
     p->second.startToSendData(isTraversalInverted);
   }
 
-  tarch::mpianalysis::Analysis::getInstance().endToPrepareAsynchronousHeapDataExchange();
+  peano::performanceanalysis::Analysis::getInstance().endToPrepareAsynchronousHeapDataExchange();
   #endif
 
   logTraceOut( "startToSendBoundaryData(bool)" );
@@ -462,12 +462,12 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   logTraceInWith1Argument( "finishedToSendSynchronousData()", _name );
 
   #ifdef Parallel
-  tarch::mpianalysis::Analysis::getInstance().beginToReleaseSynchronousHeapData();
+  peano::performanceanalysis::Analysis::getInstance().beginToReleaseSynchronousHeapData();
 
   _masterWorkerExchanger.finishedToSendData();
   _joinForkExchanger.finishedToSendData();
 
-  tarch::mpianalysis::Analysis::getInstance().endToReleaseSynchronousHeapData();
+  peano::performanceanalysis::Analysis::getInstance().endToReleaseSynchronousHeapData();
   #endif
 
   logTraceOut( "finishedToSendSynchronousData()" );
