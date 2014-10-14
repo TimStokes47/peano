@@ -437,7 +437,6 @@ void tarch::parallel::NodePool::replyToRegistrationMessages() {
     message.receive( MPI_ANY_SOURCE, _registrationTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
     logDebug(  "replyToRegistrationMessages()", "got registration from rank " << message.getSenderRank() );
     _strategy->addNode( message );
-    logStatistics();
   }
 
   logTraceOut( "replyToRegistrationMessages()" );
@@ -481,8 +480,6 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
     else {
       _strategy->setNodeIdle( queryMessage.getSenderRank() );
     }
-
-    logStatistics();
   }
   #endif
   logTraceOut( "replyToJobRequestMessage() ");
@@ -517,7 +514,6 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
         answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
       }
       _strategy->fillWorkerRequestQueue(queue);
-      logStatistics();
     }
   }
 
