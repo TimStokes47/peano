@@ -437,6 +437,7 @@ void tarch::parallel::NodePool::replyToRegistrationMessages() {
     message.receive( MPI_ANY_SOURCE, _registrationTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
     logDebug(  "replyToRegistrationMessages()", "got registration from rank " << message.getSenderRank() );
     _strategy->addNode( message );
+    assertion1( !_strategy->isIdleNode(message.getSenderRank()), message.toString() );
   }
 
   logTraceOut( "replyToRegistrationMessages()" );
