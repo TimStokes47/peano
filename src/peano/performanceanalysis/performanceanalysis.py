@@ -42,7 +42,6 @@ def parseInputFile():
    
   try:
     inputFile = open( inputFileName,  "r" )
-    totalVertexUpdates = 0
     print "parse ",
     for line in inputFile:
       for rank in range(0,numberOfRanks):
@@ -75,11 +74,12 @@ def plotLogicalTopology():
   
   try:
     inputFile = open( inputFileName,  "r" )
-    totalVertexUpdates = 0
-    print "parse ",
+    print "parse topology",
     for line in inputFile:
-      for rank in range(0,numberOfRanks):
-        if ("DefaultAnalyser" in line):
+        searchPatternAddEdge    = "peano::performanceanalysis::DefaultAnalyser::addWorker.*(d)"
+        searchPatternRemoveEdge = "peano::performanceanalysis::DefaultAnalyser::removeWorker.*"
+        xxx
+      if ("DefaultAnalyser" in line):
           m = re.search( "rank:" + str(rank) + " +" + searchPatternNumberOfCells, line )
           if (m):
             token = line.replace("(",",").replace(")","").strip().split(",")
