@@ -74,7 +74,7 @@ void peano::parallel::loadbalancing::Oracle::addWorker(
     _startCommand = Continue;
   }
 
-  peano::performanceanalysis::Analysis::getInstance().addWorker(rank,level,boundingBoxOffset,boundingBoxSize);
+  peano::performanceanalysis::Analysis::getInstance().addWorker(rank,level);
 }
 
 
@@ -87,15 +87,9 @@ void peano::parallel::loadbalancing::Oracle::removeWorker(int rank) {
     p++
   ) {
     if (p->_rank == rank) {
-      peano::performanceanalysis::Analysis::getInstance().addWorker(
-        rank,p->_level,p->_boundingBoxOffset,p->_boundingBoxSize
-      );
-
       peano::performanceanalysis::Analysis::getInstance().removeWorker(
         p->_rank,
-        p->_level,
-        p->_boundingBoxOffset,
-        p->_boundingBoxSize
+        p->_level
       );
       _workers.erase( p );
       return;

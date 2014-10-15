@@ -62,12 +62,8 @@ void peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosing
 
 void peano::performanceanalysis::DefaultAnalyser::addWorker(
   int                                 workerRank,
-  int                                 level,
-  const tarch::la::Vector<2,double>&  boundingBoxOffset,
-  const tarch::la::Vector<2,double>&  boundingBoxSize
+  int                                 level
 ) {
-/*
-
   logInfo(
     "addWorker(int,Vector,Vector)",
     tarch::parallel::Node::getInstance().getRank()
@@ -75,51 +71,17 @@ void peano::performanceanalysis::DefaultAnalyser::addWorker(
     << tarch::parallel::Node::getInstance().getRank()
     << "+"
     << workerRank
-    << " [worker's domain:"
-    << boundingBoxOffset
-    << "x"
-    << boundingBoxSize
-    << ",level:"
+    << " [level:"
     << level
     << "]"
   );
-*/
-}
-
-
-void peano::performanceanalysis::DefaultAnalyser::addWorker(
-  int                                 workerRank,
-  int                                 level,
-  const tarch::la::Vector<3,double>&  boundingBoxOffset,
-  const tarch::la::Vector<3,double>&  boundingBoxSize
-) {
-/*
-  logInfo(
-    "addWorker(int,Vector,Vector)",
-    tarch::parallel::Node::getInstance().getRank()
-    << "->"
-    << tarch::parallel::Node::getInstance().getRank()
-    << "+"
-    << workerRank
-    << " [worker's domain:"
-    << boundingBoxOffset
-    << "x"
-    << boundingBoxSize
-    << ",level:"
-    << level
-    << "]"
-  );
-*/
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::removeWorker(
   int                                 workerRank,
-  int                                 level,
-  const tarch::la::Vector<3,double>&  boundingBoxOffset,
-  const tarch::la::Vector<3,double>&  boundingBoxSize
+  int                                 level
 ) {
-/*
   logInfo(
     "removeWorker()",
     tarch::parallel::Node::getInstance().getRank()
@@ -127,41 +89,10 @@ void peano::performanceanalysis::DefaultAnalyser::removeWorker(
     << workerRank
     << "->"
     << tarch::parallel::Node::getInstance().getRank()
-    << " [worker's domain:"
-    << boundingBoxOffset
-    << "x"
-    << boundingBoxSize
-    << ",level:"
+    << " [level:"
     << level
     << "]"
   );
-*/
-}
-
-
-void peano::performanceanalysis::DefaultAnalyser::removeWorker(
-  int                                 workerRank,
-  int                                 level,
-  const tarch::la::Vector<2,double>&  boundingBoxOffset,
-  const tarch::la::Vector<2,double>&  boundingBoxSize
-) {
-/*
-  logInfo(
-    "removeWorker()",
-    tarch::parallel::Node::getInstance().getRank()
-    << "+"
-    << workerRank
-    << "->"
-    << tarch::parallel::Node::getInstance().getRank()
-    << " [worker's domain:"
-    << boundingBoxOffset
-    << "x"
-    << boundingBoxSize
-    << ",level:"
-    << level
-    << "]"
-  );
-*/
 }
 
 

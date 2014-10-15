@@ -1,6 +1,8 @@
 import sys
 import re
-import pylab 
+import pylab
+import networkx 
+
 
 
 searchPatternNumberOfCells         = ".*peano::performanceanalysis::DefaultAnalyser::endIteration.*cells=\("
@@ -15,11 +17,19 @@ numberOfOuterCells      = {}
 numberOfLocalCells      = {}
 numberOfLocalVertices   = {}
   
+  
+  
+#
+# Display constants. Might be reset later
+#
+AlphaValue = 1.0
+
 
 
 def parseInputFile():
   #data = {k: [] for k in range(2)}
 
+  print "prepare data structures",
   for rank in range(0,numberOfRanks):
     numberOfInnerLeafCells[rank]  = []
     numberOfInnerCells[rank]      = []
@@ -27,6 +37,8 @@ def parseInputFile():
     numberOfOuterCells[rank]      = []
     numberOfLocalCells[rank]      = []
     numberOfLocalVertices[rank]   = []
+    print ".",
+  print " done"
    
   try:
     inputFile = open( inputFileName,  "r" )
@@ -34,26 +46,71 @@ def parseInputFile():
     print "parse ",
     for line in inputFile:
       for rank in range(0,numberOfRanks):
-        m = re.search( "rank:" + str(rank) + " +" + searchPatternNumberOfCells, line )
-        if (m):
-          token = line.replace("(",",").replace(")","").strip().split(",")
-          numberOfInnerLeafCells[rank].append(float(token[-5]))
-          numberOfOuterLeafCells[rank].append(float(token[-4]))
-          numberOfInnerCells[rank].append(float(token[-3]))
-          numberOfOuterCells[rank].append(float(token[-2]))
-          numberOfLocalCells[rank].append(float(token[-1]))
-          print ".",
-        m = re.search( "rank:" + str(rank) + " +" + searchPatternNumberOfLocalVertices, line )
-        if (m):
-          token = line.strip().split("=")
-          numberOfLocalVertices[rank].append(float(token[-1]))
-          print ".",
+        if ("DefaultAnalyser" in line):
+          m = re.search( "rank:" + str(rank) + " +" + searchPatternNumberOfCells, line )
+          if (m):
+            token = line.replace("(",",").replace(")","").strip().split(",")
+            numberOfInnerLeafCells[rank].append(float(token[-5]))
+            numberOfOuterLeafCells[rank].append(float(token[-4]))
+            numberOfInnerCells[rank].append(float(token[-3]))
+            numberOfOuterCells[rank].append(float(token[-2]))
+            numberOfLocalCells[rank].append(float(token[-1]))
+            print ".",
+          m = re.search( "rank:" + str(rank) + " +" + searchPatternNumberOfLocalVertices, line )
+          if (m):
+            token = line.strip().split("=")
+            numberOfLocalVertices[rank].append(float(token[-1]))
+            print ".",
           
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
 
+
+
+def plotLogicalTopology():
+  topologyGraph = networkx.MultiDiGraph()
+  topologyGraph.add_node(0, color='blue')
+  
+  try:
+    inputFile = open( inputFileName,  "r" )
+    totalVertexUpdates = 0
+    print "parse ",
+    for line in inputFile:
+      for rank in range(0,numberOfRanks):
+        if ("DefaultAnalyser" in line):
+          m = re.search( "rank:" + str(rank) + " +" + searchPatternNumberOfCells, line )
+          if (m):
+            token = line.replace("(",",").replace(")","").strip().split(",")
+            numberOfInnerLeafCells[rank].append(float(token[-5]))
+            numberOfOuterLeafCells[rank].append(float(token[-4]))
+            numberOfInnerCells[rank].append(float(token[-3]))
+            numberOfOuterCells[rank].append(float(token[-2]))
+            numberOfLocalCells[rank].append(float(token[-1]))
+            print ".",
+          m = re.search( "rank:" + str(rank) + " +" + searchPatternNumberOfLocalVertices, line )
+          if (m):
+            token = line.strip().split("=")
+            numberOfLocalVertices[rank].append(float(token[-1]))
+            print ".",
+          
+    print " done"
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+  
+  
+  #G.add_edge(1,2)
+  #>>> G.add_edge(1,3)
+  #>>> G[1][3]['color']='blue'
+  #>>> G[1][3]['weight']='blue'
+  pylab.clf()
+  pylab.title( "Logical topology" )
+  networkx.draw_circular(topologyGraph)
+  pylab.savefig( outputFileName + ".topology.png" )
+  pylab.savefig( outputFileName + ".topology.pdf" )
+  
 
 
 def setGeneralPlotSettings():
@@ -87,7 +144,7 @@ def plotGlobalGridOverview():
     startRank = 0
   for rank in range(startRank,numberOfRanks):
     x = pylab.arange(0, len(numberOfLocalCells[rank]), 1.0)
-    pylab.plot(x, numberOfLocalCells[rank], 'o',  color='#000000', alpha=0.1, markersize=10)
+    pylab.plot(x, numberOfLocalCells[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
   pylab.xlabel('t')
   pylab.savefig( outputFileName + ".local-cells.png" )
   pylab.savefig( outputFileName + ".local-cells.pdf" )
@@ -99,11 +156,10 @@ def plotGlobalGridOverview():
     startRank = 0
   for rank in range(startRank,numberOfRanks):
     x = pylab.arange(0, len(numberOfLocalVertices[rank]), 1.0)
-    pylab.plot(x, numberOfLocalVertices[rank], 'o',  color='#000000', alpha=0.1, markersize=10)
+    pylab.plot(x, numberOfLocalVertices[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
   pylab.xlabel('t')
   pylab.savefig( outputFileName + ".local-vertices.png" )
   pylab.savefig( outputFileName + ".local-vertices.pdf" )
-
 
 
 
@@ -118,6 +174,10 @@ else:
   numberOfRanks   = int(sys.argv[2])
 
   outFile        = open( outputFileName, "w" )
+  
+  AlphaValue     = 1.0/numberOfRanks
+  if (AlphaValue<0.01):
+    AlphaValue   = 0.01
   
   print "read input file " + inputFileName + " for " + str(numberOfRanks) + " rank(s)"
   parseInputFile()
@@ -142,6 +202,7 @@ else:
      <h2 id=\"table-of-contents\">Table of contents</h2>\
      <ul>\
        <li><a href=\"#global-grid-overview\">Global grid overview</a></li>\
+       <li><a href=\"#logical-topology\">Logical topology</a></li>\
      </ul>\
    ")
 
@@ -161,10 +222,27 @@ else:
     The darker the plots, the more ranks exhibit a certain characteristics. \
     If the points spread out, this is an indicator that your load balancing is \
     inadequate. \
+    If you run Peano on multiple ranks, rank 0 typically degenerates to a pure \
+    administrative rank, i.e. it is o.k. if there is close to 0 vertices and cells \
+    for one particular rank. \
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
+  #
+  # Grid information
+  #
+  print "plot logical grid topology"
+  plotLogicalTopology()
+  outFile.write( "\
+    <h2 id=\"logical-topology\">Logical topology</h2>\
+    <img src=\"" + outputFileName + ".topology.png\" />\
+    <br /><br />\
+    <p>\
+    Yet to be written. \
+    </p>\
+    <a href=\"#table-of-contents\">To table of contents</a>\
+    ")
 
   #
   # Trailor of report

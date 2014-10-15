@@ -75,9 +75,7 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
      */
     virtual void addWorker(
       int                                 workerRank,
-      int                                 level,
-      const tarch::la::Vector<3,double>&  boundingBoxOffset,
-      const tarch::la::Vector<3,double>&  boundingBoxSize
+      int                                 level
     );
 
     /**
@@ -85,29 +83,7 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
      */
     virtual void removeWorker(
       int                                 workerRank,
-      int                                 level,
-      const tarch::la::Vector<3,double>&  boundingBoxOffset,
-      const tarch::la::Vector<3,double>&  boundingBoxSize
-    );
-
-    /**
-     * @see Analyser
-     */
-    virtual void addWorker(
-      int                                 workerRank,
-      int                                 level,
-      const tarch::la::Vector<2,double>&  boundingBoxOffset,
-      const tarch::la::Vector<2,double>&  boundingBoxSize
-    );
-
-    /**
-     * @see Analyser
-     */
-    virtual void removeWorker(
-      int                                 workerRank,
-      int                                 level,
-      const tarch::la::Vector<2,double>&  boundingBoxOffset,
-      const tarch::la::Vector<2,double>&  boundingBoxSize
+      int                                 level
     );
 
     /**

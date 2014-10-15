@@ -50,30 +50,12 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
 
     virtual void addWorker(
       int                                 workerRank,
-      int                                 level,
-      const tarch::la::Vector<3,double>&  boundingBoxOffset,
-      const tarch::la::Vector<3,double>&  boundingBoxSize
+      int                                 level
     );
 
     virtual void removeWorker(
       int                                 workerRank,
-      int                                 level,
-      const tarch::la::Vector<3,double>&  boundingBoxOffset,
-      const tarch::la::Vector<3,double>&  boundingBoxSize
-    );
-
-    virtual void addWorker(
-      int                                 workerRank,
-      int                                 level,
-      const tarch::la::Vector<2,double>&  boundingBoxOffset,
-      const tarch::la::Vector<2,double>&  boundingBoxSize
-    );
-
-    virtual void removeWorker(
-      int                                 workerRank,
-      int                                 level,
-      const tarch::la::Vector<2,double>&  boundingBoxOffset,
-      const tarch::la::Vector<2,double>&  boundingBoxSize
+      int                                 level
     );
 
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
