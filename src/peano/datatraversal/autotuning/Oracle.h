@@ -8,6 +8,7 @@
 
 
 #include "tarch/logging/Log.h"
+#include "tarch/timing/Watch.h"
 #include "peano/datatraversal/autotuning/OracleForOnePhase.h"
 
 
@@ -55,10 +56,20 @@ class peano::datatraversal::autotuning::Oracle {
       bool                   _recursiveCallsForThisOracle;
       #endif
       bool                   _measureTime;
+      tarch::timing::Watch*  _watch;
       OracleForOnePhase*     _oracle;
     };
 
     ValuesPerOracleKey*                        _oracles;
+
+    /**
+     * Timer for whole iterations
+     *
+     * This timer keeps track how long one iteration did last. It is restarted
+     * every time one calls switchToOracle(), i.e. at the beginning of each
+     * Peano grid sweep.
+     */
+    tarch::timing::Watch                       _watchSinceLastSwitchCall;
 
     /**
      * Oracle, method and problem size must not change between the
