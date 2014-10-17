@@ -10,7 +10,9 @@ peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   _totalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _traversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _waitForWorkerDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
+  _waitForWorkerDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
+  _synchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
+  _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
   if (!tarch::logging::CommandLineLogger::getInstance().getLogMachineName()) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of machine name is disabled. See command line logger" );
   }
@@ -113,9 +115,7 @@ void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromWorker( in
 }
 
 
-
 void peano::performanceanalysis::DefaultAnalyser::dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {
-/*
   logInfo(
     "dataWasNotReceivedInBackground()",
     "rank had to wait for " << cardinality <<
@@ -123,17 +123,15 @@ void peano::performanceanalysis::DefaultAnalyser::dataWasNotReceivedInBackground
     " on tag " << tag <<
     " with page size " << pageSize
   );
-*/
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::beginToReleaseSynchronousHeapData() {
-//  _synchronousHeapWatch.startTimer();
+  _synchronousHeapWatch.startTimer();
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::endToReleaseSynchronousHeapData() {
-/*
   _synchronousHeapWatch.stopTimer();
 
   logInfo(
@@ -143,17 +141,15 @@ void peano::performanceanalysis::DefaultAnalyser::endToReleaseSynchronousHeapDat
     ", cpu time=" <<
     _synchronousHeapWatch.getCPUTime()
   );
-*/
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::beginToPrepareAsynchronousHeapDataExchange() {
-//  _asynchronousHeapWatch.startTimer();
+  _asynchronousHeapWatch.startTimer();
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange() {
-/*
   _asynchronousHeapWatch.stopTimer();
 
   logInfo(
@@ -163,39 +159,34 @@ void peano::performanceanalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDa
     ", cpu time=" <<
     _asynchronousHeapWatch.getCPUTime()
   );
-*/
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::endReleaseOfJoinData() {
-/*
-  _watch.stopTimer();
+  _traversalWatch.stopTimer();
 
   logInfo(
     "endReleaseOfJoinData()",
     "time=" <<
-    _watch.getCalendarTime() <<
+    _traversalWatch.getCalendarTime() <<
     ", cpu time=" <<
-    _watch.getCPUTime()
+    _traversalWatch.getCPUTime()
   );
 
-  _watch.startTimer();
-*/
+  _traversalWatch.startTimer();
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
-/*
-  _watch.stopTimer();
+  _traversalWatch.stopTimer();
 
   logInfo(
     "endReleaseOfBoundaryData()",
     "time=" <<
-    _watch.getCalendarTime() <<
+    _traversalWatch.getCalendarTime() <<
     ", cpu time=" <<
-    _watch.getCPUTime()
+    _traversalWatch.getCPUTime()
   );
 
-  _watch.startTimer();
-*/
+  _traversalWatch.startTimer();
 }

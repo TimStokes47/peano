@@ -133,61 +133,121 @@ def plotForkJoinStatistics():
 
 def plotMasterWorkerLateSends():
   #  <a href=\"" + outputFileName + ".master-worker-data-exchange.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.png\" />\
+  pairs = dict()
+  totalMaxTime        = 0.0
+  totalAverage        = 0
+  totalCount          = 0
+  floatPattern = "[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?"
+  waitingForWorkerLine = "rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromWorker.+rank had to wait for worker (\d+) for ("+ floatPattern + ")s"
 
-pairs = dict()
-
-floatPattern = "[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?"
-waitingForWorkerLine = "rank:(\d+)*.*tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedFromWorker.+rank had to wait for worker (\d+) for ("+ floatPattern + ")s"
-
-  numberOfWorkingNodes = []
-  numberOfIdleNodes    = []
-  numberOfForks        = []
-  numberOfJoins        = []
-  numberOfWorkingNodes.append(1)
-  numberOfIdleNodes.append(numberOfRanks-1)
-  numberOfForks.append(0)
-  numberOfJoins.append(0)
+  print "search for late worker answers ",
   try:
     inputFile = open( inputFileName,  "r" )
     print "parse fork/join statistics",
     for line in inputFile:
-      searchPatternFork    = "peano::performanceanalysis::DefaultAnalyser::addWorker"
-      searchPatternJoin    = "peano::performanceanalysis::DefaultAnalyser::removeWorker"
-      searchEndIteration   = "rank:0 .*peano::performanceanalysis::DefaultAnalyser::endIteration"
-      m = re.search( searchPatternFork, line )
+      m = re.search( waitingForWorkerLine, line )
       if (m):
-        numberOfWorkingNodes.append(numberOfWorkingNodes[-1]+1)
-        numberOfIdleNodes.append(numberOfIdleNodes[-1]-1)
-        numberOfForks.append(numberOfForks[-1]+1)
-        numberOfJoins.append(numberOfJoins[-1]+0)
-      m = re.search( searchPatternJoin, line )
-      if (m):
-        numberOfWorkingNodes.append(numberOfWorkingNodes[-1]-1)
-        numberOfIdleNodes.append(numberOfIdleNodes[-1]+1)
-        numberOfForks.append(numberOfForks[-1]+0)
-        numberOfJoins.append(numberOfJoins[-1]+1)
-      m = re.search( searchEndIteration, line )
-      if (m):
-        numberOfWorkingNodes.append(numberOfWorkingNodes[-1])
-        numberOfIdleNodes.append(numberOfIdleNodes[-1])
-        numberOfForks.append(numberOfForks[-1])
-        numberOfJoins.append(numberOfJoins[-1])
-    print " done"
+        master = int(m.group(1))
+        worker = int(m.group(2))
+        key = (master, worker)
+        
+        if not pairs.has_key(key):
+          pairs[key] = Pair(master, worker)
+        pair = pairs[key]
+        
+        time = float(m.group(3))
+     
+        pair.maxTime = max(pair.maxTime, time)
+        totalMaxTime = max(totalMaxTime, time)
+        pair.average += time
+        totalAverage += time
+        
+        pair.count += 1
+        totalCount += 1 
+    print " found " + str( len(pairs) ) + " entries of interest in trace file" 
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
   
   
+  graph              = networkx.DiGraph()
+  sparseAverageGraph = networkx.DiGraph()
+  sparseMaxGraph     = networkx.DiGraph()
+  for rank in range(0,numberOfRanks):
+    graph.add_node(str(rank))
+    sparseAverageGraph.add_node(str(rank))
+    sparseMaxGraph.add_node(str(rank))
+    for master in range(0,numberOfRanks):
+      for worker in range(0,numberOfRanks):
+        key = (master, worker)
+        if pairs.has_key(key):
+          pair = pairs[key]
+          if pair.count>2:
+            graph.add_edge(str(worker),str(master))
+            #edge = pydot.Edge(str(worker),str(master), label="(" + str(pair.count) + "," + str(pair.maxTime) + "," + str(float(pair.average) / float(pair.count)) + ")", fontsize=str(myfontsize), labelfontcolor="blue" )
+        
+          if totalCount > 0 and pair.count>2 and (float(pair.average) / float(pair.count) > float(totalAverage) / float(totalCount)):
+            sparseAverageGraph.add_edge(str(worker),str(master))
+            #edge = pydot.Edge(str(worker),str(master), label="(" + str(pair.count) + "," + str(pair.maxTime) + "," + str(float(pair.average) / float(pair.count)) + ")", fontsize=str(myfontsize), labelfontcolor="blue" )
+ 
+          if pair.count>2 and ( float(pair.maxTime) > 0.9 * float(totalMaxTime) ):
+            sparseMaxGraph.add_edge(str(worker),str(master))
+            #edge = pydot.Edge(str(worker),str(master), label="(" + str(pair.count) + "," + str(pair.maxTime) + "," + str(float(pair.average) / float(pair.count)) + ")", fontsize=str(myfontsize), labelfontcolor="blue" )
+            #sparseMaxGraph.add_edge(edge)      
   pylab.clf()
-  pylab.title( "Fork and join statistics" )
-  x = pylab.arange(0, len(numberOfWorkingNodes), 1.0)
-  pylab.plot(x, numberOfWorkingNodes, 'o-',  markersize=10, color='#ffaa00', label='working nodes' )
-  pylab.plot(x, numberOfIdleNodes,    '+-',  markersize=10, color='#00ffaa', label='idle nodes' )
-  pylab.plot(x, numberOfForks,        '.-',  markersize=10, color='#aa00ff', label='total forks' )
-  pylab.plot(x, numberOfJoins,        'x-',  markersize=10, color='#ff00aa', label='total joins' )
-  setGeneralPlotSettings()
-  pylab.savefig( outputFileName + ".fork-join-statistics.png" )
-  pylab.savefig( outputFileName + ".fork-join-statistics.pdf" )
+  pylab.title( "Late workers" )
+  networkx.draw_networkx(
+    graph,
+    with_labels=True,
+    node_color='#667766',
+    node_size=10,
+    alpha=0.2
+  )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.png" )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.pdf" )
+  DefaultSize = pylab.gcf().get_size_inches()
+  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.large.png" )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.large.pdf" )
+  DefaultSize = pylab.gcf().get_size_inches()
+  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+
+  pylab.clf()
+  pylab.title( "Late workers (only graphs more than average)" )
+  networkx.draw_networkx(
+    sparseAverageGraph,
+    with_labels=True,
+    node_color='#667766',
+    node_size=10,
+    alpha=0.2
+  )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.png" )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.pdf" )
+  DefaultSize = pylab.gcf().get_size_inches()
+  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.large.png" )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.large.pdf" )
+  DefaultSize = pylab.gcf().get_size_inches()
+  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+
+  pylab.clf()
+  pylab.title( "Late workers (only 10% heaviest edges)" )
+  networkx.draw_networkx(
+    sparseMaxGraph,
+    with_labels=True,
+    node_color='#667766',
+    node_size=10,
+    alpha=0.2
+  )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.png" )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.pdf" )
+  DefaultSize = pylab.gcf().get_size_inches()
+  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.large.png" )
+  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.large.pdf" )
+  DefaultSize = pylab.gcf().get_size_inches()
+  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+
 
 
 def plotLogicalTopology():
@@ -436,8 +496,6 @@ else:
   plotMasterWorkerLateSends()
   outFile.write( "\
     <h2 id=\"master-worker-data-exchange\">Master-worker data exchange</h2>\
-    <img src=\"" + outputFileName + ".master-worker-data-exchange.png\" />\
-    <br /><br />\
     <p>If an edge points from a to b, it means that master b had to wait for its worker a. The labels are wait times in seconds. </p>\
     <a href=\"" + outputFileName + ".master-worker-data-exchange.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.png\" /></a>\
     <p>The following graph holds only edges whose average is beyond the average of averages.</p>\
@@ -445,7 +503,6 @@ else:
     <p>The following graph holds only edges whose maximum weight is with 10% of the total maximum weight.</p>\
     <a href=\"" + outputFileName + ".master-worker-data-exchange.sparse-max.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.sparse-max.png\" /></a>\
     ")
-
 
   outFile.write( "\
     <br /><br />\

@@ -30,14 +30,20 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
   private:
     static tarch::logging::Log     _log;
 
+
+    /**
+     * Total watch runs from one endIteration() to the next one.
+     */
     tarch::timing::Watch           _totalWatch;
+
+    /**
+     * This one runs between beginIteration() and endIteration(). Cmp to _totalWatch.
+     */
     tarch::timing::Watch           _traversalWatch;
     tarch::timing::Watch           _actualDomainTraversalWatch;
     tarch::timing::Watch           _waitForWorkerDataWatch;
-/*
     tarch::timing::Watch           _synchronousHeapWatch;
     tarch::timing::Watch           _asynchronousHeapWatch;
-*/
  public:
     DefaultAnalyser();
     virtual ~DefaultAnalyser();
