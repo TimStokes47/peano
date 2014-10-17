@@ -75,7 +75,6 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
      */
     virtual void receivedTerminateCommand(
       int     workerRank,
-      double  waitedTime,
       double  workerNumberOfInnerVertices,
       double  workerNumberOfBoundaryVertices,
       double  workerNumberOfOuterVertices,

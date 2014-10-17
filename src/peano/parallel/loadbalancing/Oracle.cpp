@@ -29,7 +29,6 @@ peano::parallel::loadbalancing::Oracle& peano::parallel::loadbalancing::Oracle::
 
 peano::parallel::loadbalancing::Oracle::Oracle():
   _currentOracle(-1),
-  _watch( "peano::parallel::loadbalancing::Oracle", "Oracle()", false),
   _oraclePrototype(0),
   _workers(),
   _startCommand(Continue),
@@ -183,7 +182,7 @@ void peano::parallel::loadbalancing::Oracle::plotStatistics() {
 
 
 void peano::parallel::loadbalancing::Oracle::masterStartsToWaitForWorkers() {
-  _watch.startTimer();
+  peano::performanceanalysis::Analysis::getInstance().beginToReceiveDataFromWorker();
 }
 
 
@@ -324,13 +323,9 @@ void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
   assertion( _currentOracle>=0 );
   assertion( _currentOracle<static_cast<int>(_oracles.size()));
 
-  _watch.stopTimer();
-
-  const double elapsedTime = _watch.getCalendarTime();
 
   _oracles[_currentOracle]->receivedTerminateCommand(
     workerRank,
-    elapsedTime,
     workerNumberOfInnerVertices,
     workerNumberOfBoundaryVertices,
     workerNumberOfOuterVertices,
@@ -348,12 +343,7 @@ void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
     workerCouldNotEraseDueToDecomposition
   );
 
-
-  if ( tarch::la::greater(elapsedTime,0.0) ) {
-    peano::performanceanalysis::Analysis::getInstance().dataWasNotReceivedFromWorker(  workerRank, _watch.getCalendarTime() );
-  }
-
-  _watch.startTimer();
+  peano::performanceanalysis::Analysis::getInstance().endToReceiveDataFromWorker(workerRank);
 }
 
 

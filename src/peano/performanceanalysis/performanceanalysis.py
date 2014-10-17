@@ -27,6 +27,16 @@ AlphaValue = 1.0
 
 
 
+
+class Pair:
+  def __init__(self, master, worker):
+    self.master         = master
+    self.worker         = worker
+    self.count          = 0
+    self.maxTime        = 0.0
+    self.average        = 0
+
+
 def parseInputFile():
   #data = {k: [] for k in range(2)}
 
@@ -110,7 +120,66 @@ def plotForkJoinStatistics():
   
   
   pylab.clf()
-  pylab.title( "Global cells" )
+  pylab.title( "Fork and join statistics" )
+  x = pylab.arange(0, len(numberOfWorkingNodes), 1.0)
+  pylab.plot(x, numberOfWorkingNodes, 'o-',  markersize=10, color='#ffaa00', label='working nodes' )
+  pylab.plot(x, numberOfIdleNodes,    '+-',  markersize=10, color='#00ffaa', label='idle nodes' )
+  pylab.plot(x, numberOfForks,        '.-',  markersize=10, color='#aa00ff', label='total forks' )
+  pylab.plot(x, numberOfJoins,        'x-',  markersize=10, color='#ff00aa', label='total joins' )
+  setGeneralPlotSettings()
+  pylab.savefig( outputFileName + ".fork-join-statistics.png" )
+  pylab.savefig( outputFileName + ".fork-join-statistics.pdf" )
+
+
+def plotMasterWorkerLateSends():
+  #  <a href=\"" + outputFileName + ".master-worker-data-exchange.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.png\" />\
+
+pairs = dict()
+
+floatPattern = "[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?"
+waitingForWorkerLine = "rank:(\d+)*.*tarch::mpianalysis::DefaultAnalyser::dataWasNotReceivedFromWorker.+rank had to wait for worker (\d+) for ("+ floatPattern + ")s"
+
+  numberOfWorkingNodes = []
+  numberOfIdleNodes    = []
+  numberOfForks        = []
+  numberOfJoins        = []
+  numberOfWorkingNodes.append(1)
+  numberOfIdleNodes.append(numberOfRanks-1)
+  numberOfForks.append(0)
+  numberOfJoins.append(0)
+  try:
+    inputFile = open( inputFileName,  "r" )
+    print "parse fork/join statistics",
+    for line in inputFile:
+      searchPatternFork    = "peano::performanceanalysis::DefaultAnalyser::addWorker"
+      searchPatternJoin    = "peano::performanceanalysis::DefaultAnalyser::removeWorker"
+      searchEndIteration   = "rank:0 .*peano::performanceanalysis::DefaultAnalyser::endIteration"
+      m = re.search( searchPatternFork, line )
+      if (m):
+        numberOfWorkingNodes.append(numberOfWorkingNodes[-1]+1)
+        numberOfIdleNodes.append(numberOfIdleNodes[-1]-1)
+        numberOfForks.append(numberOfForks[-1]+1)
+        numberOfJoins.append(numberOfJoins[-1]+0)
+      m = re.search( searchPatternJoin, line )
+      if (m):
+        numberOfWorkingNodes.append(numberOfWorkingNodes[-1]-1)
+        numberOfIdleNodes.append(numberOfIdleNodes[-1]+1)
+        numberOfForks.append(numberOfForks[-1]+0)
+        numberOfJoins.append(numberOfJoins[-1]+1)
+      m = re.search( searchEndIteration, line )
+      if (m):
+        numberOfWorkingNodes.append(numberOfWorkingNodes[-1])
+        numberOfIdleNodes.append(numberOfIdleNodes[-1])
+        numberOfForks.append(numberOfForks[-1])
+        numberOfJoins.append(numberOfJoins[-1])
+    print " done"
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+  
+  
+  pylab.clf()
+  pylab.title( "Fork and join statistics" )
   x = pylab.arange(0, len(numberOfWorkingNodes), 1.0)
   pylab.plot(x, numberOfWorkingNodes, 'o-',  markersize=10, color='#ffaa00', label='working nodes' )
   pylab.plot(x, numberOfIdleNodes,    '+-',  markersize=10, color='#00ffaa', label='idle nodes' )
@@ -274,6 +343,7 @@ else:
        <li><a href=\"#global-grid-overview\">Global grid overview</a></li>\
        <li><a href=\"#logical-topology\">Logical topology</a></li>\
        <li><a href=\"#fork-join-statistics\">Fork and join statistics</a></li>\
+       <li><a href=\"#master-worker-data-exchange\">Master-worker data exchange</a></li>\
      </ul>\
    ")
 
@@ -355,6 +425,39 @@ else:
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
+
+
+
+
+  #
+  # Master-worker data exchange. In particular late senders
+  #
+  print "master-worker data exchange"
+  plotMasterWorkerLateSends()
+  outFile.write( "\
+    <h2 id=\"master-worker-data-exchange\">Master-worker data exchange</h2>\
+    <img src=\"" + outputFileName + ".master-worker-data-exchange.png\" />\
+    <br /><br />\
+    <p>If an edge points from a to b, it means that master b had to wait for its worker a. The labels are wait times in seconds. </p>\
+    <a href=\"" + outputFileName + ".master-worker-data-exchange.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.png\" /></a>\
+    <p>The following graph holds only edges whose average is beyond the average of averages.</p>\
+    <a href=\"" + outputFileName + ".master-worker-data-exchange.sparse-average.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.sparse-average.png\" /></a>\
+    <p>The following graph holds only edges whose maximum weight is with 10% of the total maximum weight.</p>\
+    <a href=\"" + outputFileName + ".master-worker-data-exchange.sparse-max.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.sparse-max.png\" /></a>\
+    ")
+
+
+  outFile.write( "\
+    <br /><br />\
+    <i>Performance hint: </i>\
+    <p>\
+    Peano makes the global rank 0 become a pure administrative rank, i.e. it deploys all workload to another mpi \
+    rank and afterwards handles load balancing, global algorithm control, and so forth. As a consequence \
+    there is usually always one edge pointing towards rank 0. This edge does not illustrate a performance issue. \
+    </p>\
+    <a href=\"#table-of-contents\">To table of contents</a>\
+    ")
+
 
   #
   # Trailor of report

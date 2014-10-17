@@ -138,10 +138,6 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      *
      * @param workerRank   Rank of the worker that has just reported that it
      *                     finished its traversal.
-     * @param waitedTime   Time (user time) that the master had to wait until
-     *                     the worker delivered its finish message. This time
-     *                     is zero, if the message was already in the MPI queue
-     *                     when the master checked for the worker.
      * @param workerNumberOfInnerVertices  Number of inner vertices handled by
      *                     this worker. If you require the total number, you
      *                     have to feed your oracle manually within
@@ -183,7 +179,6 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      */
     virtual void receivedTerminateCommand(
       int     workerRank,
-      double  waitedTime,
       double  workerNumberOfInnerVertices,
       double  workerNumberOfBoundaryVertices,
       double  workerNumberOfOuterVertices,

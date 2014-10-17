@@ -83,7 +83,10 @@ class peano::performanceanalysis::Analyser {
      */
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) = 0;
 
-    virtual void dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) = 0;
+
+    virtual void beginToReceiveDataFromWorker() = 0;
+    virtual void endToReceiveDataFromWorker( int fromRank ) = 0;
+
     virtual void beginToReleaseSynchronousHeapData() = 0;
     virtual void endToReleaseSynchronousHeapData() = 0;
     virtual void beginToPrepareAsynchronousHeapDataExchange() = 0;

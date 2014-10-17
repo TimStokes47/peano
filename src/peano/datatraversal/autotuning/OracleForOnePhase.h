@@ -79,7 +79,7 @@ class peano::datatraversal::autotuning::OracleForOnePhase {
      * fraction is the one, parallelise() has been called for before. There's
      * never more than one section running in parallel.
      */
-    virtual void parallelSectionHasTerminated(double elapsedCalendarTime) = 0;
+    virtual void parallelSectionHasTerminated() = 0;
 
     /**
      * Plot something to info log device.

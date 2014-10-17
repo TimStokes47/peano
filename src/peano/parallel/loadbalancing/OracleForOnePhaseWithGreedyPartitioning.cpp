@@ -53,7 +53,6 @@ int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::get
 
 void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::receivedTerminateCommand(
   int     workerRank,
-  double  waitedTime,
   double  workerNumberOfInnerVertices,
   double  workerNumberOfBoundaryVertices,
   double  workerNumberOfOuterVertices,

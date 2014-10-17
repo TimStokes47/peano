@@ -69,9 +69,15 @@ void peano::performanceanalysis::Analysis::dataWasNotReceivedInBackground( int f
 }
 
 
-void peano::performanceanalysis::Analysis::dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) {
+void peano::performanceanalysis::Analysis::beginToReceiveDataFromWorker() {
   assertion( _device!=0 );
-  _device->dataWasNotReceivedFromWorker(fromRank,calendarTime);
+  _device->beginToReceiveDataFromWorker();
+}
+
+
+void peano::performanceanalysis::Analysis::endToReceiveDataFromWorker( int fromRank ) {
+  assertion( _device!=0 );
+  _device->endToReceiveDataFromWorker(fromRank);
 }
 
 

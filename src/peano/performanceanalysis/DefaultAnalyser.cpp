@@ -9,7 +9,8 @@ tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::
 peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   _totalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _traversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
+  _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
+  _waitForWorkerDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
   if (!tarch::logging::CommandLineLogger::getInstance().getLogMachineName()) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of machine name is disabled. See command line logger" );
   }
@@ -19,11 +20,6 @@ peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   if (tarch::logging::CommandLineLogger::getInstance().filterOut("info","peano::performanceanalysis::DefaultAnalyser")) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as log filters for peano::performanceanalysis::DefaultAnalyser are installed" );
   }
-/*
-  _synchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
-*/
 }
 
 
@@ -96,16 +92,26 @@ void peano::performanceanalysis::DefaultAnalyser::removeWorker(
 }
 
 
-void peano::performanceanalysis::DefaultAnalyser::dataWasNotReceivedFromWorker( int fromRank, double calendarTime ) {
-/*
-  logInfo(
-    "dataWasNotReceivedFromWorker()",
-    "rank had to wait for worker " << fromRank <<
-    " for " << calendarTime <<
-    "s"
-  );
-*/
+void peano::performanceanalysis::DefaultAnalyser::beginToReceiveDataFromWorker() {
+  _waitForWorkerDataWatch.startTimer();
 }
+
+
+void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromWorker( int fromRank ) {
+  _waitForWorkerDataWatch.stopTimer();
+  const double elapsedTime = _waitForWorkerDataWatch.getCalendarTime();
+
+  if (tarch::la::greater(elapsedTime,0.0)) {
+    logInfo(
+      "endToReceiveDataFromWorker()",
+      "rank had to wait for worker " << fromRank <<
+      " for " << elapsedTime <<
+      "s"
+    );
+  }
+  _waitForWorkerDataWatch.startTimer();
+}
+
 
 
 void peano::performanceanalysis::DefaultAnalyser::dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {

@@ -26,17 +26,14 @@ namespace peano {
  * this wrapper is the right choice iff all the task are totally independent
  * of each other.
  *
+ * @todo Usage
+ *
  * No variant ever copies the task: I expect the functors to be handed in as
  * reference. These functors in turn typically are already a copy of the
  * mappings, e.g. So they will be destroyed outside of the task set and merge
  * their state then.
  *
  * !!! Cobra
- *
- * We currently do not support parallel tasks in Cobar, i.e. all the functors
- * are executed one after each other. The reason is that multitasking either
- * result in a seg fault (the constructor with only one argument produces such
- * an error) or a deadlock (the other constructors).
  *
  * @author Tobias Weinzierl
  */

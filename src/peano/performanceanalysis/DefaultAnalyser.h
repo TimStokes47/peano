@@ -33,6 +33,7 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     tarch::timing::Watch           _totalWatch;
     tarch::timing::Watch           _traversalWatch;
     tarch::timing::Watch           _actualDomainTraversalWatch;
+    tarch::timing::Watch           _waitForWorkerDataWatch;
 /*
     tarch::timing::Watch           _synchronousHeapWatch;
     tarch::timing::Watch           _asynchronousHeapWatch;
@@ -58,8 +59,10 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
       int                                 level
     );
 
+    virtual void beginToReceiveDataFromWorker();
+    virtual void endToReceiveDataFromWorker( int fromRank );
+
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
-    virtual void dataWasNotReceivedFromWorker( int fromRank, double calendarTime );
     virtual void beginToReleaseSynchronousHeapData();
     virtual void endToReleaseSynchronousHeapData();
     virtual void beginToPrepareAsynchronousHeapDataExchange();

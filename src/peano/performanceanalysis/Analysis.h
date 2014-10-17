@@ -94,7 +94,8 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
     /**
      * @see Analyser
      */
-    virtual void dataWasNotReceivedFromWorker( int fromRank, double calendarTime );
+    virtual void beginToReceiveDataFromWorker();
+    virtual void endToReceiveDataFromWorker( int fromRank );
 
     virtual void beginToReleaseSynchronousHeapData();
     virtual void endToReleaseSynchronousHeapData();

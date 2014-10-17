@@ -19,7 +19,6 @@ peano::datatraversal::autotuning::Oracle& peano::datatraversal::autotuning::Orac
 
 peano::datatraversal::autotuning::Oracle::Oracle():
   _oracles(),
-  _watchSinceLastSwitchCall("peano::datatraversal::autotuning::Oracle", "Oracle()", false),
   _currentPhase(0),
   _oraclePrototype(0),
   _numberOfOracles(0) {
@@ -118,7 +117,6 @@ void peano::datatraversal::autotuning::Oracle::deleteOracles() {
   if (_oracles != 0) {
     for (int i=0; i<getTotalNumberOfOracles(); i++) {
       delete _oracles[i]._oracle;
-      delete _oracles[i]._watch;
     }
 
     delete[] _oracles;

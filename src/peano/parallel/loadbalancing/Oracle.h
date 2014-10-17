@@ -4,8 +4,8 @@
 #define _PEANO_PARALLEL_LOAD_BALANCING_ORACLE_H_
 
 
-#include "tarch/timing/Watch.h"
 #include "tarch/la/Vector.h"
+#include "tarch/logging/Log.h"
 #include "peano/parallel/loadbalancing/OracleForOnePhase.h"
 #include "peano/utils/Globals.h"
 
@@ -68,12 +68,6 @@ class peano::parallel::loadbalancing::Oracle {
      * Identifies which oracle out of _oracles to chose.
      */
     int                                      _currentOracle;
-
-    /**
-     * Maps each oracle type to a two tuple with a watch and the number of
-     * invocations for this watch.
-     */
-    tarch::timing::Watch                     _watch;
 
     OracleForOnePhase*                       _oraclePrototype;
 
