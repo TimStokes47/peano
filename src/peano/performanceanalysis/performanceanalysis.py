@@ -515,6 +515,40 @@ def plotWalltimeOverview():
   pylab.savefig( outputFileName + ".walltime.pdf" )
 
 
+def plotStatisticsForRank(currentRank):
+  pylab.clf()
+  pylab.title( "Walltime" )
+  x = pylab.arange(0, len(tTotal[0]), 1.0)
+  pylab.plot(x, tTotal[0], '-',  markersize=10, color='#000066', label='time per traversal (total, global)' )
+  x = pylab.arange(0, len(tTotal[currentRank]), 1.0)
+  pylab.plot(x, tTotal[currentRank], '-',  markersize=10, color='r', label='time per traversal (total, local)' )
+  x = pylab.arange(0, len(tTraversal[currentRank]), 1.0)
+  pylab.plot(x, tTraversal[currentRank], '-',  markersize=10, color='g', label='time per traversal (only traversal, local)' )
+  startRank = 1
+  if (numberOfRanks==1):
+    startRank = 0
+  for rank in range(startRank,numberOfRanks):
+    x = pylab.arange(0, len(tTraversal[rank]), 1.0)
+    pylab.plot(x, tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
+  setGeneralPlotSettings()
+  pylab.savefig( outputFileName + ".walltime-rank-" + str(currentRank) + ".png" )
+  pylab.savefig( outputFileName + ".walltime-rank-" + str(currentRank) + ".pdf" )
+
+  pylab.clf()
+  pylab.title( "Cells" )
+  x = pylab.arange(0, len(numberOfLocalCells[currentRank]), 1.0)
+  pylab.plot(x, numberOfLocalCells[currentRank], '-',  markersize=10, color='b', label='local cells' )
+  startRank = 1
+  if (numberOfRanks==1):
+    startRank = 0
+  for rank in range(startRank,numberOfRanks):
+    x = pylab.arange(0, len(tTraversal[rank]), 1.0)
+    pylab.plot(x, numberOfLocalCells[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
+  setGeneralPlotSettings()
+  pylab.savefig( outputFileName + ".local-cells-rank-" + str(currentRank) + ".png" )
+  pylab.savefig( outputFileName + ".local-cells-rank-" + str(currentRank) + ".pdf" )
+
+
 
 
 #
@@ -812,8 +846,17 @@ else:
     outFile.write( "<a href=\"#runtime-rank-" + str(rank) + "\">Profile of rank " + str(rank) + "</a> - " )
 
 
-  #for rank in range(0,numberOfRanks):
-  #  outFile.write( "<a href=\"#runtime-rank-" + str(rank) + "\">Profile of rank " + str(rank) + "</a> - " )
+  for rank in range(0,numberOfRanks):
+    outFile.write( "\
+      <h3 id=\"runtime-rank-" + str(rank) + "\">Profile of rank " + str(rank) + "</h2>\
+      <img src=\"" + outputFileName + ".walltime-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + outputFileName + ".local-cells-rank-" + str(rank) + ".png\" />\
+    <br /><br />\
+    <a href=\"#individual-ranks\">To rank overview</a>\
+    <br /><br />\
+    <a href=\"#table-of-contents\">To table of contents</a>\
+    ")
+
 
   #
   # Trailor of report
@@ -845,6 +888,8 @@ else:
   print "boundary data exchange"
   plotBoundaryLateSends()
 
-  print "boundary data exchange"
+  for rank in range(0,numberOfRanks):
+    print "plot statistics for rank " + str(rank)
+    plotStatisticsForRank(rank)
   
   
