@@ -206,7 +206,6 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     CommandLineLogger();
 
     std::string getLogColumnSeparator() const;
-    bool        getLogTimeStamp() const;
     bool        getLogTimeStampHumanReadable() const;
     bool        getLogMessageType() const;
 
@@ -240,6 +239,12 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
      * features are switched on.
      */
     bool        getLogTrace() const;
+
+    /**
+     * Is public as some analysis frameworks check explicitly whether these
+     * features are switched on.
+     */
+    bool        getLogTimeStamp() const;
 
     /**
      * Add one filter list entry

@@ -19,6 +19,9 @@ peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   if (!tarch::logging::CommandLineLogger::getInstance().getLogTrace()) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of trace is disabled. See command line logger" );
   }
+  if (!tarch::logging::CommandLineLogger::getInstance().getLogTimeStamp()) {
+    logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of time stamps is disabled. See command line logger" );
+  }
   if (tarch::logging::CommandLineLogger::getInstance().filterOut("info","peano::performanceanalysis::DefaultAnalyser")) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as log filters for peano::performanceanalysis::DefaultAnalyser are installed" );
   }
