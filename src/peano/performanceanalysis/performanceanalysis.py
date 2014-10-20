@@ -98,6 +98,81 @@ def parseInputFile():
 
 
 
+def plotMPIPhases():
+  outTraversalColor = "#aabbaa"
+  inTraversalColor  = "#6677ff"
+  baseTimeStamp     = 0
+
+  pylab.clf()
+  pylab.title( "MPI phases overview" )
+  ax = pylab.gca()
+  ax.set_aspect('equal','box')
+  
+  timeStampPattern = "([1-9][0-9]*)"
+  enterCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree"
+  leaveCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree"
+  beginIterationPattern      = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::beginIteration"
+  endIterationPattern        = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_total"  
+
+  lastTimeStamp  = [0] * numberOfRanks
+  
+  try:
+    inputFile = open( inputFileName,  "r" )
+    print "parse mpi phases",
+    for line in inputFile:
+      m = re.search( beginIterationPattern, line )
+      if (m):
+        rank = int( m.group(2) )
+        timeStamp = int( m.group(1) )
+        lastTimeStamp[rank] = timeStamp
+      m = re.search( enterCentralElementPattern, line )
+      if (m):
+        rank = int( m.group(2) )
+        timeStamp = int( m.group(1) )
+        if (baseTimeStamp==0):
+          baseTimeStamp = timeStamp
+        if (lastTimeStamp[rank]==0):
+          lastTimeStamp[rank] = timeStamp
+        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank],timeStamp-lastTimeStamp[rank],1,facecolor=outTraversalColor,edgecolor=outTraversalColor)
+        ax.add_patch(rect)
+        lastTimeStamp[rank] = timeStamp
+      m = re.search( leaveCentralElementPattern, line )
+      if (m):
+        rank = int( m.group(2) )
+        timeStamp = int( m.group(1) )
+        lastTimeStamp[rank] = timeStamp
+        rank = int( m.group(2) )
+        timeStamp = int( m.group(1) )
+        if (baseTimeStamp==0):
+          baseTimeStamp = timeStamp
+        if (lastTimeStamp[rank]==0):
+          lastTimeStamp[rank] = timeStamp
+        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank],timeStamp-lastTimeStamp[rank],1,facecolor=inTraversalColor,edgecolor=inTraversalColor)
+        ax.add_patch(rect)
+        lastTimeStamp[rank] = timeStamp
+      m = re.search( endIterationPattern, line )
+      if (m):
+        rank = int( m.group(2) )
+        timeStamp = int( m.group(1) )
+        if (baseTimeStamp==0):
+          baseTimeStamp = timeStamp
+        if (lastTimeStamp[rank]==0):
+          lastTimeStamp[rank] = timeStamp
+        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank],timeStamp-lastTimeStamp[rank],1,facecolor=outTraversalColor,edgecolor=outTraversalColor)
+        ax.add_patch(rect)
+        lastTimeStamp[rank] = timeStamp
+    print " done"
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+  
+  ax.invert_yaxis()
+  ax.autoscale_view()
+  #setGeneralPlotSettings()
+  pylab.savefig( outputFileName + ".mpi-phases.png" )
+  pylab.savefig( outputFileName + ".mpi-phases.pdf" )
+  
+
 def plotForkJoinStatistics():
   numberOfWorkingNodes = []
   numberOfIdleNodes    = []
@@ -592,6 +667,7 @@ else:
        <li><a href=\"#global-grid-overview\">Global grid overview</a></li>\
        <li><a href=\"#logical-topology\">Logical topology</a></li>\
        <li><a href=\"#fork-join-statistics\">Fork and join statistics</a></li>\
+       <li><a href=\"#mpi-phases\">MPI phases</a></li>\
        <li><a href=\"#master-worker-data-exchange\">Master-worker data exchange</a></li>\
        <li><a href=\"#boundary-data-exchange\">Boundary data exchange</a></li>\
        <li><a href=\"#individual-ranks\">Individual ranks</a></li>\
@@ -641,7 +717,7 @@ else:
     ")
 
   #
-  # Grid information
+  # Logical topology
   #
   outFile.write( "\
     <h2 id=\"logical-topology\">Logical topology</h2>\
@@ -689,6 +765,20 @@ else:
     ")
 
 
+  #
+  # MPI Phases
+  #
+  outFile.write( "\
+    <h2 id=\"mpi-phases\">MPI Phases</h2>\
+    <img src=\"" + outputFileName + ".mpi-phases.png\" />\
+    <br /><br />\
+    <i>Performance hint: </i>\
+    <p>\
+    The x-axis is the runtime, the y-axis is the ranks. Dark bars are time spent \
+    within the local domain, grey is time spent in the surrounding grid elements. \
+    </p>\
+    <a href=\"#table-of-contents\">To table of contents</a>\
+    ")
 
 
   #
@@ -881,6 +971,9 @@ else:
 
   print "extract fork and join statistics"
   plotForkJoinStatistics()
+
+  print "plot mpi phases"
+  plotMPIPhases()
 
   print "master-worker data exchange"
   plotMasterWorkerLateSends()
