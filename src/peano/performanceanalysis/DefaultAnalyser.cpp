@@ -33,6 +33,7 @@ peano::performanceanalysis::DefaultAnalyser::~DefaultAnalyser() {
 
 
 void peano::performanceanalysis::DefaultAnalyser::beginIteration() {
+  logInfo( "beginIteration()", "start traversal" );
   _traversalWatch.startTimer();
 }
 
@@ -51,6 +52,7 @@ void peano::performanceanalysis::DefaultAnalyser::endIteration(double numberOfIn
 
 
 void peano::performanceanalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree() {
+  logInfo( "enterCentralElementOfEnclosingSpacetree()", "enter central element" );
   _actualDomainTraversalWatch.startTimer();
 }
 
