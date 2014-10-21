@@ -439,6 +439,8 @@ class tarch::logging::Log {
      * Name of the class that is using the interface.
      */
     std::string _className;
+
+    static double _startupTime;
   public:
     /**
      * Writes information about the computer the output is written from.

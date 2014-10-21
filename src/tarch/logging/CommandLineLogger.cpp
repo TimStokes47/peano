@@ -175,7 +175,7 @@ void tarch::logging::CommandLineLogger::closeOutputStreamAndReopenNewOne() {
 
 std::string tarch::logging::CommandLineLogger::constructMessageString(
   std::string          messageType,
-  const long int&      timestampMS,
+  double               timestamp,
   std::string          timestampHumanReadable,
   std::string          machineName,
   std::string          trace,
@@ -186,9 +186,9 @@ std::string tarch::logging::CommandLineLogger::constructMessageString(
 
   std::string result;
 
-  if ( getLogTimeStamp() && timestampMS!=0) {
+  if ( getLogTimeStamp() ) {
     std::ostringstream timeStampString;
-    timeStampString << timestampMS;
+    timeStampString << timestamp;
     result += addSeparators(NumberOfStandardColumnSpaces,timeStampString.str() );
   }
 
@@ -216,7 +216,7 @@ std::string tarch::logging::CommandLineLogger::constructMessageString(
 }
 
 
-void tarch::logging::CommandLineLogger::debug(const long int& timestampMS, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::debug(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message) {
   if (writeDebug(trace)) {
     #if !defined(Debug)
     assertion(false);
@@ -224,7 +224,7 @@ void tarch::logging::CommandLineLogger::debug(const long int& timestampMS, const
 
     std::string outputMessage = constructMessageString(
       "debug",
-      timestampMS,
+      timestamp,
       timestampHumanReadable,
       machineName,
       trace,
@@ -238,11 +238,11 @@ void tarch::logging::CommandLineLogger::debug(const long int& timestampMS, const
 }
 
 
-void tarch::logging::CommandLineLogger::info(const long int& timestampMS, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::info(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message) {
   if (writeInfo(trace)) {
     std::string outputMessage = constructMessageString(
       "info",
-      timestampMS,
+      timestamp,
       timestampHumanReadable,
       machineName,
       trace,
@@ -258,12 +258,12 @@ void tarch::logging::CommandLineLogger::info(const long int& timestampMS, const 
 }
 
 
-void tarch::logging::CommandLineLogger::warning(const long int& timestampMS, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::warning(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message) {
   
   if (writeWarning(trace)) {
     std::string outputMessage = constructMessageString(
       "warning",
-      timestampMS,
+      timestamp,
       timestampHumanReadable,
       machineName,
       trace,
@@ -285,11 +285,11 @@ void tarch::logging::CommandLineLogger::warning(const long int& timestampMS, con
 }
 
 
-void tarch::logging::CommandLineLogger::error(const long int& timestampMS, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message) {
+void tarch::logging::CommandLineLogger::error(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message) {
   if ( writeError(trace) ) {
     std::string outputMessage = constructMessageString(
       "error",
-      timestampMS,
+      timestamp,
       timestampHumanReadable,
       machineName,
       trace,

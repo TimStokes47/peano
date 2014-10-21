@@ -20,24 +20,19 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
-#if !defined(SharedTBB) && !defined(SharedOMP) && defined(CompilerHasTimespec)
-namespace tarch {
-  namespace logging {
-    /**
-     * Forward declaration
-     *
-     * We need that dummy if and only if we are not doing shared memory stuff. If
-     * we do shared memory, we rely on the shared memory libs' operations to get
-     * the right time instead of this timespec struct.
-     */
-    struct timespec ts;
-  }
-}
-#endif
+
+double tarch::logging::Log::_startupTime(0.0);
 
 
 tarch::logging::Log::Log(const std::string& className):
   _className( className ) {
+  #if defined(CompilerHasTimespec)
+  struct timespec ts;
+  if( _startupTime==0.0 & clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
+    _startupTime = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
+  }
+  #endif
+
 }
 
 
@@ -107,8 +102,11 @@ std::string tarch::logging::Log::getMachineInformation() const {
 
 double tarch::logging::Log::getTimeStampSeconds() const {
   #if defined(CompilerHasTimespec)
+  struct timespec ts;
   if( clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
-     return (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
+     const double currentTS = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
+     //std::cout << currentTS << "," << _startupTime << "," << (currentTS - _startupTime) << std::endl;
+     return currentTS - _startupTime;
   }
   else {
     return 0.0;

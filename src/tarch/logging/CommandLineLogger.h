@@ -183,7 +183,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
      */
     std::string constructMessageString(
       std::string          messageType,
-      const long int&      timestampMS,
+      double               timestamp,
       std::string          timestampHumanReadable,
       std::string          machineName,
       std::string          trace,
@@ -259,8 +259,8 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     void addFilterListEntries( const FilterList&    entries);
     void clearFilterList();
 
-    void debug(      const long int& timestampMS, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
-    void info(       const long int& timestampMS, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
+    void debug(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
+    void info(       double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
 
     /**
      * Write Warning
@@ -271,7 +271,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
      * occur, i.e. the application might shut down before the message is flushed
      * to the terminal.
      */
-    void warning(    const long int& timestampMS, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
+    void warning(    double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
 
     /**
      * Write Error
@@ -282,7 +282,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
      * occur, i.e. the application might shut down before the message is flushed
      * to the terminal.
      */
-    void error(      const long int& timestampMS, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
+    void error(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
 
     /**
      * Tells the logger to increment/decrement the indent.
