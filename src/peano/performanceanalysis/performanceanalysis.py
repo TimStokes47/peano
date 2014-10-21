@@ -44,6 +44,15 @@ class Pair:
     self.maxCardinality = 0
 
 
+def switchToLargePlot():
+  DefaultSize = pylab.gcf().get_size_inches()
+  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+
+def switchBackToStandardPlot():
+  DefaultSize = pylab.gcf().get_size_inches()
+  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+
+
 def parseInputFile():
   #data = {k: [] for k in range(2)}
 
@@ -99,20 +108,23 @@ def parseInputFile():
 
 
 def plotMPIPhases():
-  outTraversalColor = "#aabbaa"
-  inTraversalColor  = "#6677ff"
-  baseTimeStamp     = 0
+  inTraversalColor = "#ff7766"
+  outTraversalColor  = "#6677ff"
+  baseTimeStamp     = 0.0
 
   pylab.clf()
   pylab.title( "MPI phases overview" )
   ax = pylab.gca()
   ax.set_aspect('equal','box')
   
+  floatPattern = "([0-9]\.?[0-9]*)"
   timeStampPattern = "([1-9][0-9]*)"
+  
   enterCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree"
-  leaveCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree"
+  leaveCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree.*t_central-tree-traversal=\(" + floatPattern
   beginIterationPattern      = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::beginIteration"
-  endIterationPattern        = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_total"  
+  endIterationPattern        = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_traversal=\(" + floatPattern
+
 
   lastTimeStamp  = [0] * numberOfRanks
   
@@ -123,44 +135,45 @@ def plotMPIPhases():
       m = re.search( beginIterationPattern, line )
       if (m):
         rank = int( m.group(2) )
-        timeStamp = int( m.group(1) )
+        timeStamp = float( m.group(1) )
         lastTimeStamp[rank] = timeStamp
+        print ".",
       m = re.search( enterCentralElementPattern, line )
       if (m):
         rank = int( m.group(2) )
-        timeStamp = int( m.group(1) )
+        timeStamp = float( m.group(1) )
         if (baseTimeStamp==0):
           baseTimeStamp = timeStamp
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
-        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank],timeStamp-lastTimeStamp[rank],1,facecolor=outTraversalColor,edgecolor=outTraversalColor)
+        rectLength = timeStamp-lastTimeStamp[rank]
+        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank-0.5],rectLength,1,facecolor=outTraversalColor,edgecolor=outTraversalColor)
         ax.add_patch(rect)
-        lastTimeStamp[rank] = timeStamp
+        lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
       m = re.search( leaveCentralElementPattern, line )
       if (m):
         rank = int( m.group(2) )
-        timeStamp = int( m.group(1) )
-        lastTimeStamp[rank] = timeStamp
-        rank = int( m.group(2) )
-        timeStamp = int( m.group(1) )
+        timeStamp = float( m.group(1) )
         if (baseTimeStamp==0):
           baseTimeStamp = timeStamp
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
-        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank],timeStamp-lastTimeStamp[rank],1,facecolor=inTraversalColor,edgecolor=inTraversalColor)
+        rectLength = float( m.group(3) )
+        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank-0.5],rectLength,1,facecolor=inTraversalColor,edgecolor=inTraversalColor)
         ax.add_patch(rect)
-        lastTimeStamp[rank] = timeStamp
+        lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
       m = re.search( endIterationPattern, line )
       if (m):
         rank = int( m.group(2) )
-        timeStamp = int( m.group(1) )
+        timeStamp = float( m.group(1) )
         if (baseTimeStamp==0):
           baseTimeStamp = timeStamp
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
-        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank],timeStamp-lastTimeStamp[rank],1,facecolor=outTraversalColor,edgecolor=outTraversalColor)
+        rectLength = float( m.group(3) )
+        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank-0.5],rectLength,1,facecolor=outTraversalColor,edgecolor=outTraversalColor)
         ax.add_patch(rect)
-        lastTimeStamp[rank] = timeStamp
+        lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
@@ -171,7 +184,12 @@ def plotMPIPhases():
   #setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".mpi-phases.png" )
   pylab.savefig( outputFileName + ".mpi-phases.pdf" )
-  
+  switchToLargePlot()
+  pylab.savefig( outputFileName + ".mpi-phases.large.png" )
+  pylab.savefig( outputFileName + ".mpi-phases.large.pdf" )
+  switchBackToStandardPlot()  
+
+
 
 def plotForkJoinStatistics():
   numberOfWorkingNodes = []
@@ -297,12 +315,10 @@ def plotBoundaryLateSends():
   )
   pylab.savefig( outputFileName + ".boundary-data-exchange.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+  switchToLargePlot()
   pylab.savefig( outputFileName + ".boundary-data-exchange.large.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.large.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+  switchBackToStandardPlot()
 
   pylab.clf()
   pylab.title( "Late workers (only graphs more than average)" )
@@ -315,12 +331,10 @@ def plotBoundaryLateSends():
   )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+  switchToLargePlot()
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.large.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.large.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+  switchBackToStandardPlot()
 
   pylab.clf()
   pylab.title( "Late workers (only 10% heaviest edges)" )
@@ -333,12 +347,10 @@ def plotBoundaryLateSends():
   )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+  switchToLargePlot()
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.large.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.large.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+  switchBackToStandardPlot()
 
 
 
@@ -418,12 +430,10 @@ def plotMasterWorkerLateSends():
   )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.png" )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+  switchToLargePlot()
   pylab.savefig( outputFileName + ".master-worker-data-exchange.large.png" )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.large.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+  switchBackToStandardPlot()
 
   pylab.clf()
   pylab.title( "Late workers (only graphs more than average)" )
@@ -436,12 +446,10 @@ def plotMasterWorkerLateSends():
   )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.png" )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+  switchToLargePlot()
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.large.png" )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.large.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+  switchBackToStandardPlot()
 
   pylab.clf()
   pylab.title( "Late workers (only 10% heaviest edges)" )
@@ -454,12 +462,10 @@ def plotMasterWorkerLateSends():
   )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.png" )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+  switchToLargePlot()
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.large.png" )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.large.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+  switchBackToStandardPlot()
 
 
 
@@ -481,11 +487,13 @@ def plotLogicalTopology():
             parent = m.group(0).split("->")[0].split(" ")[-1] 
             child  = m.group(0).split("+")[-1].split(" ")[-1]
             topologyGraph.add_edge(child,parent)
+            print ".",
           m = re.search( searchPatternAddJoin, line )
           if (m):
             child  = m.group(0).split("+")[1].split("->")[0] 
             parent = m.group(0).split("->")[-1] 
             topologyGraph.add_edge(child,parent)
+            print ".",
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
@@ -517,12 +525,10 @@ def plotLogicalTopology():
   )
   pylab.savefig( outputFileName + ".topology.png" )
   pylab.savefig( outputFileName + ".topology.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
+  switchToLargePlot()
   pylab.savefig( outputFileName + ".topology.large.png" )
   pylab.savefig( outputFileName + ".topology.large.pdf" )
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+  switchBackToStandardPlot()
 
 
 def setGeneralPlotSettings():
@@ -641,10 +647,7 @@ else:
   AlphaValue     = 1.0/numberOfRanks
   if (AlphaValue<0.01):
     AlphaValue   = 0.01
-  
-  print "read input file " + inputFileName + " for " + str(numberOfRanks) + " rank(s)"
-  parseInputFile()
-  
+    
   #
   # Header of report
   #
@@ -770,12 +773,14 @@ else:
   #
   outFile.write( "\
     <h2 id=\"mpi-phases\">MPI Phases</h2>\
-    <img src=\"" + outputFileName + ".mpi-phases.png\" />\
+    <a href=\"" + outputFileName + ".mpi-phases.large.png\"> <img src=\"" + outputFileName + ".mpi-phases.png\" /> </a> \
     <br /><br />\
     <i>Performance hint: </i>\
     <p>\
-    The x-axis is the runtime, the y-axis is the ranks. Dark bars are time spent \
-    within the local domain, grey is time spent in the surrounding grid elements. \
+    The x-axis is the runtime, the y-axis is the ranks. Blue bars are time spent \
+    within the local domain, red is time spent in the surrounding grid elements. \
+    Please note that the sampling accuracy is low, i.e. if your code has a very low \
+    runtime per traversal ratio, the measurements become inaccurate. \
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
@@ -954,18 +959,12 @@ else:
   outFile.write( "</body>" )
   outFile.write( "</html>" )
   outFile.close()
-  print "html file written. Continue with plots ..."
+  print "html file written"
 
 
   #
   # Now all the images are created
   #  
-  print "plot walltime overview"
-  plotWalltimeOverview()
-
-  print "plot global grid overview"
-  plotGlobalGridOverview()
-
   print "plot logical grid topology"
   plotLogicalTopology()
 
@@ -980,6 +979,17 @@ else:
 
   print "boundary data exchange"
   plotBoundaryLateSends()
+
+
+
+  parseInputFile()
+
+
+  print "plot walltime overview"
+  plotWalltimeOverview()
+
+  print "plot global grid overview"
+  plotGlobalGridOverview()
 
   for rank in range(0,numberOfRanks):
     print "plot statistics for rank " + str(rank)
