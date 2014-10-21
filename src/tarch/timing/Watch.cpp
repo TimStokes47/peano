@@ -6,14 +6,18 @@
 #include <sstream>
 
 #if !defined(SharedTBB) && !defined(SharedOMP) && defined(CompilerHasTimespec)
-/**
- * Forward declaration
- *
- * We need that dummy if and only if we are not doing shared memory stuff. If
- * we do shared memory, we rely on the shared memory libs' operations to get
- * the right time instead of this timespec struct.
- */
-struct timespec ts;
+namespace tarch {
+  namespace timing {
+    /**
+     * Forward declaration
+     *
+     * We need that dummy if and only if we are not doing shared memory stuff. If
+     * we do shared memory, we rely on the shared memory libs' operations to get
+     * the right time instead of this timespec struct.
+     */
+    struct timespec ts;
+  }
+}
 #endif
 
 

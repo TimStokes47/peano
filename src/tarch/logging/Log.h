@@ -431,7 +431,7 @@ class tarch::logging::Log {
     /**
      * Writes a timestamp to the standard output.
      */
-    long int getTimeStampMS() const;
+    double getTimeStampSeconds() const;
 
     std::string getTimeStampHumanReadable() const;
 

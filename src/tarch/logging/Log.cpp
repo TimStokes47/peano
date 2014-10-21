@@ -18,6 +18,24 @@
 #include <time.h>
 
 
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
+#if !defined(SharedTBB) && !defined(SharedOMP) && defined(CompilerHasTimespec)
+namespace tarch {
+  namespace logging {
+    /**
+     * Forward declaration
+     *
+     * We need that dummy if and only if we are not doing shared memory stuff. If
+     * we do shared memory, we rely on the shared memory libs' operations to get
+     * the right time instead of this timespec struct.
+     */
+    struct timespec ts;
+  }
+}
+#endif
+
+
 tarch::logging::Log::Log(const std::string& className):
   _className( className ) {
 }
@@ -29,22 +47,22 @@ tarch::logging::Log::~Log() {
 
 #if defined(Debug) && !defined(LogOff)
 void tarch::logging::Log::debug(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().debug(getTimeStampMS(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().debug(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
 }
 #endif
 
 
 #if !defined(LogOff)
 void tarch::logging::Log::info(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().info(getTimeStampMS(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().info(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
 }
 
 void tarch::logging::Log::warning(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().warning(getTimeStampMS(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().warning(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
 }
 
 void tarch::logging::Log::error(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().error(getTimeStampMS(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().error(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
 }
 
 void tarch::logging::Log::indent( bool indent, const std::string& trace, const std::string& message ) const {
@@ -87,13 +105,17 @@ std::string tarch::logging::Log::getMachineInformation() const {
 }
 
 
-long int tarch::logging::Log::getTimeStampMS() const {
-  time_t* timeStamp = new time_t();
-  assertion( timeStamp!=NULL );
-  time(timeStamp);
-  long int result = *timeStamp;
-  delete timeStamp;
-  return result;
+double tarch::logging::Log::getTimeStampSeconds() const {
+  #if defined(CompilerHasTimespec)
+  if( clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
+     return (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
+  }
+  else {
+    return 0.0;
+  }
+  #else
+  return 0.0;
+  #endif
 }
 
 
