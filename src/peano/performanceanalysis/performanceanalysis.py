@@ -48,9 +48,26 @@ def switchToLargePlot():
   DefaultSize = pylab.gcf().get_size_inches()
   pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
 
+
 def switchBackToStandardPlot():
   DefaultSize = pylab.gcf().get_size_inches()
   pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+
+
+def drawTreeGraph(myGraph):
+  try:
+    pos=networkx.graphviz_layout(myGraph,prog='twopi',args='')
+    #pos=networkx.graphviz_layout(myGraph,prog='dot',args='')
+  except:
+    pos=networkx.spring_layout(myGraph)
+  networkx.draw(
+    myGraph,
+    pos,
+    with_labels=True,
+    node_color='#667766',
+    node_size=10,
+    alpha=0.2
+  )
 
 
 def parseInputFile():
@@ -108,8 +125,10 @@ def parseInputFile():
 
 
 def plotMPIPhases():
-  inTraversalColor = "#ff7766"
-  outTraversalColor  = "#6677ff"
+  inTraversalColor        = "#00ff00"
+  beforeInTraversalColor  = "#ff0000"
+  afterInTraversalColor   = "#660000"
+  
   baseTimeStamp     = 0.0
 
   pylab.clf()
@@ -128,6 +147,7 @@ def plotMPIPhases():
 
   lastTimeStamp  = [0] * numberOfRanks
   
+  #myXTicks = [] 
   try:
     inputFile = open( inputFileName,  "r" )
     print "parse mpi phases",
@@ -138,6 +158,16 @@ def plotMPIPhases():
         timeStamp = float( m.group(1) )
         lastTimeStamp[rank] = timeStamp
         print ".",
+        if (baseTimeStamp==0):
+          baseTimeStamp = timeStamp
+        if (rank==0):
+          #pylab.plot((timeStamp, -0.5), (timeStamp, numberOfRanks+1), 'k-')
+          #myXTicks.append(timeStamp)
+          #pylab.plot((timeStamp, timeStamp), (-0.5, numberOfRanks+1), 'k-')
+          #print timeStamp
+          pylab.plot((timeStamp-baseTimeStamp, timeStamp-baseTimeStamp), (-0.5, numberOfRanks+1), 'k-')
+          #pass
+        
       m = re.search( enterCentralElementPattern, line )
       if (m):
         rank = int( m.group(2) )
@@ -147,7 +177,7 @@ def plotMPIPhases():
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
         rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank-0.5],rectLength,1,facecolor=outTraversalColor,edgecolor=outTraversalColor)
+        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank-0.5],rectLength,1,facecolor=beforeInTraversalColor,edgecolor=beforeInTraversalColor)
         ax.add_patch(rect)
         lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
       m = re.search( leaveCentralElementPattern, line )
@@ -171,7 +201,7 @@ def plotMPIPhases():
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
         rectLength = float( m.group(3) )
-        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank-0.5],rectLength,1,facecolor=outTraversalColor,edgecolor=outTraversalColor)
+        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank-0.5],rectLength,1,facecolor=afterInTraversalColor,edgecolor=afterInTraversalColor)
         ax.add_patch(rect)
         lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
     print " done"
@@ -181,7 +211,9 @@ def plotMPIPhases():
   
   ax.invert_yaxis()
   ax.autoscale_view()
-  #setGeneralPlotSettings()
+  pylab.xlabel('t')
+  pylab.grid(True)
+  pylab.yticks([i for i in range(0,numberOfRanks)]) 
   pylab.savefig( outputFileName + ".mpi-phases.png" )
   pylab.savefig( outputFileName + ".mpi-phases.pdf" )
   switchToLargePlot()
@@ -306,13 +338,7 @@ def plotBoundaryLateSends():
           sparseMaxGraph.add_edge(str(worker),str(master))
   pylab.clf()
   pylab.title( "Late workers" )
-  networkx.draw_networkx(
-    graph,
-    with_labels=True,
-    node_color='#667766',
-    node_size=10,
-    alpha=0.2
-  )
+  drawTreeGraph(graph)
   pylab.savefig( outputFileName + ".boundary-data-exchange.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.pdf" )
   switchToLargePlot()
@@ -322,13 +348,7 @@ def plotBoundaryLateSends():
 
   pylab.clf()
   pylab.title( "Late workers (only graphs more than average)" )
-  networkx.draw_networkx(
-    sparseAverageGraph,
-    with_labels=True,
-    node_color='#667766',
-    node_size=10,
-    alpha=0.2
-  )
+  drawTreeGraph(sparseAverageGraph)
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.pdf" )
   switchToLargePlot()
@@ -338,13 +358,7 @@ def plotBoundaryLateSends():
 
   pylab.clf()
   pylab.title( "Late workers (only 10% heaviest edges)" )
-  networkx.draw_networkx(
-    sparseMaxGraph,
-    with_labels=True,
-    node_color='#667766',
-    node_size=10,
-    alpha=0.2
-  )
+  drawTreeGraph(sparseMaxGraph)
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.pdf" )
   switchToLargePlot()
@@ -421,13 +435,7 @@ def plotMasterWorkerLateSends():
           #sparseMaxGraph.add_edge(edge)      
   pylab.clf()
   pylab.title( "Late workers" )
-  networkx.draw_networkx(
-    graph,
-    with_labels=True,
-    node_color='#667766',
-    node_size=10,
-    alpha=0.2
-  )
+  drawTreeGraph(graph)
   pylab.savefig( outputFileName + ".master-worker-data-exchange.png" )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.pdf" )
   switchToLargePlot()
@@ -437,13 +445,7 @@ def plotMasterWorkerLateSends():
 
   pylab.clf()
   pylab.title( "Late workers (only graphs more than average)" )
-  networkx.draw_networkx(
-    sparseAverageGraph,
-    with_labels=True,
-    node_color='#667766',
-    node_size=10,
-    alpha=0.2
-  )
+  drawTreeGraph(sparseAverageGraph)
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.png" )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.pdf" )
   switchToLargePlot()
@@ -453,13 +455,7 @@ def plotMasterWorkerLateSends():
 
   pylab.clf()
   pylab.title( "Late workers (only 10% heaviest edges)" )
-  networkx.draw_networkx(
-    sparseMaxGraph,
-    with_labels=True,
-    node_color='#667766',
-    node_size=10,
-    alpha=0.2
-  )
+  drawTreeGraph(sparseMaxGraph)
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.png" )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.pdf" )
   switchToLargePlot()
@@ -500,29 +496,7 @@ def plotLogicalTopology():
     print inst
   pylab.clf()
   pylab.title( "Logical topology" )
-  #pos = networkx.draw_circular(topologyGraph)
-  #pos = networkx.draw_circular(topologyGraph)
-  #pos = networkx.spring_layout(topologyGraph)
-  #networkx.draw_networkx_nodes(
-  #  topologyGraph,pos,
-  #  node_color='#667766',
-  #  node_size=10,
-  #  alpha=0.2
-  #)
-  #networkx.draw_networkx_edges(topologyGraph,pos,
-  #  alpha=0.2
-  #)
-  #networkx.draw_networkx_labels(topologyGraph,pos,
-  #  font_size=16
-  #)
-  #networkx.draw_networkx(topologyGraph,with_labels=True)
-  networkx.draw_networkx(
-    topologyGraph,
-    with_labels=True,
-    node_color='#667766',
-    node_size=10,
-    alpha=0.2
-  )
+  drawTreeGraph(topologyGraph)
   pylab.savefig( outputFileName + ".topology.png" )
   pylab.savefig( outputFileName + ".topology.pdf" )
   switchToLargePlot()
@@ -777,8 +751,9 @@ else:
     <br /><br />\
     <i>Performance hint: </i>\
     <p>\
-    The x-axis is the runtime, the y-axis is the ranks. Blue bars are time spent \
-    within the local domain, red is time spent in the surrounding grid elements. \
+    The x-axis is the runtime, the y-axis is the ranks. \
+    Bright red is time spent outside of the domain prior to enter the actual local \
+    tree (green). Dark red is time spent outside after the actual traversal. \
     Please note that the sampling accuracy is low, i.e. if your code has a very low \
     runtime per traversal ratio, the measurements become inaccurate. \
     </p>\
