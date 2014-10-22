@@ -144,10 +144,8 @@ def plotMPIPhases():
   beginIterationPattern      = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::beginIteration"
   endIterationPattern        = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_traversal=\(" + floatPattern
 
-
   lastTimeStamp  = [0] * numberOfRanks
   
-  #myXTicks = [] 
   try:
     inputFile = open( inputFileName,  "r" )
     print "parse mpi phases",
@@ -161,12 +159,7 @@ def plotMPIPhases():
         if (baseTimeStamp==0):
           baseTimeStamp = timeStamp
         if (rank==0):
-          #pylab.plot((timeStamp, -0.5), (timeStamp, numberOfRanks+1), 'k-')
-          #myXTicks.append(timeStamp)
-          #pylab.plot((timeStamp, timeStamp), (-0.5, numberOfRanks+1), 'k-')
-          #print timeStamp
           pylab.plot((timeStamp-baseTimeStamp, timeStamp-baseTimeStamp), (-0.5, numberOfRanks+1), 'k-')
-          #pass
         
       m = re.search( enterCentralElementPattern, line )
       if (m):
@@ -213,10 +206,10 @@ def plotMPIPhases():
   ax.autoscale_view()
   pylab.xlabel('t')
   pylab.grid(True)
-  pylab.yticks([i for i in range(0,numberOfRanks)]) 
   pylab.savefig( outputFileName + ".mpi-phases.png" )
   pylab.savefig( outputFileName + ".mpi-phases.pdf" )
   switchToLargePlot()
+  pylab.yticks([i for i in range(0,numberOfRanks)]) 
   pylab.savefig( outputFileName + ".mpi-phases.large.png" )
   pylab.savefig( outputFileName + ".mpi-phases.large.pdf" )
   switchBackToStandardPlot()  
@@ -578,7 +571,7 @@ def plotStatisticsForRank(currentRank):
   x = pylab.arange(0, len(tTotal[currentRank]), 1.0)
   pylab.plot(x, tTotal[currentRank], '-',  markersize=10, color='r', label='time per traversal (total, local)' )
   x = pylab.arange(0, len(tTraversal[currentRank]), 1.0)
-  pylab.plot(x, tTraversal[currentRank], '-',  markersize=10, color='g', label='time per traversal (only traversal, local)' )
+  pylab.plot(x, tTraversal[currentRank], '-',  markersize=10, color='g', label='time per traversal (only inside local domain)' )
   startRank = 1
   if (numberOfRanks==1):
     startRank = 0
@@ -602,6 +595,90 @@ def plotStatisticsForRank(currentRank):
   setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".local-cells-rank-" + str(currentRank) + ".png" )
   pylab.savefig( outputFileName + ".local-cells-rank-" + str(currentRank) + ".pdf" )
+  
+  totalTimeCalendar             = []
+  joinTimeCalendar             = []
+  boundaryTimeCalendar         = []
+  synchronousHeapDataCalendar  = []
+  asynchronousHeapDataCalendar = []
+  centralElementCalendar       = []
+  workerWaitTimeCalendar       = []
+
+  totalTimeCPU                  = []
+  joinTimeCPU                  = []
+  boundaryTimeCPU              = []
+  synchronousHeapDataCPU       = []
+  asynchronousHeapDataCPU      = []
+  centralElementCPU            = []
+
+  try:
+    inputFile = open( inputFileName,  "r" )
+    for line in inputFile:
+      if (re.search( "DefaultAnalyser::endIteration", line ) and re.search( "rank:" + str(rank) + " ", line ) and re.search( "t_total", line )):
+        totalTimeCalendar.append( float( line.split( "(" )[-1].split(",")[0] ))
+        totalTimeCPU.append(      float( line.split( "," )[-1].split(")")[0] ))
+      if (re.search( "DefaultAnalyser::endReleaseOfJoinData", line ) and re.search( "rank:" + str(rank) + " ", line )):
+        joinTimeCalendar.append( float( line.split( "=" )[1].split(",")[0] ))
+        joinTimeCPU.append(      float( line.split( "=" )[2].strip() ))
+      if (re.search( "DefaultAnalyser::endReleaseOfBoundaryData", line ) and re.search( "rank:" + str(rank) + " ", line )):
+        boundaryTimeCalendar.append( float( line.split( "=" )[-2].split(",")[0] ))
+        boundaryTimeCPU.append(      float( line.split( "=" )[-1].strip() ))
+      if (re.search( "DefaultAnalyser::endToReleaseSynchronousHeapData", line ) and re.search( "rank:" + str(rank) + " ", line )):
+        synchronousHeapDataCalendar.append( float( line.split( "=" )[-2].split(",")[0] ))      
+        synchronousHeapDataCPU.append(      float( line.split( "=" )[-1].strip() ))
+      if (re.search( "DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange", line ) and re.search( "rank:" + str(rank) + " ", line )):
+        asynchronousHeapDataCalendar.append( float( line.split( "=" )[-2].split(",")[0] ))      
+        asynchronousHeapDataCPU.append(      float( line.split( "=" )[-1].strip() ))
+      if (re.search( "DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree", line ) and re.search( "rank:" + str(rank) + " ", line )):
+        centralElementCalendar.append( float( line.split( "(" )[-1].split(",")[0] ))
+        centralElementCPU.append(      float( line.split( "," )[-1].split(")")[0] ))
+        print "added " + str(line.split( "(" )[-1].split(",")[0])
+      if (re.search( "DefaultAnalyser::dataWasNotReceivedFromWorker", line ) and re.search( "rank:" + str(rank) + " ", line )):
+        workerWaitTimeCalendar.append( float( line.split( "for " )[2].split("s")[0] ))      
+        
+        
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+
+  pylab.clf()
+  pylab.title( "Runtime profile (calendar time)" )
+
+  x = pylab.arange(0, len(totalTimeCalendar), 1.0)
+  pylab.plot(x, totalTimeCalendar, 'x-', label='total', color='#FF0000', markersize=10)
+
+  x = pylab.arange(0, len(joinTimeCalendar), 1.0)
+  pylab.plot(x, joinTimeCalendar, 'o-', label='join', color='#00FF00', markersize=10)
+
+  x = pylab.arange(0, len(boundaryTimeCalendar), 1.0)
+  pylab.plot(x, boundaryTimeCalendar, '^-', label='boundary exchange', color='#0000FF', markersize=10)
+
+  x = pylab.arange(0, len(synchronousHeapDataCalendar), 1.0)
+  pylab.plot(x, synchronousHeapDataCalendar, '+-', label='synchronous heap', color='#aaaa00', markersize=10)
+
+  x = pylab.arange(0, len(asynchronousHeapDataCalendar), 1.0)
+  pylab.plot(x, asynchronousHeapDataCalendar, '1-', label='asynchronous heap', color='#aa00aa', markersize=10)
+
+  x = pylab.arange(0, len(centralElementCalendar), 1.0)
+  pylab.plot(x, centralElementCalendar, 'v--', label='local elements traversal', color='#00aaaa', markersize=10)
+
+  x = pylab.arange(0, len(workerWaitTimeCalendar), 1.0)
+  pylab.plot(x, workerWaitTimeCalendar, '3-', label='wait for worker', color='#667766', markersize=10)
+
+  setGeneralPlotSettings()
+
+  pylab.savefig( outputFileName + ".runtime-profile-calendar-rank-" + str(currentRank) + ".png" )
+  pylab.savefig( outputFileName + ".runtime-profile-calendar-rank-" + str(currentRank) + ".pdf" )
+
+
+
+  pylab.clf()
+  pylab.title( "Runtime profile (cpu time)" )
+  
+  #@todo
+
+  pylab.savefig( outputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".png" )
+  pylab.savefig( outputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".pdf" )
 
 
 
@@ -921,6 +998,8 @@ else:
       <h3 id=\"runtime-rank-" + str(rank) + "\">Profile of rank " + str(rank) + "</h2>\
       <img src=\"" + outputFileName + ".walltime-rank-" + str(rank) + ".png\" />\
       <img src=\"" + outputFileName + ".local-cells-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + outputFileName + ".runtime-profile-calendar-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + outputFileName + ".runtime-profile-cpu-rank-" + str(rank) + ".png\" />\
     <br /><br />\
     <a href=\"#individual-ranks\">To rank overview</a>\
     <br /><br />\

@@ -48,6 +48,8 @@ void peano::performanceanalysis::DefaultAnalyser::endIteration(double numberOfIn
   logInfo( "endIteration()", "t_traversal=(" << _traversalWatch.getCalendarTime() << "," << _traversalWatch.getCPUTime() << ")" );
 
   _totalWatch.startTimer();
+  // is required by join time analysis
+  _traversalWatch.startTimer();
 }
 
 
