@@ -632,7 +632,6 @@ def plotStatisticsForRank(currentRank):
       if (re.search( "DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree", line ) and re.search( "rank:" + str(rank) + " ", line )):
         centralElementCalendar.append( float( line.split( "(" )[-1].split(",")[0] ))
         centralElementCPU.append(      float( line.split( "," )[-1].split(")")[0] ))
-        print "added " + str(line.split( "(" )[-1].split(",")[0])
       if (re.search( "DefaultAnalyser::dataWasNotReceivedFromWorker", line ) and re.search( "rank:" + str(rank) + " ", line )):
         workerWaitTimeCalendar.append( float( line.split( "for " )[2].split("s")[0] ))      
         
