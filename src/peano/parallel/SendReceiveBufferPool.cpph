@@ -7,16 +7,22 @@
 
 template <class Vertex>
 Vertex peano::parallel::SendReceiveBufferPool::getVertex(int fromRank ) {
-  logTraceInWith1Argument( "getVertex(int)", fromRank );
-  assertion2( _map.count(fromRank) == 1, fromRank, tarch::parallel::Node::getInstance().getRank() );
+  if (_mode==SendAndDeploy || _mode==DeployButDoNotSend ) {
+    logTraceInWith1Argument( "getVertex(int)", fromRank );
 
-  typedef SendReceiveBufferAbstractImplementation<Vertex> MySendReceiveBuffer;
-  std::map<int,SendReceiveBuffer*>::iterator bufferPointer = _map.find(fromRank);
-  assertion2( bufferPointer != _map.end(), fromRank, tarch::parallel::Node::getInstance().getRank() );
-  MySendReceiveBuffer* buffer = static_cast<MySendReceiveBuffer*>(bufferPointer->second);
-  Vertex result = buffer->getVertex();
-  logTraceOutWith1Argument( "getVertex(int)", result.toString() );
-  return result;
+    assertion2( _map.count(fromRank) == 1, fromRank, tarch::parallel::Node::getInstance().getRank() );
+
+    typedef SendReceiveBufferAbstractImplementation<Vertex> MySendReceiveBuffer;
+    std::map<int,SendReceiveBuffer*>::iterator bufferPointer = _map.find(fromRank);
+    assertion2( bufferPointer != _map.end(), fromRank, tarch::parallel::Node::getInstance().getRank() );
+    MySendReceiveBuffer* buffer = static_cast<MySendReceiveBuffer*>(bufferPointer->second);
+    const Vertex result = buffer->getVertex();
+    logTraceOutWith1Argument( "getVertex(int)", result.toString() );
+    return result;
+  }
+  else {
+    return Vertex();
+  }
 }
 
 
@@ -55,18 +61,20 @@ void peano::parallel::SendReceiveBufferPool::sendVertex(const Vertex& vertex, in
   assertion1( toRank >= 0, tarch::parallel::Node::getInstance().getRank() );
   assertion1( toRank != tarch::parallel::Node::getInstance().getRank(), tarch::parallel::Node::getInstance().getRank() );
 
-  if (_bufferSize<=0) {
-    logError( "sendVertex(...)", "invalid buffer size. Probably buffer is not configured" );
-    _bufferSize = 1;
+  if (_mode==SendAndDeploy || _mode==SendButDoNotDeploy) {
+    if (_bufferSize<=0) {
+      logError( "sendVertex(...)", "invalid buffer size. Probably buffer is not configured" );
+      _bufferSize = 1;
+    }
+
+    createBufferManually<Vertex>(toRank,bufferAccessType);
+
+    typedef SendReceiveBufferAbstractImplementation<Vertex> MySendReceiveBuffer;
+    std::map<int,SendReceiveBuffer*>::iterator bufferPointer = _map.find(toRank);
+    assertion2( bufferPointer != _map.end(), toRank, tarch::parallel::Node::getInstance().getRank() );
+    MySendReceiveBuffer* buffer = static_cast<MySendReceiveBuffer*>(bufferPointer->second);
+    logDebug("sendVertex(...)", "sending vertex from rank " << tarch::parallel::Node::getInstance().getRank() << " to rank " << toRank << " due to boundary exchange. Send " << vertex);
+    buffer->sendVertex(vertex);
   }
-
-  createBufferManually<Vertex>(toRank,bufferAccessType);
-
-  typedef SendReceiveBufferAbstractImplementation<Vertex> MySendReceiveBuffer;
-  std::map<int,SendReceiveBuffer*>::iterator bufferPointer = _map.find(toRank);
-  assertion2( bufferPointer != _map.end(), toRank, tarch::parallel::Node::getInstance().getRank() );
-  MySendReceiveBuffer* buffer = static_cast<MySendReceiveBuffer*>(bufferPointer->second);
-  logDebug("sendVertex(...)", "sending vertex from rank " << tarch::parallel::Node::getInstance().getRank() << " to rank " << toRank << " due to boundary exchange. Send " << vertex);
-  buffer->sendVertex(vertex);
 }
 

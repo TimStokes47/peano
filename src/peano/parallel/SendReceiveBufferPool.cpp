@@ -21,7 +21,8 @@ tarch::logging::Log                                                             
 peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
   _iterationManagementTag(MPI_ANY_TAG),
   _iterationDataTag(MPI_ANY_TAG),
-  _bufferSize(0) {
+  _bufferSize(0),
+  _mode(SendAndDeploy) {
   _iterationManagementTag = tarch::parallel::Node::getInstance().reserveFreeTag("SendReceiveBufferPool[it-mgmt]");
   _iterationDataTag       = tarch::parallel::Node::getInstance().reserveFreeTag("SendReceiveBufferPool[it-data]");
 
@@ -33,7 +34,8 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
 peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
   _iterationManagementTag(-1),
   _iterationDataTag(-1),
-  _bufferSize(0) {
+  _bufferSize(0),
+  _mode(SendAndDeploy) {
 }
 #endif
 
@@ -195,3 +197,45 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::switchState(State
   logTraceOutWith1Argument( "switchState(State)", toString() );
 }
 
+
+void peano::parallel::SendReceiveBufferPool::exchangeBoundaryVertices(bool value) {
+  switch (_mode) {
+    case SendAndDeploy:
+      if (value) {
+        _mode = SendAndDeploy;
+      }
+      else {
+        _mode = DeployButDoNotSend;
+      }
+      break;
+    case DeployButDoNotSend:
+      if (value) {
+        _mode = SendButDoNotDeploy;
+      }
+      else {
+        _mode = NeitherDeployNorSend;
+      }
+      break;
+    case SendButDoNotDeploy:
+      if (value) {
+        _mode = SendAndDeploy;
+      }
+      else {
+        _mode = DeployButDoNotSend;
+      }
+      break;
+    case NeitherDeployNorSend:
+      if (value) {
+        _mode = SendButDoNotDeploy;
+      }
+      else {
+        _mode = NeitherDeployNorSend;
+      }
+      break;
+  }
+}
+
+
+bool peano::parallel::SendReceiveBufferPool::deploysValidData() const {
+  return _mode==SendAndDeploy || _mode==DeployButDoNotSend;
+}
