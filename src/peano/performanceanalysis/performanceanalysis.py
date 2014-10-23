@@ -90,10 +90,10 @@ def parseInputFile():
     inputFile = open( inputFileName,  "r" )
     print "parse ",
     for line in inputFile:
-      for rank in range(0,numberOfRanks):
         if ("DefaultAnalyser" in line):
-          m = re.search( "rank:" + str(rank) + " +" + searchPatternNumberOfCells, line )
+          m = re.search( searchPatternNumberOfCells, line )
           if (m):
+            rank  = int(line.split( "rank:" )[-1].split( " " )[0])
             token = line.replace("(",",").replace(")","").strip().split(",")
             numberOfInnerLeafCells[rank].append(float(token[-5]))
             numberOfOuterLeafCells[rank].append(float(token[-4]))
@@ -101,18 +101,21 @@ def parseInputFile():
             numberOfOuterCells[rank].append(float(token[-2]))
             numberOfLocalCells[rank].append(float(token[-1]))
             print ".",
-          m = re.search( "rank:" + str(rank) + " +" + searchPatternNumberOfLocalVertices, line )
+          m = re.search( searchPatternNumberOfLocalVertices, line )
           if (m):
+            rank  = int(line.split( "rank:" )[-1].split( " " )[0])
             token = line.strip().split("=")
             numberOfLocalVertices[rank].append(float(token[-1]))
             print ".",
-          m = re.search( "rank:" + str(rank) + " +" + searchPatternTTotal, line )
+          m = re.search( searchPatternTTotal, line )
           if (m):
+            rank  = int(line.split( "rank:" )[-1].split( " " )[0])
             token = line.strip().split("=(")[-1].split(",")[0]
             tTotal[rank].append(float(token))
             print ".",
-          m = re.search( "rank:" + str(rank) + " +" + searchPatternTTraversal, line )
+          m = re.search( searchPatternTTraversal, line )
           if (m):
+            rank  = int(line.split( "rank:" )[-1].split( " " )[0])
             token = line.strip().split("=(")[-1].split(",")[0]
             tTraversal[rank].append(float(token))
             print ".",
