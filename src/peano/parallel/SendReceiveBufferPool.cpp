@@ -130,7 +130,7 @@ void peano::parallel::SendReceiveBufferPool::restart() {
 
 
 void peano::parallel::SendReceiveBufferPool::releaseMessages() {
-  logTraceIn( "releaseMessages()" );
+  logTraceInWith1Argument( "releaseMessages()", toString(_mode) );
 
   #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
   _backgroundThread.switchState(BackgroundThread::Suspend);
@@ -147,7 +147,20 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   _backgroundThread.switchState(BackgroundThread::ReceiveDataInBackground);
   #endif
 
-  logTraceOut( "releaseMessages()" );
+  switch (_mode) {
+    case SendAndDeploy:
+      break;
+    case DeployButDoNotSend:
+      _mode = NeitherDeployNorSend;
+      break;
+    case SendButDoNotDeploy:
+      _mode = SendAndDeploy;
+      break;
+    case NeitherDeployNorSend:
+      break;
+  }
+
+  logTraceOutWith1Argument( "releaseMessages()", toString(_mode) );
 }
 
 
@@ -228,20 +241,10 @@ void peano::parallel::SendReceiveBufferPool::exchangeBoundaryVertices(bool value
       }
       break;
     case DeployButDoNotSend:
-      if (value) {
-        _mode = SendButDoNotDeploy;
-      }
-      else {
-        _mode = NeitherDeployNorSend;
-      }
+      assertionMsg( false, "mode should not be set in-between two iterations" );
       break;
     case SendButDoNotDeploy:
-      if (value) {
-        _mode = SendAndDeploy;
-      }
-      else {
-        _mode = DeployButDoNotSend;
-      }
+      assertionMsg( false, "mode should not be set in-between two iterations" );
       break;
     case NeitherDeployNorSend:
       if (value) {

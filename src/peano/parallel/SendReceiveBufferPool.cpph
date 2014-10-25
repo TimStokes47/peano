@@ -8,7 +8,7 @@
 template <class Vertex>
 Vertex peano::parallel::SendReceiveBufferPool::getVertex(int fromRank ) {
   if (_mode==SendAndDeploy || _mode==DeployButDoNotSend ) {
-    logTraceInWith1Argument( "getVertex(int)", fromRank );
+    logTraceInWith2Arguments( "getVertex(int)", fromRank, toString(_mode) );
 
     assertion2( _map.count(fromRank) == 1, fromRank, tarch::parallel::Node::getInstance().getRank() );
 
