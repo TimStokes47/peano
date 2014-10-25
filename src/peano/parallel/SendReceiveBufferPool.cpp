@@ -59,6 +59,22 @@ peano::parallel::SendReceiveBufferPool& peano::parallel::SendReceiveBufferPool::
 
 
 
+std::string peano::parallel::SendReceiveBufferPool::toString( SendReceiveMode  mode) {
+  switch (mode) {
+    case SendAndDeploy:
+      return "send-and-deploy";
+    case DeployButDoNotSend:
+      return "deploy-but-do-not-send";
+    case SendButDoNotDeploy:
+      return "send-but-do-not-deploy";
+    case NeitherDeployNorSend:
+      return "neither-deploy-nor-send";
+  }
+
+  return "undef";
+}
+
+
 int peano::parallel::SendReceiveBufferPool::getIterationManagementTag() const {
   #ifdef Parallel
   assertion( _iterationManagementTag!=MPI_ANY_TAG );
@@ -83,8 +99,10 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
 
 
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesFromAllBuffersInPool() {
+  // @todo Use   if (_mode==SendAndDeploy || _mode==SendButDoNotDeploy) {
+
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
-    logDebug( "receiveDanglingMessagesFromAllBuffersInPool()", "receive data from rank " << p->first );
+    logDebug( "receiveDanglingMessagesFromAllBuffersInPool()", "receive data from rank " << p->first << " in mode " << toString(_mode) );
     p->second->receivePageIfAvailable();
   }
 }

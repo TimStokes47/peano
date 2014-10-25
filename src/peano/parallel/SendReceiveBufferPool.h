@@ -117,6 +117,9 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
      * Nobody is allowed to copy the pool.
      */
     SendReceiveBufferPool(const SendReceiveBufferPool& copy) {}
+
+    static std::string toString( SendReceiveMode  mode);
+
   public:
     /**
      * Delete all the buffers not yet deleted.
