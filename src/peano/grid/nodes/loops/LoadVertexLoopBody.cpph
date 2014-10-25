@@ -158,13 +158,13 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
                 currentNeighbourRank
               );
             }
-          }
 
-          peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
-            _fineGridVertices[positionInVertexArray],
-            receivedVertex,
-            currentNeighbourRank
-          );
+            peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
+              _fineGridVertices[positionInVertexArray],
+              receivedVertex,
+              currentNeighbourRank
+            );
+          }
 
           _threadLocalEventHandle.mergeWithNeighbour(
             _fineGridVertices[positionInVertexArray],
