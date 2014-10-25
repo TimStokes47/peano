@@ -217,6 +217,7 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::switchState(State
 
 
 void peano::parallel::SendReceiveBufferPool::exchangeBoundaryVertices(bool value) {
+  logTraceInWith2Arguments( "exchangeBoundaryVertices(bool)", toString(_mode), value );
   switch (_mode) {
     case SendAndDeploy:
       if (value) {
@@ -251,6 +252,7 @@ void peano::parallel::SendReceiveBufferPool::exchangeBoundaryVertices(bool value
       }
       break;
   }
+  logTraceOutWith1Argument( "exchangeBoundaryVertices(bool)", toString(_mode) );
 }
 
 
