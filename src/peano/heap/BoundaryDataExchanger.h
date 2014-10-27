@@ -250,6 +250,10 @@ class peano::heap::BoundaryDataExchanger {
      * is disabled if data is sent via the buffered exchanger, i.e. without any
      * communication in the background.
      *
+     * The buffered exchanger can be distinguished from the other exchangers as
+     * dataExchangerCommunicatesInBackground() holds not: it does all the exchange
+     * in one sweep.
+     *
      * @param position Used for validation, i.e. to ensure that the right
      *                 record is sent back
      * @param level    Used for validation, i.e. to ensure that the right

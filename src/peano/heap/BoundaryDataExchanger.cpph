@@ -424,6 +424,21 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
   assertion(sizeOfNewDeployBuffer>=numberOfMessagesSentThisIteration);
 
   if (numberOfMessagesSentThisIteration < sizeOfNewDeployBuffer) {
+
+
+    /*
+
+    assertion in file ../peano/heap/BoundaryDataExchanger.cpph, line 291 failed: readElement->fits(position,level) | !dataExchangerCommunicatesInBackground()
+    parameter _readDeployBufferInReverseOrder: 1
+    parameter level: 2
+    parameter position: [1,1]
+    parameter _receiveTasks[currentDeployBuffer].front()._metaInformation.toString(): (length:0,position:[1,0.962963],level:4)
+    parameter _receiveTasks[currentDeployBuffer].back()._metaInformation.toString(): (length:0,position:[1,0.777778],level:3)
+    parameter tarch::parallel::Node::getInstance().getRank(): 0
+    peano-MPI-noTBB-DDim2: ../peano/heap/BoundaryDataExchanger.cpph:291: std::vector<Data, std::allocator<Data>> peano::heap::BoundaryDataExchanger<Data>::receiveData(const tarch::la::Vector<2, double> &, int) [with Data = particles::pidt::records::Particle]: Assertion `false' failed.
+
+    */
+
     logInfo(
       "switchReceiveAndDeployBuffer(int)",
       "have to copy back " << sizeOfNewDeployBuffer-numberOfMessagesSentThisIteration <<
@@ -446,7 +461,8 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
     }
   }
   else {
-    logDebug(
+    // @todo Make it debug again
+    logInfo(
       "switchReceiveAndDeployBuffer(int)",
       "number of received messages equals number of sent messages: " << numberOfMessagesSentThisIteration
     );
