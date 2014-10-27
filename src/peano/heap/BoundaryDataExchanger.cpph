@@ -437,13 +437,15 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
     parameter tarch::parallel::Node::getInstance().getRank(): 0
     peano-MPI-noTBB-DDim2: ../peano/heap/BoundaryDataExchanger.cpph:291: std::vector<Data, std::allocator<Data>> peano::heap::BoundaryDataExchanger<Data>::receiveData(const tarch::la::Vector<2, double> &, int) [with Data = particles::pidt::records::Particle]: Assertion `false' failed.
 
-    vermutlich ist es Rank 12
+    vermutlich ist es Rank 12 -> es ist Rank 12
+
     */
 
     logInfo(
       "switchReceiveAndDeployBuffer(int)",
       "have to copy back " << sizeOfNewDeployBuffer-numberOfMessagesSentThisIteration <<
-      " message(s) from the deploy buffer to the receive buffer, as " << numberOfMessagesSentThisIteration <<
+      " message(s) from the deploy buffer to the receive buffer or rank " << _rank <<
+      ", as " << numberOfMessagesSentThisIteration <<
       " message(s) have been sent out while " << sizeOfNewDeployBuffer << " have been received"
     );
 
@@ -464,7 +466,8 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
     /**
      * @todo doku
      */
-    _readDeployBufferInReverseOrder = !_readDeployBufferInReverseOrder;
+    _wasTraversalInvertedThroughoutLastSendReceiveTraversal = !_wasTraversalInvertedThroughoutLastSendReceiveTraversal;
+  //  _readDeployBufferInReverseOrder = !_readDeployBufferInReverseOrder;
   }
   else {
     // @todo Make it debug again

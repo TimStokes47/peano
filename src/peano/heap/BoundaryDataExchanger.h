@@ -120,6 +120,18 @@ class peano::heap::BoundaryDataExchanger {
      * details. This operation is really based upon the actual value of the
      * field _receiveTasks[1-_currentReceiveBuffer].size().
      *
+     * !!! Overtaking messages
+     *
+     * If Peano manages to break tight synchronisation, i.e. to run multiple
+     * sweeps of different traversals in parallel, it can happen that messages
+     * arrive in the buffer that belong to already the subsequent traversal.
+     * These may not be delivered in the current traversal, i.e. we may switch
+     * the buffers, but then we have to return those additional messages to the
+     * receive buffer again.
+     *
+     * This return mechanism also has to take into account that we need the
+     * _readDeployBufferInReverseOrder flag to
+     *
      * @param numberOfMessagesSentThisIteration The switch mechanism has to be
      *   know how many data have to be in the new receive buffer. If there are
      *   more messages available, those additional ones belong to next
