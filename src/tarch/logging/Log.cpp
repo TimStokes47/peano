@@ -28,7 +28,7 @@ tarch::logging::Log::Log(const std::string& className):
   _className( className ) {
   #if defined(CompilerHasTimespec)
   struct timespec ts;
-  if( _startupTime==0.0 & clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
+  if( (_startupTime==0.0) & (clock_gettime(CLOCK_REALTIME, &ts) == 0) ) {
     _startupTime = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
   }
   #endif
