@@ -422,16 +422,23 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
   assertion(sizeOfNewDeployBuffer>=numberOfMessagesSentThisIteration);
 
   if (numberOfMessagesSentThisIteration < sizeOfNewDeployBuffer) {
-    logDebug(
+    logInfo(
       "switchReceiveAndDeployBuffer(int)",
       "have to copy back " << sizeOfNewDeployBuffer-numberOfMessagesSentThisIteration <<
-      " messages from the deploy buffer to the receive buffer"
+      " message(s) from the deploy buffer to the receive buffer, as " << numberOfMessagesSentThisIteration <<
+      " message(s) have been sent out while " << sizeOfNewDeployBuffer << " have been received"
     );
 
     typename std::list<SendReceiveTask<Data> >::iterator p = _receiveTasks[1-_currentReceiveBuffer].begin();
     std::advance(p, numberOfMessagesSentThisIteration);
 
     while (p != _receiveTasks[1-_currentReceiveBuffer].end()) {
+      // @todo raus
+      logInfo(
+        "switchReceiveAndDeployBuffer(int)",
+        "move message " << p->toString()
+      );
+
       _receiveTasks[_currentReceiveBuffer].push_back(*p);
       p = _receiveTasks[1-_currentReceiveBuffer].erase(p);
     }
