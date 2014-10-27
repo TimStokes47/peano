@@ -437,6 +437,7 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
     parameter tarch::parallel::Node::getInstance().getRank(): 0
     peano-MPI-noTBB-DDim2: ../peano/heap/BoundaryDataExchanger.cpph:291: std::vector<Data, std::allocator<Data>> peano::heap::BoundaryDataExchanger<Data>::receiveData(const tarch::la::Vector<2, double> &, int) [with Data = particles::pidt::records::Particle]: Assertion `false' failed.
 
+    vermutlich ist es Rank 12
     */
 
     logInfo(
@@ -459,6 +460,11 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
       _receiveTasks[_currentReceiveBuffer].push_back(*p);
       p = _receiveTasks[1-_currentReceiveBuffer].erase(p);
     }
+
+    /**
+     * @todo doku
+     */
+    _readDeployBufferInReverseOrder = !_readDeployBufferInReverseOrder;
   }
   else {
     // @todo Make it debug again
