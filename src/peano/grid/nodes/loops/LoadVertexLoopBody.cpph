@@ -56,7 +56,7 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   _numberOfInnerLeafVertices(0.0),
   _numberOfBoundaryLeafVertices(0.0),
   _numberOfOuterLeafVertices(0.0),
-  _hasRefinened(false),
+  _hasRefined(false),
   _hasErased(false),
   _hasFailedToEraseDueToDomainDecomposition(false),
   _hasChangedVertexState(false),
@@ -80,7 +80,7 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   _state.incNumberOfBoundaryLeafVertices(_numberOfBoundaryLeafVertices);
   _state.incNumberOfOuterLeafVertices(_numberOfOuterLeafVertices);
 
-  _state.updateRefinementHistoryAfterLoad( _hasRefinened, _hasErased, _hasFailedToEraseDueToDomainDecomposition, _hasChangedVertexState );
+  _state.updateRefinementHistoryAfterLoad( _hasRefined, _hasErased, _hasFailedToEraseDueToDomainDecomposition, _hasChangedVertexState );
 
   #if defined(SharedMemoryParallelisation)
   _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
@@ -209,7 +209,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   const bool                                         switchedIntoRefining = _fineGridVertices[positionInVertexArray].switchRefinementTriggeredToRefining();
   const typename Vertex::SwitchEraseTriggeredResult  switchedIntoErasing  = _fineGridVertices[positionInVertexArray].switchEraseTriggeredToErasing();
   if ( switchedIntoRefining ) {
-    _hasRefinened = true;
+    _hasRefined = true;
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex refining: " << _fineGridVertices[positionInVertexArray].toString() );
   }
   if ( switchedIntoErasing == Vertex::SwitchedIntoErasing ) {
