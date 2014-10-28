@@ -526,7 +526,7 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
     // @todo Make it debug again
     logInfo(
       "switchReceiveAndDeployBuffer(int)",
-      "number of received messages equals number of sent messages: " << numberOfMessagesSentThisIteration
+      "number of received messages from rank " << _rank << " equals number of sent messages: " << numberOfMessagesSentThisIteration
     );
   }
 
