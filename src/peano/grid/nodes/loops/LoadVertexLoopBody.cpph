@@ -194,10 +194,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
               _fineGridVertices[positionInVertexArray].isAdjacentSubtreeForksIntoOtherRankFlagSet(), copyOfLocalVertex.isAdjacentSubtreeForksIntoOtherRankFlagSet(),
               _fineGridVertices[positionInVertexArray].toString(), copyOfLocalVertex.toString()
             );
-            assertionEquals2(
-              _fineGridVertices[positionInVertexArray].getAdjacentRemoteRanks(), copyOfLocalVertex.getAdjacentRemoteRanks(),
-              _fineGridVertices[positionInVertexArray].toString(), copyOfLocalVertex.toString()
-            );
             #endif
           }
 
