@@ -224,6 +224,15 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     #endif
   }
 
+  #ifdef Parallel
+  assertion1(
+    peano::parallel::SendReceiveBufferPool::getInstance().deploysValidData() ||
+    !_hasRefined ||
+    !_hasErased,
+    _fineGridVertices[positionInVertexArray].toString()
+  );
+  #endif
+
   logTraceOutWith1Argument( "updateRefinementFlagsOfVertexAfterLoad(...)", _fineGridVertices[positionInVertexArray].toString() );
 }
 
