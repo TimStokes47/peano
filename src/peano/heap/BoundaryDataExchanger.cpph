@@ -424,24 +424,7 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
   assertion(sizeOfNewDeployBuffer>=numberOfMessagesSentThisIteration);
 
   if (numberOfMessagesSentThisIteration < sizeOfNewDeployBuffer) {
-
-
-    /*
-
-    assertion in file ../peano/heap/BoundaryDataExchanger.cpph, line 291 failed: readElement->fits(position,level) | !dataExchangerCommunicatesInBackground()
-    parameter _readDeployBufferInReverseOrder: 1
-    parameter level: 2
-    parameter position: [1,1]
-    parameter _receiveTasks[currentDeployBuffer].front()._metaInformation.toString(): (length:0,position:[1,0.962963],level:4)
-    parameter _receiveTasks[currentDeployBuffer].back()._metaInformation.toString(): (length:0,position:[1,0.777778],level:3)
-    parameter tarch::parallel::Node::getInstance().getRank(): 0
-    peano-MPI-noTBB-DDim2: ../peano/heap/BoundaryDataExchanger.cpph:291: std::vector<Data, std::allocator<Data>> peano::heap::BoundaryDataExchanger<Data>::receiveData(const tarch::la::Vector<2, double> &, int) [with Data = particles::pidt::records::Particle]: Assertion `false' failed.
-
-    vermutlich ist es Rank 12 -> es ist Rank 12
-
-    */
-
-    logInfo(
+    logDebug(
       "switchReceiveAndDeployBuffer(int)",
       "have to copy back " << sizeOfNewDeployBuffer-numberOfMessagesSentThisIteration <<
       " message(s) from the deploy buffer to the receive buffer or rank " << _rank <<
@@ -451,29 +434,6 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
 
     typename std::list<SendReceiveTask<Data> >::iterator p = _receiveTasks[1-_currentReceiveBuffer].begin();
     std::advance(p, numberOfMessagesSentThisIteration);
-
-//    _currentReceiveBuffer = 1-_currentReceiveBuffer;
-
-/*
-    _receiveTasks[_currentReceiveBuffer].insert(
-      _receiveTasks[_currentReceiveBuffer].begin(),
-      _receiveTasks[1-_currentReceiveBuffer].begin(),
-      p
-    );
-    _receiveTasks[1-_currentReceiveBuffer].erase(
-      _receiveTasks[1-_currentReceiveBuffer].begin(),
-      p
-    );
-*/
-
-    for (
-      typename std::list<SendReceiveTask<Data> >::const_iterator it = _receiveTasks[1-_currentReceiveBuffer].begin();
-      it != _receiveTasks[1-_currentReceiveBuffer].end();
-      it++
-    ) {
-      // @todo raus
-      logInfo( "switchReceiveAndDeployBuffer(int)", "original deploy buffer: " << it->toString() );
-    }
 
     _receiveTasks[_currentReceiveBuffer].insert(
       _receiveTasks[_currentReceiveBuffer].begin(),
@@ -490,8 +450,7 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
       it != _receiveTasks[_currentReceiveBuffer].end();
       it++
     ) {
-      // @todo raus
-      logInfo( "switchReceiveAndDeployBuffer(int)", "transferred element (now in receive buffer): " << it->toString() );
+      logDebug( "switchReceiveAndDeployBuffer(int)", "transferred element (now in receive buffer): " << it->toString() );
     }
 
     for (
@@ -499,32 +458,11 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
       it != _receiveTasks[1-_currentReceiveBuffer].end();
       it++
     ) {
-      // @todo raus
-      logInfo( "switchReceiveAndDeployBuffer(int)", "remaining deploy element: " << it->toString() );
+      logDebug( "switchReceiveAndDeployBuffer(int)", "remaining deploy element: " << it->toString() );
     }
-/*
-
-    while (p != _receiveTasks[1-_currentReceiveBuffer].end()) {
-      // @todo raus
-      logInfo(
-        "switchReceiveAndDeployBuffer(int)",
-        "move message " << p->toString()
-      );
-
-      _receiveTasks[_currentReceiveBuffer].push_back(*p);
-      p = _receiveTasks[1-_currentReceiveBuffer].erase(p);
-    }
-*/
-
-    /**
-     * @todo doku
-     */
-//    _wasTraversalInvertedThroughoutLastSendReceiveTraversal = !_wasTraversalInvertedThroughoutLastSendReceiveTraversal;
-  //  _readDeployBufferInReverseOrder = !_readDeployBufferInReverseOrder;
   }
   else {
-    // @todo Make it debug again
-    logInfo(
+    logDebug(
       "switchReceiveAndDeployBuffer(int)",
       "number of received messages from rank " << _rank << " equals number of sent messages: " << numberOfMessagesSentThisIteration
     );
