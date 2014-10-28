@@ -470,6 +470,15 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
       // @todo raus
       logInfo( "switchReceiveAndDeployBuffer(int)", "transferred element: " << it->toString() );
     }
+
+    for (
+      typename std::list<SendReceiveTask<Data> >::const_iterator it = _receiveTasks[1-_currentReceiveBuffer].begin();
+      it != _receiveTasks[1-_currentReceiveBuffer].end();
+      it++
+    ) {
+      // @todo raus
+      logInfo( "switchReceiveAndDeployBuffer(int)", "remaining deploy element: " << it->toString() );
+    }
 /*
 
     while (p != _receiveTasks[1-_currentReceiveBuffer].end()) {

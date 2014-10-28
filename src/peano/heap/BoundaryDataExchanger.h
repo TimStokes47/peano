@@ -45,7 +45,15 @@ class peano::heap::BoundaryDataExchanger {
 
     int  _numberOfSentMessages;
     int  _numberOfSentRecords;
+
+    /**
+     * Purely statistical purposes, i.e. is not used for any real algorithmics.
+     */
     int  _numberOfReceivedMessages;
+
+    /**
+     * Purely statistical purposes, i.e. is not used for any real algorithmics.
+     */
     int  _numberOfReceivedRecords;
 
     /**
