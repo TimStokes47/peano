@@ -186,12 +186,15 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
               currentNeighbourRank
             );
 
-            assertionEquals2(
+            assertionEquals3(
               _fineGridVertices[positionInVertexArray].getRefinementControl(), copyOfLocalVertex.getRefinementControl(),
-              _fineGridVertices[positionInVertexArray].toString(), copyOfLocalVertex.toString()
+              _fineGridVertices[positionInVertexArray].toString(), copyOfLocalVertex.toString(), receivedVertex.toString()
             );
             #endif
 
+            // This is formally not correct, but it is pessimistic: We just
+            // ensure that nothing does go wrong as someone tries to coarse
+            // somewhere.
             _fineGridVertices[positionInVertexArray].setAdjacentSubtreeForksIntoOtherRankFlag();
           }
 
