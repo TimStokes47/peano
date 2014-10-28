@@ -463,7 +463,7 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
     );
 
     for (
-      std::list<SendReceiveTask<Data> >::const_iterator it = _receiveTasks[_currentReceiveBuffer].begin();
+      typename std::list<SendReceiveTask<Data> >::const_iterator it = _receiveTasks[_currentReceiveBuffer].begin();
       it != _receiveTasks[_currentReceiveBuffer].end();
       it++
     ) {
