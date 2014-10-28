@@ -452,17 +452,7 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
     typename std::list<SendReceiveTask<Data> >::iterator p = _receiveTasks[1-_currentReceiveBuffer].begin();
     std::advance(p, numberOfMessagesSentThisIteration);
 
-    _receiveTasks[_currentReceiveBuffer].insert(
-      _receiveTasks[_currentReceiveBuffer].begin(),
-      p,
-      _receiveTasks[1-_currentReceiveBuffer].end()
-    );
-    _receiveTasks[1-_currentReceiveBuffer].erase(
-      p,
-      _receiveTasks[1-_currentReceiveBuffer].end()
-    );
-
-    _currentReceiveBuffer = 1-_currentReceiveBuffer;
+//    _currentReceiveBuffer = 1-_currentReceiveBuffer;
 
 /*
     _receiveTasks[_currentReceiveBuffer].insert(
@@ -477,12 +467,31 @@ void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int 
 */
 
     for (
+      typename std::list<SendReceiveTask<Data> >::const_iterator it = _receiveTasks[1-_currentReceiveBuffer].begin();
+      it != _receiveTasks[1-_currentReceiveBuffer].end();
+      it++
+    ) {
+      // @todo raus
+      logInfo( "switchReceiveAndDeployBuffer(int)", "original deploy buffer: " << it->toString() );
+    }
+
+    _receiveTasks[_currentReceiveBuffer].insert(
+      _receiveTasks[_currentReceiveBuffer].begin(),
+      p,
+      _receiveTasks[1-_currentReceiveBuffer].end()
+    );
+    _receiveTasks[1-_currentReceiveBuffer].erase(
+      p,
+      _receiveTasks[1-_currentReceiveBuffer].end()
+    );
+
+    for (
       typename std::list<SendReceiveTask<Data> >::const_iterator it = _receiveTasks[_currentReceiveBuffer].begin();
       it != _receiveTasks[_currentReceiveBuffer].end();
       it++
     ) {
       // @todo raus
-      logInfo( "switchReceiveAndDeployBuffer(int)", "transferred element: " << it->toString() );
+      logInfo( "switchReceiveAndDeployBuffer(int)", "transferred element (now in receive buffer): " << it->toString() );
     }
 
     for (
