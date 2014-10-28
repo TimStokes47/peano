@@ -99,8 +99,6 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
 
 
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesFromAllBuffersInPool() {
-  // @todo Use   if (_mode==SendAndDeploy || _mode==SendButDoNotDeploy) {
-
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     logDebug( "receiveDanglingMessagesFromAllBuffersInPool()", "receive data from rank " << p->first << " in mode " << toString(_mode) );
     p->second->receivePageIfAvailable();

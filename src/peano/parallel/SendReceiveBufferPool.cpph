@@ -7,7 +7,13 @@
 
 template <class Vertex>
 Vertex peano::parallel::SendReceiveBufferPool::getVertex(int fromRank ) {
-  if (_mode==SendAndDeploy || _mode==DeployButDoNotSend ) {
+  #ifdef Asserts
+  const bool receiveVertex = true;
+  #else
+  const bool receiveVertex = _mode==SendAndDeploy || _mode==DeployButDoNotSend;
+  #endif
+
+  if ( receiveVertex ) {
     logTraceInWith2Arguments( "getVertex(int)", fromRank, toString(_mode) );
 
     assertion2( _map.count(fromRank) == 1, fromRank, tarch::parallel::Node::getInstance().getRank() );
@@ -61,7 +67,13 @@ void peano::parallel::SendReceiveBufferPool::sendVertex(const Vertex& vertex, in
   assertion1( toRank >= 0, tarch::parallel::Node::getInstance().getRank() );
   assertion1( toRank != tarch::parallel::Node::getInstance().getRank(), tarch::parallel::Node::getInstance().getRank() );
 
-  if (_mode==SendAndDeploy || _mode==SendButDoNotDeploy) {
+  #ifdef Asserts
+  const bool sendVertexAway = true;
+  #else
+  const bool sendVertexAway = _mode==SendAndDeploy || _mode==SendButDoNotDeploy;
+  #endif
+
+  if ( sendVertexAway ) {
     if (_bufferSize<=0) {
       logError( "sendVertex(...)", "invalid buffer size. Probably buffer is not configured" );
       _bufferSize = 1;
