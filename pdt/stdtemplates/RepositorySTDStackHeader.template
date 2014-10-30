@@ -79,7 +79,7 @@ class __NAMESPACE__::repositories::RepositorySTDStack: public __NAMESPACE__::rep
     virtual __NAMESPACE__::State& getState();
     virtual const __NAMESPACE__::State& getState() const;
 	
-    virtual void iterate(int numberOfIterations=1);
+    virtual void iterate(int numberOfIterations=1, bool exchangeBoundaryVertices=true);
 
     virtual void writeCheckpoint(peano::grid::Checkpoint<__NAMESPACE__::Vertex, __NAMESPACE__::Cell> * const checkpoint); 
     virtual void readCheckpoint( peano::grid::Checkpoint<__NAMESPACE__::Vertex, __NAMESPACE__::Cell> const * const checkpoint );
