@@ -158,10 +158,10 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
       
    }
    
-   void peano::parallel::messages::LoadBalancingMessage::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+   void peano::parallel::messages::LoadBalancingMessage::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
       _senderDestinationRank = destination;
       
-      if (communicateBlocking) {
+      if (communicateSleep<0) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
@@ -209,6 +209,7 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
          << ": " << tarch::parallel::MPIReturnValueToString(result);
          _log.error( "send(int)",msg.str() );
       }
+      int sleepDelay = communicateSleep;
       result = MPI_Test( sendRequestHandle, &flag, &status );
       while (!flag) {
          if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -245,6 +246,8 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(sleepDelay);
+         sleepDelay += communicateSleep;
       }
       
       delete sendRequestHandle;
@@ -258,8 +261,8 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
 
 
 
-void peano::parallel::messages::LoadBalancingMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-   if (communicateBlocking) {
+void peano::parallel::messages::LoadBalancingMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateBlocking) {
+   if (communicateBlocking<0) {
    
       MPI_Status  status;
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -304,6 +307,7 @@ void peano::parallel::messages::LoadBalancingMessage::receive(int source, int ta
          _log.error( "receive(int)", msg.str() );
       }
       
+      int sleepDelay = communicateBlocking;
       result = MPI_Test( sendRequestHandle, &flag, &status );
       while (!flag) {
          if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -338,6 +342,8 @@ void peano::parallel::messages::LoadBalancingMessage::receive(int source, int ta
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(sleepDelay);
+         sleepDelay += communicateBlocking;
       }
       
       delete sendRequestHandle;
@@ -540,10 +546,10 @@ void peano::parallel::messages::LoadBalancingMessagePacked::shutdownDatatype() {
    
 }
 
-void peano::parallel::messages::LoadBalancingMessagePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+void peano::parallel::messages::LoadBalancingMessagePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
    _senderDestinationRank = destination;
    
-   if (communicateBlocking) {
+   if (communicateSleep<0) {
    
       const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
       if  (result!=MPI_SUCCESS) {
@@ -591,6 +597,7 @@ void peano::parallel::messages::LoadBalancingMessagePacked::send(int destination
       << ": " << tarch::parallel::MPIReturnValueToString(result);
       _log.error( "send(int)",msg.str() );
    }
+   int sleepDelay = communicateSleep;
    result = MPI_Test( sendRequestHandle, &flag, &status );
    while (!flag) {
       if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -627,6 +634,8 @@ void peano::parallel::messages::LoadBalancingMessagePacked::send(int destination
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+      usleep(sleepDelay);
+      sleepDelay += communicateSleep;
    }
    
    delete sendRequestHandle;
@@ -640,8 +649,8 @@ void peano::parallel::messages::LoadBalancingMessagePacked::send(int destination
 
 
 
-void peano::parallel::messages::LoadBalancingMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-if (communicateBlocking) {
+void peano::parallel::messages::LoadBalancingMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateBlocking) {
+if (communicateBlocking<0) {
 
    MPI_Status  status;
    const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -686,6 +695,7 @@ else {
       _log.error( "receive(int)", msg.str() );
    }
    
+   int sleepDelay = communicateBlocking;
    result = MPI_Test( sendRequestHandle, &flag, &status );
    while (!flag) {
       if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -720,6 +730,8 @@ else {
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+      usleep(sleepDelay);
+      sleepDelay += communicateBlocking;
    }
    
    delete sendRequestHandle;
