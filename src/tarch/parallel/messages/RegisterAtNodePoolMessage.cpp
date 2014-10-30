@@ -284,7 +284,7 @@ void tarch::parallel::messages::RegisterAtNodePoolMessage::receive(int source, i
    if (communicateBlocking) {
    
       MPI_Status  status;
-      const int   result = MPI_Recv(this, 1, communicateBlocking ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
       _senderDestinationRank = status.MPI_SOURCE;
       if ( result != MPI_SUCCESS ) {
          std::ostringstream msg;
@@ -688,7 +688,7 @@ void tarch::parallel::messages::RegisterAtNodePoolMessagePacked::receive(int sou
 if (communicateBlocking) {
 
    MPI_Status  status;
-   const int   result = MPI_Recv(this, 1, communicateBlocking ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+   const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
    _senderDestinationRank = status.MPI_SOURCE;
    if ( result != MPI_SUCCESS ) {
       std::ostringstream msg;

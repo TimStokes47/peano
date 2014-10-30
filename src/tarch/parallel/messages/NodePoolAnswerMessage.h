@@ -31,9 +31,9 @@ namespace tarch {
  * 		   2007-2009 Wolfgang Eckhardt
  * 		   2012      Tobias Weinzierl
  *
- * 		   build date: 04-02-2014 16:40
+ * 		   build date: 09-02-2014 14:40
  *
- * @date   04/02/2014 16:42
+ * @date   30/10/2014 13:28
  */
 class tarch::parallel::messages::NodePoolAnswerMessage { 
    
@@ -160,9 +160,9 @@ class tarch::parallel::messages::NodePoolAnswerMessage {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 04-02-2014 16:40
+    * 		   build date: 09-02-2014 14:40
     *
-    * @date   04/02/2014 16:42
+    * @date   30/10/2014 13:28
     */
    class tarch::parallel::messages::NodePoolAnswerMessagePacked { 
       
