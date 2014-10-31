@@ -115,7 +115,7 @@
  *
  * @see Grid::sendStateToMaster()
  */
-#define SendWorkerMasterMessagesBlocking     false
+#define SendWorkerMasterMessagesBlocking     0
 
 
 /**
@@ -131,7 +131,7 @@
  *
  * @see Node::updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()
  */
-#define SendMasterWorkerMessagesBlocking     false
+#define SendMasterWorkerMessagesBlocking     0
 
 /**
  *
@@ -148,7 +148,7 @@
  * while nodes are waiting for their master's notification at the begin ob
  * subsequent traversal.
  */
-#define ReceiveMasterMessagesBlocking        false
+#define ReceiveMasterMessagesBlocking        0
 
 
 /**
@@ -166,10 +166,10 @@
  * The default of this value is false. A switch to true is usually not very
  * critical.
  */
-#define SendAndReceiveLoadBalancingMessagesBlocking    false
-#define ReceiveIterationControlMessagesBlocking        false
-#define BroadcastToIdleNodesBlocking                   false
-#define BroadcastToWorkingNodesBlocking                false
+#define SendAndReceiveLoadBalancingMessagesBlocking    0
+#define ReceiveIterationControlMessagesBlocking        0
+#define BroadcastToIdleNodesBlocking                   0
+#define BroadcastToWorkingNodesBlocking                0
 
 
 /**
@@ -182,7 +182,7 @@
  * send/receive protocol there is not just switching a flag but to select a
  * completely different algorithm.
  */
-#define SendAndReceiveHeapMetaDataBlocking             false
+#define SendAndReceiveHeapMetaDataBlocking             0
 
 
 
