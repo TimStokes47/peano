@@ -47,6 +47,10 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::clear() {
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::writeToFile( const std::string& filename ) {
   assertion( !_writtenToFile );
 
+  if (filename.rfind(".vtk")==std::string::npos) {
+    logWarning( "writeToFile()", "filename should end with .vtk but is " << filename );
+  }
+
   std::ofstream out;
   out.open( filename.c_str() );
   if ( (!out.fail()) && out.is_open() ) {

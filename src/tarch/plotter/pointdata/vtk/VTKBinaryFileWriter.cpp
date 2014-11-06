@@ -45,6 +45,10 @@ void tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::clear() {
 void tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::writeToFile( const std::string& filename ) {
   assertion( !_writtenToFile );
 
+  if (filename.rfind(".vtk")==std::string::npos) {
+    logWarning( "writeToFile()", "filename should end with .vtu but is " << filename );
+  }
+
   std::ofstream out;
   out.open( filename.c_str(), std::ios::binary );
   if ( (!out.fail()) && out.is_open() ) {

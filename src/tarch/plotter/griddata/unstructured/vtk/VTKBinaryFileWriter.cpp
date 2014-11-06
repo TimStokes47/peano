@@ -48,6 +48,10 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::clear() {
 void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::writeToFile( const std::string& filename ) {
   assertion( !_writtenToFile );
 
+  if (filename.rfind(".vtk")==std::string::npos) {
+    logWarning( "writeToFile()", "filename should end with .vtk but is " << filename );
+  }
+
   std::ofstream out;
   out.open( filename.c_str(), std::ios::binary );
   if ( (!out.fail()) && out.is_open() ) {
@@ -66,12 +70,12 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::writeToFi
     out << "CELL_TYPES " << _numberOfCells << std::endl;
     out << _cellTypeDescription.rdbuf() << std::endl << std::endl;
 
-    if (_numberOfVertices>0 ) {
+    if (_numberOfVertices>0 && !_vertexDataDescription.str().empty() ) {
       out << "POINT_DATA " << _numberOfVertices << std::endl;
       out << _vertexDataDescription.rdbuf() << std::endl << std::endl;
     }
 
-    if (_numberOfCells>0 ) {
+    if (_numberOfCells>0 && !_cellDataDescription.str().empty()) {
       out << "CELL_DATA " << _numberOfCells << std::endl;
       out << _cellDataDescription.rdbuf() << std::endl << std::endl;
     }
