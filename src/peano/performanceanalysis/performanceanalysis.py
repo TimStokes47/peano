@@ -333,7 +333,7 @@ def plotBoundaryLateSends():
           #edge = pydot.Edge(str(sender),str(receiver), label="(" + str(pair.count) + "," + str(pair.maxCardinality) + "," + str(float(pair.average) / float(pair.count)) + ")", fontsize=str(myfontsize), labelfontcolor="blue" )
           sparseMaxGraph.add_edge(str(worker),str(master))
   pylab.clf()
-  pylab.title( "Late workers" )
+  pylab.title( "Late sends from neighbours" )
   drawTreeGraph(graph)
   pylab.savefig( outputFileName + ".boundary-data-exchange.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.pdf" )
@@ -343,7 +343,7 @@ def plotBoundaryLateSends():
   switchBackToStandardPlot()
 
   pylab.clf()
-  pylab.title( "Late workers (only graphs more than average)" )
+  pylab.title( "Late sends from neighbours (only edges with weight more than average)" )
   drawTreeGraph(sparseAverageGraph)
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.pdf" )
@@ -353,7 +353,7 @@ def plotBoundaryLateSends():
   switchBackToStandardPlot()
 
   pylab.clf()
-  pylab.title( "Late workers (only 10% heaviest edges)" )
+  pylab.title( "Late sends from neighbours (only 10% heaviest edges)" )
   drawTreeGraph(sparseMaxGraph)
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.pdf" )
@@ -440,7 +440,7 @@ def plotMasterWorkerLateSends():
   switchBackToStandardPlot()
 
   pylab.clf()
-  pylab.title( "Late workers (only graphs more than average)" )
+  pylab.title( "Late workers (only edges with weight more than average)" )
   drawTreeGraph(sparseAverageGraph)
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.png" )
   pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.pdf" )
