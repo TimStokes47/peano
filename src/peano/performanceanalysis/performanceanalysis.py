@@ -676,9 +676,26 @@ def plotStatisticsForRank(currentRank):
 
   pylab.clf()
   pylab.title( "Runtime profile (cpu time)" )
-  
-  #@todo
 
+  x = pylab.arange(0, len(totalTimeCPU), 1.0)
+  pylab.plot(x, totalTimeCPU, 'x-', label='total', color='#FF0000', markersize=10)
+
+  x = pylab.arange(0, len(joinTimeCPU), 1.0)
+  pylab.plot(x, joinTimeCPU, 'o-', label='join', color='#00FF00', markersize=10)
+
+  x = pylab.arange(0, len(boundaryTimeCPU), 1.0)
+  pylab.plot(x, boundaryTimeCPU, '^-', label='boundary exchange', color='#0000FF', markersize=10)
+
+  x = pylab.arange(0, len(synchronousHeapDataCPU), 1.0)
+  pylab.plot(x, synchronousHeapDataCPU, '+-', label='synchronous heap', color='#aaaa00', markersize=10)
+
+  x = pylab.arange(0, len(asynchronousHeapDataCPU), 1.0)
+  pylab.plot(x, asynchronousHeapDataCPU, '1-', label='asynchronous heap', color='#aa00aa', markersize=10)
+
+  x = pylab.arange(0, len(centralElementCPU), 1.0)
+  pylab.plot(x, centralElementCPU, 'v--', label='local elements traversal', color='#00aaaa', markersize=10)
+
+  setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".png" )
   pylab.savefig( outputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".pdf" )
 
