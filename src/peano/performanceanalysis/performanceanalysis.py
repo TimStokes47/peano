@@ -617,25 +617,25 @@ def plotStatisticsForRank(currentRank):
   try:
     inputFile = open( inputFileName,  "r" )
     for line in inputFile:
-      if (re.search( "DefaultAnalyser::endIteration", line ) and re.search( "rank:" + str(rank) + " ", line ) and re.search( "t_total", line )):
+      if (re.search( "DefaultAnalyser::endIteration", line ) and re.search( "rank:" + str(currentRank) + " ", line ) and re.search( "t_total", line )):
         totalTimeCalendar.append( float( line.split( "(" )[-1].split(",")[0] ))
         totalTimeCPU.append(      float( line.split( "," )[-1].split(")")[0] ))
-      if (re.search( "DefaultAnalyser::endReleaseOfJoinData", line ) and re.search( "rank:" + str(rank) + " ", line )):
+      if (re.search( "DefaultAnalyser::endReleaseOfJoinData", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         joinTimeCalendar.append( float( line.split( "=" )[1].split(",")[0] ))
         joinTimeCPU.append(      float( line.split( "=" )[2].strip() ))
-      if (re.search( "DefaultAnalyser::endReleaseOfBoundaryData", line ) and re.search( "rank:" + str(rank) + " ", line )):
+      if (re.search( "DefaultAnalyser::endReleaseOfBoundaryData", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         boundaryTimeCalendar.append( float( line.split( "=" )[-2].split(",")[0] ))
         boundaryTimeCPU.append(      float( line.split( "=" )[-1].strip() ))
-      if (re.search( "DefaultAnalyser::endToReleaseSynchronousHeapData", line ) and re.search( "rank:" + str(rank) + " ", line )):
+      if (re.search( "DefaultAnalyser::endToReleaseSynchronousHeapData", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         synchronousHeapDataCalendar.append( float( line.split( "=" )[-2].split(",")[0] ))      
         synchronousHeapDataCPU.append(      float( line.split( "=" )[-1].strip() ))
-      if (re.search( "DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange", line ) and re.search( "rank:" + str(rank) + " ", line )):
+      if (re.search( "DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         asynchronousHeapDataCalendar.append( float( line.split( "=" )[-2].split(",")[0] ))      
         asynchronousHeapDataCPU.append(      float( line.split( "=" )[-1].strip() ))
-      if (re.search( "DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree", line ) and re.search( "rank:" + str(rank) + " ", line )):
+      if (re.search( "DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         centralElementCalendar.append( float( line.split( "(" )[-1].split(",")[0] ))
         centralElementCPU.append(      float( line.split( "," )[-1].split(")")[0] ))
-      if (re.search( "DefaultAnalyser::dataWasNotReceivedFromWorker", line ) and re.search( "rank:" + str(rank) + " ", line )):
+      if (re.search( "DefaultAnalyser::dataWasNotReceivedFromWorker", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         workerWaitTimeCalendar.append( float( line.split( "for " )[2].split("s")[0] ))      
         
         
