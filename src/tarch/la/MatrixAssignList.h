@@ -40,7 +40,7 @@ class tarch::la::MatrixAssignList {
     /**
      * Constructor.
      */
-    MatrixAssignList(Matrix<Rows,Cols,Scalar>&  matrix, int col, int row);
+    MatrixAssignList(Matrix<Rows,Cols,Scalar>&  matrix, int row, int col);
 
     /**
      * Destructor, asserts that the right amount of values has been assigned.

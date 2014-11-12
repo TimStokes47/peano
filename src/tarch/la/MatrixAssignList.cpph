@@ -19,7 +19,7 @@ tarch::la::MatrixAssignList<Rows,Cols,Scalar>::MatrixAssignList( Matrix<Rows,Col
 template<int Rows, int Cols, typename Scalar>
 tarch::la::MatrixAssignList<Rows,Cols,Scalar>::MatrixAssignList(
   Matrix<Rows,Cols,Scalar>&  matrix,
-  int col, int row
+  int row, int col
 ):
   _matrix(matrix), _rowIndex(row), _colIndex(col) {
 }
