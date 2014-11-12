@@ -106,6 +106,14 @@ class tarch::la::Matrix {
 
   template <typename NewScalarType>
   tarch::la::Matrix<Rows,Cols,NewScalarType> convertScalar() const;
+
+
+  /**
+   * Assignment operator for list of comma separated scalar values, that has to
+   * match the number of components of the vector. Otherwise a runtime assertion
+   * goes wrong.
+   */
+  MatrixAssignList<Rows,Cols,Scalar> operator=(const Scalar& value);
 };
 
 

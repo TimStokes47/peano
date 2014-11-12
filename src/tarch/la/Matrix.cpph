@@ -17,6 +17,18 @@ tarch::la::Matrix<Rows,Cols,Scalar>::Matrix( const Scalar& initialValue ):
 
 
 template<int Rows, int Cols, typename Scalar>
+tarch::la::MatrixAssignList<Rows,Cols,Scalar> tarch::la::Matrix<Rows,Cols,Scalar>::operator=(
+  const Scalar& value
+) {
+  assertion(Rows > 0);
+  assertion(Cols > 0);
+  _values[0] = value;
+  return MatrixAssignList<Rows,Cols,Scalar>(*this,1);
+}
+
+
+
+template<int Rows, int Cols, typename Scalar>
 int tarch::la::Matrix<Rows,Cols,Scalar>::rows() const {
   return Rows;
 }
