@@ -38,6 +38,11 @@ class tarch::la::MatrixAssignList {
     MatrixAssignList(Matrix<Rows,Cols,Scalar>&  matrix);
 
     /**
+     * Constructor.
+     */
+    MatrixAssignList(Matrix<Rows,Cols,Scalar>&  matrix, int col, int row);
+
+    /**
      * Destructor, asserts that the right amount of values has been assigned.
      */
     ~MatrixAssignList();

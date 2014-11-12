@@ -23,7 +23,7 @@ tarch::la::MatrixAssignList<Rows,Cols,Scalar> tarch::la::Matrix<Rows,Cols,Scalar
   assertion(Rows > 0);
   assertion(Cols > 0);
   _values[0] = value;
-  return MatrixAssignList<Rows,Cols,Scalar>(*this,1);
+  return MatrixAssignList<Rows,Cols,Scalar>(*this,0,1);
 }
 
 
