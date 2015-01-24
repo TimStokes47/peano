@@ -109,6 +109,7 @@ class peano::datatraversal::SingleLevelCellLoop {
       SixPowerDColouring
     };
 
+    static std::string toString(ParallelisationStrategy strategy);
 
     /**
      * Run in Red-black Manner Through All Cells of One Level

@@ -4,6 +4,28 @@
 #include "peano/utils/PeanoOptimisations.h"
 
 
+
+template <class LoopBody>
+std::string peano::datatraversal::SingleLevelCellLoop<LoopBody>::toString(ParallelisationStrategy strategy) {
+  switch (strategy) {
+    case Serial:
+      return "serial";
+      break;
+    case NoColouring:
+      return "no-colouring";
+      break;
+    case TwoPowerDColouring:
+      return "two-power-d-colouring";
+      break;
+    case SixPowerDColouring:
+      return "six-power-d-colouring";
+      break;
+  }
+  return "undef";
+}
+
+
+
 template <class LoopBody>
 peano::datatraversal::SingleLevelCellLoop<LoopBody>::SingleLevelCellLoop(
   const tarch::la::Vector<DIMENSIONS,int>&  range,
