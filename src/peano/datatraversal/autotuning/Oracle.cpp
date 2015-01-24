@@ -95,16 +95,16 @@ void peano::datatraversal::autotuning::Oracle::createOracles() {
 
     _oracles = new ValuesPerOracleKey[getTotalNumberOfOracles()];
 
-	  for (int i=0; i<getTotalNumberOfOracles(); i++) {
+    for (int i=0; i<getTotalNumberOfOracles(); i++) {
       #ifdef Asserts
-	    _oracles[i]._recursiveCallsForThisOracle  = false;
+      _oracles[i]._recursiveCallsForThisOracle  = false;
       #endif
 
-      const int          phase = i/peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling;
-      const MethodTrace  trace = toMethodTrace(i-phase*peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling);
-      _oracles[i]._measureTime                  = false;
-	    _oracles[i]._watch                        = new tarch::timing::Watch("peano::datatraversal::autotuning::Oracle", "createOracles(int)", false);
-	    _oracles[i]._oracle                       = _oraclePrototype->createNewOracle(phase,trace);
+      const int                phase = i/peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling;
+      const MethodTrace        trace = toMethodTrace(i-phase*peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling);
+      _oracles[i]._measureTime = false;
+      _oracles[i]._watch       = new tarch::timing::Watch("peano::datatraversal::autotuning::Oracle", "createOracles(int)", false);
+      _oracles[i]._oracle      = _oraclePrototype->createNewOracle(phase,trace);
     }
   }
 
