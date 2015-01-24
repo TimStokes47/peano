@@ -7,6 +7,9 @@
 #include "tarch/services/ServiceRepository.h"
 
 
+#include "tarch/multicore/MulticoreDefinitions.h"
+
+
 #ifdef SharedTBB
 #include "tarch/multicore/tbb/Core.h"
 #endif
