@@ -22,12 +22,23 @@ namespace tarch {
     template<int Rows, int Cols, typename Scalar>
     Matrix<Cols,Rows,Scalar> transpose(const Matrix<Rows,Cols,Scalar>& matrix);
 
-
     /**
      * Extract diagonal vector from matrix
      */
     template<int Rows, typename Scalar>
     Vector<Rows,Scalar> diag(const Matrix<Rows,Rows,Scalar>& matrix);
+
+    /**
+     * Extract row from matrix
+     */
+    template<int Rows, int Cols, typename Scalar>
+    Vector<Cols,Scalar> row(const Matrix<Rows,Cols,Scalar>& matrix, int whichRow);
+
+    /**
+     * Extract row from matrix
+     */
+    template<int Rows, int Cols, typename Scalar>
+    Vector<Rows,Scalar> col(const Matrix<Rows,Cols,Scalar>& matrix, int whichColumn);
   }
 }
 
