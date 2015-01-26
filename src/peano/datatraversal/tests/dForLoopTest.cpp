@@ -1,6 +1,8 @@
 #include "peano/datatraversal/tests/dForLoopTest.h"
 
 #include "peano/datatraversal/dForLoop.h"
+#include "tarch/multicore/Lock.h"
+
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(peano::datatraversal::tests::dForLoopTest)

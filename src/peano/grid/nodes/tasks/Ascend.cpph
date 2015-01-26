@@ -1,7 +1,7 @@
 #include "peano/datatraversal/dForLoop.h"
-#include "peano/datatraversal/SingleLevelCellLoop.h"
 #include "peano/MappingSpecification.h"
 #include "peano/datatraversal/autotuning/KernelGrainSizes.h"
+#include "peano/datatraversal/autotuning/Oracle.h"
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
@@ -76,11 +76,11 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::leaveCell
     switch (_eventHandle.leaveCellSpecification().multithreading) {
       case peano::MappingSpecification::Serial:
         {
-          peano::datatraversal::SingleLevelCellLoop<LeaveCellLoopBody> loop(
+          peano::datatraversal::dForLoop<LeaveCellLoopBody> loop(
             NumberOfCells,
             _leaveCellLoopBody,
             0,                     // sharedMemoryGrainSize
-            peano::datatraversal::SingleLevelCellLoop<LeaveCellLoopBody>::Serial
+            peano::datatraversal::dForLoop<LeaveCellLoopBody>::Serial
           );
         }
         break;
@@ -90,11 +90,11 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::leaveCell
             tarch::la::volume(NumberOfCells) / SIX_POWER_D,
             peano::datatraversal::autotuning::CallLeaveCellOnRegularStationaryGrid
           );
-          peano::datatraversal::SingleLevelCellLoop<LeaveCellLoopBody> loop(
+          peano::datatraversal::dForLoop<LeaveCellLoopBody> loop(
             NumberOfCells,
             _leaveCellLoopBody,
             sharedMemoryGrainSize,
-            peano::datatraversal::SingleLevelCellLoop<LeaveCellLoopBody>::SixPowerDColouring
+            peano::datatraversal::dForLoop<LeaveCellLoopBody>::SixPowerDColouring
           );
         }
         peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallLeaveCellOnRegularStationaryGrid);
@@ -105,11 +105,11 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::leaveCell
             tarch::la::volume(NumberOfCells) / TWO_POWER_D,
             peano::datatraversal::autotuning::CallLeaveCellOnRegularStationaryGrid
           );
-          peano::datatraversal::SingleLevelCellLoop<LeaveCellLoopBody> loop(
+          peano::datatraversal::dForLoop<LeaveCellLoopBody> loop(
             NumberOfCells,
             _leaveCellLoopBody,
             sharedMemoryGrainSize,
-            peano::datatraversal::SingleLevelCellLoop<LeaveCellLoopBody>::TwoPowerDColouring
+            peano::datatraversal::dForLoop<LeaveCellLoopBody>::TwoPowerDColouring
           );
           peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallLeaveCellOnRegularStationaryGrid);
         }
@@ -120,11 +120,11 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::leaveCell
             tarch::la::volume(_gridContainer.getNumberOfCells(level)),
             peano::datatraversal::autotuning::CallLeaveCellOnRegularStationaryGrid
           );
-          peano::datatraversal::SingleLevelCellLoop<LeaveCellLoopBody> loop(
+          peano::datatraversal::dForLoop<LeaveCellLoopBody> loop(
             NumberOfCells,
             _leaveCellLoopBody,
             sharedMemoryGrainSize,
-            peano::datatraversal::SingleLevelCellLoop<LeaveCellLoopBody>::NoColouring
+            peano::datatraversal::dForLoop<LeaveCellLoopBody>::NoColouring
           );
           peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallLeaveCellOnRegularStationaryGrid);
         }
@@ -148,11 +148,11 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::ascend(in
     switch (_eventHandle.ascendSpecification().multithreading) {
       case peano::MappingSpecification::Serial:
         {
-          peano::datatraversal::SingleLevelCellLoop<AscendLoopBody> loop(
+          peano::datatraversal::dForLoop<AscendLoopBody> loop(
             NumberOfCoarseGridCells,
             _ascendLoopBody,
             0,
-            peano::datatraversal::SingleLevelCellLoop<AscendLoopBody>::Serial
+            peano::datatraversal::dForLoop<AscendLoopBody>::Serial
           );
         }
         break;
@@ -162,11 +162,11 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::ascend(in
             tarch::la::volume(NumberOfCoarseGridCells) / TWO_POWER_D,
             peano::datatraversal::autotuning::AscendOnRegularStationaryGrid
           );
-          peano::datatraversal::SingleLevelCellLoop<AscendLoopBody> loop(
+          peano::datatraversal::dForLoop<AscendLoopBody> loop(
             NumberOfCoarseGridCells,
             _ascendLoopBody,
             sharedMemoryGrainSize,
-            peano::datatraversal::SingleLevelCellLoop<AscendLoopBody>::TwoPowerDColouring
+            peano::datatraversal::dForLoop<AscendLoopBody>::TwoPowerDColouring
           );
           peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::AscendOnRegularStationaryGrid);
         }
@@ -180,11 +180,11 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::ascend(in
             tarch::la::volume(NumberOfCoarseGridCells),
             peano::datatraversal::autotuning::AscendOnRegularStationaryGrid
           );
-          peano::datatraversal::SingleLevelCellLoop<AscendLoopBody> loop(
+          peano::datatraversal::dForLoop<AscendLoopBody> loop(
             NumberOfCoarseGridCells,
             _ascendLoopBody,
             sharedMemoryGrainSize,
-            peano::datatraversal::SingleLevelCellLoop<AscendLoopBody>::NoColouring
+            peano::datatraversal::dForLoop<AscendLoopBody>::NoColouring
           );
           peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::AscendOnRegularStationaryGrid);
         }

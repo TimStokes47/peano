@@ -1,11 +1,7 @@
 #include "peano/datatraversal/dForRange.h"
-
-#include "tarch/multicore/Lock.h"
-#include "tarch/la/Vector.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
 #include "peano/utils/Loop.h"
 #include "peano/utils/PeanoOptimisations.h"
-
-#include "peano/datatraversal/autotuning/Oracle.h"
 
 #ifdef SharedTBB
 #include "tbb/parallel_reduce.h"
@@ -25,38 +21,31 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
   const tarch::la::Vector<DIMENSIONS,int>&  range,
   LoopBody&                                 body,
   int                                       grainSize,
-  bool                                      useSevenPowerDColouring
+  int                                       colouring
 ) {
-	assertion( grainSize >= 0 );
-	if (grainSize>0) {
-    #ifdef SharedTBB
-	  if (useSevenPowerDColouring) {
-      logTraceInWith4Arguments( "dForLoop(...)", range, grainSize, "tbb", "7^d colouring" );
-      dForLoopInstance loopInstance(body,0,7);
-      dfor(k,7) {
-        tarch::la::Vector<DIMENSIONS,int> localRange = range;
-        for (int d=0; d<DIMENSIONS; d++) {
-          const int rangeModColouring = localRange(d)%7;
-          if (rangeModColouring!=0 && k(d)<rangeModColouring) {
-            localRange(d) = localRange(d) / 7 + 1;
-          }
-          else {
-            localRange(d) /= 7;
-          }
-          assertion4( localRange(d)>=1, range, localRange, k, grainSize );
-        }
-        loopInstance.setOffset(k);
-        tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance );
-      }
-	  }
-	  else {
-      logTraceInWith4Arguments( "dForLoop(...)", range, grainSize, "tbb", "embarassingly parallel" );
-      dForLoopInstance loopInstance(body,0,1);
-      tbb::parallel_reduce(
-        dForRange( range, grainSize ),
-        loopInstance
-      );
-	  }
+  assertion( grainSize >= 0 );
+
+  #if defined(SharedMemoryParallelisation)
+  if (grainSize==0) {
+    colouring = Serial;
+  }
+
+  if (colouring==Serial) {
+    runSequentially(range,body);
+  }
+  else if (colouring==NoColouring) {
+    runParallelWithoutColouring(range,body,grainSize);
+  }
+  else {
+    runParallelWithColouring(range,body,grainSize,colouring);
+  }
+  #else
+  runSequentially(range,body);
+  #endif
+
+
+
+/*
     #elif SharedOMP
     if (useSevenPowerDColouring) {
       assertionMsg( false, "not implemented yet" );
@@ -73,65 +62,78 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
         loopInstance(ranges[i]);
       }
     }
-    #elif SharedCobra
-      if (useSixPowerDColouring) {
-        assertionMsg( "dForLoop(...)", "not implemented yet" );
-      }
-      else {
-        logTraceInWith4Arguments( "dForLoop(...)", range, grainSize, "cobra", "embarassingly parallel" );
-
-        tarch::multicore::cobra::Core::getInstance().getScheduler().call([&](::cobra::continuator& ctr) {
-          realiseParallelForAsTaskBipartitioning(
-            peano::datatraversal::dForRange( range, grainSize ),
-            ctr,
-            dForLoopInstance(body)
-          );
-        });
-      }
-    #else
-		logTraceInWith3Arguments( "dForLoop(...)", range, grainSize, "no-parallelisation" );
-		dfor(i,range) {
-			body(i);
-		}
-    #endif
-	}
-	else {
-		logTraceInWith2Arguments( "dForLoop(...)", range, grainSize );
-		dfor(i,range) {
-		  body(i);
-		}
-	}
+*/
 
 	logTraceOut( "dForLoop(...)" );
 }
 
 
-#ifdef SharedCobra
+
 template <class LoopBody>
-void peano::datatraversal::dForLoop<LoopBody>::realiseParallelForAsTaskBipartitioning(
-  peano::datatraversal::dForRange  range,
-  ::cobra::continuator&            ctr,
-   dForLoopInstance                loopBody
+void peano::datatraversal::dForLoop<LoopBody>::runSequentially(
+  const tarch::la::Vector<DIMENSIONS,int>&  range,
+  LoopBody&                                 loopBody
 ) {
-  if (range.is_divisible()) {
-    peano::datatraversal::dForRange range1(range);
-    peano::datatraversal::dForRange range2(range1,peano::datatraversal::dForRange::Split());
-    ctr.fork<0>([=](::cobra::continuator &ctr) {
-      realiseParallelForAsTaskBipartitioning(range1, ctr, loopBody);
-    });
-    ctr.fork<1>([=](::cobra::continuator &ctr) {
-      realiseParallelForAsTaskBipartitioning(range2, ctr, loopBody);
-    });
-    ctr.join([]{});
+  dfor(i,range) {
+    loopBody(i);
   }
-  // [=] funktioniert hier leider nicht, aber ich bin mir eh nicht sicher, ob man das join hier braucht
-//  else ctr.join([&] {
-  else {
-    loopBody(range);
-  }
-//  });
 }
-#endif
+
+
+template <class LoopBody>
+void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
+  const tarch::la::Vector<DIMENSIONS,int>&  range,
+  LoopBody&                                 loopBody,
+  int                                       grainSize
+) {
+  #ifdef SharedTBB
+  dForLoopInstance loopInstance(loopBody,0,1);
+  tbb::parallel_reduce(
+    dForRange( range, grainSize ),
+    loopInstance
+  );
+  #else
+    assertion(false);
+  #endif
+}
+
+
+template <class LoopBody>
+void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
+  const tarch::la::Vector<DIMENSIONS,int>&  range,
+  LoopBody&                                 loopBody,
+  int                                       grainSize,
+  int                                       colouring
+) {
+  assertion(colouring>2);
+  dForLoopInstance loopInstance(loopBody,0,colouring);
+  dfor(k,colouring) {
+    tarch::la::Vector<DIMENSIONS,int> localRange = range;
+    for (int d=0; d<DIMENSIONS; d++) {
+      const int rangeModColouring = localRange(d)%colouring;
+      if (rangeModColouring!=0 && k(d)<rangeModColouring) {
+        localRange(d) = localRange(d) / colouring + 1;
+      }
+      else {
+        localRange(d) /= colouring;
+      }
+      assertion4( localRange(d)>=1, range, localRange, k, grainSize );
+    }
+    loopInstance.setOffset(k);
+    #ifdef SharedTBB
+    tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance );
+    #elif SharedOMP
+    std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
+
+    #pragma omp parallel for schedule(dynamic, 1) firstprivate(loopInstance)
+    for( int i=0; i < (int)(ranges.size()); i++ ){
+      loopInstance(ranges[i]);
+    }
+    #else
+    assertion(false);
+    #endif
+  }
+}
 
 
 template <class LoopBody>
@@ -182,11 +184,11 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::dForLoopInstance( co
 
 template <class LoopBody>
 void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::operator() (const dForRange& range) {
-	logTraceInWith1Argument( "dForLoopInstance::operator()", range.toString() );
+  logTraceInWith1Argument( "dForLoopInstance::operator()", range.toString() );
 
   dfor(i,range.getRange()) {
     _loopBody( (i + range.getOffset())*_padding + _offset );
-	}
+  }
 
   logTraceOutWith1Argument( "dForLoopInstance::operator()", range.toString() );
 }

@@ -83,15 +83,6 @@ namespace peano {
  * to be const. Instead, we have to use the parallel_reduce even though we
  * merge the copies ourself in the destructors.
  *
- * !!! Cobra/C++11
- *
- * For Cobra, we could in theory use parallel_for, as Cobra's parallel for
- * supports non-const loop handles. However, I encountered some compiler
- * errors (see http://software.intel.com/en-us/forums/topic/293787) and
- * incompatible range signatures (Cobra has another range signature than
- * TBB), so I realise the parallel for as bipartitioning myself in a function
- * of its own.
- *
  * !!! Copy Policies
  *
  * If the code is running serial, the loop body is not copied at all. If the
@@ -108,6 +99,9 @@ class peano::datatraversal::dForLoop {
 
     static tarch::logging::Log _log;
 
+    /**
+     * Required only for OpenMP (not used currently)
+     */
     std::vector<dForRange> createRangesVector(
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       int                                       grainSize
@@ -129,6 +123,11 @@ class peano::datatraversal::dForLoop {
 
         void setOffset(const tarch::la::Vector<DIMENSIONS,int>&  offset);
 
+        /**
+         * See documentation of TBB. This flag is just used to
+         * distinguish the split constructor from a standard
+         * copy constructor.
+         */
         #if defined(SharedTBB)
         typedef tbb::split   SplitFlag;
         #else
@@ -169,17 +168,32 @@ class peano::datatraversal::dForLoop {
         void join(const dForLoopInstance&  with);
     };
 
-    #ifdef SharedCobra
-    /**
-     * For Cobra only
-     */
-    void realiseParallelForAsTaskBipartitioning(
-      peano::datatraversal::dForRange  range,
-      ::cobra::continuator&            ctr,
-      dForLoopInstance                 loopBody
+    void runSequentially(
+      const tarch::la::Vector<DIMENSIONS,int>&  range,
+      LoopBody&                                 loopBody
     );
-    #endif
+
+    void runParallelWithoutColouring(
+      const tarch::la::Vector<DIMENSIONS,int>&  range,
+      LoopBody&                                 loopBody,
+      int                                       grainSize
+    );
+
+    void runParallelWithColouring(
+      const tarch::la::Vector<DIMENSIONS,int>&  range,
+      LoopBody&                                 loopBody,
+      int                                       grainSize,
+      int                                       colouring
+    );
   public:
+    enum ParallelisationStrategy {
+      Serial               = 0,
+      NoColouring          = 1,
+      TwoPowerDColouring   = 2,
+      SixPowerDColouring   = 6,
+      SevenPowerDColouring = 7
+    };
+
     /**
      * Constructor
      *
@@ -192,7 +206,7 @@ class peano::datatraversal::dForLoop {
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       LoopBody&                                 body,
       int                                       grainSize,
-      bool                                      useSevenPowerDColouring
+      int                                       colouring
     );
 };
 
