@@ -57,6 +57,12 @@ namespace tarch {
       const Matrix<Rows,Cols,Scalar>&  rhs
     );
 
+    template<int Rows, int Cols, typename Scalar>
+    Matrix<Rows,Cols,Scalar> operator- (
+      const Matrix<Rows,Cols,Scalar>&  lhs,
+      const Matrix<Rows,Cols,Scalar>&  rhs
+    );
+
     /**
      * Return Index of element which is not equals.
      *
