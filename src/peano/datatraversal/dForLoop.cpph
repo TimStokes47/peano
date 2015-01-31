@@ -23,6 +23,7 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
   int                                       grainSize,
   int                                       colouring
 ) {
+  logTraceInWith3Arguments( "dForLoop(...)", range, grainSize, colouring );
   assertion( grainSize >= 0 );
 
   #if defined(SharedMemoryParallelisation)
@@ -64,7 +65,7 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
     }
 */
 
-	logTraceOut( "dForLoop(...)" );
+  logTraceOut( "dForLoop(...)" );
 }
 
 
