@@ -16,6 +16,7 @@
 
 #include "peano/heap/records/FloatHeapData.h"
 #include "peano/heap/records/DoubleHeapData.h"
+#include "peano/heap/records/BooleanHeapData.h"
 #include "peano/heap/records/IntegerHeapData.h"
 
 #include "tarch/logging/Log.h"
@@ -77,6 +78,9 @@ namespace peano {
 
     typedef PlainHeap<peano::heap::records::FloatHeapData>    PlainFloatHeap;
     typedef RLEHeap<peano::heap::records::FloatHeapData>      RLEFloatHeap;
+
+    typedef PlainHeap<peano::heap::records::BooleanHeapData>    PlainBooleanHeap;
+    typedef RLEHeap<peano::heap::records::BooleanHeapData>      RLEBooleanHeap;
 
     /**
      * Flags to specify which kind of message is sent or
