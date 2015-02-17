@@ -78,7 +78,10 @@ class peano::datatraversal::TaskSet {
      * and the asynchronous task then tries to invoke it. This would result in
      * a seg fault.
      *
-     * This operation does not work for recursive tasks.
+     * As a consequence, you have to very carefully when the destructor is not
+     * empty. Task objects might be copied multiple times and you never know
+     * which destructor is the one belonging to the task object that is really
+     * executed.
      *
      * !!! TBB
      *
@@ -86,11 +89,6 @@ class peano::datatraversal::TaskSet {
      * particular on Windows systems, I often encounter starvation processes if
      * a load vertices or store vertices task splits very often and spawns too
      * many task children due to this operation.
-     *
-     * !!! Cobra
-     *
-     * We explicitly create a task and detach it, i.e. we remove its bindings
-     * to the current thread.
      */
     template <class Functor>
     inline TaskSet(
