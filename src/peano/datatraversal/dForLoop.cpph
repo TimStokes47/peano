@@ -106,7 +106,7 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
   int                                       grainSize,
   int                                       colouring
 ) {
-  assertion(colouring>2);
+  assertion3(colouring>=2,range,grainSize,colouring);
   dForLoopInstance loopInstance(loopBody,0,colouring);
   dfor(k,colouring) {
     tarch::la::Vector<DIMENSIONS,int> localRange = range;
