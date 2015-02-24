@@ -173,6 +173,15 @@ namespace tarch {
     );
 
     /**
+     * Component-wise max evaluation
+     */
+    template<int Size, typename Scalar>
+    Vector<Size,Scalar> max(
+      const Vector<Size,Scalar>&  lhs,
+      const Vector<Size,Scalar>&  rhs
+    );
+
+    /**
      * Bit-wise comparison of the components of two vectors for equality.
      *
      * This method should not be used for floating-point valued vectors. Instead,
