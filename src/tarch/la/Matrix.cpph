@@ -1,6 +1,9 @@
 #include "tarch/Assertions.h"
 
 
+#include <iomanip>
+
+
 template<int Rows, int Cols, typename Scalar>
 tarch::la::Matrix<Rows,Cols,Scalar>::Matrix():
   _values() {
@@ -46,7 +49,6 @@ int tarch::la::Matrix<Rows,Cols,Scalar>::size() const {
 }
 
 
-
 template<int Rows, int Cols, typename Scalar>
 std::string tarch::la::Matrix<Rows,Cols,Scalar>::toString() const {
   std::ostringstream os;
@@ -68,6 +70,31 @@ std::string tarch::la::Matrix<Rows,Cols,Scalar>::toString() const {
   return os.str();
 }
 
+
+template<int Rows, int Cols, typename Scalar>
+std::string tarch::la::Matrix<Rows,Cols,Scalar>::toPrettyString() const {
+  std::ostringstream os;
+  os << "[";
+  os << std::setiosflags(std::ios::fixed) << std::setprecision(4);
+  for (int i=0; i < Rows; i++) {
+    os << std::endl;
+    for (int j=0; j < Cols; j++) {
+      if (_values[i * Cols + j]>=0.0) {
+        os << " ";
+      }
+      os << _values[i * Cols + j];
+      if (j + 1 < Cols) {
+        os << ", ";
+      }
+    }
+    if (i + 1 < Rows) {
+      os << ",";
+    }
+  }
+  os << std::endl;
+  os << "]";
+  return os.str();
+}
 
 
 template<int Rows, int Cols, typename Scalar>
