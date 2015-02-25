@@ -104,7 +104,7 @@ class tarch::la::Matrix {
 
   std::string toString() const;
 
-  std::string toPrettyString() const;
+  std::string toPrettyString(int numberOfDigits=4) const;
 
   template <typename NewScalarType>
   tarch::la::Matrix<Rows,Cols,NewScalarType> convertScalar() const;

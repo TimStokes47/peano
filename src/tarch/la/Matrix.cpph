@@ -72,10 +72,10 @@ std::string tarch::la::Matrix<Rows,Cols,Scalar>::toString() const {
 
 
 template<int Rows, int Cols, typename Scalar>
-std::string tarch::la::Matrix<Rows,Cols,Scalar>::toPrettyString() const {
+std::string tarch::la::Matrix<Rows,Cols,Scalar>::toPrettyString(int numberOfDigits) const {
   std::ostringstream os;
   os << "[";
-  os << std::setiosflags(std::ios::fixed) << std::setprecision(4);
+  os << std::setiosflags(std::ios::fixed) << std::setprecision(numberOfDigits);
   for (int i=0; i < Rows; i++) {
     os << std::endl;
     for (int j=0; j < Cols; j++) {
