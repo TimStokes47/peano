@@ -86,7 +86,6 @@ tarch::la::Matrix<Rows,Cols,Scalar> tarch::la::operator+ (
   tarch::la::Matrix<Rows,Cols,Scalar> result;
   #ifdef CompilerICC
   #pragma ivdep
-  #pragma simd
   #endif
   for (int i=0; i < Rows; i++) {
     for (int j=0; j < Cols; j++) {
@@ -105,7 +104,6 @@ tarch::la::Matrix<Rows,Cols,Scalar> tarch::la::operator- (
   tarch::la::Matrix<Rows,Cols,Scalar> result;
   #ifdef CompilerICC
   #pragma ivdep
-  #pragma simd
   #endif
   for (int i=0; i < Rows; i++) {
     for (int j=0; j < Cols; j++) {

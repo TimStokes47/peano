@@ -8,7 +8,6 @@ tarch::la::Vector<Size,Scalar> tarch::la::invertEntries (
   Vector<Size,Scalar> result;
   #ifdef CompilerICC
   #pragma ivdep
-  #pragma simd
   #endif
   for (int i=0; i < Size; i++) {
     assertion1(vector(i)!=0.0, vector.toString());

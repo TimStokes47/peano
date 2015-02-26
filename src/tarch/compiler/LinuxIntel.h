@@ -37,13 +37,14 @@
  * Switch on the Intel Compiler
  *
  */
-#define CompilerICC
+#ifndef noCompilerICC
+  #define CompilerICC
+#endif
 
 
 /**
  * Enable SSE vectorisation with a 16 bytes alignment
  */
-#define CompilerHasSSE
 //#define VectorisationAlignment 16
 
 

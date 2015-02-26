@@ -49,8 +49,6 @@
  */
 #define CompilerICC
 
-#define CompilerHasSSE
-
 
 
 /**

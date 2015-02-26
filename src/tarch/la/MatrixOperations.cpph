@@ -27,7 +27,6 @@ tarch::la::Matrix<Cols,Rows,Scalar> tarch::la::transpose(const tarch::la::Matrix
   tarch::la::Matrix<Cols,Rows,Scalar> result;
   #ifdef CompilerICC
   #pragma ivdep
-  #pragma simd
   #endif
   for (int i=0; i < Rows; i++) {
     for (int j=0; j < Cols; j++) {

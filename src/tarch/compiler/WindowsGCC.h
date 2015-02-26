@@ -33,13 +33,6 @@
  */
 //#define CompilerCLX
 
-/**
- * Switch on the Intel Compiler
- *
- */
-//#define CompilerICC
-
-//#define CompilerHasSSE
 
 
 /**
