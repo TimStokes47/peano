@@ -108,12 +108,6 @@
   #warning No alignment specified by compiler though UseManualAlignment is switched on
 #endif
 
-/*
-#if defined(CompilerHasSSE) && defined(noUseManualAlignment)
-  #warning Code is trying to use SSE without manual alignment of data structures
-#endif
-*/
-
 
 /**
  * The regular grid container has three different realisations to handle
