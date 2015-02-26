@@ -413,6 +413,21 @@ namespace peano {
         }}
 
 
+#define pdfor3(counter)  \
+  pfor(counter##Scalar,0,THREE_POWER_D,1) \
+    tarch::la::Vector<DIMENSIONS,int> counter; \
+        { \
+        int   copy##counter##Scalar = counter##Scalar; \
+        for (int counter##ddd=DIMENSIONS-1; counter##ddd>=0; counter##ddd--) { \
+          int counter##aPowI = 1; \
+          for (int counter##jjj=0; counter##jjj<counter##ddd; counter##jjj++) { \
+            counter##aPowI *= 3; \
+          } \
+        counter(counter##ddd) = copy##counter##Scalar /  counter##aPowI; \
+        copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \
+        }}
+
+
 /**
  * I prefer to use this macro for dforx instead of a closing bracket as many
  * syntax parser fail otherwise.
