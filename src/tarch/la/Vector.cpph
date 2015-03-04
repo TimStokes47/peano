@@ -8,7 +8,7 @@ tarch::la::Vector<Size,Scalar>::Vector ():
 
 
 template<int Size, typename Scalar>
-tarch::la::Vector<Size,Scalar>::Vector (double value0, double value1) {
+tarch::la::Vector<Size,Scalar>::Vector (Scalar value0, Scalar value1) {
   assertion(Size==2);
   _values[0] = value0;
   _values[1] = value1;
@@ -16,7 +16,7 @@ tarch::la::Vector<Size,Scalar>::Vector (double value0, double value1) {
 
 
 template<int Size, typename Scalar>
-tarch::la::Vector<Size,Scalar>::Vector (double value0, double value1, double value2) {
+tarch::la::Vector<Size,Scalar>::Vector (Scalar value0, Scalar value1, Scalar value2) {
   assertion(Size==3);
   _values[0] = value0;
   _values[1] = value1;

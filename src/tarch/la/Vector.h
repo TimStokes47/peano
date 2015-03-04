@@ -35,8 +35,8 @@ struct tarch::la::Vector {
   public:
     Vector ();
 
-    Vector (double value0, double value1);
-    Vector (double value0, double value1, double value2);
+    Vector (Scalar value0, Scalar value1);
+    Vector (Scalar value0, Scalar value1, Scalar value2);
 
     /**
      * Assignment operator for any vector type.
