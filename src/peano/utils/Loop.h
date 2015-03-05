@@ -288,6 +288,49 @@ namespace peano {
     }}
 
 
+#define dfor5(counter) \
+  for( int counter##Scalar=0; counter##Scalar<FIVE_POWER_D; counter##Scalar++) { \
+    tarch::la::Vector<DIMENSIONS,int> counter; \
+    { \
+    int   copy##counter##Scalar = counter##Scalar; \
+    for (int counter##ddd=DIMENSIONS-1; counter##ddd>=0; counter##ddd--) { \
+      int counter##aPowI = 1; \
+      for (int counter##jjj=0; counter##jjj<counter##ddd; counter##jjj++) { \
+        counter##aPowI *= 5; \
+      } \
+      counter(counter##ddd) = copy##counter##Scalar /  counter##aPowI; \
+      copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \
+    }}
+
+#define dfor7(counter) \
+  for( int counter##Scalar=0; counter##Scalar<SEVEN_POWER_D; counter##Scalar++) { \
+    tarch::la::Vector<DIMENSIONS,int> counter; \
+    { \
+    int   copy##counter##Scalar = counter##Scalar; \
+    for (int counter##ddd=DIMENSIONS-1; counter##ddd>=0; counter##ddd--) { \
+      int counter##aPowI = 1; \
+      for (int counter##jjj=0; counter##jjj<counter##ddd; counter##jjj++) { \
+        counter##aPowI *= 7; \
+      } \
+      counter(counter##ddd) = copy##counter##Scalar /  counter##aPowI; \
+      copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \
+    }}
+
+
+#define dfor9(counter) \
+  for( int counter##Scalar=0; counter##Scalar<NINE_POWER_D; counter##Scalar++) { \
+    tarch::la::Vector<DIMENSIONS,int> counter; \
+    { \
+    int   copy##counter##Scalar = counter##Scalar; \
+    for (int counter##ddd=DIMENSIONS-1; counter##ddd>=0; counter##ddd--) { \
+      int counter##aPowI = 1; \
+      for (int counter##jjj=0; counter##jjj<counter##ddd; counter##jjj++) { \
+        counter##aPowI *= 9; \
+      } \
+      counter(counter##ddd) = copy##counter##Scalar /  counter##aPowI; \
+      copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \
+    }}
+
 /**
  * If DIMENSIONS is not set to three, we might nevertheless need
  * three-dimensional loops. So this is the corresponding macro.
