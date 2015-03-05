@@ -73,6 +73,11 @@
   #define FIVE_POWER_D_DIVIDED_BY_FIVE  (BasePowerExponent<5,DIMENSIONS-1>::value)
   #define SIX_POWER_D  (BasePowerExponent<6,DIMENSIONS>::value)
   #define SEVEN_POWER_D  (BasePowerExponent<7,DIMENSIONS>::value)
+  #define NINE_POWER_D  (BasePowerExponent<9,DIMENSIONS>::value)
+  #define ELEVEN_POWER_D  (BasePowerExponent<11,DIMENSIONS>::value)
+  #define THIRTEEN_POWER_D  (BasePowerExponent<13,DIMENSIONS>::value)
+  #define FIFTEEN_POWER_D  (BasePowerExponent<15,DIMENSIONS>::value)
+  #define SEVENTEEN_POWER_D  (BasePowerExponent<17,DIMENSIONS>::value)
   #define NUMBER_OF_VERTICES_PER_ELEMENT TWO_POWER_D
   #define DIMENSIONS_TIMES_TWO (2*DIMENSIONS)
   #define DIMENSIONS_TIMES_TWO_POWER_D (DIMENSIONS*TWO_POWER_D)
