@@ -7,8 +7,8 @@
 namespace {
   int dLinearisedNotOptimised( const tarch::la::Vector<DIMENSIONS,int> & counter, int max ) {
     int result = counter(DIMENSIONS - 1);
-    assertion2(counter(DIMENSIONS - 1) >= 0, counter(DIMENSIONS - 1), max);
-    assertion2(counter(DIMENSIONS - 1) < max, counter(DIMENSIONS - 1), max);
+    assertion2(counter(DIMENSIONS - 1) >= 0, counter, max);
+    assertion2(counter(DIMENSIONS - 1) < max, counter, max);
     for (int d = DIMENSIONS - 2; d >= 0; d--) {
       assertion2(counter(d) >= 0, counter(d), max);
       assertion2(counter(d) < max, counter(d), max);
