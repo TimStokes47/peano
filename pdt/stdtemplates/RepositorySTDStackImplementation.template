@@ -158,7 +158,6 @@ void __NAMESPACE__::repositories::RepositorySTDStack::iterate(int numberOfIterat
   peano::datatraversal::autotuning::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
 
   peano::parallel::loadbalancing::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
-  peano::parallel::loadbalancing::Oracle::getInstance().activateLoadBalancing(_repositoryState.getNumberOfIterations()==1);  
   
   _solverState.currentlyRunsMultipleIterations(_repositoryState.getNumberOfIterations()>1);
   #else
