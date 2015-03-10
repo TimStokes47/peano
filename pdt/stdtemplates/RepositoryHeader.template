@@ -158,13 +158,22 @@ class __NAMESPACE__::repositories::Repository {
     virtual ContinueCommand continueToIterate() = 0;
 
     /**
-     * Run one global step on all mpi ranks
+     * Run one global step on all mpi ranks besides rank 0
      * 
      * This operation sends a marker to all nodes, i.e. 
      * both idle and working nodes, and calls their runGlobalStep() routine 
      * within the parallel runner. Afterwards, all idle nodes again register as 
      * idle on the node pool, all other nodes continue to run Peano. Should be 
      * used with care, as it might be expensive on massively parallel systems.  
+     *
+     * Please note that all worker runners invoke their runGlobalStep() as a 
+     * reaction to this function call. The global master, i.e. rank 0, however
+     * does not run this operation. If you want to make the master trigger the 
+     * function as well, you have to invoke it manually. Typically, the global 
+     * master code thus comprises two steps: call runGlobalStep() on the 
+     * repository (which in turn invokes runGlobalStep() on all workers) and 
+     * immediately afterwards call runGlobalStep() locally within 
+     * runAsMaster().
      */
     virtual void runGlobalStep() = 0;
     #endif
