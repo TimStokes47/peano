@@ -47,6 +47,13 @@ class peano::grid::aspects::VertexStateAnalysis {
       typename Vertex::Records::RefinementControl  whichFlag
     );
 
+    template <class Vertex>
+    static bool doAllNonHangingVerticesCarryRefinementFlag(
+      Vertex                                       fineGridVertices[FOUR_POWER_D],
+      const peano::grid::VertexEnumerator&         fineGridVerticesEnumerator,
+      typename Vertex::Records::RefinementControl  whichFlag
+    );
+
     /**
      * Analyse parent vertices
      *

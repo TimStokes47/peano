@@ -47,6 +47,23 @@ bool peano::grid::aspects::VertexStateAnalysis::doAllVerticesCarryRefinementFlag
 }
 
 
+template <class Vertex>
+bool peano::grid::aspects::VertexStateAnalysis::doAllNonHangingVerticesCarryRefinementFlag(
+  Vertex                                                 fineGridVertices[FOUR_POWER_D],
+  const peano::grid::VertexEnumerator&  fineGridVerticesEnumerator,
+  typename Vertex::Records::RefinementControl            whichFlag
+) {
+  bool result = true;
+  dfor2(k)
+    result &=
+      (
+        fineGridVertices[fineGridVerticesEnumerator(k)].isHangingNode() ||
+        fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==whichFlag
+      );
+  enddforx
+  return result;
+}
+
 
 template <class Vertex>
 bool peano::grid::aspects::VertexStateAnalysis::isOneCoarseGridVertexOutsideDomain(
