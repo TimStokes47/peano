@@ -448,7 +448,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   if (
     tarch::parallel::Node::getInstance().isGlobalMaster() &&
     !centralFineGridCell.isAssignedToRemoteRank() &&
-    !state.isInvolvedInJoinOrFork()
+    !state.isInvolvedInJoinOrFork() &&
+    peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated()
   ) {
     std::bitset<THREE_POWER_D> localInnerCells;
     localInnerCells.set(THREE_POWER_D/2,true);
