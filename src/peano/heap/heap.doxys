@@ -246,11 +246,11 @@
   To regenerate all DaStGen records provided by the heap component, change into 
   the heap directory and call 
   \code
-  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator dastgen/MetaInformation.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoHeapNameTranslator dastgen/MetaInformation.def records
   
-  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoHeapNameTranslator dastgen/DoubleHeapData.def records
-  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoHeapNameTranslator dastgen/IntegerHeapData.def records
-  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoHeapNameTranslator dastgen/FloatHeapData.def records
-  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoHeapNameTranslator dastgen/BooleanHeapData.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoHeapNameTranslator dastgen/DoubleHeapData.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoHeapNameTranslator dastgen/IntegerHeapData.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoHeapNameTranslator dastgen/FloatHeapData.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoHeapNameTranslator dastgen/BooleanHeapData.def records
   \endcode
  */
