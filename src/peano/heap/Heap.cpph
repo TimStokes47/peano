@@ -421,7 +421,9 @@ std::string peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Ne
       << ",maximum-number-of-heap-entries=" << _maximumNumberOfHeapEntries
       << ",number-of-heap-allocations=" << _numberOfHeapAllocations
       << ",number-of-heap-frees=" << _numberOfHeapFrees
+      #ifdef Parallel
       << ",no-of-data-exchangers=" << _neighbourDataExchanger.size()
+      #endif
       << ")";
 
   return msg.str();
