@@ -25,6 +25,11 @@ namespace tarch {
 
 /**
  * Simple vector class
+ *
+ * Most features concerning vectors are deployed into separate headers. Examples:
+ *
+ * - Access only few elements within vector (subvector): VectorSlice.h
+ *
  */
 template<int Size, typename Scalar>
 struct tarch::la::Vector {
