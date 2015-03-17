@@ -13,16 +13,16 @@ peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   _waitForWorkerDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _synchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
-  if (!tarch::logging::CommandLineLogger::getInstance().getLogMachineName()) {
+  if (!tarch::logging::CommandLineLogger::getInstance().getLogMachineName() && tarch::parallel::Node::getInstance().isGlobalMaster() ) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of machine name is disabled. See command line logger" );
   }
-  if (!tarch::logging::CommandLineLogger::getInstance().getLogTrace()) {
+  if (!tarch::logging::CommandLineLogger::getInstance().getLogTrace() && tarch::parallel::Node::getInstance().isGlobalMaster() ) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of trace is disabled. See command line logger" );
   }
-  if (!tarch::logging::CommandLineLogger::getInstance().getLogTimeStamp()) {
+  if (!tarch::logging::CommandLineLogger::getInstance().getLogTimeStamp() && tarch::parallel::Node::getInstance().isGlobalMaster() ) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of time stamps is disabled. See command line logger" );
   }
-  if (tarch::logging::CommandLineLogger::getInstance().filterOut("info","peano::performanceanalysis::DefaultAnalyser")) {
+  if (tarch::logging::CommandLineLogger::getInstance().filterOut("info","peano::performanceanalysis::DefaultAnalyser") && tarch::parallel::Node::getInstance().isGlobalMaster() ) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as log filters for peano::performanceanalysis::DefaultAnalyser are installed" );
   }
 }
