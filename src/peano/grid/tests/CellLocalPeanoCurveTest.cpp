@@ -38,6 +38,9 @@ void peano::grid::tests::CellLocalPeanoCurveTest::run() {
   testMethod( test2DCreateWriteVertexSequenceForP1M1M2P2 );
 
   testMethod( test3DCreateReadVertexSequenceForM2P4M1P1P2P3 );
+
+  testMethod( test4D );
+
   logTraceOut( "run() ");
 }
 
@@ -519,6 +522,44 @@ void peano::grid::tests::CellLocalPeanoCurveTest::test3DCreateReadVertexSequence
   #ifdef Dim3
   #endif
 }
+
+
+void peano::grid::tests::CellLocalPeanoCurveTest::test4D() {
+//  #ifdef Dim4
+  TestCell cell;
+
+  //  (isInside:0,state:New,level:1,evenFlags:[0,0],accessNumber:[0,0,1,2])
+  cell._cellData.setAccessNumber(0,1);
+  cell._cellData.setAccessNumber(1,2);
+  cell._cellData.setAccessNumber(2,3);
+  cell._cellData.setAccessNumber(3,-1);
+  cell._cellData.setAccessNumber(4,0);
+  cell._cellData.setAccessNumber(5,0);
+  cell._cellData.setAccessNumber(6,0);
+  cell._cellData.setAccessNumber(7,4);
+
+  cell._cellData.setEvenFlags(0,0);
+  cell._cellData.setEvenFlags(1,0);
+  cell._cellData.setEvenFlags(2,0);
+  cell._cellData.setEvenFlags(3,1);
+
+  peano::datatraversal::ActionSetTraversal sequentialTraversal = peano::grid::aspects::CellLocalPeanoCurve::createSequentialReadVertexSequence( cell._cellData.getAccessNumber(), cell._cellData.getEvenFlags(),false );
+  //peano::datatraversal::ActionSetTraversal parallelTraversal   = peano::grid::aspects::CellLocalPeanoCurve::createParallelReadVertexSequence( cell._cellData.getAccessNumber(), cell._cellData.getEvenFlags(), false );
+
+  validateEquals(sequentialTraversal.getMaximumPath(),NUMBER_OF_VERTICES_PER_ELEMENT);
+
+  validateEquals(sequentialTraversal.getActionSet(0).getNumberOfParallelActions(),1);
+  validateEquals(sequentialTraversal.getActionSet(1).getNumberOfParallelActions(),1);
+  validateEquals(sequentialTraversal.getActionSet(2).getNumberOfParallelActions(),1);
+  validateEquals(sequentialTraversal.getActionSet(3).getNumberOfParallelActions(),1);
+
+  validateEqualsWithParams1(sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition(0),1,sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition);
+  validateEqualsWithParams1(sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition(1),1,sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition);
+  validateEqualsWithParams1(sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition(2),1,sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition);
+  validateEqualsWithParams1(sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition(3),0,sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition);
+  validateEquals(sequentialTraversal.getActionSet(0).getAction(0)._id,7);
+}
+
 
 
 #ifdef UseTestSpecificCompilerSettings

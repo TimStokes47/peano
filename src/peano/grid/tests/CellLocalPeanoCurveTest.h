@@ -62,6 +62,7 @@ class peano::grid::tests::CellLocalPeanoCurveTest: public tarch::tests::TestCase
 
     void test3DCreateReadVertexSequenceForM2P4M1P1P2P3();
 
+    void test4D();
 
   public:
     CellLocalPeanoCurveTest();
