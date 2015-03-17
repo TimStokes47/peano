@@ -52,7 +52,7 @@ int peano::grid::aspects::CellLocalPeanoCurve::getUniqueKey(
     result += currentBase;
   }
 
-  assertion( result>=0 );
+  assertion6( result>=0, result, accessNumber, evenFlags, isTraversalInverted, isParallel, "buffer overflows may happen for big dimensions. Compile with -DnoCacheActionSets (see PeanoOptimisations)" );
   return result;
 }
 
@@ -81,6 +81,8 @@ int peano::grid::aspects::CellLocalPeanoCurve::getReadStackIdentifier(
   if ( result!=peano::stacks::Constants::InOutStack && evenFlags[direction] ) {
     result = result<DIMENSIONS ? result+DIMENSIONS : result-DIMENSIONS;
   }
+
+  assertion5(result==peano::stacks::Constants::InOutStack || result>=0,result,coordinates,accessNumber,evenFlags,isTraversalInverted);
 
   return result;
 }
