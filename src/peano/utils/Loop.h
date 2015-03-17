@@ -404,19 +404,6 @@ namespace peano {
   AA##counter = !AA##counter; \
   BB##counter = !(AA##counter ^ BB##counter); \
   CC##counter = CC##counter || (!AA##counter && !BB##counter && !CC##counter);  
-                           
-#elif DIMENSIONS == 4
-#define dfor2(counter) \
-  for( int counter##Scalar=0, AA##counter = 0, BB##counter = 0, CC##counter = 0, DD##counter = 0; counter##Scalar<TWO_POWER_D; counter##Scalar++) { \
-  tarch::la::Vector<DIMENSIONS,int> counter; \
-  counter(0) = AA##counter; \
-  counter(1) = BB##counter; \
-  counter(2) = CC##counter; \
-  counter(3) = DD##counter; \
-  AA##counter = !AA##counter; \
-  BB##counter = !(AA##counter ^ BB##counter); \
-  CC##counter = CC##counter || (!AA##counter && !BB##counter && !CC##counter); \
-  DD##counter = DD##counter || (!AA##counter && !BB##counter && !CC##counter && !DD##counter); 
 
 #else 
 #define dfor2(counter) \
