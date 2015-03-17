@@ -87,10 +87,20 @@
 
 
 /**
- * @see ActionSetTraversal
+ * Usually, I use lookup tables for all the sfc indices, vertex access codes
+ * (which stack to use), and so forth. I call them action sets. For big spatial
+ * dimensions, these lookup tables may become huge and it thus might make sense
+ * not to precompute them but to compute all table entries on-the-fly whenever
+ * entries are needed.
+ *
+ * Further, we sometimes run into cases where we have index overflows (they do
+ * not fit into integers anymore) for big d. In this case, it also makes sense
+ * to switch off the action set caching.
+ *
+ * @see ActionSetTraversal and CellLocalPeanoCurve
  */
 #ifndef noCacheActionSets
-#define CacheActionSets
+  #define CacheActionSets
 #endif
 
 
