@@ -177,7 +177,7 @@ struct peano::CommunicationSpecification {
      * heap in one iteration, you have to receive it right in the next one.
      *
      * If one mapping of an adapter sets this flag, it holds for the whole
-     * adapter. Please note that you may not open any communcation channel
+     * adapter. Please note that you may not open any communication channel
      * manually then.
      *
      * @param exchangeMasterWorkerData  See enum description for variants
