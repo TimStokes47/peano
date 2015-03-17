@@ -355,7 +355,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     assertion( coarseGridVerticesEnumerator.getCellFlags() <= peano::grid::Leaf || fineGridCounter[kScalar]==CounterPersistentNode);
     logDebug(
       "setCounter(...)",
-      "- counter at " << k << ": " << fineGridCounter[kScalar] << "; " << counterToString(fineGridCounter[kScalar])
+      "- counter at " << k << " (" << kScalar << "): " << fineGridCounter[kScalar] << "; " << counterToString(fineGridCounter[kScalar])
     );
   enddforx
 
