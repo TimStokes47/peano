@@ -525,7 +525,7 @@ void peano::grid::tests::CellLocalPeanoCurveTest::test3DCreateReadVertexSequence
 
 
 void peano::grid::tests::CellLocalPeanoCurveTest::test4D() {
-//  #ifdef Dim4
+  #ifdef Dim4
   TestCell cell;
 
   //  (isInside:0,state:New,level:1,evenFlags:[0,0],accessNumber:[0,0,1,2])
@@ -558,6 +558,7 @@ void peano::grid::tests::CellLocalPeanoCurveTest::test4D() {
   validateEqualsWithParams1(sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition(2),1,sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition);
   validateEqualsWithParams1(sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition(3),0,sequentialTraversal.getActionSet(0).getAction(0)._cartesianPosition);
   validateEquals(sequentialTraversal.getActionSet(0).getAction(0)._id,7);
+  #endif
 }
 
 
