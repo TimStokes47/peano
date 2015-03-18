@@ -70,15 +70,58 @@ namespace peano {
         virtual ~BufferedHeap() {}
     };
 
+    /**
+     * Plean heap over integers.
+     *
+     * I recommend to use this for first prototyping or applications with a low
+     * communication memory footprint. It is pretty fast. However, I also
+     * observe that this heap implementation plains to deadlock quickly for big
+     * data sets where lots of messages are exchanged. In that case, I
+     * recommend to use the RLEHeap below.
+     */
     typedef PlainHeap<peano::heap::records::IntegerHeapData>  PlainIntegerHeap;
     typedef RLEHeap<peano::heap::records::IntegerHeapData>    RLEIntegerHeap;
 
+
+    /**
+     * Plean heap over doubles.
+     *
+     * I recommend to use this for first prototyping or applications with a low
+     * communication memory footprint. It is pretty fast. However, I also
+     * observe that this heap implementation plains to deadlock quickly for big
+     * data sets where lots of messages are exchanged. In that case, I
+     * recommend to use the RLEHeap below.
+     */
     typedef PlainHeap<peano::heap::records::DoubleHeapData>   PlainDoubleHeap;
     typedef RLEHeap<peano::heap::records::DoubleHeapData>     RLEDoubleHeap;
 
+
+    /**
+     * Plean heap over floats.
+     *
+     * I recommend to use this for first prototyping or applications with a low
+     * communication memory footprint. It is pretty fast. However, I also
+     * observe that this heap implementation plains to deadlock quickly for big
+     * data sets where lots of messages are exchanged. In that case, I
+     * recommend to use the RLEHeap below.
+     */
     typedef PlainHeap<peano::heap::records::FloatHeapData>    PlainFloatHeap;
     typedef RLEHeap<peano::heap::records::FloatHeapData>      RLEFloatHeap;
 
+
+    /**
+     * Plean heap over booleans.
+     *
+     * I recommend to use this for first prototyping or applications with a low
+     * communication memory footprint. It is pretty fast. However, I also
+     * observe that this heap implementation plains to deadlock quickly for big
+     * data sets where lots of messages are exchanged. In that case, I
+     * recommend to use the RLEHeap below.
+     *
+     * Please note that this heap works with the real bool data type of C++. In
+     * many cases, it might be better to work with integers instead and use the
+     * integers at bitfield. It saves memory.
+     */
     typedef PlainHeap<peano::heap::records::BooleanHeapData>    PlainBooleanHeap;
     typedef RLEHeap<peano::heap::records::BooleanHeapData>      RLEBooleanHeap;
 
