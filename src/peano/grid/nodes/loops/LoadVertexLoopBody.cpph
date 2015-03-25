@@ -329,6 +329,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   const int  CoarsestRegularInnerAndOuterGridLevel = peano::parallel::loadbalancing::Oracle::getInstance().getCoarsestRegularInnerAndOuterGridLevel();
   #else
   const bool AnalyseVertex = true;
+  const int  CoarsestRegularInnerAndOuterGridLevel = 0;
   #endif
 
   if (AnalyseVertex) {
@@ -348,19 +349,22 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       case peano::geometry::GeometryHelper::LeaveVertexUnaltered:
         break;
       case peano::geometry::GeometryHelper::LeaveOuterVertexUnaltered:
-        #ifdef Parallel
         if (
-          _fineGridVerticesEnumerator.getLevel()<CoarsestRegularInnerAndOuterGridLevel &&
+          _fineGridVerticesEnumerator.getLevel()<CoarsestRegularInnerAndOuterGridLevel
+          &&
           _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Unrefined
         ) {
           _fineGridVertices[positionInVertexArray].refine();
         }
-        #endif
         break;
       case peano::geometry::GeometryHelper::EraseOutsideVertex:
         logDebug( "updateGeometry(...)", "EraseOutsideVertex" );
         assertion1( _fineGridVertices[positionInVertexArray].isOutside(),_fineGridVertices[positionInVertexArray] );
-        if (_fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined) {
+        if (
+          _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined
+          &&
+          _fineGridVerticesEnumerator.getLevel()>CoarsestRegularInnerAndOuterGridLevel
+        ) {
           _hasChangedVertexState = true;
           _fineGridVertices[positionInVertexArray].erase();
         }
@@ -380,6 +384,13 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _fineGridVertices[positionInVertexArray].switchToInside();
         _hasChangedVertexState = true;
         logDebug( "load_vertices()", "switch vertex to inside. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
+        if (
+          _fineGridVerticesEnumerator.getLevel()<CoarsestRegularInnerAndOuterGridLevel
+          &&
+          _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Unrefined
+        ) {
+          _fineGridVertices[positionInVertexArray].refine();
+        }
         break;
       case peano::geometry::GeometryHelper::CreateBoundaryVertex:
         logDebug( "updateGeometry(...)", "CreateBoundaryVertex" );
@@ -395,6 +406,13 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToBoundary();
         _hasChangedVertexState = true;
+        if (
+          _fineGridVerticesEnumerator.getLevel()<CoarsestRegularInnerAndOuterGridLevel
+          &&
+          _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Unrefined
+        ) {
+          _fineGridVertices[positionInVertexArray].refine();
+        }
         break;
       case peano::geometry::GeometryHelper::DestroyVertexAndSwitchToOutside:
         logDebug( "updateGeometry(...)", "DestroyVertexAndSwitchToOutside" );
@@ -424,7 +442,12 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         );
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToOutside();
-        if (_fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined) {
+        if (
+          _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined
+          &&
+          &&
+          _fineGridVerticesEnumerator.getLevel()>CoarsestRegularInnerAndOuterGridLevel
+        ) {
           _fineGridVertices[positionInVertexArray].erase();
         }
         _hasChangedVertexState = true;
