@@ -972,6 +972,12 @@ else:
     particular level while finer levels then continue to fork. This will, due to the dfs nature of the grid traversal, induce a serialisation of the code. Try to fork \
     more aggressively on coarser levels by using a more regular grid for the coarse resolutions, e.g. \
     </p>\
+    <i>Performance hint: </i>\
+    <p>\
+    Master-worker communication is very critical for the runtime as this information is exchanged synchronously. If some columns in the first table above holds only \
+    one entry, you should have a very shallow topology (cf. topology graph) and thus one master for many ranks. This is typically not a good idea as this master then \
+    easily becomes a bottleneck. Try to distribute the master job (by forking on coarser levels, e.g.). \
+    </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
