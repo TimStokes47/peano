@@ -934,6 +934,8 @@ else:
     wide, i.e. if it is deep and its breadth is bounded by 3^d you typically have a good performance. If your tree is shallow, \
     few ranks grab all the workers which is often not a good sign. Often, such an unfair behaviour goes hand in hand with a \
     monotonic decrease of cells on one worker. See discussion in the Section 'Global grid overview'. \
+    Also consult the section 'Doublecheck the multiscale concurrency' in the wiki. The latter also discusses how to manually enforce a higher coarse grid \
+    regularity and thus allow the load balancing to fork. \
     <p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
