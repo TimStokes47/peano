@@ -69,7 +69,7 @@ int tarch::parallel::NodePool::getNumberOfWorkingNodes() const {
   assertion1( Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
   assertion1( _strategy!=0, Node::getInstance().getRank() );
 
-  return _strategy->getNumberOfRegisteredNodes() - _strategy->getNumberOfIdleNodes();
+  return _strategy->getNumberOfRegisteredNodes() - _strategy->getNumberOfIdleNodes() + 1; // +1 is the master
   #else
   return 1;
   #endif
