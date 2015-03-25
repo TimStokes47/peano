@@ -515,15 +515,16 @@ def setGeneralPlotSettings():
 
 def plotGlobalGridOverview():
   pylab.clf()
-  pylab.title( "Global cells" )
+  pylab.title( "Cells on global master" )
   x = pylab.arange(0, len(numberOfInnerLeafCells[0]), 1.0)
-  pylab.plot(x, numberOfInnerLeafCells[0], 'o-',  markersize=10, color='r', label='#inner leaf cells' )
-  pylab.plot(x, numberOfOuterLeafCells[0], '+-',  markersize=10, color='g', label='#outer leaf cells' )
-  pylab.plot(x, numberOfInnerCells[0],     '.-',  markersize=10, color='r', label='#inner cells' )
-  pylab.plot(x, numberOfOuterCells[0],     'x-',  markersize=10, color='g', label='#outer cells' )
+  pylab.plot(x, numberOfInnerLeafCells[0], 'o-',  markersize=10, color='#ff0000', label='#inner leaf cells' )
+  pylab.plot(x, numberOfOuterLeafCells[0], '+-',  markersize=10, color='#00ff00', label='#outer leaf cells' )
+  pylab.plot(x, numberOfInnerCells[0],     '.-',  markersize=10, color='#aa0066', label='#inner cells' )
+  pylab.plot(x, numberOfOuterCells[0],     'x-',  markersize=10, color='#00aa66', label='#outer cells' )
   setGeneralPlotSettings()
-  pylab.savefig( outputFileName + ".grid-overview.png" )
-  pylab.savefig( outputFileName + ".grid-overview.pdf" )
+  pylab.legend(fontsize=9, loc='upper left', framealpha=0.5)
+  pylab.savefig( outputFileName + ".grid-overview-global-master.png" )
+  pylab.savefig( outputFileName + ".grid-overview-global-master.pdf" )
 
   pylab.clf()
   pylab.title( "Local cells" )
@@ -536,6 +537,41 @@ def plotGlobalGridOverview():
   pylab.xlabel('t')
   pylab.savefig( outputFileName + ".local-cells.png" )
   pylab.savefig( outputFileName + ".local-cells.pdf" )
+
+  globalNumberOfInnerLeafCells = [a for a in numberOfInnerLeafCells[0]]
+  globalNumberOfOuterLeafCells = [a for a in numberOfOuterLeafCells[0]]
+  globalNumberOfInnerCells     = [a for a in numberOfInnerCells[0]]
+  globalNumberOfOuterCells     = [a for a in numberOfOuterCells[0]]
+  
+  for rank in range(1,numberOfRanks):
+    currentEntry = len(globalNumberOfInnerLeafCells)-1
+    for i in reversed(numberOfInnerLeafCells[rank]):
+      globalNumberOfInnerLeafCells[currentEntry] = globalNumberOfInnerLeafCells[currentEntry] + i
+      currentEntry = currentEntry - 1
+    currentEntry = len(globalNumberOfOuterLeafCells)-1
+    for i in reversed(numberOfOuterLeafCells[rank]):
+      globalNumberOfOuterLeafCells[currentEntry] = globalNumberOfOuterLeafCells[currentEntry] + i
+      currentEntry = currentEntry - 1
+    currentEntry = len(globalNumberOfInnerCells)-1
+    for i in reversed(numberOfInnerCells[rank]):
+      globalNumberOfInnerCells[currentEntry] = globalNumberOfInnerCells[currentEntry] + i
+      currentEntry = currentEntry - 1
+    currentEntry = len(globalNumberOfOuterCells)-1
+    for i in reversed(numberOfOuterCells[rank]):
+      globalNumberOfOuterCells[currentEntry] = globalNumberOfOuterCells[currentEntry] + i
+      currentEntry = currentEntry - 1
+
+  pylab.clf()
+  pylab.title( "Global cells" )
+  x = pylab.arange(0, len(numberOfInnerLeafCells[0]), 1.0)
+  pylab.plot(x, globalNumberOfInnerLeafCells, 'o-',  markersize=10, color='#ff0000', label='#inner leaf cells' )
+  pylab.plot(x, globalNumberOfOuterLeafCells, '+-',  markersize=10, color='#00ff00', label='#outer leaf cells' )
+  pylab.plot(x, globalNumberOfInnerCells,     '.-',  markersize=10, color='#aa0066', label='#inner cells' )
+  pylab.plot(x, globalNumberOfOuterCells,     'x-',  markersize=10, color='#00aa66', label='#outer cells' )
+  pylab.legend(fontsize=9, loc='upper left', framealpha=0.5)
+  setGeneralPlotSettings()
+  pylab.savefig( outputFileName + ".grid-overview.png" )
+  pylab.savefig( outputFileName + ".grid-overview.pdf" )
 
   pylab.clf()
   pylab.title( "Local vertices" )
@@ -771,11 +807,20 @@ else:
   outFile.write( "\
     <h2 id=\"global-grid-overview\">Global grid overview</h2>\
     <img src=\"" + outputFileName + ".grid-overview.png\" />\
+    <img src=\"" + outputFileName + ".grid-overview-global-master.png\" />\
+    <br /><br />\
     <img src=\"" + outputFileName + ".local-cells.png\" />\
     <img src=\"" + outputFileName + ".local-vertices.png\" />\
     <br /><br />\
     <p>\
-    The darker the plots, the more ranks exhibit a certain characteristics. \
+    <b>Remarks on the global cell/vertex and the master plots:</b> \
+    If you are implementing a code that allows ranks to send up their state to the \
+    master before they've completed the whole traversal (see communicator object in \
+    the mappings) or even to skip reduction, you will see oscillations and non-smooth \
+    behaviour for some data. This is not a bug, but has to do with the communication scheme. \
+    </p>\
+    <p>\
+    <b>Remarks on the local cell/vertex plots:</b> The darker the plots the more ranks exhibit a certain characteristics. \
     If the points spread out, this is an indicator that your load balancing is \
     inadequate. \
     If you run Peano on multiple ranks, rank 0 typically degenerates to a pure \
@@ -785,6 +830,20 @@ else:
     with each other. \
     Ranks that start to work later yield shorter histograms that are all aligned \
     to the left. \
+    </p>\
+    <p>\
+    <i>Performance hint:</i></p><p>\
+    In Peano's spacetree world, the coarse grid ranks are the most critical ranks. \
+    If your global master holds many cells, e.g., almost for sure you run into poor-scaling \
+    code. \
+    <p>\
+    <i>Performance hint:</i></p><p>\
+    If you identify ranks whose local load decreases incrementally, these are ranks \
+    that step by step fork more of their work to other ranks. In this case, it might \
+    make sense to switch from an aggressive refinement into an iterative grid refinement \
+    strategy (one refinement level per step, e.g.) to allow the rank to deploy work \
+    throughout the grid construction and thus build up the grid in parallel and avoid \
+    the transfer of whole grid blocks due to rebalancing. \
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
@@ -809,13 +868,20 @@ else:
     to make the computational grid more regular to some degree, i.e. to prescribe a finer maximum mesh size. \
     </p>\
     <p>\
-    <i>Performance hint: </i>\
+    <i>Performance hint: </i></p><p>\
     If you find this graph to become a multigraph in many places, lots of joins and forks are conducted. \
     Joins and forks are expensive operations in terms of walltime. Evaluating the load balancing \
     information also is not for free. Hence, try to reduce the number of joins and forks as you \
     switch on rebalancing only from time to time, and reduce the load balancing overhead. See \
     the section on 'Disable load balancing' in the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a>. \
     </p>\
+    <p>\
+    <i>Performance hint:</i></p><p>\
+    Peano scales best if the coarsest grids are decomposed. In turn, it performs good if the logical topology tree is not too \
+    wide, i.e. if it is deep and its breadth is bounded by 3^d you typically have a good performance. If your tree is shallow, \
+    few ranks grab all the workers which is often not a good sign. Often, such an unfair behaviour goes hand in hand with a \
+    monotonic decrease of cells on one worker. See discussion in the Section 'Global grid overview'. \
+    <p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
@@ -1038,6 +1104,18 @@ else:
   #
   # Now all the images are created
   #  
+  parseInputFile()
+
+  print "plot walltime overview"
+  plotWalltimeOverview()
+
+  print "plot global grid overview"
+  plotGlobalGridOverview()
+
+  for rank in range(0,numberOfRanks):
+    print "plot statistics for rank " + str(rank)
+    plotStatisticsForRank(rank)
+
   print "plot logical grid topology"
   plotLogicalTopology()
 
@@ -1053,19 +1131,4 @@ else:
   print "boundary data exchange"
   plotBoundaryLateSends()
 
-
-
-  parseInputFile()
-
-
-  print "plot walltime overview"
-  plotWalltimeOverview()
-
-  print "plot global grid overview"
-  plotGlobalGridOverview()
-
-  for rank in range(0,numberOfRanks):
-    print "plot statistics for rank " + str(rank)
-    plotStatisticsForRank(rank)
-  
   
