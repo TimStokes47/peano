@@ -271,6 +271,46 @@ def plotForkJoinStatistics():
   pylab.savefig( outputFileName + ".fork-join-statistics.pdf" )
 
 
+def  extractForkHistory():
+  outFile.write( "<table border=\"1\">" )
+  outFile.write( "<tr>" )
+  try:
+    inputFile = open( inputFileName,  "r" )
+    print "parse topology",
+    for line in inputFile:
+      searchPatternAddFork    = "peano::performanceanalysis::DefaultAnalyser::addWorker.*\d+->\d+\+\d+"
+      searchPatternAddJoin    = "peano::performanceanalysis::DefaultAnalyser::removeWorker.*\d+\+\d+->d+"
+      searchEndIteration      = "rank:0 .*peano::performanceanalysis::DefaultAnalyser::endIteration"
+      if ("DefaultAnalyser" in line):
+        m = re.search( searchPatternAddFork, line )
+        if (m):
+          parent = int(m.group(0).split("->")[0].split(" ")[-1]) 
+          child  = int(m.group(0).split("+")[-1].split(" ")[-1])
+          level  = line.split("level:")[1].split("]")[0]
+          for i in range(0,parent):
+            outFile.write( "<td>" )
+            outFile.write( "</td>" )        
+          outFile.write( "<td>" + str(parent) + "->" + str(parent) + "+" + str(child) + " (level=" + level + ")</td>" )        
+        m = re.search( searchPatternAddJoin, line )
+        if (m):
+          parent = int(m.group(0).split("->")[0].split(" ")[-1]) 
+          child  = int(m.group(0).split("+")[-1].split(" ")[-1])
+          for i in range(0,child):
+            outFile.write( "<td>" )
+            outFile.write( "</td>" )        
+          outFile.write( "<td>" + str(parent) + "+" + str(child) + "->" + str(parent) + "</td>" )        
+        m = re.search( searchEndIteration, line )
+        if (m):
+          outFile.write( "<tr>" )
+          outFile.write( "</tr>" )
+    print " done"
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+  outFile.write( "</tr>" )
+  outFile.write( "</table>" )
+  
+
 def plotBoundaryLateSends():
   pairs = dict()
   totalMaxCardinality     = 0
@@ -361,9 +401,6 @@ def plotBoundaryLateSends():
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.large.png" )
   pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.large.pdf" )
   switchBackToStandardPlot()
-
-
-
 
 
 def plotMasterWorkerLateSends():
@@ -776,6 +813,7 @@ else:
        <li><a href=\"#global-grid-overview\">Global grid overview</a></li>\
        <li><a href=\"#logical-topology\">Logical topology</a></li>\
        <li><a href=\"#fork-join-statistics\">Fork and join statistics</a></li>\
+       <li><a href=\"#fork-history\">Fork history</a></li>\
        <li><a href=\"#mpi-phases\">MPI phases</a></li>\
        <li><a href=\"#master-worker-data-exchange\">Master-worker data exchange</a></li>\
        <li><a href=\"#boundary-data-exchange\">Boundary data exchange</a></li>\
@@ -899,6 +937,19 @@ else:
     information also is not for free. Hence, try to reduce the number of joins and forks as you \
     switch on rebalancing only from time to time, and reduce the load balancing overhead. See \
     the section on 'Disable load balancing' in the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a>. \
+    </p>\
+    <a href=\"#table-of-contents\">To table of contents</a>\
+    ")
+
+
+  #
+  # Fork history
+  #
+  outFile.write( "<h2 id=\"fork-history\">Fork history</h2>" )
+  extractForkHistory()
+  outFile.write( " \
+    <p>\
+    The table above is an overview over all forks and joins. It allows you to explicitly keep track of these repartitionings and to interpret other performance data. \
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
