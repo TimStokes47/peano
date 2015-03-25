@@ -274,6 +274,7 @@ def plotForkJoinStatistics():
 def  extractForkHistory():
   outFile.write( "<table border=\"1\">" )
   outFile.write( "<tr>" )
+  histogram = []
   try:
     inputFile = open( inputFileName,  "r" )
     print "parse topology",
@@ -291,6 +292,9 @@ def  extractForkHistory():
             outFile.write( "<td>" )
             outFile.write( "</td>" )        
           outFile.write( "<td>" + str(parent) + "->" + str(parent) + "+" + str(child) + " (level=" + level + ")</td>" )        
+          while len(histogram)<=int(level):
+            histogram.append( 0 )
+          histogram[int(level)] = histogram[int(level)] + 1
         m = re.search( searchPatternAddJoin, line )
         if (m):
           parent = int(m.group(0).split("->")[0].split(" ")[-1]) 
@@ -308,6 +312,17 @@ def  extractForkHistory():
     print "failed to read " + inputFileName
     print inst
   outFile.write( "</tr>" )
+  outFile.write( "</table>" )
+  outFile.write( "<h3>Histogram:</h3>" )
+  outFile.write( "<table border=\"1\">" )
+  outFile.write( "<tr><td><b>Level</b></td><td><b>Number of forks</b></td></tr>" )
+  for i in range(1,len(histogram)):
+    outFile.write( "<tr><td>"  + str(i) + "</td>" )
+    if histogram[i]==0:
+      outFile.write( "<td bgcolor=\"#FF0000\">"  + str(histogram[i]) )
+    else:
+      outFile.write( "<td>"  + str(histogram[i]) )
+    outFile.write( "</td></tr>" )
   outFile.write( "</table>" )
   
 
@@ -950,6 +965,12 @@ else:
   outFile.write( " \
     <p>\
     The table above is an overview over all forks and joins. It allows you to explicitly keep track of these repartitionings and to interpret other performance data. \
+    </p>\
+    <i>Performance hint: </i>\
+    <p>\
+    Most Peano applications suffer if the forks are not conducted on the coarsest grid levels. If you run into a red (empty) level above, the code does not fork on a \
+    particular level while finer levels then continue to fork. This will, due to the dfs nature of the grid traversal, induce a serialisation of the code. Try to fork \
+    more aggressively on coarser levels by using a more regular grid for the coarse resolutions, e.g. \
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
