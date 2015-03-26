@@ -445,7 +445,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         if (
           _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined
           &&
-          &&
           _fineGridVerticesEnumerator.getLevel()>CoarsestRegularInnerAndOuterGridLevel
         ) {
           _fineGridVertices[positionInVertexArray].erase();
