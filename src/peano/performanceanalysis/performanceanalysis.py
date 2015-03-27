@@ -6,10 +6,10 @@ import networkx
 
 
 
-searchPatternNumberOfCells         = ".*peano::performanceanalysis::DefaultAnalyser::endIteration.*cells=\("
-searchPatternNumberOfLocalVertices = ".*peano::performanceanalysis::DefaultAnalyser::endIteration.*local-vertices="
-searchPatternTTotal                = ".*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_total=\("
-searchPatternTTraversal            = ".*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_traversal=\("
+searchPatternNumberOfCells         = "peano::performanceanalysis::DefaultAnalyser::endIteration.*cells=\("
+searchPatternNumberOfLocalVertices = "peano::performanceanalysis::DefaultAnalyser::endIteration.*local-vertices="
+searchPatternTTotal                = "([0-9]\.?[0-9]*).*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_total=\("
+searchPatternTTraversal            = "peano::performanceanalysis::DefaultAnalyser::endIteration.*t_traversal=\("
 
 
 
@@ -110,8 +110,8 @@ def parseInputFile():
           m = re.search( searchPatternTTotal, line )
           if (m):
             rank  = int(line.split( "rank:" )[-1].split( " " )[0])
-            token = line.strip().split("=(")[-1].split(",")[0]
-            tTotal[rank].append(float(token))
+            timeStamp = float( m.group(1) )
+            tTotal[rank].append(timeStamp)
             print ".",
           m = re.search( searchPatternTTraversal, line )
           if (m):
@@ -132,15 +132,14 @@ def plotMPIPhases():
   beforeInTraversalColor  = "#ff0000"
   afterInTraversalColor   = "#660000"
   
-  baseTimeStamp     = 0.0
 
   pylab.clf()
   pylab.title( "MPI phases overview" )
   ax = pylab.gca()
   ax.set_aspect('equal','box')
   
-  floatPattern = "([0-9]\.?[0-9]*)"
   timeStampPattern = "([1-9][0-9]*)"
+  floatPattern = "([0-9]\.?[0-9]*)"
   
   enterCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree"
   leaveCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree.*t_central-tree-traversal=\(" + floatPattern
@@ -159,45 +158,37 @@ def plotMPIPhases():
         timeStamp = float( m.group(1) )
         lastTimeStamp[rank] = timeStamp
         print ".",
-        if (baseTimeStamp==0):
-          baseTimeStamp = timeStamp
         if (rank==0):
-          pylab.plot((timeStamp-baseTimeStamp, timeStamp-baseTimeStamp), (-0.5, numberOfRanks+1), 'k-')
+          pylab.plot((timeStamp, timeStamp), (-0.5, numberOfRanks+1), 'k-')
         
       m = re.search( enterCentralElementPattern, line )
       if (m):
         rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        if (baseTimeStamp==0):
-          baseTimeStamp = timeStamp
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
         rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank-0.5],rectLength,1,facecolor=beforeInTraversalColor,edgecolor=beforeInTraversalColor)
+        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=beforeInTraversalColor,edgecolor=beforeInTraversalColor)
         ax.add_patch(rect)
         lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
       m = re.search( leaveCentralElementPattern, line )
       if (m):
         rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        if (baseTimeStamp==0):
-          baseTimeStamp = timeStamp
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
         rectLength = float( m.group(3) )
-        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank-0.5],rectLength,1,facecolor=inTraversalColor,edgecolor=inTraversalColor)
+        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=inTraversalColor,edgecolor=inTraversalColor)
         ax.add_patch(rect)
         lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
       m = re.search( endIterationPattern, line )
       if (m):
         rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        if (baseTimeStamp==0):
-          baseTimeStamp = timeStamp
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
         rectLength = float( m.group(3) )
-        rect = pylab.Rectangle([lastTimeStamp[rank]-baseTimeStamp,rank-0.5],rectLength,1,facecolor=afterInTraversalColor,edgecolor=afterInTraversalColor)
+        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=afterInTraversalColor,edgecolor=afterInTraversalColor)
         ax.add_patch(rect)
         lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
     print " done"
@@ -224,35 +215,50 @@ def plotForkJoinStatistics():
   numberOfIdleNodes    = []
   numberOfForks        = []
   numberOfJoins        = []
+  timelineOfWorkingNodes = []
+  timelineOfIdleNodes    = []
+  timelineOfForks        = []
+  timelineOfJoins        = []
+  
   numberOfWorkingNodes.append(1)
   numberOfIdleNodes.append(numberOfRanks-1)
   numberOfForks.append(0)
   numberOfJoins.append(0)
+  timelineOfWorkingNodes.append(0.0)
+  timelineOfIdleNodes.append(0.0)
+  timelineOfForks.append(0.0)
+  timelineOfJoins.append(0.0)
+  
+  timeStampPattern  = "([1-9][0-9]*)"
+  
+  searchPatternFork    = timeStampPattern + ".*peano::performanceanalysis::DefaultAnalyser::addWorker"
+  searchPatternJoin    = timeStampPattern + ".*peano::performanceanalysis::DefaultAnalyser::removeWorker"
+  
   try:
     inputFile = open( inputFileName,  "r" )
     print "parse fork/join statistics",
     for line in inputFile:
-      searchPatternFork    = "peano::performanceanalysis::DefaultAnalyser::addWorker"
-      searchPatternJoin    = "peano::performanceanalysis::DefaultAnalyser::removeWorker"
-      searchEndIteration   = "rank:0 .*peano::performanceanalysis::DefaultAnalyser::endIteration"
       m = re.search( searchPatternFork, line )
       if (m):
+        timeStamp = float( m.group(1) )
         numberOfWorkingNodes.append(numberOfWorkingNodes[-1]+1)
         numberOfIdleNodes.append(numberOfIdleNodes[-1]-1)
         numberOfForks.append(numberOfForks[-1]+1)
-        numberOfJoins.append(numberOfJoins[-1]+0)
+
+        timelineOfWorkingNodes.append(timeStamp)
+        timelineOfIdleNodes.append(timeStamp)
+        timelineOfForks.append(timeStamp)
       m = re.search( searchPatternJoin, line )
       if (m):
+        timeStamp = float( m.group(1) )
+        
         numberOfWorkingNodes.append(numberOfWorkingNodes[-1]-1)
         numberOfIdleNodes.append(numberOfIdleNodes[-1]+1)
-        numberOfForks.append(numberOfForks[-1]+0)
         numberOfJoins.append(numberOfJoins[-1]+1)
-      m = re.search( searchEndIteration, line )
-      if (m):
-        numberOfWorkingNodes.append(numberOfWorkingNodes[-1])
-        numberOfIdleNodes.append(numberOfIdleNodes[-1])
-        numberOfForks.append(numberOfForks[-1])
-        numberOfJoins.append(numberOfJoins[-1])
+
+        timelineOfWorkingNodes.append(timeStamp)
+        timelineOfIdleNodes.append(timeStamp)
+        timelineOfJoins.append(timeStamp)
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
@@ -261,12 +267,14 @@ def plotForkJoinStatistics():
   
   pylab.clf()
   pylab.title( "Fork and join statistics" )
-  x = pylab.arange(0, len(numberOfWorkingNodes), 1.0)
-  pylab.plot(x, numberOfWorkingNodes, 'o-',  markersize=10, color='#ffaa00', label='working nodes' )
-  pylab.plot(x, numberOfIdleNodes,    '+-',  markersize=10, color='#00ffaa', label='idle nodes' )
-  pylab.plot(x, numberOfForks,        '.-',  markersize=10, color='#aa00ff', label='total forks' )
-  pylab.plot(x, numberOfJoins,        'x-',  markersize=10, color='#ff00aa', label='total joins' )
+
+  pylab.plot(timelineOfWorkingNodes, numberOfWorkingNodes, 'o-',  markersize=10, color='#ffaa00', label='working nodes' )
+  pylab.plot(timelineOfIdleNodes, numberOfIdleNodes,    '+-',  markersize=10, color='#00ffaa', label='idle nodes' )
+  pylab.plot(timelineOfForks, numberOfForks,        '.-',  markersize=10, color='#aa00ff', label='total forks' )
+  pylab.plot(timelineOfJoins, numberOfJoins,        'x-',  markersize=10, color='#ff00aa', label='total joins' )
+  
   setGeneralPlotSettings()
+  
   pylab.savefig( outputFileName + ".fork-join-statistics.png" )
   pylab.savefig( outputFileName + ".fork-join-statistics.pdf" )
 
@@ -626,11 +634,11 @@ def setGeneralPlotSettings():
 def plotGlobalGridOverview():
   pylab.clf()
   pylab.title( "Cells on global master" )
-  x = pylab.arange(0, len(numberOfInnerLeafCells[0]), 1.0)
-  pylab.plot(x, numberOfInnerLeafCells[0], 'o-',  markersize=10, color='#ff0000', label='#inner leaf cells' )
-  pylab.plot(x, numberOfOuterLeafCells[0], '+-',  markersize=10, color='#00ff00', label='#outer leaf cells' )
-  pylab.plot(x, numberOfInnerCells[0],     '.-',  markersize=10, color='#aa0066', label='#inner cells' )
-  pylab.plot(x, numberOfOuterCells[0],     'x-',  markersize=10, color='#00aa66', label='#outer cells' )
+
+  pylab.plot(tTotal[0], numberOfInnerLeafCells[0], 'o-',  markersize=10, color='#ff0000', label='#inner leaf cells' )
+  pylab.plot(tTotal[0], numberOfOuterLeafCells[0], '+-',  markersize=10, color='#00ff00', label='#outer leaf cells' )
+  pylab.plot(tTotal[0], numberOfInnerCells[0],     '.-',  markersize=10, color='#aa0066', label='#inner cells' )
+  pylab.plot(tTotal[0], numberOfOuterCells[0],     'x-',  markersize=10, color='#00aa66', label='#outer cells' )
   setGeneralPlotSettings()
   pylab.legend(fontsize=9, loc='upper left', framealpha=0.5)
   pylab.savefig( outputFileName + ".grid-overview-global-master.png" )
@@ -643,7 +651,7 @@ def plotGlobalGridOverview():
     startRank = 0
   for rank in range(startRank,numberOfRanks):
     x = pylab.arange(0, len(numberOfLocalCells[rank]), 1.0)
-    pylab.plot(x, numberOfLocalCells[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
+    pylab.plot(tTotal[rank], numberOfLocalCells[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
   pylab.xlabel('t')
   pylab.savefig( outputFileName + ".local-cells.png" )
   pylab.savefig( outputFileName + ".local-cells.pdf" )
@@ -674,10 +682,10 @@ def plotGlobalGridOverview():
   pylab.clf()
   pylab.title( "Global cells" )
   x = pylab.arange(0, len(numberOfInnerLeafCells[0]), 1.0)
-  pylab.plot(x, globalNumberOfInnerLeafCells, 'o-',  markersize=10, color='#ff0000', label='#inner leaf cells' )
-  pylab.plot(x, globalNumberOfOuterLeafCells, '+-',  markersize=10, color='#00ff00', label='#outer leaf cells' )
-  pylab.plot(x, globalNumberOfInnerCells,     '.-',  markersize=10, color='#aa0066', label='#inner cells' )
-  pylab.plot(x, globalNumberOfOuterCells,     'x-',  markersize=10, color='#00aa66', label='#outer cells' )
+  pylab.plot(tTotal[0], globalNumberOfInnerLeafCells, 'o-',  markersize=10, color='#ff0000', label='#inner leaf cells' )
+  pylab.plot(tTotal[0], globalNumberOfOuterLeafCells, '+-',  markersize=10, color='#00ff00', label='#outer leaf cells' )
+  pylab.plot(tTotal[0], globalNumberOfInnerCells,     '.-',  markersize=10, color='#aa0066', label='#inner cells' )
+  pylab.plot(tTotal[0], globalNumberOfOuterCells,     'x-',  markersize=10, color='#00aa66', label='#outer cells' )
   pylab.legend(fontsize=9, loc='upper left', framealpha=0.5)
   setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".grid-overview.png" )
@@ -690,7 +698,7 @@ def plotGlobalGridOverview():
     startRank = 0
   for rank in range(startRank,numberOfRanks):
     x = pylab.arange(0, len(numberOfLocalVertices[rank]), 1.0)
-    pylab.plot(x, numberOfLocalVertices[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
+    pylab.plot(tTotal[rank], numberOfLocalVertices[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
   pylab.xlabel('t')
   pylab.savefig( outputFileName + ".local-vertices.png" )
   pylab.savefig( outputFileName + ".local-vertices.pdf" )
@@ -700,13 +708,13 @@ def plotWalltimeOverview():
   pylab.clf()
   pylab.title( "Walltime" )
   x = pylab.arange(0, len(tTotal[0]), 1.0)
-  pylab.plot(x, tTotal[0], '-',  markersize=10, color='#000066', label='time per traversal' )
+  pylab.plot(tTotal[0], tTraversal[0], '-',  markersize=10, color='#000066', label='time per traversal on global master' )
   startRank = 1
   if (numberOfRanks==1):
     startRank = 0
   for rank in range(startRank,numberOfRanks):
     x = pylab.arange(0, len(tTraversal[rank]), 1.0)
-    pylab.plot(x, tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
+    pylab.plot(tTotal[rank], tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
   setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".walltime.png" )
   pylab.savefig( outputFileName + ".walltime.pdf" )
@@ -715,32 +723,25 @@ def plotWalltimeOverview():
 def plotStatisticsForRank(currentRank):
   pylab.clf()
   pylab.title( "Walltime" )
-  x = pylab.arange(0, len(tTotal[0]), 1.0)
-  pylab.plot(x, tTotal[0], '-',  markersize=10, color='#000066', label='time per traversal (total, global)' )
-  x = pylab.arange(0, len(tTotal[currentRank]), 1.0)
-  pylab.plot(x, tTotal[currentRank], '-',  markersize=10, color='r', label='time per traversal (total, local)' )
-  x = pylab.arange(0, len(tTraversal[currentRank]), 1.0)
-  pylab.plot(x, tTraversal[currentRank], '-',  markersize=10, color='g', label='time per traversal (only inside local domain)' )
+  pylab.plot(tTotal[0], tTraversal[0], '-',  markersize=10, color='#000066', label='time per traversal (global master)' )
+  pylab.plot(tTotal[currentRank], tTraversal[currentRank], '-',  markersize=10, color='#550000', label='time per traversal (only inside local domain)' )
   startRank = 1
   if (numberOfRanks==1):
     startRank = 0
   for rank in range(startRank,numberOfRanks):
-    x = pylab.arange(0, len(tTraversal[rank]), 1.0)
-    pylab.plot(x, tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
+    pylab.plot(tTotal[rank], tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
   setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".walltime-rank-" + str(currentRank) + ".png" )
   pylab.savefig( outputFileName + ".walltime-rank-" + str(currentRank) + ".pdf" )
 
   pylab.clf()
   pylab.title( "Cells" )
-  x = pylab.arange(0, len(numberOfLocalCells[currentRank]), 1.0)
-  pylab.plot(x, numberOfLocalCells[currentRank], '-',  markersize=10, color='b', label='local cells' )
+  pylab.plot(tTotal[currentRank], numberOfLocalCells[currentRank], '-',  markersize=10, color='b', label='local cells' )
   startRank = 1
   if (numberOfRanks==1):
     startRank = 0
   for rank in range(startRank,numberOfRanks):
-    x = pylab.arange(0, len(tTraversal[rank]), 1.0)
-    pylab.plot(x, numberOfLocalCells[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
+    pylab.plot(tTotal[rank], numberOfLocalCells[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
   setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".local-cells-rank-" + str(currentRank) + ".png" )
   pylab.savefig( outputFileName + ".local-cells-rank-" + str(currentRank) + ".pdf" )
@@ -760,29 +761,64 @@ def plotStatisticsForRank(currentRank):
   asynchronousHeapDataCPU      = []
   centralElementCPU            = []
 
+  ttotalTimeCalendar            = []
+  tjoinTimeCalendar             = []
+  tboundaryTimeCalendar         = []
+  tsynchronousHeapDataCalendar  = []
+  tasynchronousHeapDataCalendar = []
+  tcentralElementCalendar       = []
+  tworkerWaitTimeCalendar       = []
+
+  ttotalTimeCPU                 = []
+  tjoinTimeCPU                  = []
+  tboundaryTimeCPU              = []
+  tsynchronousHeapDataCPU       = []
+  tasynchronousHeapDataCPU      = []
+  tcentralElementCPU            = []
+
   try:
     inputFile = open( inputFileName,  "r" )
     for line in inputFile:
       if (re.search( "DefaultAnalyser::endIteration", line ) and re.search( "rank:" + str(currentRank) + " ", line ) and re.search( "t_total", line )):
         totalTimeCalendar.append( float( line.split( "(" )[-1].split(",")[0] ))
         totalTimeCPU.append(      float( line.split( "," )[-1].split(")")[0] ))
+        
+        ttotalTimeCalendar.append( float( line.strip().split( " " )[0] ))
+        ttotalTimeCPU.append(      float( line.strip().split( " " )[0] ))
       if (re.search( "DefaultAnalyser::endReleaseOfJoinData", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         joinTimeCalendar.append( float( line.split( "=" )[1].split(",")[0] ))
         joinTimeCPU.append(      float( line.split( "=" )[2].strip() ))
+
+        tjoinTimeCalendar.append( float( line.strip().split( " " )[0] ))
+        tjoinTimeCPU.append(      float( line.strip().split( " " )[0] ))
       if (re.search( "DefaultAnalyser::endReleaseOfBoundaryData", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         boundaryTimeCalendar.append( float( line.split( "=" )[-2].split(",")[0] ))
         boundaryTimeCPU.append(      float( line.split( "=" )[-1].strip() ))
+
+        tboundaryTimeCalendar.append( float( line.strip().split( " " )[0] ))
+        tboundaryTimeCPU.append(      float( line.strip().split( " " )[0] ))
       if (re.search( "DefaultAnalyser::endToReleaseSynchronousHeapData", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         synchronousHeapDataCalendar.append( float( line.split( "=" )[-2].split(",")[0] ))      
         synchronousHeapDataCPU.append(      float( line.split( "=" )[-1].strip() ))
+
+        tsynchronousHeapDataCalendar.append( float( line.strip().split( " " )[0] )    )  
+        tsynchronousHeapDataCPU.append(      float( line.strip().split( " " )[0] ))
       if (re.search( "DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         asynchronousHeapDataCalendar.append( float( line.split( "=" )[-2].split(",")[0] ))      
         asynchronousHeapDataCPU.append(      float( line.split( "=" )[-1].strip() ))
+
+        tasynchronousHeapDataCalendar.append( float( line.strip().split( " " )[0] ))     
+        tasynchronousHeapDataCPU.append(      float( line.strip().split( " " )[0] ))
       if (re.search( "DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         centralElementCalendar.append( float( line.split( "(" )[-1].split(",")[0] ))
         centralElementCPU.append(      float( line.split( "," )[-1].split(")")[0] ))
+
+        tcentralElementCalendar.append( float( line.strip().split( " " )[0] ))
+        tcentralElementCPU.append(      float( line.strip().split( " " )[0] ))
       if (re.search( "DefaultAnalyser::dataWasNotReceivedFromWorker", line ) and re.search( "rank:" + str(currentRank) + " ", line )):
         workerWaitTimeCalendar.append( float( line.split( "for " )[2].split("s")[0] ))      
+  
+        tworkerWaitTimeCalendar.append( float( line.strip().split( " " )[0] ) )     
         
         
   except Exception as inst:
@@ -792,26 +828,25 @@ def plotStatisticsForRank(currentRank):
   pylab.clf()
   pylab.title( "Runtime profile (calendar time)" )
 
-  x = pylab.arange(0, len(totalTimeCalendar), 1.0)
-  pylab.plot(x, totalTimeCalendar, 'x-', label='total', color='#FF0000', markersize=10)
+  pylab.plot(ttotalTimeCalendar, totalTimeCalendar, 'x-', label='total', color='#FF0000', markersize=10)
 
-  x = pylab.arange(0, len(joinTimeCalendar), 1.0)
-  pylab.plot(x, joinTimeCalendar, 'o-', label='join', color='#00FF00', markersize=10)
+  pylab.plot(tjoinTimeCalendar, joinTimeCalendar, 'o-', label='join', color='#00FF00', markersize=10)
 
-  x = pylab.arange(0, len(boundaryTimeCalendar), 1.0)
-  pylab.plot(x, boundaryTimeCalendar, '^-', label='boundary exchange', color='#0000FF', markersize=10)
+  pylab.plot(tboundaryTimeCalendar, boundaryTimeCalendar, '^-', label='boundary exchange', color='#0000FF', markersize=10)
 
-  x = pylab.arange(0, len(synchronousHeapDataCalendar), 1.0)
-  pylab.plot(x, synchronousHeapDataCalendar, '+-', label='synchronous heap', color='#aaaa00', markersize=10)
+  pylab.plot(tsynchronousHeapDataCalendar, synchronousHeapDataCalendar, '+-', label='synchronous heap', color='#aaaa00', markersize=10)
 
-  x = pylab.arange(0, len(asynchronousHeapDataCalendar), 1.0)
-  pylab.plot(x, asynchronousHeapDataCalendar, '1-', label='asynchronous heap', color='#aa00aa', markersize=10)
+  pylab.plot(tasynchronousHeapDataCalendar, asynchronousHeapDataCalendar, '1-', label='asynchronous heap', color='#aa00aa', markersize=10)
 
-  x = pylab.arange(0, len(centralElementCalendar), 1.0)
-  pylab.plot(x, centralElementCalendar, 'v--', label='local elements traversal', color='#00aaaa', markersize=10)
+  #
+  # If multiple ranks plot to one terminal, lines can be mixed up and parsing can fail. 
+  #
+  if (len(tcentralElementCalendar)==len(centralElementCalendar)):
+    pylab.plot(tcentralElementCalendar, centralElementCalendar, 'v--', label='local elements traversal', color='#00aaaa', markersize=10)
+  else:
+    print "- error in centralElementCalendar"
 
-  x = pylab.arange(0, len(workerWaitTimeCalendar), 1.0)
-  pylab.plot(x, workerWaitTimeCalendar, '3-', label='wait for worker', color='#667766', markersize=10)
+  pylab.plot(tworkerWaitTimeCalendar, workerWaitTimeCalendar, '3-', label='wait for worker', color='#667766', markersize=10)
 
   setGeneralPlotSettings()
 
@@ -823,23 +858,20 @@ def plotStatisticsForRank(currentRank):
   pylab.clf()
   pylab.title( "Runtime profile (cpu time)" )
 
-  x = pylab.arange(0, len(totalTimeCPU), 1.0)
-  pylab.plot(x, totalTimeCPU, 'x-', label='total', color='#FF0000', markersize=10)
+  pylab.plot(ttotalTimeCPU, totalTimeCPU, 'x-', label='total', color='#FF0000', markersize=10)
 
-  x = pylab.arange(0, len(joinTimeCPU), 1.0)
-  pylab.plot(x, joinTimeCPU, 'o-', label='join', color='#00FF00', markersize=10)
+  pylab.plot(tjoinTimeCPU, joinTimeCPU, 'o-', label='join', color='#00FF00', markersize=10)
 
-  x = pylab.arange(0, len(boundaryTimeCPU), 1.0)
-  pylab.plot(x, boundaryTimeCPU, '^-', label='boundary exchange', color='#0000FF', markersize=10)
+  pylab.plot(tboundaryTimeCPU, boundaryTimeCPU, '^-', label='boundary exchange', color='#0000FF', markersize=10)
 
-  x = pylab.arange(0, len(synchronousHeapDataCPU), 1.0)
-  pylab.plot(x, synchronousHeapDataCPU, '+-', label='synchronous heap', color='#aaaa00', markersize=10)
+  pylab.plot(tsynchronousHeapDataCPU, synchronousHeapDataCPU, '+-', label='synchronous heap', color='#aaaa00', markersize=10)
 
-  x = pylab.arange(0, len(asynchronousHeapDataCPU), 1.0)
-  pylab.plot(x, asynchronousHeapDataCPU, '1-', label='asynchronous heap', color='#aa00aa', markersize=10)
+  pylab.plot(tasynchronousHeapDataCPU, asynchronousHeapDataCPU, '1-', label='asynchronous heap', color='#aa00aa', markersize=10)
 
-  x = pylab.arange(0, len(centralElementCPU), 1.0)
-  pylab.plot(x, centralElementCPU, 'v--', label='local elements traversal', color='#00aaaa', markersize=10)
+  if (len(tcentralElementCPU)==len(centralElementCPU)):
+    pylab.plot(tcentralElementCPU, centralElementCPU, 'v--', label='local elements traversal', color='#00aaaa', markersize=10)
+  else:
+    print "- error in centralElementCPU"
 
   setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".png" )
@@ -1250,10 +1282,6 @@ else:
   print "plot global grid overview"
   plotGlobalGridOverview()
 
-  for rank in range(0,numberOfRanks):
-    print "plot statistics for rank " + str(rank)
-    plotStatisticsForRank(rank)
-
   print "plot logical grid topology"
   plotLogicalTopology()
 
@@ -1269,4 +1297,7 @@ else:
   print "boundary data exchange"
   plotBoundaryLateSends()
 
+  for rank in range(0,numberOfRanks):
+    print "plot statistics for rank " + str(rank)
+    plotStatisticsForRank(rank)
   
