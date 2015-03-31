@@ -311,27 +311,8 @@ class peano::grid::State {
      * it would change immediately. Also compare to isGridBalanced() for these
      * cases.
      *
-     * Another issue arises if you have a grid construction running in
-     * parallel. Whenever Peano does some rebalancing, it waits for a couple of
-     * iterations (at least IterationsInBetweenRebalancing) on the involved
-     * ranks before it continues to rebalance. This is to allow the grid to
-     * recover, i.e. to keep all adjacency information up-to-date all the time.
-     * It thus can happen that you construct your grid in four iterations and
-     * isGridStationary() then returns true as you don't add additional vertices
-     * and you do not remove either. Throughout the construction only one fork
-     * took place at the very beginning. You now switch to another adapter or
-     * you do something else and suddenly the rebalancing kicks in again though
-     * you thought everything worked fine.
-     *
      * In parallel, it is does either a good idea to use isGridBalanced() or,
      * even more precise, to combine both operations.
-     *
-     * !!! isGridBalanced()
-     *
-     * In the parallel case, isGridBalanced() returns true even though an erase
-     * is triggered that cannot pass due to the domain decomposition. However,
-     * it returns true if and only if the last traversal could have triggered
-     * a rebalancing but didn't do so (see isInvolvedInJoinOrFork()).
      *
      * @see isGridBalanced()
      * @see isInvolvedInJoinOrFork().
@@ -348,8 +329,12 @@ class peano::grid::State {
      * Is the grid balanced (in parallel mode)
      *
      * In serial mode, this equals isGridStationary(). If we call this in
-     * the parallel case, it is only similar to grid stationary. See
-     * isGridStationary() for details.
+     * the parallel case, it is only similar to grid stationary. Different to
+     * the latter one, this one returns true even though an erase
+     * is triggered that cannot pass due to the domain decomposition. However,
+     * it returns true if and only if the last traversal could have triggered
+     * a rebalancing but didn't do so (see isInvolvedInJoinOrFork()), i.e. if
+     * the grid could - in theory - fork further.
      *
      * @see isGridStationary()
      *
