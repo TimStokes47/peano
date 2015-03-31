@@ -212,7 +212,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         workerState.getCouldNotEraseDueToDecompositionFlag()
       );
 
-      tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
+      // Does not hold if heaps are used
+      // tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
     }
     else {
       logInfo( "updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(...)", "skip reduction from rank " << currentWorker );
