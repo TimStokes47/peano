@@ -293,6 +293,16 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
 
   _stateData.setIsTraversalInverted(!_stateData.getIsTraversalInverted());
 
+  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    _stateData.setHasModifiedGridInPreviousIteration(
+      _stateData.getHasChangedVertexOrCellState() |
+      _stateData.getHasErased() |
+      _stateData.getHasRefined() |
+      _stateData.getHasTriggeredEraseForNextIteration() |
+      _stateData.getHasTriggeredRefinementForNextIteration()
+    );
+  }
+
   #ifdef Parallel
 
   #ifdef Asserts
@@ -379,14 +389,6 @@ bool peano::grid::State<StateData>::hasGridChangedInPreviousIteration() const {
 template <class StateData>
 void peano::grid::State<StateData>::resetStateAtBeginOfIteration() {
   logTraceInWith1Argument( "resetStateAtBeginOfIteration()", toString() );
-
-  _stateData.setHasModifiedGridInPreviousIteration(
-    _stateData.getHasChangedVertexOrCellState() |
-    _stateData.getHasErased() |
-    _stateData.getHasRefined() |
-    _stateData.getHasTriggeredEraseForNextIteration() |
-    _stateData.getHasTriggeredRefinementForNextIteration()
-  );
 
   _stateData.setHasChangedVertexOrCellState(false);
   _stateData.setHasErased(false);

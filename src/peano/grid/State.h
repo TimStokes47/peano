@@ -36,6 +36,23 @@ namespace peano {
  * use exclusively the modificators of the present class and study their
  * comments carefully.
  *
+ * !!! Parallel state exchange
+ *
+ * The state is always copied from the master to the worker unless you use a
+ * differing communication specification. It is then merged back into the
+ * master through mergeWithWorkerState(). This way, the master has the full
+ * overview how many vertices have been processed, how many cells there are
+ * in the domain, whether a refinement has been triggered and so forth. Again,
+ * please study your communciation specification carefully to identify how
+ * 'reliable' all these statistics are.
+ *
+ * Prior to the iteration, each worker calls resetStateAtBeginOfIteration().
+ * This is called on the copy received from the master. At the end of the
+ * traversal, i.e. after endIteration(), we call resetStateAtEndOfIteration().
+ * It is called by Grid::iterate() as one of the very last actions, i.e. way
+ * after the state has been sent up to the master. See both operations for
+ * details information what they do.
+ *
  * @author Tobias Weinzierl
  */
 template <class StateData>
@@ -210,6 +227,15 @@ class peano::grid::State {
      * If you call the present operation on rank 0, you hence obtain only a
      * lower estimate of outer cells/vertices on the global spacetree. The real
      * number if higher.
+     *
+     * If you switch off reduction or broadcast of tighten it to your
+     * traversal's needs, you will get corrumpted figures as well.
+     *
+     * If you fork a domain, a new master-worker relation is established. In
+     * the subsequent iteration, the master then will transfer data from its
+     * domain to the new worker and the new worker will invoke all required
+     * operations. However, reduction is not done in this first step, i.e.
+     * your counters will slightly go down for one iteration.
      */
      double getNumberOfOuterCells() const;
 
@@ -221,6 +247,7 @@ class peano::grid::State {
       *        result if the code runs with mpi.
       */
      double getNumberOfOuterLeafVertices() const;
+
      double getNumberOfInnerLeafCells() const;
 
      /**
@@ -295,6 +322,11 @@ class peano::grid::State {
      */
     void changedCellState();
 
+    /**
+     * This flag is valid if and only if you have a full reduction and you
+     * broadcast the state around. If your communication specification skips
+     * some of these steps on some ranks, the result is not well-defined.
+     */
     bool hasGridChangedInPreviousIteration() const;
 
     /**
@@ -355,6 +387,12 @@ class peano::grid::State {
      *
      * Throughout the traversal, the individual fields are updated. In
      * endIteration(), they contain valid values.
+     *
+     * For a lifetime analysis of all the reset operations see the class
+     * documentation. Please note that we copy states, i.e. once we receive
+     * data from the master, this master might already have done something
+     * on the grid and changed flags. It is thus important that all flags
+     * are cleared per rank through this operation.
      */
     void resetStateAtBeginOfIteration();
 
@@ -377,6 +415,28 @@ class peano::grid::State {
      * holds at least a tree of height one. As a result, each join has to come
      * along with a tree modification on the worker side, i.e. an erase of
      * spacetree substructures.
+     *
+     * !!! Lifetime
+     *
+     * See the class documentation on details when the reset operations are
+     * called. As Peano realises a copy-from-master semantics, a state always
+     * is overwritten per iteration (unless you switch it off explicitly).
+     * Consequently, this operation modifies solely attributes that are not
+     * modelled as state statistics and thus are rank-local. As the description
+     * suggests, the operation (almost) degenerates to nop in the sequential
+     * case. However, please note that this operation also is called on the
+     * global master, i.e. all attribute transitions then apply to all workers
+     * as soon as the state has been sent out.
+     *
+     * A different story is the flag indicating whether the transition is
+     * inverted or not. This one has to be set by each rank - if you skip a
+     * broadcast or if you receive the state late, i.e. right before you dive
+     * into the central elements, your code otherwise would load invalid data.
+     *
+     * The flag HasModifiedGridInPreviousIteration is not reset by
+     * resetStateAtBeginOfIteration(). We hence may update it on the global
+     * master. It is then sent around to the workers. We may not update it
+     * on the other ranks (they would reset it to false).
      */
     void resetStateAtEndOfIteration();
 
