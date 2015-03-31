@@ -281,6 +281,10 @@ def plotForkJoinStatistics():
 
 def  extractForkHistory():
   outFile.write( "<table border=\"1\">" )
+
+  outFile.write( "<tr>" )
+  histogram        = []
+  lastParentForked = -1
   
   outFile.write( "<tr><td><b>Rank</b> <i>0</i></td>" )
   for i in range(1,numberOfRanks):
@@ -308,6 +312,18 @@ def  extractForkHistory():
           parent = int(m.group(0).split("->")[0].split(" ")[-1]) 
           child  = int(m.group(0).split("+")[-1].split(" ")[-1])
           level  = line.split("level:")[1].split("]")[0]
+
+          if parent<=lastParentForked:
+            outFile.write( "</tr>" )
+            outFile.write( "<tr>" )        
+          for i in range(0,parent):
+            outFile.write( "<td>" )
+            outFile.write( "</td>" )        
+          outFile.write( "<td>" + str(parent) + "->" + str(parent) + "+" + str(child) + " (level=" + level + ")</td>" )        
+          while len(histogram)<=int(level):
+            histogram.append( 0 )
+          histogram[int(level)] = histogram[int(level)] + 1   
+          lastParentForked = parent
           #
           # find right column in table
           #
@@ -339,6 +355,18 @@ def  extractForkHistory():
           #
           parent = int(m.group(0).split("->")[0].split(" ")[-1]) 
           child  = int(m.group(0).split("+")[-1].split(" ")[-1])
+          if parent<=lastParentForked:
+            outFile.write( "</tr>" )
+            outFile.write( "<tr>" )        
+          for i in range(0,child):
+            outFile.write( "<td>" )
+            outFile.write( "</td>" )        
+          outFile.write( "<td>" + str(parent) + "+" + str(child) + "->" + str(parent) + "</td>" )        
+          lastParentForked = child
+        m = re.search( searchEndIteration, line )
+        if (m and lastParentForked>-1):
+          outFile.write( "<tr>" )
+          outFile.write( "</tr>" )
           level  = line.split("level:")[1].split("]")[0]
           #
           # find right column in table
@@ -359,6 +387,7 @@ def  extractForkHistory():
           #        
           histogramLevelJoins[int(level)] = histogramLevelJoins[int(level)] + 1
           joinsPerRank[parent]            = joinsPerRank[parent] + 1
+          lastParentForked = -1
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
@@ -1081,13 +1110,22 @@ else:
     <h2 id=\"mpi-phases\">MPI Phases</h2>\
     <a href=\"" + outputFileName + ".mpi-phases.large.png\"> <img src=\"" + outputFileName + ".mpi-phases.png\" /> </a> \
     <br /><br />\
-    <i>Performance hint: </i>\
-    <p>\
-    The x-axis is the runtime, the y-axis is the ranks. \
-    Bright red is time spent outside of the domain prior to enter the actual local \
-    tree (green). Dark red is time spent outside after the actual traversal. \
-    Please note that the sampling accuracy is low, i.e. if your code has a very low \
-    runtime per traversal ratio, the measurements become inaccurate. \
+    <h3>Legend:</h3>\
+    <ul>\
+    <li>x-axis: simulation time</li>\
+    <li>y-axis: ranks</li>\
+    <li>vertical black bars: end of iteration on master rank</li>\
+    <li>bright red: time spent outside of the domain prior to enter the actual local tree</li>\
+    <li>green: time spent within local tree</li>\
+    <li>dark red: time spent outside of the domain after local tree has been processed</li>\
+    </ul>\
+    <i>Visualisation remarks/performance hints: </i>\
+    <ul>\
+    <li>The sampling accuracy is low, i.e. if your code has a very low \
+    runtime per traversal ratio, the measurements become inaccurate. </li>\
+    <li>If you switch off reduction (workers do not send data back to their master), the end iteration bar is inserted though workers still might be working on the traversal.</li>\
+    <li>If large redish blocks introduce your critical path, your problem is decomposed into too small chunks. Reduce number of forks/ranks.</li>\
+    <li>If long green blocks introduce a critical path, your problem is ill-balanced, i.e. some ranks have signficiantly more work to do than others.</li>\
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
