@@ -371,8 +371,22 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
 
 
 template <class StateData>
+bool peano::grid::State<StateData>::hasGridChangedInPreviousIteration() const {
+  return _stateData.getHasModifiedGridInPreviousIteration();
+}
+
+
+template <class StateData>
 void peano::grid::State<StateData>::resetStateAtBeginOfIteration() {
   logTraceInWith1Argument( "resetStateAtBeginOfIteration()", toString() );
+
+  _stateData.setHasModifiedGridInPreviousIteration(
+    _stateData.getHasChangedVertexOrCellState() |
+    _stateData.getHasErased() |
+    _stateData.getHasRefined() |
+    _stateData.getHasTriggeredEraseForNextIteration() |
+    _stateData.getHasTriggeredRefinementForNextIteration()
+  );
 
   _stateData.setHasChangedVertexOrCellState(false);
   _stateData.setHasErased(false);

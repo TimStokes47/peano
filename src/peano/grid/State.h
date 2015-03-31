@@ -295,6 +295,8 @@ class peano::grid::State {
      */
     void changedCellState();
 
+    bool hasGridChangedInPreviousIteration() const;
+
     /**
      * Is the grid stationary
      *
