@@ -1,7 +1,8 @@
 #include <limits>
 
-#ifdef Parallel
 #include "tarch/parallel/Node.h"
+
+#ifdef Parallel
 #include "peano/parallel/loadbalancing/Oracle.h"
 #include "tarch/parallel/NodePool.h"
 #include "peano/parallel/SendReceiveBufferPool.h"
