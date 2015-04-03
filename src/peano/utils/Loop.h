@@ -332,8 +332,71 @@ namespace peano {
     }}
 
 /**
+ * If DIMENSIONS is not set to two, we might nevertheless need
+ * two-dimensional loops. So this is the corresponding macro.
+ *
+ * Please use enddforx to close a loop started with this macro.
+ */
+#define d2for2(counter) \
+  for( int counter##Scalar=0; counter##Scalar<tarch::la::aPowI(2,2); counter##Scalar++) { \
+    tarch::la::Vector<2,int> counter; \
+    { \
+    int   copy##counter##Scalar = counter##Scalar; \
+    for (int counter##ddd=2-1; counter##ddd>=0; counter##ddd--) { \
+      int counter##aPowI = 1; \
+      for (int counter##jjj=0; counter##jjj<counter##ddd; counter##jjj++) { \
+        counter##aPowI *= 2; \
+      } \
+      counter(counter##ddd) = copy##counter##Scalar /  counter##aPowI; \
+      copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \
+    }}
+
+/**
  * If DIMENSIONS is not set to three, we might nevertheless need
  * three-dimensional loops. So this is the corresponding macro.
+ *
+ * Please use enddforx to close a loop started with this macro.
+ */
+#define d3for2(counter) \
+  for( int counter##Scalar=0; counter##Scalar<tarch::la::aPowI(3,2); counter##Scalar++) { \
+    tarch::la::Vector<3,int> counter; \
+    { \
+    int   copy##counter##Scalar = counter##Scalar; \
+    for (int counter##ddd=3-1; counter##ddd>=0; counter##ddd--) { \
+      int counter##aPowI = 1; \
+      for (int counter##jjj=0; counter##jjj<counter##ddd; counter##jjj++) { \
+        counter##aPowI *= 2; \
+      } \
+      counter(counter##ddd) = copy##counter##Scalar /  counter##aPowI; \
+      copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \
+    }}
+
+
+/**
+ * If DIMENSIONS is not set to two, we might nevertheless need
+ * two-dimensional loops. So this is the corresponding macro.
+ *
+ * Please use enddforx to close a loop started with this macro.
+ */
+#define d2for3(counter) \
+  for( int counter##Scalar=0; counter##Scalar<tarch::la::aPowI(2,3); counter##Scalar++) { \
+    tarch::la::Vector<2,int> counter; \
+    { \
+    int   copy##counter##Scalar = counter##Scalar; \
+    for (int counter##ddd=2-1; counter##ddd>=0; counter##ddd--) { \
+      int counter##aPowI = 1; \
+      for (int counter##jjj=0; counter##jjj<counter##ddd; counter##jjj++) { \
+        counter##aPowI *= 3; \
+      } \
+      counter(counter##ddd) = copy##counter##Scalar /  counter##aPowI; \
+      copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \
+    }}
+
+/**
+ * If DIMENSIONS is not set to three, we might nevertheless need
+ * three-dimensional loops. So this is the corresponding macro.
+ *
+ * Please use enddforx to close a loop started with this macro.
  */
 #define d3for3(counter) \
   for( int counter##Scalar=0; counter##Scalar<tarch::la::aPowI(3,3); counter##Scalar++) { \
