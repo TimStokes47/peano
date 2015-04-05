@@ -119,6 +119,18 @@ namespace peano {
     int dLinearised( const tarch::la::Vector<DIMENSIONS,int>& counter, int max );
 
     /**
+     * Special 2d variant of dLinearised that works also if you compile with other
+     * dimensions.
+     */
+    int d2Linearised( const tarch::la::Vector<2,int>& counter, int max );
+
+    /**
+     * Special 3d variant of dLinearised that works also if you compile with other
+     * dimensions.
+     */
+    int d3Linearised( const tarch::la::Vector<3,int>& counter, int max );
+
+    /**
      * Linearisation not Optimised
      *
      * This operation's semantics equals dLinearised, but the operation is not
@@ -333,6 +345,34 @@ namespace peano {
 
 /**
  * If DIMENSIONS is not set to two, we might nevertheless need
+ * two-dimensional loops. So this is the corresponding macro. It is
+ * way slower than dfor if you compile with Dim2.
+ *
+ * Please use this macro with an enddforx macro closing your scope rather than
+ * brackets.
+ *
+ * Please note that counterScalar is already a linearised version of your counter.
+ *
+ * Please note that you need a specialised linearisation function (depending on d
+ * explicitly) to work with 2d index vectors within such a loop. Do not just use
+ * dLinearised, but use the d2Linearised or d3Linearised variant instead.
+ */
+#define d2for(counter,max) \
+  for( int counter##Scalar=0; counter##Scalar<tarch::la::aPowI(2,max); counter##Scalar++) { \
+    tarch::la::Vector<2,int> counter; \
+    { \
+    int   copy##counter##Scalar = counter##Scalar; \
+    for (int counter##ddd=2-1; counter##ddd>=0; counter##ddd--) { \
+      int counter##aPowI = 1; \
+      for (int counter##jjj=0; counter##jjj<counter##ddd; counter##jjj++) { \
+        counter##aPowI *= max; \
+      } \
+      counter(counter##ddd) = copy##counter##Scalar /  counter##aPowI; \
+      copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \
+    }}
+
+/**
+ * If DIMENSIONS is not set to two, we might nevertheless need
  * two-dimensional loops. So this is the corresponding macro.
  *
  * Please use enddforx to close a loop started with this macro.
@@ -366,6 +406,36 @@ namespace peano {
       int counter##aPowI = 1; \
       for (int counter##jjj=0; counter##jjj<counter##ddd; counter##jjj++) { \
         counter##aPowI *= 2; \
+      } \
+      counter(counter##ddd) = copy##counter##Scalar /  counter##aPowI; \
+      copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \
+    }}
+
+
+
+/**
+ * If DIMENSIONS is not set to three, we might nevertheless need
+ * two-dimensional loops. So this is the corresponding macro. It is
+ * way slower than dfor if you compile with Dim2.
+ *
+ * Please use this macro with an enddforx macro closing your scope rather than
+ * brackets.
+ *
+ * Please note that counterScalar is already a linearised version of your counter.
+ *
+ * Please note that you need a specialised linearisation function (depending on d
+ * explicitly) to work with 2d index vectors within such a loop. Do not just use
+ * dLinearised, but use the d2Linearised or d3Linearised variant instead.
+ */
+#define d3for(counter,max) \
+  for( int counter##Scalar=0; counter##Scalar<tarch::la::aPowI(3,max); counter##Scalar++) { \
+    tarch::la::Vector<3,int> counter; \
+    { \
+    int   copy##counter##Scalar = counter##Scalar; \
+    for (int counter##ddd=3-1; counter##ddd>=0; counter##ddd--) { \
+      int counter##aPowI = 1; \
+      for (int counter##jjj=0; counter##jjj<counter##ddd; counter##jjj++) { \
+        counter##aPowI *= max; \
       } \
       counter(counter##ddd) = copy##counter##Scalar /  counter##aPowI; \
       copy##counter##Scalar -= counter(counter##ddd) * counter##aPowI; \

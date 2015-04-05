@@ -97,6 +97,33 @@ int peano::utils::dLinearised( const tarch::la::Vector<DIMENSIONS,int>& counter,
   #endif
 }
 
+
+int peano::utils::d2Linearised( const tarch::la::Vector<2,int>& counter, int max ) {
+  int result = counter(2 - 1);
+  assertion2(counter(2 - 1) >= 0, counter, max);
+  assertion2(counter(2 - 1) < max, counter, max);
+  for (int d = 2 - 2; d >= 0; d--) {
+    assertion3(counter(d) >= 0, counter, d, max);
+    assertion3(counter(d) < max, counter, d, max);
+    result = result * max + counter(d);
+  }
+  return result;
+}
+
+
+int peano::utils::d3Linearised( const tarch::la::Vector<3,int>& counter, int max ) {
+  int result = counter(3 - 1);
+  assertion2(counter(3 - 1) >= 0, counter, max);
+  assertion2(counter(3 - 1) < max, counter, max);
+  for (int d = 3 - 2; d >= 0; d--) {
+    assertion2(counter(d) >= 0, counter(d), max);
+    assertion2(counter(d) < max, counter(d), max);
+    result = result * max + counter(d);
+  }
+  return result;
+}
+
+
 tarch::la::Vector<DIMENSIONS,int> peano::utils::dDelinearisedWithoutLookup(int value, int max) {
   return dDelinearisedNotOptimised(value, max);
 }
