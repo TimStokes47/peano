@@ -115,6 +115,15 @@ namespace tarch {
       const Scalar&               scalar
     );
 
+    /**
+     * !!! Vectorisation remark
+     *
+     * The Intel compiler refuses to vectorise these code fragments if they
+     * exit early. As a consequence, we have to remove early exit instructions
+     * though they might be faster for very long vectors. In Peano, vectors
+     * typically are pretty short and thus we have no early exit condition if
+     * you use the Intel compiler.
+     */
     template<int Size, typename Scalar>
     bool equals (
       const Vector<Size,Scalar>&  lhs,

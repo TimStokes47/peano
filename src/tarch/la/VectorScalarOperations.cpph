@@ -1,4 +1,6 @@
 #include "tarch/Assertions.h"
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
 
 
 template<int Size, typename Scalar>
@@ -158,12 +160,22 @@ bool tarch::la::equals (
   const Scalar&               cmp,
   const Scalar                tolerance 
 ) {
+  #ifdef CompilerICC
+  bool result = true;
+  for ( int i=0; i < Size; i++ ) {
+    if ( la::abs(lhs(i) - cmp) > tolerance ) {
+      result = false;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( la::abs(lhs(i) - cmp) > tolerance ) {
       return false;
     }
   }
   return true;
+  #endif
 }
 
 
@@ -173,12 +185,22 @@ bool tarch::la::oneEquals (
   const Scalar&               cmp,
   const Scalar                tolerance
 ) {
+  #ifdef CompilerICC
+  bool result = false;
+  for ( int i=0; i < Size; i++ ) {
+    if ( la::abs(lhs(i) - cmp) <= tolerance ) {
+      result = true;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( la::abs(lhs(i) - cmp) <= tolerance ) {
       return true;
     }
   }
   return false;
+  #endif
 }
 
 
@@ -188,12 +210,22 @@ bool tarch::la::oneGreater (
   const Scalar&               cmp,
   const Scalar                tolerance 
 ) {
+  #ifdef CompilerICC
+  bool result = false;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) - cmp > tolerance ) {
+      result = true;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp > tolerance ) {
       return true;
     }
   }
   return false;
+  #endif
 }
 
 
@@ -203,12 +235,22 @@ bool tarch::la::oneGreaterEquals (
   const Scalar&               cmp,
   const Scalar                tolerance
 ) {
+  #ifdef CompilerICC
+  bool result = false;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) - cmp >= - tolerance ) {
+      result = true;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp >= - tolerance ) {
       return true;
     }
   }
   return false;
+  #endif
 }
 
 
@@ -218,12 +260,22 @@ bool tarch::la::allGreater (
   const Scalar&               cmp,
   const Scalar                tolerance
 ) {
+  #ifdef CompilerICC
+  bool result = true;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) - cmp <= tolerance ) {
+      result =  false;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp <= tolerance ) {
       return false;
     }
   }
   return true;
+  #endif
 }
 
 
@@ -233,12 +285,22 @@ bool tarch::la::allGreaterEquals (
   const Scalar&               cmp,
   const Scalar                tolerance
 ) {
+  #ifdef CompilerICC
+  bool result = true;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) - cmp < -tolerance ) {
+      result = false;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp < -tolerance ) {
       return false;
     }
   }
   return true;
+  #endif
 }
 
 
@@ -248,12 +310,22 @@ bool tarch::la::allSmaller (
   const Scalar&               cmp,
   const Scalar                tolerance 
 ) {
+  #ifdef CompilerICC
+  bool result = true;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) - cmp >= -tolerance ) {
+      result = false;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp >= -tolerance ) {
       return false;
     }
   }
   return true;
+  #endif
 }
 
 
@@ -263,12 +335,22 @@ bool tarch::la::allSmallerEquals (
   const Scalar&               cmp,
   const Scalar                tolerance 
 ) {
+  #ifdef CompilerICC
+  bool result = true;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) - cmp > tolerance ) {
+      result = false;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) - cmp > tolerance ) {
       return false;
     }
   }
   return true;
+  #endif
 }
 
 
@@ -278,12 +360,22 @@ bool tarch::la::equals (
   const Vector<Size,int>&  lhs,
   const int&               cmp
 ) {
+  #ifdef CompilerICC
+  bool result = true;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i)!=cmp ) {
+      result = false;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i)!=cmp ) {
       return false;
     }
   }
   return true;
+  #endif
 }
 
 
@@ -292,12 +384,22 @@ bool tarch::la::oneEquals (
   const Vector<Size,int>&  lhs,
   const int&               cmp
 ) {
+  #ifdef CompilerICC
+  bool result = false;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i)==cmp ) {
+      result = true;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i)==cmp ) {
       return true;
     }
   }
   return false;
+  #endif
 }
 
 
@@ -306,12 +408,22 @@ bool tarch::la::oneGreater (
   const Vector<Size,int>&  lhs,
   const int&               cmp
 ) {
+  #ifdef CompilerICC
+  bool result = false;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) > cmp ) {
+      result = true;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) > cmp ) {
       return true;
     }
   }
   return false;
+  #endif
 }
 
 
@@ -320,12 +432,22 @@ bool tarch::la::oneGreaterEquals (
   const Vector<Size,int>&  lhs,
   const int&               cmp
 ) {
+  #ifdef CompilerICC
+  bool result = false;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) >= cmp ) {
+      result = true;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) >= cmp ) {
       return true;
     }
   }
   return false;
+  #endif
 }
 
 
@@ -334,12 +456,22 @@ bool tarch::la::allGreater (
   const Vector<Size,int>&  lhs,
   const int&               cmp
 ) {
+  #ifdef CompilerICC
+  bool result = true;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) <= cmp ) {
+      result = false;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) <= cmp ) {
       return false;
     }
   }
   return true;
+  #endif
 }
 
 
@@ -348,12 +480,22 @@ bool tarch::la::allGreaterEquals (
   const Vector<Size,int>&  lhs,
   const int&               cmp
 ) {
+  #ifdef CompilerICC
+  bool result = true;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) < cmp ) {
+      result = false;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) < cmp ) {
       return false;
     }
   }
   return true;
+  #endif
 }
 
 
@@ -362,12 +504,22 @@ bool tarch::la::allSmaller (
   const Vector<Size,int>&  lhs,
   const int&               cmp
 ) {
+  #ifdef CompilerICC
+  bool result = true;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) >= cmp ) {
+      result = false;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) >= cmp ) {
       return false;
     }
   }
   return true;
+  #endif
 }
 
 
@@ -376,10 +528,20 @@ bool tarch::la::allSmallerEquals (
   const Vector<Size,int>&  lhs,
   const int&               cmp
 ) {
+  #ifdef CompilerICC
+  bool result = true;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) > cmp ) {
+      result = false;
+    }
+  }
+  return result;
+  #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) > cmp ) {
       return false;
     }
   }
   return true;
+  #endif
 }
