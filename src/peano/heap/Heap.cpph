@@ -142,7 +142,12 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   }
 
   assertion2(_heapData.find(wantedIndex) == _heapData.end(), "heap entry does exist already", wantedIndex);
-  _heapData.insert( typename HeapContainer::value_type(wantedIndex,new std::vector<Data>(numberOfEntries)) );
+  std::vector<Data>* newData = new (std::nothrow) std::vector<Data>(numberOfEntries);
+  if (newData==nullptr) {
+    logError( "createDataForIndex(int,int,int)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
+    exit(-1);
+  }
+  _heapData.insert( typename HeapContainer::value_type(wantedIndex,newData) );
   if (initialCapacity>0) {
     _heapData[wantedIndex]->reserve(initialCapacity);
   }
@@ -178,7 +183,12 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   }
 
   assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry does exist already.");
-  _heapData.insert( typename HeapContainer::value_type(index,new std::vector<Data>(numberOfEntries)) );
+  std::vector<Data>* newData = new (std::nothrow) std::vector<Data>(numberOfEntries);
+  if (newData==nullptr) {
+    logError( "createDataForIndex(int,int)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
+    exit(-1);
+  }
+  _heapData.insert( typename HeapContainer::value_type(index,newData) );
   if (initialCapacity>0) {
     _heapData[index]->reserve(initialCapacity);
   }
