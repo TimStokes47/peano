@@ -71,14 +71,25 @@ struct peano::heap::SendReceiveTask {
    */
   MPIData*        _data;
 
+  bool            _freeDataPointer;
+
   #ifdef Asserts
   SendReceiveTask();
   #endif
 
   /**
-   * Please note that you have to call delete[] on _data afterwards.
+   * Prelude to sendData().
+   *
+   * Please note that you have to call delete[] on _data afterwards through
+   * operation freeMemoryOfSendTask().
    */
   void wrapData(const std::vector<Data>& data);
+
+  /**
+   * Counterpart of wrapData(). The task sends away the data directly from the
+   * specified buffer. Please call unwrapDataAndFreeMemory() nevertheless.
+   */
+  void sendDataDirectlyFromBuffer(const std::vector<Data>& data);
 
   /**
    * @see triggerReceive() for implementation remarks.
@@ -94,6 +105,8 @@ struct peano::heap::SendReceiveTask {
   void triggerReceive(int tag);
 
   std::vector<Data> unwrapDataAndFreeMemory();
+
+  void freeMemoryOfSendTask();
 
   /**
    * Set a task invalid explicitly. Messages marked that way will pass the

@@ -178,9 +178,7 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
     }
 
-    if (i->_metaInformation.getLength()>0) {
-      delete[] (i->_data);
-    }
+    i->freeMemoryOfSendTask();
   }
 
   _sendTasks.clear();

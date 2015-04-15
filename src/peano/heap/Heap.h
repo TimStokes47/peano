@@ -12,7 +12,6 @@
 #include "peano/heap/SynchronousDataExchanger.h"
 #include "peano/heap/PlainBoundaryDataExchanger.h"
 #include "peano/heap/RLEBoundaryDataExchanger.h"
-#include "peano/heap/BufferedBoundaryDataExchanger.h"
 
 #include "peano/heap/records/FloatHeapData.h"
 #include "peano/heap/records/DoubleHeapData.h"
@@ -57,17 +56,6 @@ namespace peano {
     > {
       public:
         virtual ~RLEHeap() {}
-    };
-
-    template<class Data>
-    class BufferedHeap: public Heap<
-      Data,
-      SynchronousDataExchanger< Data >,
-      SynchronousDataExchanger< Data >,
-      BufferedBoundaryDataExchanger< Data >
-    > {
-      public:
-        virtual ~BufferedHeap() {}
     };
 
     /**
