@@ -110,63 +110,40 @@
  * communicate with the load balancing rank, e.g. By default, Peano also uses
  * non-blocking methods for these messages and tries to receive dangling
  * messages after the send has been triggered until it has completed. This way,
- * Peano avoids deadlocks. However, you can observe a signficiant speedup if
+ * Peano avoids deadlocks. However, you might observe a significiant speedup if
  * you switch from a non-blocking realisation (false as argument here) to plain
  * MPI_Send or MPI_Recv, respectively.
  *
- * @see Grid::sendStateToMaster()
+ * Value | Semantics
+ * <1    | Use blocking mpi commands instead of non-blocking variants
+ * 0     | Use non-blocking mpi commands and poll data as long as data is not
+ *         sent/received
+ * >0    | Use non-blocking mpi commands as above but sleep for a couple of
+ *         milliseconds between each check whether new data has arrived or
+ *         operation is complete
  */
 #define SendWorkerMasterMessagesBlocking     0
 
 
 /**
- *
- * Peano relies on synchronous and asynchronous messages. Synchronous messages
- * are sent up and down the tree throughout the traversal or are used to
- * communicate with the load balancing rank, e.g. By default, Peano also uses
- * non-blocking methods for these messages and tries to receive dangling
- * messages after the send has been triggered until it has completed. This way,
- * Peano avoids deadlocks. However, you can observe a signficiant speedup if
- * you switch from a non-blocking realisation (false as argument here) to plain
- * MPI_Send or MPI_Recv, respectively.
- *
+ * @see SendWorkerMasterMessagesBlocking
  * @see Node::updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()
  */
 #define SendMasterWorkerMessagesBlocking     0
 
 
 /**
+ * @see SendWorkerMasterMessagesBlocking
  *
- * Peano relies on synchronous and asynchronous messages. Synchronous messages
- * are sent up and down the tree throughout the traversal or are used to
- * communicate with the load balancing rank, e.g. By default, Peano also uses
- * non-blocking methods for these messages and tries to receive dangling
- * messages after the send has been triggered until it has completed. This way,
- * Peano avoids deadlocks. However, you can observe a signficiant speedup if
- * you switch from a non-blocking realisation (false as argument here) to plain
- * MPI_Send or MPI_Recv, respectively.
- *
- * Recommendation: Do not switch to true to enable data exchange in background
- * while nodes are waiting for their master's notification at the begin ob
+ * Recommendation: Do not switch to >0 to enable data exchange in background
+ * while nodes are waiting for their master's notification at the begin of
  * subsequent traversal.
  */
 #define ReceiveMasterMessagesBlocking        0
 
 
 /**
- * Exchange load balancing and global (iteration control) messages blocking
- *
- * Peano relies on synchronous and asynchronous messages. Synchronous messages
- * are sent up and down the tree throughout the traversal or are used to
- * communicate with the load balancing rank, e.g. By default, Peano also uses
- * non-blocking methods for these messages and tries to receive dangling
- * messages after the send has been triggered until it has completed. This way,
- * Peano avoids deadlocks. However, you can observe a signficiant speedup if
- * you switch from a non-blocking realisation (false as argument here) to plain
- * MPI_Send or MPI_Recv, respectively.
- *
- * The default of this value is false. A switch to true is usually not very
- * critical.
+ * @see SendWorkerMasterMessagesBlocking
  */
 #define SendAndReceiveLoadBalancingMessagesBlocking    0
 #define ReceiveIterationControlMessagesBlocking        0
@@ -183,6 +160,8 @@
  * have to study the heap implementations. Switching to a different
  * send/receive protocol there is not just switching a flag but to select a
  * completely different algorithm.
+ *
+ * @see SendWorkerMasterMessagesBlocking
  */
 #define SendAndReceiveHeapMetaDataBlocking             0
 
