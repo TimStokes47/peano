@@ -158,10 +158,10 @@ tarch::parallel::messages::NodePoolAnswerMessagePacked tarch::parallel::messages
       
    }
    
-   void tarch::parallel::messages::NodePoolAnswerMessage::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+   void tarch::parallel::messages::NodePoolAnswerMessage::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
       _senderDestinationRank = destination;
       
-      if (communicateBlocking) {
+      if (communicateSleep<0) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
@@ -245,6 +245,8 @@ tarch::parallel::messages::NodePoolAnswerMessagePacked tarch::parallel::messages
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -258,8 +260,8 @@ tarch::parallel::messages::NodePoolAnswerMessagePacked tarch::parallel::messages
 
 
 
-void tarch::parallel::messages::NodePoolAnswerMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-   if (communicateBlocking) {
+void tarch::parallel::messages::NodePoolAnswerMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+   if (communicateSleep<0) {
    
       MPI_Status  status;
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -338,6 +340,8 @@ void tarch::parallel::messages::NodePoolAnswerMessage::receive(int source, int t
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -540,10 +544,10 @@ void tarch::parallel::messages::NodePoolAnswerMessagePacked::shutdownDatatype() 
    
 }
 
-void tarch::parallel::messages::NodePoolAnswerMessagePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+void tarch::parallel::messages::NodePoolAnswerMessagePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
    _senderDestinationRank = destination;
    
-   if (communicateBlocking) {
+   if (communicateSleep<0) {
    
       const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
       if  (result!=MPI_SUCCESS) {
@@ -627,6 +631,8 @@ void tarch::parallel::messages::NodePoolAnswerMessagePacked::send(int destinatio
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;
@@ -640,8 +646,8 @@ void tarch::parallel::messages::NodePoolAnswerMessagePacked::send(int destinatio
 
 
 
-void tarch::parallel::messages::NodePoolAnswerMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-if (communicateBlocking) {
+void tarch::parallel::messages::NodePoolAnswerMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
    MPI_Status  status;
    const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -720,6 +726,8 @@ else {
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;

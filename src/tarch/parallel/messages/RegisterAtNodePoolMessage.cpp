@@ -180,10 +180,10 @@ tarch::parallel::messages::RegisterAtNodePoolMessagePacked tarch::parallel::mess
       
    }
    
-   void tarch::parallel::messages::RegisterAtNodePoolMessage::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+   void tarch::parallel::messages::RegisterAtNodePoolMessage::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
       _senderDestinationRank = destination;
       
-      if (communicateBlocking) {
+      if (communicateSleep<0) {
       
          const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
          if  (result!=MPI_SUCCESS) {
@@ -267,6 +267,8 @@ tarch::parallel::messages::RegisterAtNodePoolMessagePacked tarch::parallel::mess
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -280,8 +282,8 @@ tarch::parallel::messages::RegisterAtNodePoolMessagePacked tarch::parallel::mess
 
 
 
-void tarch::parallel::messages::RegisterAtNodePoolMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-   if (communicateBlocking) {
+void tarch::parallel::messages::RegisterAtNodePoolMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+   if (communicateSleep<0) {
    
       MPI_Status  status;
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -360,6 +362,8 @@ void tarch::parallel::messages::RegisterAtNodePoolMessage::receive(int source, i
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -584,10 +588,10 @@ void tarch::parallel::messages::RegisterAtNodePoolMessagePacked::shutdownDatatyp
    
 }
 
-void tarch::parallel::messages::RegisterAtNodePoolMessagePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
+void tarch::parallel::messages::RegisterAtNodePoolMessagePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
    _senderDestinationRank = destination;
    
-   if (communicateBlocking) {
+   if (communicateSleep<0) {
    
       const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
       if  (result!=MPI_SUCCESS) {
@@ -671,6 +675,8 @@ void tarch::parallel::messages::RegisterAtNodePoolMessagePacked::send(int destin
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;
@@ -684,8 +690,8 @@ void tarch::parallel::messages::RegisterAtNodePoolMessagePacked::send(int destin
 
 
 
-void tarch::parallel::messages::RegisterAtNodePoolMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, bool communicateBlocking) {
-if (communicateBlocking) {
+void tarch::parallel::messages::RegisterAtNodePoolMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
    MPI_Status  status;
    const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -764,6 +770,8 @@ else {
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;
