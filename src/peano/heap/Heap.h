@@ -39,9 +39,9 @@ namespace peano {
     template<class Data>
     class PlainHeap: public Heap<
       Data,
-      SynchronousDataExchanger< Data >,
-      SynchronousDataExchanger< Data >,
-      PlainBoundaryDataExchanger< Data >
+      SynchronousDataExchanger< Data, true >,
+      SynchronousDataExchanger< Data, true >,
+      PlainBoundaryDataExchanger< Data, true >
     > {
       public:
         virtual ~PlainHeap() {}
@@ -50,12 +50,34 @@ namespace peano {
     template<class Data>
     class RLEHeap: public Heap<
       Data,
-      SynchronousDataExchanger< Data >,
-      SynchronousDataExchanger< Data >,
-      RLEBoundaryDataExchanger< Data >
+      SynchronousDataExchanger< Data, true >,
+      SynchronousDataExchanger< Data, true >,
+      RLEBoundaryDataExchanger< Data, true >
     > {
       public:
         virtual ~RLEHeap() {}
+    };
+
+    template<class Data>
+    class PlainHeapWithoutDataCopyingForBoundarySends: public Heap<
+      Data,
+      SynchronousDataExchanger< Data, true >,
+      SynchronousDataExchanger< Data, true >,
+      PlainBoundaryDataExchanger< Data, false >
+    > {
+      public:
+        virtual ~PlainHeapWithoutDataCopyingForBoundarySends() {}
+    };
+
+    template<class Data>
+    class RLEHeapWithoutDataCopyingForBoundarySends: public Heap<
+      Data,
+      SynchronousDataExchanger< Data, true >,
+      SynchronousDataExchanger< Data, true >,
+      RLEBoundaryDataExchanger< Data, false >
+    > {
+      public:
+        virtual ~RLEHeapWithoutDataCopyingForBoundarySends() {}
     };
 
     /**

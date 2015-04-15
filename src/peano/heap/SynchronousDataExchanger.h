@@ -6,13 +6,21 @@
 
 namespace peano {
   namespace heap {
-    template<class Data>
+    template<class Data, bool CreateCopiesOfSentData>
     class SynchronousDataExchanger;
   }
 }
 
 
-template<class Data>
+/**
+ * !!! CreateCopiesOfSentData
+ *
+ * This flag indicates how to handle the exchange of synchronous data. We
+ * either can copy all data for each send and then free this data manually.
+ * Or we can send away data directly from the heap and rely on the user that
+ * this data remains persistent.
+ */
+template<class Data, bool CreateCopiesOfSentData>
 class peano::heap::SynchronousDataExchanger {
   private:
     /**

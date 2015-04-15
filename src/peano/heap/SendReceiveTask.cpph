@@ -44,7 +44,7 @@ void peano::heap::SendReceiveTask<Data>::setInvalid() {
 template <class Data>
 void peano::heap::SendReceiveTask<Data>::freeMemoryOfSendTask() {
   if (_freeDataPointer && _metaInformation.getLength()>0) {
-    delete[] _data);
+    delete[] _data;
   }
 }
 
@@ -59,10 +59,10 @@ void peano::heap::SendReceiveTask<Data>::sendDataDirectlyFromBuffer(const std::v
   logError( "sendDataDirectlyFromBuffer(...)", "direct send of heap data does not work if ParallelExchangePackedRecordsInHeaps is set" );
   assertion(false);
   exit(-1);
-  #endif
-
+  #else
   _freeDataPointer = false;
-  _data            = data.data();
+  _data            = const_cast< Data* >( data.data() );
+  #endif
 }
 
 

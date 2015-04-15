@@ -2,19 +2,19 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
-template<class Data>
-tarch::logging::Log  peano::heap::PlainBoundaryDataExchanger<Data>::_log( "peano::heap::PlainBoundaryDataExchanger" );
+template<class Data, bool CreateCopiesOfSentData>
+tarch::logging::Log  peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::_log( "peano::heap::PlainBoundaryDataExchanger" );
 
 
 
-template<class Data>
-peano::heap::PlainBoundaryDataExchanger<Data>::PlainBoundaryDataExchanger():
+template<class Data, bool CreateCopiesOfSentData>
+peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::PlainBoundaryDataExchanger():
   BoundaryDataExchanger<Data>() {
 }
 
 
-template<class Data>
-peano::heap::PlainBoundaryDataExchanger<Data>::PlainBoundaryDataExchanger(
+template<class Data, bool CreateCopiesOfSentData>
+peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::PlainBoundaryDataExchanger(
   const std::string& identifier,
   int tag,
   int rank
@@ -23,35 +23,35 @@ peano::heap::PlainBoundaryDataExchanger<Data>::PlainBoundaryDataExchanger(
 }
 
 
-template<class Data>
-peano::heap::PlainBoundaryDataExchanger<Data>::~PlainBoundaryDataExchanger() {
+template<class Data, bool CreateCopiesOfSentData>
+peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::~PlainBoundaryDataExchanger() {
 }
 
 
-template<class Data>
-bool peano::heap::PlainBoundaryDataExchanger<Data>::dataExchangerCommunicatesInBackground() const {
+template<class Data, bool CreateCopiesOfSentData>
+bool peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::dataExchangerCommunicatesInBackground() const {
   return true;
 }
 
 
-template<class Data>
-int peano::heap::PlainBoundaryDataExchanger<Data>::getNumberOfSentMessages() const {
+template<class Data, bool CreateCopiesOfSentData>
+int peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::getNumberOfSentMessages() const {
   return static_cast<int>( Base::_sendTasks.size() );
 }
 
 
-template<class Data>
-void peano::heap::PlainBoundaryDataExchanger<Data>::postprocessStartToSendData() {
+template<class Data, bool CreateCopiesOfSentData>
+void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::postprocessStartToSendData() {
 }
 
 
-template<class Data>
-void peano::heap::PlainBoundaryDataExchanger<Data>::postprocessFinishedToSendData() {
+template<class Data, bool CreateCopiesOfSentData>
+void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::postprocessFinishedToSendData() {
 }
 
 
-template<class Data>
-void peano::heap::PlainBoundaryDataExchanger<Data>::handleAndQueueReceivedTask( const SendReceiveTask<Data>&  receivedTask ) {
+template<class Data, bool CreateCopiesOfSentData>
+void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::handleAndQueueReceivedTask( const SendReceiveTask<Data>&  receivedTask ) {
   Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
   if(receivedTask._metaInformation.getLength() > 0) {
     Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_tag);
@@ -65,15 +65,20 @@ void peano::heap::PlainBoundaryDataExchanger<Data>::handleAndQueueReceivedTask( 
 }
 
 
-template<class Data>
-void peano::heap::PlainBoundaryDataExchanger<Data>::handleAndQueueSendTask( const SendReceiveTask<Data>&  sendTask, const std::vector<Data>& data ) {
+template<class Data, bool CreateCopiesOfSentData>
+void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::handleAndQueueSendTask( const SendReceiveTask<Data>&  sendTask, const std::vector<Data>& data ) {
   logTraceIn( "handleAndQueueSendTask(...)" );
 
   Base::_sendTasks.push_back(sendTask);
   Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true, SendAndReceiveHeapMetaDataBlocking);
 
   if(data.size() > 0) {
-    Base::_sendTasks.back().wrapData(data);
+    if (CreateCopiesOfSentData) {
+      Base::_sendTasks.back().wrapData(data);
+    }
+    else {
+      Base::_sendTasks.back().sendDataDirectlyFromBuffer(data);
+    }
     Base::_sendTasks.back().triggerSend(Base::_tag);
   }
 
