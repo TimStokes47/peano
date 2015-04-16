@@ -254,6 +254,58 @@ bool tarch::la::oneGreaterEquals (
 }
 
 
+
+
+template<int Size, typename Scalar>
+bool tarch::la::oneSmaller (
+  const Vector<Size,Scalar>&  lhs,
+  const Scalar&               cmp,
+  const Scalar                tolerance
+) {
+  #ifdef CompilerICC
+  bool result = false;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) - cmp < tolerance ) {
+      result = true;
+    }
+  }
+  return result;
+  #else
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) - cmp < tolerance ) {
+      return true;
+    }
+  }
+  return false;
+  #endif
+}
+
+
+template<int Size, typename Scalar>
+bool tarch::la::oneSmallerEquals (
+  const Vector<Size,Scalar>&  lhs,
+  const Scalar&               cmp,
+  const Scalar                tolerance
+) {
+  #ifdef CompilerICC
+  bool result = false;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) - cmp <= - tolerance ) {
+      result = true;
+    }
+  }
+  return result;
+  #else
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) - cmp <= - tolerance ) {
+      return true;
+    }
+  }
+  return false;
+  #endif
+}
+
+
 template<int Size, typename Scalar>
 bool tarch::la::allGreater (
   const Vector<Size,Scalar>&  lhs,
@@ -443,6 +495,54 @@ bool tarch::la::oneGreaterEquals (
   #else
   for ( int i=0; i < Size; i++ ) {
     if ( lhs(i) >= cmp ) {
+      return true;
+    }
+  }
+  return false;
+  #endif
+}
+
+
+template<int Size>
+bool tarch::la::oneSmaller (
+  const Vector<Size,int>&  lhs,
+  const int&               cmp
+) {
+  #ifdef CompilerICC
+  bool result = false;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) < cmp ) {
+      result = true;
+    }
+  }
+  return result;
+  #else
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) < cmp ) {
+      return true;
+    }
+  }
+  return false;
+  #endif
+}
+
+
+template<int Size>
+bool tarch::la::oneSmallerEquals (
+  const Vector<Size,int>&  lhs,
+  const int&               cmp
+) {
+  #ifdef CompilerICC
+  bool result = false;
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) <= cmp ) {
+      result = true;
+    }
+  }
+  return result;
+  #else
+  for ( int i=0; i < Size; i++ ) {
+    if ( lhs(i) <= cmp ) {
       return true;
     }
   }

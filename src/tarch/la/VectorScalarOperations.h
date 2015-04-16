@@ -166,6 +166,21 @@ namespace tarch {
       const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
     );
 
+
+    template<int Size, typename Scalar>
+    bool oneSmaller (
+      const Vector<Size,Scalar>&  lhs,
+      const Scalar&               cmp,
+      const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
+    );
+
+    template<int Size, typename Scalar>
+    bool oneSmallerEquals (
+      const Vector<Size,Scalar>&  lhs,
+      const Scalar&               cmp,
+      const Scalar                tolerance = NUMERICAL_ZERO_DIFFERENCE
+    );
+
     template<int Size, typename Scalar>
     bool allSmaller (
       const Vector<Size,Scalar>&  lhs,
@@ -204,6 +219,18 @@ namespace tarch {
 
     template<int Size>
     bool oneGreaterEquals (
+      const Vector<Size,int>&  lhs,
+      const int&               cmp
+    );
+
+    template<int Size>
+    bool oneSmaller (
+      const Vector<Size,int>&  lhs,
+      const int&               cmp
+    );
+
+    template<int Size>
+    bool oneSmallerEquals (
       const Vector<Size,int>&  lhs,
       const int&               cmp
     );
