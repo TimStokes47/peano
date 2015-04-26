@@ -55,6 +55,7 @@ int tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellWriter
   tmp = byteSwapForParaviewBinaryFiles(tmp);
   _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
   for (int i=0; i<8; i++) {
+    for (int j=i+1; j<8; j++) assertion(vertexIndex[i] != vertexIndex[j]);
     tmp = vertexIndex[i];
     tmp = byteSwapForParaviewBinaryFiles(tmp);
     _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
@@ -80,6 +81,7 @@ int tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellWriter
   tmp = byteSwapForParaviewBinaryFiles(tmp);
   _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
   for (int i=0; i<4; i++) {
+    for (int j=i+1; j<4; j++) assertion(vertexIndex[i] != vertexIndex[j]);
     tmp = vertexIndex[i];
     tmp = byteSwapForParaviewBinaryFiles(tmp);
     _cellOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
