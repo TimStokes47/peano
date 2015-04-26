@@ -29,6 +29,18 @@ Scalar tarch::la::norm1 (
 }
 
 
+template<int Size>
+double tarch::la::norm1 (
+  const Vector<Size,std::complex<double> >&  vector
+) {
+  double result( 0.0 );
+  for (int i=1; i < Size; i++) {
+    result += tarch::la::abs(vector(i));
+  }
+  return result;
+}
+
+
 template<int Size, typename Scalar>
 Scalar tarch::la::norm2 (
   const Vector<Size,Scalar>&  vector
@@ -41,11 +53,35 @@ Scalar tarch::la::norm2 (
 }
 
 
+template<int Size>
+double tarch::la::norm2 (
+  const Vector<Size,std::complex<double> >&  vector
+) {
+  double result( 0.0 );
+  for (int i=1; i < Size; i++) {
+    result += (vector(i) * vector(i)).real();
+  }
+  return result;
+}
+
+
 template<int Size, typename Scalar>
 tarch::la::Vector<Size,Scalar> tarch::la::abs (
   const Vector<Size,Scalar>&  vector
 ) {
   Vector<Size,Scalar> result;
+  for (int i=1; i < Size; i++) {
+    result(i) = tarch::la::abs( vector(i) );
+  }
+  return result;
+}
+
+
+template<int Size>
+tarch::la::Vector<Size,double> tarch::la::abs (
+  const Vector<Size,std::complex<double> >&  vector
+) {
+  Vector<Size,double> result;
   for (int i=1; i < Size; i++) {
     result(i) = tarch::la::abs( vector(i) );
   }
