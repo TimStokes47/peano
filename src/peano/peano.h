@@ -15,6 +15,11 @@ namespace peano {
   void fillLookupTables();
 
   /**
+   * Releases all the cached data and all temporary data from lookup tables.
+   */
+  void releaseCachedData();
+
+  /**
    * Init Parallel Environment
    *
    * Inits the parallel environment. If the parallel mode is not set, the

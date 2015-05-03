@@ -8,6 +8,27 @@ std::map<int,peano::datatraversal::ActionSetTraversal*> peano::grid::aspects::Ce
 #endif
 
 
+void peano::grid::aspects::CellLocalPeanoCurve::releaseCachedData() {
+  #if defined(CacheActionSets)
+  for (
+    std::map<int,peano::datatraversal::ActionSetTraversal*>::iterator p = cachedEntriesForWriteVertexSequence.begin();
+    p != cachedEntriesForWriteVertexSequence.end();
+    p++
+  ) {
+    delete p->second;
+  }
+
+
+  for (
+    std::map<int,peano::datatraversal::ActionSetTraversal*>::iterator p = cachedEntriesForReadVertexSequence.begin();
+    p != cachedEntriesForReadVertexSequence.end();
+    p++
+  ) {
+    delete p->second;
+  }
+  #endif
+}
+
 
 peano::grid::aspects::CellLocalPeanoCurve::CellLocalPeanoCurve() {
 }
@@ -158,9 +179,6 @@ peano::grid::aspects::CellLocalPeanoCurve::createSequentialWriteVertexSequence( 
   peano::datatraversal::ActionSetTraversal result(NUMBER_OF_VERTICES_PER_ELEMENT);
 
   int coordinates = static_cast<int>( getFirstVertexIndex(evenFlags).to_ulong() );
-//  #ifdef CompilerICC
-//  #pragma unroll (NUMBER_OF_VERTICES_PER_ELEMENT)
-//  #endif
   for (int i=0; i<NUMBER_OF_VERTICES_PER_ELEMENT; i++) {
     Coordinates currentLocalVertexIndex( coordinates ^ i );
 

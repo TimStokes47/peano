@@ -144,6 +144,8 @@ class peano::grid::aspects::CellLocalPeanoCurve {
      */
     template <class Cell>
     static bool isFaceTouched(const Cell& cell, int faceNumber, bool isTraversalInverted);
+
+    static void releaseCachedData();
 };
 
 

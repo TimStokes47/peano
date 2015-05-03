@@ -3,6 +3,9 @@
 
 #include "peano/peano.h"
 
+#include "peano/grid/aspects/CellLocalPeanoCurve.h"
+
+
 #ifdef SharedMemoryParallelisation
 #include "tarch/multicore/Core.h"
 #endif
@@ -62,4 +65,9 @@ void peano::shutdownSharedMemoryEnvironment() {
   #ifdef SharedMemoryParallelisation
   tarch::multicore::Core::getInstance().shutDown();
   #endif
+}
+
+
+void peano::releaseCachedData() {
+  peano::grid::aspects::CellLocalPeanoCurve::releaseCachedData();
 }
