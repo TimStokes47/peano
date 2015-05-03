@@ -8,6 +8,8 @@
     #include "tarch/compiler/WindowsIntel.h"
   #elif defined(__GNUC__) && defined(__WIN32__)
     #include "tarch/compiler/WindowsGCC.h"
+  #elif defined(__INTEL_COMPILER) && defined(__linux) && defined(__MIC__)
+    #include "tarch/compiler/LinuxIntelMIC.h"
   #elif defined(__INTEL_COMPILER) && defined(__linux)
     #include "tarch/compiler/LinuxIntel.h"
   #elif defined(__GNUC__) && defined(__linux)
