@@ -4,7 +4,6 @@
 #define _TARCH_PLOTTER_GRID_DATA_BLOCK_STRUCTURED_PATCH_WRITER_H_
 
 #include "tarch/plotter/griddata/Writer.h"
-#include "tarch/multicore/BooleanSemaphore.h"
 
 #include "tarch/multicore/BooleanSemaphore.h"
 
