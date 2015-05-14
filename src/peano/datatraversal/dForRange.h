@@ -10,7 +10,7 @@
 #include "tarch/logging/Log.h"
 
 
-#ifdef SharedTBB
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 #include <tbb/tbb_stddef.h>
 #endif
 
@@ -60,7 +60,7 @@ class peano::datatraversal::dForRange {
     int                                _grainSize;
 
   public:
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     typedef tbb::split Split;
     #else
     typedef std::string Split;
