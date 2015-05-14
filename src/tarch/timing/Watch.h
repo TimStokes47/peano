@@ -24,7 +24,7 @@ namespace tarch {
 
 #ifdef SharedOMP
 #include <omp.h>
-#elif SharedTBB
+#elif defined(SharedTBB) || defined(SharedTBBInvade)
 #include <tbb/tick_count.h>
 #endif
 
@@ -80,7 +80,7 @@ class tarch::timing::Watch {
 
     #ifdef SharedOMP
     double          _startTime;
-    #elif SharedTBB
+    #elif defined(SharedTBB) || defined(SharedTBBInvade)
     tbb::tick_count _startTime;
     #else
     /**

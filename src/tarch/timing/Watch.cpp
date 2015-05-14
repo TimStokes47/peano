@@ -67,7 +67,7 @@ void tarch::timing::Watch::startTimer() {
   _startClockTicks = std::clock();
   #ifdef SharedOMP
   _startTime       = omp_get_wtime();
-  #elif SharedTBB
+  #elif defined(SharedTBB) || defined(SharedTBBInvade)
   _startTime       = tbb::tick_count::now();
   #elif defined(__APPLE__)
   mach_timespec_t mts;
@@ -84,7 +84,7 @@ void tarch::timing::Watch::startTimer() {
 void tarch::timing::Watch::stopTimer() {
   #ifdef SharedOMP
   _elapsedTime         = omp_get_wtime() - _startTime;
-  #elif SharedTBB
+  #elif defined(SharedTBB) || defined(SharedTBBInvade)
   _elapsedTime         = (tbb::tick_count::now() - _startTime).seconds();
   #elif defined(__APPLE__)
   mach_timespec_t mts;
