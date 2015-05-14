@@ -3,7 +3,7 @@
 #ifndef _TARCH_MULTICORE_CORE_H_
 #define _TARCH_MULTICORE_CORE_H_
 
-#ifdef SharedTBB
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 #include "tarch/multicore/tbb/Core.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Core.h"

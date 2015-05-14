@@ -1,4 +1,4 @@
-#if defined(SharedTBB)
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 #include "tarch/multicore/tbb/Core.h"
 #include "tarch/Assertions.h"
 
@@ -9,13 +9,15 @@ const int tarch::multicore::Core::UseDefaultNumberOfThreads = 0;
 
 
 tarch::multicore::Core::Core():
+  #if defined(SharedTBBInvade)
+  _invadeRoot(true),
+  #endif
   _numberOfThreads(::tbb::task_scheduler_init::default_num_threads()),
   _task_scheduler_init(_numberOfThreads) {
 }
 
 
 tarch::multicore::Core::~Core() {
-
 }
 
 

@@ -1,12 +1,27 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#if !defined( _TARCH_MULTICORE_TBB_CORE_H_) && defined(SharedTBB)
+#if !defined( _TARCH_MULTICORE_TBB_CORE_H_) && (defined(SharedTBB) || defined(SharedTBBInvade))
 #define _TARCH_MULTICORE_TBB_CORE_H_
 
 
 #include <tbb/task_scheduler_init.h>
 
 #include "tarch/logging/Log.h"
+
+
+#if defined(SharedTBBInvade)
+
+ #if defined(Asserts)
+ #define SHM_INVADE_DEBUG  2
+ #endif
+
+ #if defined(Debug)
+ #define SHM_INVADE_DEBUG  4
+ #endif
+
+ #include "shminvade/SHMInvade.hpp"
+#endif
+
 
 namespace tarch {
   namespace multicore {
@@ -24,6 +39,10 @@ namespace tarch {
  */
 class tarch::multicore::Core {
   private:
+    #if defined(SharedTBBInvade)
+    SHMInvadeRoot _invadeRoot;
+    #endif
+
     Core();
 
     static tarch::logging::Log  _log;

@@ -1,11 +1,13 @@
 /**
 
  @dir "Multicore"
+
+ To compile with multicore support, we currently offer three variants:
  
- This directory contains some services for the shared memory parallelisation. 
- While the memory parallelisation is controlled by the compile options 
- $-DSharedTBB$ and $-DSharedOMP$, just remove this directory from your build, if 
- you don't want to use the parallelisation.
+ -DSharedOMP       OpenMP    Not maintained at the moment due to a lack of time
+ -DSharedTBB       TBB       Default
+ -SharedTBBInvade  TBB       Invasive variant of TBB (collaboration with Martin Schreiber, Exceter)
+
  
  If you wanna distinguish in your code between multicore and no-multicore variants, 
  please use
