@@ -79,7 +79,7 @@ std::string tarch::la::Matrix<Rows,Cols,Scalar>::toPrettyString(int numberOfDigi
   for (int i=0; i < Rows; i++) {
     os << std::endl;
     for (int j=0; j < Cols; j++) {
-      if (_values[i * Cols + j]>=0.0) {
+      if ( tarch::la::abs( _values[i * Cols + j] )>=0.0) {
         os << " ";
       }
       os << _values[i * Cols + j];
