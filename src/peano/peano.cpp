@@ -4,10 +4,15 @@
 #include "peano/peano.h"
 
 #include "peano/grid/aspects/CellLocalPeanoCurve.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
 
 
 #ifdef SharedMemoryParallelisation
 #include "tarch/multicore/Core.h"
+#endif
+
+#if defined(SharedTBBInvade)
+#include "shminvade/SHMInvade.hpp"
 #endif
 
 
@@ -49,7 +54,14 @@ void peano::shutdownParallelEnvironment() {
 
 int peano::initSharedMemoryEnvironment() {
   #ifdef SharedMemoryParallelisation
-  if ( tarch::multicore::tbb::Core::getInstance().isInitialised() ) {
+    #if defined(SharedTBBInvade)
+    SHMController::cleanup();
+
+    #ifdef Parallel
+    MPI_Barrier(MPI_COMM_WORLD);
+    #endif
+    #endif
+  if ( tarch::multicore::Core::getInstance().isInitialised() ) {
     return 0;
   }
   else {

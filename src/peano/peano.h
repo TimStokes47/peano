@@ -40,10 +40,14 @@ namespace peano {
    * been configured correctly.
    */
   int initParallelEnvironment(int* argc, char*** argv);
+
   void shutdownParallelEnvironment();
 
   /**
    * Init shared memory environment.
+   *
+   * If you work in a hybrid environment, i.e. if you use MPI and shared memory
+   * parallelisation, please invoke initParallelEnvironment() before.
    *
    * If an error occurs, it returns -3.
    */
