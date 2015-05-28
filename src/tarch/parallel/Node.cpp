@@ -214,8 +214,8 @@ tarch::parallel::Node::Node():
 }
 #else
 tarch::parallel::Node::Node():
-  _rank(-1),
-  _numberOfProcessors(-1),
+  _rank(0),
+  _numberOfProcessors(1),
   _communicator(-1),
   _timeOutWarning(0),
   _deadlockTimeOut(0) {
