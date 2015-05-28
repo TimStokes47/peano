@@ -195,7 +195,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
         }
         break;
       case peano::MappingSpecification::AvoidFineGridRaces:
-        assertionMsg( false, "descend configuration " << _eventHandle.leaveCellSpecification().toString() << " not supported" );
+        assertionMsg( false, "descend configuration " << _eventHandle.leaveCellSpecification().toString() << " not supported. Use serial, concurrent run on fine grid or decide to avoid coarse grid races." );
         break;
       case peano::MappingSpecification::RunConcurrentlyOnFineGrid:
         {
