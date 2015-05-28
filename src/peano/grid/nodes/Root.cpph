@@ -10,6 +10,11 @@
 #include "peano/utils/PeanoOptimisations.h"
 
 
+#ifdef Parallel
+#include "peano/heap/AbstractHeap.h"
+#endif
+
+
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 tarch::logging::Log peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::_log( "peano::grid::nodes::Root" );
 
