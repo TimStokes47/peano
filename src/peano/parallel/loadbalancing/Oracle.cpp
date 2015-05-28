@@ -8,19 +8,6 @@
 tarch::logging::Log  peano::parallel::loadbalancing::Oracle::_log( "peano::parallel::loadbalancing::Oracle" );
 
 
-peano::parallel::loadbalancing::Oracle::Worker::Worker(
-   int rank,
-   int level,
-   const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-   const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize
-):
-  _rank(rank),
-  _level(level),
-  _boundingBoxOffset(boundingBoxOffset),
-  _boundingBoxSize(boundingBoxSize) {
-}
-
-
 peano::parallel::loadbalancing::Oracle& peano::parallel::loadbalancing::Oracle::getInstance() {
   static peano::parallel::loadbalancing::Oracle singleton;
   return singleton;
@@ -50,7 +37,7 @@ bool peano::parallel::loadbalancing::Oracle::workersListContainsRank( int rank )
     p!= _workers.end();
     p++
   ) {
-    if (p->_rank == rank) return true;
+    if (p->_persistentRecords._rank == rank) return true;
   }
 
   return false;
@@ -65,7 +52,7 @@ void peano::parallel::loadbalancing::Oracle::addWorker(
 ) {
   assertion4( !workersListContainsRank(rank), rank, boundingBoxOffset, boundingBoxSize, level );
   assertion4( level>=0, rank, boundingBoxOffset, boundingBoxSize, level );
-  _workers.push_back( Worker(rank, level, boundingBoxOffset, boundingBoxSize) );
+  _workers.push_back( WorkerEntry(rank, level, boundingBoxOffset, boundingBoxSize) );
   if (_startCommand>ForkOnce) {
     _startCommand = _startCommand-1;
   }
@@ -85,10 +72,10 @@ void peano::parallel::loadbalancing::Oracle::removeWorker(int rank) {
     p!= _workers.end();
     p++
   ) {
-    if (p->_rank == rank) {
+    if (p->_persistentRecords._rank == rank) {
       peano::performanceanalysis::Analysis::getInstance().removeWorker(
-        p->_rank,
-        p->_level
+        p->_persistentRecords._rank,
+        p->_persistentRecords._level
       );
       _workers.erase( p );
       return;
@@ -107,7 +94,7 @@ peano::parallel::loadbalancing::Oracle::WorkerContainer::iterator peano::paralle
     p!= _workers.end();
     p++
   ) {
-    if (p->_rank == rank) {
+    if (p->_persistentRecords._rank == rank) {
       return p;
     }
   }
@@ -125,7 +112,7 @@ peano::parallel::loadbalancing::Oracle::WorkerContainer::const_iterator peano::p
     p!= _workers.end();
     p++
   ) {
-    if (p->_rank == rank) {
+    if (p->_persistentRecords._rank == rank) {
       return p;
     }
   }
@@ -144,19 +131,19 @@ int peano::parallel::loadbalancing::Oracle::getWorkerRank(int index) const {
   assertion( _workers.size()>0 );
   assertion( index>=0 );
   assertion( index < getNumberOfWorkers());
-  return _workers[index]._rank;
+  return _workers[index]._persistentRecords._rank;
 }
 
 
 tarch::la::Vector<DIMENSIONS,double>  peano::parallel::loadbalancing::Oracle::getBoundingBoxOffset( int workerRank ) const {
   assertion1( workersListContainsRank(workerRank), workerRank );
-  return getWorkerRecord( workerRank )->_boundingBoxOffset;
+  return getWorkerRecord( workerRank )->_persistentRecords._boundingBoxOffset;
 }
 
 
 tarch::la::Vector<DIMENSIONS,double>  peano::parallel::loadbalancing::Oracle::getBoundingBoxSizeOfWorker( int workerRank ) const {
   assertion1( workersListContainsRank(workerRank), workerRank );
-  return getWorkerRecord( workerRank )->_boundingBoxSize;
+  return getWorkerRecord( workerRank )->_persistentRecords._boundingBoxSize;
 }
 
 
@@ -373,4 +360,46 @@ void peano::parallel::loadbalancing::Oracle::deleteOracles() {
 
   _oracles.clear();
   _oracles.resize(0);
+}
+
+
+std::vector<peano::parallel::loadbalancing::WorkerEntry> peano::parallel::loadbalancing::Oracle::exchangeWorkerDataWithAllRanks(int tag, MPI_Comm communicator) {
+  logTraceInWith1Argument( "exchangeWorkerDataWithAllRanks(int,Comm)", tag );
+  std::vector<WorkerEntry> result( _workers );
+
+  for (int fromRank=0; fromRank<tarch::parallel::Node::getInstance().getNumberOfNodes(); fromRank++ ) {
+    if (tarch::parallel::Node::getInstance().getRank()==fromRank) {
+      for (int toRank=0; toRank<tarch::parallel::Node::getInstance().getNumberOfNodes(); toRank++ ) {
+        if (toRank!=fromRank) {
+          logDebug( "exchangeWorkerDataWithAllRanks(int,Comm)", "send " << _workers.size() << " message(s) to rank " << toRank );
+          const int result = MPI_Send( _workers.data(), _workers.size(), WorkerEntry::FullDatatype, toRank, tag, communicator);
+          if  (result!=MPI_SUCCESS) {
+            logError( "exchangeWorkerDataWithAllRanks(int,Comm)", "was not able to send " << _workers.size() << " message(s) to rank " << toRank << ": " << tarch::parallel::MPIReturnValueToString(result) );
+          }
+        }
+      }
+    }
+    else {
+      const int oldSize         = result.size();
+      int       receivedEntries = 0;
+      MPI_Status status;
+      const int resultCount = MPI_Probe(fromRank, tag, communicator, &status);
+      if  (resultCount!=MPI_SUCCESS) {
+        logError( "exchangeWorkerDataWithAllRanks(int,Comm)", "was not able to identify how many messages drop in from " << fromRank << ": " << tarch::parallel::MPIReturnValueToString(resultCount) );
+      }
+      MPI_Get_count(&status, WorkerEntry::FullDatatype, &receivedEntries);
+
+      assertion( receivedEntries>=0 );
+
+      result.resize(oldSize+receivedEntries);
+      const int resultRecv = MPI_Recv(&(result[oldSize]),receivedEntries,WorkerEntry::FullDatatype,fromRank,tag,communicator,&status);
+      if  (resultRecv!=MPI_SUCCESS) {
+        logError( "exchangeWorkerDataWithAllRanks(int,Comm)", "was not able to receive " << receivedEntries << " message(s) frpm rank " << fromRank << ": " << tarch::parallel::MPIReturnValueToString(resultRecv) );
+      }
+      logDebug( "exchangeWorkerDataWithAllRanks(int,Comm)", "received " << receivedEntries << " message(s) from rank " << fromRank << ". size(result)=" << result.size() );
+    }
+  }
+
+  logTraceOutWith1Argument( "exchangeWorkerDataWithAllRanks(int,Comm)", result.size() );
+  return result;
 }

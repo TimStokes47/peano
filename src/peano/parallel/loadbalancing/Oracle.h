@@ -6,6 +6,7 @@
 
 #include "tarch/la/Vector.h"
 #include "tarch/logging/Log.h"
+#include "peano/parallel/loadbalancing/WorkerEntry.h"
 #include "peano/parallel/loadbalancing/OracleForOnePhase.h"
 #include "peano/utils/Globals.h"
 
@@ -41,15 +42,6 @@ namespace peano {
  */
 class peano::parallel::loadbalancing::Oracle {
   private:
-    struct Worker {
-      int                                   _rank;
-      int                                   _level;
-      tarch::la::Vector<DIMENSIONS,double>  _boundingBoxOffset;
-      tarch::la::Vector<DIMENSIONS,double>  _boundingBoxSize;
-
-      Worker(int rank, int level, const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset, const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize);
-    };
-
     static tarch::logging::Log  _log;
 
     /**
@@ -71,7 +63,7 @@ class peano::parallel::loadbalancing::Oracle {
 
     OracleForOnePhase*                       _oraclePrototype;
 
-    typedef std::vector<Worker>              WorkerContainer;
+    typedef std::vector<WorkerEntry>         WorkerContainer;
 
     /**
      * It is basically a set. However, I wanna access it both element-wisely and in a
@@ -112,6 +104,27 @@ class peano::parallel::loadbalancing::Oracle {
       const tarch::la::Vector<DIMENSIONS,double>&  boundingBoxSize,
       int                                          level
     );
+
+    /**
+     * Exchange worker information among all ranks involved
+     *
+     * This is a global operation that has to be called by all ranks at the same
+     * time. Even those that are idle currently. It is a very expensive
+     * operation. The resulting list is not ordered at all but contains all
+     * worker entries stored anywhere on the system. Also, the ordering on each
+     * rank might be different.
+     *
+     * Please note that the result typically does not contain an entry for the
+     * global master, i.e. for the bounding box of the problem.
+     *
+     * !!! Implementation
+     *
+     * I cannot use MPI's Bcast here as the cardinality of the individual
+     * packages is not known a priori. And it differs from rank to rank.
+     *
+     * @return List of all worker informations (available on each rank now).
+     */
+    std::vector<WorkerEntry> exchangeWorkerDataWithAllRanks(int tag, MPI_Comm communicator);
 
     /**
      * Is public to enable other classes to validate their state as well.

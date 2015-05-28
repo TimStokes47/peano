@@ -11,8 +11,9 @@
  DaStGen messages to communicate with its neighbours. To (re-)generate these 
  messages, change into the directory containing the $src$ directory and type in 
  \code
- java -jar pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/peano/parallel/dastgen/ForkMessage.def src/peano/parallel/messages 
+ java -jar pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/peano/parallel/dastgen/ForkMessage.def          src/peano/parallel/messages 
  java -jar pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/peano/parallel/dastgen/LoadBalancingMessage.def src/peano/parallel/messages 
+ java -jar pdt/lib/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/peano/parallel/dastgen/WorkerEntry.def          src/peano/parallel/loadbalancing 
  \endcode
  
  
