@@ -282,27 +282,30 @@ def plotForkJoinStatistics():
 def  extractForkHistory():
   outFile.write( "<table border=\"1\">" )
 
-  outFile.write( "<tr>" )
   histogram        = []
-  lastParentForked = -1
+  lastParentForked = 0
   
-  outFile.write( "<tr><td><b>Rank</b> <i>0</i></td>" )
-  for i in range(1,numberOfRanks):
+  outFile.write( "<tr><td><b>Step\\Rank</b></td>" )
+  for i in range(0,numberOfRanks):
     outFile.write( "<td><i>" + str(i) + "</td>" )
-  
-  outFile.write( "</tr><tr><td>" )
+  outFile.write( "</tr>" )
+
+ 
   histogramLevelForks = []
   histogramLevelJoins = []
   forksPerRank        = [0 for a in range(0,numberOfRanks)]
   joinsPerRank        = [0 for a in range(0,numberOfRanks)]
   
-  lastColumnWrittenTo = 0
+  outFile.write( "<tr>" )
+  outFile.write( "<td><b>0</b></td>" )
+  currentStep         = 1
   try:
     inputFile = open( inputFileName,  "r" )
     print "parse forks/join history",
     for line in inputFile:
       searchPatternAddFork    = "peano::performanceanalysis::DefaultAnalyser::addWorker.*\d+->\d+\+\d+"
       searchPatternAddJoin    = "peano::performanceanalysis::DefaultAnalyser::removeWorker.*\d+\+\d+->d+"
+      searchEndIteration      = "rank:0.*peano::performanceanalysis::DefaultAnalyser::endIteration"
       if ("DefaultAnalyser" in line):
         m = re.search( searchPatternAddFork, line )
         if (m):
@@ -313,31 +316,33 @@ def  extractForkHistory():
           child  = int(m.group(0).split("+")[-1].split(" ")[-1])
           level  = line.split("level:")[1].split("]")[0]
 
-          if parent<=lastParentForked:
+          if parent<lastParentForked:
             outFile.write( "</tr>" )
-            outFile.write( "<tr>" )        
-          for i in range(0,parent):
-            outFile.write( "<td>" )
-            outFile.write( "</td>" )        
+            outFile.write( "<tr>" )
+            lastParentForked = -1
+          while lastParentForked<parent:
+            outFile.write( "<td />" )
+            lastParentForked = lastParentForked + 1
+          lastParentForked = lastParentForked + 1
           outFile.write( "<td>" + str(parent) + "->" + str(parent) + "+" + str(child) + " (level=" + level + ")</td>" )        
-          while len(histogram)<=int(level):
-            histogram.append( 0 )
-          histogram[int(level)] = histogram[int(level)] + 1   
-          lastParentForked = parent
+          #while len(histogram)<=int(level):
+          #  histogram.append( 0 )
+          #histogram[int(level)] = histogram[int(level)] + 1   
+          #lastParentForked = parent
           #
           # find right column in table
           #
-          if (lastColumnWrittenTo>parent):
-            outFile.write( "</td></tr><tr>" )
-            lastColumnWrittenTo=0
-          for i in range(lastColumnWrittenTo,parent):
-            outFile.write( "</td>" )
-            outFile.write( "<td>" )        
-          lastColumnWrittenTo = parent
+          #if (lastColumnWrittenTo>parent):
+          #  outFile.write( "</td></tr><tr>" )
+          #  lastColumnWrittenTo=0
+          #for i in range(lastColumnWrittenTo,parent):
+          #  outFile.write( "</td>" )
+          #  outFile.write( "<td>" )        
+          #lastColumnWrittenTo = parent
           #
           # write entry
           #
-          outFile.write( str(parent) + "->" + str(parent) + "+" + str(child) + " (level=" + level + ")<br />" )
+          #outFile.write( str(parent) + "->" + str(parent) + "+" + str(child) + " (level=" + level + ")<br />" )
           #
           # update statistics
           #        
@@ -350,60 +355,31 @@ def  extractForkHistory():
           forksPerRank[parent]            = forksPerRank[parent] + 1
         m = re.search( searchPatternAddJoin, line )
         if (m):
-          #
-          # parse
-          #
-          parent = int(m.group(0).split("->")[0].split(" ")[-1]) 
-          child  = int(m.group(0).split("+")[-1].split(" ")[-1])
-          if parent<=lastParentForked:
-            outFile.write( "</tr>" )
-            outFile.write( "<tr>" )        
-          for i in range(0,child):
-            outFile.write( "<td>" )
-            outFile.write( "</td>" )        
-          outFile.write( "<td>" + str(parent) + "+" + str(child) + "->" + str(parent) + "</td>" )        
-          lastParentForked = child
+          print "not written yet"
+          quit()
         m = re.search( searchEndIteration, line )
-        if (m and lastParentForked>-1):
-          outFile.write( "<tr>" )
-          outFile.write( "</tr>" )
-          level  = line.split("level:")[1].split("]")[0]
-          #
-          # find right column in table
-          #
-          if (lastColumnWrittenTo>parent):
-            outFile.write( "</td></tr><tr>" )
-            lastColumnWrittenTo=0
-          for i in range(lastColumnWrittenTo,parent):
-            outFile.write( "</td>" )
-            outFile.write( "<td>" )        
-          lastColumnWrittenTo = parent
-          #
-          # write entry
-          #
-          outFile.write( "<td>" + str(parent) + "+" + str(child) + "->" + str(parent) + "</td>" )
-          #
-          # update statistics
-          #        
-          histogramLevelJoins[int(level)] = histogramLevelJoins[int(level)] + 1
-          joinsPerRank[parent]            = joinsPerRank[parent] + 1
-          lastParentForked = -1
+        if (m and lastParentForked>0):
+          outFile.write( "</tr><tr>" )
+          outFile.write( "<td><b>" + str(currentStep) + "</b></td>" )
+          currentStep      = currentStep + 1
+          lastParentForked = 0
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
-  outFile.write( "</td></tr>" )
+  outFile.write( "</tr>" )
 
-  outFile.write( "<tr><td><b>no of forks:</b> <i>x</i></td>" )
-  for i in range(1,numberOfRanks):
+  outFile.write( "<tr><td><b>no of forks:</b></td>" )
+  for i in range(0,numberOfRanks):
     outFile.write( "<td><i>" + str(forksPerRank[i]) + "</i></td>" )
-  outFile.write( "<\tr>" )
-  outFile.write( "<tr><td><b>no of joins:</b> <i>x</i></td>" )
-  for i in range(1,numberOfRanks):
+  outFile.write( "</tr>" )
+  outFile.write( "<tr><td><b>no of joins:</b></td>" )
+  for i in range(0,numberOfRanks):
     outFile.write( "<td><i>" + str(joinsPerRank[i]) + "</i></td>" )
-  outFile.write( "<\tr>" )
-
+  outFile.write( "</tr>" )
   outFile.write( "</table>" )
+  
+  
   outFile.write( "<h3>Histograms:</h3>" )
   outFile.write( "<table border=\"1\">" )
   outFile.write( "<tr><td><b>Level</b></td><td><b>Number of forks</b></td><td><b>Number of joins</b></td></tr>" )
@@ -412,13 +388,15 @@ def  extractForkHistory():
     if histogramLevelForks[i]>0:
       outFile.write( "<td bgcolor=\"#aaaaFF\">"  + str(histogramLevelForks[i]) )
     else:
-      outFile.write( "<td bgcolor=\"#FF0000\">>"  + str(histogramLevelForks[i]) )
+      outFile.write( "<td bgcolor=\"#FF0000\">"  + str(histogramLevelForks[i]) )
     if histogramLevelJoins[i]==0:
       outFile.write( "<td bgcolor=\"#aaaaFF\">"  + str(histogramLevelJoins[i]) )
     else:
-      outFile.write( "<td bgcolor=\"#00FF00\">>"  + str(histogramLevelJoins[i]) )
+      outFile.write( "<td bgcolor=\"#00FF00\">"  + str(histogramLevelJoins[i]) )
     outFile.write( "</td></tr>" )
   outFile.write( "</table>" )
+
+
   
 
 def plotBoundaryLateSends():
