@@ -14,6 +14,11 @@
 #include <vector>
 
 
+#ifdef Parallel
+#include <mpi.h>
+#endif
+
+
 namespace peano {
   namespace parallel {
     namespace loadbalancing {
@@ -105,6 +110,7 @@ class peano::parallel::loadbalancing::Oracle {
       int                                          level
     );
 
+    #ifdef Parallel
     /**
      * Exchange worker information among all ranks involved
      *
@@ -122,9 +128,14 @@ class peano::parallel::loadbalancing::Oracle {
      * I cannot use MPI's Bcast here as the cardinality of the individual
      * packages is not known a priori. And it differs from rank to rank.
      *
+     * This operation is protected with the ifdef to make the code translate in
+     * serial variants as well. If you work without -DParallel, mpi.h is not
+     * included and the datatype MPI_Comm hence is undefined.
+     *
      * @return List of all worker informations (available on each rank now).
      */
     std::vector<WorkerEntry> exchangeWorkerDataWithAllRanks(int tag, MPI_Comm communicator);
+    #endif
 
     /**
      * Is public to enable other classes to validate their state as well.

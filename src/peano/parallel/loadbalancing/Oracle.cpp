@@ -363,6 +363,7 @@ void peano::parallel::loadbalancing::Oracle::deleteOracles() {
 }
 
 
+#ifdef Parallel
 std::vector<peano::parallel::loadbalancing::WorkerEntry> peano::parallel::loadbalancing::Oracle::exchangeWorkerDataWithAllRanks(int tag, MPI_Comm communicator) {
   logTraceInWith1Argument( "exchangeWorkerDataWithAllRanks(int,Comm)", tag );
   std::vector<WorkerEntry> result( _workers );
@@ -403,3 +404,4 @@ std::vector<peano::parallel::loadbalancing::WorkerEntry> peano::parallel::loadba
   logTraceOutWith1Argument( "exchangeWorkerDataWithAllRanks(int,Comm)", result.size() );
   return result;
 }
+#endif
