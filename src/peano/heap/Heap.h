@@ -387,8 +387,27 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      * heap that you finished to send in prepareSendToMaster().
      *
      * This induces an error on the global master where prepareSendToMaster()
-     * is never called. So, you have to call finish in endIteration() as well -
-     * but if and only if you are on the global master.
+     * is never called if you have invoked startToSendSynchronousData() in
+     * beginIteration(). In this case,
+     *
+     * - either call startToSendSynchronousData() when you receive data from
+     *   the master or just when you start to send data back, i.e.
+     *   prepareSendToMaster(),
+     * - or call finish in endIteration() as well - but if and only if you are
+     *   on the global master.
+     *
+     * Please note however that all of these operations
+     *
+     * !!! Congestion
+     *
+     * Heaps in Peano often are used to manage large pieces of data. As such,
+     * we observe that congestion happens quite frequently - two pieces of code
+     * send out large data and block each other. The heap is particularly
+     * dangerous here. If you send out big data and call receive afterwards, be
+     * sure that you place the finishedToSendSynchronousData() after the receive
+     * command, as finishedToSendSynchronousData() waits until data has been
+     * delivered. Now, this can't happen for big messages if the corresponding
+     * receive hasn't been triggered.
      */
     virtual void finishedToSendSynchronousData();
 
