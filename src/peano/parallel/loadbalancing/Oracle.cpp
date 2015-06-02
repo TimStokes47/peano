@@ -206,7 +206,8 @@ void peano::parallel::loadbalancing::Oracle::receivedStartCommand( int  commandF
   assertion( _currentOracle>=0 );
   assertion( _currentOracle<static_cast<int>(_oracles.size()));
 
-  assertion2( commandFromMaster!=Join || _workers.empty(), _workers.size(), tarch::parallel::Node::getInstance().getRank() );
+  assertion2( commandFromMaster!=Join || _workers.empty(),   _workers.size(), tarch::parallel::Node::getInstance().getRank() );
+  assertion2( commandFromMaster!=UndefinedLoadBalancingFlag, _workers.size(), tarch::parallel::Node::getInstance().getRank() );
 
   if (_oraclePrototype==0) {
     logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
@@ -215,7 +216,7 @@ void peano::parallel::loadbalancing::Oracle::receivedStartCommand( int  commandF
     _oracles[_currentOracle]->receivedStartCommand(commandFromMaster);
   }
 
-  _startCommand                    = commandFromMaster;
+  _startCommand = commandFromMaster;
 }
 
 
@@ -262,7 +263,7 @@ int peano::parallel::loadbalancing::Oracle::getCommandForWorker(
 
   joinIsAllowed &= !tarch::parallel::Node::getInstance().isGlobalMaster();
 
-  int result;
+  int result = UndefinedLoadBalancingFlag;
   if (_oraclePrototype==0) {
     logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
     result = peano::parallel::loadbalancing::Continue;
@@ -274,6 +275,9 @@ int peano::parallel::loadbalancing::Oracle::getCommandForWorker(
       joinIsAllowed & _loadBalancingActivated
     );
   }
+
+  assertion5( result!=UndefinedLoadBalancingFlag, workerRank, forkIsAllowed, joinIsAllowed, (_oraclePrototype==0), _loadBalancingActivated );
+
   logTraceOutWith1Argument( "getCommandForWorker(int)", convertLoadBalancingFlagToString(result) );
   return result;
 }
