@@ -46,7 +46,7 @@ peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
   #endif
 
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
-    std::cerr << "encountered open buffer for destination " << p->first << ". Would be nicer to call terminate on SendReceiveBufferPool." << std::endl;
+    std::cerr << "encountered open buffer for destination " << p->first << " on rank " << tarch::parallel::Node::getInstance().getRank() <<  ". Would be nicer to call terminate() on SendReceiveBufferPool." << std::endl;
     delete p->second;
   }
 }
