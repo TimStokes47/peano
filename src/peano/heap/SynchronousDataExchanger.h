@@ -96,6 +96,19 @@ class peano::heap::SynchronousDataExchanger {
      */
     void receiveDanglingMessages();
 
+    /**
+     * Send data in a synchronous way
+     *
+     * Sends away the meta data immediately and (if necessary) triggers an
+     * asynchronous send call for the actual data afterwards.
+     *
+     * !!! Implementation remarks
+     *
+     * It is important to insert the task first and then to trigger the send.
+     * The mpi command uses the exact memory location for the isend request
+     * handle. Thus, triggering the send first and then queuing the task object
+     * messes up the memory.
+     */
     void sendData(
       const std::vector<Data>&                      data,
       int                                           toRank,

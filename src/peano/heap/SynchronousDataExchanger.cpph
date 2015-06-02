@@ -280,7 +280,13 @@ typename std::list< peano::heap::SendReceiveTask<Data> >::iterator peano::heap::
       MPI_Status status;
       int        finishedWait = false;
       if (i->_metaInformation.getLength() > 0) {
-        MPI_Test(&(i->_request), &finishedWait, &status);
+        const int mpiTestResult = MPI_Test(&(i->_request), &finishedWait, &status);
+        if (mpiTestResult!=MPI_SUCCESS) {
+          logError(
+            "findMessageFromRankInReceiveBuffer()",
+             "testing for messages failed: " << tarch::parallel::MPIReturnValueToString(mpiTestResult)
+          );
+        }
       }
       else {
         finishedWait = true;
