@@ -197,8 +197,6 @@ std::vector< Data > peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSe
     bool           triggeredTimeoutWarning = false;
 
     while (resultTask == _receiveTasks.end()) {
-      resultTask = findMessageFromRankInReceiveBuffer(fromRank);
-
       // deadlock aspect
       if (
          tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
@@ -223,6 +221,12 @@ std::vector< Data > peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSe
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+
+      resultTask = findMessageFromRankInReceiveBuffer(fromRank);
+
+      if (SendAndReceiveHeapMetaDataBlocking>0) {
+        usleep(SendAndReceiveHeapMetaDataBlocking);
+      }
     }
   }
 
