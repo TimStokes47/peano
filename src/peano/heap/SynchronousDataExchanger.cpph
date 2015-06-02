@@ -158,19 +158,18 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::sendDa
 
   sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
   sendTask._metaInformation.send(toRank, _tag, true, SendAndReceiveHeapMetaDataBlocking );
+  _sendTasks.push_back(sendTask);
 
   if(data.size() > 0) {
     if (CreateCopiesOfSentData) {
-      sendTask.wrapData(data);
+      _sendTasks.back().wrapData(data);
     }
     else {
-      sendTask.sendDataDirectlyFromBuffer(data);
+      _sendTasks.back().sendDataDirectlyFromBuffer(data);
     }
 
-    sendTask.triggerSend(_tag);
+    _sendTasks.back().triggerSend(_tag);
   }
-
-  _sendTasks.push_back(sendTask);
 
   _numberOfSentMessages += 1;
   _numberOfSentRecords  += data.size();
