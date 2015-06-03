@@ -1,4 +1,4 @@
-// Default variant of CompilerSpecificSettings.h for IBM's XLC compiler.
+// Default variant of CompilerSpecificSettings.h for GCC on Windows.
 // For a detailed description of the semantics of the settings, please
 // consult LinuxIntel.h which is the most elaborate documentation.
 
@@ -36,6 +36,7 @@
 #define BroadcastToIdleNodesBlocking                   0
 #define BroadcastToWorkingNodesBlocking                0
 #define SendAndReceiveHeapMetaDataBlocking             0
+#define SendAndReceiveHeapSynchronousDataBlocking      0
 
 
 

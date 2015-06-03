@@ -27,6 +27,7 @@
 #define BroadcastToIdleNodesBlocking                   0
 #define BroadcastToWorkingNodesBlocking                0
 #define SendAndReceiveHeapMetaDataBlocking             0
+#define SendAndReceiveHeapSynchronousDataBlocking      0
 
 
 
