@@ -29,7 +29,8 @@ class peano::heap::SynchronousDataExchanger {
     static tarch::logging::Log _log;
 
     const std::string    _identifier;
-    const int            _tag;
+    const int            _metaDataTag;
+    const int            _dataTag;
 
     std::list<SendReceiveTask<Data> >   _sendTasks;
     std::list<SendReceiveTask<Data> >   _receiveTasks;
@@ -75,7 +76,7 @@ class peano::heap::SynchronousDataExchanger {
     /**
      * @param identifier Only required by the plot
      */
-    SynchronousDataExchanger(const std::string& identifier, int tag);
+    SynchronousDataExchanger(const std::string& identifier, int metaDataTag, int dataTag);
 
     void startToSendData();
 

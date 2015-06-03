@@ -16,10 +16,10 @@ peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::PlainBound
 template<class Data, bool CreateCopiesOfSentData>
 peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::PlainBoundaryDataExchanger(
   const std::string& identifier,
-  int tag,
+  int metaDataTag, int dataTag,
   int rank
 ):
-  BoundaryDataExchanger<Data>(identifier,tag,rank) {
+  BoundaryDataExchanger<Data>(identifier,metaDataTag,dataTag,rank) {
 }
 
 
@@ -54,7 +54,7 @@ template<class Data, bool CreateCopiesOfSentData>
 void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::handleAndQueueReceivedTask( const SendReceiveTask<Data>&  receivedTask ) {
   Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
   if(receivedTask._metaInformation.getLength() > 0) {
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_tag);
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_dataTag);
     logDebug(
       "handleAndQueueReceivedTask(...)",
       "started to receive " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() <<
@@ -70,7 +70,7 @@ void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::handl
   logTraceIn( "handleAndQueueSendTask(...)" );
 
   Base::_sendTasks.push_back(sendTask);
-  Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_tag, true, SendAndReceiveHeapMetaDataBlocking);
+  Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendAndReceiveHeapMetaDataBlocking);
 
   if(data.size() > 0) {
     if (CreateCopiesOfSentData) {
@@ -79,7 +79,7 @@ void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData>::handl
     else {
       Base::_sendTasks.back().sendDataDirectlyFromBuffer(data);
     }
-    Base::_sendTasks.back().triggerSend(Base::_tag);
+    Base::_sendTasks.back().triggerSend(Base::_dataTag);
   }
 
   logTraceOut( "handleAndQueueSendTask(...)" );

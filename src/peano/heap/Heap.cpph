@@ -18,9 +18,10 @@ template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, clas
 peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::Heap()
   : _heapData(), _freedHeapIndices(), _nextIndex(0)
   #ifdef Parallel
-  , _neighbourDataExchangerTag(tarch::parallel::Node::reserveFreeTag("heap[neighbour]"))
-  , _masterWorkerExchanger("master-worker-exchanger", tarch::parallel::Node::reserveFreeTag("heap[master-worker]"))
-  , _joinForkExchanger("join/fork-exchanger", tarch::parallel::Node::reserveFreeTag("heap[join/fork]"))
+  , _neighbourDataExchangerMetaDataTag(tarch::parallel::Node::reserveFreeTag("heap[meta-data,neighbour]"))
+  , _neighbourDataExchangerDataTag(tarch::parallel::Node::reserveFreeTag("heap[data,neighbour]"))
+  , _masterWorkerExchanger("master-worker-exchanger", tarch::parallel::Node::reserveFreeTag("heap[meta-data,master-worker]"), tarch::parallel::Node::reserveFreeTag("heap[data,master-worker]"))
+  , _joinForkExchanger("join/fork-exchanger", tarch::parallel::Node::reserveFreeTag("heap[meta-data,join/fork]"), tarch::parallel::Node::reserveFreeTag("heap[data,join/fork]"))
   , _neighbourDataExchanger()
   #endif
   ,_maximumNumberOfHeapEntries(0)
@@ -323,7 +324,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
         _neighbourDataExchanger.insert(
           std::pair<int, NeighbourDataExchanger>(
             toRank,
-            NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerTag,toRank)
+            NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,toRank)
           )
         );
         _neighbourDataExchanger[toRank].startToSendData(false);

@@ -37,7 +37,8 @@ class peano::heap::BoundaryDataExchanger {
 
   protected:
     const std::string    _identifier;
-    const int            _tag;
+    const int            _metaDataTag;
+    const int            _dataTag;
     const int            _rank;
 
     std::list<SendReceiveTask<Data> >   _sendTasks;
@@ -236,7 +237,7 @@ class peano::heap::BoundaryDataExchanger {
      *
      * @param identifier Only required by the plot
      */
-    BoundaryDataExchanger(const std::string& identifier, int tag, int rank);
+    BoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
 
     virtual ~BoundaryDataExchanger();
 

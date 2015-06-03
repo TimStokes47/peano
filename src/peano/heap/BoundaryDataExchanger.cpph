@@ -10,7 +10,8 @@ tarch::logging::Log  peano::heap::BoundaryDataExchanger<Data>::_log( "peano::hea
 template<class Data>
 peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger():
   _identifier( "created-by-standard-constructor"),
-  _tag(-1),
+  _metaDataTag(-1),
+  _dataTag(-1),
   _rank(-1),
   _numberOfSentMessages(-1),
   _numberOfSentRecords(-1),
@@ -29,11 +30,13 @@ peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger():
 template<class Data>
 peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger(
   const std::string& identifier,
-  int tag,
+  int metaDataTag,
+  int dataTag,
   int rank
 ):
   _identifier(identifier),
-  _tag(tag),
+  _metaDataTag(metaDataTag),
+  _dataTag(dataTag),
   _rank(rank),
   _numberOfSentMessages(0),
   _numberOfSentRecords(0),
@@ -112,7 +115,7 @@ void peano::heap::BoundaryDataExchanger<Data>::waitUntilNumberOfReceivedNeighbou
        tarch::parallel::Node::getInstance().writeTimeOutWarning(
          "peano::heap::BoundaryDataExchanger::waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages",
          "waitUntilNumberOfReceivedMessagesEqualsNumberOfSentMessages()", _rank,
-         _tag, numberOfMessagesSentThisIteration - _receiveTasks[_currentReceiveBuffer].size()
+         _metaDataTag, numberOfMessagesSentThisIteration - _receiveTasks[_currentReceiveBuffer].size()
        );
 
        triggeredTimeoutWarning = true;
@@ -124,7 +127,7 @@ void peano::heap::BoundaryDataExchanger<Data>::waitUntilNumberOfReceivedNeighbou
        tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
          "peano::heap::BoundaryDataExchanger::waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages",
          "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", _rank,
-         _tag, numberOfMessagesSentThisIteration - _receiveTasks[_currentReceiveBuffer].size()
+         _metaDataTag, numberOfMessagesSentThisIteration - _receiveTasks[_currentReceiveBuffer].size()
        );
     }
 
@@ -167,7 +170,8 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
          (clock()>timeOutShutdown)
       ) {
          std::ostringstream msg;
-         msg << "tag " << _tag;
+         msg << "metaDataTag=" << _metaDataTag;
+         msg << ",dataTag=" << _dataTag;
          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
            "peano::heap::SynchronousDataExchanger",
            "finishedToSendData()", i->_rank,
@@ -208,7 +212,7 @@ void peano::heap::BoundaryDataExchanger<Data>::receiveDanglingMessages() {
   MPI_Status status;
   int        result = MPI_Iprobe(
     _rank,
-    _tag,
+    _metaDataTag,
     tarch::parallel::Node::getInstance().getCommunicator(),
     &flag,
     &status
@@ -220,11 +224,11 @@ void peano::heap::BoundaryDataExchanger<Data>::receiveDanglingMessages() {
     );
   }
   if (flag) {
-    logTraceInWith1Argument( "receiveDanglingMessages(...)", _tag );
+    logTraceInWith1Argument( "receiveDanglingMessages(...)", _metaDataTag );
 
     SendReceiveTask<Data> receiveTask;
 
-    receiveTask._metaInformation.receive(_rank, _tag, true, SendAndReceiveHeapMetaDataBlocking);
+    receiveTask._metaInformation.receive(_rank, _metaDataTag, true, SendAndReceiveHeapMetaDataBlocking);
     receiveTask._rank = _rank;
 
     _numberOfReceivedMessages += 1;
@@ -253,7 +257,7 @@ void peano::heap::BoundaryDataExchanger<Data>::sendData(
   sendTask._metaInformation.setLevel(level);
   #endif
 
-  logDebug("sendData", "sending data at " << position << " to Rank " << _rank << " with tag " << _tag  );
+  logDebug("sendData", "sending data at " << position << " to Rank " << _rank << " with tag " << _dataTag  );
 
   sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
 
@@ -307,22 +311,22 @@ template<class Data>
 void peano::heap::BoundaryDataExchanger<Data>::plotStatistics() const {
   logInfo(
     "plotStatistics()",
-    "records sent by " << _identifier << " to " << _rank << " on tag " << _tag << ": " << _numberOfSentRecords
+    "records sent by " << _identifier << " to " << _rank << " on tag " << _metaDataTag << ": " << _numberOfSentRecords
   );
 
   logInfo(
     "plotStatistics()",
-    "messages sent by " << _identifier << " to " << _rank << " on tag " << _tag << ": " << _numberOfSentMessages
+    "messages sent by " << _identifier << " to " << _rank << " on tag " << _metaDataTag << ": " << _numberOfSentMessages
   );
 
   logInfo(
     "plotStatistics()",
-    "records received by " << _identifier << " to " << _rank << " on tag " << _tag << ": " << _numberOfReceivedRecords
+    "records received by " << _identifier << " to " << _rank << " on tag " << _metaDataTag << ": " << _numberOfReceivedRecords
   );
 
   logInfo(
     "plotStatistics()",
-    "messages received by " << _identifier << " to " << _rank << " on tag " << _tag << ": " << _numberOfReceivedMessages
+    "messages received by " << _identifier << " to " << _rank << " on tag " << _metaDataTag << ": " << _numberOfReceivedMessages
   );
 
   logInfo(
@@ -387,7 +391,7 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseReceivedNeighbourMessagesR
        tarch::parallel::Node::getInstance().writeTimeOutWarning(
          "peano::heap::BoundaryDataExchanger",
          "releaseReceivedMessagesRequests()", -1,
-         _tag, -1
+         _metaDataTag, -1
        );
        triggeredTimeoutWarning = true;
     }
@@ -398,7 +402,7 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseReceivedNeighbourMessagesR
        tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
          "peano::heap::BoundaryDataExchanger",
          "releaseReceivedMessagesRequests()", -1,
-         _tag, -1
+         _metaDataTag, -1
        );
     }
 

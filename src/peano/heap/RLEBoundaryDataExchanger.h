@@ -55,7 +55,7 @@ class peano::heap::RLEBoundaryDataExchanger: public peano::heap::BoundaryDataExc
   public:
     RLEBoundaryDataExchanger();
 
-    RLEBoundaryDataExchanger(const std::string& identifier, int tag, int rank);
+    RLEBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
 
     virtual ~RLEBoundaryDataExchanger();
 };

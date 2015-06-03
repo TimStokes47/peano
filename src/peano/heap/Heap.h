@@ -291,7 +291,13 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
     int _nextIndex;
 
     #ifdef Parallel
-    int                                    _neighbourDataExchangerTag;
+    /**
+     * Class has to remember the neighbour tags, as we need them whenever we
+     * create a new exchanger. For the synchronous data exchangers, we may
+     * create tags on-the-fly.
+     */
+    int                                    _neighbourDataExchangerMetaDataTag;
+    int                                    _neighbourDataExchangerDataTag;
 
     MasterWorkerExchanger                  _masterWorkerExchanger;
     JoinForkExchanger                      _joinForkExchanger;

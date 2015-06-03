@@ -8,10 +8,12 @@ tarch::logging::Log  peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfS
 template<class Data, bool CreateCopiesOfSentData>
 peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::SynchronousDataExchanger(
   const std::string& identifier,
-  int tag
+  int metaDataTag,
+  int dataTag
 ):
   _identifier(identifier),
-  _tag(tag),
+  _metaDataTag(metaDataTag),
+  _dataTag(dataTag),
   _sendTasks(),
   _receiveTasks(),
   _numberOfSentMessages(0),
@@ -73,14 +75,15 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::finish
          tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
          (clock()>timeOutShutdown)
       ) {
-         std::ostringstream msg;
-         msg << "tag " << _tag;
-         tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+        std::ostringstream msg;
+        msg << "meta-data-tag=" << _metaDataTag;
+        msg << ",data-tag=" << _dataTag;
+        tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
            "peano::heap::SynchronousDataExchanger",
            "finishedToSendData()", i->_rank,
            -1,
            i->_metaInformation.getLength(), msg.str()
-         );
+        );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
     }
@@ -100,7 +103,7 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::receiv
   MPI_Status status;
   int        result = MPI_Iprobe(
     MPI_ANY_SOURCE,
-    _tag,
+    _metaDataTag,
     tarch::parallel::Node::getInstance().getCommunicator(),
     &flag,
     &status
@@ -116,7 +119,7 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::receiv
 
     SendReceiveTask<Data> receiveTask;
 
-    receiveTask._metaInformation.receive(status.MPI_SOURCE, _tag, true, SendAndReceiveHeapMetaDataBlocking);
+    receiveTask._metaInformation.receive(status.MPI_SOURCE, _metaDataTag, true, SendAndReceiveHeapMetaDataBlocking);
     receiveTask._rank = status.MPI_SOURCE;
 
     _numberOfReceivedMessages += 1;
@@ -125,7 +128,7 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::receiv
     _receiveTasks.push_back( receiveTask );
 
     if(receiveTask._metaInformation.getLength() > 0) {
-      _receiveTasks.back().triggerReceive(_tag);
+      _receiveTasks.back().triggerReceive(_dataTag);
       logDebug(
         "receiveDanglingMessages(...)",
         "started to receive " << _receiveTasks.size() << "th message from rank " << receiveTask._rank << " with " << receiveTask._metaInformation.getLength() << " entries and data pointing to " << receiveTask._data
@@ -157,7 +160,7 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::sendDa
   logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with tag " << _tag  );
 
   sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
-  sendTask._metaInformation.send(toRank, _tag, true, SendAndReceiveHeapMetaDataBlocking );
+  sendTask._metaInformation.send(toRank, _metaDataTag, true, SendAndReceiveHeapMetaDataBlocking );
   _sendTasks.push_back(sendTask);
 
   if(data.size() > 0) {
@@ -168,7 +171,7 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::sendDa
       _sendTasks.back().sendDataDirectlyFromBuffer(data);
     }
 
-    _sendTasks.back().triggerSend(_tag);
+    _sendTasks.back().triggerSend(_dataTag);
   }
 
   _numberOfSentMessages += 1;
@@ -205,7 +208,7 @@ std::vector< Data > peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSe
          tarch::parallel::Node::getInstance().writeTimeOutWarning(
            "peano::heap::SynchronousDataExchanger",
            "receiveData()", fromRank,
-           _tag, -1
+           _metaDataTag, -1
          );
          triggeredTimeoutWarning = true;
       }
@@ -216,15 +219,15 @@ std::vector< Data > peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSe
          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
            "peano::heap::SynchronousDataExchanger",
            "receiveData()", fromRank,
-           _tag, -1
+           _metaDataTag, -1
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
 
       resultTask = findMessageFromRankInReceiveBuffer(fromRank);
 
-      if (SendAndReceiveHeapMetaDataBlocking>0) {
-        usleep(SendAndReceiveHeapMetaDataBlocking);
+      if (SendAndReceiveHeapSynchronousDataBlocking>0) {
+        usleep(SendAndReceiveHeapSynchronousDataBlocking);
       }
     }
   }

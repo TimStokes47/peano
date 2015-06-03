@@ -65,7 +65,7 @@ class peano::heap::PlainBoundaryDataExchanger: public peano::heap::BoundaryDataE
   public:
     PlainBoundaryDataExchanger();
 
-    PlainBoundaryDataExchanger(const std::string& identifier, int tag, int rank);
+    PlainBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
 
     virtual ~PlainBoundaryDataExchanger();
 };
