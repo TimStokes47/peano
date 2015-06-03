@@ -27,13 +27,17 @@ bool tarch::parallel::Node::_initIsCalled = false;
 int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessageName) {
   static int            result = 0;
   result++;
-  
-  tarch::logging::Log _log("tarch::parallel::Node<static>");
-  logInfo(
-    "reserveFreeTag()",
-    "assigned message " << fullQualifiedMessageName
-     << " the free tag " << result
-  );
+
+  // I protect the tag manually (not via log filter), as many tags are actually
+  // grabbed before most applications initialise their log filters properly.
+  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    tarch::logging::Log _log("tarch::parallel::Node<static>");
+    logInfo(
+      "reserveFreeTag()",
+      "assigned message " << fullQualifiedMessageName
+       << " the free tag " << result
+    );
+  }
 
   return result;
 }
