@@ -119,7 +119,8 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::receiv
 
     SendReceiveTask<Data> receiveTask;
 
-    receiveTask._metaInformation.receive(status.MPI_SOURCE, _metaDataTag, true, SendAndReceiveHeapMetaDataBlocking);
+    // @todo Has to be -1 (we may not call receiveDangling in-between as this would mess up the order of the real data). Documentation!
+    receiveTask._metaInformation.receive(status.MPI_SOURCE, _metaDataTag, true, -1);
     receiveTask._rank = status.MPI_SOURCE;
 
     _numberOfReceivedMessages += 1;
@@ -160,7 +161,8 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::sendDa
   logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with tag " << _tag  );
 
   sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
-  sendTask._metaInformation.send(toRank, _metaDataTag, true, SendAndReceiveHeapMetaDataBlocking );
+  // @todo See comment above on the -1
+  sendTask._metaInformation.send(toRank, _metaDataTag, true, -1 );
   _sendTasks.push_back(sendTask);
 
   if(data.size() > 0) {
