@@ -353,7 +353,10 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       state.setReduceStateAndCell(currentWorker,false);
     }
 
-    if (_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())!=peano::CommunicationSpecification::Skip) {
+    if (_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Skip) {
+      logInfo( "updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(...)", "skip send of startup data to rank " << currentWorker );
+    }
+    else {
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send balancing message " << loadBalancingMessage.toString() << " to rank " << currentWorker );
       loadBalancingMessage.send(
         currentWorker,
