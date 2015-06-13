@@ -26,7 +26,7 @@
 #define ReceiveIterationControlMessagesBlocking        0
 #define BroadcastToIdleNodesBlocking                   0
 #define BroadcastToWorkingNodesBlocking                0
-#define SendAndReceiveHeapMetaDataBlocking             0
+#define SendHeapMetaDataBlocking                       0
 #define SendAndReceiveHeapSynchronousDataBlocking      0
 
 #ifndef noManualInlining

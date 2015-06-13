@@ -56,7 +56,7 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData>::sendAll
     zeroLengthReceiveTask._metaInformation.setLength(-_numberOfEmptyMessagesSinceLastNonEmptySendCall);
     zeroLengthReceiveTask._data = 0;
 
-    zeroLengthReceiveTask._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendAndReceiveHeapMetaDataBlocking);
+    zeroLengthReceiveTask._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
 
     _numberOfEmptyMessagesSinceLastNonEmptySendCall = 0;
     logTraceOut( "sendAllCompressedEmptyMessages()" );
@@ -116,7 +116,7 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData>::handleA
 
     Base::_sendTasks.push_back(sendTask);
 
-    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendAndReceiveHeapMetaDataBlocking);
+    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
     if (CreateCopiesOfSentData) {
       Base::_sendTasks.back().wrapData(data);
     }

@@ -228,7 +228,8 @@ void peano::heap::BoundaryDataExchanger<Data>::receiveDanglingMessages() {
 
     SendReceiveTask<Data> receiveTask;
 
-    receiveTask._metaInformation.receive(_rank, _metaDataTag, true, SendAndReceiveHeapMetaDataBlocking);
+    const int receiveMetaDataMode = -1;
+    receiveTask._metaInformation.receive(_rank, _metaDataTag, true, receiveMetaDataMode);
     receiveTask._rank = _rank;
 
     _numberOfReceivedMessages += 1;
