@@ -30,7 +30,10 @@ int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessag
 
   // I protect the tag manually (not via log filter), as many tags are actually
   // grabbed before most applications initialise their log filters properly.
-  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+  //
+  // We may not use isGlobalMaster() as this query checks whether the code is
+  // properly initialised.
+  if ( getInstance()._rank==getGlobalMasterRank() ) {
     tarch::logging::Log _log("tarch::parallel::Node<static>");
     logInfo(
       "reserveFreeTag()",
