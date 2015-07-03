@@ -61,7 +61,7 @@ __x__WRITE_INTERGRID_OPERATOR_OPERATION_DOUBLE__ void __NAMESPACE__::VertexOpera
 
 
 
-__x__READ_SCALAR_OPERATION_INT__ tarch::la::Vector<TWO_POWER_D,int> __NAMESPACE__::VertexOperations::readAll__READ_SCALAR_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices) { tarch::la::Vector<FOUR_POWER_D,int> result; dfor4(x) result(xScalar) = vertices[ enumerator(x) ]._vertexData.get__READ_SCALAR_OPERATION_INT__(); enddforx return result; }
+__x__READ_SCALAR_OPERATION_INT__ tarch::la::Vector<FOUR_POWER_D,int> __NAMESPACE__::VertexOperations::readAll__READ_SCALAR_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices) { tarch::la::Vector<FOUR_POWER_D,int> result; dfor4(x) result(xScalar) = vertices[ enumerator(x) ]._vertexData.get__READ_SCALAR_OPERATION_INT__(); enddforx return result; }
 
 
 __x__READ_SCALAR_OPERATION_INT__ tarch::la::Vector<TWO_POWER_D,int> __NAMESPACE__::VertexOperations::read__READ_SCALAR_OPERATION_INT__(const peano::grid::VertexEnumerator& enumerator, const Vertex* const vertices) { tarch::la::Vector<TWO_POWER_D,int> result; dfor2(x) result(xScalar) = vertices[ enumerator(x) ]._vertexData.get__READ_SCALAR_OPERATION_INT__(); enddforx return result; }
