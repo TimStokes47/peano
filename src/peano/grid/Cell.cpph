@@ -191,6 +191,25 @@ void peano::grid::Cell<CellData>::switchToRoot(int rootLevel) {
 }
 
 
+
+template <class CellData>
+void peano::grid::Cell<CellData>::setCellData(const CellData& cellData) {
+  _cellData = cellData;
+}
+
+
+template <class CellData>
+CellData peano::grid::Cell<CellData>::getCellData() const {
+  return _cellData;
+}
+
+
+template <class CellData>
+CellData& peano::grid::Cell<CellData>::getCellData() {
+  return _cellData;
+}
+
+
 template <class CellData>
 void peano::grid::Cell<CellData>::switchToLeaf() {
   #ifdef Parallel
@@ -549,17 +568,5 @@ void peano::grid::Cell<CellData>::assignToRemoteNode(int rank) {
 template <class CellData>
 int peano::grid::Cell<CellData>::getRankOfRemoteNode() const {
   return _cellData.getResponsibleRank();
-}
-
-
-template <class CellData>
-void peano::grid::Cell<CellData>::setCellData(const CellData& cellData) {
-  _cellData = cellData;
-}
-
-
-template <class CellData>
-CellData peano::grid::Cell<CellData>::getCellData() const {
-  return _cellData;
 }
 #endif

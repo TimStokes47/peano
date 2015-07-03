@@ -166,6 +166,31 @@ class peano::grid::Cell {
       bool          considerJoiningNodesToBeRemote
     ) const;
 
+
+    /**
+     * !!! Warning
+     *
+     * This operation is used by the send and receive buffers, e.g.
+     * It violates the ideas of OO and thus should be used very carefully.
+     */
+    void setCellData(const CellData& cellData);
+
+    /**
+     * !!! Warning
+     *
+     * This operation is used by the send and receive buffers, e.g.
+     * It violates the ideas of OO and thus should be used very carefully.
+     */
+    CellData getCellData() const;
+
+    /*
+     * !!! Warning
+     *
+     * This operation is used by the send and receive buffers, e.g.
+     * It violates the ideas of OO and thus should be used very carefully.
+     */
+    CellData& getCellData();
+
     #ifdef Parallel
     bool isCellAForkCandidate() const;
 
@@ -197,18 +222,6 @@ class peano::grid::Cell {
     void assignToLocalNode();
 
     /**
-     * This operation is used by the send and receive buffers and should not
-     * be used by other components of Peano.
-     */
-    void setCellData(const CellData& cellData);
-
-    /**
-     * This operation is used by the send and receive buffers and should not
-     * be used by other components of Peano.
-     */
-    CellData getCellData() const;
-
-    /**
      * This operation is exclusively used by the Root node if it is running on
      * a parallel worker.
      */
@@ -225,6 +238,8 @@ class peano::grid::Cell {
      * Please note that this workload is updated on regular subgrids if and
      * only if you specify your mapping to call ascend on the whole tree. On
      * changing/instationary subgrids, I update it in each traversal.
+     *
+     * @todo I think we should remove this workload model from the code
      */
     double getLocalWorkload() const;
 
