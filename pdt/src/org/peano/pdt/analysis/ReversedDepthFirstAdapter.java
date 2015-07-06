@@ -78,6 +78,14 @@ public class ReversedDepthFirstAdapter extends AnalysisAdapter
         {
             node.getVertex().apply(this);
         }
+        {
+            List<PHeapDastgenFile> copy = new ArrayList<PHeapDastgenFile>(node.getHeapDastgenFile());
+            Collections.reverse(copy);
+            for(PHeapDastgenFile e : copy)
+            {
+                e.apply(this);
+            }
+        }
         if(node.getNamespace() != null)
         {
             node.getNamespace().apply(this);
@@ -809,6 +817,27 @@ public class ReversedDepthFirstAdapter extends AnalysisAdapter
             node.getFilename().apply(this);
         }
         outAState(node);
+    }
+
+    public void inAHeapDastgenFile(AHeapDastgenFile node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAHeapDastgenFile(AHeapDastgenFile node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAHeapDastgenFile(AHeapDastgenFile node)
+    {
+        inAHeapDastgenFile(node);
+        if(node.getFilename() != null)
+        {
+            node.getFilename().apply(this);
+        }
+        outAHeapDastgenFile(node);
     }
 
     public void inAEventMapping(AEventMapping node)

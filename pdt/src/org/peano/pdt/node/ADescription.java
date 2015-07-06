@@ -10,6 +10,7 @@ public final class ADescription extends PDescription
 {
     private TIdentifier _name_;
     private TNamespace _namespace_;
+    private final LinkedList<PHeapDastgenFile> _heapDastgenFile_ = new LinkedList<PHeapDastgenFile>();
     private PVertex _vertex_;
     private PCell _cell_;
     private PState _state_;
@@ -24,6 +25,7 @@ public final class ADescription extends PDescription
     public ADescription(
         @SuppressWarnings("hiding") TIdentifier _name_,
         @SuppressWarnings("hiding") TNamespace _namespace_,
+        @SuppressWarnings("hiding") List<PHeapDastgenFile> _heapDastgenFile_,
         @SuppressWarnings("hiding") PVertex _vertex_,
         @SuppressWarnings("hiding") PCell _cell_,
         @SuppressWarnings("hiding") PState _state_,
@@ -34,6 +36,8 @@ public final class ADescription extends PDescription
         setName(_name_);
 
         setNamespace(_namespace_);
+
+        setHeapDastgenFile(_heapDastgenFile_);
 
         setVertex(_vertex_);
 
@@ -53,6 +57,7 @@ public final class ADescription extends PDescription
         return new ADescription(
             cloneNode(this._name_),
             cloneNode(this._namespace_),
+            cloneList(this._heapDastgenFile_),
             cloneNode(this._vertex_),
             cloneNode(this._cell_),
             cloneNode(this._state_),
@@ -113,6 +118,26 @@ public final class ADescription extends PDescription
         }
 
         this._namespace_ = node;
+    }
+
+    public LinkedList<PHeapDastgenFile> getHeapDastgenFile()
+    {
+        return this._heapDastgenFile_;
+    }
+
+    public void setHeapDastgenFile(List<PHeapDastgenFile> list)
+    {
+        this._heapDastgenFile_.clear();
+        this._heapDastgenFile_.addAll(list);
+        for(PHeapDastgenFile e : list)
+        {
+            if(e.parent() != null)
+            {
+                e.parent().removeChild(e);
+            }
+
+            e.parent(this);
+        }
     }
 
     public PVertex getVertex()
@@ -236,6 +261,7 @@ public final class ADescription extends PDescription
         return ""
             + toString(this._name_)
             + toString(this._namespace_)
+            + toString(this._heapDastgenFile_)
             + toString(this._vertex_)
             + toString(this._cell_)
             + toString(this._state_)
@@ -256,6 +282,11 @@ public final class ADescription extends PDescription
         if(this._namespace_ == child)
         {
             this._namespace_ = null;
+            return;
+        }
+
+        if(this._heapDastgenFile_.remove(child))
+        {
             return;
         }
 
@@ -304,6 +335,24 @@ public final class ADescription extends PDescription
         {
             setNamespace((TNamespace) newChild);
             return;
+        }
+
+        for(ListIterator<PHeapDastgenFile> i = this._heapDastgenFile_.listIterator(); i.hasNext();)
+        {
+            if(i.next() == oldChild)
+            {
+                if(newChild != null)
+                {
+                    i.set((PHeapDastgenFile) newChild);
+                    newChild.parent(this);
+                    oldChild.parent(null);
+                    return;
+                }
+
+                i.remove();
+                oldChild.parent(null);
+                return;
+            }
         }
 
         if(this._vertex_ == oldChild)

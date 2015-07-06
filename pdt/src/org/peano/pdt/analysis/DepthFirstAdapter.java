@@ -58,6 +58,13 @@ public class DepthFirstAdapter extends AnalysisAdapter
         {
             node.getNamespace().apply(this);
         }
+        {
+            List<PHeapDastgenFile> copy = new ArrayList<PHeapDastgenFile>(node.getHeapDastgenFile());
+            for(PHeapDastgenFile e : copy)
+            {
+                e.apply(this);
+            }
+        }
         if(node.getVertex() != null)
         {
             node.getVertex().apply(this);
@@ -806,6 +813,27 @@ public class DepthFirstAdapter extends AnalysisAdapter
             node.getFilename().apply(this);
         }
         outAState(node);
+    }
+
+    public void inAHeapDastgenFile(AHeapDastgenFile node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAHeapDastgenFile(AHeapDastgenFile node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAHeapDastgenFile(AHeapDastgenFile node)
+    {
+        inAHeapDastgenFile(node);
+        if(node.getFilename() != null)
+        {
+            node.getFilename().apply(this);
+        }
+        outAHeapDastgenFile(node);
     }
 
     public void inAEventMapping(AEventMapping node)

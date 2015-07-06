@@ -40,14 +40,15 @@ public class Main {
         if (templateDirectoryName != null) {
           System.out.println("parse template directory specification "
               + templateDirectoryName );
-          templateDirectory = new Vector<String>( Arrays.asList(templateDirectoryName.split(":")) );
+          templateDirectory = new Vector<String>();
           
-          for (String d: templateDirectory) {
+          for ( String d: Arrays.asList(templateDirectoryName.split(":")) ) {
             java.io.File checkFile = new java.io.File(d);
             if (checkFile.isDirectory()) {
               System.out.println("template directory "
                   + checkFile.getAbsolutePath()
                   + " added to user-defined template search path");
+              templateDirectory.add( checkFile.getAbsolutePath() );
             }
             else {
               System.err.println("template directory "
@@ -79,7 +80,7 @@ public class Main {
 
         System.out.print("run DaStGen");
         document.apply(new org.peano.pdt.generators.DaStGenGenerator(
-          dirGenerator, translationTable
+          dirGenerator, translationTable, templateDirectory
         ));
         System.out.println(" ... ok");
         

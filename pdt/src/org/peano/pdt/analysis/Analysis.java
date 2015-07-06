@@ -47,6 +47,7 @@ public interface Analysis extends Switch
     void caseAWriteIntergridOperatorComplexOperation(AWriteIntergridOperatorComplexOperation node);
     void caseACell(ACell node);
     void caseAState(AState node);
+    void caseAHeapDastgenFile(AHeapDastgenFile node);
     void caseAEventMapping(AEventMapping node);
     void caseAAdapter(AAdapter node);
     void caseAPredefinedAdapter(APredefinedAdapter node);
@@ -56,6 +57,7 @@ public interface Analysis extends Switch
     void caseTTokenState(TTokenState node);
     void caseTTokenComponent(TTokenComponent node);
     void caseTTokenNamespace(TTokenNamespace node);
+    void caseTTokenHeapDastgenFile(TTokenHeapDastgenFile node);
     void caseTTokenRead(TTokenRead node);
     void caseTTokenWrite(TTokenWrite node);
     void caseTTokenScalarDouble(TTokenScalarDouble node);

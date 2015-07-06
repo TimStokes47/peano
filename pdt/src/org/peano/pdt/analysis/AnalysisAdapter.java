@@ -244,6 +244,11 @@ public class AnalysisAdapter implements Analysis
         defaultCase(node);
     }
 
+    public void caseAHeapDastgenFile(AHeapDastgenFile node)
+    {
+        defaultCase(node);
+    }
+
     public void caseAEventMapping(AEventMapping node)
     {
         defaultCase(node);
@@ -280,6 +285,11 @@ public class AnalysisAdapter implements Analysis
     }
 
     public void caseTTokenNamespace(TTokenNamespace node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseTTokenHeapDastgenFile(TTokenHeapDastgenFile node)
     {
         defaultCase(node);
     }

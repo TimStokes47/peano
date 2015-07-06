@@ -31,6 +31,8 @@ Tokens
   token_component             = 'component:';
   token_namespace             = 'namespace:';
   
+  token_heap_dastgen_file     = 'heap-dastgen-file:';
+
   token_read                  = 'read';
   token_write                 = 'write';
   
@@ -82,8 +84,12 @@ Ignored Tokens
 Productions
   
   description {->description} = 
-    token_component [name]:identifier token_namespace namespace vertex cell state event_mapping_list? adapter_list?
-      { -> New description( name,namespace,vertex, cell, state, [event_mapping_list.event_mapping], [adapter_list.adapter] ) };
+    token_component [name]:identifier token_namespace namespace heap_dastgen_file_list? vertex cell state event_mapping_list? adapter_list?
+      { -> New description( name,namespace,[heap_dastgen_file_list.heap_dastgen_file],vertex, cell, state, [event_mapping_list.event_mapping], [adapter_list.adapter] ) };
+
+  heap_dastgen_file_list {->heap_dastgen_file*} =
+      {single} token_heap_dastgen_file filename                        {-> [New heap_dastgen_file(filename)] }
+    | {multi}  token_heap_dastgen_file filename heap_dastgen_file_list {-> [New heap_dastgen_file(filename),heap_dastgen_file_list.heap_dastgen_file] };
 
   vertex {->vertex} = 
     token_vertex token_dastgen_file filename operation_list? 
@@ -261,7 +267,7 @@ Productions
   
 Abstract Syntax Tree
  
-  description = [name]:identifier namespace vertex cell state event_mapping* adapter*;
+  description = [name]:identifier namespace heap_dastgen_file* vertex cell state event_mapping* adapter*;
   
   repository = [name]:identifier;
   
@@ -303,6 +309,8 @@ Abstract Syntax Tree
   cell = [filename]:filename;
  
   state = [filename]:filename;
+  
+  heap_dastgen_file = [filename]:filename;
   
   event_mapping = [name]:identifier;
   
