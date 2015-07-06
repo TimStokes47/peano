@@ -114,13 +114,13 @@ peano::CommunicationSpecification peano::CommunicationSpecification::combine(con
 }
 
 
-peano::CommunicationSpecification peano::CommunicationSpecification::getMinimalSpecification() {
-  return CommunicationSpecification(peano::CommunicationSpecification::MaskOutMasterWorkerDataAndStateExchange,peano::CommunicationSpecification::MaskOutWorkerMasterDataAndStateExchange,false);
+peano::CommunicationSpecification peano::CommunicationSpecification::getMinimalSpecification(bool handleHeapInKernel) {
+  return CommunicationSpecification(peano::CommunicationSpecification::MaskOutMasterWorkerDataAndStateExchange,peano::CommunicationSpecification::MaskOutWorkerMasterDataAndStateExchange,handleHeapInKernel);
 }
 
 
-peano::CommunicationSpecification peano::CommunicationSpecification::getPessimisticSpecification() {
-  return CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime,false);
+peano::CommunicationSpecification peano::CommunicationSpecification::getPessimisticSpecification(bool handleHeapInKernel) {
+  return CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime,handleHeapInKernel);
 }
 
 

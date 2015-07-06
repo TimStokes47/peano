@@ -146,7 +146,7 @@ struct peano::CommunicationSpecification {
       Skip
     };
 
-    static CommunicationSpecification getMinimalSpecification();
+    static CommunicationSpecification getMinimalSpecification(bool handleHeapInKernel=false);
 
     /**
      * This is the maximum specification where everyting is absolutely
@@ -155,7 +155,7 @@ struct peano::CommunicationSpecification {
      * to any other operation and they may not close it before everything
      * has been written.
      */
-    static CommunicationSpecification getPessimisticSpecification();
+    static CommunicationSpecification getPessimisticSpecification(bool handleHeapInKernel=false);
 
     /**
      * !!! Kernel controls the heap
