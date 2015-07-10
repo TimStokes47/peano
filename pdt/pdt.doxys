@@ -55,7 +55,24 @@ be a vector of size @f$ 2^d \cdot 3^d @f$.
 ||  intergrid-operator(int)    |              5^d             |        2^d * 5^d                  |  int
 
 
-!!! Recreate files
+
+
+
+ !! Building DaStGen / The Ant-File
+
+In order to recreate the PDT, we rely on ANT:
+
+
+\code
+ant clean
+ant createParser
+ant compile
+ant dist 
+\endcode
+
+
+
+!!! Manual recreation/recompilation
 
   
 To (re-)create the parser, change into the pdt directory and type in
