@@ -252,5 +252,6 @@
   java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoHeapNameTranslator dastgen/IntegerHeapData.def records
   java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoHeapNameTranslator dastgen/FloatHeapData.def records
   java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoHeapNameTranslator dastgen/BooleanHeapData.def records
+  java -jar ../../../pdt/lib/DaStGen.jar --plugin PeanoHeapSnippetGenerator --naming PeanoHeapNameTranslator dastgen/CharHeapData.def records
   \endcode
  */

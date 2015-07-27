@@ -34,7 +34,7 @@ namespace peano {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   11/03/2015 11:53
+ * @date   25/07/2015 13:44
  */
 class peano::heap::records::DoubleHeapData { 
    
@@ -168,7 +168,7 @@ class peano::heap::records::DoubleHeapData {
           *
           * 		   build date: 09-02-2014 14:40
           *
-          * @date   11/03/2015 11:53
+          * @date   25/07/2015 13:44
           */
          class peano::heap::records::DoubleHeapDataPacked { 
             

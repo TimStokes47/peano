@@ -14,6 +14,7 @@
 #include "peano/heap/RLEBoundaryDataExchanger.h"
 
 #include "peano/heap/records/FloatHeapData.h"
+#include "peano/heap/records/CharHeapData.h"
 #include "peano/heap/records/DoubleHeapData.h"
 #include "peano/heap/records/BooleanHeapData.h"
 #include "peano/heap/records/IntegerHeapData.h"
@@ -117,6 +118,18 @@ namespace peano {
      */
     typedef PlainHeap<peano::heap::records::FloatHeapData>    PlainFloatHeap;
     typedef RLEHeap<peano::heap::records::FloatHeapData>      RLEFloatHeap;
+
+    /**
+     * Plean heap over chars/bytes.
+     *
+     * I recommend to use this for first prototyping or applications with a low
+     * communication memory footprint. It is pretty fast. However, I also
+     * observe that this heap implementation plains to deadlock quickly for big
+     * data sets where lots of messages are exchanged. In that case, I
+     * recommend to use the RLEHeap below.
+     */
+    typedef PlainHeap<peano::heap::records::CharHeapData>    PlainCharHeap;
+    typedef RLEHeap<peano::heap::records::CharHeapData>      RLECharHeap;
 
 
     /**
