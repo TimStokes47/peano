@@ -40,7 +40,7 @@ tarch::parallel::NodePool::NodePool():
 
 void tarch::parallel::NodePool::restart() {
   assertion1WithExplanation( !_isAlive, Node::getInstance().getRank(), "perhaps restart() called without terminate()" );
-  assertion1( !Node::getInstance().isGlobalMaster() || _strategy!=0 , Node::getInstance().getRank() );
+  assertion2( !Node::getInstance().isGlobalMaster() || _strategy!=0 , Node::getInstance().getRank(), "perhaps forgot to set a proper strategy" );
   assertion1( !Node::getInstance().isGlobalMaster() || _strategy->getNumberOfRegisteredNodes()==0, Node::getInstance().getRank() );
 
   logTraceIn( "restart()" );
