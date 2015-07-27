@@ -95,7 +95,7 @@ namespace tarch {
     Scalar max (const Vector<Size,Scalar>& vector);
 
     /**
-     * Returns the element with maximal absoluate value.
+     * Returns the element with maximal absolute value.
      */
     template<int Size, typename Scalar>
     Scalar maxAbs (const Vector<Size,Scalar>& vector);
