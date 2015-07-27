@@ -59,8 +59,8 @@
   #ifndef noParallelExchangePackedRecordsBetweenMasterAndWorker
     #define ParallelExchangePackedRecordsBetweenMasterAndWorker
   #endif
-  #ifndef noParallelExchangePackedRecordsInHeaps
-    #define ParallelExchangePackedRecordsInHeaps
+  #ifndef noPackRecordsInHeaps
+    #define PackRecordsInHeaps
   #endif
   #ifndef noParallelExchangePackedRecordsThroughoutJoinsAndForks
     #define ParallelExchangePackedRecordsThroughoutJoinsAndForks
