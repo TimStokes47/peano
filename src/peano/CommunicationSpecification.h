@@ -13,6 +13,18 @@ namespace peano {
 
 
 /**
+ * Combine two specifications.
+ *
+ * Forwards the arguments to peano::CommunicationSpecification::combine().
+ */
+peano::CommunicationSpecification operator&(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs);
+
+bool operator==(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs);
+bool operator!=(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs);
+
+
+
+/**
  * Specification of communication behaviour of a mapping
  *
  * Peano applies a clear broadcast/reduction paradigm in principle. Prior to
@@ -197,19 +209,35 @@ struct peano::CommunicationSpecification {
 
     bool shallKernelControlHeap() const;
 
+    /**
+     * Realisation of the & operator.
+     *
+     *
+     * !!! Heap control
+     *
+     * For the heap control, we try to ensure that all mappings either deploy
+     * the heap control to the kernel or do it manually. While the result is
+     * a simple boolean or, we write a warning if the specs do not agree. This
+     * is just a security check: it is in general not a good idea if parts of
+     * the application control the heap manually and others not - that might
+     * lead to conflicts.
+     *
+     * There's only one exception: the adapters use getMinimalSpecification()
+     * and then combine all the mappings' specs with combine(). The minimal
+     * spec by default does not control the heap in the kernel, so if a
+     * mapping selects true for the heap control flag both specs do not
+     * agree. In this case, we do not write a warning.
+     */
     static peano::CommunicationSpecification combine(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs);
   private:
+    friend bool ::operator==(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs);
+    friend bool ::operator!=(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs);
+
     ExchangeMasterWorkerData  exchangeMasterWorkerData;
     ExchangeWorkerMasterData  exchangeWorkerMasterData;
 
     bool                      controlHeapInKernel;
 };
 
-
-
-/**
- * Combine two specifications.
- */
-peano::CommunicationSpecification operator&(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs);
 
 #endif

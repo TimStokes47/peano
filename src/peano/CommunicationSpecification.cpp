@@ -105,12 +105,36 @@ peano::CommunicationSpecification peano::CommunicationSpecification::combine(con
     exchangeWorkerMasterData = peano::CommunicationSpecification::MaskOutWorkerMasterDataAndStateExchange;
   }
 
-
+  #ifdef Asserts
+  if (
+    (lhs.controlHeapInKernel != rhs.controlHeapInKernel)
+    &&
+    (lhs!=getMinimalSpecification())
+    &&
+    (rhs!=getMinimalSpecification())
+  ) {
+    logWarning( "operator&(...)", "two communication specifications do not agree on heap control. lhs=" << lhs.toString() << ", rhs=" << rhs.toString() << " (minimial spec=" << getMinimalSpecification().toString() << ")" );
+  }
+  #endif
 
   const peano::CommunicationSpecification result(exchangeMasterWorkerData,exchangeWorkerMasterData, lhs.controlHeapInKernel | rhs.controlHeapInKernel);
 
   logTraceOutWith1Argument("operator&(...)",result.toString());
   return result;
+}
+
+
+bool operator==(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs) {
+  return (lhs.exchangeMasterWorkerData==rhs.exchangeMasterWorkerData)
+      && (lhs.exchangeWorkerMasterData==rhs.exchangeWorkerMasterData)
+      && (lhs.controlHeapInKernel==rhs.controlHeapInKernel);
+}
+
+
+bool operator!=(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs) {
+  return (lhs.exchangeMasterWorkerData!=rhs.exchangeMasterWorkerData)
+      || (lhs.exchangeWorkerMasterData!=rhs.exchangeWorkerMasterData)
+      || (lhs.controlHeapInKernel!=rhs.controlHeapInKernel);
 }
 
 
