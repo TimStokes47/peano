@@ -238,6 +238,18 @@ namespace peano {
  * heap data again after you've sent out heap data before is the grid traversal
  * where you also receive data.
  *
+ * !!! Memory footprint
+ *
+ * To reduce the memory footprint of the heaps, you may want to apply two different
+ * optimisation:
+ *
+ * - The define PackRecordsInHeaps (by default, it is defined) allows you to
+ *   remove padding on the heap. This is different to packing in the context
+ *   of DaStGen:
+ * - Use the packed variants of the heap records to save lots of data. In this
+ *   case however, you have to ensure that you convert all data types properly
+ *   in your code.
+ *
  * !!! Efficiency note
  *
  * If a lot of heap data is exchanged, the asynchronous exchange of information

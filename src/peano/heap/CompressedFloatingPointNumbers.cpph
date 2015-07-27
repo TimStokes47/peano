@@ -24,8 +24,8 @@ void peano::heap::decompose(
 
 template <class T>
 double peano::heap::compose(
-  char&   exponent,
-  T&      mantissa
+  const char&   exponent,
+  const T&      mantissa
 ) {
   return std::ldexp(mantissa,exponent);
 }

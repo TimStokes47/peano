@@ -55,14 +55,8 @@ void peano::heap::SendReceiveTask<Data>::sendDataDirectlyFromBuffer(const std::v
   assertion( !data.empty() );
   assertion( _data==0 );
 
-  #if defined(ParallelExchangePackedRecordsInHeaps)
-  logError( "sendDataDirectlyFromBuffer(...)", "direct send of heap data does not work if ParallelExchangePackedRecordsInHeaps is set" );
-  assertion(false);
-  exit(-1);
-  #else
   _freeDataPointer = false;
   _data            = const_cast< Data* >( data.data() );
-  #endif
 }
 
 
@@ -75,11 +69,7 @@ void peano::heap::SendReceiveTask<Data>::wrapData(const std::vector<Data>& data)
 
   _data = new MPIData[data.size()];
   for (int i=0; i<static_cast<int>( data.size() ); i++) {
-    #if defined(ParallelExchangePackedRecordsInHeaps)
-    _data[i] = data[i].convert();
-    #else
     _data[i] = data[i];
-    #endif
   }
 }
 
@@ -138,11 +128,7 @@ std::vector<Data> peano::heap::SendReceiveTask<Data>::unwrapDataAndFreeMemory() 
   if (_metaInformation.getLength()>0) {
     assertion( _data!=0 );
     for (int i=0; i<_metaInformation.getLength(); i++) {
-      #if defined(ParallelExchangePackedRecordsInHeaps)
-      result.push_back(_data[i].convert());
-      #else
       result.push_back(_data[i]);
-      #endif
     }
 
     delete[] _data;

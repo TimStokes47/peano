@@ -21,7 +21,7 @@ namespace peano {
 }
 
 
-#ifdef ParallelExchangePackedRecordsInHeaps
+#ifdef PackRecordsInHeaps
  #pragma pack (push, 1)
 #endif
 
@@ -59,11 +59,7 @@ struct peano::heap::SendReceiveTask {
    */
   int             _rank;
 
-  #if defined(Parallel) && defined(ParallelExchangePackedRecordsInHeaps)
-  typedef typename Data::Packed  MPIData;
-  #else
   typedef Data    MPIData;
-  #endif
 
   /**
    * Pointer to the actual data. If meta data marks a message without
@@ -136,7 +132,7 @@ struct peano::heap::SendReceiveTask {
   std::string toString() const;
 };
 
-#ifdef ParallelExchangePackedRecordsInHeaps
+#ifdef PackRecordsInHeaps
 #pragma pack (pop)
 #endif
 

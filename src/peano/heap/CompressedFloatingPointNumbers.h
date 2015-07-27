@@ -30,8 +30,8 @@ namespace peano {
      */
     template <class T>
     double compose(
-      char&  exponent,
-      T&     mantissa
+      const char&  exponent,
+      const T&     mantissa
     );
   }
 }
