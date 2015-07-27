@@ -1,10 +1,10 @@
-#include "peano/heap/tests/TestCase.h"
+#include "peano/heap/tests/CompressedFloatingPointNumbersTest.h"
 
 #include "peano/heap/CompressedFloatingPointNumbers.h"
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/tests/TestCaseFactory.h"
-registerTest(picard::tests::TestCase)
+registerTest(peano::heap::tests::CompressedFloatingPointNumbersTest)
 
 
 #ifdef UseTestSpecificCompilerSettings
@@ -12,16 +12,16 @@ registerTest(picard::tests::TestCase)
 #endif
 
  
-picard::tests::TestCase::TestCase():
-  tarch::tests::TestCase( "picard::tests::TestCase" ) {
+peano::heap::tests::CompressedFloatingPointNumbersTest::CompressedFloatingPointNumbersTest():
+  tarch::tests::TestCase( "peano::heap::tests::CompressedFloatingPointNumbersTest" ) {
 }
 
 
-picard::tests::TestCase::~TestCase() {
+peano::heap::tests::CompressedFloatingPointNumbersTest::~CompressedFloatingPointNumbersTest() {
 }
 
 
-void picard::tests::TestCase::run() {
+void peano::heap::tests::CompressedFloatingPointNumbersTest::run() {
   testMethod( testDecomposeWithLongInt );
   testMethod( testDecomposeWithInt );
   testMethod( testDecomposeWithChar );
@@ -32,7 +32,7 @@ void picard::tests::TestCase::run() {
 /**
  * @todo Gehoert in den Heap
  */
-void picard::tests::TestCase::testDecomposeWithLongInt() {
+void peano::heap::tests::CompressedFloatingPointNumbersTest::testDecomposeWithLongInt() {
   double       value;
   double       reconstructedValue;
   char         exponent;
@@ -90,7 +90,7 @@ void picard::tests::TestCase::testDecomposeWithLongInt() {
 }
 
 
-void picard::tests::TestCase::testDecomposeWithInt() {
+void peano::heap::tests::CompressedFloatingPointNumbersTest::testDecomposeWithInt() {
   double       value;
   double       reconstructedValue;
   char         exponent;
@@ -148,7 +148,7 @@ void picard::tests::TestCase::testDecomposeWithInt() {
 }
 
 
-void picard::tests::TestCase::testDecomposeWithChar() {
+void peano::heap::tests::CompressedFloatingPointNumbersTest::testDecomposeWithChar() {
   double       value;
   double       reconstructedValue;
   char         exponent;
@@ -205,7 +205,8 @@ void picard::tests::TestCase::testDecomposeWithChar() {
   validateWithParams4( std::abs(reconstructedValue-value)<1e-12, static_cast<int>(exponent),mantissa,reconstructedValue,value );
 }
 
-void picard::tests::TestCase::testBatchDecomposition() {
+
+void peano::heap::tests::CompressedFloatingPointNumbersTest::testBatchDecomposition() {
   double       value;
 
   char          exponent[8];

@@ -16,7 +16,7 @@
 namespace peano {
   namespace heap {
     namespace tests {
-      class TestCase;
+      class CompressedFloatingPointNumbersTest;
     }
   }
 }
@@ -26,15 +26,15 @@ namespace peano {
  * This is just a default test case that demonstrated how to write unit tests 
  * in Peano. Feel free to rename, remove, or duplicate it. 
  */ 
-class peano::heap::TestCase: public tarch::tests::TestCase {
+class peano::heap::tests::CompressedFloatingPointNumbersTest: public tarch::tests::TestCase {
   private:
     void testDecomposeWithLongInt();
     void testDecomposeWithInt();
     void testDecomposeWithChar();
     void testBatchDecomposition();
   public: 
-    TestCase(); 
-    virtual ~TestCase();
+    CompressedFloatingPointNumbersTest();
+    virtual ~CompressedFloatingPointNumbersTest();
      
     virtual void run();
 };
