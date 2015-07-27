@@ -84,7 +84,10 @@ class peano::heap::SynchronousDataExchanger {
      * Release the sent messages
      *
      * Wait until test holds for all messages in the send queue and then erase
-     * that buffer.
+     * that buffer. Please note that all meta data is sent out immediately
+     * anyway, i.e. as long as only meta data is transferred, this operation
+     * returns immediately. What it does is that it waits for the real data to
+     * be transferred.
      */
     void finishedToSendData();
 
