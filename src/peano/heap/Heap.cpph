@@ -142,7 +142,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
     _nextIndex = wantedIndex+1;
   }
 
-  assertion2(_heapData.find(wantedIndex) == _heapData.end(), "heap entry does exist already", wantedIndex);
+  assertion3(_heapData.find(wantedIndex) == _heapData.end(), "heap entry does exist already", wantedIndex, _name );
   std::vector<Data>* newData = new (std::nothrow) std::vector<Data>(numberOfEntries);
   if (newData==nullptr) {
     logError( "createDataForIndex(int,int,int)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
