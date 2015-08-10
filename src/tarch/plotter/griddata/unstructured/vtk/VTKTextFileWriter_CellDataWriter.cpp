@@ -48,15 +48,19 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWri
 
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::close() {
+  if (_myWriter._numberOfCells==0) {
+    logWarning( "close()", "writer " << _identifier << " is closed though underlying grid writer does not hold any vertices/cells. Ensure you call close() on the vertex/cell writer before" );
+  }
   assertion2(
     _lastWriteCommandCellNumber>-2,
     _identifier,
     "closed twice"
   );
-  assertionEquals2(
-    _lastWriteCommandCellNumber, _myWriter._numberOfCells-1,
-    _identifier,
-    "one record has to be written per cell"
+  assertionMsg(
+    _lastWriteCommandCellNumber==_myWriter._numberOfCells-1,
+    "one record has to be written per cell on writer " << _identifier <<
+    " (cell entries written=" <<  _lastWriteCommandCellNumber <<
+    ", cell entries expected=" << _myWriter._numberOfCells << ")"
   );
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() or assignRemainingCellsDefaultValues() on a data writer before you destroy your writer?" );
 

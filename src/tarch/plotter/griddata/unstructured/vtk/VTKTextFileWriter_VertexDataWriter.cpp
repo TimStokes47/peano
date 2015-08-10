@@ -4,28 +4,25 @@
 #include <iomanip>
 
 tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataWriter::VertexDataWriter(
-  const std::string& dataIdentifier, VTKTextFileWriter& writer, int recordsPerVertex
+  const std::string& identifier, VTKTextFileWriter& writer, int recordsPerVertex
 ):
   _lastWriteCommandVertexNumber(-1),
   _myWriter(writer),
   _out(),
   _recordsPerVertex(recordsPerVertex),
   _minValue(std::numeric_limits<double>::max()),
-  _maxValue(std::numeric_limits<double>::min()) {
+  _maxValue(std::numeric_limits<double>::min()),
+  _identifier(identifier) {
   assertion(_recordsPerVertex>0);
 
   _out << std::setprecision(_myWriter._precision);
   if (_recordsPerVertex!=3) {
-    _out << "SCALARS " << dataIdentifier << " " << _myWriter._doubleOrFloat << " " << _recordsPerVertex << std::endl
+    _out << "SCALARS " << _identifier << " " << _myWriter._doubleOrFloat << " " << _recordsPerVertex << std::endl
          << "LOOKUP_TABLE default" << std::endl;
   }
   else {
-    _out << "VECTORS " << dataIdentifier << " " << _myWriter._doubleOrFloat << " " << std::endl;
+    _out << "VECTORS " << _identifier << " " << _myWriter._doubleOrFloat << " " << std::endl;
   }
-
-  #ifdef Asserts
-  _dataIdentifier = dataIdentifier;
-  #endif
 }
 
 
@@ -40,7 +37,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
   assertion4(
     _lastWriteCommandVertexNumber <= _myWriter._numberOfCells-1,
     _lastWriteCommandVertexNumber, _myWriter._numberOfCells,
-    _dataIdentifier,
+    _identifier,
     "please call close on the vertex writer before"
   );
 
@@ -53,15 +50,16 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataWriter::close() {
   assertion2(
     _lastWriteCommandVertexNumber>-2,
-    _dataIdentifier,
+    _identifier,
     "closed twice"
   );
-  assertionEquals2(
-    _lastWriteCommandVertexNumber, _myWriter._numberOfVertices-1,
-    _dataIdentifier,
-    "one record has to be written per vertex"
+  assertionMsg(
+    _lastWriteCommandVertexNumber==_myWriter._numberOfVertices-1,
+    "one record has to be written per cell on writer " << _identifier <<
+    " (cell entries written=" <<  _lastWriteCommandVertexNumber <<
+    ", cell entries expected=" << _myWriter._numberOfVertices << ")"
   );
-  assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() or assignRemainingVerticesDefaultValues() on a data writer before you destroy your writer for value " << _dataIdentifier );
+  assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() or assignRemainingVerticesDefaultValues() on a data writer before you destroy your writer for value " << _identifier );
 
   if (_lastWriteCommandVertexNumber>=-1) {
     _out << std::endl;
@@ -75,8 +73,8 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
   assertion(_lastWriteCommandVertexNumber>=-1);
   assertion(1<=_recordsPerVertex);
 
-  assertion3( value != std::numeric_limits<double>::infinity(), index, value, _dataIdentifier);
-  assertion3( value == value, index, value, _dataIdentifier);  // test for not a number
+  assertion3( value != std::numeric_limits<double>::infinity(), index, value, _identifier);
+  assertion3( value == value, index, value, _identifier);  // test for not a number
 
   while (_lastWriteCommandVertexNumber<index-1) {
     plotVertex(_lastWriteCommandVertexNumber+1,0.0);

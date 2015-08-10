@@ -313,16 +313,9 @@ class tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter:
         double _minValue;
         double _maxValue;
 
-        VertexDataWriter(const std::string& dataIdentifier, VTKTextFileWriter& writer, int recordsPerVertex);
+        std::string  _identifier;
 
-        #ifdef Asserts
-        /**
-         * There is no reason to store a data identifier. However, we augment
-         * the assertions with the identifier to make it a little bit easier to
-         * find data inconsistencies.
-         */
-        std::string  _dataIdentifier;
-        #endif
+        VertexDataWriter(const std::string& dataIdentifier, VTKTextFileWriter& writer, int recordsPerVertex);
 
         VertexDataWriter(const VertexDataWriter& copy):
           _myWriter(copy._myWriter) {
