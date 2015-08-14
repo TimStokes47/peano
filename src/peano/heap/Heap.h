@@ -360,7 +360,6 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
     ~Heap();
 
   public:
-    typedef Data               HeapData;
     typedef std::vector<Data>  HeapEntries;
 
     /**
