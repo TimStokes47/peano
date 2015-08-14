@@ -7,9 +7,13 @@
 	<property name="lib.dir" value="${basedir}/lib/"/>
 
     <!-- cross compiling -->
+	<!-- 
+	 
+	 See remarks in DaStGen build file where this one is copied from.
+	
     <property name="ant.build.javac.source" value="1.5"/>
     <property name="ant.build.javac.target" value="1.5"/>
-
+    -->
 
 	<!-- set the path to libraries -->
 	<path id="lib.path">
@@ -55,6 +59,7 @@
 		<javac  srcdir="${src.dir}"
 				destdir="${bin.dir}"
 				classpathref="lib.path"
+                includeantruntime="true"
 		/>
 		<!-- copy all created resources (exept .java files) to ./bin -->
 		<copy todir="${bin.dir}">
