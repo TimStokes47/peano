@@ -26,6 +26,9 @@ void peano::heap::tests::CompressedFloatingPointNumbersTest::run() {
   testMethod( testDecomposeWithInt );
   testMethod( testDecomposeWithChar );
   testMethod( testBatchDecomposition );
+
+  testMethod( testDecompose1 );
+  testMethod( testErrorComputation );
 }
 
 
@@ -261,6 +264,36 @@ void peano::heap::tests::CompressedFloatingPointNumbersTest::testBatchDecomposit
   validateWithParams4( std::abs(peano::heap::compose(exponent[6],mantissa[6])-value)<1e-12, static_cast<int>(exponent[6]),mantissa[6],error[6],peano::heap::compose(exponent[6],mantissa[6]) );
   validateWithParams4( std::abs(peano::heap::compose(exponent[7],mantissa[7])-value)<1e-12, static_cast<int>(exponent[7]),mantissa[7],error[7],peano::heap::compose(exponent[7],mantissa[7]) );
 
+}
+
+
+void peano::heap::tests::CompressedFloatingPointNumbersTest::testDecompose1() {
+  double       value;
+
+  char          exponent[8];
+  long int      mantissa[8];
+  double        error[8];
+
+
+  value = 0.920446;
+  peano::heap::decompose( value, exponent, mantissa,error );
+  validateWithParams6(std::abs(peano::heap::compose(exponent[0],mantissa[0])-value)<2e-3, static_cast<int>(exponent[0]),mantissa[0],error[0],peano::heap::compose(exponent[0],mantissa[0]),value,peano::heap::compose(exponent[0],mantissa[0])-value);
+  validateWithParams6(std::abs(peano::heap::compose(exponent[1],mantissa[1])-value)<2e-5, static_cast<int>(exponent[1]),mantissa[1],error[1],peano::heap::compose(exponent[1],mantissa[1]),value,peano::heap::compose(exponent[1],mantissa[1])-value);
+  validateWithParams6(std::abs(peano::heap::compose(exponent[2],mantissa[2])-value)<4e-8, static_cast<int>(exponent[2]),mantissa[2],error[2],peano::heap::compose(exponent[2],mantissa[2]),value,peano::heap::compose(exponent[2],mantissa[2])-value);
+}
+
+
+void peano::heap::tests::CompressedFloatingPointNumbersTest::testErrorComputation() {
+  double       value;
+
+  char          exponent[8];
+  long int      mantissa[8];
+  double        error[8];
+
+
+  value = 0.920446;
+  peano::heap::decompose( value, exponent, mantissa,error );
+  validateNumericalEquals( std::abs(peano::heap::compose(exponent[0],mantissa[0])-value), error[0] );
 }
 
 

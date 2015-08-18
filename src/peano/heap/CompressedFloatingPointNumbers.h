@@ -15,8 +15,18 @@ namespace peano {
     );
 
     /**
+     * Decompose floating point value
+     *
      * Decomposes the input value into eight different variants with
      * 1,2,3,... bytes (chars) per mantissa. It also gives the errors.
+     *
+     * You may want to cast one of the integers into a sequence of chars
+     * or other data types. While the array mantissa comprises long ints,
+     * only the first kth bytes are used in the k-1th entry.
+     *
+     * @return exponent Sequence of exponents belonging to the eight decompositions.
+     * @return mantissa Sequence of mantissas belonging to the eight decompositions.
+     * @return error    Errors associated to the decompositions. They are all positive values.
      */
     void decompose(
       const double& value,

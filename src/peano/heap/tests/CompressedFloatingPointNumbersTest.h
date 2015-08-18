@@ -32,7 +32,13 @@ class peano::heap::tests::CompressedFloatingPointNumbersTest: public tarch::test
     void testDecomposeWithInt();
     void testDecomposeWithChar();
     void testBatchDecomposition();
-  public: 
+    void testErrorComputation();
+
+    /**
+     * Something taken from the ParCo presentation
+     */
+    void testDecompose1();
+public:
     CompressedFloatingPointNumbersTest();
     virtual ~CompressedFloatingPointNumbersTest();
      
