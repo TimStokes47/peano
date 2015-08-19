@@ -13,7 +13,10 @@ void peano::heap::decompose(
 ) {
   assertion(value==value);
 
-  int shiftExponent = 7;
+  // We may not use 7 though we use seven out of eight bits for the first byte.
+  // If we shift by seven, we can end up with the highest byte set for
+  // 0.0155759, e.g.
+  int shiftExponent = 6;
 
   const long int sign = value < 0.0 ? -1 : 1;
 
@@ -22,14 +25,14 @@ void peano::heap::decompose(
   }
 
   int           integerExponent;
-  const double  significant          = std::frexp(value , &integerExponent);
+  const double  significand          = std::frexp(value , &integerExponent);
 
   for (int i=0; i<8; i++) {
     const double shiftMantissa    = std::pow( 2.0,shiftExponent );
 
     exponent[i]  = static_cast<char>( integerExponent-shiftExponent );
-    mantissa[i]  = static_cast<long int>( std::round(significant*shiftMantissa) );
-    error[i]     = std::abs( std::ldexp(sign * mantissa[i],exponent[i]) - value );
+    mantissa[i]  = static_cast<long int>( std::round(significand*shiftMantissa) );
+    error[i]     = std::abs( std::ldexp(mantissa[i],exponent[i]) - value );
 
     assertion5( mantissa[i]>=0, value, mantissa[i], exponent[i], error[i], sign );
 
@@ -37,7 +40,10 @@ void peano::heap::decompose(
 
     #ifdef Asserts
     for (int j=(i+1)*8-1; j<64; j++) {
-      assertion5( !(*mantissaAsBitset)[j], *mantissaAsBitset, value, exponent[i], mantissa[i], error[i] );
+      assertion9(
+        !(*mantissaAsBitset)[j],
+        *mantissaAsBitset, value, static_cast<int>( exponent[i] ), mantissa[i], error[i], i, j, significand, integerExponent
+      );
     }
     #endif
 
@@ -64,17 +70,7 @@ double peano::heap::compose(
     mantissaAsBitset->flip( bytesUsed*8-1 );
     mantissa = -mantissa;
   }
-/*
-  char*  pMantissasLowestByte = reinterpret_cast<char*>( &mantissa );
-  pMantissasLowestByte += (bytesUsed-1);
 
-  double sign = 1.0;
-  if (*pMantissasLowestByte<0) {
-    sign = -1.0;
-    *pMantissasLowestByte *= -1;
-  }
-*/
-  //    pMantissasLowestByte   = reinterpret_cast<char*>( &(mantissa[i]) );
   return std::ldexp(mantissa,exponent);
 }
 

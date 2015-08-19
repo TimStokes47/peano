@@ -32,9 +32,6 @@ void peano::heap::tests::CompressedFloatingPointNumbersTest::run() {
 }
 
 
-/**
- * @todo Gehoert in den Heap
- */
 void peano::heap::tests::CompressedFloatingPointNumbersTest::testDecomposeWithLongInt() {
   double       value;
   double       reconstructedValue;
@@ -283,12 +280,12 @@ void peano::heap::tests::CompressedFloatingPointNumbersTest::testDecompose1() {
 
   value = 0.00830992 - 0.0468039;
   peano::heap::decompose( value, exponent, mantissa, error );
-  validateWithParams6(error[0]<1e-4, static_cast<int>(exponent[0]),mantissa[0],error[0],peano::heap::compose(exponent[0],mantissa[0]),value,peano::heap::compose(exponent[0],mantissa[0])-value);
+  validateWithParams6(error[0]<1e-3, static_cast<int>(exponent[0]),mantissa[0],error[0],peano::heap::compose(exponent[0],mantissa[0]),value,peano::heap::compose(exponent[0],mantissa[0])-value);
   // bps=2 i.e. two chars sufficient
   reconstructedMantissa     = 0;
   pReconstructedMantissa[0] = *pMantissa;
   gluedValue    = peano::heap::compose(exponent[0],reconstructedMantissa,1);
-  validateWithParams5(std::abs(gluedValue-value)<1e-4, value, gluedValue, mantissa[0], (int)(exponent[0]), reconstructedMantissa );
+  validateWithParams5(std::abs(gluedValue-value)<1e-3, value, gluedValue, mantissa[0], (int)(exponent[0]), reconstructedMantissa );
 
 
   value = -0.015625;
