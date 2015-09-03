@@ -610,7 +610,7 @@ public class TranslationTable extends DepthFirstAdapter {
 		}
   }
 
-  private java.io.BufferedReader getBufferedReaderForStdTemplate(String templateFile) throws FileNotFoundException {
+  static public java.io.BufferedReader getBufferedReaderForStdTemplate(String templateFile) throws FileNotFoundException {
     templateFile = "/stdtemplates/" + templateFile;
     java.io.InputStream stream = Main.class.getResourceAsStream(templateFile);
     if (stream==null) {
@@ -622,7 +622,7 @@ public class TranslationTable extends DepthFirstAdapter {
 	  return reader;
   }
 
-  private java.io.BufferedReader getBufferedReaderForUserTemplate(String templateFile)
+  public java.io.BufferedReader getBufferedReaderForUserTemplate(String templateFile)
 		throws FileNotFoundException {
 
     String qualifiedTemplateFile = templateFile;
