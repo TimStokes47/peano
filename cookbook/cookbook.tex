@@ -1,5 +1,5 @@
 %%\documentclass{article}
-\documentclass[12pt,twoside,a4paper]{article}
+\documentclass[12pt,twoside,a4paper]{book}
 
 \usepackage{geometry}
 \usepackage{amsmath, amssymb, amsthm}
@@ -25,6 +25,29 @@
 \begin{document}
 
  \input{title}
+
+ \thispagestyle{empty}
+ \newpage
+ \cleardoublepage 
+
+ \pagestyle{plain}
+ \pagenumbering{roman}
+ \input{00_preamble}
+
+ \thispagestyle{empty}
+ \cleardoublepage 
+ 
+ \thispagestyle{empty}
+ \tableofcontents
+
+ \newpage
+
+ \thispagestyle{empty}
+ \cleardoublepage 
+%  \cleardoublepage 
+
+ \pagestyle{plain}
+ \pagenumbering{arabic}
 
 % \begin{itemize}
 %   \item Nochmal eine Beschreibung?
