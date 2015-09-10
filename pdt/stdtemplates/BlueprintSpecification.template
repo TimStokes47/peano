@@ -1,6 +1,6 @@
 component: YourProjectName
 
-namespace: __PROJECT_NAME__
+namespace: ::__PROJECT_NAME__
 
 vertex:
   dastgen-file: Vertex.def
