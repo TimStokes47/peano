@@ -1,0 +1,31 @@
+\newenvironment{history}
+{
+ \begin{framed}
+  \begin{minipage}{0.9\textwidth}
+   { \footnotesize
+    Historic remark:
+   }
+}
+{
+  \end{minipage}
+ \end{framed}  
+}
+
+
+\lstdefinelanguage{cCCode}[]{C}{
+  basicstyle=\small,
+  stringstyle=\color{red},
+  keywordstyle=\color{blue},
+  commentstyle=\color{grey}\slshape,
+  morekeywords={linestyle,linetype,linewidth,linecolor,pointtype,nohidden3d,hidden3d,palette,lt,lw,lc,pt,ps,fd,fill,fs,ls},
+  framexleftmargin=1mm, framextopmargin=1mm, frame=shadowbox,
+  rulesepcolor=\color{grey}
+}
+    
+    
+\lstnewenvironment{code}[1][]{
+\lstset{
+ language=cCCode,#1
+}}{}
+    
+    

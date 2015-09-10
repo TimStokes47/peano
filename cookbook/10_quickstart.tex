@@ -1,2 +1,134 @@
 \chapter{Quickstart}
 
+\section{Download and install}
+
+To start work with Peano, you need at least two things.
+
+\begin{enumerate}
+  \item The Peano source code. Today, the source code consists of two important
+  directories. The \texttt{peano} directory holds the actual Peano code. An
+  additional \texttt{tarch} directory holds Peano's technical architecture.
+  \item The Peano Development Toolkit (PDT). The PDT is a small Java archive. It
+  takes away the cumbersome work to write lots of glue code, i.e.~empty
+  interface implementations, default routines, \ldots, so we use it quite
+  frequently.
+\end{enumerate}
+
+\noindent
+For advanced features, you might want to use some {\bf toolboxes}.
+A toolbox in Peano is a small collection of files that you store in a directory
+and adopt all pathes accordingly.
+From a user's point of view, when we use the term toolbox we actually mean this
+directory with all its content.
+
+
+
+\begin{history}
+Originally, we hoped that Peano's technical architecture (\texttt{tarch}) might
+become of value for several projects, i.e.~project appreciate that they do not
+have to re-develop things such as logging, writing of output files, writing
+support for OpenMP and TBB, and so forth.
+To the best of our knowledge, the tarch however is not really used by someone
+else, so we cannot really claim that it is independent of Peano.
+Nevertheless, we try to keep it separate and not to add anyting AMR or
+grid-speicific to the tarch.
+\end{history}
+
+There are two ways to get hold of Peano's sources and tools. You either {\em
+download the archives from the website} or you {\em access the repository
+directly}.
+Both variants are fine.
+We recommend to access the respository directly.
+
+
+\subsection{Download the archives from the website}
+
+If you don't want to download Peano's whole archive, simply to Peano's webpage
+\url{http://www.peano-framework.org} and grab the files
+\begin{itemize}
+  \item \texttt{peano.tar.gz} and
+  \item \texttt{pdt.jar}
+\end{itemize}
+from there. If you do so, please skip the first two lines from the script
+before. Otherwise, load down the important files with \texttt{wget}. 
+Independent of which variant you follow, please unpack the \texttt{peano.tar.gz}
+archive. 
+It holds all required C++ sources.
+
+\begin{code}
+> wget http://sourceforge.net/projects/peano/files/peano.tar.gz
+> wget http://sourceforge.net/projects/peano/files/pdt.jar
+> tar -xzvf peano.tar.gz
+\end{code}
+
+
+\noindent
+There's a couple of helper files that we use IN the
+cookbook. 
+They are not necessarily required for each Peano project, but for our examples
+here they are very useful.
+So, please create an additional directory \texttt{usrtemplates} and grap
+these files
+
+\begin{code}
+> mkdir usrtemplates
+> cd usrtemplates
+> wget http://sourceforge.net/projects/peano/files/ \
+  usrtemplates/VTKMultilevelGridVisualiserImplementation.template 
+> wget http://sourceforge.net/projects/peano/files/ \
+  usrtemplates/VTKMultilevelGridVisualiserHeader.template 
+> wget http://sourceforge.net/projects/peano/files/ \
+  usrtemplates/VTKGridVisualiserImplementation.template 
+> wget http://sourceforge.net/projects/peano/files/ \
+  usrtemplates/VTKGridVisualiserHeader.template 
+> wget http://sourceforge.net/projects/peano/files/ \
+  usrtemplates/VTK2dTreeVisualiserImplementation.template 
+> wget http://sourceforge.net/projects/peano/files/ \
+  usrtemplates/VTK2dTreeVisualiserHeader.template 
+\end{code}
+
+\subsection{Access the repository directly}
+
+Instead of a manual download, you might also decide to download a copy of the
+whole Peano repository. 
+This also has the advantage that you can do a simple \texttt{svn update} anytime
+later throughout your development to immediately obtain all kernel
+modifications.
+
+
+\begin{code}
+> svn checkout http://svn.code.sf.net/p/peano/code/trunk peano
+\end{code}
+
+\noindent
+Your directory structure will be slightly different than in the example above,
+but this way you can be sure you grabbed everything that has been released for
+Peano through the webpage ever.
+
+The archive \texttt{pdt.jar} will be contained in \texttt{pdt}, while the two
+source folders will be held by \texttt{src}.
+The directory \texttt{usrtemplates} is contained in \texttt{pdt}.
+
+
+\subsection{Prepare your own project}
+
+
+From hereon, we recommend that you do not make any changes within Peano
+repositories but use your own directory for your particular project.
+We call this project from hereon \texttt{myproject}.
+Within \texttt{myproject}, we will need to access the directories \texttt{peano}
+and \texttt{tarch}.
+It is most convenient to create symbolic links to these files.
+Alternatively, you also might want to copy files around or adopt makefiles,
+scripts, and so forth.
+I'm too lazy to do so and rely on OS links.
+
+
+\begin{code}
+> mkdir myproject
+> cd myproject
+> ln -s ../../mydownloads/peano peano
+> ln -s ../../mydownloads/tarch tarch
+> ls
+  peano   tarch
+\end{code}
