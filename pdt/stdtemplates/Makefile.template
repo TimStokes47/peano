@@ -9,10 +9,7 @@
 # ---------
 # Please adopt these directories to your Peano installation. The values are 
 # used by the compiler and linker calls.
-PEANO_HOME   = ../../src
-
-# this is the path/root where your projects are stored
-PROJECT_ROOT = ..
+PEANO_HOME   = .
 
 # points to directory holding the project's sources
 PROJECT_HOME = __PROJECT_PATH__  
@@ -114,13 +111,13 @@ all: header build
 files.mk:
 	touch files.mk
 	echo -n SOURCES= > files.mk
-	find $(PEANO_HOME) -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
-	find $(PROJECT_ROOT)/$(PROJECT_HOME) -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+	find -H $(PEANO_HOME)/peano -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+	find -H $(PEANO_HOME)/tarch -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+	find $(PROJECT_HOME) -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
 	# if you encouter problems with awk, use the following snippets (through they
 	# do in turn not work with all bash versions. In particular not with MACs:
 	#
-	# find $(PEANO_HOME) -name '*.cpp' -printf '%p ' >> files.mk
-	# find $(PROJECT_ROOT)/$(PROJECT_HOME) -name '*.cpp' -printf '%p ' >> files.mk
+	# find $(PROJECT_HOME) -name '*.cpp' -printf '%p ' >> files.mk
 
 
 
@@ -142,4 +139,4 @@ clean:
 
 
 $(OBJECTS): %.o : %.cpp
-	$(CC) $(DIM) $(PROJECT_CFLAGS) $(COMPILER_CFLAGS) $(SYSTEM_CFLAGS) -I$(PROJECT_ROOT) -I$(PEANO_HOME) -c $< -o $@
+	$(CC) $(DIM) $(PROJECT_CFLAGS) $(COMPILER_CFLAGS) $(SYSTEM_CFLAGS) -I$(PEANO_HOME) -c $< -o $@
