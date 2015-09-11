@@ -2,6 +2,19 @@
 \label{chapter:quickstart}
 
 
+\chapterDescription
+  {
+    Should take you around 15 minutes to get the
+    code up and running. Then another 15 minutes to have the first static
+    adaptive Cartesian grid.
+  }
+  {
+    No previous knowledge, but some experience with the Linux
+    command line and Paraview is advantageous.
+  }
+
+
+
 \section{Download and install}
 
 To start work with Peano, you need at least two things.
@@ -25,7 +38,7 @@ directory with all its content.
 
 
 
-\begin{history}
+\begin{remark}
 Originally, we hoped that Peano's technical architecture (\texttt{tarch}) might
 become of value for several projects, i.e.~project appreciate that they do not
 have to re-develop things such as logging, writing of output files, writing
@@ -34,7 +47,7 @@ To the best of our knowledge, the tarch however is not really used by someone
 else, so we cannot really claim that it is independent of Peano.
 Nevertheless, we try to keep it separate and not to add anyting AMR or
 grid-speicific to the tarch.
-\end{history}
+\end{remark}
 
 There are two ways to get hold of Peano's sources and tools. You either {\em
 download the archives from the website} or you {\em access the repository
@@ -165,8 +178,7 @@ Rather than creating the files as well as the directory manually, we can use the
 PDT for this:
 
 \begin{code}
-> java -jar <mypath>/pdt.jar  --create-project myproject \
-  myproject 
+> java -jar <mypath>/pdt.jar  --create-project myproject myproject 
 > ls
   myproject  peano  tarch
 \end{code}
@@ -262,7 +274,134 @@ Congratulations: We have created the simplest adaptive Cartesian grid in 2d that
 does exist. A single square!
 
 
-\section{At least a little bit of an information}
+\section{Some real AMR}
 
-% switch to 3d in makefile
-% change grid
+We now set up something slightly more complicated. 
+First of all, we switch to a 3d setup rather than 2d. 
+For this, open the makefile (\texttt{myproject/makefile}) and alter the
+content of the \texttt{DIM} variable.
+
+\begin{code}
+# Set Dimension
+# -------------
+#DIM=-DDim2
+DIM=-DDim3
+#DIM=-DDim4
+\end{code}
+
+\noindent
+If you clean your project (\texttt{make -f myproject/makefile clean}) and
+rebuild your code, you see that the individual files are translated with the
+compile switch 
+
+\begin{code}
+g++ ... -DDim3 ....
+\end{code}
+
+\noindent
+Indeed, this is all that's required for Peano to run a 3d experiment rather than
+a 2d setup. 
+
+\begin{remark}
+We do support currently up to 10-dimensional setups. If you require higher
+dimensions, you might even be able to extend Peano accordingly by changing
+solely the file \texttt{peano/utils/Dimensions.h}. But have fun with your memory
+requirements exploding.
+\end{remark}
+
+
+Next, we will edit the file \texttt{myproject/mappings/CreateGrid.cpp}. 
+Open it with your favourite text editor and search for the operation
+\texttt{createBoundaryVertex}. 
+Change it into the code below:
+
+
+\begin{code}
+void myproject::mappings::CreateGrid::createBoundaryVertex(
+ myproject::Vertex&                          fineGridVertex,
+ const tarch::la::Vector<DIMENSIONS,double>& fineGridX,
+ const tarch::la::Vector<DIMENSIONS,double>& fineGridH,
+ myproject::Vertex * const                   coarseGridVertices,
+ const peano::grid::VertexEnumerator&     coarseGridVerticesEnumerator,
+ myproject::Cell&                            coarseGridCell,
+ const tarch::la::Vector<DIMENSIONS,int>&    fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments("createBoundaryVertex(...)", ...); 
+    // leave this first line as it is
+   
+  if (coarseGridVerticesEnumerator.getLevel()<2) {
+    fineGridVertex.refine();
+  }
+
+  logTraceOutWith1Argument("createBoundaryVertex(...)",fineGridVertex);
+}
+\end{code}
+
+
+\noindent
+If you compile this code and run the executable, you will (besides lots of
+debug output) obtain bigger vtk file. 
+If you visualise it this time, we observe that the code refines towards the
+cube's boundary. 
+You may want to play around with magic \texttt{2} in the operation above. 
+Or you might want to continue to our final example.
+
+\begin{center}
+  \includegraphics[width=0.55\textwidth]{10_quickstart/cube.png}
+\end{center}
+
+
+\section{A tree within the spacetree}
+
+In the final example we create a slightly more interesting setup. 
+We solely edit the operation \texttt{createInnerVertex} within the  
+file \texttt{myproject/mappings/CreateGrid.cpp}, recompile it and 
+have a look at the result.
+When you study source code, please note the similarity to Matlab when we work
+with vectors in Peano; as well as that the indices start with 0.
+If your want to get rid of all the debug statements and are sick of long 
+waiting times, remove the \texttt{-DDebug} statement in the line  
+\texttt{PROJECT\_CFLAGS = -DDebug -DAsserts}
+within the makefile.
+There are more elegant ways to filter out log statements that we will discuss
+later.
+
+
+\begin{code}
+
+void myproject::mappings::CreateGrid::createInnerVertex(
+ myproject::Vertex&                          fineGridVertex,
+ const tarch::la::Vector<DIMENSIONS,double>& fineGridX,
+ const tarch::la::Vector<DIMENSIONS,double>& fineGridH,
+ myproject::Vertex * const                   coarseGridVertices,
+ const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
+ myproject::Cell&                            coarseGridCell,
+ const tarch::la::Vector<DIMENSIONS,int>&    fineGridPositionOfVertex 
+) {
+ logTraceInWith6Arguments("createInnerVertex(...)",fineGridVertex,...);
+  
+ if (
+   fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined 
+   &&
+   coarseGridVerticesEnumerator.getLevel()<4
+ ) {
+   bool trunk = (fineGridX(0)-0.5)*(fineGridX(0)-0.5)
+              + (fineGridX(2)-0.5)*(fineGridX(2)-0.5)<0.008;
+   bool treeTop = (fineGridX(0)-0.5)*(fineGridX(0)-0.5)
+                + (fineGridX(1)-0.7)*(fineGridX(1)-0.7)
+                + (fineGridX(2)-0.5)*(fineGridX(2)-0.5)<0.3*0.3;
+   if (trunk | treeTop) {
+     fineGridVertex.refine();
+   }
+ }
+
+ logTraceOutWith1Argument("createInnerVertex(...)",fineGridVertex);
+}
+\end{code}
+
+So here's what I get. Feel free to create better pics:
+
+\begin{center}
+  \includegraphics[width=0.55\textwidth]{10_quickstart/tree.png}
+\end{center}
+

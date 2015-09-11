@@ -1,9 +1,16 @@
-\newenvironment{history}
+\definecolor{darkgrey}{rgb}{0.2,0.2,0.2}
+\definecolor{grey}{rgb}{0.9,0.9,0.9}
+\definecolor{red}{rgb}{0.9,0.0,0.0}
+\definecolor{green}{rgb}{0.0,0.9,0.0}
+\definecolor{blue}{rgb}{0.0,0.0,0.9}
+
+
+\newenvironment{remark}
 {
- \begin{framed}
+ \begin{framed} 
   \begin{minipage}{0.9\textwidth}
    { \footnotesize
-    Historic remark:
+    {\bf Remark:}
    }
 }
 {
@@ -12,11 +19,32 @@
 }
 
 
+
+
+\newcommand{\chapterDescription}[2]{
+%\flushright{
+  \footnotesize
+  \hspace{0.4\textwidth}
+  \begin{minipage}{0.65\textwidth}
+  \includegraphics[width=0.2\textwidth]{symbols/clock.pdf}
+  {\bf Time:} #1
+  
+  {\bf Required:} #2
+  
+  \end{minipage}
+%}
+}
+
+
+
 \lstdefinelanguage{cCCode}[]{C}{
-  basicstyle=\small,
+  backgroundcolor=\color{grey},
+%  basicstyle=\tiny,
+%  basicstyle=\small,
+  basicstyle=\footnotesize,
   stringstyle=\color{red},
   keywordstyle=\color{blue},
-  commentstyle=\color{grey}\slshape,
+  commentstyle=\color{darkgrey}\slshape,
   morekeywords={linestyle,linetype,linewidth,linecolor,pointtype,nohidden3d,hidden3d,palette,lt,lw,lc,pt,ps,fd,fill,fs,ls},
   framexleftmargin=1mm, framextopmargin=1mm, frame=shadowbox,
   rulesepcolor=\color{grey}
