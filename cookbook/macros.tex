@@ -49,11 +49,17 @@
   framexleftmargin=1mm, framextopmargin=1mm, frame=shadowbox,
   rulesepcolor=\color{grey}
 }
-    
+
+
+
     
 \lstnewenvironment{code}[1][]{
 \lstset{
- language=cCCode,#1
+ language=cCCode,#1,
+upquote=true,
+columns=fullflexible,
+literate={*}{{\char42}}1
+         {-}{{\char45}}1
 }}{}
     
     
