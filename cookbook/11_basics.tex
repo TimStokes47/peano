@@ -4,7 +4,8 @@
 
 \chapterDescription
   {
-    30 minutes including the visualisation.
+    15 minutes for the programming but perhaps around 30 minutes for the
+    visualisation.
   }
   {
     Chapter \ref{chapter:quickstart}.
@@ -14,7 +15,8 @@
 In this section, we study a 2d example.
 Please adopt your makefile accordingly.
 Furthermore, we use the files \texttt{VTKMultilevelGridVisualiserHeader} and
-\texttt{...Implementation}.
+\texttt{...Implementation} as well as
+\texttt{VTK2dTreeVisualiser...}.
 If you have downloaded the whole Peano repository, these files can be found in
 \texttt{pdt/usrtemplates}.
 If not, you have to download them manually from the webpage.
@@ -24,7 +26,7 @@ operations can remain empty/only filled with log statements):
 
 
 \begin{code}
-void myproject::mappings::CreateGrid::touchVertexFirstTime(
+void myproject::mappings::CreateGrid::touchVertexLastTime(
       myproject::Vertex&               fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
@@ -33,7 +35,7 @@ void myproject::mappings::CreateGrid::touchVertexFirstTime(
       myproject::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, ...
 
   if (
     coarseGridVerticesEnumerator.getLevel()<5
@@ -133,6 +135,7 @@ adapter:
 adapter:
   name: CreateGridAndPlot
   merge-with-user-defined-mapping: CreateGrid
+  merge-with-predefined-mapping: VTKGridVisualiser(finegrid)
   merge-with-predefined-mapping: VTKMultilevelGridVisualiser(grid)
 
 adapter:
@@ -142,7 +145,7 @@ adapter:
 
 adapter:
   name: Plot
-  merge-with-predefined-mapping: VTKMultilevelGridVisualiser(finalgrid)
+  merge-with-predefined-mapping: VTKGridVisualiser(finalgrid)
 \end{code}
 
 The first two adapters are trivial: 
@@ -233,9 +236,86 @@ We just want to know how many vertices there are.
 We really do not care about how the grid is ran through.
 We also do not really care how all vertices, cells, whatever are processed.
 We say what is done in which order from a bird eye's perspective.
-
-
 If you compile the code and run it now, you should end up with a sequence of vtk
 files. 
-You might want to make a video. 
+You might want to make a video (take the files that are called
+\texttt{finegrid-}something).
 Below are some screenshots:
+
+
+\begin{center}
+  \includegraphics[width=0.3\textwidth]{11_basics/grid00.png}
+  \includegraphics[width=0.3\textwidth]{11_basics/grid01.png}
+  \includegraphics[width=0.3\textwidth]{11_basics/grid02.png}
+\end{center}
+
+
+\section{What happens}
+
+
+\begin{center}
+  \includegraphics[width=0.45\textwidth]{11_basics/construction00.png}
+  \includegraphics[width=0.45\textwidth]{11_basics/construction01.png}
+  \includegraphics[width=0.45\textwidth]{11_basics/construction02.png}
+  \includegraphics[width=0.45\textwidth]{11_basics/construction03.png}
+\end{center}
+
+% UserInterface interpretieren
+% Welche events sind da
+% was passiert
+% Log lesen
+% 
+% 
+
+
+
+\section{Data model}
+Prior to a discussion of Peano's data model, it might make sense to load all the
+files \texttt{grid-level-?-0.vtk} into your favourite visualisation software.
+Dilate them according to their level encoded in the name.
+In Paraview, you have to select each file, apply
+Filters/Alphabetical/Transform, and dilate each file by -0.2 along the z-axis
+per level.
+You might end up with something alike:
+
+
+
+\begin{center}
+  \includegraphics[width=0.8\textwidth]{11_basics/tree00.png}
+\end{center}
+
+\noindent
+Again, feel free to create a video that shows how additional levels are added in
+each step.
+There's a more elegant way to end up with a similar picture. 
+I once created a graph visualiser that is today also available as predefined
+mapping. Just modify your adapters as follows:
+
+\begin{code}
+adapter:
+  name: CreateGridAndPlot
+  merge-with-user-defined-mapping: CreateGrid
+  merge-with-predefined-mapping: VTK2dTreeVisualiser(tree,getLevel)
+\end{code}
+
+\noindent
+This time, creating a video should be straightforward.
+\begin{center}
+  \includegraphics[width=0.8\textwidth]{11_basics/tree01.png}
+\end{center}
+
+% Data Model
+% Visualisierung von Einbettung
+% Wo liegen welche Daten
+% 
+% Remark: How to realise degrees of freedom associated to faces or edges
+% 
+
+
+\section{Counting vertices}
+% We could use the repository's operations
+% Do it yourself and then compare
+% Finale: Vertices zaehlen
+% Den Wert von einem double umsetzen
+
+
