@@ -299,11 +299,41 @@ Below are some screenshots:
   \includegraphics[width=0.45\textwidth]{11_basics/construction03.png}
 \end{center}
 
-% UserInterface interpretieren
-% Welche events sind da
-% was passiert
-% Log lesen
-% 
+
+To understand what is happening, we can read all the outputs written to the
+terminal by Peano (see the next chapter how to remove them/filter them).
+Or we can just give a quick sketch:
+
+\begin{enumerate}
+  \item We first create a repository. A repository is basically the spacetree,
+  i.e.~the grid, plus all the adapters we've defined. It also provides some
+  statistics the can read out.
+  \item The code runs into the Runner's \texttt{runAsMaster()} routine and
+  selects which adapter to use. This is the switch statement. In a parallel
+  code, all involved ranks would now immediately active this adapter.
+  \item In the runner, we then call the \texttt{iterate} operation on the
+  repository. The repository now starts to run through the whole grid. Actually,
+  it runs through the spacetree in a kind of top-down way.
+  \item Whenever it encounters an interesting situation (it loads a vertex for
+  the very first time, e.g.), it triggers an event. Event means that it calls an
+  operation on the adapter.
+  \item An adapter may fuse multiple events; both predefined and user-defined.
+  Per event, it calls all these mappings' implementations one after another. The
+  order is the same you have used in your specification file.
+\end{enumerate}
+
+\begin{remark}
+  This document does not run through the list of available events, in which
+  order they are called and so forth. You may want to have a look into any
+  event's header. The PDT augments the header with a quite verbose explanation
+  what event is called when.
+\end{remark}
+
+It might now be the right time to look into one of these mapping headers to get
+a first impression what is available.
+Basically, they describe all important plug-in points that you might want to use
+in any element-wise multiscale grid traversal.
+
 % 
 
 
@@ -343,12 +373,64 @@ This time, creating a video should be straightforward.
   \includegraphics[width=0.8\textwidth]{11_basics/tree01.png}
 \end{center}
 
-% Data Model
-% Visualisierung von Einbettung
+We see that speaking of Peano in terms of a spacetree software is only one way
+to go.
+We also could speak of it of a software managing Cartesian grids embedded into
+each other.
+The latter point of view reveals an important fact:
+Peano handles vertices and cells.
+Cells are embedded into each other as they form the tree and there is a clear
+parent-child relation.
+Vertices connect cells.
+A vertex is unique due to its position in space plus its level, i.e.~there might
+be some coordinates that host multiple vertices.
+In math, we would call this generating system.
+There are two types of vertices:
+the standard ones are adjacent to $2^d$ cells on the same level with $d$ being
+the dimension of the problem.
+All other vertices are hanging nodes.
+
+\begin{remark}
+  Hanging nodes are not stored persistently. They are created and destroyed in
+  each traversal upon request and never stored in-between two iterations. You
+  can never be sure how often a hanging nodes is constructed per traversal. It
+  could be up to $2^d-1$ times. You only know it is created once at least.
+\end{remark}
+
+Cells and vertices hold data. This data is described in the files
+\texttt{Vertex.def} and \texttt{Cell.def}.
+The .def files feed into our tool DaStGen that translated them internally into a
+standard C++ class (though it does some more stuff: it autogenerates all MPI
+data types that we need later on for parallel codes, and it in particular
+compresses the data such that a bool field is really mapped onto a single bit,
+e.g.).
+
+
+So what we might do now is the following. Open the \texttt{Cell.def} and edit it
+accordingly. 
+Rerun the PDT, recompile, and work.
+
+
+\begin{code}
+Packed-Type: short int;
+
+
+class myproject::dastgen::Cell {
+  discard    parallelise int     myNonPersistentInteger;
+  persistent parallelise double  myValue;
+  persistent parallelise bool    myBool1;
+  persistent parallelise bool    myBool2;
+};
+\end{code}
+% Element-wise traversal.
 % Wo liegen welche Daten
+% Enumerator
+% Wer aggregiert was
 % 
 % Remark: How to realise degrees of freedom associated to faces or edges
 % 
+
+
 
 
 \section{Counting vertices}
