@@ -52,10 +52,45 @@ void myproject::mappings::CreateGrid::touchVertexLastTime(
 
 \end{code}
 
+
+\noindent
+This source fragment requires some additional explanation. 
+We neglect the enumerator stuff for the time being.
+That will become clear later throughout the present chapter.
+The refinement control check says `well, refine, but do it only on unrefined
+vertices'.
+It's just a matter of good style, not to call \texttt{refine} on a refined
+vertex.
+The middle line uses a function from the tarch's linear algebra namespace. 
+It takes the \texttt{fineGridX} vector (the position of the vertex in space) and
+checks whether all entries equal zero.
+As we are working with floating point numbers, it is not a bit-wise check. 
+Instead, it uses an interval of machine precision around zero.
+You may want to change this notion of machine precision in Peano (file
+\texttt{Scalar} within the \texttt{tarch::la} namespace). 
+In general, it would be a good idea to study the content of the \texttt{la}
+component soon---there's lots of useful stuff in there to work with
+tiny, dense vectors\footnote{Peano someday should perhaps be rewritten to use
+boost linear algebra or some fancy template library. Feel free to do so. Right
+at the moment, it is all plain hand-craftet routines.}.
+
+\begin{remark}
+  Peano realises a {\bf vertex-based}, {\bf logical-or} refinement: You can
+  invoke \texttt{refine} on any unrefined vertex. Peano then refines all cells
+  around a vertex in the present or next traversal (it basically tries to do it
+  asap, but sometimes data consistency constraints require it to postpone the
+  actual refinement by one iteration). The other way round, you may read it as
+  follows: A cell is refined if the refinement flag is set for any adjacent
+  vertex.
+\end{remark}
+
+
 Whenever you use Peano, you have to do three things:
 \begin{enumerate}
   \item Decide which algorithmic phases do exist and in which order they are
-  called.
+  called. Examples for algorithmic phases could be: set up grid, initialise all
+  variables, refine regions of interest, perform an iterative solve step, plot
+  some data, compute metrics on the solution, \ldots
   \item Model the data, i.e.~decide which data is assigned to the vertices and
   cells of the grid.
   \item Implement the different actions on this data model that are used by the
@@ -68,7 +103,11 @@ They specify which set of operations is to be called throughout a run through
 the grid, i.e.~they say what is done on which data.
 Afterward, they invoke the iteration and leave it to Peano to run through the
 grid and invoke these operations in the right order on the right ranks using all
-the cores you have on your machine.
+the cores you have on your machine\footnote{This statements requires
+explanation, and indeed it is not {\em that} straightforward. But the idea is
+phrases correctly: the application codes specifies what is to be done and then
+outsources the scheduling and the responsibility to use a multicore machine to
+Peano.}.
 This scheme realises something people call `The Hollywood Principle': Don't
 call us, we call you!
 
@@ -90,14 +129,14 @@ call us, we call you!
 
 The algorithmic phases, i.e.~what can be done on a grid, are specified in the
 specification file.
-Open you project's file. 
+Open your project's file. 
 There are two different parts of the document that are of interest to us:
 An {\em event mapping} is an algorithmic step that you have to implement
 yourself.
 In this chapter's example, we want to do two things: create a grid and count all
 the vertices. 
-Furthermore, we want to plot our grid, but lets keep in mind that Peano has some
-predefined actions as well.
+Furthermore, we want to plot our grid, but let's keep in mind that Peano has
+some predefined actions as well.
 So we augment our mapping set as follows:
 
 \begin{code}
@@ -151,7 +190,7 @@ adapter:
 The first two adapters are trivial: 
 They basically delegate to one event set. 
 The next two take one event set each and invoke it. 
-Furthermore, they also use a predined event set. 
+Furthermore, they also use a predefined event set. 
 They will call \texttt{CreateGrid} or \texttt{CountVertices}, respectively, and
 at the same time plot.
 If you create all code with 
@@ -176,7 +215,7 @@ Runner (see the source code yourself if you don't believe).
 It then invokes \texttt{run()} which in turn continues to \texttt{runAsMaster}
 or \texttt{runAsWorker()}.
 The latter will play a role once we use MPI.
-For the time being, lets focus on the master's routine.
+For the time being, let's focus on the master's routine.
 Here, we see the following:
 
 \begin{code}
@@ -233,7 +272,7 @@ This time, nothing shall be plotted.
 We just want to know how many vertices there are.
 
 
-We really do not care about how the grid is ran through.
+We really do not care about how the code runs through the grid.
 We also do not really care how all vertices, cells, whatever are processed.
 We say what is done in which order from a bird eye's perspective.
 If you compile the code and run it now, you should end up with a sequence of vtk
