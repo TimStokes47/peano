@@ -71,10 +71,12 @@ def drawTreeGraph(myGraph):
 
 
 def parseInputFile():
-  #data = {k: [] for k in range(2)}
-
   print "prepare data structures",
-  for rank in range(0,numberOfRanks):
+  
+  myNumberOfRanks = numberOfRanks
+  if myNumberOfRanks==0:
+    myNumberOfRanks = 1
+  for rank in range(0,myNumberOfRanks):
     numberOfInnerLeafCells[rank]  = []
     numberOfInnerCells[rank]      = []
     numberOfOuterLeafCells[rank]  = []
@@ -93,7 +95,9 @@ def parseInputFile():
         if ("DefaultAnalyser" in line):
           m = re.search( searchPatternNumberOfCells, line )
           if (m):
-            rank  = int(line.split( "rank:" )[-1].split( " " )[0])
+            rank  = 0
+            if numberOfRanks>0:
+              rank  = int(line.split( "rank:" )[-1].split( " " )[0])
             token = line.replace("(",",").replace(")","").strip().split(",")
             numberOfInnerLeafCells[rank].append(float(token[-5]))
             numberOfOuterLeafCells[rank].append(float(token[-4]))
@@ -103,19 +107,25 @@ def parseInputFile():
             print ".",
           m = re.search( searchPatternNumberOfLocalVertices, line )
           if (m):
-            rank  = int(line.split( "rank:" )[-1].split( " " )[0])
+            rank  = 0
+            if numberOfRanks>0:
+              rank  = int(line.split( "rank:" )[-1].split( " " )[0])
             token = line.strip().split("=")
             numberOfLocalVertices[rank].append(float(token[-1]))
             print ".",
           m = re.search( searchPatternTTotal, line )
           if (m):
-            rank  = int(line.split( "rank:" )[-1].split( " " )[0])
+            rank  = 0
+            if numberOfRanks>0:
+              rank  = int(line.split( "rank:" )[-1].split( " " )[0])
             timeStamp = float( m.group(1) )
             tTotal[rank].append(timeStamp)
             print ".",
           m = re.search( searchPatternTTraversal, line )
           if (m):
-            rank  = int(line.split( "rank:" )[-1].split( " " )[0])
+            rank  = 0
+            if numberOfRanks>0:
+              rank  = int(line.split( "rank:" )[-1].split( " " )[0])
             token = line.strip().split("=(")[-1].split(",")[0]
             tTraversal[rank].append(float(token))
             print ".",
@@ -714,6 +724,7 @@ def plotGlobalGridOverview():
 def plotWalltimeOverview():
   pylab.clf()
   pylab.title( "Walltime" )
+  pylab.ylabel( "time per grid sweep [t]=s" )
   x = pylab.arange(0, len(tTotal[0]), 1.0)
   pylab.plot(tTotal[0], tTraversal[0], '-',  markersize=10, color='#000066', label='time per traversal on global master' )
   startRank = 1
@@ -890,78 +901,145 @@ def plotStatisticsForRank(currentRank):
 #
 # main
 #
-if ( len(sys.argv)<=2 ):
-  print "please specify input file name and number of ranks"
+if ( len(sys.argv)!=2 and len(sys.argv)!=4):
+  print "Usage: python performanceanalysis.py inputfile [ranks threads]"
+  print ""
+  print "ranks and threads are optional integers. Skip them or set them to"
+  print "0 if you use no MPI or multithreading, respectively."
+  print ""
+  print "(C) 2015 Tobias Weinzierl"
+  quit()
+if ( len(sys.argv)==2 ):
+  print "input data stems from single core run" 
+  numberOfRanks   = 0
+  numberOfThreads = 0
+  AlphaValue     = 0.9
 else:
-  inputFileName   = sys.argv[1]
-  outputFileName  = sys.argv[1] + ".html"
   numberOfRanks   = int(sys.argv[2])
+  numberOfThreads = int(sys.argv[3])
+  if numberOfRanks>0:
+    AlphaValue     = 1.0/numberOfRanks
+    if (AlphaValue<0.01):
+      AlphaValue   = 0.01
+  else:
+    AlphaValue     = 0.9
 
-  outFile        = open( outputFileName, "w" )
+inputFileName   = sys.argv[1]
+outputFileName  = sys.argv[1] + ".html"
+
+outFile        = open( outputFileName, "w" )
   
-  AlphaValue     = 1.0/numberOfRanks
-  if (AlphaValue<0.01):
-    AlphaValue   = 0.01
     
-  #
-  # Header of report
-  #
-  outFile.write( 
-    "<html>\
-       <body>\
-       <h1>Peano Performance Report</h1>\
-       <p>Peano's default performance analysis</p>\
-       <p>Author: Tobias Weinzierl</p>\
-       <p>Data file: " + inputFileName + "</p>\
-       <p>Ranks: " + str(numberOfRanks) + "</p>\
-       <center><img src=\"http://www.peano-framework.org/logo.png\" />\
-       <br /><a href=\"http://www.peano-framework.org\" >www.peano-framework.org</a></center>\
+
+
+
+
+
+#
+# Header of report
+#
+outFile.write( 
+  "<html>\
+     <body>\
+     <h1>Peano Performance Report</h1>\
+     <p>Peano's default performance analysis</p>\
+     <p>Author: Tobias Weinzierl</p>\
+     <p>Data file: " + inputFileName + "</p>\
+  ")
+     
+if (numberOfRanks==0):      
+  outFile.write( "\
+     <p>Ranks: no MPI used</p>\
+  ")
+else:      
+  outFile.write( "\
+     <p>Ranks: " + str(numberOfRanks) + "</p>\
+  ")
+     
+if (numberOfThreads==0):      
+  outFile.write( "\
+     <p>Threads: no multithreading used</p>\
+  ")
+else:      
+  outFile.write( "\
+     <p>Threads: " + str(numberOfThreads) + "</p>\
+  ")
+     
+outFile.write( "\
+     <center><img src=\"http://www.peano-framework.org/logo.png\" />\
+     <br /><a href=\"http://www.peano-framework.org\" >www.peano-framework.org</a></center>\
+  ")
+
+outFile.write( "\
+   <h2 id=\"table-of-contents\">Table of contents</h2>\
+   <ul>\
+   ")
+
+outFile.write( "\
+     <li><a href=\"#walltime-overview\">Walltime overview</a></li>\
+     <li><a href=\"#global-grid-overview\">Global grid overview</a></li>\
     ")
 
+if (numberOfRanks>0):      
   outFile.write( "\
-     <h2 id=\"table-of-contents\">Table of contents</h2>\
-     <ul>\
-       <li><a href=\"#walltime-overview\">Walltime overview</a></li>\
-       <li><a href=\"#global-grid-overview\">Global grid overview</a></li>\
-       <li><a href=\"#logical-topology\">Logical topology</a></li>\
-       <li><a href=\"#fork-join-statistics\">Fork and join statistics</a></li>\
-       <li><a href=\"#fork-history\">Fork history</a></li>\
-       <li><a href=\"#mpi-phases\">MPI phases</a></li>\
-       <li><a href=\"#master-worker-data-exchange\">Master-worker data exchange</a></li>\
-       <li><a href=\"#boundary-data-exchange\">Boundary data exchange</a></li>\
-       <li><a href=\"#individual-ranks\">Individual ranks</a></li>\
-     </ul>\
+     <li><a href=\"#logical-topology\">Logical topology</a></li>\
+     <li><a href=\"#fork-join-statistics\">Fork and join statistics</a></li>\
+     <li><a href=\"#fork-history\">Fork history</a></li>\
+     <li><a href=\"#mpi-phases\">MPI phases</a></li>\
+     <li><a href=\"#master-worker-data-exchange\">Master-worker data exchange</a></li>\
+     <li><a href=\"#boundary-data-exchange\">Boundary data exchange</a></li>\
+     <li><a href=\"#individual-ranks\">Individual ranks</a></li>\
+    ")
+
+outFile.write( "\
+   </ul>\
    ")
 
 
-  #
-  # Walltime information
-  #
-  outFile.write( "\
+
+
+
+
+#
+# Walltime information
+#
+outFile.write( "\
     <h2 id=\"walltime-overview\">Walltime overview</h2>\
-    <img src=\"" + outputFileName + ".walltime.png\" />\
+     <img src=\"" + outputFileName + ".walltime.png\" />\
     <br /><br />\
     <p>\
-    The fuzzy dots summarises the local runtimes of the individual ranks, \
+    The fuzzy dots summarise the local runtimes of the individual ranks, \
     i.e. the time spent within the local traversals. \
     Cf. shift discussion in the next section. \
     For non-reducing algorithms that do not synchronise their boundaries, \
     local compute times can exceed the global time per traversal. \
     </p>\
+    <p>\
+    The solid line is the time per traversal on the global master rank. \
+    If you run without MPI, this equals your application's runtime. \
+    </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
-  #
-  # Grid information
-  #
-  outFile.write( "\
+#
+# Grid information
+#
+outFile.write( "\
     <h2 id=\"global-grid-overview\">Global grid overview</h2>\
     <img src=\"" + outputFileName + ".grid-overview.png\" />\
     <img src=\"" + outputFileName + ".grid-overview-global-master.png\" />\
     <br /><br />\
+    ")
+    
+    
+if (numberOfRanks>0):      
+  outFile.write( "\  
     <img src=\"" + outputFileName + ".local-cells.png\" />\
     <img src=\"" + outputFileName + ".local-vertices.png\" />\
     <br /><br />\
+    ")
+
+outFile.write( "\  
     <p>\
     <b>Remarks on the global cell/vertex and the master plots:</b> \
     If you are implementing a code that allows ranks to send up their state to the \
@@ -998,8 +1076,11 @@ else:
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
+
+
+if (numberOfRanks>0):      
   #
-  # Logical topology
+  # Logical topology  
   #
   outFile.write( "\
     <h2 id=\"logical-topology\">Logical topology</h2>\
@@ -1083,7 +1164,7 @@ else:
 
   #
   # MPI Phases
-  #
+  # 
   outFile.write( "\
     <h2 id=\"mpi-phases\">MPI Phases</h2>\
     <a href=\"" + outputFileName + ".mpi-phases.large.png\"> <img src=\"" + outputFileName + ".mpi-phases.png\" /> </a> \
@@ -1278,26 +1359,27 @@ else:
     ")
 
 
-  #
-  # Trailor of report
-  #
-  outFile.write( "</body>" )
-  outFile.write( "</html>" )
-  outFile.close()
-  print "html file written"
+#
+# Trailor of report
+#
+outFile.write( "</body>" )
+outFile.write( "</html>" )
+outFile.close()
+print "html file written"
 
 
-  #
-  # Now all the images are created
-  #  
-  parseInputFile()
+#
+# Now all the images are created
+#  
+parseInputFile()
 
-  print "plot walltime overview"
-  plotWalltimeOverview()
+print "plot walltime overview"
+plotWalltimeOverview()
 
-  print "plot global grid overview"
-  plotGlobalGridOverview()
+print "plot global grid overview"
+plotGlobalGridOverview()
 
+if (numberOfRanks>0):      
   print "plot logical grid topology"
   plotLogicalTopology()
 
