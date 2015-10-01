@@ -1,14 +1,63 @@
-\section{Reducing MPI communication}
+\section{MPI quick tuning}
 
 
 \chapterDescription
   {
-    Around 30 minutes.
+    Around 15 minutes.
   }
   {
     A working MPI code.
   }
 
+
+This section collects a couple of really primitive measurements to make your
+code faster.
+
+\subsection{Filter out log statements}
+
+It is probably to simple to mention, but all our teams from time to time forget
+this. 
+One of the major things slowing down codes is writing to the terminal. 
+So adding a few additional log filters can significantly speed up your code.
+
+
+
+\subsection{Switch off load balancing}
+
+Most of Peano's load balancing algorithms (at least the ones coming along with
+the standard package) rely on a central node pool.
+If a rank decides that it would be advantageous to split up its domain, it sends
+a request to the first rank whether there are any idle nodes available.
+If your code already uses all ranks, this is a time consuming process that
+suffers from latency.
+If you know a prior that the load balancing is static and no further splits of
+subdomains are possible, it does make sense to switch the load balancing off.
+There is a routine \texttt{activateLoadBalancing} operation on the load
+balancing oracle to do so.
+
+This operation has to be called on each individual rank.
+So either you add it to a corresponding mapping, or you invoke a global step on
+all ranks prior to an \texttt{iterate} call:
+
+\begin{code}
+void picard::runners::Runner::runGlobalStep() {
+  peano::parallel::loadbalancing::Oracle::getInstance().activateLoadBalancing(false);
+}
+
+
+int picard::runners::Runner::runAsMaster(...) {
+  ...
+  
+  repository.runGlobalStep(); // on all other ranks
+  runGlobalStep();            // and locally, too
+}
+\end{code}
+
+
+
+\subsection{Continue to write soon \ldots}
+, we assume that you've a reasonable load balancing but see that all
+the
   
   The smell
   
