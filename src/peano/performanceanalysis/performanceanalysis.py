@@ -148,7 +148,7 @@ def plotMPIPhases():
   ax = pylab.gca()
   ax.set_aspect('equal','box')
   
-  timeStampPattern = "([1-9][0-9]*)"
+  timeStampPattern = "([0-9]\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
   
   enterCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree"
@@ -239,7 +239,7 @@ def plotForkJoinStatistics():
   timelineOfForks.append(0.0)
   timelineOfJoins.append(0.0)
   
-  timeStampPattern  = "([1-9][0-9]*)"
+  timeStampPattern  = "([0-9]\.?[0-9]*)"
   
   searchPatternFork    = timeStampPattern + ".*peano::performanceanalysis::DefaultAnalyser::addWorker"
   searchPatternJoin    = timeStampPattern + ".*peano::performanceanalysis::DefaultAnalyser::removeWorker"
@@ -1033,13 +1033,13 @@ outFile.write( "\
     
     
 if (numberOfRanks>0):      
-  outFile.write( "\  
+  outFile.write( "\
     <img src=\"" + outputFileName + ".local-cells.png\" />\
     <img src=\"" + outputFileName + ".local-vertices.png\" />\
     <br /><br />\
     ")
 
-outFile.write( "\  
+outFile.write( "\
     <p>\
     <b>Remarks on the global cell/vertex and the master plots:</b> \
     If you are implementing a code that allows ranks to send up their state to the \
@@ -1095,7 +1095,7 @@ if (numberOfRanks>0):
     If the maximal number of working ranks is significantly smaller than the total number of ranks, your application might \
     have ran into a weak scaling issue. The problem then was too small. If the problem is sufficiently big, and the number \
     if idle ranks still remains high, it might had happened that Peano was not able to fork on a coarse enough level. \
-    See the section on MPI tuning in the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a> that discusses multiscale concurrency. In such a case, it often helps \
+    See the remarks on MPI tuning in Peano's quick start guide discussing multiscale concurrency. In such a case, it often helps \
     to make the computational grid more regular to some degree, i.e. to prescribe a finer maximum mesh size. \
     </p>\
     <p>\
@@ -1104,7 +1104,7 @@ if (numberOfRanks>0):
     Joins and forks are expensive operations in terms of walltime. Evaluating the load balancing \
     information also is not for free. Hence, try to reduce the number of joins and forks as you \
     switch on rebalancing only from time to time, and reduce the load balancing overhead. See \
-    the section on 'Disable load balancing' in the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a>. \
+    the section on 'Disable load balancing' in Peano's quick start guide. \
     </p>\
     <p>\
     <i>Performance hint:</i></p><p>\
@@ -1112,7 +1112,7 @@ if (numberOfRanks>0):
     wide, i.e. if it is deep and its breadth is bounded by 3^d you typically have a good performance. If your tree is shallow, \
     few ranks grab all the workers which is often not a good sign. Often, such an unfair behaviour goes hand in hand with a \
     monotonic decrease of cells on one worker. See discussion in the Section 'Global grid overview'. \
-    Also consult the section 'Doublecheck the multiscale concurrency' in the wiki. The latter also discusses how to manually enforce a higher coarse grid \
+    Also consult the notes on multiscale concurrency in Peano's quick start guide. The latter also discusses how to manually enforce a higher coarse grid \
     regularity and thus allow the load balancing to fork. \
     <p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
@@ -1131,7 +1131,7 @@ if (numberOfRanks>0):
     Joins and forks are expensive operations in terms of walltime. Evaluating the load balancing \
     information also is not for free. Hence, try to reduce the number of joins and forks as you \
     switch on rebalancing only from time to time, and reduce the load balancing overhead. See \
-    the section on 'Disable load balancing' in the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a>. \
+    the section on load balancing disabling in Peano's quick start guide. \
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
@@ -1183,9 +1183,10 @@ if (numberOfRanks>0):
     <li>The sampling accuracy is low, i.e. if your code has a very low \
     runtime per traversal ratio, the measurements become inaccurate. </li>\
     <li>If you switch off reduction (workers do not send data back to their master), the end iteration bar is inserted though workers still might be working on the traversal.</li>\
-    <li>If large redish blocks introduce your critical path, your problem is decomposed into too small chunks. Reduce number of forks/ranks.</li>\
-    <li>If long green blocks introduce a critical path, your problem is ill-balanced, i.e. some ranks have signficiantly more work to do than others.</li>\
-    </p>\
+    <li>If long green blocks assigned to nodes without any further workers introduce a critical path, your problem is ill-balanced, i.e. some ranks have signficiantly more work to do than others. You might want to use more ranks to give the load balancing more degrees of freedom to balance.</li>\
+    <li>If all ranks suffer from long light red blocks, your setup suffers from latency. Ranks wait quite a while for their masters to give them a go. If you run a sequence of multiple sweeps in a row, you might be able map them onto one iterate. Skipping master-worker data exchange also might help.</li>\
+    <li>If large dark redish blocks introduce your critical path, your problem either is decomposed into too small chunks. Reduce number of forks/ranks. Or you have to search for ways to skip worker-master data exchange.</li>\
+    </ul>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
@@ -1219,8 +1220,8 @@ if (numberOfRanks>0):
     <p>\
     The edges here illustrate the critical communication path for one traversal, i.e. long graphs running from a node to rank 0 indicate \
     that along these graphs the Peano traversal is serialised. Eliminate these edges by reducing the \
-    workload of the involved nodes. See remark in <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a> on 'Optimise worker-master communication' or \
-    'Avoid reductions'. \
+    workload of the involved nodes. See remark in Peano's quick start guide on the optimisation of the worker-master communication or \
+    reduction avoiding algorithms. \
     </p>\
     <p>\
     If you have late workers that you cannot explain, also try to scale up the problem. Late \
@@ -1264,8 +1265,8 @@ if (numberOfRanks>0):
     the diagrams above have to be read in context with the worker-master graphs. \
     </p>\
     <p>\
-    The global rank 0 should not have adjacent edges. If it has, ensure you've followed the 'Avoid communications \
-    with rank 0' recipes from the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a>. \
+    The global rank 0 should not have adjacent edges. If it has, ensure you've followed the avoid communications \
+    with rank 0 recipes from Peano's quick start guide. \
     </p>\
     <p>\
     If this graph is a clique, your mpi buffer sizes might be too small or too big. Cf. \
@@ -1275,8 +1276,8 @@ if (numberOfRanks>0):
     <p>\
     If single nodes are the hot-spots making the others wait (many outgoing edges), those nodes might either have \
     a significantly higher load than others (cf. balancing remark above) or they might have a significant higher surface to \
-    other nodes that has to be exchanged. Adopt load balancing and see 'Check the load balancing and node weights' \
-    in the <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a>. \
+    other nodes that has to be exchanged. Adopt load balancing and check the load balancing \
+    as discussed in Peano's quick start guide. \
     </p>\
     <p>\
     If edges point from workers to their direct parents (cf. logical topology), the local master-worker balancing might be ill-balanced. Such \
@@ -1289,7 +1290,7 @@ if (numberOfRanks>0):
     <p>\
     If nodes delay their masters but have no significant heavy edges in the boundary graph, study their individual runtime \
     profile carefully. If these profiles also indicate that the data exchange is not signficiant, your worker-master \
-    data exchange suffers from worker-master latency. See section in <a href=\"http://sourceforge.net/p/peano/wiki\" target=\"_blank\">wiki</a> on 'Optimise worker-master communication'. \
+    data exchange suffers from worker-master latency. See Peano's quick start guide on the optimisation of worker-master communication. \
     </p><br /><br />\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
