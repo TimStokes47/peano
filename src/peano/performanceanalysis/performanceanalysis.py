@@ -1174,9 +1174,10 @@ if (numberOfRanks>0):
     <li>x-axis: simulation time</li>\
     <li>y-axis: ranks</li>\
     <li>vertical black bars: end of iteration on master rank</li>\
-    <li>bright red: time spent outside of the domain prior to enter the actual local tree</li>\
+    <li>bright red: time spent outside of the domain prior to enter the actual local tree; comprises the time the node has to wait for data from the master if master-worker data exchange is not switched off.</li>\
     <li>green: time spent within local tree</li>\
-    <li>dark red: time spent outside of the domain after local tree has been processed</li>\
+    <li>dark red: time spent outside of the domain after local tree has been processed; comprises the time the node has to wait until data is successfully sent to the master if worker-master data exchange is not switched off. Usually this effect however is negligible as MPI buffers away the blocking messages.</li>\
+    <li>white: idle time and time used to exchange boundary and heap data</li>\
     </ul>\
     <i>Visualisation remarks/performance hints: </i>\
     <ul>\
