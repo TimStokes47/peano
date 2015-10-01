@@ -494,6 +494,22 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      */
     int createData(int numberOfEntries=0, int initialCapacity=0);
 
+    /**
+     * Creates a heap entry for the index wantedIndex. This is operation
+     * typically is used by codes that manage multiple heaps with one
+     * heap index. They create one one index through createData() and then
+     * invoke createDataForIndex() with this index on all other heaps.
+     * Typically, such code sequences are found in creational operations.
+     *
+     * !!! Frequent bug
+     *
+     * Whenever you have a createDataForIndex for a heap, please check whether
+     * there's a corresponding deleteData() call. If you work with grids that
+     * refine only (and/or are static) you can omit the delete as long as you
+     * work without MPI. If you use MPI, you always have to implement the
+     * deletion as any partitioning involves a grid destruction on the node
+     * that deploys parts of its grid to another rank.
+     */
     void createDataForIndex(int wantedIndex, int numberOfEntries=0, int initialCapacity=0);
 
     /**
