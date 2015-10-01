@@ -51,11 +51,27 @@
  \pagestyle{plain}
  \pagenumbering{arabic}
 
- \input{10_quickstart}
+
+
+ \input{01_quickstart}
+
+
+ 
+ \chapter{Basic Programming Course}
+ \label{chapter:basics-explained}
+
  \input{11_basics}
  \input{12_logging-and-statistics}
+ \input{13_dastgen-and-heaps}
+ \input{14_element-wise-traversal}
 
- \input{20_applications}
+
+
+
+ \chapter{Applications}
+ \label{chapter:application}
+
+ \input{22_patch-based-solver}
 %  \section{Matrix-free Jacobi solver}
 %  \section{Shallow water code}
 %  \section{Molecular dynamics}
@@ -66,6 +82,8 @@
 % pdfor. pfor
 
   \chapter{Tuning}
+  \label{chapter:tuning}
+
   \input{40_performance-analysis}
   \input{41_mpi-setup}
   \input{42_mpi-communication}

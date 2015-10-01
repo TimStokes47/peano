@@ -1,5 +1,5 @@
-\chapter{Basic Programming Course}
-\label{chapter:basics-explained}
+\section{Grid creation}
+\label{section:grid-creation}
 
 
 \chapterDescription
@@ -125,7 +125,7 @@ call us, we call you!
 \end{remark}
 
 
-\section{On the power of loosing control}
+\subsection{On the power of loosing control}
 
 The algorithmic phases, i.e.~what can be done on a grid, are specified in the
 specification file.
@@ -289,7 +289,7 @@ Below are some screenshots:
 \end{center}
 
 
-\section{What happens}
+\subsection{What happens}
 
 
 \begin{center}
@@ -338,7 +338,7 @@ in any element-wise multiscale grid traversal.
 
 
 
-\section{Data model}
+\subsection{Multiscale data}
 Prior to a discussion of Peano's data model, it might make sense to load all the
 files \texttt{grid-level-?-0.vtk} into your favourite visualisation software.
 Dilate them according to their level encoded in the name.
@@ -404,39 +404,6 @@ standard C++ class (though it does some more stuff: it autogenerates all MPI
 data types that we need later on for parallel codes, and it in particular
 compresses the data such that a bool field is really mapped onto a single bit,
 e.g.).
-
-
-So what we might do now is the following. Open the \texttt{Cell.def} and edit it
-accordingly. 
-Rerun the PDT, recompile, and work.
-
-
-\begin{code}
-Packed-Type: short int;
-
-
-class myproject::dastgen::Cell {
-  discard    parallelise int     myNonPersistentInteger;
-  persistent parallelise double  myValue;
-  persistent parallelise bool    myBool1;
-  persistent parallelise bool    myBool2;
-};
-\end{code}
-% Element-wise traversal.
-% Wo liegen welche Daten
-% Enumerator
-% Wer aggregiert was
-% 
-% Remark: How to realise degrees of freedom associated to faces or edges
-% 
-
-
-
-
-\section{Counting vertices}
-% We could use the repository's operations
-% Do it yourself and then compare
-% Finale: Vertices zaehlen
-% Den Wert von einem double umsetzen
-
-
+There's an alternative way to hold data on the grid that is called heap: in this
+case, we do not assign a fixed number of properties to vertices or cells.
+Both storage variants are discussed in Chapter \ref{chapter:dastgen-and-heap}.
