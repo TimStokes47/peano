@@ -138,10 +138,10 @@ def parseInputFile():
 
 
 def plotMPIPhases():
-  inTraversalColor        = "#00ff00"
-  beforeInTraversalColor  = "#ff0000"
-  afterInTraversalColor   = "#660000"
-  
+  inTraversalColor        = "#00ab00"
+  beforeInTraversalColor  = "#ab0000"
+  afterInTraversalColor   = "#560000"
+  afterBoundaryExchange   = "#0000ab"
 
   pylab.clf()
   pylab.title( "MPI phases overview" )
@@ -151,10 +151,11 @@ def plotMPIPhases():
   timeStampPattern = "([0-9]\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
   
+  beginIterationPattern      = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::beginIteration"
   enterCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree"
   leaveCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree.*t_central-tree-traversal=\(" + floatPattern
-  beginIterationPattern      = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::beginIteration"
   endIterationPattern        = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_traversal=\(" + floatPattern
+  endDataExchange            = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData"
 
   lastTimeStamp  = [0] * numberOfRanks
   
@@ -187,7 +188,8 @@ def plotMPIPhases():
         timeStamp = float( m.group(1) )
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
-        rectLength = float( m.group(3) )
+        #rectLength = float( m.group(3) )
+        rectLength = timeStamp-lastTimeStamp[rank]
         rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=inTraversalColor,edgecolor=inTraversalColor)
         ax.add_patch(rect)
         lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
@@ -197,10 +199,22 @@ def plotMPIPhases():
         timeStamp = float( m.group(1) )
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
-        rectLength = float( m.group(3) )
+        #rectLength = float( m.group(3) )
+        rectLength = timeStamp-lastTimeStamp[rank]
         rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=afterInTraversalColor,edgecolor=afterInTraversalColor)
         ax.add_patch(rect)
         lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
+      m = re.search( endDataExchange, line )
+      if (m):
+        rank = int( m.group(2) )
+        timeStamp = float( m.group(1) )
+        if (lastTimeStamp[rank]==0):
+          lastTimeStamp[rank] = timeStamp
+        rectLength = timeStamp-lastTimeStamp[rank]
+        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=afterBoundaryExchange,edgecolor=afterBoundaryExchange)
+        ax.add_patch(rect)
+        lastTimeStamp[rank] = timeStamp
+
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
@@ -919,8 +933,8 @@ else:
   numberOfThreads = int(sys.argv[3])
   if numberOfRanks>0:
     AlphaValue     = 1.0/numberOfRanks
-    if (AlphaValue<0.01):
-      AlphaValue   = 0.01
+    if (AlphaValue<0.1):
+      AlphaValue   = 0.1
   else:
     AlphaValue     = 0.9
 
@@ -1176,7 +1190,9 @@ if (numberOfRanks>0):
     <li>vertical black bars: end of iteration on master rank</li>\
     <li>bright red: time spent outside of the domain prior to enter the actual local tree; comprises the time the node has to wait for data from the master if master-worker data exchange is not switched off.</li>\
     <li>green: time spent within local tree</li>\
-    <li>dark red: time spent outside of the domain after local tree has been processed; comprises the time the node has to wait until data is successfully sent to the master if worker-master data exchange is not switched off. Usually this effect however is negligible as MPI buffers away the blocking messages.</li>\
+    <li>dark red: time spent outside of the domain after local tree has been processed; comprises the time the node has to wait until data is successfully sent to the master if worker-master data exchange is not switched off. Usually this effect however is negligible as MPI buffers away the blocking messages</li>\
+    <li>dark red on master: time spent to wait for first worker</li>\
+    <li>blue: time required to exchange heap and boundary data; the heap data usually is for free as it overlaps into the subsequent traversal</li>\
     <li>white: idle time and time used to exchange boundary and heap data</li>\
     </ul>\
     <i>Visualisation remarks/performance hints: </i>\
