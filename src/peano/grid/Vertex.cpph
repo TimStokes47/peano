@@ -168,9 +168,9 @@ bool peano::grid::Vertex<VertexData>::switchRefinementTriggeredToRefining() {
 
 template <class VertexData>
 typename peano::grid::Vertex<VertexData>::SwitchEraseTriggeredResult peano::grid::Vertex<VertexData>::switchEraseTriggeredToErasing() {
+  #ifdef Parallel
   assertion1( _vertexData.getRefinementControl()!=VertexData::RefineDueToJoinThoughWorkerIsAlreadyErasing, toString() );
 
-  #ifdef Parallel
   if (
     _vertexData.getRefinementControl()==VertexData::EraseTriggered &&
     _vertexData.getAdjacentSubtreeForksIntoOtherRank() &&
@@ -389,6 +389,16 @@ tarch::la::Vector<DIMENSIONS,double> peano::grid::Vertex<VertexData>::getX() con
 
 
 #ifdef Parallel
+template <class VertexData>
+void peano::grid::Vertex<VertexData>::enforceRefine() {
+  assertion2( !_vertexData.getIsHangingNode(), toString(), "may not call enforceRefine on hanging node" );
+  assertion2( _vertexData.getRefinementControl()==VertexData::Unrefined, toString(), "tried to call enforceRefine on vertex that was already refined" );
+
+  _vertexData.setRefinementControl(VertexData::EnforceRefinementTriggered);
+  _vertexData.setAdjacentCellsHeight( peano::grid::NotStationary );
+}
+
+
 template <class VertexData>
 template <class State>
 bool peano::grid::Vertex<VertexData>::isRemote(

@@ -466,6 +466,20 @@ class peano::grid::Vertex {
     #endif
 
     #ifdef Parallel
+
+    /**
+     * Enforce an immediate refine.
+     *
+     * This operation refines immediately if called by a creational event or
+     * touchVertexFirstTime(). It thus equals refine() in a serial code. In a
+     * parallel code, refine() always postpones the refinement along boundaries.
+     * See refine()'s documentation and the picture there for details.
+     * enforceRefine() does not postpone the refinement. Thus, you have to
+     * ensure yourself that the grid remains consistent, i.e. all ranks holding
+     * a copy of this vertex call enforceRefine() in the same grid sweep.
+     */
+    void enforceRefine();
+
     /**
      * Set flag that blocks erases.
      *

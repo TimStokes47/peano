@@ -49,7 +49,9 @@ void peano::stacks::VertexSTDStack<Vertex>::push( int stackNumber, const Vertex&
     // @todo Join3
     assertion1( vertex.getRefinementControl() != Vertex::Records::Refining, vertex );
     assertion1( vertex.getRefinementControl() != Vertex::Records::Erasing, vertex );
+    #ifdef Parallel
     assertion1( vertex.getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing, vertex );
+    #endif
     _inputOutputStack[1-_currentInputStack].push(vertex.getRecords());
   }
   else {

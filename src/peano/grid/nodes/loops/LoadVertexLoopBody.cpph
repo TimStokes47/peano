@@ -119,9 +119,10 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   assertion1( _fineGridVertices[positionInVertexArray].getRefinementControl() != Vertex::Records::Refining,                                    _fineGridVertices[positionInVertexArray] );
   assertion1( _fineGridVertices[positionInVertexArray].getRefinementControl() != Vertex::Records::Erasing,                                     _fineGridVertices[positionInVertexArray] );
-  assertion1( _fineGridVertices[positionInVertexArray].getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing, _fineGridVertices[positionInVertexArray] );
 
   #ifdef Parallel
+  assertion1( _fineGridVertices[positionInVertexArray].getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing, _fineGridVertices[positionInVertexArray] );
+
   const bool IrregularStaticGrid = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
   if (!IrregularStaticGrid) {
     if (
@@ -545,7 +546,9 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   assertion1( _fineGridVertices[positionInVertexArray].getRefinementControl() != Vertex::Records::Refining,                                    _fineGridVertices[positionInVertexArray] );
   assertion1( _fineGridVertices[positionInVertexArray].getRefinementControl() != Vertex::Records::Erasing,                                     _fineGridVertices[positionInVertexArray] );
+  #ifdef Parallel
   assertion1( _fineGridVertices[positionInVertexArray].getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing, _fineGridVertices[positionInVertexArray] );
+  #endif
 
   logTraceOutWith1Argument( "createNewVertex(...)", _fineGridVertices[positionInVertexArray].toString() );
 }
