@@ -215,6 +215,17 @@ class peano::grid::Vertex {
      *   Otherwise,
      * - Peano bookmarks your refinement wish and refines the grid in the
      *   subsequent traversal.
+     *
+     * The picture below illustrates the parallel behaviour for a vertex that
+     * is shared between two ranks (red and green). It is obvious that we may
+     * never refine immediately in this case. If we did, the grid would become
+     * inconsistent as the green rank would lack behind.
+     *
+     * @image html Vertex_enforceRefine.png
+     *
+     * In parallel codes, this can lead to a very slow grid setup, as each
+     * additional level in the grid requires one grid sweep. Please see the
+     * operation enforceRefine() for an alternative.
      */
     void refine();
 
