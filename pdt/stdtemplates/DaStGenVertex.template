@@ -13,11 +13,21 @@ class __NAMESPACE__::records::Vertex {
   enum InsideOutsideDomain {
     Inside, Boundary, Outside
   };
-
+ 
+  #ifdef Parallel
   enum RefinementControl {
     Unrefined,Refined,RefinementTriggered,
-    Refining,EraseTriggered,Erasing,RefineDueToJoinThoughWorkerIsAlreadyErasing
+    Refining,EraseTriggered,Erasing,RefineDueToJoinThoughWorkerIsAlreadyErasing,
+    EnforceRefinementTriggered
   };
+  #endif
+  
+  #ifndef Parallel
+  enum RefinementControl {
+    Unrefined,Refined,RefinementTriggered,
+    Refining,EraseTriggered,Erasing
+  };
+  #endif
 
   persistent parallelise packed bool               isHangingNode;
   persistent parallelise packed RefinementControl  refinementControl;

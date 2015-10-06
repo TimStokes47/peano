@@ -55,9 +55,13 @@ int __NAMESPACE__::runners::Runner::runAsWorker(__NAMESPACE__::repositories::Rep
 
 
 void __NAMESPACE__::runners::Runner::runGlobalStep() {
-    // insert yourcode here
-    // -------------------------------
+  // You might want to remove this assertion, but please consult the 
+  // documentation before.
+  assertion( !peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated() );
+  
+  // insert yourcode here
+  // -------------------------------
 
-    // -------------------------------
+  // -------------------------------
 }
 #endif
