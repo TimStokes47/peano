@@ -29,6 +29,9 @@ void peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
   assertionEquals2( localVertex._vertexData.getInsideOutsideDomain(), neighbourVertex._vertexData.getInsideOutsideDomain(), localVertex.toString(), neighbourVertex.toString() );
   assertion1( !localVertex.isHangingNode(),                           localVertex.toString() );
 
+  assertion3( localVertex.getRefinementControl()!=Vertex::Records::EnforceRefinementTriggered,     localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank() );
+  assertion3( neighbourVertex.getRefinementControl()!=Vertex::Records::EnforceRefinementTriggered, localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank() );
+
   assertion3( localVertex.getRefinementControl()!=Vertex::Records::Erasing ,                                    localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
   assertion3( localVertex.getRefinementControl()!=Vertex::Records::Refining,                                    localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
   assertion3( localVertex.getRefinementControl()!=Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing, localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
@@ -85,6 +88,9 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
   MergeVertexDueToJoinEffect result = MasterVertexStateRemainsUnaltered;
 
   const bool LocalNodeHasNotBeenResponsibleBefore = !localVertex.isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() );
+
+  assertion3( localVertex.getRefinementControl()!=Vertex::Records::EnforceRefinementTriggered,    localVertex.toString(), workerVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
+  assertion3( workerVertex.getRefinementControl()!=Vertex::Records::EnforceRefinementTriggered,   localVertex.toString(), workerVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
 
   assertionVectorNumericalEquals3( localVertex._vertexData.getX(), workerVertex._vertexData.getX(),     localVertex.toString(), workerVertex.toString(), workerRank );
   assertionEquals3( localVertex._vertexData.getLevel(),            workerVertex._vertexData.getLevel(), localVertex.toString(), workerVertex.toString(), workerRank );
@@ -384,6 +390,9 @@ void peano::grid::aspects::ParallelMerge::mergeWithForkedVertexFromMaster(
   const Vertex&  masterVertex
 ) {
   logTraceInWith2Arguments( "mergeWithForkedVertexFromMaster(...)", localVertex, masterVertex );
+
+  assertion3( localVertex.getRefinementControl()!=Vertex::Records::EnforceRefinementTriggered,    localVertex.toString(), masterVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
+  assertion3( masterVertex.getRefinementControl()!=Vertex::Records::EnforceRefinementTriggered,   localVertex.toString(), masterVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
 
   assertionVectorNumericalEquals2( localVertex._vertexData.getX(),     masterVertex._vertexData.getX(),     localVertex.toString(), masterVertex.toString() );
   assertionEquals2(                localVertex._vertexData.getLevel(), masterVertex._vertexData.getLevel(), localVertex.toString(), masterVertex.toString() );

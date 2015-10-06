@@ -156,7 +156,11 @@ bool peano::grid::Vertex<VertexData>::isInside() const {
 
 template <class VertexData>
 bool peano::grid::Vertex<VertexData>::switchRefinementTriggeredToRefining() {
-  const bool doTransition = _vertexData.getRefinementControl()==VertexData::RefinementTriggered;
+  const bool doTransition =  _vertexData.getRefinementControl()==VertexData::RefinementTriggered
+                          #ifdef Parallel
+                          || _vertexData.getRefinementControl()==VertexData::EnforceRefinementTriggered
+                          #endif
+                          ;
   if( doTransition ) {
     _vertexData.setRefinementControl( VertexData::Refining );
     assertion1(_vertexData.getAdjacentCellsHeight() <= peano::grid::NotStationary ,toString());
