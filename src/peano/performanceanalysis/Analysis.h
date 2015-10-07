@@ -103,6 +103,8 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
     virtual void endToPrepareAsynchronousHeapDataExchange();
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
+
+    virtual void logWorkerMasterCommunication(int worker, bool exchangedData);
 };
 
 

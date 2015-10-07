@@ -197,3 +197,14 @@ void peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
 
   _traversalWatch.startTimer();
 }
+
+
+void peano::performanceanalysis::DefaultAnalyser::logWorkerMasterCommunication(int worker, bool exchangedData) {
+  if (exchangedData) {
+    logInfo( "logWorkerMasterCommunication()", "reduce data from " << worker );
+  }
+  else {
+    logInfo( "logWorkerMasterCommunication()", "skip reduction from " << worker );
+  }
+}
+

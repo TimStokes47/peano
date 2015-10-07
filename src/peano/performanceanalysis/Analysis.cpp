@@ -116,12 +116,20 @@ void peano::performanceanalysis::Analysis::endReleaseOfBoundaryData() {
   _device->endReleaseOfBoundaryData();
 }
 
+
 void peano::performanceanalysis::Analysis::enterCentralElementOfEnclosingSpacetree() {
   assertion( _device!=0 );
   _device->enterCentralElementOfEnclosingSpacetree();
 }
 
+
 void peano::performanceanalysis::Analysis::leaveCentralElementOfEnclosingSpacetree() {
   assertion( _device!=0 );
   _device->leaveCentralElementOfEnclosingSpacetree();
+}
+
+
+void peano::performanceanalysis::Analysis::logWorkerMasterCommunication(int worker, bool exchangedData) {
+  assertion( _device!=0 );
+  _device->logWorkerMasterCommunication(worker,exchangedData);
 }
