@@ -136,9 +136,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       fineGridVerticesEnumerator.getLevel()
     );
 
-    const bool reduceDataFromWorker = state.reduceDataFromWorker(currentWorker);
-    peano::performanceanalysis::Analysis::getInstance().logWorkerMasterCommunication(currentWorker, reduceDataFromWorker);
-    if ( reduceDataFromWorker ) {
+    if ( state.reduceDataFromWorker(currentWorker) ) {
       peano::parallel::loadbalancing::Oracle::getInstance().masterStartsToWaitForWorkers();
 
       if (_eventHandle.communicationSpecification().sendDataBackToMaster()!=peano::CommunicationSpecification::Skip) {
