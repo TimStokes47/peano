@@ -127,9 +127,3 @@ void peano::performanceanalysis::Analysis::leaveCentralElementOfEnclosingSpacetr
   assertion( _device!=0 );
   _device->leaveCentralElementOfEnclosingSpacetree();
 }
-
-
-void peano::performanceanalysis::Analysis::logWorkerMasterCommunication(int worker, bool exchangedData) {
-  assertion( _device!=0 );
-  _device->logWorkerMasterCommunication(worker,exchangedData);
-}

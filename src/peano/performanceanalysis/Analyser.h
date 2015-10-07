@@ -93,11 +93,6 @@ class peano::performanceanalysis::Analyser {
     virtual void endToPrepareAsynchronousHeapDataExchange() = 0;
     virtual void endReleaseOfJoinData() = 0;
     virtual void endReleaseOfBoundaryData() = 0;
-
-    /**
-     * @see peano::grid::Node::updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree()
-     */
-    virtual void logWorkerMasterCommunication(int worker, bool exchangedData) = 0;
 };
 
 

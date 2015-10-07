@@ -75,8 +75,6 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     virtual void endToPrepareAsynchronousHeapDataExchange();
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
-
-    virtual void logWorkerMasterCommunication(int worker, bool exchangedData);
 };
 
 
