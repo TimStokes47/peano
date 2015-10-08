@@ -91,6 +91,14 @@ We also observe that the reduction skips often only change the communication
 profile but do not speed up the computation. 
 Often it is only a preparatory step to switch off boundary data exchange
 afterwards.
+Once this is done, you should get a profile as below. 
+It is more or less completely asynchronous, and all data exchange (blue) is
+hidden in the background, i.e.~not visible anymore:
+
+
+\begin{center}
+  \includegraphics[width=0.9\textwidth]{43_mpi-synchronisation/mpi-phases-after.pdf}
+\end{center}
 
 
 
