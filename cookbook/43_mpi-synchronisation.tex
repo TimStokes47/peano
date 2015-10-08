@@ -30,6 +30,7 @@ waits for rank 0 to start up a new traversal.
   \includegraphics[width=0.9\textwidth]{43_mpi-synchronisation/mpi-phases-before.pdf}
 \end{center}
 
+\noindent
 It also becomes obvious if you study how often a master has to work for its 
 workers. 
 In the picture below, only rank 0 synchronises the other ranks.
@@ -69,6 +70,27 @@ There are basically two variants to improve this situation:
   \texttt{prepareSendToWorker(...)}.
 \end{enumerate}
 
+
+
+\begin{remark}
+  If you want to validate that reductions have been skipped, switch on the log
+  info of 
+  \texttt{peano::grid::nodes::Node::updateCellsParallel}
+  \texttt{StateBeforeStoreForRootOfDeployedSubtree}.
+\end{remark}
+
+
+\noindent
+Please be aware that reduction are skipped by the kernel if and only if all
+mappings allow the kernel to switch off the reduction.
+Furthermore, load balancing has to be disabled.
+If you want to load balance, master and worker ranks have to communicate with
+each other and may not skip any data/status exchange.
+
+We also observe that the reduction skips often only change the communication
+profile but do not speed up the computation. 
+Often it is only a preparatory step to switch off boundary data exchange
+afterwards.
 
 
 
