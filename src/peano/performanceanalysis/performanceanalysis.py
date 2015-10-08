@@ -29,6 +29,8 @@ tTraversal              = {}
 AlphaValue = 1.0
 
 
+GlobalSynchronisationOnRank0 = False
+
 
 
 #
@@ -516,6 +518,8 @@ def plotBoundaryLateSends():
 
 
 def plotMasterWorkerLateSends():
+  global GlobalSynchronisationOnRank0
+  
   #  <a href=\"" + outputFileName + ".master-worker-data-exchange.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.png\" />\
   pairs = dict()
   totalMaxTime        = 0.0
@@ -572,10 +576,16 @@ def plotMasterWorkerLateSends():
         
         if totalCount > 0 and pair.count>2 and (float(pair.average) / float(pair.count) > float(totalAverage) / float(totalCount)):
           sparseAverageGraph.add_edge(str(worker),str(master))
+          if master==0:
+            GlobalSynchronisationOnRank0 = True
+            print "detected very strong MPI synchronisation"
           #edge = pydot.Edge(str(worker),str(master), label="(" + str(pair.count) + "," + str(pair.maxTime) + "," + str(float(pair.average) / float(pair.count)) + ")", fontsize=str(myfontsize), labelfontcolor="blue" )
  
         if pair.count>2 and ( float(pair.maxTime) > 0.9 * float(totalMaxTime) ):
           sparseMaxGraph.add_edge(str(worker),str(master))
+          if master==0:
+            print "detected very strong MPI synchronisation"
+            GlobalSynchronisationOnRank0 = True
           #edge = pydot.Edge(str(worker),str(master), label="(" + str(pair.count) + "," + str(pair.maxTime) + "," + str(float(pair.average) / float(pair.count)) + ")", fontsize=str(myfontsize), labelfontcolor="blue" )
           #sparseMaxGraph.add_edge(edge)      
   pylab.clf()
@@ -946,6 +956,40 @@ outFile        = open( outputFileName, "w" )
     
 
 
+#
+# Now all the images are created and the data is analysed.
+# I use this data to generate some problem-specific hints, 
+# so it has to be done first
+#  
+parseInputFile()
+
+print "plot walltime overview"
+plotWalltimeOverview()
+
+print "plot global grid overview"
+plotGlobalGridOverview()
+
+if (numberOfRanks>0):      
+  print "plot logical grid topology"
+  plotLogicalTopology()
+
+  print "extract fork and join statistics"
+  plotForkJoinStatistics()
+
+  print "plot mpi phases"
+  plotMPIPhases()
+
+  print "master-worker data exchange"
+  plotMasterWorkerLateSends()
+
+  print "boundary data exchange"
+  plotBoundaryLateSends()
+
+  for rank in range(0,numberOfRanks):
+    print "plot statistics for rank " + str(rank)
+    plotStatisticsForRank(rank)
+  
+
 
 
 
@@ -1221,18 +1265,16 @@ if (numberOfRanks>0):
     <a href=\"" + outputFileName + ".master-worker-data-exchange.sparse-max.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.sparse-max.png\" /></a>\
     ")
 
+  # This is one of the reasons why we have to generate the plots first    
+  if  GlobalSynchronisationOnRank0:
+    outFile.write( "<table bgcolor=\"#ff0000\"><tr><td>Attention: Code suffers from strong synchronisation through rank 0.</td></tr></table>" ) 
+  
   outFile.write( "\
     <br /><br />\
     <i>Performance hints: </i>\
     <p>\
-    Peano makes the global rank 0 become a pure administrative rank, i.e. it deploys all workload to another mpi \
-    rank and afterwards handles load balancing, global algorithm control, and so forth. As a consequence \
-    there is usually always one edge pointing towards rank 0. This edge does not illustrate a performance issue. \
-    </p>\
-    <p>\
-    Several researchers recommend to introduce pure administrative ranks in Peano, i.e. make some ranks deploy \
-    all their workload to other nodes and act as administrator only. Such ranks always should have incoming \
-    edges from all their children here. \
+    If you use purely administrative ranks, i.e. ranks that hold only one cell of the spacetree and deploy all children to other ranks, such ranks always should have incoming \
+    edges from all their children in the plot. \
     </p>\
     <p>\
     The edges here illustrate the critical communication path for one traversal, i.e. long graphs running from a node to rank 0 indicate \
@@ -1243,6 +1285,9 @@ if (numberOfRanks>0):
     <p>\
     If you have late workers that you cannot explain, also try to scale up the problem. Late \
     workers often are an indicator for classic strong scaling issues, i.e. too small problem sizes. \
+    </p>\
+    <p>\
+    If rank 0 synchronises all other ranks (see attention), try to reduce the synchronisation according to guide book. \
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
@@ -1384,36 +1429,3 @@ outFile.write( "</body>" )
 outFile.write( "</html>" )
 outFile.close()
 print "html file written"
-
-
-#
-# Now all the images are created
-#  
-parseInputFile()
-
-print "plot walltime overview"
-plotWalltimeOverview()
-
-print "plot global grid overview"
-plotGlobalGridOverview()
-
-if (numberOfRanks>0):      
-  print "plot logical grid topology"
-  plotLogicalTopology()
-
-  print "extract fork and join statistics"
-  plotForkJoinStatistics()
-
-  print "plot mpi phases"
-  plotMPIPhases()
-
-  print "master-worker data exchange"
-  plotMasterWorkerLateSends()
-
-  print "boundary data exchange"
-  plotBoundaryLateSends()
-
-  for rank in range(0,numberOfRanks):
-    print "plot statistics for rank " + str(rank)
-    plotStatisticsForRank(rank)
-  
