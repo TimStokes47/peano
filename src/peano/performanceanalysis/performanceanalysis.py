@@ -1247,6 +1247,8 @@ if (numberOfRanks>0):
     <li>If long green blocks assigned to nodes without any further workers introduce a critical path, your problem is ill-balanced, i.e. some ranks have signficiantly more work to do than others. You might want to use more ranks to give the load balancing more degrees of freedom to balance.</li>\
     <li>If all ranks suffer from long light red blocks, your setup suffers from latency. Ranks wait quite a while for their masters to give them a go. If you run a sequence of multiple sweeps in a row, you might be able map them onto one iterate. Skipping master-worker data exchange also might help.</li>\
     <li>If large dark redish blocks introduce your critical path, your problem either is decomposed into too small chunks. Reduce number of forks/ranks. Or you have to search for ways to skip worker-master data exchange.</li>\
+    <li>If all ranks have large blue blocks that all end at the same time, then you have a very tight coupling of the ranks through boundary data. Change your bounding box, e.g. (see remarks in guide book on boundary data skips).</li>\
+    <li>If the green bars are significantly smaller than the other bars, your problem is too small for this number of ranks. All your time is spent on communication.</li>\
     </ul>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
