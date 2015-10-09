@@ -37,7 +37,7 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 }
 
 
-void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string& methodTrace) {
+void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
   static tarch::logging::Log  _log( "tarch::multicore::BooleanSemaphore" );
   if (_pauseCounter < _pauseBeforeYield) {
     __TBB_Pause(_pauseCounter);
@@ -46,11 +46,7 @@ void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string
   else {
     if (_pauseCounter>_counterThresholdForWarning && _pauseCounter != std::numeric_limits<int>::max()) {
       _pauseCounter = std::numeric_limits<int>::max();
-      logWarning(
-        "sendCurrentTaskToBack(string)",
-        "probably running into deadlock or inefficient behaviour in " << methodTrace <<
-        ". Consult method's documentation for more information"
-      );
+      logWarning( "sendCurrentTaskToBack(string)", "probably running into deadlock or inefficient behaviour" );
     }
     else {
       _pauseCounter++;
@@ -60,7 +56,7 @@ void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string
 }
 
 
-void tarch::multicore::BooleanSemaphore::continueWithTask() {
+void tarch::multicore::BooleanSemaphore::continuedWithTask() {
   _pauseCounter = 1;
 }
 

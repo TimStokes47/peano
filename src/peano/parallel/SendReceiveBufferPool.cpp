@@ -197,8 +197,9 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
     }
     lock.free();
 
-    sendThisTaskToBackground( "peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()" );
+    tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
+  tarch::multicore::BooleanSemaphore::continuedWithTask();
 }
 
 

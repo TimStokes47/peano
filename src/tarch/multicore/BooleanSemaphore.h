@@ -17,54 +17,6 @@ namespace tarch {
   }
 }
 
-/**
- * Macro for pipelining
- *
- * If you use pipelining architectures, you should send your task to the
- * background if no input records are available. Invoke continueWithTask()
- * afterwards.
- */
-#define sendThisTaskToBackground(trace) \
-  { \
-    std::ostringstream conv; \
-    conv << trace; \
-    conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack( conv.str() ); \
-  }
-
-
-/**
- * Macro for pipelining
- *
- * If you use pipelining architectures, you should send your task to the
- * background if no input records are available. Invoke continueWithTask()
- * afterwards.
- */
-#define sendThisTaskToBackgroundWith1Argument(trace,argument0) \
-  { \
-    std::ostringstream conv; \
-    conv << trace << ": " << #argument0 << ":" << argument0; \
-    conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack( conv.str() ); \
-  }
-
-
-/**
- * Macro for pipelining
- *
- * If you use pipelining architectures, you should send your task to the
- * background if no input records are available. Invoke continueWithTask()
- * afterwards.
- */
-#define sendThisTaskToBackgroundWith2Arguments(trace,argument0,argument1) \
-  { \
-    std::ostringstream conv; \
-    conv << trace << ": " << #argument0 << ":" << argument0; \
-    conv << ", " << #argument1 << ":" << argument1; \
-    conv << " (file:" << __FILE__ << ",line:" << __LINE__ << ")"; \
-    tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack( conv.str() ); \
-  }
-
 
 /**
  * Boolean Semaphore
@@ -168,11 +120,41 @@ class tarch::multicore::BooleanSemaphore {
     ~BooleanSemaphore();
 
     /**
-     * NOP
-     */
-    static void sendCurrentTaskToBack(const std::string& methodTrace);
+     *
+     * Macro for pipelining
+     *
+     * You should send your task to the background if no input data are available
+     * to continue. This might e.g. materialise in a semaphore not released yet.
+     * Please invoke continuedWithTask() as soon as your waiting code fragment
+     * continues. The operation does not termine/stop the task. It might only stop
+     * it for a brief time and then continue.
+     *
+     * A typical pattern how to use the macro reads as follows:
+     * \code
 
-    static void continueWithTask();
+    bool hasFinished = false;
+
+    while (!hasFinished) {
+      {
+        tarch::multicore::Lock lock(mySemaphore);
+        hasFinished = get data from some place protected by mySemaphore;
+      }
+      tarch::multicore::BooleanSemaphore::sendTaskToBack();
+    }
+
+    tarch::multicore::BooleanSemaphore::continuedWithTask();
+
+ \endcode
+    *
+    * Please be aware of the inner brackets. We thus explicitly invoke the
+    * lock's destructor. Alternatively, we could unlock manually.
+    */
+    static void sendTaskToBack();
+
+    /**
+     * Each sendCurrentTaskToBack() should be followed by a continueWithTask().
+     */
+    static void continuedWithTask();
 };
 #endif
 

@@ -45,12 +45,9 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
     assertion2(_gridContainer.isLevelInitialised(level), level, _gridContainer.toString());
     #else
     while (_descendProcessRunsInParallelToOtherTasks && !_gridContainer.isLevelInitialised(level)) {
-      sendThisTaskToBackgroundWith1Argument(
-        "peano::grid::nodes::tasks::Descend::touchVerticesFirstTime(int)",
-        level
-      );
+      tarch::multicore::BooleanSemaphore::sendTaskToBack();
     }
-    tarch::multicore::BooleanSemaphore::continueWithTask();
+    tarch::multicore::BooleanSemaphore::continuedWithTask();
     #endif
 
     assertionMsg( _eventHandle.touchVertexFirstTimeSpecification().multithreading != peano::MappingSpecification::AvoidFineGridRaces, "avoid fine grid races not supported. Use avoid coarse grid races instead" );

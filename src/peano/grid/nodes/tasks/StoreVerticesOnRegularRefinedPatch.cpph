@@ -461,13 +461,9 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     _regularGridContainer.getVertexEnumerator(0).getCellFlags()
   );
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel)) {
-    sendThisTaskToBackgroundWith2Arguments(
-      "peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch::storeSubVerticesWithCellsFromGridContainer(...)",
-      _coarsestLevelOfThisTask,
-      _coarsestCellsOffset
-    );
+    tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
-  tarch::multicore::BooleanSemaphore::continueWithTask();
+  tarch::multicore::BooleanSemaphore::continuedWithTask();
   #endif
 
   zfor3(k,loopDirection2)
@@ -571,9 +567,9 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
   assertion( _storeProcessRunsInParallelToOtherTasks || _regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel) );
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel)) {
-    tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack( "peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch::storeSubVerticesWithCellsOnFirstLevelInSharedMemoryMode(...)" );
+    tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
-  tarch::multicore::BooleanSemaphore::continueWithTask();
+  tarch::multicore::BooleanSemaphore::continuedWithTask();
 
   // handle the first level, i.e. the level that has not been handled yet. At
   // this point, all stack views have to be closed.
@@ -646,12 +642,12 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     bool allTasksHaveTerminated = false;
     logDebug( "operator()()", "wait until all store processes have terminated. active-tasks=" << _activeStoreTasks );
     while (!allTasksHaveTerminated) {
-      tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack( "peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch::operator()" );
+      tarch::multicore::BooleanSemaphore::sendTaskToBack();
       leaveOperatorlock.lock();
       allTasksHaveTerminated = _activeStoreTasks == 1;
       leaveOperatorlock.free();
     }
-    tarch::multicore::BooleanSemaphore::continueWithTask();
+    tarch::multicore::BooleanSemaphore::continuedWithTask();
     #else
     assertionEquals2(_activeStoreTasks,1,_coarsestLevelOfThisTask,_coarsestCellsOffset);
     #endif

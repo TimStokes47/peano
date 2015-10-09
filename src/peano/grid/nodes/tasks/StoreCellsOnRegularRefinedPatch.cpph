@@ -57,11 +57,9 @@ void peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch<Vertex,Cell,Cell
   logDebug( "storeCells(...)", "wait until all store processes have terminated. store-runs-in-parallel=" <<_storeProcessRunsInParallelToOtherTasks << ", all events called on current level " << currentLevel << "=" << _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel) );
   assertion2( _storeProcessRunsInParallelToOtherTasks || _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel), currentLevel, _regularGridContainer.toString() );
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)) {
-    sendThisTaskToBackground(
-      "peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch::storeCells(...)"
-    );
+    tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
-  tarch::multicore::BooleanSemaphore::continueWithTask();
+  tarch::multicore::BooleanSemaphore::continuedWithTask();
   #endif
 
   zfor3(k,loopDirection)

@@ -629,9 +629,9 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     _loadProcessRunsInParallelToOtherTasks &&
     !_regularGridContainer.areCellsOfLevelLoaded(currentFineGridLevel)
   ) {
-    tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack( "peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch::loadSubVerticesWithCellsFromGridContainer(...)" );
+    tarch::multicore::BooleanSemaphore::sendTaskToBack();
   };
-  tarch::multicore::BooleanSemaphore::continueWithTask();
+  tarch::multicore::BooleanSemaphore::continuedWithTask();
 
   zfor3(k,loopDirection1)
     const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k + currentCoarseCellPositionWithinUnrolledPatch*3;
@@ -705,9 +705,9 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     _loadProcessRunsInParallelToOtherTasks &&
     !_regularGridContainer.areCellsOfLevelLoaded(currentFineGridLevel)
   ) {
-    tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack( "peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch::loadSubVerticesWithCellsOnFirstLevelInSharedMemoryMode()" );
+    tarch::multicore::BooleanSemaphore::sendTaskToBack();
   };
-  tarch::multicore::BooleanSemaphore::continueWithTask();
+  tarch::multicore::BooleanSemaphore::continuedWithTask();
 
 
   zfor3(k,loopDirection1)

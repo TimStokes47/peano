@@ -55,6 +55,11 @@ class tarch::multicore::BooleanSemaphore {
     /**
      * Send task to background
      *
+     * For a description from the user's point of view please see the
+     * BooleanSemaphore implementation that is active if you don't compile with
+     * any shared memory support. This documentation documents only
+     * implementation details.
+     *
      * The operation first analyses the _pauseCounter reset by
      * continueWithTask().
      *
@@ -66,12 +71,12 @@ class tarch::multicore::BooleanSemaphore {
      * - If however the _pauseCounter exceeds, the operation invokes
      *   __TBB_Yield. Furthermore, it writes an error message once.
      */
-    static void sendCurrentTaskToBack(const std::string& methodTrace);
+    static void sendTaskToBack();
 
     /**
-     * Each sendCurrentTaskToBack() should be followed by a continueWithTask().
+     * @see continueWithTask() of class that is active without TBB/OpenMP/...
      */
-    static void continueWithTask();
+    static void continuedWithTask();
 
 };
 #endif

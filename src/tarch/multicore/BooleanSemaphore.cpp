@@ -21,11 +21,11 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 }
 
 
-void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string& methodTrace) {
+void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
 }
 
 
-void tarch::multicore::BooleanSemaphore::continueWithTask() {
+void tarch::multicore::BooleanSemaphore::continuedWithTask() {
 }
 
 #endif

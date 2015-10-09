@@ -184,12 +184,9 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         SplitLoadVerticesTask!=0 &&
         !_regularGridContainer.isLevelInitialised(TreeDepth)
       ) {
-        sendThisTaskToBackgroundWith1Argument(
-          "peano::grid::nodes::RegularRefined::traverse(...)",
-          TreeDepth
-        );
+        tarch::multicore::BooleanSemaphore::sendTaskToBack();
       }
-      tarch::multicore::BooleanSemaphore::continueWithTask();
+      tarch::multicore::BooleanSemaphore::continuedWithTask();
       #endif
 
       peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::SplitLoadVerticesTaskOnRegularStationaryGrid );
