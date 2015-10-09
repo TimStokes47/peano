@@ -353,8 +353,7 @@ void __THIS_QUALIFIED_TYPENAME__::touchVertexFirstTime(
   if (
     fineGridVertex.getRefinementControl()==__NAMESPACE__::Vertex::Records::Unrefined ||
     fineGridVertex.getRefinementControl()==__NAMESPACE__::Vertex::Records::RefinementTriggered ||
-    fineGridVertex.getRefinementControl()==__NAMESPACE__::Vertex::Records::Erasing || 
-    fineGridVertex.getRefinementControl()==__NAMESPACE__::Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing
+    fineGridVertex.getRefinementControl()==__NAMESPACE__::Vertex::Records::Erasing
   ) {
     plotVertex( fineGridVertex, fineGridX ); 
   }
