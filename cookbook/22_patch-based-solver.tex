@@ -437,6 +437,21 @@ the plotting in the next section first.
 It uses exactly the sketched loop of the patch entries.
 
 
+\begin{remark}
+  It is not clear a priori whether it is better to have overlapping patches or
+  non-overlapping data structures. With overlaps, there's an additional memory
+  overhead for redundant data and data has to be moved around in the preamble of
+  \texttt{enterCell}, e.g. In return, the actual work on the patches can be
+  realised on a continuous array; and thus benefit from vectorisation and
+  parallel fors. Alternatively, one can not use any redundant data and instead
+  access the neighbouring data indirectly. This makes the actual computation
+  often more complicated (one has to analyse whether data is held within the
+  patch of comes from an adjacent patch), but induces no memory overhead and
+  perhaps reduces the stress on the memory subsystem.
+\end{remark}
+
+
+
 \subsection{Plotting}
 
 We briefly sketch what rapid coding of the plotting of a patch-based solver
