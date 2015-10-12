@@ -10,9 +10,9 @@
 
 
 namespace peano {
-    namespace datatraversal {
-      class TaskSet;
-    }
+  namespace datatraversal {
+    class TaskSet;
+  }
 }
 
 
@@ -26,14 +26,12 @@ namespace peano {
  * this wrapper is the right choice iff all the task are totally independent
  * of each other.
  *
- * @todo Usage
+ * The standard variants do not copy the task you hand in and I expect the
+ * functors to be handed in as references. If the tasks are not independent
+ * of each other, they thus might induce data races.
  *
- * No variant ever copies the task: I expect the functors to be handed in as
- * reference. These functors in turn typically are already a copy of the
- * mappings, e.g. So they will be destroyed outside of the task set and merge
- * their state then.
- *
- * !!! Cobra
+ * Please see the documentation of the constructor with only one argument for
+ * further details, as this one behaves differently.
  *
  * @author Tobias Weinzierl
  */
