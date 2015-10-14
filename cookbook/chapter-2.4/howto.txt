@@ -1,0 +1,7 @@
+Chapter 2.4: Some real AMR
+--------------------------
+
+Create links to peano in the directory you have unzipped the archive:
+
+ln -s 
+
