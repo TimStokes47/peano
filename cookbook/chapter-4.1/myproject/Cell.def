@@ -2,5 +2,5 @@ Packed-Type: short int;
 
 
 class myproject::dastgen::Cell {  
-  persistent double eps;
+  persistent double epsilon;
 };
