@@ -21,5 +21,5 @@ myproject::Vertex::Vertex(const Base::PersistentVertex& argument):
 }
 
 double myproject::Vertex::getU() const {
-  return vertexData.getU();
+  return _vertexData.getU();
 }
