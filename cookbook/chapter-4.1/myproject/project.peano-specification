@@ -4,8 +4,8 @@ namespace: ::myproject
 
 vertex:
   dastgen-file: Vertex.def
-  read scalar(double): oldU
-  write scalar(double): u
+  read scalar(double): OldU
+  write scalar(double): U
   
 cell:
   dastgen-file: Cell.def

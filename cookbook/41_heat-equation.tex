@@ -28,8 +28,8 @@ solution.
 \begin{code}
 Packed-Type: short int;
 class myproject::dastgen::Vertex {
-  parallel persistent double  currentU;
-  parallel discard    double  oldU;
+  parallelise persistent double  u;
+  discard                double  oldU;
 };
 \end{code}
 
@@ -42,6 +42,7 @@ class myproject::dastgen::Cell {
 \end{code}
 
 
+\noindent
 Furthermore, we make the code's state hold the solver's time step size. We will
 write the code such that it works in 2d and 3d. All the pictures are done for a
 3d setup. To run with other dimensions, you have to adopt your makefile
@@ -51,9 +52,120 @@ accordingly.
 \begin{code}
 Packed-Type: short int;
 class myproject::dastgen::State { 
-  parallelise double dt;
+  persistent parallelise double dt;
 };
 \end{code}
 
 
+\noindent
+We do not use any sophisticated plotting routines and thus rely in some plotters
+that are available out-of-the-box for Peano.
+We also require only two mappings: one for the setup, one for the time stepping. 
+Depending on our personal choices, we combine them with plotting features or
+not\footnote{There is a known issue with the coding standards in Peano/PDT
+which can be avoided a priori if all read and write attributes start with an
+uppercase---even though they might be defined with lowercase in the def file.}.
+
+\begin{code}
+omponent: ExplicitEulerForHeatEquation
+namespace: ::myproject
+vertex:
+  dastgen-file: Vertex.def
+  read scalar(double): OldU
+  write scalar(double): U
+cell:
+  dastgen-file: Cell.def
+state:
+  dastgen-file: State.def
+event-mapping:
+  name: CreateGrid
+event-mapping:
+  name: TimeStep
+adapter:
+  name: CreateGrid
+  merge-with-user-defined-mapping: CreateGrid
+adapter:
+  name: TimeStep
+  merge-with-user-defined-mapping: TimeStep
+adapter:
+  name: CreateGridAndPlot
+  merge-with-user-defined-mapping: CreateGrid
+  merge-with-predefined-mapping: VTKPlotCellValue(epsilon,getEpsilon,eps)
+  merge-with-predefined-mapping: VTKPlotVertexValue(result,getU,u)
+adapter:
+  name: TimeStepAndPlot
+  merge-with-user-defined-mapping: TimeStep
+  merge-with-predefined-mapping: VTKPlotVertexValue(result,getU,u)
+\end{code}
+
+\noindent
+To translate this file, you need the corresponding predefined mappings that are 
+held in the repository or on the webpage.
+To find out what the arguments of the predefined mappings mean, please have a 
+look into the corresponding template header files.
+We note that we write out epsilon only throughout the setup phase. 
+It does not make sense to plot each each iteration, as this material parameter
+does not change in time.
+We furthermore note that we add some \texttt{read} and \texttt{write}
+statements.
+They make the PDT generate helper methods that allow us within each cell to
+access all $u$ values of a cell as one vector.
+
+
+
+\subsection{Making the plotter work}
+
+This code so far does not compile. It complains with
+
+\begin{code}
+> make -f myproject/makefile
+--- This is Peano 3 ---
+g++ -DDim3 [...] -c myproject/adapters/CreateGridAndPlot2VTKPlotCellValue_0.cpp -o \
+myproject/adapters/CreateGridAndPlot2VTKPlotCellValue_0.o 
+[...]  In member function ‘void [...]::CreateGridAndPlot2VTKPlotCellValue_0::enterCell([...])’:
+[...] error: ‘class myproject::Cell’ has no member named ‘getEpsilon’
+     _cellValueWriter->plotCell(cellIndex,fineGridCell.getEpsilon() );
+                                                       ^
+make: *** [myproject/adapters/CreateGridAndPlot2VTKPlotCellValue_0.o] Error 1
+\end{code}
+
+\noindent
+This is correct. 
+We have told the predefined mapping that there would be an opteration
+\texttt{getEpsilon} to print cell data, but we have not provided one yet.
+A similar reasoning holds for the plotting of the actual solution.
+Therefore, we add 
+
+\begin{code}
+myproject::Cell::Cell():
+  Base() { 
+  _cellData.setEpsilon( 1.0 + static_cast<double>(rand() % 100)/100.0 );
+}
+
+double myproject::Cell::getEpsilon() const {
+  return _cellData.getEpsilon();
+}
+\end{code}
+
+\noindent
+This snippet also initialises each cell with a random value from $(1,2)$.
+We follow the approach for the vertex,
+
+\begin{code}
+double myproject::Vertex::getU() const {
+  return _vertexData.getU();
+}
+\end{code}
+
+\noindent
+Finally, we plug into \texttt{CreateGrid}'s \texttt{createInnerVertex} and
+\texttt{createBoundaryVertex} and add some refinement to end up with a first
+plot of our setup:
+
+\begin{code}
+  if (coarseGridVerticesEnumerator.getLevel()<4) {
+    fineGridVertex.refine();
+  }
+
+\end{code}
 % warum previous solution. Erklaeren.
