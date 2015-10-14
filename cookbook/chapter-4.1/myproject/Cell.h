@@ -56,6 +56,7 @@ class myproject::Cell: public peano::grid::Cell< myproject::records::Cell > {
      */
     Cell(const Base::PersistentCell& argument);
 
+    void init();
     double getEpsilon() const;
 };
 

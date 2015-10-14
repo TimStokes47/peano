@@ -3,8 +3,13 @@
 
 myproject::Cell::Cell():
   Base() { 
+}
+
+
+void myproject::Cell::init() {
   _cellData.setEpsilon( 1.0 + static_cast<double>(rand() % 100)/100.0 );
 }
+
 
 double myproject::Cell::getEpsilon() const {
   return _cellData.getEpsilon();

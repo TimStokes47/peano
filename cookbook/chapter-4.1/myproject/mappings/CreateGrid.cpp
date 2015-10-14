@@ -184,7 +184,9 @@ void myproject::mappings::CreateGrid::createCell(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
   logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
+
+fineGridCell.init();
+
   logTraceOutWith1Argument( "createCell(...)", fineGridCell );
 }
 
