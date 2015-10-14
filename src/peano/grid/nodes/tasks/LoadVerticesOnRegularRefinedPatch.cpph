@@ -202,17 +202,26 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         _regularGridContainer.getVertexEnumerator(0).getCellFlags()
       );
       if (_regularGridContainer.getVertexEnumerator(0).getCellFlags()-currentLevel==0) {
+        #ifdef Parallel
         assertion5(
           (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
-          #ifdef Parallel
           (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing) &&
-          #endif
           (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
           currentLevel,
           currentLevel,positionInArray
         );
+        #else
+        assertion5(
+          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
+          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
+          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+          _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+          currentLevel,
+          currentLevel,positionInArray
+        );
+        #endif
       }
       else {
         assertionEquals1(
@@ -393,17 +402,26 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         _regularGridContainer.getVertex(0,3).toString()
       );
       if (_regularGridContainer.getVertexEnumerator(0).getCellFlags()-currentLevel==0) {
+        #ifdef Parallel
         assertion5(
           (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
-          #ifdef Parallel
           (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing) &&
-          #endif
           (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
           currentLevel,
           currentLevel,positionInArray
         );
+        #else
+        assertion5(
+          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
+          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
+          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+          _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+          currentLevel,
+          currentLevel,positionInArray
+        );
+        #endif
       }
       else {
         assertion7(

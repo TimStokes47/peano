@@ -189,12 +189,11 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     logDebug( "traverse(...)", " - adjacent vertex: " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() );
   enddforx
 
+  #ifdef Parallel
   assertion4(
     peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Erasing) ||
     peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::EraseTriggered) ||
-    #ifdef Parallel
     peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing) ||
-    #endif
     peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Refining) ||
     peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Refined),
     fineGridVertices[fineGridVerticesEnumerator(0)].toString(),
@@ -202,6 +201,18 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     fineGridVertices[fineGridVerticesEnumerator(2)].toString(),
     fineGridVertices[fineGridVerticesEnumerator(3)].toString()
   );
+  #else
+  assertion4(
+    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Erasing) ||
+    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::EraseTriggered) ||
+    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Refining) ||
+    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Refined),
+    fineGridVertices[fineGridVerticesEnumerator(0)].toString(),
+    fineGridVertices[fineGridVerticesEnumerator(1)].toString(),
+    fineGridVertices[fineGridVerticesEnumerator(2)].toString(),
+    fineGridVertices[fineGridVerticesEnumerator(3)].toString()
+  );
+  #endif
 
   typedef std::vector<Cell> CellContainer;
   CellContainer newfineGridCellContainer(THREE_POWER_D, Cell(typename Cell::DoNotCallStandardConstructor()));
@@ -292,18 +303,24 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallLeaveCellAndStoreSubCellsWithinTraverse);
   }
   else {
+    #ifdef Parallel
     assertion4(
-      peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Erasing)
-      #ifdef Parallel
-      ||
-      peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing)
-      #endif
-      ,
+      peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Erasing) ||
+      peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing),
       fineGridVertices[ fineGridVerticesEnumerator(0) ].toString(),
       fineGridVertices[ fineGridVerticesEnumerator(1) ].toString(),
       fineGridVertices[ fineGridVerticesEnumerator(2) ].toString(),
       fineGridVertices[ fineGridVerticesEnumerator(3) ].toString()
     );
+    #else
+    assertion4(
+      peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Erasing),
+      fineGridVertices[ fineGridVerticesEnumerator(0) ].toString(),
+      fineGridVertices[ fineGridVerticesEnumerator(1) ].toString(),
+      fineGridVertices[ fineGridVerticesEnumerator(2) ].toString(),
+      fineGridVertices[ fineGridVerticesEnumerator(3) ].toString()
+    );
+    #endif
     fineGridCell.switchToLeaf();
     leaveRefinedCell();
   }
