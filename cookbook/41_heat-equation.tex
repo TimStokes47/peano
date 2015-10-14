@@ -9,9 +9,51 @@
     Chapter \ref{chapter:quickstart}.
   }
 
-In this section, we sketch how to realise a simple explicit heat equation
-solver that is based upon patches.
-The idea is that we embed a small regular Cartesian grid into each individual
-spacetree leaf.
-This patch is surrounded by a halo/ghost cell layer holding copies from
-neighbouring patches.
+In this section, we sketch how to realise a heat equation solver for
+\[
+  \partial _t u - \nabla (\epsilon \nabla) u = 0
+\]
+that is based
+upon an explicit Euler.
+It uses the spacetree as computational grid.
+
+
+\subsection{Preparation}
+
+We create an empty project with the PDT (\texttt{--create-project myproject
+myproject}) and first adopt our cell and vertex data structure such that each
+cell holds an $\epsilon$ value and each vertex holds the current and previous
+solution.
+
+\begin{code}
+Packed-Type: short int;
+class myproject::dastgen::Vertex {
+  parallel persistent double  currentU;
+  parallel discard    double  oldU;
+};
+\end{code}
+
+
+\begin{code}
+Packed-Type: short int;
+class myproject::dastgen::Cell {
+  persistent double eps;
+};
+\end{code}
+
+
+Furthermore, we make the code's state hold the solver's time step size. We will
+write the code such that it works in 2d and 3d. All the pictures are done for a
+3d setup. To run with other dimensions, you have to adopt your makefile
+accordingly.
+
+
+\begin{code}
+Packed-Type: short int;
+class myproject::dastgen::State { 
+  parallelise double dt;
+};
+\end{code}
+
+
+% warum previous solution. Erklaeren.

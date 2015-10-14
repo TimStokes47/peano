@@ -1,4 +1,4 @@
-\section{A patch-based shallow water solver}
+\section{A patch-based heat equation solver}
 
 
 \chapterDescription
@@ -17,7 +17,7 @@ This patch is surrounded by a halo/ghost cell layer holding copies from
 neighbouring patches.
 
 \begin{center}
-  \includegraphics[width=0.4\textwidth]{22_patch-based-solver/patches.pdf}
+  \includegraphics[width=0.4\textwidth]{44_patch-based-solver/patches.pdf}
 \end{center}
 
 In the sketch, we enbed $4\times 4$ patches into the spacetree cells.
@@ -253,7 +253,7 @@ Finally, we make the meta data record point to this data, while
 the cell itself points to the \texttt{PatchDescription} instance.
  
 \begin{center}
-  \includegraphics[width=0.5\textwidth]{22_patch-based-solver/data.pdf}
+  \includegraphics[width=0.5\textwidth]{44_patch-based-solver/data.pdf}
 \end{center}
 
 \noindent
