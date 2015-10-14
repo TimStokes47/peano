@@ -69,7 +69,7 @@ int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository&
   repository.switchToCreateGridAndPlot();
   repository.iterate();
   
-//  repository.getState().setTimeStepSize( 0.001 );
+  repository.getState().setTimeStepSize( 0.001 );
   for (int i=0; i<10000; i++) {
     if (i%100==0) {
       repository.switchToTimeStepAndPlot();
