@@ -1,0 +1,17 @@
+\section{The heat equation with an explicit Euler}
+
+
+\chapterDescription
+  {
+    60 minutes.
+  }
+  {
+    Chapter \ref{chapter:quickstart}.
+  }
+
+In this section, we sketch how to realise a simple explicit heat equation
+solver that is based upon patches.
+The idea is that we embed a small regular Cartesian grid into each individual
+spacetree leaf.
+This patch is surrounded by a halo/ghost cell layer holding copies from
+neighbouring patches.
