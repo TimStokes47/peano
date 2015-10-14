@@ -12,11 +12,17 @@ howto.txt  myproject  peano  tarch
 > java -jar <mypeanopath>/pdt/pdt.jar --create-project myproject myproject
 Run mode: create project
 Was not able to create directories myproject. Probably directory has existed before
+
+  (blueprint of myproject/Vertex.def already exists)
+  (blueprint of myproject/Cell.def already exists)
+  (blueprint of myproject/State.def already exists)
+  (blueprint of myproject/project.peano-specification already exists)
+
 > java -jar <mypeanopath>/pdt/pdt.jar  --generate-gluecode myproject/project.peano-specification myproject <mypeanopath>/pdt/usrtemplates
 [...]
 > make -f myproject/makefile       
 [...]
-> ./peano-YourProjectName-debug
+> ./peano-YourProjectName-asserts
 [...]
 > ls
 files.mk  grid-0.vtk  howto.txt  myproject  peano  peano-YourProjectName-debug  tarch

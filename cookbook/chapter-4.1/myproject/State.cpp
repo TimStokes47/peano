@@ -29,11 +29,11 @@ void myproject::State::readFromCheckpoint( const peano::grid::Checkpoint<myproje
 
 
 void myproject::State::setTimeStepSize(double dt) {
-  _stateData.setTimeStepSize(dt);
+  _stateData.setDt(dt);
 }
 
 
 double myproject::State::getTimeStepSize() const {
-  return _stateData.getTimeStepSize();
+  return _stateData.getDt();
 }
 
