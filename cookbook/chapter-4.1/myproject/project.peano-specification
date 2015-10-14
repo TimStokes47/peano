@@ -1,9 +1,11 @@
-component: YourProjectName
+component: ExplicitEulerForHeatEquation
 
 namespace: ::myproject
 
 vertex:
   dastgen-file: Vertex.def
+  read scalar(double): oldU
+  write scalar(double): u
   
 cell:
   dastgen-file: Cell.def
@@ -14,8 +16,25 @@ state:
 event-mapping:
   name: CreateGrid
 
+event-mapping:
+  name: TimeStep
+
 adapter:
   name: CreateGrid
   merge-with-user-defined-mapping: CreateGrid
-  merge-with-predefined-mapping: VTKGridVisualiser(grid)
  
+adapter:
+  name: TimeStep
+  merge-with-user-defined-mapping: TimeStep
+
+adapter:
+  name: CreateGridAndPlot
+  merge-with-user-defined-mapping: CreateGrid
+  merge-with-predefined-mapping: VTKPlotCellValue(epsilon,getEpsilon,eps)
+  merge-with-predefined-mapping: VTKPlotVertexValue(result,getU,u)
+
+adapter:
+  name: TimeStepAndPlot
+  merge-with-user-defined-mapping: TimeStep
+  merge-with-predefined-mapping: VTKPlotVertexValue(result,getU,u)
+

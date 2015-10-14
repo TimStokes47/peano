@@ -2,5 +2,5 @@ Packed-Type: short int;
 
 
 class myproject::dastgen::State {  
-  parallelise double dt;
+  persistent parallelise double dt;
 };

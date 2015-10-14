@@ -2,6 +2,6 @@ Packed-Type: short int;
 
 
 class myproject::dastgen::Vertex {  
-  parallel persistent double  currentU;
-  parallel discard    double  oldU;
+  parallelise persistent double  u;
+  discard    double  oldU;
 };
