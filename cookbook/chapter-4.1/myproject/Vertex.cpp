@@ -23,3 +23,9 @@ myproject::Vertex::Vertex(const Base::PersistentVertex& argument):
 double myproject::Vertex::getU() const {
   return _vertexData.getU();
 }
+
+
+void myproject::Vertex::moveCurrentSolutionIntoOldSolutionAndClear() {
+  _vertexData.setOldU( _vertexData.getU() );
+  _vertexData.setU( 0.0 );
+}
