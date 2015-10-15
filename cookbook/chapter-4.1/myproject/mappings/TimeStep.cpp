@@ -379,11 +379,14 @@ void myproject::mappings::TimeStep::touchVertexFirstTime(
 ) {
   logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  fineGridVertex.moveCurrentSolutionIntoOldSolutionAndClear();
-
   if (fineGridVertex.isBoundary() && fineGridX(0)<1e-8) {
     VertexOperations::writeU( fineGridVertex, 1.0 );
   }
+  else if (fineGridVertex.isBoundary()) {
+    VertexOperations::writeU( fineGridVertex, 0.0 );
+  }
+
+  fineGridVertex.copyCurrentSolutionIntoOldSolution();
 
   logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
 }
@@ -428,7 +431,9 @@ void myproject::mappings::TimeStep::enterCell(
 
   tarch::la::Vector<TWO_POWER_D,double> uOld = VertexOperations::readOldU(fineGridVerticesEnumerator,fineGridVertices);
 
-  tarch::la::Vector<TWO_POWER_D,double> uUpdate = fineGridCell.getEpsilon() * A * uOld;
+  const double h = fineGridVerticesEnumerator.getCellSize()(0);
+
+  tarch::la::Vector<TWO_POWER_D,double> uUpdate = - _timeStepSize * fineGridCell.getEpsilon() * A * uOld / h / h  ;
 
   VertexOperations::writeU(
     fineGridVerticesEnumerator,fineGridVertices,

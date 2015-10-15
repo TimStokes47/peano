@@ -185,7 +185,7 @@ void myproject::mappings::CreateGrid::createCell(
 ) {
   logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
-fineGridCell.init();
+  fineGridCell.init();
 
   logTraceOutWith1Argument( "createCell(...)", fineGridCell );
 }
