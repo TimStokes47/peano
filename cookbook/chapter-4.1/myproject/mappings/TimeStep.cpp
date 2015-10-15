@@ -1,5 +1,6 @@
 #include "myproject/mappings/TimeStep.h"
-
+#include "myproject/VertexOperations.h"
+#include "tarch/la/Matrix.h"
 
 
 /**
@@ -377,7 +378,13 @@ void myproject::mappings::TimeStep::touchVertexFirstTime(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
   logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
+
+  fineGridVertex.moveCurrentSolutionIntoOldSolutionAndClear();
+
+  if (fineGridVertex.isBoundary() && fineGridX(0)<1e-8) {
+    VertexOperations::writeU( fineGridVertex, 1.0 );
+  }
+
   logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
 }
 
@@ -407,7 +414,27 @@ void myproject::mappings::TimeStep::enterCell(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
   logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
+
+  tarch::la::Matrix<TWO_POWER_D,TWO_POWER_D,double> A;
+
+  A =  1.0, -0.5, -0.5,  0.0, -0.5,  0.0,  0.0,  0.0,
+      -0.5,  1.0,  0.0, -0.5,  0.0, -0.5,  0.0,  0.0,
+      -0.5,  0.0,  1.0, -0.5,  0.0,  0.0, -0.5,  0.0,
+       0.0, -0.5, -0.5,  1.0,  0.0,  0.0,  0.0, -0.5,
+      -0.5,  0.0,  0.0,  0.0,  1.0, -0.5, -0.5,  0.0,
+       0.0, -0.5,  0.0,  0.0, -0.5,  1.0,  0.0, -0.5,
+       0.0,  0.0, -0.5,  0.0, -0.5,  0.0,  1.0, -0.5,
+       0.0,  0.0,  0.0, -0.5,  0.0, -0.5, -0.5,  1.0;
+
+  tarch::la::Vector<TWO_POWER_D,double> uOld = VertexOperations::readOldU(fineGridVerticesEnumerator,fineGridVertices);
+
+  tarch::la::Vector<TWO_POWER_D,double> uUpdate = fineGridCell.getEpsilon() * A * uOld;
+
+  VertexOperations::writeU(
+    fineGridVerticesEnumerator,fineGridVertices,
+    VertexOperations::readU(fineGridVerticesEnumerator,fineGridVertices) + uUpdate
+  );
+
   logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
 
@@ -431,7 +458,9 @@ void myproject::mappings::TimeStep::beginIteration(
   myproject::State&  solverState
 ) {
   logTraceInWith1Argument( "beginIteration(State)", solverState );
-  // @todo Insert your code here
+
+  _timeStepSize = solverState.getTimeStepSize();
+
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
 
