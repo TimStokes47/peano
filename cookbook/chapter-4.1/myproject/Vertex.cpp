@@ -28,3 +28,7 @@ double myproject::Vertex::getU() const {
 void myproject::Vertex::copyCurrentSolutionIntoOldSolution() {
   _vertexData.setOldU( _vertexData.getU() );
 }
+
+void myproject::Vertex::inject(const Vertex& fromVertex) {
+  _vertexData.setU( fromVertex._vertexData.getU() );
+}
