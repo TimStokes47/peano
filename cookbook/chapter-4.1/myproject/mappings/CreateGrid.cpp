@@ -132,7 +132,10 @@ void myproject::mappings::CreateGrid::createInnerVertex(
 ) {
   logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  if (coarseGridVerticesEnumerator.getLevel()<4) {
+//  if (coarseGridVerticesEnumerator.getLevel()<4) {
+//    fineGridVertex.refine();
+//  }
+  if (coarseGridVerticesEnumerator.getLevel()<2) {
     fineGridVertex.refine();
   }
 
@@ -151,9 +154,16 @@ void myproject::mappings::CreateGrid::createBoundaryVertex(
 ) {
   logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  if (coarseGridVerticesEnumerator.getLevel()<4) {
+//  if (coarseGridVerticesEnumerator.getLevel()<4) {
+//    fineGridVertex.refine();
+//  }
+  if (coarseGridVerticesEnumerator.getLevel()<6 && fineGridX(0)<1e-8) {
     fineGridVertex.refine();
   }
+  else if (coarseGridVerticesEnumerator.getLevel()<2) {
+    fineGridVertex.refine();
+  }
+
 
   logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
 }
