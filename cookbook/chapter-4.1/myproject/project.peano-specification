@@ -19,6 +19,9 @@ event-mapping:
 
 event-mapping:
   name: TimeStep
+  
+event-mapping:
+  name: Inject
 
 adapter:
   name: CreateGrid
@@ -27,6 +30,7 @@ adapter:
 adapter:
   name: TimeStep
   merge-with-user-defined-mapping: TimeStep
+  merge-with-user-defined-mapping: Inject
 
 adapter:
   name: CreateGridAndPlot
@@ -37,5 +41,6 @@ adapter:
 adapter:
   name: TimeStepAndPlot
   merge-with-user-defined-mapping: TimeStep
+  merge-with-user-defined-mapping: Inject
   merge-with-predefined-mapping: VTKPlotVertexValue(result,getU,u)
 
