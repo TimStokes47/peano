@@ -448,12 +448,179 @@ ragged as well.
 Bottom: The temperature propagates further into the medium.
 
 
+\subsection{Multiscale data representation}
+
+We continue the solver development with a technical extension that proofs to be
+of great value.
+Rather than working on the actual fine grid, i.e.~our compute grid, we inject
+the finest solutions to the coarser grids all the time:
+whenever a vertex coincides with a vertex on a coarser level, we take its value
+and copy it to the coarser grid.
+To realise this injection, we typically propose to introduce a new mapping in
+the specification, and to realise the injection in this new mapping---it has
+nothing to do directly with the solver, so the separation of mappings reflects a
+separation of concerns.
+
+\begin{code}
+...
+event-mapping:
+  name: Inject
+...
+adapter:
+  name: TimeStep
+  merge-with-user-defined-mapping: TimeStep
+  merge-with-user-defined-mapping: Inject
+...
+adapter:
+  name: TimeStepAndPlot
+  merge-with-user-defined-mapping: TimeStep
+  merge-with-user-defined-mapping: Inject
+  merge-with-predefined-mapping: VTKPlotVertexValue(result,getU,u)
+\end{code}
+
+
+\noindent
+As a result, we have a multiscale representation of the solution on each
+individual grid level.
+It is (almost) for free, as Peano's vertices are unique due to their combination
+of level and spatial position, i.e.~these coarse vertices do exist anyway.
+
+\begin{code}
+void myproject::Vertex::inject(const Vertex& fromVertex) {
+  _vertexData.setU( fromVertex._vertexData.getU() );
+}
+
+void myproject::mappings::Inject::touchVertexLastTime(...) {
+ logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, ... );
+
+ if ( peano::grid::SingleLevelEnumerator::isVertexPositionAlsoACoarseVertexPosition(
+  fineGridPositionOfVertex) ) {
+  const peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex coarseGridPosition = 
+   peano::grid::SingleLevelEnumerator::getVertexPositionOnCoarserLevel
+   (fineGridPositionOfVertex);
+
+  coarseGridVertices[ coarseGridVerticesEnumerator(coarseGridPosition) ].inject(fineGridVertex);
+ }
+
+ logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
+}
+\end{code}
+
+\noindent
+In our implementation, we use helper functions of the enumerator classes. 
+Alternatively, we could have checked the integer array
+\texttt{fineGridPosiitionOfVertex} manually whether all entries are either 0 or
+3.
+
+
+\begin{remark}
+Several projects have exploited this multiscale representation for visualisation
+and data postprocessing. Whenever data in a reduced accuracy is sufficient (to
+create fancy pictures, e.g.), one can directly extract this data from the
+corresponding spacetree level rather than using the finest grid representation
+and postprocess these data.
+\end{remark}
+
 \subsection{Static adaptivity}
 
+An elegant way to realise adaptive solvers is to pick up the concept of FAC/MLAT
+from the multigrid community.
+The idea is very simple:
+\begin{itemize}
+  \item We calculate an update of the solution for each and every cell in the
+  sapcetree. This includes the refined ones.
+  \item We interpolate hanging nodes from the next coarser levels. This can be
+  done recursively, i.e.~a 3:1 balancing of the tree is not required. Rippling
+  does not happen.
+  \item We inject the solution of a fine grid vertex to the coarser levels and
+  thus overwrite the impact of the unknown update there. 
+\end{itemize}
+
+\begin{center}
+ \includegraphics[width=0.34\textwidth]{41_heat-equation/FAC.pdf}
+\end{center}
 
 
-% Noch was zu FAC
-%injection
+\noindent
+One can read such a scheme as an overlapping domain decomposition: 
+The coarser levels slightly overlap finer levels. 
+Those coarse grid vertices that fall into a fine grid partition are treated as
+Dirichlet values (we may update them, but the update then is overwritten
+immediately).
+Their value is injected from finer grids---an ingredient we already have
+realised.
+Fine grid problems are handled as Dirichlet problems as well. 
+Their boundary points either are real boundary points or hanging nodes.
+The value of hanging nodes in turn stems from coarser levels which closes the
+coupling of the coarse and fine grid problems.
+
+
+We propose to introduce---mirroring \texttt{Inject}---a new mapping
+\texttt{Prolong} that solely plugs into the generation of hanging nodes.
+This time, we use Peano's $d$-dimensional loops, as well as PDT's generated
+write operations that break up the OO encapsulation.
+
+\begin{code}
+#include "myproject/VertexOperations.h"
+#include "peano/utils/Loop.h"
+
+
+void myproject::mappings::Prolong::createHangingVertex(...) {
+  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, ... );
+
+  double interpolatedValue = 0.0;
+  dfor2(k)
+    double weight = 1.0;
+    for (int d=0; d<DIMENSIONS; d++) {
+      if (k(d)==0) {
+        weight *= 1.0 - (fineGridPositionOfVertex(d))/3.0;
+      }
+      else {
+        weight *= (fineGridPositionOfVertex(d))/3.0;
+      }
+    }
+    interpolatedValue = weight * coarseGridVertices[ coarseGridVerticesEnumerator(k)].getU();
+  enddforx
+
+  VertexOperations::writeU( fineGridVertex, interpolatedValue );
+  fineGridVertex.copyCurrentSolutionIntoOldSolution();
+
+  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
+}
+\end{code}
+
+\noindent
+We reiterate that Peano's \texttt{matrixfree} toolbox provides helpers realising
+such typical interpolation tasks.
+
+Finally, we have to setup an adaptive grid. We stick to a static, simple setup
+for the time being where the mesh is made very fine along the $x=0$ plane and
+reasonably coarse everywhere else.
+
+\begin{code}
+void myproject::mappings::CreateGrid::createInnerVertex(...) {
+ if (coarseGridVerticesEnumerator.getLevel()<2) {
+  fineGridVertex.refine();
+ }
+}
+
+void myproject::mappings::CreateGrid::createBoundaryVertex(...) {
+ if (coarseGridVerticesEnumerator.getLevel()<6 && fineGridX(0)<1e-8) {
+  fineGridVertex.refine();
+ }
+ else if (coarseGridVerticesEnumerator.getLevel()<2) {
+  fineGridVertex.refine();
+ }
+}
+\end{code}
+
+
+\begin{center}
+ \includegraphics[width=0.65\textwidth]{41_heat-equation/initial-adaptive-grid.png}
+\end{center}
+
 
 
 \subsection{Dynamic adaptivity}
+
+% Initialisierung mit rein
