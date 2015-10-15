@@ -5,7 +5,7 @@
 
 myproject::Vertex::Vertex():
   Base() { 
-  // @todo Insert your code here
+  _vertexData.setU(0.0);
 }
 
 
@@ -25,7 +25,6 @@ double myproject::Vertex::getU() const {
 }
 
 
-void myproject::Vertex::moveCurrentSolutionIntoOldSolutionAndClear() {
+void myproject::Vertex::copyCurrentSolutionIntoOldSolution() {
   _vertexData.setOldU( _vertexData.getU() );
-  _vertexData.setU( 0.0 );
 }

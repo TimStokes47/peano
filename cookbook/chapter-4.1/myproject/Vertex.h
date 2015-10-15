@@ -66,7 +66,7 @@ class myproject::Vertex: public peano::grid::Vertex< myproject::records::Vertex 
 
     double getU() const;
 
-    void moveCurrentSolutionIntoOldSolutionAndClear();
+    void copyCurrentSolutionIntoOldSolution();
 };
 
 

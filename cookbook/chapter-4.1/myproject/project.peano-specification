@@ -32,7 +32,7 @@ adapter:
   name: CreateGridAndPlot
   merge-with-user-defined-mapping: CreateGrid
   merge-with-predefined-mapping: VTKPlotCellValue(epsilon,getEpsilon,eps)
-  merge-with-predefined-mapping: VTKPlotVertexValue(result,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexValue(initialSetup,getU,u)
 
 adapter:
   name: TimeStepAndPlot
