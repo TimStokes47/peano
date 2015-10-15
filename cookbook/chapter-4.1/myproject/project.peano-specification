@@ -4,6 +4,7 @@ namespace: ::myproject
 
 vertex:
   dastgen-file: Vertex.def
+  read scalar(double): U
   read scalar(double): OldU
   write scalar(double): U
   
