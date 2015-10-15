@@ -71,6 +71,7 @@ omponent: ExplicitEulerForHeatEquation
 namespace: ::myproject
 vertex:
   dastgen-file: Vertex.def
+  read scalar(double): U
   read scalar(double): OldU
   write scalar(double): U
 cell:
@@ -137,8 +138,7 @@ A similar reasoning holds for the plotting of the actual solution.
 Therefore, we add 
 
 \begin{code}
-myproject::Cell::Cell():
-  Base() { 
+void myproject::Cell::init() {
   _cellData.setEpsilon( 1.0 + static_cast<double>(rand() % 100)/100.0 );
 }
 
@@ -148,8 +148,19 @@ double myproject::Cell::getEpsilon() const {
 \end{code}
 
 \noindent
-This snippet also initialises each cell with a random value from $(1,2)$.
-We follow the approach for the vertex,
+This snippet also allows us to initialise a cell with a random value from
+$(1,2)$.
+
+
+\begin{remark}
+An initialisation of the cell's $\epsilon$ in the default constructor does not
+work because of the flyweight pattern (see next remark). Instead, we have to
+provide an explicit initialisation routine, and we have to call this routine
+within the mapping's \texttt{createCell} event.
+\end{remark}
+
+\noindent
+We reiterate our code extension for the vertex,
 
 \begin{code}
 double myproject::Vertex::getU() const {
@@ -162,9 +173,26 @@ Finally, we plug into \texttt{CreateGrid}'s \texttt{createInnerVertex} and
 \texttt{createBoundaryVertex} and add some refinement statements:
 
 \begin{code}
-  if (coarseGridVerticesEnumerator.getLevel()<4) {
-    fineGridVertex.refine();
-  }
+void myproject::mappings::CreateGrid::createInnerVertex(...) {
+ if (coarseGridVerticesEnumerator.getLevel()<4) {
+  fineGridVertex.refine();
+ }
+} 
+ 
+void myproject::mappings::CreateGrid::createBoundaryVertex(...) {
+ if (coarseGridVerticesEnumerator.getLevel()<4) {
+  fineGridVertex.refine();
+ }
+} 
+ 
+void myproject::mappings::CreateGrid::createCell(...) {
+ logTraceInWith4Arguments( "createCell(...)", fineGridCell, ... );
+
+ fineGridCell.init();
+
+ logTraceOutWith1Argument( "createCell(...)", fineGridCell );
+}
+  
 \end{code}
 
 As soon as this first plot is available, as add a time stepping loop in the
@@ -201,6 +229,12 @@ The implementation of the \texttt{State}'s \texttt{void setTimeStepSize(double
 dt)} operation is left to the reader. 
 Please add the corresponding \texttt{double getTimeStepSize() const}, too.
 
+\begin{center}
+  \includegraphics[width=0.7\textwidth]{41_heat-equation/epsilon.png}
+\end{center}
+
+
+
 \begin{remark}
   It is a `original' decision to model states, vertices and cells as classes
   that actually aggregate their data objects (attribute \texttt{\_stateData},
@@ -217,9 +251,6 @@ Please add the corresponding \texttt{double getTimeStepSize() const}, too.
 \end{remark}
 
 
-
-@todo man braucht wohl ein init.
-@todo das ist auch der Grund, warum der Konstruktor nix bringt
 
 
 \subsection{A stencil code}
@@ -241,9 +272,123 @@ Our strategy (within the mapping) is simple:
   \item In \texttt{enterCell}, we element-wisely accumulate the new solution in
   the vertices.
 \end{enumerate}
-% warum previous solution. Erklaeren.
-% Mal richtig oft jetzt die Tools hernehmen. 
-% Noch was zu FAC
+
+\begin{code}
+class myproject::mappings::TimeStep {
+ private:
+  /**
+   * Logging device for the trace macros.
+   */
+  static tarch::logging::Log  _log;
+    
+  double _timeStepSize;
+  ...
+};
+
+
+void myproject::mappings::TimeStep::beginIteration(
+  myproject::State&  solverState
+) {
+  logTraceInWith1Argument( "beginIteration(State)", solverState );
+
+  _timeStepSize = solverState.getTimeStepSize();
+
+  logTraceOutWith1Argument( "beginIteration(State)", solverState);
+}
+\end{code}
+
+\noindent
+We reiterate that the state is not available to a mapping by default. If you
+need the state (or one of its properties), you explicitly have to grab this data
+in \texttt{beginIteration}. As an alternative to the double above, it also would
+be possible to copy the whole state. If you want to modify the solver's state,
+you have to alter it in \texttt{endIteration}. As Peano requires the user to
+explicitly move state data around when required, we ensure that the data remains
+consistent in the parallel code variants.
+
+\begin{code}
+void myproject::mappings::TimeStep::touchVertexFirstTime(...) {
+ ...  
+ fineGridVertex.moveCurrentSolutionIntoOldSolutionAndClear();
+ ...  
+}
+
+void myproject::Vertex::moveCurrentSolutionIntoOldSolutionAndClear() {
+  _vertexData.setOldU( _vertexData.getU() );
+  _vertexData.setU( 0.0 );
+}
+\end{code}
+
+\noindent
+The interesting stuff happens in the mapping's \texttt{enterCell}, 
+where we first of all take all $2^d$ vertices and write their old solution into
+one double vector. 
+For this, there's a predefined operation in \texttt{VertexOperations} as we have
+asked the PDE that we read the scalar.
+This $2^d$ vector then is multiplied with the local assembly matrix subject of
+an $\epsilon$ scaling.
+The result finally is added to the new value.
+Again, we us the generated read and write methods.
+
+\begin{code}
+#include "myproject/VertexOperations.h"
+#include "tarch/la/Matrix.h"
+
+void myproject::mappings::TimeStep::enterCell(...) {
+  logTraceInWith4Arguments( "enterCell(...)", fineGridCell, ... );
+
+  tarch::la::Matrix<TWO_POWER_D,TWO_POWER_D,double> A;
+
+  A =  1.0, -0.5, -0.5,  0.0, -0.5,  0.0,  0.0,  0.0,
+      -0.5,  1.0,  0.0, -0.5,  0.0, -0.5,  0.0,  0.0,
+      -0.5,  0.0,  1.0, -0.5,  0.0,  0.0, -0.5,  0.0,
+       0.0, -0.5, -0.5,  1.0,  0.0,  0.0,  0.0, -0.5,
+      -0.5,  0.0,  0.0,  0.0,  1.0, -0.5, -0.5,  0.0,
+       0.0, -0.5,  0.0,  0.0, -0.5,  1.0,  0.0, -0.5,
+       0.0,  0.0, -0.5,  0.0, -0.5,  0.0,  1.0, -0.5,
+       0.0,  0.0,  0.0, -0.5,  0.0, -0.5, -0.5,  1.0;
+
+  tarch::la::Vector<TWO_POWER_D,double> uOld = 
+    VertexOperations::readOldU(fineGridVerticesEnumerator,fineGridVertices);
+
+  tarch::la::Vector<TWO_POWER_D,double> uUpdate = fineGridCell.getEpsilon() * A * uOld;
+
+  VertexOperations::writeU(
+    fineGridVerticesEnumerator,fineGridVertices,
+    VertexOperations::readU(fineGridVerticesEnumerator,fineGridVertices) + uUpdate
+  );
+
+  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
+}
+\end{code}
+
+\noindent
+In this example, I wrote down the local assembly matrix for $d=3$ explicitly.
+If you want to support other dimensions, you have to adopt this part
+accordingly.
+Alternatively, you might want to use Peano's dimension-generic tools and write
+one-version-fits-it-all.
+
+We use Peano's linear algebra routines here.
+They are held in the \texttt{tarch} component, and provide all basic
+functionality we typically need.
+Obviously, it might make sense to switch to other linear algebra packages
+(BLAS, e.g.) for more demanding setups.
+
+For a better understanding, it might make sense to have a look into
+\texttt{readOldU}.
+We note that \texttt{fineGridVertices} is a pointer to an array of vertices, but
+the layout of the vertices within this array remains open.
+Therefore, Peano hands over an enumerator object. 
+The enumerator object has a functor to allow us to select the right vertices.
+\texttt{fineGridVertices[ fineGridVerticesEnumerator(0) ]} for example returns
+the bottom left vertex of the cell.
+See the enumerator's documentation in the header for detailed information.
+ 
+Obviously, the above code is not very elaborate. 
+The stiffness matrix is set up multiple times.
+The most basic optimisation would be to make the matrix an attribute of the
+mapping and to initialise it only once.
 
 \begin{remark}
   On the Peano webpage and in the repository, you find a \texttt{matrixfree}
@@ -253,3 +398,34 @@ Our strategy (within the mapping) is simple:
   simpler PDE operators from a finite element/tensor-product formalism and it
   also provides operations fitted to PDT's generated read and write routines. 
 \end{remark}
+
+
+\noindent
+Obviously, our code does not do anything as we do not set any nonzero boundary
+conditions. 
+Lets do this upon a vertex's first use. 
+As we have specified a read, the PDT provides write operations that break up the
+object encapsulation.
+We make use of this now;
+
+\begin{code}
+void myproject::mappings::TimeStep::touchVertexFirstTime(...) {
+  ...
+
+  if (fineGridVertex.isBoundary() && fineGridX(0)<1e-8) {
+    VertexOperations::writeU( fineGridVertex, 1.0 );
+  }
+ 
+  ...
+}
+\end{code}
+
+\subsection{Static adaptivity}
+
+
+
+% Noch was zu FAC
+injection
+
+
+\subsection{Dynamic adaptivity}
