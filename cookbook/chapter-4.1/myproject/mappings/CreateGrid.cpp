@@ -135,7 +135,7 @@ void myproject::mappings::CreateGrid::createInnerVertex(
 //  if (coarseGridVerticesEnumerator.getLevel()<4) {
 //    fineGridVertex.refine();
 //  }
-  if (coarseGridVerticesEnumerator.getLevel()<2) {
+  if (coarseGridVerticesEnumerator.getLevel()<1) {
     fineGridVertex.refine();
   }
 
@@ -157,10 +157,10 @@ void myproject::mappings::CreateGrid::createBoundaryVertex(
 //  if (coarseGridVerticesEnumerator.getLevel()<4) {
 //    fineGridVertex.refine();
 //  }
-  if (coarseGridVerticesEnumerator.getLevel()<6 && fineGridX(0)<1e-8) {
+  if (coarseGridVerticesEnumerator.getLevel()<5 && fineGridX(0)<1e-8) {
     fineGridVertex.refine();
   }
-  else if (coarseGridVerticesEnumerator.getLevel()<2) {
+  else if (coarseGridVerticesEnumerator.getLevel()<1) {
     fineGridVertex.refine();
   }
 

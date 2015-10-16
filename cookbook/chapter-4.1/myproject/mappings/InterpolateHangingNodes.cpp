@@ -1,4 +1,4 @@
-#include "myproject/mappings/Prolong.h"
+#include "myproject/mappings/InterpolateHangingNodes.h"
 #include "myproject/VertexOperations.h"
 #include "peano/utils/Loop.h"
 
@@ -6,7 +6,7 @@
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::CommunicationSpecification   myproject::mappings::Prolong::communicationSpecification() {
+peano::CommunicationSpecification   myproject::mappings::InterpolateHangingNodes::communicationSpecification() {
   return peano::CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime,false);
 }
 
@@ -14,7 +14,7 @@ peano::CommunicationSpecification   myproject::mappings::Prolong::communicationS
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   myproject::mappings::Prolong::touchVertexLastTimeSpecification() {
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::touchVertexLastTimeSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
 }
 
@@ -22,7 +22,7 @@ peano::MappingSpecification   myproject::mappings::Prolong::touchVertexLastTimeS
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   myproject::mappings::Prolong::touchVertexFirstTimeSpecification() { 
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::touchVertexFirstTimeSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
 }
 
@@ -30,7 +30,7 @@ peano::MappingSpecification   myproject::mappings::Prolong::touchVertexFirstTime
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   myproject::mappings::Prolong::enterCellSpecification() {
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::enterCellSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
 }
 
@@ -38,7 +38,7 @@ peano::MappingSpecification   myproject::mappings::Prolong::enterCellSpecificati
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   myproject::mappings::Prolong::leaveCellSpecification() {
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::leaveCellSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
 }
 
@@ -46,7 +46,7 @@ peano::MappingSpecification   myproject::mappings::Prolong::leaveCellSpecificati
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   myproject::mappings::Prolong::ascendSpecification() {
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::ascendSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
 }
 
@@ -54,45 +54,45 @@ peano::MappingSpecification   myproject::mappings::Prolong::ascendSpecification(
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   myproject::mappings::Prolong::descendSpecification() {
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::descendSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
 }
 
 
-tarch::logging::Log                myproject::mappings::Prolong::_log( "myproject::mappings::Prolong" ); 
+tarch::logging::Log                myproject::mappings::InterpolateHangingNodes::_log( "myproject::mappings::InterpolateHangingNodes" );
 
 
-myproject::mappings::Prolong::Prolong() {
-  logTraceIn( "Prolong()" );
+myproject::mappings::InterpolateHangingNodes::InterpolateHangingNodes() {
+  logTraceIn( "InterpolateHangingNodes()" );
   // @todo Insert your code here
-  logTraceOut( "Prolong()" );
+  logTraceOut( "InterpolateHangingNodes()" );
 }
 
 
-myproject::mappings::Prolong::~Prolong() {
-  logTraceIn( "~Prolong()" );
+myproject::mappings::InterpolateHangingNodes::~InterpolateHangingNodes() {
+  logTraceIn( "~InterpolateHangingNodes()" );
   // @todo Insert your code here
-  logTraceOut( "~Prolong()" );
+  logTraceOut( "~InterpolateHangingNodes()" );
 }
 
 
 #if defined(SharedMemoryParallelisation)
-myproject::mappings::Prolong::Prolong(const Prolong&  masterThread) {
-  logTraceIn( "Prolong(Prolong)" );
+myproject::mappings::InterpolateHangingNodes::InterpolateHangingNodes(const InterpolateHangingNodes&  masterThread) {
+  logTraceIn( "InterpolateHangingNodes(InterpolateHangingNodes)" );
   // @todo Insert your code here
-  logTraceOut( "Prolong(Prolong)" );
+  logTraceOut( "InterpolateHangingNodes(InterpolateHangingNodes)" );
 }
 
 
-void myproject::mappings::Prolong::mergeWithWorkerThread(const Prolong& workerThread) {
-  logTraceIn( "mergeWithWorkerThread(Prolong)" );
+void myproject::mappings::InterpolateHangingNodes::mergeWithWorkerThread(const InterpolateHangingNodes& workerThread) {
+  logTraceIn( "mergeWithWorkerThread(InterpolateHangingNodes)" );
   // @todo Insert your code here
-  logTraceOut( "mergeWithWorkerThread(Prolong)" );
+  logTraceOut( "mergeWithWorkerThread(InterpolateHangingNodes)" );
 }
 #endif
 
 
-void myproject::mappings::Prolong::createHangingVertex(
+void myproject::mappings::InterpolateHangingNodes::createHangingVertex(
       myproject::Vertex&     fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                fineGridH,
@@ -124,7 +124,7 @@ void myproject::mappings::Prolong::createHangingVertex(
 }
 
 
-void myproject::mappings::Prolong::destroyHangingVertex(
+void myproject::mappings::InterpolateHangingNodes::destroyHangingVertex(
       const myproject::Vertex&   fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridH,
@@ -139,7 +139,7 @@ void myproject::mappings::Prolong::destroyHangingVertex(
 }
 
 
-void myproject::mappings::Prolong::createInnerVertex(
+void myproject::mappings::InterpolateHangingNodes::createInnerVertex(
       myproject::Vertex&               fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
@@ -154,7 +154,7 @@ void myproject::mappings::Prolong::createInnerVertex(
 }
 
 
-void myproject::mappings::Prolong::createBoundaryVertex(
+void myproject::mappings::InterpolateHangingNodes::createBoundaryVertex(
       myproject::Vertex&               fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
@@ -169,7 +169,7 @@ void myproject::mappings::Prolong::createBoundaryVertex(
 }
 
 
-void myproject::mappings::Prolong::destroyVertex(
+void myproject::mappings::InterpolateHangingNodes::destroyVertex(
       const myproject::Vertex&   fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridH,
@@ -184,7 +184,7 @@ void myproject::mappings::Prolong::destroyVertex(
 }
 
 
-void myproject::mappings::Prolong::createCell(
+void myproject::mappings::InterpolateHangingNodes::createCell(
       myproject::Cell&                 fineGridCell,
       myproject::Vertex * const        fineGridVertices,
       const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -199,7 +199,7 @@ void myproject::mappings::Prolong::createCell(
 }
 
 
-void myproject::mappings::Prolong::destroyCell(
+void myproject::mappings::InterpolateHangingNodes::destroyCell(
       const myproject::Cell&           fineGridCell,
       myproject::Vertex * const        fineGridVertices,
       const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -214,7 +214,7 @@ void myproject::mappings::Prolong::destroyCell(
 }
 
 #ifdef Parallel
-void myproject::mappings::Prolong::mergeWithNeighbour(
+void myproject::mappings::InterpolateHangingNodes::mergeWithNeighbour(
   myproject::Vertex&  vertex,
   const myproject::Vertex&  neighbour,
   int                                           fromRank,
@@ -227,7 +227,7 @@ void myproject::mappings::Prolong::mergeWithNeighbour(
   logTraceOut( "mergeWithNeighbour(...)" );
 }
 
-void myproject::mappings::Prolong::prepareSendToNeighbour(
+void myproject::mappings::InterpolateHangingNodes::prepareSendToNeighbour(
   myproject::Vertex&  vertex,
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS,double>&   x,
@@ -239,7 +239,7 @@ void myproject::mappings::Prolong::prepareSendToNeighbour(
   logTraceOut( "prepareSendToNeighbour(...)" );
 }
 
-void myproject::mappings::Prolong::prepareCopyToRemoteNode(
+void myproject::mappings::InterpolateHangingNodes::prepareCopyToRemoteNode(
   myproject::Vertex&  localVertex,
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS,double>&   x,
@@ -251,7 +251,7 @@ void myproject::mappings::Prolong::prepareCopyToRemoteNode(
   logTraceOut( "prepareCopyToRemoteNode(...)" );
 }
 
-void myproject::mappings::Prolong::prepareCopyToRemoteNode(
+void myproject::mappings::InterpolateHangingNodes::prepareCopyToRemoteNode(
   myproject::Cell&  localCell,
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS,double>&   cellCentre,
@@ -263,7 +263,7 @@ void myproject::mappings::Prolong::prepareCopyToRemoteNode(
   logTraceOut( "prepareCopyToRemoteNode(...)" );
 }
 
-void myproject::mappings::Prolong::mergeWithRemoteDataDueToForkOrJoin(
+void myproject::mappings::InterpolateHangingNodes::mergeWithRemoteDataDueToForkOrJoin(
   myproject::Vertex&  localVertex,
   const myproject::Vertex&  masterOrWorkerVertex,
   int                                       fromRank,
@@ -276,7 +276,7 @@ void myproject::mappings::Prolong::mergeWithRemoteDataDueToForkOrJoin(
   logTraceOut( "mergeWithRemoteDataDueToForkOrJoin(...)" );
 }
 
-void myproject::mappings::Prolong::mergeWithRemoteDataDueToForkOrJoin(
+void myproject::mappings::InterpolateHangingNodes::mergeWithRemoteDataDueToForkOrJoin(
   myproject::Cell&  localCell,
   const myproject::Cell&  masterOrWorkerCell,
   int                                       fromRank,
@@ -289,7 +289,7 @@ void myproject::mappings::Prolong::mergeWithRemoteDataDueToForkOrJoin(
   logTraceOut( "mergeWithRemoteDataDueToForkOrJoin(...)" );
 }
 
-bool myproject::mappings::Prolong::prepareSendToWorker(
+bool myproject::mappings::InterpolateHangingNodes::prepareSendToWorker(
   myproject::Cell&                 fineGridCell,
   myproject::Vertex * const        fineGridVertices,
   const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -305,7 +305,7 @@ bool myproject::mappings::Prolong::prepareSendToWorker(
   return true;
 }
 
-void myproject::mappings::Prolong::prepareSendToMaster(
+void myproject::mappings::InterpolateHangingNodes::prepareSendToMaster(
   myproject::Cell&                       localCell,
   myproject::Vertex *                    vertices,
   const peano::grid::VertexEnumerator&       verticesEnumerator, 
@@ -320,7 +320,7 @@ void myproject::mappings::Prolong::prepareSendToMaster(
 }
 
 
-void myproject::mappings::Prolong::mergeWithMaster(
+void myproject::mappings::InterpolateHangingNodes::mergeWithMaster(
   const myproject::Cell&           workerGridCell,
   myproject::Vertex * const        workerGridVertices,
  const peano::grid::VertexEnumerator& workerEnumerator,
@@ -341,7 +341,7 @@ void myproject::mappings::Prolong::mergeWithMaster(
 }
 
 
-void myproject::mappings::Prolong::receiveDataFromMaster(
+void myproject::mappings::InterpolateHangingNodes::receiveDataFromMaster(
       myproject::Cell&                        receivedCell, 
       myproject::Vertex *                     receivedVertices,
       const peano::grid::VertexEnumerator&        receivedVerticesEnumerator,
@@ -359,7 +359,7 @@ void myproject::mappings::Prolong::receiveDataFromMaster(
 }
 
 
-void myproject::mappings::Prolong::mergeWithWorker(
+void myproject::mappings::InterpolateHangingNodes::mergeWithWorker(
   myproject::Cell&           localCell, 
   const myproject::Cell&     receivedMasterCell,
   const tarch::la::Vector<DIMENSIONS,double>&  cellCentre,
@@ -372,7 +372,7 @@ void myproject::mappings::Prolong::mergeWithWorker(
 }
 
 
-void myproject::mappings::Prolong::mergeWithWorker(
+void myproject::mappings::InterpolateHangingNodes::mergeWithWorker(
   myproject::Vertex&        localVertex,
   const myproject::Vertex&  receivedMasterVertex,
   const tarch::la::Vector<DIMENSIONS,double>&   x,
@@ -385,7 +385,7 @@ void myproject::mappings::Prolong::mergeWithWorker(
 }
 #endif
 
-void myproject::mappings::Prolong::touchVertexFirstTime(
+void myproject::mappings::InterpolateHangingNodes::touchVertexFirstTime(
       myproject::Vertex&               fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
@@ -400,7 +400,7 @@ void myproject::mappings::Prolong::touchVertexFirstTime(
 }
 
 
-void myproject::mappings::Prolong::touchVertexLastTime(
+void myproject::mappings::InterpolateHangingNodes::touchVertexLastTime(
       myproject::Vertex&         fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridH,
@@ -415,7 +415,7 @@ void myproject::mappings::Prolong::touchVertexLastTime(
 }
 
 
-void myproject::mappings::Prolong::enterCell(
+void myproject::mappings::InterpolateHangingNodes::enterCell(
       myproject::Cell&                 fineGridCell,
       myproject::Vertex * const        fineGridVertices,
       const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -430,7 +430,7 @@ void myproject::mappings::Prolong::enterCell(
 }
 
 
-void myproject::mappings::Prolong::leaveCell(
+void myproject::mappings::InterpolateHangingNodes::leaveCell(
       myproject::Cell&           fineGridCell,
       myproject::Vertex * const  fineGridVertices,
       const peano::grid::VertexEnumerator&          fineGridVerticesEnumerator,
@@ -445,7 +445,7 @@ void myproject::mappings::Prolong::leaveCell(
 }
 
 
-void myproject::mappings::Prolong::beginIteration(
+void myproject::mappings::InterpolateHangingNodes::beginIteration(
   myproject::State&  solverState
 ) {
   logTraceInWith1Argument( "beginIteration(State)", solverState );
@@ -454,7 +454,7 @@ void myproject::mappings::Prolong::beginIteration(
 }
 
 
-void myproject::mappings::Prolong::endIteration(
+void myproject::mappings::InterpolateHangingNodes::endIteration(
   myproject::State&  solverState
 ) {
   logTraceInWith1Argument( "endIteration(State)", solverState );
@@ -464,7 +464,7 @@ void myproject::mappings::Prolong::endIteration(
 
 
 
-void myproject::mappings::Prolong::descend(
+void myproject::mappings::InterpolateHangingNodes::descend(
   myproject::Cell * const          fineGridCells,
   myproject::Vertex * const        fineGridVertices,
   const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -478,7 +478,7 @@ void myproject::mappings::Prolong::descend(
 }
 
 
-void myproject::mappings::Prolong::ascend(
+void myproject::mappings::InterpolateHangingNodes::ascend(
   myproject::Cell * const    fineGridCells,
   myproject::Vertex * const  fineGridVertices,
   const peano::grid::VertexEnumerator&          fineGridVerticesEnumerator,
