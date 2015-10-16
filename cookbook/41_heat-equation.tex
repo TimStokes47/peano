@@ -556,7 +556,7 @@ coupling of the coarse and fine grid problems.
 
 
 We propose to introduce---mirroring \texttt{Inject}---a new mapping
-\texttt{Prolong} that solely plugs into the generation of hanging nodes.
+\texttt{InterpolateHangingNodes} that solely plugs into the generation of hanging nodes.
 This time, we use Peano's $d$-dimensional loops, as well as PDT's generated
 write operations that break up the OO encapsulation.
 
@@ -564,8 +564,7 @@ write operations that break up the OO encapsulation.
 #include "myproject/VertexOperations.h"
 #include "peano/utils/Loop.h"
 
-
-void myproject::mappings::Prolong::createHangingVertex(...) {
+void myproject::mappings::InterpolateHangingNodes::createHangingVertex(...) {
   logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, ... );
 
   double interpolatedValue = 0.0;
@@ -596,19 +595,21 @@ such typical interpolation tasks.
 Finally, we have to setup an adaptive grid. We stick to a static, simple setup
 for the time being where the mesh is made very fine along the $x=0$ plane and
 reasonably coarse everywhere else.
+Please note that you might have to adopt your time step size as well if you
+reduce the resolution along the heated up plate. 
 
 \begin{code}
 void myproject::mappings::CreateGrid::createInnerVertex(...) {
- if (coarseGridVerticesEnumerator.getLevel()<2) {
+ if (coarseGridVerticesEnumerator.getLevel()<1) {
   fineGridVertex.refine();
  }
 }
 
 void myproject::mappings::CreateGrid::createBoundaryVertex(...) {
- if (coarseGridVerticesEnumerator.getLevel()<6 && fineGridX(0)<1e-8) {
+ if (coarseGridVerticesEnumerator.getLevel()<5 && fineGridX(0)<1e-8) {
   fineGridVertex.refine();
  }
- else if (coarseGridVerticesEnumerator.getLevel()<2) {
+ else if (coarseGridVerticesEnumerator.getLevel()<1) {
   fineGridVertex.refine();
  }
 }
@@ -616,11 +617,49 @@ void myproject::mappings::CreateGrid::createBoundaryVertex(...) {
 
 
 \begin{center}
- \includegraphics[width=0.65\textwidth]{41_heat-equation/initial-adaptive-grid.png}
+ \includegraphics[width=0.45\textwidth]{41_heat-equation/initial-adaptive-grid.png}
+ \includegraphics[width=0.45\textwidth]{41_heat-equation/adaptive-grid-21.png}
 \end{center}
 
 
 
 \subsection{Dynamic adaptivity}
 
-% Initialisierung mit rein
+Given a statically adaptive grid, dynamic adaptivity is (technically) a minor
+improvement. 
+We realise it in two steps:
+\begin{enumerate}
+  \item We write the refinement criterion, and 
+  \item we ensure that the a posteriori refinement initialises the correct data.
+\end{enumerate}
+
+The first step is strongly application dependent. 
+A simple criterion that seems to work sufficiently is to assign each vertex a
+new (non-persistent) value $\hat u$ that is set to zero in
+\texttt{touchVertexFirstTime}. In the \texttt{enterCell} method, we then
+evaluate the stencil
+\[
+\left[ \begin{array}{ccc}
+  0 & \frac{1}{4} & 0 \\
+  \frac{1}{4} & -1 & \frac{1}{4} \\
+  0 & \frac{1}{4} & 0
+\end{array}  \right].
+\]
+In \texttt{touchVertexLastTime}, I then refine the vertices with the biggest
+absolute $\hat u$. This stencil determines the derivation from the
+average in a point, i.e.~it measures the second derivative.
+For a first try, it often yields very reasonable refinement patterns.
+I tend to realise this refinement in a mapping of its own that I merge into the
+time stepping adapter.
+
+For the second step, we have to ensure that all newly created cells and vertices
+are intialised correctly.
+For the cells, we might simply merge the \texttt{CreateGrid} mapping into our
+time stepping adapter.
+For the vertices, we have to plug into \texttt{createInnerVertex} where we
+initialse the vertex with the interpolated value of its coarse grid parents.
+Again, Peano offers toolboxes with routines that do so. 
+However, you may also simply reprogram it using the dimension-specific for-loops
+of the \texttt{Loop} header.
+
+ 
