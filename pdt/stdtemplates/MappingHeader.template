@@ -906,6 +906,9 @@ class __THIS_QUALIFIED_TYPENAME__ {
 
     /**
      * Counterpart of mergeWithMaster()
+     * 
+     * Remark: If your grid exhibits sufficient regularity beyond the domain 
+     *         boundaries, the received cell might be an outside cell. 
      */
     void mergeWithWorker(
       __NAMESPACE__::Cell&           localCell, 
@@ -918,6 +921,9 @@ class __THIS_QUALIFIED_TYPENAME__ {
 
     /**
      * Counterpart of mergeWithMaster()
+     * 
+     * Remark: If your grid exhibits sufficient regularity beyond the domain 
+     *         boundaries, the received vertex might be an outside vertex. 
      */
     void mergeWithWorker(
       __NAMESPACE__::Vertex&        localVertex,
