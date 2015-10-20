@@ -762,6 +762,35 @@ def plotWalltimeOverview():
   pylab.savefig( outputFileName + ".walltime.pdf" )
 
 
+def createRankDetails(rank):
+  #searchPattern = "(\d+),rank:" + str(rank) + ".*::repositories::.*::restart(...).*start node for subdomain"
+  #searchPattern = str(rank) + ".*repositories.*restart.*start node for subdomain"
+  searchPattern = "rank:" + str(rank) + ".*repositories.*restart.*start node for subdomain"
+
+  outFile.write( "<h4>Rank details:</h4>" );
+  outFile.write( "<ol>" );
+ 
+  wroteDetails = False
+  #try:
+  inputFile = open( inputFileName,  "r" )
+  for line in inputFile:
+    m = re.search( searchPattern, line )
+    if (m):
+      wroteDetails = True
+      outFile.write( "<li>" );
+      outFile.write( line );
+      outFile.write( "</li>" );
+
+  #except:
+  #  pass
+    
+  if not wroteDetails:
+    outFile.write( "<li>Rank details are available if and only if info messages from the repositories subcomponent are switched on</li>" );
+  
+  outFile.write( "</ol>" );
+
+
+
 def plotStatisticsForRank(currentRank):
   pylab.clf()
   pylab.title( "Walltime" )
@@ -1076,6 +1105,11 @@ outFile.write( "\
     The solid line is the time per traversal on the global master rank. \
     If you run without MPI, this equals your application's runtime. \
     </p>\
+    <p>\
+    If your code does not synchronise the ranks with the global master, the solid line does not give a good \
+    overview of your runtime. If the code synchronises only everh kth grid sweep, k sweeps are always summarised \
+    by one linear graph. \
+    </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
@@ -1184,6 +1218,11 @@ if (numberOfRanks>0):
     <h2 id=\"fork-join-statistics\">Fork and join statistics</h2>\
     <img src=\"" + outputFileName + ".fork-join-statistics.png\" />\
     <br /><br />\
+    <p>\
+    The statistics use the node's timers. If the timers of nodes ran with MPI \
+    are slightly non-synchronised or many forks and joins happen at the same time, \
+    you might see vertical zig-zag patterns. They are not errors but measurement inaccuracies. \
+    </p>\
     <i>Performance hint: </i>\
     <p>\
     Joins and forks are expensive operations in terms of walltime. Evaluating the load balancing \
@@ -1269,10 +1308,15 @@ if (numberOfRanks>0):
 
   # This is one of the reasons why we have to generate the plots first    
   if  GlobalSynchronisationOnRank0:
-    outFile.write( "<table bgcolor=\"#ff0000\"><tr><td>Attention: Code suffers from strong synchronisation through rank 0.</td></tr></table>" ) 
+    outFile.write( "<table bgcolor=\"#ff0000\"><tr><td>Attention: Code might suffer from strong synchronisation through rank 0.</td></tr></table>" ) 
   
   outFile.write( "\
     <br /><br />\
+    <p>\
+    If you obtain a warning no strong synchronisation with the master above but switched off all/most synchronisation with the master \
+    please ignore the warning. In this case, it is natural that the global master waits for the workers to finish at some points. It \
+    then is not an inefficiency pattern but an efficiency validation. \
+    </p>\
     <i>Performance hints: </i>\
     <p>\
     If you use purely administrative ranks, i.e. ranks that hold only one cell of the spacetree and deploy all children to other ranks, such ranks always should have incoming \
@@ -1290,6 +1334,9 @@ if (numberOfRanks>0):
     </p>\
     <p>\
     If rank 0 synchronises all other ranks (see attention), try to reduce the synchronisation according to guide book. \
+    </p>\
+    <p>\
+    If rank 0 continues to synchronises all other ranks and your MPI phases exhibit lots of dark red areas, your rank 0 might participate in too many boundary exchanges. Consult guide book how to adopt the domain boundaries accordingly. \
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
@@ -1411,8 +1458,9 @@ if (numberOfRanks>0):
 
 
   for rank in range(0,numberOfRanks):
+    outFile.write( "<h3 id=\"runtime-rank-" + str(rank) + "\">Profile of rank " + str(rank) + "</h2>")
+    createRankDetails(rank)  
     outFile.write( "\
-      <h3 id=\"runtime-rank-" + str(rank) + "\">Profile of rank " + str(rank) + "</h2>\
       <img src=\"" + outputFileName + ".walltime-rank-" + str(rank) + ".png\" />\
       <img src=\"" + outputFileName + ".local-cells-rank-" + str(rank) + ".png\" />\
       <img src=\"" + outputFileName + ".runtime-profile-calendar-rank-" + str(rank) + ".png\" />\
