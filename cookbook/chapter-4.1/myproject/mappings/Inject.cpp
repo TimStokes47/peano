@@ -2,57 +2,24 @@
 
 
 
-/**
- * @todo Please tailor the parameters to your mapping's properties.
- */
 peano::CommunicationSpecification   myproject::mappings::Inject::communicationSpecification() {
   return peano::CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime,false);
 }
-
-
-/**
- * @todo Please tailor the parameters to your mapping's properties.
- */
 peano::MappingSpecification   myproject::mappings::Inject::touchVertexLastTimeSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
 }
-
-
-/**
- * @todo Please tailor the parameters to your mapping's properties.
- */
 peano::MappingSpecification   myproject::mappings::Inject::touchVertexFirstTimeSpecification() { 
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
 }
-
-
-/**
- * @todo Please tailor the parameters to your mapping's properties.
- */
 peano::MappingSpecification   myproject::mappings::Inject::enterCellSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
 }
-
-
-/**
- * @todo Please tailor the parameters to your mapping's properties.
- */
 peano::MappingSpecification   myproject::mappings::Inject::leaveCellSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
 }
-
-
-/**
- * @todo Please tailor the parameters to your mapping's properties.
- */
 peano::MappingSpecification   myproject::mappings::Inject::ascendSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
 }
-
-
-/**
- * @todo Please tailor the parameters to your mapping's properties.
- */
 peano::MappingSpecification   myproject::mappings::Inject::descendSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
 }
@@ -62,31 +29,19 @@ tarch::logging::Log                myproject::mappings::Inject::_log( "myproject
 
 
 myproject::mappings::Inject::Inject() {
-  logTraceIn( "Inject()" );
-  // @todo Insert your code here
-  logTraceOut( "Inject()" );
 }
 
 
 myproject::mappings::Inject::~Inject() {
-  logTraceIn( "~Inject()" );
-  // @todo Insert your code here
-  logTraceOut( "~Inject()" );
 }
 
 
 #if defined(SharedMemoryParallelisation)
 myproject::mappings::Inject::Inject(const Inject&  masterThread) {
-  logTraceIn( "Inject(Inject)" );
-  // @todo Insert your code here
-  logTraceOut( "Inject(Inject)" );
 }
 
 
 void myproject::mappings::Inject::mergeWithWorkerThread(const Inject& workerThread) {
-  logTraceIn( "mergeWithWorkerThread(Inject)" );
-  // @todo Insert your code here
-  logTraceOut( "mergeWithWorkerThread(Inject)" );
 }
 #endif
 
@@ -100,9 +55,6 @@ void myproject::mappings::Inject::createHangingVertex(
       myproject::Cell&       coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
 }
 
 
@@ -115,9 +67,6 @@ void myproject::mappings::Inject::destroyHangingVertex(
       myproject::Cell&           coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "destroyHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "destroyHangingVertex(...)", fineGridVertex );
 }
 
 
@@ -130,9 +79,6 @@ void myproject::mappings::Inject::createInnerVertex(
       myproject::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
 }
 
 
@@ -145,9 +91,6 @@ void myproject::mappings::Inject::createBoundaryVertex(
       myproject::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
 }
 
 
@@ -160,9 +103,6 @@ void myproject::mappings::Inject::destroyVertex(
       myproject::Cell&           coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "destroyVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "destroyVertex(...)", fineGridVertex );
 }
 
 
@@ -175,9 +115,6 @@ void myproject::mappings::Inject::createCell(
       myproject::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
-  logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createCell(...)", fineGridCell );
 }
 
 
@@ -190,9 +127,6 @@ void myproject::mappings::Inject::destroyCell(
       myproject::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
-  logTraceInWith4Arguments( "destroyCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "destroyCell(...)", fineGridCell );
 }
 
 #ifdef Parallel
@@ -204,10 +138,8 @@ void myproject::mappings::Inject::mergeWithNeighbour(
   const tarch::la::Vector<DIMENSIONS,double>&   fineGridH,
   int                                           level
 ) {
-  logTraceInWith6Arguments( "mergeWithNeighbour(...)", vertex, neighbour, fromRank, fineGridX, fineGridH, level );
-  // @todo Insert your code here
-  logTraceOut( "mergeWithNeighbour(...)" );
 }
+
 
 void myproject::mappings::Inject::prepareSendToNeighbour(
   myproject::Vertex&  vertex,
@@ -216,10 +148,8 @@ void myproject::mappings::Inject::prepareSendToNeighbour(
       const tarch::la::Vector<DIMENSIONS,double>&   h,
       int                                           level
 ) {
-  logTraceInWith3Arguments( "prepareSendToNeighbour(...)", vertex, toRank, level );
-  // @todo Insert your code here
-  logTraceOut( "prepareSendToNeighbour(...)" );
 }
+
 
 void myproject::mappings::Inject::prepareCopyToRemoteNode(
   myproject::Vertex&  localVertex,
@@ -228,10 +158,8 @@ void myproject::mappings::Inject::prepareCopyToRemoteNode(
       const tarch::la::Vector<DIMENSIONS,double>&   h,
       int                                           level
 ) {
-  logTraceInWith5Arguments( "prepareCopyToRemoteNode(...)", localVertex, toRank, x, h, level );
-  // @todo Insert your code here
-  logTraceOut( "prepareCopyToRemoteNode(...)" );
 }
+
 
 void myproject::mappings::Inject::prepareCopyToRemoteNode(
   myproject::Cell&  localCell,
@@ -240,10 +168,8 @@ void myproject::mappings::Inject::prepareCopyToRemoteNode(
       const tarch::la::Vector<DIMENSIONS,double>&   cellSize,
       int                                           level
 ) {
-  logTraceInWith5Arguments( "prepareCopyToRemoteNode(...)", localCell, toRank, cellCentre, cellSize, level );
-  // @todo Insert your code here
-  logTraceOut( "prepareCopyToRemoteNode(...)" );
 }
+
 
 void myproject::mappings::Inject::mergeWithRemoteDataDueToForkOrJoin(
   myproject::Vertex&  localVertex,
@@ -253,10 +179,8 @@ void myproject::mappings::Inject::mergeWithRemoteDataDueToForkOrJoin(
   const tarch::la::Vector<DIMENSIONS,double>&  h,
   int                                       level
 ) {
-  logTraceInWith6Arguments( "mergeWithRemoteDataDueToForkOrJoin(...)", localVertex, masterOrWorkerVertex, fromRank, x, h, level );
-  // @todo Insert your code here
-  logTraceOut( "mergeWithRemoteDataDueToForkOrJoin(...)" );
 }
+
 
 void myproject::mappings::Inject::mergeWithRemoteDataDueToForkOrJoin(
   myproject::Cell&  localCell,
@@ -266,10 +190,8 @@ void myproject::mappings::Inject::mergeWithRemoteDataDueToForkOrJoin(
   const tarch::la::Vector<DIMENSIONS,double>&  cellSize,
   int                                       level
 ) {
-  logTraceInWith3Arguments( "mergeWithRemoteDataDueToForkOrJoin(...)", localCell, masterOrWorkerCell, fromRank );
-  // @todo Insert your code here
-  logTraceOut( "mergeWithRemoteDataDueToForkOrJoin(...)" );
 }
+
 
 bool myproject::mappings::Inject::prepareSendToWorker(
   myproject::Cell&                 fineGridCell,
@@ -281,9 +203,6 @@ bool myproject::mappings::Inject::prepareSendToWorker(
   const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell,
   int                                                                  worker
 ) {
-  logTraceIn( "prepareSendToWorker(...)" );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "prepareSendToWorker(...)", true );
   return true;
 }
 
@@ -296,9 +215,6 @@ void myproject::mappings::Inject::prepareSendToMaster(
   const myproject::Cell&                 coarseGridCell,
   const tarch::la::Vector<DIMENSIONS,int>&   fineGridPositionOfCell
 ) {
-  logTraceInWith2Arguments( "prepareSendToMaster(...)", localCell, verticesEnumerator.toString() );
-  // @todo Insert your code here
-  logTraceOut( "prepareSendToMaster(...)" );
 }
 
 
@@ -317,9 +233,6 @@ void myproject::mappings::Inject::mergeWithMaster(
   const myproject::State&          workerState,
   myproject::State&                masterState
 ) {
-  logTraceIn( "mergeWithMaster(...)" );
-  // @todo Insert your code here
-  logTraceOut( "mergeWithMaster(...)" );
 }
 
 
@@ -335,9 +248,6 @@ void myproject::mappings::Inject::receiveDataFromMaster(
       myproject::Cell&                        workersCoarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&    fineGridPositionOfCell
 ) {
-  logTraceIn( "receiveDataFromMaster(...)" );
-  // @todo Insert your code here
-  logTraceOut( "receiveDataFromMaster(...)" );
 }
 
 
@@ -348,9 +258,6 @@ void myproject::mappings::Inject::mergeWithWorker(
   const tarch::la::Vector<DIMENSIONS,double>&  cellSize,
   int                                          level
 ) {
-  logTraceInWith2Arguments( "mergeWithWorker(...)", localCell.toString(), receivedMasterCell.toString() );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "mergeWithWorker(...)", localCell.toString() );
 }
 
 
@@ -361,9 +268,6 @@ void myproject::mappings::Inject::mergeWithWorker(
   const tarch::la::Vector<DIMENSIONS,double>&   h,
   int                                           level
 ) {
-  logTraceInWith2Arguments( "mergeWithWorker(...)", localVertex.toString(), receivedMasterVertex.toString() );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "mergeWithWorker(...)", localVertex.toString() );
 }
 #endif
 
@@ -376,9 +280,6 @@ void myproject::mappings::Inject::touchVertexFirstTime(
       myproject::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
 }
 
 
@@ -412,9 +313,6 @@ void myproject::mappings::Inject::enterCell(
       myproject::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
-  logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
 
 
@@ -427,27 +325,18 @@ void myproject::mappings::Inject::leaveCell(
       myproject::Cell&           coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfCell
 ) {
-  logTraceInWith4Arguments( "leaveCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "leaveCell(...)", fineGridCell );
 }
 
 
 void myproject::mappings::Inject::beginIteration(
   myproject::State&  solverState
 ) {
-  logTraceInWith1Argument( "beginIteration(State)", solverState );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
 
 
 void myproject::mappings::Inject::endIteration(
   myproject::State&  solverState
 ) {
-  logTraceInWith1Argument( "endIteration(State)", solverState );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "endIteration(State)", solverState);
 }
 
 
@@ -460,9 +349,6 @@ void myproject::mappings::Inject::descend(
   const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
   myproject::Cell&                 coarseGridCell
 ) {
-  logTraceInWith2Arguments( "descend(...)", coarseGridCell.toString(), coarseGridVerticesEnumerator.toString() );
-  // @todo Insert your code here
-  logTraceOut( "descend(...)" );
 }
 
 
@@ -474,7 +360,4 @@ void myproject::mappings::Inject::ascend(
   const peano::grid::VertexEnumerator&          coarseGridVerticesEnumerator,
   myproject::Cell&           coarseGridCell
 ) {
-  logTraceInWith2Arguments( "ascend(...)", coarseGridCell.toString(), coarseGridVerticesEnumerator.toString() );
-  // @todo Insert your code here
-  logTraceOut( "ascend(...)" );
 }
