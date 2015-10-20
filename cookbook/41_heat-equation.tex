@@ -174,13 +174,13 @@ Finally, we plug into \texttt{CreateGrid}'s \texttt{createInnerVertex} and
 
 \begin{code}
 void myproject::mappings::CreateGrid::createInnerVertex(...) {
- if (coarseGridVerticesEnumerator.getLevel()<4) {
+ if (coarseGridVerticesEnumerator.getLevel()<3) {
   fineGridVertex.refine();
  }
 } 
  
 void myproject::mappings::CreateGrid::createBoundaryVertex(...) {
- if (coarseGridVerticesEnumerator.getLevel()<4) {
+ if (coarseGridVerticesEnumerator.getLevel()<3) {
   fineGridVertex.refine();
  }
 } 
@@ -206,9 +206,9 @@ int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository&
   repository.switchToCreateGridAndPlot();
   repository.iterate();
   
-  repository.getState().setTimeStepSize( 1e-8 );
-  for (int i=0; i<1000; i++) {
-    if (i%10==0) {
+  repository.getState().setTimeStepSize( 0.5e-7 );
+  for (int i=0; i<10000; i++) {
+    if (i%100==0) {
       repository.switchToTimeStepAndPlot();
     }
     else {
@@ -596,7 +596,10 @@ Finally, we have to setup an adaptive grid. We stick to a static, simple setup
 for the time being where the mesh is made very fine along the $x=0$ plane and
 reasonably coarse everywhere else.
 Please note that you might have to adopt your time step size as well if you
-reduce the resolution along the heated up plate. 
+reduce the resolution along the heated up plate.
+Furthermore, if you visualise, please note that the default visualiser we used
+so far does not know anything about the hanging nodes' interpolation and thus
+plots them as zero values. 
 
 \begin{code}
 void myproject::mappings::CreateGrid::createInnerVertex(...) {
@@ -606,7 +609,7 @@ void myproject::mappings::CreateGrid::createInnerVertex(...) {
 }
 
 void myproject::mappings::CreateGrid::createBoundaryVertex(...) {
- if (coarseGridVerticesEnumerator.getLevel()<5 && fineGridX(0)<1e-8) {
+ if (coarseGridVerticesEnumerator.getLevel()<3 && fineGridX(0)<1e-8) {
   fineGridVertex.refine();
  }
  else if (coarseGridVerticesEnumerator.getLevel()<1) {
@@ -622,6 +625,28 @@ void myproject::mappings::CreateGrid::createBoundaryVertex(...) {
 \end{center}
 
 
+\noindent
+In the present example, it does not matter that some cells compute stencil
+evaluations that are never used:
+These are the cells where all adjacent vertices are refined.
+Due to the injection, the stencil evalution here is not necessary.
+As the stencils are very small and cheap to evaluate, this does not make a
+difference.
+For more complicated setups, it however might make a difference.
+
+Obviously, it is not possible in the present case to use the cells'
+\texttt{isRefined()} operation to determine whether a stencil evaluation should
+be skipped or not.
+Refined cells next to an unrefined one have to be taken into account.
+Instead, we have to run over all adjacent vertices of a cell and determine their
+refinement state.
+Peano realises an or-based refinement---if any vertex adjacent to a cell carries
+the refinement bit, the cell is refined---so the required check is an or
+combination followed by a negation.
+In Peano, there's a class \texttt{peano::grid::aspects::VertexStateAnalysis}.
+It is worth to study this class; it offers most of such analysis routines
+already and makes the programming of multiscale algorithms more convenient.
+
 
 \subsection{Dynamic adaptivity}
 
@@ -635,22 +660,164 @@ We realise it in two steps:
 
 The first step is strongly application dependent. 
 A simple criterion that seems to work sufficiently is to assign each vertex a
-new (non-persistent) value $\hat u$ that is set to zero in
-\texttt{touchVertexFirstTime}. In the \texttt{enterCell} method, we then
-evaluate the stencil
+new (non-persistent) value that holds the average value of the surrounding
+vertices. 
+If this value differs significantly from the computed value in the point (which
+is kind of a smoothness analysis), we refine.
+For this, we change the vertex definition
+\begin{code}
+Packed-Type: short int;
+
+
+class myproject::dastgen::Vertex {  
+  parallelise persistent double  u;
+  discard    double  oldU;
+  discard    double  averagedU;
+};
+\end{code}
+
+\noindent
+and we also add additional read statements to the specification.
+The specification remains more or less unchanged, but we keep all the dynamic
+refinement in an additional refinement mapping.
+
+\begin{code}
+vertex:
+  dastgen-file: Vertex.def
+  read scalar(double): U
+  read scalar(double): OldU
+  read scalar(double): AveragedU
+  write scalar(double): U
+  write scalar(double): AveragedU
+  
+...
+
+event-mapping:
+  name: RefineDynamically
+
+...
+
+adapter:
+  name: TimeStep
+  merge-with-user-defined-mapping: TimeStep
+  merge-with-user-defined-mapping: Inject
+  merge-with-user-defined-mapping: InterpolateHangingNodes
+  merge-with-user-defined-mapping: RefineDynamically
+\end{code}
+
+\noindent
+Before we implement this additional mapping, we create a slightly more appealing
+problem setup in create grid:
+\begin{code}
+void myproject::mappings::CreateGrid::createCell(...) {
+  logTraceInWith4Arguments( "createCell(...)", fineGridCell, ... );
+
+  fineGridCell.init( fineGridVerticesEnumerator.getCellCenter() );
+
+  logTraceOutWith1Argument( "createCell(...)", fineGridCell );
+}
+
+
+void myproject::Cell::init(const tarch::la::Vector<DIMENSIONS,double>&  x) {
+  _cellData.setEpsilon( x(1) * x(2) + static_cast<double>(rand() % 100)/100.0 );
+}
+\end{code}
+
+\noindent
+Furthermore, we make the start grid one level coarser along the $x=0$ axis 
+compared to the previous setup.
+
+Our refinement criterion materialises in a very simple mapping relying on the
+simple stencil (here given for two dimensions)
 \[
 \left[ \begin{array}{ccc}
-  0 & \frac{1}{4} & 0 \\
-  \frac{1}{4} & -1 & \frac{1}{4} \\
-  0 & \frac{1}{4} & 0
-\end{array}  \right].
+  0 & 1 & 0 \\
+  -1 & 0 & 1 \\
+  0 & -1 & 0
+\end{array}  \right]
 \]
-In \texttt{touchVertexLastTime}, I then refine the vertices with the biggest
-absolute $\hat u$. This stencil determines the derivation from the
-average in a point, i.e.~it measures the second derivative.
-For a first try, it often yields very reasonable refinement patterns.
-I tend to realise this refinement in a mapping of its own that I merge into the
-time stepping adapter.
+that we apply on the solution.
+This stencil determines the derivative in a point.
+For a first try, it often yields very reasonable refinement patterns---we
+refine where we observe a steep gradient.
+
+\begin{code}
+void myproject::mappings::AdaptiveRefinementCriterion::touchVertexFirstTime(...) { 
+  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, ... );
+
+  VertexOperations::writeAveragedU( fineGridVertex, 0.0 );
+
+  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
+}
+
+
+void myproject::mappings::AdaptiveRefinementCriterion::enterCell(...) {
+  logTraceInWith4Arguments( "enterCell(...)", fineGridCell, ... );
+
+  tarch::la::Matrix<TWO_POWER_D,TWO_POWER_D,double> A;
+
+  A =  0.0,  1.0,  1.0,  0.0,  1.0,  0.0,  0.0,  0.0,
+      -1.0,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0,
+      -1.0,  0.0,  0.0,  1.0,  0.0,  0.0,  1.0,  0.0,
+       0.0, -1.0, -1.0,  0.0,  0.0,  0.0,  0.0,  1.0,
+      -1.0,  0.0,  0.0,  0.0,  0.0,  1.0,  1.0,  0.0,
+       0.0, -1.0,  0.0,  0.0, -1.0,  0.0,  0.0,  1.0,
+       0.0,  0.0, -1.0,  0.0, -1.0,  0.0,  0.0,  1.0,
+       0.0,  0.0,  0.0, -1.0,  0.0, -1.0, -1.0,  0.0;
+
+  tarch::la::Vector<TWO_POWER_D,double> uOld = 
+    VertexOperations::readOldU(fineGridVerticesEnumerator,fineGridVertices);
+
+  const double h       = fineGridVerticesEnumerator.getCellSize()(0);
+  const double scaling = 1.0/h;
+  tarch::la::Vector<TWO_POWER_D,double> averageUpdate = scaling * A * uOld;
+
+  VertexOperations::writeAveragedU(
+    fineGridVerticesEnumerator,fineGridVertices,
+    VertexOperations::readAveragedU(fineGridVerticesEnumerator,fineGridVertices) 
+    + averageUpdate
+  );
+ 
+  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
+}
+
+
+void myproject::mappings::AdaptiveRefinementCriterion::touchVertexLastTime(...) { 
+  logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, ... );
+
+  if (coarseGridVerticesEnumerator.getLevel()<6) {
+    fineGridVertex.evaluateRefinementCiterion();
+  }
+
+  logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
+}
+
+\end{code}
+
+
+\noindent
+The magic final operation is kept very simple in this guide book:
+
+\begin{code}
+void myproject::Vertex::evaluateRefinementCiterion() {
+ if (
+  getRefinementControl()==Records::Unrefined
+  &&
+  std::abs( _vertexData.getAveragedU() )>0.1
+ ) {
+   refine();
+ }
+}
+\end{code}
+
+\begin{remark}
+Almost all sophisticated refinement criteria are based upon a marker concept
+such that only a given ratio of the cells are refined per step. 
+Such markers are non-trivial to implement as they require global sorting.
+It is thus convenient to use some binning approach.
+The \texttt{matrixfree} toolbox of Peano has a reference implementation that
+also works in an MPI environment.
+\end{remark}
 
 For the second step, we have to ensure that all newly created cells and vertices
 are intialised correctly.
@@ -660,6 +827,45 @@ For the vertices, we have to plug into \texttt{createInnerVertex} where we
 initialse the vertex with the interpolated value of its coarse grid parents.
 Again, Peano offers toolboxes with routines that do so. 
 However, you may also simply reprogram it using the dimension-specific for-loops
-of the \texttt{Loop} header.
+of \texttt{Loop.h}.
+The routines are then very similar to the interpolation for hanging nodes.
+In this example, we do not reuse \texttt{CreateGrid}, but implement everything
+within the adaptivity criterion's mapping.
 
- 
+\begin{code}
+void myproject::mappings::AdaptiveRefinementCriterion::createCell( ... ) {
+  logTraceInWith4Arguments( "createCell(...)", fineGridCell, ... );
+
+  fineGridCell.init( fineGridVerticesEnumerator.getCellCenter() );
+
+  logTraceOutWith1Argument( "createCell(...)", fineGridCell );
+}
+
+
+void myproject::mappings::AdaptiveRefinementCriterion::createInnerVertex( ... ) {
+  logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, ... );
+
+  double interpolatedValue = 0.0;
+  dfor2(k)
+    double weight = 1.0;
+    for (int d=0; d<DIMENSIONS; d++) {
+      if (k(d)==0) {
+        weight *= 1.0 - (fineGridPositionOfVertex(d))/3.0;
+      }
+      else {
+        weight *= (fineGridPositionOfVertex(d))/3.0;
+      }
+    }
+    interpolatedValue = weight * coarseGridVertices[ coarseGridVerticesEnumerator(k)].getU();
+  enddforx
+
+  VertexOperations::writeU( fineGridVertex, interpolatedValue );
+  fineGridVertex.copyCurrentSolutionIntoOldSolution();
+
+  logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
+}
+\end{code}
+
+
+@todo Anpassen im Runner der Zeitschrittweite
+
