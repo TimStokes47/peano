@@ -178,8 +178,8 @@ void myproject::mappings::CreateGrid::createBoundaryVertex(
   else if (coarseGridVerticesEnumerator.getLevel()<1) {
     fineGridVertex.refine();
   }
-*/
 
+*/
 
   logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
 }
