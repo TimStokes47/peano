@@ -132,12 +132,20 @@ void myproject::mappings::CreateGrid::createInnerVertex(
 ) {
   logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-//  if (coarseGridVerticesEnumerator.getLevel()<4) {
-//    fineGridVertex.refine();
-//  }
+  // This is the variant with the regular grid
+  // =========================================
+  if (coarseGridVerticesEnumerator.getLevel()<3) {
+    fineGridVertex.refine();
+  }
+
+
+  // This is the variant with the adaptive grid
+  // ==========================================
+/*
   if (coarseGridVerticesEnumerator.getLevel()<1) {
     fineGridVertex.refine();
   }
+*/
 
   logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
 }
@@ -154,15 +162,23 @@ void myproject::mappings::CreateGrid::createBoundaryVertex(
 ) {
   logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-//  if (coarseGridVerticesEnumerator.getLevel()<4) {
-//    fineGridVertex.refine();
-//  }
-  if (coarseGridVerticesEnumerator.getLevel()<5 && fineGridX(0)<1e-8) {
+  // This is the variant with the regular grid
+  // =========================================
+  if (coarseGridVerticesEnumerator.getLevel()<3) {
+    fineGridVertex.refine();
+  }
+
+
+  // This is the variant with the adaptive grid
+  // ==========================================
+/*
+  if (coarseGridVerticesEnumerator.getLevel()<3 && fineGridX(0)<1e-8) {
     fineGridVertex.refine();
   }
   else if (coarseGridVerticesEnumerator.getLevel()<1) {
     fineGridVertex.refine();
   }
+*/
 
 
   logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
