@@ -326,8 +326,7 @@ void myproject::mappings::TimeStep::enterCell(
 
   tarch::la::Vector<TWO_POWER_D,double> uOld = VertexOperations::readOldU(fineGridVerticesEnumerator,fineGridVertices);
 
-
-  assertion(fineGridCell.getEpsilon()>=1.0);
+  assertion(fineGridCell.getEpsilon()>0.0);
   assertion(_timeStepSize>0.0);
 
   const double h = fineGridVerticesEnumerator.getCellSize()(0);

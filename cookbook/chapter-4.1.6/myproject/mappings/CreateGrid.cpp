@@ -132,20 +132,9 @@ void myproject::mappings::CreateGrid::createInnerVertex(
 ) {
   logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  // This is the variant with the regular grid
-  // =========================================
-  if (coarseGridVerticesEnumerator.getLevel()<3) {
-    fineGridVertex.refine();
-  }
-
-
-  // This is the variant with the adaptive grid
-  // ==========================================
-/*
   if (coarseGridVerticesEnumerator.getLevel()<1) {
     fineGridVertex.refine();
   }
-*/
 
   logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
 }
@@ -162,24 +151,12 @@ void myproject::mappings::CreateGrid::createBoundaryVertex(
 ) {
   logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  // This is the variant with the regular grid
-  // =========================================
-  if (coarseGridVerticesEnumerator.getLevel()<3) {
-    fineGridVertex.refine();
-  }
-
-
-  // This is the variant with the adaptive grid
-  // ==========================================
-/*
-  if (coarseGridVerticesEnumerator.getLevel()<3 && fineGridX(0)<1e-8) {
+  if (coarseGridVerticesEnumerator.getLevel()<2 && fineGridX(0)<1e-8) {
     fineGridVertex.refine();
   }
   else if (coarseGridVerticesEnumerator.getLevel()<1) {
     fineGridVertex.refine();
   }
-
-*/
 
   logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
 }
@@ -194,9 +171,6 @@ void myproject::mappings::CreateGrid::destroyVertex(
       myproject::Cell&           coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "destroyVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "destroyVertex(...)", fineGridVertex );
 }
 
 
@@ -211,7 +185,7 @@ void myproject::mappings::CreateGrid::createCell(
 ) {
   logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
-  fineGridCell.init();
+  fineGridCell.init( fineGridVerticesEnumerator.getCellCenter() );
 
   logTraceOutWith1Argument( "createCell(...)", fineGridCell );
 }

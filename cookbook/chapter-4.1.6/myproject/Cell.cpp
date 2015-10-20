@@ -6,8 +6,8 @@ myproject::Cell::Cell():
 }
 
 
-void myproject::Cell::init() {
-  _cellData.setEpsilon( 1.0 + static_cast<double>(rand() % 100)/100.0 );
+void myproject::Cell::init(const tarch::la::Vector<DIMENSIONS,double>&  x) {
+  _cellData.setEpsilon( x(1) * x(2) + static_cast<double>(rand() % 100)/100.0 );
 }
 
 

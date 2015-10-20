@@ -24,6 +24,9 @@ double myproject::Vertex::getU() const {
   return _vertexData.getU();
 }
 
+double myproject::Vertex::getAveragedU() const {
+  return _vertexData.getAveragedU();
+}
 
 void myproject::Vertex::copyCurrentSolutionIntoOldSolution() {
   _vertexData.setOldU( _vertexData.getU() );
@@ -31,4 +34,14 @@ void myproject::Vertex::copyCurrentSolutionIntoOldSolution() {
 
 void myproject::Vertex::inject(const Vertex& fromVertex) {
   _vertexData.setU( fromVertex._vertexData.getU() );
+}
+
+void myproject::Vertex::evaluateRefinementCiterion() {
+ if (
+  getRefinementControl()==Records::Unrefined
+  &&
+  std::abs( _vertexData.getAveragedU() )>0.1
+ ) {
+   refine();
+ }
 }

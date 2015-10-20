@@ -6,7 +6,9 @@ vertex:
   dastgen-file: Vertex.def
   read scalar(double): U
   read scalar(double): OldU
+  read scalar(double): AveragedU
   write scalar(double): U
+  write scalar(double): AveragedU
   
 cell:
   dastgen-file: Cell.def
@@ -53,4 +55,5 @@ adapter:
   merge-with-user-defined-mapping: Inject
   merge-with-user-defined-mapping: RefineDynamically
   merge-with-predefined-mapping: VTKPlotVertexValue(result,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexValue(averagedU,getAveragedU,a)
 
