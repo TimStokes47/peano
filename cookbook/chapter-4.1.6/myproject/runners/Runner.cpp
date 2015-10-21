@@ -12,8 +12,10 @@
 #include "tarch/parallel/NodePool.h"
 
 
-// @todo Remove this include as soon as you've created your real-world geometry
 #include "peano/geometry/Hexahedron.h" 
+
+
+tarch::logging::Log  myproject::runners::Runner::_log( "myproject::runners::Runner" );
 
 
 myproject::runners::Runner::Runner() {
@@ -69,16 +71,19 @@ int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository&
   repository.switchToCreateGridAndPlot();
   repository.iterate();
   
-  repository.getState().setTimeStepSize( 1e-6 );
-  //repository.getState().setTimeStepSize( 0.5e-7 );
+  const double initialDt = 1e-4;
+  repository.getState().setTimeStepSize( initialDt );
   for (int i=0; i<10000; i++) {
-    if (i%100==0) {
+    if (i%100==0 || !repository.getState().isGridStationary()) {
       repository.switchToTimeStepAndPlot();
     }
     else {
      repository.switchToTimeStep();
     }
     repository.iterate();
+    double dt = initialDt * repository.getState().getMinimumMeshWidth() * repository.getState().getMinimumMeshWidth();
+    repository.getState().setTimeStepSize( dt );
+    logInfo( "runAsMaster(...)", "time step " << i << ": dt=" << dt << ", h_min=" << repository.getState().getMinimumMeshWidth() );
   }
  
   repository.logIterationStatistics();
