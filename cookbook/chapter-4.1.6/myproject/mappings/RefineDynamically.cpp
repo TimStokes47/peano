@@ -1,10 +1,9 @@
 #include "myproject/mappings/RefineDynamically.h"
+#include "myproject/VertexOperations.h"
+#include "tarch/la/Matrix.h"
+#include "peano/utils/Loop.h"
 
 
-
-/**
- * @todo Please tailor the parameters to your mapping's properties.
- */
 peano::CommunicationSpecification   myproject::mappings::RefineDynamically::communicationSpecification() {
   return peano::CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime,false);
 }
@@ -21,7 +20,7 @@ peano::MappingSpecification   myproject::mappings::RefineDynamically::touchVerte
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   myproject::mappings::RefineDynamically::touchVertexFirstTimeSpecification() { 
+peano::MappingSpecification   myproject::mappings::RefineDynamically::touchVertexFirstTimeSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
 }
 
@@ -58,7 +57,7 @@ peano::MappingSpecification   myproject::mappings::RefineDynamically::descendSpe
 }
 
 
-tarch::logging::Log                myproject::mappings::RefineDynamically::_log( "myproject::mappings::RefineDynamically" ); 
+tarch::logging::Log                myproject::mappings::RefineDynamically::_log( "myproject::mappings::RefineDynamically" );
 
 
 myproject::mappings::RefineDynamically::RefineDynamically() {
@@ -100,9 +99,6 @@ void myproject::mappings::RefineDynamically::createHangingVertex(
       myproject::Cell&       coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
 }
 
 
@@ -115,9 +111,6 @@ void myproject::mappings::RefineDynamically::destroyHangingVertex(
       myproject::Cell&           coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "destroyHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "destroyHangingVertex(...)", fineGridVertex );
 }
 
 
@@ -131,7 +124,24 @@ void myproject::mappings::RefineDynamically::createInnerVertex(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
   logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
+
+  double interpolatedValue = 0.0;
+  dfor2(k)
+    double weight = 1.0;
+    for (int d=0; d<DIMENSIONS; d++) {
+      if (k(d)==0) {
+        weight *= 1.0 - (fineGridPositionOfVertex(d))/3.0;
+      }
+      else {
+        weight *= (fineGridPositionOfVertex(d))/3.0;
+      }
+    }
+    interpolatedValue = weight * coarseGridVertices[ coarseGridVerticesEnumerator(k)].getU();
+  enddforx
+
+  VertexOperations::writeU( fineGridVertex, interpolatedValue );
+  fineGridVertex.copyCurrentSolutionIntoOldSolution();
+
   logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
 }
 
@@ -145,9 +155,6 @@ void myproject::mappings::RefineDynamically::createBoundaryVertex(
       myproject::Cell&                 coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
 }
 
 
@@ -160,9 +167,6 @@ void myproject::mappings::RefineDynamically::destroyVertex(
       myproject::Cell&           coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
 ) {
-  logTraceInWith6Arguments( "destroyVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "destroyVertex(...)", fineGridVertex );
 }
 
 
@@ -176,7 +180,9 @@ void myproject::mappings::RefineDynamically::createCell(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
   logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
+
+  fineGridCell.init( fineGridVerticesEnumerator.getCellCenter() );
+
   logTraceOutWith1Argument( "createCell(...)", fineGridCell );
 }
 
@@ -377,7 +383,9 @@ void myproject::mappings::RefineDynamically::touchVertexFirstTime(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
 ) {
   logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
+
+  VertexOperations::writeAveragedU( fineGridVertex, 0.0 );
+
   logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
 }
 
@@ -392,7 +400,11 @@ void myproject::mappings::RefineDynamically::touchVertexLastTime(
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
 ) {
   logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
+
+  if (coarseGridVerticesEnumerator.getLevel()<5) {
+    fineGridVertex.evaluateRefinementCiterion();
+  }
+
   logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
 }
 
@@ -407,7 +419,31 @@ void myproject::mappings::RefineDynamically::enterCell(
       const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
 ) {
   logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
+
+  tarch::la::Matrix<TWO_POWER_D,TWO_POWER_D,double> A;
+
+  A =  0.0,  1.0/4.0,  1.0/4.0,  0.0,  1.0/4.0,  0.0,  0.0,  0.0,
+      -1.0/4.0,  0.0,  0.0,  1.0/4.0,  0.0,  1.0/4.0,  0.0,  0.0,
+      -1.0/4.0,  0.0,  0.0,  1.0/4.0,  0.0,  0.0,  1.0/4.0,  0.0,
+       0.0, -1.0/4.0, -1.0/4.0,  0.0,  0.0,  0.0,  0.0,  1.0/4.0,
+      -1.0/4.0,  0.0,  0.0,  0.0,  0.0,  1.0/4.0,  1.0/4.0,  0.0,
+       0.0, -1.0/4.0,  0.0,  0.0, -1.0/4.0,  0.0,  0.0,  1.0/4.0,
+       0.0,  0.0, -1.0/4.0,  0.0, -1.0/4.0,  0.0,  0.0,  1.0/4.0,
+       0.0,  0.0,  0.0, -1.0/4.0,  0.0, -1.0/4.0, -1.0/4.0,  0.0;
+
+  tarch::la::Vector<TWO_POWER_D,double> uOld = VertexOperations::readOldU(fineGridVerticesEnumerator,fineGridVertices);
+
+  assertion(fineGridCell.getEpsilon()>0.0);
+
+  const double h       = fineGridVerticesEnumerator.getCellSize()(0);
+  const double scaling = 1.0/h;
+  tarch::la::Vector<TWO_POWER_D,double> averageUpdate = scaling * A * uOld;
+
+  VertexOperations::writeAveragedU(
+    fineGridVerticesEnumerator,fineGridVertices,
+    VertexOperations::readAveragedU(fineGridVerticesEnumerator,fineGridVertices) + averageUpdate
+  );
+
   logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
 
@@ -421,27 +457,18 @@ void myproject::mappings::RefineDynamically::leaveCell(
       myproject::Cell&           coarseGridCell,
       const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfCell
 ) {
-  logTraceInWith4Arguments( "leaveCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "leaveCell(...)", fineGridCell );
 }
 
 
 void myproject::mappings::RefineDynamically::beginIteration(
   myproject::State&  solverState
 ) {
-  logTraceInWith1Argument( "beginIteration(State)", solverState );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
 
 
 void myproject::mappings::RefineDynamically::endIteration(
   myproject::State&  solverState
 ) {
-  logTraceInWith1Argument( "endIteration(State)", solverState );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "endIteration(State)", solverState);
 }
 
 
@@ -454,9 +481,6 @@ void myproject::mappings::RefineDynamically::descend(
   const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
   myproject::Cell&                 coarseGridCell
 ) {
-  logTraceInWith2Arguments( "descend(...)", coarseGridCell.toString(), coarseGridVerticesEnumerator.toString() );
-  // @todo Insert your code here
-  logTraceOut( "descend(...)" );
 }
 
 
@@ -468,7 +492,4 @@ void myproject::mappings::RefineDynamically::ascend(
   const peano::grid::VertexEnumerator&          coarseGridVerticesEnumerator,
   myproject::Cell&           coarseGridCell
 ) {
-  logTraceInWith2Arguments( "ascend(...)", coarseGridCell.toString(), coarseGridVerticesEnumerator.toString() );
-  // @todo Insert your code here
-  logTraceOut( "ascend(...)" );
 }

@@ -22,7 +22,7 @@ Was not able to create directories myproject. Probably directory has existed bef
 [...]
 > make -f myproject/makefile       
 [...]
-> ./peano-YourProjectName-asserts
+> ./peano-YourProjectName
 [...]
 
 
@@ -30,5 +30,5 @@ Was not able to create directories myproject. Probably directory has existed bef
 To clean up the directory, type in
 
 > make -f myproject/makefile clean
-> rm -rf *.vtk file.mk myproject/adapters myproject/dastgen myproject/records myproject/repositories myproject/tests  myproject/VertexOperations.* myproject/main.cpp myproject/runners/Runner.h myproject/runners/RunnerParallelWorker.cpp myproject/mappings/CreateGrid.h myproject/mappings/Inject.h myproject/mappings/InterpolateHangingNodes.h
+> rm -rf *.vtk file.mk myproject/adapters myproject/dastgen myproject/records myproject/repositories myproject/tests  myproject/VertexOperations.* myproject/main.cpp myproject/runners/RunnerParallelWorker.cpp myproject/mappings/CreateGrid.h myproject/mappings/Inject.h myproject/mappings/InterpolateHangingNodes.h
 

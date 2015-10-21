@@ -24,9 +24,9 @@ DIM=-DDim3
 
 # Configure Peano
 #----------------
-PROJECT_CFLAGS = -DAsserts 
+PROJECT_CFLAGS = 
 PROJECT_LFLAGS = 
-EXECUTABLE=peano-ExplicitEulerForHeatEquation-asserts
+EXECUTABLE=peano-ExplicitEulerForHeatEquation
 #EXECUTABLE=peano-ExplicitEulerForHeatEquation-debug
 
 

@@ -40,7 +40,7 @@ void myproject::Vertex::evaluateRefinementCiterion() {
  if (
   getRefinementControl()==Records::Unrefined
   &&
-  std::abs( _vertexData.getAveragedU() )>0.1
+  std::abs( _vertexData.getAveragedU() )>1.0
  ) {
    refine();
  }
