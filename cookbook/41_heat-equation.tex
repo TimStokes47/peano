@@ -883,6 +883,46 @@ We finally modifiy our runner in two ways:
 \end{enumerate}
 
 \begin{code}
+int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository& repository) {
+ peano::utils::UserInterface userInterface;
+ userInterface.writeHeader();
 
+ repository.switchToCreateGridAndPlot();
+ repository.iterate();
+  
+ const double initialDt = 1e-4;
+ repository.getState().setTimeStepSize( initialDt );
+ for (int i=0; i<10000; i++) {
+   if (i%100==0 || !repository.getState().isGridStationary()) {
+     repository.switchToTimeStepAndPlot();
+   }
+   else {
+    repository.switchToTimeStep();
+   }
+   repository.iterate();
+   double dt = initialDt * repository.getState().getMinimumMeshWidth() 
+             * repository.getState().getMinimumMeshWidth();
+   repository.getState().setTimeStepSize( dt );
+   logInfo( 
+    "runAsMaster(...)", 
+    "time step " << i << ": dt=" << dt << ", h_min=" <<
+    repository.getState().getMinimumMeshWidth() ); 
+ }
+ 
+ repository.logIterationStatistics();
+ repository.terminate();
+
+ return 0;
+}
 \end{code}
 
+
+\noindent
+The screenshots below illustrate how the grid evolves in the first four time
+steps of the simulation:
+\begin{center}
+  \includegraphics[width=0.4\textwidth]{41_heat-equation/dynamic00.png}
+  \includegraphics[width=0.4\textwidth]{41_heat-equation/dynamic01.png}
+  \includegraphics[width=0.4\textwidth]{41_heat-equation/dynamic02.png}
+  \includegraphics[width=0.4\textwidth]{41_heat-equation/dynamic03.png}
+\end{center}
