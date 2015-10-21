@@ -24,9 +24,11 @@ Was not able to create directories myproject. Probably directory has existed bef
 [...]
 > ./peano-YourProjectName-asserts
 [...]
-> ls
-files.mk  grid-0.vtk  howto.txt  myproject  peano  peano-YourProjectName-debug  tarch
 
 
-Visualise the file grid-0.vtk (with Paraview, e.g.).
-                                                                                                                                                       
+
+To clean up the directory, type in
+
+> make -f myproject/makefile clean
+> rm -rf *.vtk file.mk myproject/adapters myproject/dastgen myproject/records myproject/repositories myproject/tests  myproject/VertexOperations.* myproject/main.cpp myproject/runners/Runner.h myproject/runners/RunnerParallelWorker.cpp myproject/mappings/CreateGrid.h myproject/mappings/Inject.h myproject/mappings/InterpolateHangingNodes.h
+
