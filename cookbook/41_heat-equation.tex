@@ -337,14 +337,14 @@ void myproject::mappings::TimeStep::enterCell(...) {
 
   tarch::la::Matrix<TWO_POWER_D,TWO_POWER_D,double> A;
 
-  A =  1.0, -0.5, -0.5,  0.0, -0.5,  0.0,  0.0,  0.0,
-      -0.5,  1.0,  0.0, -0.5,  0.0, -0.5,  0.0,  0.0,
-      -0.5,  0.0,  1.0, -0.5,  0.0,  0.0, -0.5,  0.0,
-       0.0, -0.5, -0.5,  1.0,  0.0,  0.0,  0.0, -0.5,
-      -0.5,  0.0,  0.0,  0.0,  1.0, -0.5, -0.5,  0.0,
-       0.0, -0.5,  0.0,  0.0, -0.5,  1.0,  0.0, -0.5,
-       0.0,  0.0, -0.5,  0.0, -0.5,  0.0,  1.0, -0.5,
-       0.0,  0.0,  0.0, -0.5,  0.0, -0.5, -0.5,  1.0;
+  A =  6.0/8.0, -1.0/4.0, -1.0/4.0,      0.0, -1.0/4.0,      0.0,      0.0,      0.0,
+      -1.0/4.0,  6.0/8.0,      0.0, -1.0/4.0,      0.0, -1.0/4.0,      0.0,      0.0,
+      -1.0/4.0,      0.0,  6.0/8.0, -1.0/4.0,      0.0,      0.0, -1.0/4.0,      0.0,
+           0.0, -1.0/4.0, -1.0/4.0,  6.0/8.0,      0.0,      0.0,      0.0, -1.0/4.0,
+      -1.0/4.0,      0.0,      0.0,      0.0,  6.0/8.0, -1.0/4.0, -1.0/4.0,      0.0,
+           0.0, -1.0/4.0,      0.0,      0.0, -1.0/4.0,  6.0/8.0,      0.0, -1.0/4.0,
+           0.0,      0.0, -1.0/4.0,      0.0, -1.0/4.0,      0.0,  6.0/8.0, -1.0/4.0,
+           0.0,      0.0,      0.0, -1.0/4.0,      0.0, -1.0/4.0, -1.0/4.0,  6.0/8.0;
 
   tarch::la::Vector<TWO_POWER_D,double> uOld = 
     VertexOperations::readOldU(fineGridVerticesEnumerator,fineGridVertices);
@@ -367,8 +367,6 @@ void myproject::mappings::TimeStep::enterCell(...) {
 In this example, I wrote down the local assembly matrix for $d=3$ explicitly.
 If you want to support other dimensions, you have to adopt this part
 accordingly.
-Alternatively, you might want to use Peano's dimension-generic tools and write
-one-version-fits-it-all.
 
 We use Peano's linear algebra routines here.
 They are held in the \texttt{tarch} component, and provide all basic
@@ -406,6 +404,8 @@ mapping and to initialise it only once.
   other matrix-free/PDE toolboxes, but it a small suite to build up at least the
   simpler PDE operators from a finite element/tensor-product formalism and it
   also provides operations fitted to PDT's generated read and write routines. 
+The toolbox also provides helper functions that decompose stencils in element-wise
+assembly matrices as the one above.
 \end{remark}
 
 
@@ -429,6 +429,13 @@ void myproject::mappings::TimeStep::touchVertexFirstTime(...) {
   ...
 }
 \end{code}
+
+\begin{remark}
+In this example, we do not ensure that we do not update boundary vertices.
+Indeed, we update them, but in the subsequent traversal we overwrite them again
+with the prescribed Dirichlet values (code snippet above). Most codes rather add
+an additional if statement checking \texttt{fineGridVertex.isBoundary()}.
+\end{remark}
 
 \begin{center}
   \includegraphics[width=0.45\textwidth]{41_heat-equation/solution00.png}
@@ -756,14 +763,14 @@ void myproject::mappings::AdaptiveRefinementCriterion::enterCell(...) {
 
   tarch::la::Matrix<TWO_POWER_D,TWO_POWER_D,double> A;
 
-  A =  0.0,  1.0,  1.0,  0.0,  1.0,  0.0,  0.0,  0.0,
-      -1.0,  0.0,  0.0,  1.0,  0.0,  1.0,  0.0,  0.0,
-      -1.0,  0.0,  0.0,  1.0,  0.0,  0.0,  1.0,  0.0,
-       0.0, -1.0, -1.0,  0.0,  0.0,  0.0,  0.0,  1.0,
-      -1.0,  0.0,  0.0,  0.0,  0.0,  1.0,  1.0,  0.0,
-       0.0, -1.0,  0.0,  0.0, -1.0,  0.0,  0.0,  1.0,
-       0.0,  0.0, -1.0,  0.0, -1.0,  0.0,  0.0,  1.0,
-       0.0,  0.0,  0.0, -1.0,  0.0, -1.0, -1.0,  0.0;
+  A =  0.0,  1.0/4.0,  1.0/4.0,  0.0,  1.0/4.0,  0.0,  0.0,  0.0,
+      -1.0/4.0,  0.0,  0.0,  1.0/4.0,  0.0,  1.0/4.0,  0.0,  0.0,
+      -1.0/4.0,  0.0,  0.0,  1.0/4.0,  0.0,  0.0,  1.0/4.0,  0.0,
+       0.0, -1.0/4.0, -1.0/4.0,  0.0,  0.0,  0.0,  0.0,  1.0/4.0,
+      -1.0/4.0,  0.0,  0.0,  0.0,  0.0,  1.0/4.0,  1.0/4.0,  0.0,
+       0.0, -1.0/4.0,  0.0,  0.0, -1.0/4.0,  0.0,  0.0,  1.0/4.0,
+       0.0,  0.0, -1.0/4.0,  0.0, -1.0/4.0,  0.0,  0.0,  1.0/4.0,
+       0.0,  0.0,  0.0, -1.0/4.0,  0.0, -1.0/4.0, -1.0/4.0,  0.0;
 
   tarch::la::Vector<TWO_POWER_D,double> uOld = 
     VertexOperations::readOldU(fineGridVerticesEnumerator,fineGridVertices);
@@ -803,7 +810,7 @@ void myproject::Vertex::evaluateRefinementCiterion() {
  if (
   getRefinementControl()==Records::Unrefined
   &&
-  std::abs( _vertexData.getAveragedU() )>0.1
+  std::abs( _vertexData.getAveragedU() )>1.0
  ) {
    refine();
  }
@@ -866,6 +873,16 @@ void myproject::mappings::AdaptiveRefinementCriterion::createInnerVertex( ... ) 
 }
 \end{code}
 
+\noindent
+We finally modifiy our runner in two ways:
+\begin{enumerate}
+  \item We make the runner also plot if the grid changes in a particular time
+  step, and
+  \item we ensure that the time step size adopts to the grid structure, i.e.~we
+  implement adaptive time stepping.
+\end{enumerate}
 
-@todo Anpassen im Runner der Zeitschrittweite
+\begin{code}
+
+\end{code}
 
