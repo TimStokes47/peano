@@ -166,8 +166,7 @@ namespace peano {
 /**
  * Heap Singleton - Single Point of Contact for Heap Management
  *
- * HeapData is a template class that manages the storage of
- * vertex data on the heap. The vertex data class has to be generated
+ * The data held on the heap has to be generated
  * by DaStGen to provide MPI methods for sending and receiving. The idea of
  * heaps in Peano is that you model your vertex to have one integer index
  * per associated heap object with arbitrary cardinality. Whenever you
