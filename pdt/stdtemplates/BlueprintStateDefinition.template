@@ -1,5 +1,5 @@
 Packed-Type: short int;
 
 
-class __PROJECT_NAME__::dastgen::State {  
+class __PROJECT_NAME__::records::State {  
 };

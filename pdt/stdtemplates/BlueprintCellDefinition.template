@@ -1,5 +1,5 @@
 Packed-Type: short int;
 
 
-class __PROJECT_NAME__::dastgen::Cell {  
+class __PROJECT_NAME__::records::Cell {  
 };
