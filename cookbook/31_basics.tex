@@ -206,7 +206,17 @@ predefined event sets.
 The last adapter by the way is a trivil one, too: It invokes only one of the
 events that ship with Peano.
 
+\begin{remark}
+You may mix predefined and user-defined mappings in your adapters in arbitrary
+order. 
+They are always ran in the order specified per event.
+If you have to call different mappings in different order for different events
+(i.e.~one way in \texttt{createHangingNode} but the other way round for
+destruction), you have to split up the events into a preamble and epilogue event
+and merge them together in the spec file.
+\end{remark}
 
+\noindent
 Next, please create all glue code and have a quick look into the file
 \texttt{runners/Runner.cpp}.
 This file is the starting point of Peano.
