@@ -87,21 +87,26 @@ Productions
     token_component [name]:identifier token_namespace namespace heap_dastgen_file_list? vertex cell state event_mapping_list? adapter_list?
       { -> New description( name,namespace,[heap_dastgen_file_list.heap_dastgen_file],vertex, cell, state, [event_mapping_list.event_mapping], [adapter_list.adapter] ) };
 
+
   heap_dastgen_file_list {->heap_dastgen_file*} =
       {single} token_heap_dastgen_file filename                        {-> [New heap_dastgen_file(filename)] }
     | {multi}  token_heap_dastgen_file filename heap_dastgen_file_list {-> [New heap_dastgen_file(filename),heap_dastgen_file_list.heap_dastgen_file] };
+
 
   vertex {->vertex} = 
     token_vertex token_dastgen_file filename operation_list? 
       { -> New vertex( filename, [operation_list.operation]) };
 
+
   state {->state} = 
     token_state token_dastgen_file filename
       { -> New state( filename) };
 
+
   cell {->cell} = 
     token_cell token_dastgen_file filename
       { -> New cell( filename) };
+  
   
   operation_list { -> operation* } =
       {single_read_scalar_double} token_read token_scalar_double identifier
@@ -185,7 +190,6 @@ Productions
         { -> [New operation.write_intergrid_operator_int(identifier) ] }
     | {list_write_intergrid_operator_int}   token_write token_vector_five_pow_d_int identifier operation_list
         { -> [New operation.write_intergrid_operator_int(identifier),operation_list.operation] }
-
         
     | {single_read_scalar_complex} token_read token_scalar_complex identifier
         { -> [New operation.read_scalar_complex(identifier) ] }
@@ -235,28 +239,25 @@ Productions
     | {list}    token_event_mapping token_name identifier event_mapping_list
         { -> [New event_mapping(identifier),event_mapping_list.event_mapping] };        
   
-  adapter_list {->adapter*} =
-      {single}  token_adapter token_name identifier merge_with_user_defined_adapter_list? merge_with_predefined_adapter_list?
-        { -> [New adapter(identifier,[merge_with_user_defined_adapter_list.identifier],[merge_with_predefined_adapter_list.predefined_adapter])] }
-    | {list}    token_adapter token_name identifier merge_with_user_defined_adapter_list? merge_with_predefined_adapter_list? adapter_list
-        { -> [New adapter(identifier,[merge_with_user_defined_adapter_list.identifier],[merge_with_predefined_adapter_list.predefined_adapter]),adapter_list.adapter] };        
- 
-  merge_with_user_defined_adapter_list {->identifier*} = 
-      {single}  token_merge_with_user_defined_adapter identifier
-        { -> [identifier] }
-    | {list}    token_merge_with_user_defined_adapter identifier merge_with_user_defined_adapter_list
-        { -> [identifier,merge_with_user_defined_adapter_list.identifier] };        
   
-  merge_with_predefined_adapter_list {->predefined_adapter*} =
-      {single_with_parameter}     token_merge_with_predefined_adapter identifier token_open_bracket predefined_adapter_parameter_list token_close_bracket
-        { -> [New predefined_adapter(identifier,[predefined_adapter_parameter_list.identifier])] }
-    | {list_with_parameter}       token_merge_with_predefined_adapter identifier token_open_bracket predefined_adapter_parameter_list token_close_bracket merge_with_predefined_adapter_list
-        { -> [New predefined_adapter(identifier,[predefined_adapter_parameter_list.identifier]),merge_with_predefined_adapter_list.predefined_adapter] } 
-    | {single_without_parameter}  token_merge_with_predefined_adapter identifier token_open_bracket token_close_bracket
-        { -> [New predefined_adapter(identifier,[])] }
-    | {list_without_parameter}    token_merge_with_predefined_adapter identifier token_open_bracket token_close_bracket merge_with_predefined_adapter_list
-        { -> [New predefined_adapter(identifier,[]),merge_with_predefined_adapter_list.predefined_adapter] };        
+  adapter_list {->adapter*} =
+      {single}  token_adapter token_name identifier use_mapping_list?
+        { -> [New adapter(identifier,[use_mapping_list.use_mapping])] }
+    | {list}    token_adapter token_name identifier use_mapping_list? adapter_list
+        { -> [New adapter(identifier,[use_mapping_list.use_mapping]),adapter_list.adapter] };
+      
+      
+  use_mapping_list {->use_mapping*} = 
+      {single_userdefined}  token_merge_with_user_defined_adapter identifier
+        { -> [New use_mapping.userdefined(identifier)] }
+    | {list_userdefined}  token_merge_with_user_defined_adapter identifier use_mapping_list
+        { -> [New use_mapping.userdefined(identifier), use_mapping_list.use_mapping] }
+    | {single_predefined}   token_merge_with_predefined_adapter identifier token_open_bracket predefined_adapter_parameter_list token_close_bracket
+        { -> [New use_mapping.predefined(identifier,[predefined_adapter_parameter_list.identifier])] }
+    | {list_predefined}   token_merge_with_predefined_adapter identifier token_open_bracket predefined_adapter_parameter_list token_close_bracket use_mapping_list
+        { -> [New use_mapping.predefined(identifier,[predefined_adapter_parameter_list.identifier]), use_mapping_list.use_mapping] };
 
+  
   predefined_adapter_parameter_list {->identifier*} = 
       {single}    identifier 
          { -> [identifier] }
@@ -314,7 +315,9 @@ Abstract Syntax Tree
   
   event_mapping = [name]:identifier;
   
-  adapter = [name]:identifier [user_defined]:identifier* predefined_adapter*;
+  adapter = [name]:identifier use_mapping*;
   
-  predefined_adapter = [name]:identifier [parameters]:identifier*;
-  
+  use_mapping = 
+      {predefined}    [name]:identifier [parameters]:identifier*
+    | {userdefined}   [name]:identifier;
+ 

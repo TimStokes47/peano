@@ -259,7 +259,12 @@ public class AnalysisAdapter implements Analysis
         defaultCase(node);
     }
 
-    public void caseAPredefinedAdapter(APredefinedAdapter node)
+    public void caseAPredefinedUseMapping(APredefinedUseMapping node)
+    {
+        defaultCase(node);
+    }
+
+    public void caseAUserdefinedUseMapping(AUserdefinedUseMapping node)
     {
         defaultCase(node);
     }

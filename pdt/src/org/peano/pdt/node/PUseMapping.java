@@ -2,7 +2,7 @@
 
 package org.peano.pdt.node;
 
-public abstract class PPredefinedAdapter extends Node
+public abstract class PUseMapping extends Node
 {
     // Empty body
 }

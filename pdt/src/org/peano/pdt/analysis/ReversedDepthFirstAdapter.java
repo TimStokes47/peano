@@ -876,17 +876,9 @@ public class ReversedDepthFirstAdapter extends AnalysisAdapter
     {
         inAAdapter(node);
         {
-            List<PPredefinedAdapter> copy = new ArrayList<PPredefinedAdapter>(node.getPredefinedAdapter());
+            List<PUseMapping> copy = new ArrayList<PUseMapping>(node.getUseMapping());
             Collections.reverse(copy);
-            for(PPredefinedAdapter e : copy)
-            {
-                e.apply(this);
-            }
-        }
-        {
-            List<TIdentifier> copy = new ArrayList<TIdentifier>(node.getUserDefined());
-            Collections.reverse(copy);
-            for(TIdentifier e : copy)
+            for(PUseMapping e : copy)
             {
                 e.apply(this);
             }
@@ -898,20 +890,20 @@ public class ReversedDepthFirstAdapter extends AnalysisAdapter
         outAAdapter(node);
     }
 
-    public void inAPredefinedAdapter(APredefinedAdapter node)
+    public void inAPredefinedUseMapping(APredefinedUseMapping node)
     {
         defaultIn(node);
     }
 
-    public void outAPredefinedAdapter(APredefinedAdapter node)
+    public void outAPredefinedUseMapping(APredefinedUseMapping node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAPredefinedAdapter(APredefinedAdapter node)
+    public void caseAPredefinedUseMapping(APredefinedUseMapping node)
     {
-        inAPredefinedAdapter(node);
+        inAPredefinedUseMapping(node);
         {
             List<TIdentifier> copy = new ArrayList<TIdentifier>(node.getParameters());
             Collections.reverse(copy);
@@ -924,6 +916,27 @@ public class ReversedDepthFirstAdapter extends AnalysisAdapter
         {
             node.getName().apply(this);
         }
-        outAPredefinedAdapter(node);
+        outAPredefinedUseMapping(node);
+    }
+
+    public void inAUserdefinedUseMapping(AUserdefinedUseMapping node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAUserdefinedUseMapping(AUserdefinedUseMapping node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAUserdefinedUseMapping(AUserdefinedUseMapping node)
+    {
+        inAUserdefinedUseMapping(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAUserdefinedUseMapping(node);
     }
 }

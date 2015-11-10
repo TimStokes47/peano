@@ -876,15 +876,8 @@ public class DepthFirstAdapter extends AnalysisAdapter
             node.getName().apply(this);
         }
         {
-            List<TIdentifier> copy = new ArrayList<TIdentifier>(node.getUserDefined());
-            for(TIdentifier e : copy)
-            {
-                e.apply(this);
-            }
-        }
-        {
-            List<PPredefinedAdapter> copy = new ArrayList<PPredefinedAdapter>(node.getPredefinedAdapter());
-            for(PPredefinedAdapter e : copy)
+            List<PUseMapping> copy = new ArrayList<PUseMapping>(node.getUseMapping());
+            for(PUseMapping e : copy)
             {
                 e.apply(this);
             }
@@ -892,20 +885,20 @@ public class DepthFirstAdapter extends AnalysisAdapter
         outAAdapter(node);
     }
 
-    public void inAPredefinedAdapter(APredefinedAdapter node)
+    public void inAPredefinedUseMapping(APredefinedUseMapping node)
     {
         defaultIn(node);
     }
 
-    public void outAPredefinedAdapter(APredefinedAdapter node)
+    public void outAPredefinedUseMapping(APredefinedUseMapping node)
     {
         defaultOut(node);
     }
 
     @Override
-    public void caseAPredefinedAdapter(APredefinedAdapter node)
+    public void caseAPredefinedUseMapping(APredefinedUseMapping node)
     {
-        inAPredefinedAdapter(node);
+        inAPredefinedUseMapping(node);
         if(node.getName() != null)
         {
             node.getName().apply(this);
@@ -917,6 +910,27 @@ public class DepthFirstAdapter extends AnalysisAdapter
                 e.apply(this);
             }
         }
-        outAPredefinedAdapter(node);
+        outAPredefinedUseMapping(node);
+    }
+
+    public void inAUserdefinedUseMapping(AUserdefinedUseMapping node)
+    {
+        defaultIn(node);
+    }
+
+    public void outAUserdefinedUseMapping(AUserdefinedUseMapping node)
+    {
+        defaultOut(node);
+    }
+
+    @Override
+    public void caseAUserdefinedUseMapping(AUserdefinedUseMapping node)
+    {
+        inAUserdefinedUseMapping(node);
+        if(node.getName() != null)
+        {
+            node.getName().apply(this);
+        }
+        outAUserdefinedUseMapping(node);
     }
 }

@@ -9,8 +9,7 @@ import org.peano.pdt.analysis.*;
 public final class AAdapter extends PAdapter
 {
     private TIdentifier _name_;
-    private final LinkedList<TIdentifier> _userDefined_ = new LinkedList<TIdentifier>();
-    private final LinkedList<PPredefinedAdapter> _predefinedAdapter_ = new LinkedList<PPredefinedAdapter>();
+    private final LinkedList<PUseMapping> _useMapping_ = new LinkedList<PUseMapping>();
 
     public AAdapter()
     {
@@ -19,15 +18,12 @@ public final class AAdapter extends PAdapter
 
     public AAdapter(
         @SuppressWarnings("hiding") TIdentifier _name_,
-        @SuppressWarnings("hiding") List<TIdentifier> _userDefined_,
-        @SuppressWarnings("hiding") List<PPredefinedAdapter> _predefinedAdapter_)
+        @SuppressWarnings("hiding") List<PUseMapping> _useMapping_)
     {
         // Constructor
         setName(_name_);
 
-        setUserDefined(_userDefined_);
-
-        setPredefinedAdapter(_predefinedAdapter_);
+        setUseMapping(_useMapping_);
 
     }
 
@@ -36,8 +32,7 @@ public final class AAdapter extends PAdapter
     {
         return new AAdapter(
             cloneNode(this._name_),
-            cloneList(this._userDefined_),
-            cloneList(this._predefinedAdapter_));
+            cloneList(this._useMapping_));
     }
 
     public void apply(Switch sw)
@@ -70,36 +65,16 @@ public final class AAdapter extends PAdapter
         this._name_ = node;
     }
 
-    public LinkedList<TIdentifier> getUserDefined()
+    public LinkedList<PUseMapping> getUseMapping()
     {
-        return this._userDefined_;
+        return this._useMapping_;
     }
 
-    public void setUserDefined(List<TIdentifier> list)
+    public void setUseMapping(List<PUseMapping> list)
     {
-        this._userDefined_.clear();
-        this._userDefined_.addAll(list);
-        for(TIdentifier e : list)
-        {
-            if(e.parent() != null)
-            {
-                e.parent().removeChild(e);
-            }
-
-            e.parent(this);
-        }
-    }
-
-    public LinkedList<PPredefinedAdapter> getPredefinedAdapter()
-    {
-        return this._predefinedAdapter_;
-    }
-
-    public void setPredefinedAdapter(List<PPredefinedAdapter> list)
-    {
-        this._predefinedAdapter_.clear();
-        this._predefinedAdapter_.addAll(list);
-        for(PPredefinedAdapter e : list)
+        this._useMapping_.clear();
+        this._useMapping_.addAll(list);
+        for(PUseMapping e : list)
         {
             if(e.parent() != null)
             {
@@ -115,8 +90,7 @@ public final class AAdapter extends PAdapter
     {
         return ""
             + toString(this._name_)
-            + toString(this._userDefined_)
-            + toString(this._predefinedAdapter_);
+            + toString(this._useMapping_);
     }
 
     @Override
@@ -129,12 +103,7 @@ public final class AAdapter extends PAdapter
             return;
         }
 
-        if(this._userDefined_.remove(child))
-        {
-            return;
-        }
-
-        if(this._predefinedAdapter_.remove(child))
+        if(this._useMapping_.remove(child))
         {
             return;
         }
@@ -152,31 +121,13 @@ public final class AAdapter extends PAdapter
             return;
         }
 
-        for(ListIterator<TIdentifier> i = this._userDefined_.listIterator(); i.hasNext();)
+        for(ListIterator<PUseMapping> i = this._useMapping_.listIterator(); i.hasNext();)
         {
             if(i.next() == oldChild)
             {
                 if(newChild != null)
                 {
-                    i.set((TIdentifier) newChild);
-                    newChild.parent(this);
-                    oldChild.parent(null);
-                    return;
-                }
-
-                i.remove();
-                oldChild.parent(null);
-                return;
-            }
-        }
-
-        for(ListIterator<PPredefinedAdapter> i = this._predefinedAdapter_.listIterator(); i.hasNext();)
-        {
-            if(i.next() == oldChild)
-            {
-                if(newChild != null)
-                {
-                    i.set((PPredefinedAdapter) newChild);
+                    i.set((PUseMapping) newChild);
                     newChild.parent(this);
                     oldChild.parent(null);
                     return;

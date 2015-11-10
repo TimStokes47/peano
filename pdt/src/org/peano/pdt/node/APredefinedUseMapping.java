@@ -6,17 +6,17 @@ import java.util.*;
 import org.peano.pdt.analysis.*;
 
 @SuppressWarnings("nls")
-public final class APredefinedAdapter extends PPredefinedAdapter
+public final class APredefinedUseMapping extends PUseMapping
 {
     private TIdentifier _name_;
     private final LinkedList<TIdentifier> _parameters_ = new LinkedList<TIdentifier>();
 
-    public APredefinedAdapter()
+    public APredefinedUseMapping()
     {
         // Constructor
     }
 
-    public APredefinedAdapter(
+    public APredefinedUseMapping(
         @SuppressWarnings("hiding") TIdentifier _name_,
         @SuppressWarnings("hiding") List<TIdentifier> _parameters_)
     {
@@ -30,14 +30,14 @@ public final class APredefinedAdapter extends PPredefinedAdapter
     @Override
     public Object clone()
     {
-        return new APredefinedAdapter(
+        return new APredefinedUseMapping(
             cloneNode(this._name_),
             cloneList(this._parameters_));
     }
 
     public void apply(Switch sw)
     {
-        ((Analysis) sw).caseAPredefinedAdapter(this);
+        ((Analysis) sw).caseAPredefinedUseMapping(this);
     }
 
     public TIdentifier getName()

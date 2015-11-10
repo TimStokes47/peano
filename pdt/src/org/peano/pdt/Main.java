@@ -50,13 +50,26 @@ public class Main {
     	
         boolean success = (new java.io.File(args[2])).mkdirs();
         if (!success) {
-          System.err.println("Was not able to create directories " + args[2]  + ". Probably directory has existed before");
+          System.err.println("Warning: Was not able to create directories " + args[2]  + ". Probably directory has existed before");
         }
         
+        System.out.print("- Generate vertex blueprint ...");
         convertTemplateFile( "BlueprintVertexDefinition.template", args[2] + "/Vertex.def", args[1] );
+        System.out.println("done");
+
+        System.out.print("- Generate cell blueprint ...");
         convertTemplateFile( "BlueprintCellDefinition.template",   args[2] + "/Cell.def",   args[1] );
+        System.out.println("done");
+        
+        System.out.print("- Generate state blueprint ...");
         convertTemplateFile( "BlueprintStateDefinition.template",  args[2] + "/State.def",  args[1] );
+        System.out.println("done");
+        
+        System.out.print("- Generate specification blueprint ...");
         convertTemplateFile( "BlueprintSpecification.template",    args[2] + "/project.peano-specification",  args[1] );
+        System.out.println("done");
+
+        System.out.println("- Project setup successful. Please rerun with options \"--generate-gluecode " + args[2] + "/project.peano-specification " + args[2] + " yourpath/usrtemplates\"");
     } 
     else if (args[0].equals("--generate-gluecode") ) {
       System.out.println("Run mode: generate gluecode");

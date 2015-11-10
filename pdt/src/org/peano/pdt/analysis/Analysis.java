@@ -50,7 +50,8 @@ public interface Analysis extends Switch
     void caseAHeapDastgenFile(AHeapDastgenFile node);
     void caseAEventMapping(AEventMapping node);
     void caseAAdapter(AAdapter node);
-    void caseAPredefinedAdapter(APredefinedAdapter node);
+    void caseAPredefinedUseMapping(APredefinedUseMapping node);
+    void caseAUserdefinedUseMapping(AUserdefinedUseMapping node);
 
     void caseTTokenVertex(TTokenVertex node);
     void caseTTokenCell(TTokenCell node);
