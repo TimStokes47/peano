@@ -17,8 +17,8 @@
 #include "__PROJECT_PATH__/Cell.h"
 #include "__PROJECT_PATH__/State.h"
 
-__x__MAPPINGS__ #include "__PROJECT_PATH__/mappings/__MAPPINGS__.h"
-__x__PREDEFINED_MAPPINGS__ #include "__PROJECT_PATH__/adapters/__PREDEFINED_MAPPINGS__.h"
+
+__x__MAPPINGS_PATH__ #include "__PROJECT_PATH__/__MAPPINGS_PATH__.h"
 
 
 __OPEN_NAMESPACE__
@@ -37,8 +37,9 @@ __CLOSE_NAMESPACE__
  */
 class __THIS_QUALIFIED_TYPENAME__ {
   private:
-   __x__MAPPINGS__ __NAMESPACE__::mappings::__MAPPINGS__ _map2__MAPPINGS__;
-   __x__PREDEFINED_MAPPINGS__ __NAMESPACE__::adapters::__PREDEFINED_MAPPINGS__ _map2__PREDEFINED_MAPPINGS__;
+   __x__FULL_QUALIFIED_MAPPINGS__ typedef __FULL_QUALIFIED_MAPPINGS__ Mapping#no;
+   __x__MAPPINGS__  Mapping#no  _map2__MAPPINGS__;
+
   public:
     static peano::MappingSpecification         touchVertexLastTimeSpecification();
     static peano::MappingSpecification         touchVertexFirstTimeSpecification();

@@ -110,7 +110,7 @@ all: header build
 
 files.mk:
 	touch files.mk
-	echo -n SOURCES= > files.mk
+	echo "SOURCES=\\" > files.mk
 	find -H $(PEANO_HOME)/peano -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
 	find -H $(PEANO_HOME)/tarch -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
 	find $(PROJECT_HOME) -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
