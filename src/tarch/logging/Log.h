@@ -440,7 +440,12 @@ class tarch::logging::Log {
      */
     std::string _className;
 
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
+    static tbb::tick_count  _startupTime;
+    #else
     static double _startupTime;
+    #endif
+
   public:
     /**
      * Writes information about the computer the output is written from.

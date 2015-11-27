@@ -26,13 +26,23 @@ double tarch::logging::Log::_startupTime(0.0);
 
 tarch::logging::Log::Log(const std::string& className):
   _className( className ) {
-  #if defined(CompilerHasTimespec)
-  struct timespec ts;
-  if( (_startupTime==0.0) & (clock_gettime(CLOCK_REALTIME, &ts) == 0) ) {
-    _startupTime = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
-  }
-  #endif
 
+  #ifdef SharedOMP
+    _startupTime       = omp_get_wtime();
+  #elif defined(SharedTBB) || defined(SharedTBBInvade)
+    _startupTime       = tbb::tick_count::now();
+  #elif defined(__APPLE__)
+    mach_timespec_t mts;
+    clock_get_time(cclock, &mts);
+    _startupTime = (double)mts.tv_sec + (double)mts.tv_nsec * 1e-09;
+  #elif defined(CompilerHasTimespec)
+    struct timespec ts;
+    if( clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
+      _startupTime = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
+    }
+  #else
+    _startupTime = 0.0;
+  #endif
 }
 
 
@@ -101,19 +111,25 @@ std::string tarch::logging::Log::getMachineInformation() const {
 
 
 double tarch::logging::Log::getTimeStampSeconds() const {
-  #if defined(CompilerHasTimespec)
-  struct timespec ts;
-  if( clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
-     const double currentTS = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
-     //std::cout << currentTS << "," << _startupTime << "," << (currentTS - _startupTime) << std::endl;
-     return currentTS - _startupTime;
-  }
-  else {
-    return 0.0;
-  }
+  #ifdef SharedOMP
+    double currentTS       = omp_get_wtime();
+  #elif defined(SharedTBB) || defined(SharedTBBInvade)
+    tbb::tick_count currentTS       = tbb::tick_count::now();
+  #elif defined(__APPLE__)
+    mach_timespec_t mts;
+    clock_get_time(cclock, &mts);
+    double currentTS = (double)mts.tv_sec + (double)mts.tv_nsec * 1e-09;
+  #elif defined(CompilerHasTimespec)
+    struct timespec ts;
+    double currentTS = 0.0;
+    if( clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
+      currentTS = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
+    }
   #else
-  return 0.0;
+    double currentTS = 0.0;
   #endif
+
+  return currentTS - _startupTime;
 }
 
 
