@@ -273,7 +273,7 @@ void myprojectsnamespace::Cell::initCellInComputeTree( ... ) {
   _cellData.setPatchIndex( newPatchIndex );
   assertion( newPatchIndex>=0 );
 
-  records::PatchDescription patchDescription =
+  records::PatchDescription&  patchDescription =
     PatchDescriptionHeap::getInstance().getData(newPatchIndex)[0]; 
   
   patchDescription.setU( DataHeap::getInstance().createData(7*7) );
