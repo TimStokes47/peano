@@ -18,6 +18,13 @@
 #include <time.h>
 
 
+#ifdef __APPLE__
+#include <mach/mach_time.h>
+#include <mach/mach.h>
+#include <mach/clock.h>
+#endif
+
+
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
