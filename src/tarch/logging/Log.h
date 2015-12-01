@@ -10,6 +10,14 @@
 #include <sstream>
 
 
+#ifdef __APPLE__
+#include <mach/mach_time.h>
+#include <mach/mach.h>
+#include <mach/clock.h>
+#endif
+
+
+
 namespace tarch {
   namespace logging {
     class Log;
@@ -444,6 +452,11 @@ class tarch::logging::Log {
     static tbb::tick_count  _startupTime;
     #else
     static double _startupTime;
+    #endif
+
+
+    #ifdef __APPLE__
+    clock_serv_t cclock;
     #endif
 
   public:
