@@ -926,3 +926,181 @@ steps of the simulation:
   \includegraphics[width=0.4\textwidth]{41_heat-equation/dynamic02.png}
   \includegraphics[width=0.4\textwidth]{41_heat-equation/dynamic03.png}
 \end{center}
+
+
+\subsection{Global data}
+
+For most solvers, some kind of global information is required. 
+Such data could be 
+\begin{itemize}
+  \item a global time step size,
+  \item a residual norm,
+  \item a counter for file plots, 
+  \item and so forth.
+\end{itemize}
+
+\noindent
+We could hold such information as static/global data in our code or as an
+attribute in a mapping. 
+Both options are not particular appealing. 
+Global variables contradict our notion of nice decomposed programming.
+Furthermore, I have to anticipate that Peano automatically replicates mappings
+on a multithreaded system. 
+So we have to be very carefully if we access global data within the mapping's
+routines to avoid race conditions.
+Attributes of mappings suffer from the same issues.
+Furthermore, if mappings are replicated, they are replicated as well: 
+instead of data races we have to ensure that data is correctly replicated and
+then fused again. 
+Finally, if we run on a distributed memory machine, multiple instances of our
+application will execute because of MPI's SPMD paradigm, and we have to somehow
+manually ensure that global data is kept consistent among all the ranks.
+
+
+Peano's concept is to model all global data within the \texttt{State.def} file. 
+Again, we can here also anticipate which data later on is to be distributed
+between different ranks. We have discussed this issue before.
+We also have clarified that the standard pattern is to set global data in the
+runner through the State object and then to use this data alter on.
+
+\begin{code}
+Packed-Type: short int;
+
+
+class myproject::dastgen::State {  
+  persistent parallelise double dt;
+};
+
+\end{code}
+
+To use a state, I recommend to make each mapping extract all required data from
+the state in \texttt{beginIteration()}.
+The idea is as follows (for parallel runs later on): a global algorithm control
+routing sets global data in the state.
+This state is distributed among all ranks.
+All ranks run a particular set of mappings through one adapter.
+Each mapping get the required data in \texttt{beginIteration()}.
+Later on, we will can tune exactly when the state data is exchanged.
+
+As copying attributes from the \texttt{State} object is laborious, a standard
+pattern is to make each mapping hold a copy of the whole state:
+
+\begin{code}
+class myproject::mappings::TimeStep {
+  private:
+    /**
+     * Logging device for the trace macros.
+     */
+    static tarch::logging::Log  _log;
+
+    State _localState;
+    ...
+};
+\end{code}
+
+\noindent
+It is important that this state is a local one and is overwritten in each run,
+as the runner outside might have changed it.
+
+\begin{code}
+void myproject::mappings::TimeStep::beginIteration(
+  myproject::State&  solverState
+) {
+  logTraceInWith1Argument( "beginIteration(State)", solverState );
+
+  _localState  = solverState;
+  _localState._clearAttributes(); // see remark below
+
+  assertion2( _timeStepSize>0.0, _timeStepSize, solverState.toString() );
+
+  logTraceOutWith1Argument( "beginIteration(State)", solverState);
+}
+\end{code}
+
+\noindent
+Once you need data from the state, you can extract this data within the mapping
+via \linebreak \texttt{solverState.getTimeStepSize()} in the present example.
+
+
+We finally have to clarify how to collect global data, i.e.~how to realise the
+data flow the other way round. 
+For this, we also use the copy of the state (this is only one implementation
+pattern and again we could fill back data manually attribute-by-attribute. It
+is just more convenient this way).
+Usually, we first introduce an operation \texttt{State::clearAttributes()} that
+resets all data, and we offer operations alike
+\texttt{State::updateResidual(double myParam)} that allow us to collect
+information within a \texttt{State} instance.
+
+Within the mapping, we then use this operation to collect the data from all grid
+entities:
+\begin{code}
+  ...
+  _localState.updateResidual(myValue); 
+  ...
+\end{code}
+
+\noindent
+Obviously, the solution so far is not worth a penny, as the mappings work with
+their own local copy of state. 
+The solution now is to introduce a new operation 
+\begin{code}
+void State::merge( const State& otherState ) {
+  _stateData.setMyLocalAttribute( 
+    _stateData.getMyLocalAttribute() +
+    otherState._stateData.getMyLocalAttribute() 
+  ); 
+}
+\end{code}
+
+\noindent
+We call this operation in \texttt{endIteration()} to basically backplay the data
+from the local copy into the global state:
+\begin{code}
+void myproject::mappings::TimeStep::endIteration(
+  myproject::State&  solverState
+) {
+  solverState.merge( _localState );
+}
+\end{code}
+
+\noindent
+Finally, we can read the state in the global runner and plot some data to the
+terminal, e.g.:
+\begin{code}
+int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository& repository) {
+  ...
+  
+  const double initialDt = 1e-4;
+  repository.getState().setTimeStepSize( initialDt );
+  for (int i=0; i<10000; i++) {
+    if (i%100==0 || !repository.getState().isGridStationary()) {
+      repository.switchToTimeStepAndPlot();
+    }
+    else {
+     repository.switchToTimeStep();
+    }
+    repository.getState()._clearAttributes();
+    repository.iterate();
+    logInfo( "runAsMaster(...)", "my fancy global attribute=" <<
+    repository.getState().getMyFancyGloalAttribute() );
+    
+    ...
+  }
+ 
+  ...
+}
+\end{code}
+
+\noindent
+Please note that you might have to clear also the global state from time to
+time, which is done in the snippet above right before we call \texttt{iterate}.
+
+\begin{remark}
+  The whole process seems to be a little bit of overengineering just to get a
+  few global variables right. The elegance of the solution becomes obvious when
+  we use multiple MPI ranks and multiple threads. There, we rely on exactly the
+  same \texttt{merge} operation to distribute a global state first to all ranks
+  and threads before we fuse all distributed states together again into one
+  object. 
+\end{remark}
