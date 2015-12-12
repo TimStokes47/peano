@@ -18,6 +18,9 @@ usually makes sense first of all to have a how Peano is performing from a grid
 point of view. For this, the framework comes along with a rather useful script.
 
 \begin{itemize}
+  \item Recompile your code with \texttt{-DPerformanceAnalysis}. For the
+    performance analysis, it usually makes sense to compile with the highest
+    optimisation level and to disable \texttt{-DDebug} and \texttt{-DAsserts}.
   \item Run your code and ensure that \texttt{info} outputs from the
     \texttt{peano::performanceanalysis} component are enabled.
   \item Pipe the output into a file:
@@ -44,6 +47,8 @@ out time stamps as well as trace information. If you use your own logger or a
 modified log format, the Python script will fail.
 \end{remark}
 
+
+\noindent
 If you browse through your directory, you will notice that all graphs are
 written both as png and as pdf. 
 You can thus integrate them directly into your \LaTeX\ reports.
