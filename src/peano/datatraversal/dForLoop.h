@@ -102,7 +102,7 @@ class peano::datatraversal::dForLoop {
     /**
      * Required only for OpenMP (not used currently)
      */
-    std::vector<dForRange> createRangesVector(
+    static std::vector<dForRange> createRangesVector(
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       int                                       grainSize
     );
