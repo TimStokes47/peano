@@ -17,6 +17,12 @@
 #endif
 
 
+#ifdef SharedOMP
+#include <omp.h>
+#elif defined(SharedTBB) || defined(SharedTBBInvade)
+#include <tbb/tick_count.h>
+#endif
+
 
 namespace tarch {
   namespace logging {

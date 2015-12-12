@@ -21,16 +21,20 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
+#if defined(SharedTBB) || defined(SharedTBBInvade)
+tbb::tick_count tarch::logging::Log::_startupTime( tbb::tick_count::now() );
+#else
 double tarch::logging::Log::_startupTime(0.0);
+#endif
 
 
 tarch::logging::Log::Log(const std::string& className):
   _className( className ) {
 
+  #if !defined(SharedTBB) && !defined(SharedTBBInvade)
   if (_startupTime==0.0) {
   #ifdef SharedOMP
     _startupTime       = omp_get_wtime();
-  #elif defined(SharedTBB) || defined(SharedTBBInvade)
     _startupTime       = tbb::tick_count::now();
   #elif defined(__APPLE__)
     mach_timespec_t mts;
@@ -43,6 +47,7 @@ tarch::logging::Log::Log(const std::string& className):
     }
   #endif
   }
+  #endif
 }
 
 
@@ -116,7 +121,7 @@ double tarch::logging::Log::getTimeStampSeconds() const {
     return currentTS - _startupTime;
   #elif defined(SharedTBB) || defined(SharedTBBInvade)
     tbb::tick_count currentTS       = tbb::tick_count::now();
-    return currentTS - _startupTime;
+    return (currentTS - _startupTime).seconds();
   #elif defined(__APPLE__)
     mach_timespec_t mts;
     clock_get_time(cclock, &mts);
