@@ -133,4 +133,16 @@ void peano::performanceanalysis::Analysis::leaveCentralElementOfEnclosingSpacetr
   _device->leaveCentralElementOfEnclosingSpacetree();
 }
 
+
+void peano::performanceanalysis::Analysis::changeConcurrencyLevel(int change) {
+  assertion( _device!=0 );
+  _device->changeConcurrencyLevel(change);
+}
+
+
+void peano::performanceanalysis::Analysis::fireAndForgetBackgroundTask(int taskCount) {
+  assertion( _device!=0 );
+  _device->fireAndForgetBackgroundTask(taskCount);
+}
+
 #endif

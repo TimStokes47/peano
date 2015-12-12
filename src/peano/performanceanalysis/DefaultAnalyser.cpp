@@ -197,3 +197,11 @@ void peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
 
   _traversalWatch.startTimer();
 }
+
+
+void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int change) {
+}
+
+
+void peano::performanceanalysis::DefaultAnalyser::fireAndForgetBackgroundTask(int taskCount) {
+}

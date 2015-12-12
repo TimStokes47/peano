@@ -93,6 +93,9 @@ class peano::performanceanalysis::Analyser {
     virtual void endToPrepareAsynchronousHeapDataExchange() = 0;
     virtual void endReleaseOfJoinData() = 0;
     virtual void endReleaseOfBoundaryData() = 0;
+
+    virtual void changeConcurrencyLevel(int change) = 0;
+    virtual void fireAndForgetBackgroundTask(int taskCount) = 0;
 };
 
 

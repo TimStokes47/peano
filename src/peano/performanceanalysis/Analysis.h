@@ -105,6 +105,9 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
     virtual void endToPrepareAsynchronousHeapDataExchange();
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
+
+    virtual void changeConcurrencyLevel(int change);
+    virtual void fireAndForgetBackgroundTask(int taskCount);
 };
 
 
@@ -180,6 +183,9 @@ class peano::performanceanalysis::Analysis {
     void endToPrepareAsynchronousHeapDataExchange() {}
     void endReleaseOfJoinData() {}
     void endReleaseOfBoundaryData()  {}
+
+    virtual void changeConcurrencyLevel(int change) {}
+    virtual void fireAndForgetBackgroundTask(int taskCount) {}
 };
 
 #endif

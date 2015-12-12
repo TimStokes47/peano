@@ -75,6 +75,9 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     virtual void endToPrepareAsynchronousHeapDataExchange();
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
+
+    virtual void changeConcurrencyLevel(int change);
+    virtual void fireAndForgetBackgroundTask(int taskCount);
 };
 
 
