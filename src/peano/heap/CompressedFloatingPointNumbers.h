@@ -1,3 +1,4 @@
+
 #ifndef _PEANO_HEAP_COMPRESSED_FLOATING_POINT_NUMBERS_H_
 #define _PEANO_HEAP_COMPRESSED_FLOATING_POINT_NUMBERS_H_
 
@@ -41,11 +42,18 @@ namespace peano {
      * @return mantissa Sequence of mantissas belonging to the eight decompositions.
      * @return error    Errors associated to the decompositions. They are all positive values.
      */
-    void decompose(
+    void decomposeIntoEightVariants(
       double        value,
       char          exponent[8],
       long int      mantissa[8],
       double        error[8]
+    );
+
+    void decomposeIntoFourVariants(
+      double        value,
+      char          exponent[4],
+      int           mantissa[4],
+      double        error[4]
     );
 
     /**

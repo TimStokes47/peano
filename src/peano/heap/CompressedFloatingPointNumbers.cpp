@@ -5,7 +5,7 @@
 #include <bitset>
 
 
-void peano::heap::decompose(
+void peano::heap::decomposeIntoEightVariants(
   double        value,
   char          exponent[8],
   long int      mantissa[8],
@@ -40,6 +40,58 @@ void peano::heap::decompose(
 
     #ifdef Asserts
     for (int j=(i+1)*8-1; j<64; j++) {
+      assertion9(
+        !(*mantissaAsBitset)[j],
+        *mantissaAsBitset, value, static_cast<int>( exponent[i] ), mantissa[i], error[i], i, j, significand, integerExponent
+      );
+    }
+    #endif
+
+    if (sign<0) {
+      assertion ( (*mantissaAsBitset)[ (i+1)*8-1 ]==false );
+      mantissaAsBitset->flip( (i+1)*8-1 );
+    }
+
+    shiftExponent+=8;
+  }
+}
+
+
+void peano::heap::decomposeIntoFourVariants(
+  double   value,
+  char     exponent[4],
+  int      mantissa[4],
+  double   error[4]
+) {
+  assertion(value==value);
+
+  // We may not use 7 though we use seven out of eight bits for the first byte.
+  // If we shift by seven, we can end up with the highest byte set for
+  // 0.0155759, e.g.
+  int shiftExponent = 6;
+
+  const long int sign = value < 0.0 ? -1 : 1;
+
+  if (sign<0) {
+    value = -value;
+  }
+
+  int           integerExponent;
+  const double  significand          = std::frexp(value , &integerExponent);
+
+  for (int i=0; i<4; i++) {
+    const double shiftMantissa    = std::pow( 2.0,shiftExponent );
+
+    exponent[i]  = static_cast<char>( integerExponent-shiftExponent );
+    mantissa[i]  = static_cast<int>( std::round(significand*shiftMantissa) );
+    error[i]     = std::abs( std::ldexp(mantissa[i],exponent[i]) - value );
+
+    assertion5( mantissa[i]>=0, value, mantissa[i], exponent[i], error[i], sign );
+
+    std::bitset< sizeof(int)*8 >*  mantissaAsBitset = reinterpret_cast<std::bitset< sizeof(int)*8 >*>( &(mantissa[i]) );
+
+    #ifdef Asserts
+    for (int j=(i+1)*8-1; j<sizeof(int)*8; j++) {
       assertion9(
         !(*mantissaAsBitset)[j],
         *mantissaAsBitset, value, static_cast<int>( exponent[i] ), mantissa[i], error[i], i, j, significand, integerExponent

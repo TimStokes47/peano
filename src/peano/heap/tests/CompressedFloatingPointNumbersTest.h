@@ -32,6 +32,7 @@ class peano::heap::tests::CompressedFloatingPointNumbersTest: public tarch::test
     void testDecomposeWithInt();
     void testDecomposeWithChar();
     void testBatchDecomposition();
+    void testBatchDecompositionWithArrayOfFour();
     void testErrorComputation();
 
     /**
