@@ -53,9 +53,9 @@ namespace peano
 
         class TestLoopBody {
           public:
-            int _counter;
-
-            static int _globalCounter;
+            static int _constructorCounter;
+            static int _operatorCounter;
+            static int _destructorCounter;
 
             static tarch::multicore::BooleanSemaphore _semaphore;
 

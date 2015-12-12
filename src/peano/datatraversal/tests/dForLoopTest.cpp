@@ -95,11 +95,7 @@ void peano::datatraversal::tests::dForLoopTest::testParallelReduction() {
   range(1) = 4;
   int grainSize = 4;
 
-  TestLoopBody testLoopBody;
-  TestLoopBody::resetGlobalCounter();
-  peano::datatraversal::dForLoop<TestLoopBody> loop(range, testLoopBody, grainSize, false);
-
-  std::vector<peano::datatraversal::dForRange> ranges = loop.createRangesVector(range, grainSize);
+  std::vector<peano::datatraversal::dForRange> ranges = peano::datatraversal::dForLoop<TestLoopBody>::createRangesVector(range, grainSize);
 
   validateEquals(ranges.size(), 4);
 
@@ -128,7 +124,16 @@ void peano::datatraversal::tests::dForLoopTest::testParallelReduction() {
   validateEqualsWithParams1( ranges[3].getRange()(1),  2, ranges[3].toString());
 
 
-  validateEquals(TestLoopBody::_globalCounter, 16);
+
+  TestLoopBody testLoopBody;
+  TestLoopBody::resetGlobalCounter();
+  peano::datatraversal::dForLoop<TestLoopBody> loop(range, testLoopBody, grainSize, peano::datatraversal::dForLoop<TestLoopBody>::NoColouring);
+
+  // we cannot say for sure whether the rank has been split or not. It depends
+  // on the runtime behaviour. But we can check other things.
+  validateEqualsWithParams5(TestLoopBody::_operatorCounter, 16, TestLoopBody::_operatorCounter,    TestLoopBody::_constructorCounter, TestLoopBody::_destructorCounter, grainSize, range);
+  validateEqualsWithParams5(TestLoopBody::_constructorCounter, TestLoopBody::_destructorCounter, TestLoopBody::_operatorCounter, TestLoopBody::_constructorCounter, TestLoopBody::_destructorCounter, grainSize, range);
+  validateWithParams5(TestLoopBody::_constructorCounter>=1, TestLoopBody::_operatorCounter, TestLoopBody::_constructorCounter, TestLoopBody::_destructorCounter, grainSize, range);
 
   #endif
 }
@@ -137,32 +142,41 @@ void peano::datatraversal::tests::dForLoopTest::testParallelReduction() {
 
 
 //TestLoopBody
-int peano::datatraversal::tests::TestLoopBody::_globalCounter;
+int peano::datatraversal::tests::TestLoopBody::_constructorCounter;
+int peano::datatraversal::tests::TestLoopBody::_operatorCounter;
+int peano::datatraversal::tests::TestLoopBody::_destructorCounter;
+
+
 tarch::multicore::BooleanSemaphore peano::datatraversal::tests::TestLoopBody::_semaphore;
 
-peano::datatraversal::tests::TestLoopBody::TestLoopBody():
-  _counter(0) {
+peano::datatraversal::tests::TestLoopBody::TestLoopBody() {
+  tarch::multicore::Lock lock(_semaphore);
+  _constructorCounter++;
 }
 
 
-peano::datatraversal::tests::TestLoopBody::TestLoopBody(const TestLoopBody& copy):
-  _counter(0) {
+peano::datatraversal::tests::TestLoopBody::TestLoopBody(const TestLoopBody& copy) {
+  tarch::multicore::Lock lock(_semaphore);
+  _constructorCounter++;
 }
 
 
 peano::datatraversal::tests::TestLoopBody::~TestLoopBody() {
   tarch::multicore::Lock lock(_semaphore);
 
-  _globalCounter += _counter;
+  _destructorCounter++;
 }
 
 void peano::datatraversal::tests::TestLoopBody::operator()(const tarch::la::Vector<DIMENSIONS,int>& i)
 {
-  _counter++;
+  tarch::multicore::Lock lock(_semaphore);
+  _operatorCounter++;
 }
 
 void peano::datatraversal::tests::TestLoopBody::resetGlobalCounter() {
-  _globalCounter = 0;
+  _constructorCounter = 0;
+  _operatorCounter    = 0;
+  _destructorCounter  = 0;
 }
 
 #ifdef UseTestSpecificCompilerSettings
