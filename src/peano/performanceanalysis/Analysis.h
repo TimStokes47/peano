@@ -15,6 +15,8 @@ namespace peano {
 
 
 
+#ifdef PerformanceAnalysis
+
 /**
  * Analyser Singleton
  *
@@ -104,6 +106,83 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
 };
+
+
+#else
+
+class peano::performanceanalysis::Analysis {
+  public:
+    ~Analysis() {}
+
+    static Analysis& getInstance() {
+      static Analysis singleton;
+      return singleton;
+    };
+
+    /**
+     * Set new device. The Analysis object becomes responsible for the pointer,
+     * i.e. will delete it automatically at shutdown (or if you set another
+     * device again).
+     */
+    void setDevice( Analyser* device ) {}
+
+
+    /**
+     * =========================================================================
+     * Everything below is inherited and forwards the call to the current device.
+     * =========================================================================
+     */
+
+
+    /**
+     * @see Analyser
+     */
+    void beginIteration() {}
+
+    /**
+     * @see beginIteration()
+     */
+    void endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells, double numberOfInnerCells, double numberOfOuterCells, double numberOfLocalCells, double numberOfLocalVertices) {}
+
+    void enterCentralElementOfEnclosingSpacetree() {}
+    void leaveCentralElementOfEnclosingSpacetree() {}
+
+    /**
+     * @see Analyser
+     */
+    void addWorker(
+      int                                 workerRank,
+      int                                 level
+    ) {}
+
+    /**
+     * @see Analyser
+     */
+    void removeWorker(
+      int                                 workerRank,
+      int                                 level
+    ) {}
+
+    /**
+     * @see Analyser
+     */
+    void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {}
+
+    /**
+     * @see Analyser
+     */
+    void beginToReceiveDataFromWorker() {}
+    void endToReceiveDataFromWorker( int fromRank ) {}
+
+    void beginToReleaseSynchronousHeapData() {}
+    void endToReleaseSynchronousHeapData() {}
+    void beginToPrepareAsynchronousHeapDataExchange() {}
+    void endToPrepareAsynchronousHeapDataExchange() {}
+    void endReleaseOfJoinData() {}
+    void endReleaseOfBoundaryData()  {}
+};
+
+#endif
 
 
 #endif

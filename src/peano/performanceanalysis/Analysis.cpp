@@ -3,6 +3,11 @@
 #include "tarch/Assertions.h"
 
 
+
+
+#ifdef PerformanceAnalysis
+
+
 peano::performanceanalysis::Analysis::Analysis():
   _device(0) {
   _device = new DefaultAnalyser();
@@ -127,3 +132,5 @@ void peano::performanceanalysis::Analysis::leaveCentralElementOfEnclosingSpacetr
   assertion( _device!=0 );
   _device->leaveCentralElementOfEnclosingSpacetree();
 }
+
+#endif
