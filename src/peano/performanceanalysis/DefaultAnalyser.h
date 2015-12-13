@@ -5,8 +5,11 @@
 
 
 #include "peano/performanceanalysis/Analyser.h"
+
 #include "tarch/logging/Log.h"
 #include "tarch/timing/Watch.h"
+
+#include "tarch/multicore/BooleanSemaphore.h"
 
 
 namespace peano {
@@ -44,7 +47,25 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     tarch::timing::Watch           _waitForWorkerDataWatch;
     tarch::timing::Watch           _synchronousHeapWatch;
     tarch::timing::Watch           _asynchronousHeapWatch;
- public:
+
+    tarch::timing::Watch                _concurrencyReportWatch;
+    tarch::multicore::BooleanSemaphore  _concurrencyReportSemaphore;
+
+    int                                 _currentConcurrencyLevel;
+    int                                 _currentMaxPotentialConcurrencyLevel;
+
+    int                                 _numberOfSpawnedBackgroundTask;
+    double                              _concurrentTimeSpent;
+    double                              _maxPotentialConcurrentTimeSpent;
+    double                              _maxConcurrencyLevel;
+    double                              _maxPotentialConcurrencyLevel;
+
+    double                              _lastConcurrencyDataUpdateTimeStamp;
+
+    static double TimeInBetweenTwoConcurrencyLogs;
+
+
+  public:
     DefaultAnalyser();
     virtual ~DefaultAnalyser();
 

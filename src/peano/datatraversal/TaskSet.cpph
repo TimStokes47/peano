@@ -67,11 +67,15 @@ peano::datatraversal::TaskSet::TaskSet(
       task0();
       task1();
     #endif
+
+
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-2,-2);
   }
   else {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,2);
     task0();
     task1();
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-2);
   }
 }
 
@@ -124,12 +128,14 @@ peano::datatraversal::TaskSet::TaskSet(
       task1();
       task2();
     #endif
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-3,-3);
   }
   else {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,3);
     task0();
     task1();
     task2();
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-3);
   }
 }
 

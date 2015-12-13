@@ -1,9 +1,13 @@
 #include "peano/performanceanalysis/DefaultAnalyser.h"
+
 #include "tarch/parallel/Node.h"
 #include "tarch/logging/CommandLineLogger.h"
 
+#include "tarch/multicore/Lock.h"
 
 tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::performanceanalysis::DefaultAnalyser" );
+
+double peano::performanceanalysis::DefaultAnalyser::TimeInBetweenTwoConcurrencyLogs( 1.0 );
 
 
 peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
@@ -12,7 +16,16 @@ peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _waitForWorkerDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _synchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false) {
+  _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
+  _concurrencyReportWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
+  _currentConcurrencyLevel(0),
+  _currentMaxPotentialConcurrencyLevel(0),
+  _numberOfSpawnedBackgroundTask(0),
+  _concurrentTimeSpent(0),
+  _maxPotentialConcurrentTimeSpent(0),
+  _maxConcurrencyLevel(0),
+  _maxPotentialConcurrencyLevel(0),
+  _lastConcurrencyDataUpdateTimeStamp(0) {
   if (!tarch::logging::CommandLineLogger::getInstance().getLogMachineName() && tarch::parallel::Node::getInstance().isGlobalMaster() ) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of machine name is disabled. See command line logger" );
   }
@@ -200,10 +213,63 @@ void peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
 
 
 void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int actualChange, int maxPossibleChange) {
-  logInfo( "changeConcurrencyLevel(int,int)", "plopp" << actualChange << ", " << maxPossibleChange );
+  tarch::multicore::Lock lock(_concurrencyReportSemaphore);
+
+  assertion4(
+    (actualChange>=0 && maxPossibleChange>0)
+    ||
+    (actualChange<=0 && maxPossibleChange<0),
+    actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel
+  );
+
+  _concurrencyReportWatch.stopTimer();
+
+  const double currentTimeStamp       = _concurrencyReportWatch.getCalendarTime();
+  const double deltaToLastDataUpdate  = currentTimeStamp - _lastConcurrencyDataUpdateTimeStamp;
+
+  _lastConcurrencyDataUpdateTimeStamp = _concurrencyReportWatch.getCalendarTime();
+
+  _concurrentTimeSpent             += _currentConcurrencyLevel             * deltaToLastDataUpdate;
+  _maxPotentialConcurrentTimeSpent += _currentMaxPotentialConcurrencyLevel * deltaToLastDataUpdate;
+
+  _currentConcurrencyLevel             += actualChange;
+  _currentMaxPotentialConcurrencyLevel += maxPossibleChange;
+
+  _maxConcurrencyLevel          = _maxConcurrencyLevel          > _currentConcurrencyLevel             ? _maxConcurrencyLevel : _currentConcurrencyLevel;
+  _maxPotentialConcurrencyLevel = _maxPotentialConcurrencyLevel > _currentMaxPotentialConcurrencyLevel ? _maxPotentialConcurrencyLevel : _currentMaxPotentialConcurrencyLevel;
+
+  assertion4( _currentConcurrencyLevel>=0,             actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel);
+  assertion4( _currentMaxPotentialConcurrencyLevel>=0, actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel);
+
+  if ( _concurrencyReportWatch.getCalendarTime() > TimeInBetweenTwoConcurrencyLogs) {
+    logInfo(
+      "changeConcurrencyLevel(int,int)",
+      "dt=" << _concurrencyReportWatch.getCalendarTime() <<
+      ", cpu-time=" << _concurrencyReportWatch.getCPUTime() <<
+      ", concurrent-time=" << _concurrentTimeSpent <<
+      ", potential-concurrent-time=" << _maxPotentialConcurrentTimeSpent <<
+      ", max-concurrency-level=" << _maxConcurrencyLevel <<
+      ", max-potential-concurrency-level=" << _maxPotentialConcurrencyLevel <<
+      ", background-tasks=" << _numberOfSpawnedBackgroundTask
+    );
+
+    _numberOfSpawnedBackgroundTask      = 0;
+
+    _concurrentTimeSpent                = 0.0;
+    _maxPotentialConcurrentTimeSpent    = 0.0;
+
+    _maxConcurrencyLevel          = 0;
+    _maxPotentialConcurrencyLevel = 0;
+
+    _lastConcurrencyDataUpdateTimeStamp = 0.0;
+
+    _concurrencyReportWatch.startTimer();
+  }
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::fireAndForgetBackgroundTask(int taskCount) {
-  logInfo( "fireAndForgetBackgroundTask()", "plopp" );
+  tarch::multicore::Lock lock(_concurrencyReportSemaphore);
+
+  _numberOfSpawnedBackgroundTask += taskCount;
 }
