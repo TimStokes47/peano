@@ -2,6 +2,7 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "peano/utils/Loop.h"
 #include "peano/utils/PeanoOptimisations.h"
+#include "peano/performanceanalysis/Analysis.h"
 
 #ifdef SharedTBB
 #include "tbb/parallel_reduce.h"
@@ -75,9 +76,11 @@ void peano::datatraversal::dForLoop<LoopBody>::runSequentially(
   const tarch::la::Vector<DIMENSIONS,int>&  range,
   LoopBody&                                 loopBody
 ) {
+  peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,tarch::la::volume(range));
   dfor(i,range) {
     loopBody(i);
   }
+  peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-tarch::la::volume(range));
 }
 
 
@@ -87,15 +90,19 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
   LoopBody&                                 loopBody,
   int                                       grainSize
 ) {
+  peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(tarch::la::volume(range)/grainSize,tarch::la::volume(range));
   #ifdef SharedTBB
   dForLoopInstance loopInstance(loopBody,0,1);
   tbb::parallel_reduce(
     dForRange( range, grainSize ),
     loopInstance
   );
+  #elif SharedOMP
+   #warning @Vasco OpenMP nicht implementiert
   #else
     assertion(false);
   #endif
+  peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-tarch::la::volume(range)/grainSize,-tarch::la::volume(range));
 }
 
 
@@ -107,6 +114,9 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
   int                                       colouring
 ) {
   assertion3(colouring>=2,range,grainSize,colouring);
+
+  peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring)/grainSize,tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring));
+
   dForLoopInstance loopInstance(loopBody,0,colouring);
   dfor(k,colouring) {
     tarch::la::Vector<DIMENSIONS,int> localRange = range;
@@ -124,6 +134,7 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
     #ifdef SharedTBB
     tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance );
     #elif SharedOMP
+      #warning @Vasco OpenMP vermutlich gnadenlos veraltet
     std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
 
     #pragma omp parallel for schedule(dynamic, 1) firstprivate(loopInstance)
@@ -134,6 +145,8 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
     assertion(false);
     #endif
   }
+
+  peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring)/grainSize,-tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring));
 }
 
 

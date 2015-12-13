@@ -199,9 +199,11 @@ void peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
 }
 
 
-void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int change) {
+void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int actualChange, int maxPossibleChange) {
+  logInfo( "changeConcurrencyLevel(int,int)", "plopp" << actualChange << ", " << maxPossibleChange );
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::fireAndForgetBackgroundTask(int taskCount) {
+  logInfo( "fireAndForgetBackgroundTask()", "plopp" );
 }

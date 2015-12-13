@@ -134,9 +134,9 @@ void peano::performanceanalysis::Analysis::leaveCentralElementOfEnclosingSpacetr
 }
 
 
-void peano::performanceanalysis::Analysis::changeConcurrencyLevel(int change) {
+void peano::performanceanalysis::Analysis::changeConcurrencyLevel(int actualChange, int maxPossibleChange) {
   assertion( _device!=0 );
-  _device->changeConcurrencyLevel(change);
+  _device->changeConcurrencyLevel(actualChange,maxPossibleChange);
 }
 
 

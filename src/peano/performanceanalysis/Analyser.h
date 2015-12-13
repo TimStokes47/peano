@@ -94,7 +94,12 @@ class peano::performanceanalysis::Analyser {
     virtual void endReleaseOfJoinData() = 0;
     virtual void endReleaseOfBoundaryData() = 0;
 
-    virtual void changeConcurrencyLevel(int change) = 0;
+    /**
+     * Reports that the concurrency level has been changed by actualChange
+     * while it could even have been changed by maxPossibleChange.
+     */
+    virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange) = 0;
+
     virtual void fireAndForgetBackgroundTask(int taskCount) = 0;
 };
 

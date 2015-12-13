@@ -5,6 +5,7 @@
 #include "peano/datatraversal/autotuning/Oracle.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "peano/utils/PeanoOptimisations.h"
+#include "peano/performanceanalysis/Analysis.h"
 
 
 template <class LoopBody>
@@ -38,12 +39,14 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopSequential(
 ) {
   const int maximumPath = traversal.getMaximumPath();
   for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
     for (int j=0; j<traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
       #ifdef CompilerICC
       #pragma forceinline
       #endif
       loopBody(traversal.getActionSet(currentStepInPath).getAction(j));
     }
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());;
   }
 }
 
@@ -56,6 +59,7 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
 ) {
   const int maximumPath = traversal.getMaximumPath();
   for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()/grainSize,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
     #ifdef SharedTBB
     ActionSetTraversalLoopInstance loopInstance(loopBody,traversal.getActionSet(currentStepInPath));
     tbb::parallel_reduce(
@@ -66,6 +70,9 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
     // This check is due to a bug in the OpenMP-Library on Shaheen, which does not handle the case grainSize > problemSize correctly
     if(grainSize < traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()) {
       LoopBody localIterationLoopBody(loopBody);
+
+      #warning @Vasco OpenMP Implementierung evtl. nicht mehr up-to-date
+
       #pragma omp parallel
       {
         #pragma omp for schedule(dynamic, grainSize) firstprivate(localIterationLoopBody)
@@ -79,15 +86,10 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
         localIterationLoopBody(traversal.getActionSet(currentStepInPath).getAction(j));
       }
     }
-    #elif SharedCobra
-    tarch::multicore::cobra::Core::getInstance().getScheduler().call([&](::cobra::continuator& ctr) {
-      ::cobra::blocked_range<int> range(0, traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(), grainSize);
-
-      realiseParallelForAsTaskBipartitioning( range, ctr, traversal.getActionSet(currentStepInPath), loopBody );
-    });
     #else
     assertion(false);
     #endif
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()/grainSize,-traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
   }
 }
 

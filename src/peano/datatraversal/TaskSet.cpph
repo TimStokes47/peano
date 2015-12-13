@@ -1,19 +1,14 @@
 #include "tarch/Assertions.h"
 
-
-#if defined(SharedCobra)
-#include "tarch/multicore/cobra/Core.h"
-
-#include <cobra/thread.hpp>
-
-#include <memory>
-#endif
+#include "peano/performanceanalysis/Analysis.h"
 
 
 template <class Functor>
 peano::datatraversal::TaskSet::TaskSet(
   Functor&  myTask
 ) {
+  peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
+
   #if defined(SharedTBB)
   typedef GenericTaskWithCopy<Functor> Task;
 
@@ -22,20 +17,12 @@ peano::datatraversal::TaskSet::TaskSet(
   tbb::task::enqueue(*tbbTask);
 
   #elif defined(SharedOMP)
+    #warning @Vasco OpenMP Implementierung evtl. nicht mehr up-to-date
     #pragma omp task shared(myTask)
     {
       Functor copyOfMyTask(myTask);
       copyOfMyTask();
     }
-  #elif defined(SharedCobra)
-//   ::cobra::thread thread(
-//    [=]{
-//      Functor copyOfmyTask(myTask);
-//      copyOfmyTask();
-//    }
-//  );
-//  thread.detach();
-  myTask();
   #else
   myTask();
   #endif
@@ -50,6 +37,8 @@ peano::datatraversal::TaskSet::TaskSet(
 ) {
   assertion1( parallelise>=0 && parallelise<=2, parallelise );
   if (parallelise==1) {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(2,2);
+
     #if defined(SharedTBB)
       typedef GenericTask<Functor0> Task0;
       typedef GenericTask<Functor1> Task1;
@@ -64,6 +53,7 @@ peano::datatraversal::TaskSet::TaskSet(
 
       tbb::task::spawn_root_and_wait(tbbTaskList);
     #elif defined(SharedOMP)
+      #warning @Vasco OpenMP Implementierung evtl. nicht mehr up-to-date
       #pragma omp task shared(task0)
       {
         task0();
@@ -73,23 +63,13 @@ peano::datatraversal::TaskSet::TaskSet(
         task1();
       }
       #pragma omp taskwait
-    #elif defined(SharedCobra)
-//      tarch::multicore::cobra::Core::getInstance().getScheduler().call(
-//          // & does not seem to work
-//        [&](::cobra::continuator& ctr) {
-//          ctr.fork<0>([&](::cobra::continuator&){ task0(); });
-//          ctr.fork<1>([&](::cobra::continuator&){ task1(); });
-//          ctr.join([]{});
-//        }
-//      );
-      task0();
-      task1();
     #else
       task0();
       task1();
     #endif
   }
   else {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,2);
     task0();
     task1();
   }
@@ -106,6 +86,7 @@ peano::datatraversal::TaskSet::TaskSet(
 ) {
   assertion1( parallelise>=0 && parallelise<=3, parallelise );
   if (parallelise==1 || parallelise==2) {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(3,3);
     #if defined(SharedTBB)
       typedef GenericTask<Functor0> Task0;
       typedef GenericTask<Functor1> Task1;
@@ -123,6 +104,8 @@ peano::datatraversal::TaskSet::TaskSet(
 
       tbb::task::spawn_root_and_wait(tbbTaskList);
     #elif defined(SharedOMP)
+      #warning @Vasco OpenMP Implementierung evtl. nicht mehr up-to-date
+
       #pragma omp task shared(task0)
       {
         task0();
@@ -136,18 +119,6 @@ peano::datatraversal::TaskSet::TaskSet(
         task2();
       }
       #pragma omp taskwait
-    #elif defined(SharedCobra)
-//      tarch::multicore::cobra::Core::getInstance().getScheduler().call(
-//        [&](::cobra::continuator& ctr) {
-//          ctr.fork<0>([&](::cobra::continuator&){ task0(); });
-//          ctr.fork<1>([&](::cobra::continuator&){ task1(); });
-//          ctr.fork<2>([&](::cobra::continuator&){ task2(); });
-//          ctr.join([]{});
-//        }
-//      );
-      task0();
-      task1();
-      task2();
     #else
       task0();
       task1();
@@ -155,6 +126,7 @@ peano::datatraversal::TaskSet::TaskSet(
     #endif
   }
   else {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,3);
     task0();
     task1();
     task2();

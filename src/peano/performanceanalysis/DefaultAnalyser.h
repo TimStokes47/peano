@@ -76,7 +76,7 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
 
-    virtual void changeConcurrencyLevel(int change);
+    virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange);
     virtual void fireAndForgetBackgroundTask(int taskCount);
 };
 

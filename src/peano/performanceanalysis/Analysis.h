@@ -106,7 +106,7 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
 
-    virtual void changeConcurrencyLevel(int change);
+    virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange);
     virtual void fireAndForgetBackgroundTask(int taskCount);
 };
 
@@ -184,7 +184,7 @@ class peano::performanceanalysis::Analysis {
     void endReleaseOfJoinData() {}
     void endReleaseOfBoundaryData()  {}
 
-    virtual void changeConcurrencyLevel(int change) {}
+    virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange) {}
     virtual void fireAndForgetBackgroundTask(int taskCount) {}
 };
 

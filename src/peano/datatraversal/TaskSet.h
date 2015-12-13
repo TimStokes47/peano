@@ -87,6 +87,12 @@ class peano::datatraversal::TaskSet {
      * particular on Windows systems, I often encounter starvation processes if
      * a load vertices or store vertices task splits very often and spawns too
      * many task children due to this operation.
+     *
+     * !!! Deadlocks
+     *
+     * Please note that your code might deadlock if you spawn a task without
+     * multicore support and if you hope/rely on the fact that this task cannot
+     * complete right at the moment but will later on be able to do so.
      */
     template <class Functor>
     inline TaskSet(
