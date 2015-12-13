@@ -135,14 +135,19 @@ class tarch::timing::Watch {
      *
      * This method starts the timer. Actually, it restarts the time as the
      * constructor also invokes this operation.
+     *
+     * @see stopTimer()
      */
     void startTimer();
 
 
     /**
-     * This method stops the timer
+     * This method stops the timer. You may stop a timer multiple time because
+     * the stop does not reset the start time. Please note that all the getters
+     * return meaningful results if and only if you call stopTimer().
      */
     void stopTimer();
+
 
     /**
      * Return CPU Time in Seconds
