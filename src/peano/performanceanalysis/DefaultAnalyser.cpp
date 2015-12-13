@@ -7,7 +7,7 @@
 
 tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::performanceanalysis::DefaultAnalyser" );
 
-double peano::performanceanalysis::DefaultAnalyser::TimeInBetweenTwoConcurrencyLogs( 1.0 );
+double peano::performanceanalysis::DefaultAnalyser::TimeInBetweenTwoConcurrencyLogs( 4.0 );
 
 
 peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
