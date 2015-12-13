@@ -7,7 +7,8 @@
 
 tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::performanceanalysis::DefaultAnalyser" );
 
-double peano::performanceanalysis::DefaultAnalyser::TimeInBetweenTwoConcurrencyLogs( 4.0 );
+double peano::performanceanalysis::DefaultAnalyser::MinTimeInBetweenTwoConcurrencyLogs( 1.0 );
+double peano::performanceanalysis::DefaultAnalyser::MaxTimeInBetweenTwoConcurrencyLogs( 4.0 );
 
 
 peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
@@ -241,7 +242,11 @@ void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int act
   assertion4( _currentConcurrencyLevel>=0,             actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel);
   assertion4( _currentMaxPotentialConcurrencyLevel>=0, actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel);
 
-  if ( _concurrencyReportWatch.getCalendarTime() > TimeInBetweenTwoConcurrencyLogs) {
+  if (
+    (_concurrencyReportWatch.getCalendarTime() > MaxTimeInBetweenTwoConcurrencyLogs)
+    ||
+    (_currentMaxPotentialConcurrencyLevel==0 && _concurrencyReportWatch.getCalendarTime()> MinTimeInBetweenTwoConcurrencyLogs )
+  ) {
     logInfo(
       "changeConcurrencyLevel(int,int)",
       "dt=" << _concurrencyReportWatch.getCalendarTime() <<

@@ -21,6 +21,7 @@ numberOfLocalCells      = {}
 numberOfLocalVertices   = {}
 tTotal                  = {}
 tTraversal              = {}
+
   
   
 #
@@ -136,6 +137,90 @@ def parseInputFile():
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
+
+
+
+def plotConcurrency(rank):
+  pylab.clf()
+  #pylab.title( "Concurrency levels" )
+
+  ax = pylab.gca()
+  #ax.set_aspect('equal','box')
+  
+  timeStampPattern = "([0-9]\.?[0-9]*)"
+  floatPattern = "([0-9]\.?[0-9]*)"
+  
+  searchPattern              = timeStampPattern + ".*rank:" + str(rank) + " .*peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel" + \
+                               ".*dt=" + floatPattern + \
+                               ".*cpu-time=" + floatPattern + \
+                               ".*concurrent-time=" + floatPattern + \
+                               ".*potential-concurrent-time=" + floatPattern + \
+                               ".*max-concurrency-level=" + floatPattern + \
+                               ".*max-potential-concurrency-level=" + floatPattern + \
+                               ".*background-tasks=" + floatPattern
+
+  lastTimeStamp = 0
+  
+  
+  maxPotentialConcurrencyLevelLastPoint = 0
+  potentialConcurrencyTimeLastPoint     = 0
+  realConcurrencyLastPoint              = 1
+  
+  try:
+    inputFile = open( inputFileName,  "r" )
+    print "parse concurrency of level " + str(rank)
+    for line in inputFile:
+      m = re.search( searchPattern, line )
+      if (m):
+        timeStamp                      = float( m.group(1) )
+        dt                             = float( m.group(2) )
+        cpuTime                        = float( m.group(3) ) 
+        concurrentTime                 = float( m.group(4) )
+        potentialConcurrentTime        = float( m.group(5) ) 
+        maxConcurrencyLevel            = float( m.group(6) )
+        maxPotentialConcurrencyLevel   = float( m.group(7) ) 
+        backgroundTasks                = float( m.group(8) )
+        
+        
+        #print "found dt=" + str(dt) + ", cpuTime=" + str(cpuTime)
+         
+  
+        backgroundTasksBar         = pylab.Rectangle([lastTimeStamp,maxConcurrencyLevel],timeStamp-lastTimeStamp,backgroundTasks,facecolor="#0000ff",edgecolor="#0000ff")
+        maxConcurrencyLevelBar     = pylab.Rectangle([lastTimeStamp,0],timeStamp-lastTimeStamp,maxConcurrencyLevel,              facecolor="#ff0000",edgecolor="#ff0000")
+        concurrentTimeBar          = pylab.Rectangle([lastTimeStamp,0],timeStamp-lastTimeStamp,concurrentTime/dt,                facecolor="#aa0000",edgecolor="#bb3344")
+
+        maxPotentialConcurrencyLevelSymbol = pylab.plot([lastTimeStamp,timeStamp],[maxPotentialConcurrencyLevelLastPoint, maxPotentialConcurrencyLevel], "-",  color="#00ff00" )
+        potentialConcurrencyTimeSymbol     = pylab.plot([lastTimeStamp,timeStamp],[potentialConcurrencyTimeLastPoint,     potentialConcurrentTime/dt]  , ":",  color="#008800" )
+        realConcurrencyLevelSymbol         = pylab.plot([lastTimeStamp,timeStamp],[realConcurrencyLastPoint,              cpuTime/dt                ]  , "-",  color="#000000")
+
+        maxPotentialConcurrencyLevelLastPoint = maxPotentialConcurrencyLevel
+        potentialConcurrencyTimeLastPoint     = potentialConcurrentTime/dt
+        realConcurrencyLastPoint              = cpuTime/dt
+
+        ax.add_patch(backgroundTasksBar)
+        ax.add_patch(maxConcurrencyLevelBar)
+        ax.add_patch(concurrentTimeBar)
+
+        lastTimeStamp = timeStamp
+        print ".",
+    pylab.plot([0,timeStamp],[1,1], "--", color="#000000")
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+  
+  ax.autoscale_view()
+  ax.set_yscale('symlog', basey=2)
+  pylab.xlabel('t')
+  pylab.ylabel('Concurrency level')
+  pylab.grid(True)
+  pylab.savefig( outputFileName + "-rank-" + str(rank) + ".concurrency.png" )
+  pylab.savefig( outputFileName + "-rank-" + str(rank) + ".concurrency.pdf" )
+  switchToLargePlot()
+  pylab.savefig( outputFileName + "-rank-" + str(rank) + ".concurrency.large.png" )
+  pylab.savefig( outputFileName + "-rank-" + str(rank) + ".concurrency.large.pdf" )
+  switchBackToStandardPlot()  
+
+
 
 
 
@@ -998,6 +1083,16 @@ plotWalltimeOverview()
 print "plot global grid overview"
 plotGlobalGridOverview()
 
+if (numberOfThreads>0):      
+  print "plot concurrency levels"
+  if (numberOfRanks>0):
+    for rank in range(0,numberOfRanks):
+      print "plot concurrency levels for rank " + str(rank)
+      plotConcurrency(rank)
+  else:
+    print "plot concurrency levels"
+    plotConcurrency(0)
+  
 if (numberOfRanks>0):      
   print "plot logical grid topology"
   plotLogicalTopology()
@@ -1067,6 +1162,11 @@ outFile.write( "\
      <li><a href=\"#global-grid-overview\">Global grid overview</a></li>\
     ")
 
+
+if (numberOfThreads>0):      
+  outFile.write( "<li><a href=\"#concurrency\">Multithreading concurrency</a></li>")
+  
+  
 if (numberOfRanks>0):      
   outFile.write( "\
      <li><a href=\"#logical-topology\">Logical topology</a></li>\
@@ -1170,6 +1270,47 @@ outFile.write( "\
 
 
 
+#
+# Concurrency analysis
+#
+if (numberOfThreads>0):      
+  outFile.write( "<h2 id=\"concurrency\">Multithreading concurrency</h2>" )
+  if numberOfRanks==0:
+    outFile.write( "<img src=\"" + outputFileName + "-rank-0.concurrency.png\" />" )
+    outFile.write( "<br /><a href=\"" + outputFileName + "-rank-0.concurrency.large.png\">Big version</a>" )
+
+  for rank in range(0,numberOfRanks):
+    outFile.write( "<h3>Rank " + str(rank) + "</h2>" )
+    outFile.write( "<img src=\"" + outputFileName + "-rank-" + str(rank) + ".concurrency.png\" />" )
+    outFile.write( "<br /><a href=\"" + outputFileName + "-rank-" + str(rank) + ".concurrency.large.png\">Big version</a>" )
+    
+  outFile.write("\
+    <br /><br />\
+    <p>\
+    Legend:\
+    <ul>\
+     <li>Dotted black line: Concurrency level is one</li> \
+     <li>Solid black line: Real concurrency level of current code.</li> \
+     <li>Solid green line: Maximum concurrency that could be used in the code if all grain sizes were set to one. Ignores background tasks.</li> \
+     <li>Dotted dark green line: Maximum algorithmic concurrency level introduced by the code. Takes not into account that background tasks (blue) might be handled in the background, i.e. real concurrency level could be higher.</li> \
+     <li>Light red bar: Average-case algorithmic concurrency level that could be obtained if the code selected grain size one everywhere. Ignores background tasks.</li> \
+     <li>Dark red bar: Average-case algorithmic concurrency observed for selected grain sizes. Takes not into account that background tasks (blue) might be handled in the background, i.e. real concurrency level could be higher.</li> \
+     <li>Blue bar: Additional tasks that are spawned into the background. They might remain there quite long (if the system is busy), but the diagram only tracks when they are first spawned.</li> \
+    </ul>\
+    If your events internally are multithreaded, this multithreading is not tracked by the performance analysis. Use a real performance analysis tool to get statements on your actual core usage. \
+    </p>\
+    <i>Performance hint: </i>\
+    <p>\
+      If your real concurrency falls below one, there has to be some IO or OS swapping that should be removed. \
+      If your real concurrency level falls below the number of cores available, your multicore usage is poor. Try to improve concurrency by reducing grain sizes in the oracle, e.g. \
+    </p>\
+    <a href=\"#table-of-contents\">To table of contents</a>\
+    ")
+  if (numberOfRanks>0):      
+    pass
+    
+    
+
 if (numberOfRanks>0):      
   #
   # Logical topology  
@@ -1206,7 +1347,7 @@ if (numberOfRanks>0):
     monotonic decrease of cells on one worker. See discussion in the Section 'Global grid overview'. \
     Also consult the notes on multiscale concurrency in Peano's quick start guide. The latter also discusses how to manually enforce a higher coarse grid \
     regularity and thus allow the load balancing to fork. \
-    <p>\
+    </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
