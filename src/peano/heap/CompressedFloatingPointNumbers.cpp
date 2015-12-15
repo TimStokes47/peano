@@ -39,6 +39,7 @@ void peano::heap::decomposeIntoEightVariants(
     std::bitset<64>*  mantissaAsBitset = reinterpret_cast<std::bitset<64>*>( &(mantissa[i]) );
 
     #ifdef Asserts
+    assertion1( sizeof(long int)>=64, sizeof(long int) );
     for (int j=(i+1)*8-1; j<64; j++) {
       assertion9(
         !(*mantissaAsBitset)[j],
@@ -91,7 +92,7 @@ void peano::heap::decomposeIntoFourVariants(
     std::bitset< sizeof(int)*8 >*  mantissaAsBitset = reinterpret_cast<std::bitset< sizeof(int)*8 >*>( &(mantissa[i]) );
 
     #ifdef Asserts
-    for (int j=(i+1)*8-1; j<sizeof(int)*8; j++) {
+    for (int j=(i+1)*8-1; j<static_cast<int>( sizeof(int) )*8; j++) {
       assertion9(
         !(*mantissaAsBitset)[j],
         *mantissaAsBitset, value, static_cast<int>( exponent[i] ), mantissa[i], error[i], i, j, significand, integerExponent
