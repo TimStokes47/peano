@@ -1,5 +1,7 @@
 import sys
 import re
+import matplotlib
+matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 import pylab
 import networkx 
 
