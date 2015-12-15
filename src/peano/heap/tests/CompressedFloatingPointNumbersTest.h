@@ -1,3 +1,4 @@
+
 // This file originally was created by pdt (Peano Development Toolkit) as part
 // of a code based upon the Peano project by Tobias Weinzierl. For conditions 
 // of distribution and use of this project, please see the copyright notice at
@@ -11,6 +12,7 @@
 
 
 #include "tarch/tests/TestCase.h"
+#include "tarch/logging/Log.h"
 
 
 namespace peano {
@@ -28,6 +30,8 @@ namespace peano {
  */ 
 class peano::heap::tests::CompressedFloatingPointNumbersTest: public tarch::tests::TestCase {
   private:
+    static tarch::logging::Log  _log;
+
     void testDecomposeWithLongInt();
     void testDecomposeWithInt();
     void testDecomposeWithChar();
