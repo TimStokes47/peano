@@ -1,4 +1,3 @@
-
 #ifndef _PEANO_HEAP_COMPRESSED_FLOATING_POINT_NUMBERS_H_
 #define _PEANO_HEAP_COMPRESSED_FLOATING_POINT_NUMBERS_H_
 
@@ -41,6 +40,10 @@ namespace peano {
      * @return exponent Sequence of exponents belonging to the eight decompositions.
      * @return mantissa Sequence of mantissas belonging to the eight decompositions.
      * @return error    Errors associated to the decompositions. They are all positive values.
+     *
+     * !!! Bug/interoperability
+     *
+     * This operation works if and only if your system maps a long int onto a 64 bit value.
      */
     void decomposeIntoEightVariants(
       double        value,
@@ -49,6 +52,9 @@ namespace peano {
       double        error[8]
     );
 
+    /**
+     * @see decomposeIntoEightVariants
+     */
     void decomposeIntoFourVariants(
       double        value,
       char          exponent[4],

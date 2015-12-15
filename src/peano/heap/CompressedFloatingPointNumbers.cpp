@@ -12,6 +12,7 @@ void peano::heap::decomposeIntoEightVariants(
   double        error[8]
 ) {
   assertion(value==value);
+  assertion1( sizeof(long int)*8>=64, sizeof(long int) );
 
   // We may not use 7 though we use seven out of eight bits for the first byte.
   // If we shift by seven, we can end up with the highest byte set for
@@ -39,7 +40,6 @@ void peano::heap::decomposeIntoEightVariants(
     std::bitset<64>*  mantissaAsBitset = reinterpret_cast<std::bitset<64>*>( &(mantissa[i]) );
 
     #ifdef Asserts
-    assertion1( sizeof(long int)>=64, sizeof(long int) );
     for (int j=(i+1)*8-1; j<64; j++) {
       assertion9(
         !(*mantissaAsBitset)[j],
@@ -65,6 +65,7 @@ void peano::heap::decomposeIntoFourVariants(
   double   error[4]
 ) {
   assertion(value==value);
+  assertion1( sizeof(int)*8>=32, sizeof(int) );
 
   // We may not use 7 though we use seven out of eight bits for the first byte.
   // If we shift by seven, we can end up with the highest byte set for
