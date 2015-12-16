@@ -23,7 +23,7 @@ namespace peano {
      * initial domain splitting always equals a Cartesian grid). It then
      * derives for all subvertices which adjacency flags are there.
      *
-     * @image html LevelTransferOperators.png
+     * @image html peano/parallel/LevelTransferOperators.png
      *
      *
      * !! Algorithm
@@ -32,7 +32,7 @@ namespace peano {
      * illustrated in the picture.
      *
      * @todo Hier fehlt ein Bild
-     * @image html LevelTransferOperators_recursive.png
+     * @image html peano/parallel/LevelTransferOperators_recursive.png
      *
      *
      * !! Adjacency Lists
@@ -41,7 +41,7 @@ namespace peano {
      * entries are enumerated lexicographically, and they tell Peano which
      * ranks are responsible for the adjacent cells.
      *
-     * @image html AdjacencyListsEnumeration.png
+     * @image html peano/parallel/AdjacencyListsEnumeration.png
      *
      */
     tarch::la::Vector<TWO_POWER_D,int> getAdjacencyList(

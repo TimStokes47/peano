@@ -54,7 +54,7 @@ namespace peano {
 /**
  * Abstract superclass of all oracles
  *
- * !!! Copy constructor
+ * <h2> Copy constructor </h2>
  *
  * The oracle singleton never works with the original oracle. Instead, it
  * clones its oracle strategy for each new phase (see createNewOracle()).

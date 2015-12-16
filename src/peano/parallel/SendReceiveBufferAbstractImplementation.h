@@ -72,9 +72,9 @@ namespace peano {
  *
  * The send/receive buffers use the communication tag 1.
  *
- * @image html parallel_SendReceiveBuffer.gif
+ * @image html peano/parallel/parallel_SendReceiveBuffer.gif
  *
- * @image html parallel_SendReceiveBuffer_Functionality.png
+ * @image html peano/parallel/parallel_SendReceiveBuffer_Functionality.png
  *
  * @author Tobias Weinzierl
  * @version $Revision: 1.39 $
@@ -247,7 +247,7 @@ class peano::parallel::SendReceiveBufferAbstractImplementation: public peano::pa
      * receive buffer into the deploy buffer before the two buffers are
      * interchanged.
      *
-     * @image html parallel_SendReceiveBuffer_receivePageIfAvailable.png
+     * @image html peano/parallel/parallel_SendReceiveBuffer_receivePageIfAvailable.png
      *
      * !!! Algorithm
      *

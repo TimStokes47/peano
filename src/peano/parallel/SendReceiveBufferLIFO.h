@@ -68,9 +68,9 @@ namespace peano {
  *
  * The send/receive buffers use the communication tag 1.
  *
- * @image html parallel_SendReceiveBuffer.gif
+ * @image html peano/parallel/parallel_SendReceiveBuffer.gif
  *
- * @image html parallel_SendReceiveBuffer_Functionality.png
+ * @image html peano/parallel/parallel_SendReceiveBuffer_Functionality.png
  *
  * @author Tobias Weinzierl
  * @version $Revision: 1.39 $

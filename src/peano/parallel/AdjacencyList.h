@@ -30,7 +30,7 @@ namespace peano {
        * inconsistency where the adjacency lists are not the same anymore.
        * This operation has to resolve the inconsistencies
        *
-       * @image html AdjacencyListsEnumeration.png
+       * @image html peano/parallel/AdjacencyListsEnumeration.png
        *
        * Definition:
        * - A local node is responsible for an entry i of the adjacency list, if the
@@ -143,7 +143,7 @@ namespace peano {
        *
        * !! Example
        *
-       * @image html parallel_AdjacencyList.png
+       * @image html peano/parallel/parallel_AdjacencyList.png
        *
        * This stuff all has to be rewritten asap as the algorithm works.
        */
@@ -163,7 +163,7 @@ namespace peano {
            * the cell and sets a new rank. There's no need to invalidate these
            * vertices manually, as setAdjacentRank() already does so.
            *
-           * @image html AdjacencyListsEnumeration.png
+           * @image html peano/parallel/AdjacencyListsEnumeration.png
            */
           static void replaceAdjancyEntriesOfVerticesOfOneCellWithDifferentRank(
             int                                   newRank,

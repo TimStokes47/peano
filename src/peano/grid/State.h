@@ -595,7 +595,7 @@ class peano::grid::State {
      * depth-first traversal. The following sketch illustrates potential
      * implications:
      *
-     * @image html State_mayForkCellsOnLevel.png
+     * @image html peano/grid/State_mayForkCellsOnLevel.png
      *
      * Let the root node accept the instruction to fork three times. The labels
      * illustrate how often a node could fork its children (due to grid regularity

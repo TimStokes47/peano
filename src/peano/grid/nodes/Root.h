@@ -194,7 +194,7 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
      *   reconstructs the master's grid due to a fork, or
      * - master hasn't refined a vertex whereas the vertex actually is refined.
      *
-     * @image parallel-root-cell-communication.png
+     * @image peano/grid/nodes/parallel-root-cell-communication.png
      *
      * The latter case occurs if all the @f$ 2^d @f$ adjacent cells of the
      * vertex are assigned to nodes different than the master. In the image
@@ -385,7 +385,7 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
      * global sfc. See class TraversalOrderOnTopLevel for a detailed
      * information. Also the image below illustrates this fact:
      *
-     * @image html ../../parallel/JoinDataBuffer.png
+     * @image html peano/grid/nodes/../../parallel/JoinDataBuffer.png
      *
      * !!! Validity of cell data
      *

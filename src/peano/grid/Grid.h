@@ -41,7 +41,7 @@ namespace peano {
  * Furthermore, the root event holds the state corresponding to the whole grid
  * and is responsible for inverting the state.
  *
- * @image html grid_RootElement.gif
+ * @image html peano/grid/grid_RootElement.gif
  *
  * @author Tobias Weinzierl
  * @version $Revision: 1.55 $

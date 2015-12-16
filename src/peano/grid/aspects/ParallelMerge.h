@@ -45,7 +45,7 @@ class peano::grid::aspects::ParallelMerge {
      * refinement state in this operation hence immediately affects the
      * vertex updates in this very iteration.
      *
-     * !!! Consistency checks
+     * <h2> Consistency checks </h2>
      *
      * - The spatial positions have to be the same.
      * - The level has to be the same.
@@ -53,7 +53,7 @@ class peano::grid::aspects::ParallelMerge {
      *
      * If can happen that the neighbour holds refining and the local node holds erase-triggered:
      *
-     * @image html MergeAtBoundary.png
+     * @image html peano/grid/aspects/MergeAtBoundary.png
      */
     template <class Vertex>
     static void mergeOnDomainBoundary(
@@ -109,14 +109,14 @@ class peano::grid::aspects::ParallelMerge {
      *   information might be wrong, as the master might not have updated
      *   the geometry anymore as he felt not responsible.
      *
-     * !!! Merge process
+     * <h2> Merge process </h2>
      *
      * Finally, we invalidate all adjacency information and we set the
      * blocking flag. The latter avoids that adjacent domains immediately
      * after this fork coarse the domain and make the fork irrelevant. We
      * delay grid coarsening locally.
      *
-     * !!! Constraints
+     * <h2> Constraints </h2>
      *
      * - Only persistent vertices are exchanged throughout a fork or join.
      *   See Node::updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain().
@@ -161,7 +161,7 @@ class peano::grid::aspects::ParallelMerge {
          assertion2(localVertex.isOutside(),localVertex.toString(),workerVertex.toString());
        \endcode
      *
-     * !!! Refinement update
+     * <h2> Refinement update </h2>
      *
      * Besides in/out checks, the operation also validates weather the worker's
      * grid has been refined and the local grid is not refined. In this case, it
@@ -187,12 +187,12 @@ class peano::grid::aspects::ParallelMerge {
      * container and before the vertex has been sent to the worker or merged
      * with the worker data, respectively.
      *
-     * !!! Erasing rollback?
+     * <h2> Erasing rollback? </h2>
      *
      * Merging subdomains becomes tricky if the worker tries to erase right in the
      * iteration when it joins its data into its master:
      *
-     * @image html EraseRollback.png
+     * @image html peano/grid/aspects/EraseRollback.png
      *
      * In the example abover, we study two nodes. Node 1 holds the grey cells. Node
      * 2 holds the green cells and the blue one. The later is subject of our study.
@@ -213,7 +213,7 @@ class peano::grid::aspects::ParallelMerge {
      * 'vertex now shall be refined and should be erased immediately in the next
      * traversal'.
      *
-     * !!! Update of adjacency list entries
+     * <h2> Update of adjacency list entries </h2>
      *
      * If a vertex is not adjacent to the local partition anymore, the node
      * is not informed about changes of the vertex anymore. Load rebalancing
@@ -231,8 +231,8 @@ class peano::grid::aspects::ParallelMerge {
      *
      * Some illustration that led to the identification of this bug:
      *
-     * @image html ParallelMergeJoin00.jpg
-     * @image html ParallelMergeJoin01.jpg
+     * @image html peano/grid/aspects/ParallelMergeJoin00.jpg
+     * @image html peano/grid/aspects/ParallelMergeJoin01.jpg
      */
     template <class Vertex>
     static MergeVertexDueToJoinEffect mergeWithJoinedVertexFromWorker(
@@ -252,7 +252,7 @@ class peano::grid::aspects::ParallelMerge {
      * the cells that are refined on the master remain leaves locally, as they
      * are refined to the local refinement procedure.
      *
-     * !!! Validations
+     * <h2> Validation </h2>
      *
      * I added a couple of assertions:
      * - The even flags have to be the same on the master and the worker.
@@ -275,7 +275,7 @@ class peano::grid::aspects::ParallelMerge {
      * local state to leaf and rely on mergeWithForkedVertexFromMaster() to set
      * the vertex's state to refining().
      *
-     * !!! Reassignment of remote cells
+     * <h2> Reassignment of remote cells </h2>
      *
      * If a cell is remote, i.e. not handled by the local node anymore, its
      * responsible information is taken from the master and it is consistent.

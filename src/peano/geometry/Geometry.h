@@ -24,7 +24,7 @@ namespace peano {
  * change, Peano should automatically identify this and call destruction and
  * creation events automatically. It is some kind of indirect control.
  *
- * !!! Changing Geometries in Peano
+ * <h2> Changing Geometries in Peano </h2>
  *
  * Peano's handling of changing geometries relies on a callback pattern. If you
  * implement a changing geometry, you have to do two things:
@@ -45,7 +45,7 @@ namespace peano {
  * - The mapping's create and destroy operations update the grid, i.e. the
  *   mapping implements the how to update the geometry.
  *
- * !!! Design Rationale
+ * <h2> Design Rationale </h2>
  *
  * I tried to make the geometry interface minimal, i.e. to provide only
  * operations absolutely necessary. Please browse through the method
@@ -75,8 +75,8 @@ class peano::geometry::Geometry {
      * isCompletelyOutside() returns true iff the intersection of the inner /
      * outer domain with the open surrounding box is the box itself.
      *
-     * @image html ../grid/geometry-vertex-inside-outside.png
-     * @image html ../grid/geometry-cell-inside-outside.png
+     * @image html peano/geometry/geometry-vertex-inside-outside.png
+     * @image html peano/geometry/geometry-cell-inside-outside.png
      *
      * The query is not const anymore, as you might want to cache requests, e.g.
      */
@@ -100,8 +100,8 @@ class peano::geometry::Geometry {
      * isCompletelyOutside() returns true iff the intersection of the inner /
      * outer domain with the open surrounding box is the box itself.
      *
-     * @image html ../grid/geometry-vertex-inside-outside.png
-     * @image html ../grid/geometry-cell-inside-outside.png
+     * @image html peano/geometry/geometry-vertex-inside-outside.png
+     * @image html peano/geometry/geometry-cell-inside-outside.png
      *
      */
     virtual bool isCompletelyInside( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution ) = 0;
@@ -128,12 +128,12 @@ class peano::geometry::Geometry {
      * asks the geometry due to this operation whether it shall refine here.
      * In this routine, at least the minimum mesh size should be checked.
      *
-     * @image html refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain.png
+     * @image html peano/geometry/refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain.png
      *
      * @param x          Center of subdomain
      * @param resolution Resolution of subdomain, i.e. hexahedron surrounding x
      *
-     * !!! Remark
+     * <h2> Remark </h2>
      *
      * This operation should care about something like a characteristic length
      * of a setup. If the h is smaller than this length, it probably should

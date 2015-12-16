@@ -91,7 +91,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      * Invokes switchRefinementTriggeredToRefining() and
      * switchCoarseningTriggeredToCoarsening() on the loaded vertex.
      *
-     * !!! Thread-safety
+     * <h2> Thread-safety </h2>
      *
      * This operation is invoked for vertices fetched from the input stack.
      * The access to the input stack is already serialised, i.e. there's
@@ -99,7 +99,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      * operation also is serialised and there's no need to make it thread-safe
      * explicitly.
      *
-     * !!! Parallel Computing
+     * <h2> Parallel Computing </h2>
      *
      * The create-new-vertex operation can do an immediate refinement, i.e. it
      * can switch a vertex with refinement-triggered into a refining vertex
@@ -163,7 +163,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      * Asks the scenario server whether the geometry has changed. If it has
      * changed, the operation updates the vertex's state.
      *
-     * !!! Parallelisation
+     * <h2> Parallelisation </h2>
      *
      * If the code is running in parallel, these checks are performed
      * exclusively for local vertices, i.e. vertices of the shadow layer
@@ -194,11 +194,11 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
 
     /**
      *
-     * !!! Parallelisation
+     * <h2> Parallelisation </h2>
      *
      * See remarks for updateGeometry() for further information.
      *
-     * !!! Optimisation
+     * <h2> Optimisation </h2>
      *
      * Peano's mapping specifications would allow to skip this statement for
      * refined vertices if the marker is set to false. However, we observed
@@ -248,7 +248,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
 || Temporary        |  load(stack number)                |  load(stack number)                |  load(stack number)                |  load(stack number)                |  nop (vertex is already loaded)
      *
      *
-     * !!! Assertions
+     * <h2> Assertions </h2>
      *
      * If we do some rebalancing such as a fork, the grid may not be handled as
      * static. This is an assertion we can do only throughout the load process.
@@ -256,7 +256,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      * traversal while the current traversal still handles whole grid regions
      * as stationary grid parts.
      *
-     * !!! CaseCreateNewNodeTemporarily
+     * <h2> CaseCreateNewNodeTemporarily </h2>
      *
      * When we fork or join a grid region, it can happen that the sender is
      * right in the process of destroying grid entities, while the receiver has
@@ -267,7 +267,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      * by a remote data source. There is consequently no need to realise an
      * immediate refine.
      *
-     * !!! Immediate refines
+     * <h2> Immediate refines </h2>
      *
      * In the serial mode, we load data from the input stream, call
      * touchVertexFirstTime() and afterwards update the vertex refinement

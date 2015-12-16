@@ -38,7 +38,7 @@ class peano::parallel::SendReceiveBuffer {
      * this messages (assynchronous) and the current receive page counter
      * _currentReceiveBufferPage is increased.
      *
-     * @image html parallel_SendReceiveBuffer_receivePageIfAvailable.png
+     * @image html peano/parallel/parallel_SendReceiveBuffer_receivePageIfAvailable.png
      *
      * Each new message block is stored in a new buffer page. If two iterations
      * overlap, one line in the receive buffer thus is not filled completely.
@@ -117,7 +117,7 @@ class peano::parallel::SendReceiveBuffer {
      * buffers do not exist via the buffer pool - it creates receive buffers
      * on-the-fly.
      *
-     * @image html BufferSwapProcess.png
+     * @image html peano/parallel/BufferSwapProcess.png
      *
      * The buffer pool is a singleton. Thus, the buffers are singletons, too.
      * For some test cases I create buffers all alone, i.e. these buffers are

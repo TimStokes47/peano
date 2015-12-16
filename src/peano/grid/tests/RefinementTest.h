@@ -32,7 +32,7 @@ class peano::grid::tests::RefinementTest: public tarch::tests::TestCase {
 
     /**
      *
-     * @image html RefinementTest_testRootNodeRefinement.png
+     * @image html peano/grid/tests/RefinementTest_testRootNodeRefinement.png
      */
 	  void testRootNodeRefinementCells();
 

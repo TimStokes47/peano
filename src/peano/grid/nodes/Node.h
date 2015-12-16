@@ -188,7 +188,7 @@ class peano::grid::nodes::Node {
      * adjacent to a cell are outside but the domain is contained within the
      * cell.
      *
-     * @image html Node_InvokeEnterCell.png
+     * @image html peano/grid/nodes/Node_InvokeEnterCell.png
      *
      * In this special case, we have to refine the vertices even though they
      * are outside.
@@ -223,7 +223,7 @@ class peano::grid::nodes::Node {
      * is absolutely correct. In this case, we are not allowed to change the
      * responsible rank of the middle patch cell on level one though.
      *
-     * @image html Node_updateCellsParallelStateAfterLoad_inherit_remote_state.png
+     * @image html peano/grid/nodes/Node_updateCellsParallelStateAfterLoad_inherit_remote_state.png
      *
      * This case basically invokes makeCellRemoteCell(). This operation in turn
      * is invariant on already remote cells, i.e. you may call it several times
@@ -242,7 +242,7 @@ class peano::grid::nodes::Node {
      * remote node (if this remote node is not just forked, but that cannot
      * happen, as forks are triggered after this operation has been called).
      *
-     * @image html Node_updateCellsParallelStateAfterLoad_startup_remote_node.png
+     * @image html peano/grid/nodes/Node_updateCellsParallelStateAfterLoad_startup_remote_node.png
      *
      * The story is a different one for joins: If a remote node is joining, we
      * may not start it up, as it already continues to traverse a second time
@@ -276,14 +276,14 @@ class peano::grid::nodes::Node {
      * This operation nevertheless asks for it to clear the MPI buffers. And we
      * use the data for an assertion.
      *
-     * @image html Node_updateCellsParallelStateAfterLoad_forking.png
+     * @image html peano/grid/nodes/Node_updateCellsParallelStateAfterLoad_forking.png
      *
      * !!! Comments on prepareSendToWorker()
      *
      * For a deployed cell, i.e. a cell that is handled by a remote node, (and
      * all its descendants), the enterCell() event is split up.
      *
-     * @image html parallel-root-cell-communication.png
+     * @image html peano/grid/nodes/parallel-root-cell-communication.png
      *
      * First, the grid invokes prepareSendToWorker() on the master. This allows
      * you to modify the vertices adjacent to a remote cell. These vertices and
@@ -312,7 +312,7 @@ class peano::grid::nodes::Node {
      * The fork becomes pretty complicated if hanging nodes are involved on
      * rather coarse resolutions.
      *
-     * @image html fork-hanging-nodes.png
+     * @image html peano/grid/nodes/fork-hanging-nodes.png
      *
      * Left illustration above: There is only one vertex refined in the cell
      * that the master wants to deploy to another rank. Now, if the master
@@ -445,7 +445,7 @@ class peano::grid::nodes::Node {
       * For joins, it is different. Here, we have consistent information on
       * both worker and master - even if vertices are remote:
       *
-      * @image html Node_updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker.png
+      * @image html peano/grid/nodes/Node_updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker.png
       *
       * - The blue cells all are held by rank 7.
       * - All red point are refined. We study the bright red point from now on.

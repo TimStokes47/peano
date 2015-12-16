@@ -60,7 +60,7 @@ namespace peano {
  * destructor that first locks a global semaphore, and then it calls a merge
  * operation on the mappings.
  *
- * !!! Parallel Implementation (TBB)
+ * <h2> Parallel Implementation (TBB) </h2>
  *
  * The TBB implementation is straightforward. While I could deploy the range
  * management to the loop bodys, i.e. the loop bodys' operator() runs over a
@@ -83,7 +83,7 @@ namespace peano {
  * to be const. Instead, we have to use the parallel_reduce even though we
  * merge the copies ourself in the destructors.
  *
- * !!! Copy Policies
+ * <h2> Copy Policies </h2>
  *
  * If the code is running serial, the loop body is not copied at all. If the
  * code runs in parallel, each thread creates a copy of the loop body. In

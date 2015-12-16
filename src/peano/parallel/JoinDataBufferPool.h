@@ -36,7 +36,7 @@ namespace peano {
  * message polling. Otherwise, the buffers are created on-the-fly as soon as
  * someone asks for vertices/cells/flags or wants to send some.
  *
- * @image html JoinDataBuffer.png
+ * @image html peano/parallel/JoinDataBuffer.png
  *
  * @author Tobias Weinzierl
  */

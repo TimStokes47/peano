@@ -61,7 +61,7 @@ enddforx return result;
  * forth. The picture bellow illustrates this enumeration for the
  * three-dimensional case.
  *
- * @image html lexicographic-enumeration.png
+ * @image html peano/grid/lexicographic-enumeration.png
  *
  * @author Tobias Weinzierl
  */

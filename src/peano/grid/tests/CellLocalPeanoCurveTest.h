@@ -30,7 +30,7 @@ class peano::grid::tests::CellLocalPeanoCurveTest: public tarch::tests::TestCase
 
     /**
      *
-     * @image html RefinementTest_testRootNodeRefinement.png
+     * @image html peano/grid/tests/RefinementTest_testRootNodeRefinement.png
      */
     void test2DCreateReadVertexSequenceForP0P0P1P2();
     void test2DCreateReadVertexSequenceForM1M2P2P3();

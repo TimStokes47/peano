@@ -152,7 +152,7 @@ class peano::grid::Vertex {
      * This implies that the events for this vertex have to be called and that
      * there is at least one adjacent cell inside the domain, too.
      *
-     * @image html ../gridinterface/geometry-vertex-inside-outside.png
+     * @image html peano/grid/geometry-vertex-inside-outside.png
      *
      * !!! Assertions
      *
@@ -181,7 +181,7 @@ class peano::grid::Vertex {
      * this vertex are not called anymore. Furthermore, none of the adjacent
      * cells is inside the domain, too.
      *
-     * @image html ../gridinterface/geometry-vertex-inside-outside.png
+     * @image html peano/grid/geometry-vertex-inside-outside.png
      *
      */
     void switchToOutside();
@@ -221,7 +221,7 @@ class peano::grid::Vertex {
      * never refine immediately in this case. If we did, the grid would become
      * inconsistent as the green rank would lack behind.
      *
-     * @image html Vertex_enforceRefine.png
+     * @image html peano/grid/Vertex_enforceRefine.png
      *
      * In parallel codes, this can lead to a very slow grid setup, as each
      * additional level in the grid requires one grid sweep. Please see the
@@ -235,7 +235,7 @@ class peano::grid::Vertex {
      * The illustartion below is out-of-date as coarse now is called erase.
      * However, it still illustrates the right process.
      *
-     * @image html erase-process.png
+     * @image html peano/grid/erase-process.png
      *
      * An erase becomes nop if it is done for a vertex belonging to an
      * instationary or forked subpartition, i.e. parallelisation and refinement
@@ -362,7 +362,7 @@ class peano::grid::Vertex {
      * equals @f$ 2^d @f$ and whether the vertex is unrefined. In this case, I
      * trigger a refinement.
      *
-     * @image html hanging-nodes-in-patches.png
+     * @image html peano/grid/hanging-nodes-in-patches.png
      */
     void clearCounterOfAdjacentRefinedCells();
 

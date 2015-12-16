@@ -46,9 +46,9 @@ namespace peano {
  * important operations of this class are OracleForOnePhase::receivedStartCommand(),
  * OracleForOnePhase::getCommandForWorker(), and OracleForOnePhase::receivedTerminateCommand().
  *
- * @image html OracleForOnePhase0.png
+ * @image html peano/parallel/loadbalancing/OracleForOnePhase0.png
  *
- * @image html OracleForOnePhase1.png
+ * @image html peano/parallel/loadbalancing/OracleForOnePhase1.png
  *
  * !!! Copy constructor
  *

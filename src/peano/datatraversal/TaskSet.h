@@ -81,14 +81,14 @@ class peano::datatraversal::TaskSet {
      * which destructor is the one belonging to the task object that is really
      * executed.
      *
-     * !!! TBB
+     * <h2> TBB </h2>
      *
      * I do not use the spawn command of TBB here but the enqueue. In
      * particular on Windows systems, I often encounter starvation processes if
      * a load vertices or store vertices task splits very often and spawns too
      * many task children due to this operation.
      *
-     * !!! Deadlocks
+     * <h2> Deadlocks </h2>
      *
      * Please note that your code might deadlock if you spawn a task without
      * multicore support and if you hope/rely on the fact that this task cannot
@@ -110,7 +110,7 @@ class peano::datatraversal::TaskSet {
      *
      * This operation does not work for recursive tasks.
      *
-     * !!! Copying policy
+     * <h2> Copying policy </h2>
      *
      * The TBB implementation wraps the two functions with GenericTask, i.e.
      * with an additional type holding a reference to the original object.
@@ -134,7 +134,7 @@ class peano::datatraversal::TaskSet {
      *
      * This operation does not work for recursive tasks.
      *
-     * !!! Copying policy
+     * <h2> Copying policy </h2>
      *
      * See constructor with three arguments.
      *

@@ -12,7 +12,7 @@
  is <a href="http://www.peano-framework.org" target="_blank">www.peano-framework.org</a>.
  
  
- !!! Recreate the Peano zip
+ <h2> Recreate the Peano zip </h2>
  
  To create a tarball of the code, call
  \code
@@ -22,19 +22,15 @@
  \endcode
  within our sources directory.
 
- !!! Recreate the webpage
+ <h2> Recreate the webpage </h2>
 
  To recreate the webpage, call
  \code
- rm -rf /home/wwwsccs/html/peano3/doxys
- ~/bin/doxys src/doxys.configuration
- chgrp -R wwwsccs /home/wwwsccs/html/peano3/doxys
- chmod -R a+rx /home/wwwsccs/html/peano3
- chmod -R g+w /home/wwwsccs/html/peano3
+ doxygen peano.doxygen-configuration
  \endcode
- from the directory holding src.
+ within src.
  
- !!! Recommended compiler options
+ <h2> Recommended compiler options </h2>
  
  If you write new Peano code, we recommend to compile your code with
  \code
@@ -61,12 +57,12 @@
  You have to defined /D__WIN32__ as the Intel/Microsoft compiler seems not 
  to defined this symbol. Finally, there seem to be issues with Windows macros called
  min and max. To resolve them, ensure that you are using /DNOMINMAX. Backslashes have 
- to be removed too. Please note that $-o$ in Linux becomes $/Fo$ in Windows. 
+ to be removed too. Please note that -o in Linux becomes /Fo in Windows. 
  
  If you translate Peano with Intel's TBB and the GNU compilers, we recommend to use
  \code
  -Wno-long-long and -Wno-conversions
- \code
+ \endcode
  or to skip the corresponding warning flags.
  
  If you translate Peano with MPI, we recommend to add

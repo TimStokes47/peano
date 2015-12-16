@@ -99,7 +99,7 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
     /**
      * Destructor
      *
-     * !!! Multithreading
+     * <h2> Multithreading </h2>
      *
      * We may not use a semaphore of our own, as there's always two different
      * classes involved on regular patches (besides the fact that these classes

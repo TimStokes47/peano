@@ -28,9 +28,9 @@ namespace peano {
  * switch to another adapter, they notify the oracle that they wanna switched
  * (switchToOracle()).
  *
- * !!! Jobs
+ * <h2> Jobs </h2>
  *
- * @image html Oracle-class-diagram.png
+ * @image html peano/datatraversal/autotuning/Oracle-class-diagram.png
  *
  * - Administer oracles.
  * - Keep track of the current phase, i.e. of the adapter used at the moment.
@@ -131,7 +131,7 @@ class peano::datatraversal::autotuning::Oracle {
      * internal timer, i.e. you have to tell the oracle afterwards that your
      * loop has terminated. To do so, use loopHasTerminated().
      *
-     * !!! Implementation
+     * <h2> Implementation </h2>
      *
      * - The operation ain't const as it has to start the timer.
      * - If one operation asked twice for parallelisation, the oracle returns

@@ -98,7 +98,7 @@ class peano::geometry::Hexahedron: public peano::geometry::Geometry {
      * isCompletelyOutside() returns true iff the intersection of the inner /
      * outer domain with the open surrounding box is the box itself.
      *
-     * @image html geometry_Geometry.png
+     * @image html peano/geometry/geometry_Geometry.png
      *
      * The query is not const anymore, as PreCICE might want to change the
      * underlying spacetree structure.
@@ -124,7 +124,7 @@ class peano::geometry::Hexahedron: public peano::geometry::Geometry {
      * isCompletelyOutside() returns true iff the intersection of the inner /
      * outer domain with the open surrounding box is the box itself.
      *
-     * @image html geometry_Geometry.png
+     * @image html peano/geometry/geometry_Geometry.png
      *
      * The query is not const anymore, as PreCICE might want to change the
      * underlying spacetree structure.

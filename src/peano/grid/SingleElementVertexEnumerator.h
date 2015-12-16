@@ -20,7 +20,7 @@ namespace peano {
  * Here the vertices are stored in a @f$ 2^d @f$ array and this enumerator is a
  * simple linearisation of this array along Peano's enumeration convention.
  *
- * @image html SingleElementVertexEnumerator.png
+ * @image html peano/grid/SingleElementVertexEnumerator.png
  *
  * @author Tobias Weinzierl
  */

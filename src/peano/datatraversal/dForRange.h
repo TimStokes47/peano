@@ -42,7 +42,7 @@ namespace peano {
  * performance issues in multicore parallelization. An example of the
  * division process is illustrated below on the left-hand side.
  *
- * @image html dForRange.png
+ * @image html peano/datatraversal/dForRange.png
  *
  * You find more information on the original blocked_range2d at
  *

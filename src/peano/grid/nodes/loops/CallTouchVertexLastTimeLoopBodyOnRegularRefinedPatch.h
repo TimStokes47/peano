@@ -77,7 +77,7 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
      * Study refinement state of vertex. If the vertex does not change, the
      * operation sets the height of the adjacent
      *
-     * !!! Thread safety
+     * <h2> Thread safety </h2>
      *
      * This operation is not thread-safe.
      */
@@ -93,7 +93,7 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
     /**
      * Destructor
      *
-     * !!! Multithreading
+     * <h2> Multithreading </h2>
      *
      * We may not use a semaphore of our own, as there's always two different
      * classes involved on regular patches (besides the fact that these classes

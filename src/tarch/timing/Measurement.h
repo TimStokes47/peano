@@ -85,7 +85,7 @@ class tarch::timing::Measurement {
      * measurement modifies the mean value more than the given accuracy. If
      * this is the case, the object does not represent a valid measurement yet.
      *
-     * @image Measurement.png
+     * @image tarch/timing/Measurement.png
      *
      * It does not work if we just compare new values to the mean value. If a
      * measurement looks similar to the sketch from above (black=mean value,

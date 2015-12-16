@@ -112,7 +112,7 @@ namespace peano {
  * That does not work. And the reason is very simple: Peano's ordering is
  * inherently recursive.
  *
- * @image html RegularRefined_CellOrder.png
+ * @image html peano/grid/nodes/RegularRefined_CellOrder.png
  *
  * If we processed level-wise the (level-wise) recursive order along the cell
  * boundaries would not be preserved. So the appraoch sketched above doesn't
@@ -141,7 +141,7 @@ namespace peano {
  * Peano's optimisation header.
  *
  *
- * @image html RegularRefined_Parallelisation.png
+ * @image html peano/grid/nodes/RegularRefined_Parallelisation.png
  *
  * The shared memory parallel version of the code then consists of, besides
  * some initialisation, four different steps:
@@ -157,7 +157,7 @@ namespace peano {
  * For ascend, the same arguing holds as for descend with another order of
  * level dependencies.
  *
- * @image html regular-grid-dependency-graph.png
+ * @image html peano/grid/nodes/regular-grid-dependency-graph.png
  *
  * The dependency graph reveals that we have a concurrency level of one.
  *
@@ -170,7 +170,7 @@ namespace peano {
  * levels have already been completed. We thus hope that multiple tasks can
  * overlap.
  *
- * @image html regular-grid-parallelisation.png
+ * @image html peano/grid/nodes/regular-grid-parallelisation.png
  *
  * @author Tobias Weinzierl
  */

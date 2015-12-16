@@ -32,7 +32,7 @@ namespace peano {
          * (0,1), and (1,1). Those do not read any data from temporary stacks
          * and thus can be ran in parallel on stack views.
          *
-         * @image html RegularRefined.png
+         * @image html peano/grid/nodes/tasks/RegularRefined.png
          *
          * !!! Realisation
          *
@@ -239,7 +239,7 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      *
      * The counters are of relevance only at the subpatch boundary.
      *
-     * @image html RegularRefined.png
+     * @image html peano/grid/nodes/tasks/RegularRefined.png
      *
      * For inner vertices (green), we do not maintain any counters - those
      * vertices travel directly from the input stack to the output stack

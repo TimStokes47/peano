@@ -30,7 +30,7 @@ namespace peano {
 /**
  * Store Loop Body
  *
- * !!! Optimisation
+ * <h2> Optimisation </h2>
  *
  * If there were a hanging node adjacent to the leaf, the vertex enumerators's
  * flag, i.e. CellFlagsFromEnumerator would not be equal to leaf anymore.
@@ -88,14 +88,14 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      *
      * The method is not to be called for hanging nodes.
      *
-     * !!! Thread-safety
+     * <h2> Thread-safety </h2>
      *
      * The operation does not modify the state directly but works on the
      * local attributes such as _hasRefined(). These fields then are merged
      * into the shared state in the destructor. The destructor hence has to
      * be thread safe.
      *
-     * !!! Note on dynamic refinement
+     * <h2> Note on dynamic refinement </h2>
      *
      * We we have complicated refinement patterns, it can happen that
      * vertices surrounded by @f$ 2^d @f$ refined cells are unrefined.
@@ -118,7 +118,7 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * important to call updateRefinementFlagsAndStoreVertexToOutputStream()
      * before the vertex is passed to the send/receive buffer.
      *
-     * !!! Parallel mode
+     * <h2> Parallel mode </h2>
      *
      * If the code is running in parallel, it coarsens grid regions after each
      * fork. These grid modifications however are not really a grid transition,
@@ -144,14 +144,14 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * on the vertex. There is a dedicated section in updateRefinementFlagsAndStoreVertexToOutputStream()
      * on this issue.
      *
-     * !!! Code is joining with a worker
+     * <h2> Code is joining with a worker </h2>
      *
      * We are in the second phase of the join, i.e. now data is transferred
      * from the worker to this node. As a consequence, we can replace all
      * worker entries by the local rank's number before we write the vertex
      * to the output stream.
      *
-     * !!! Code is joining with master
+     * <h2> Code is joining with master </h2>
      *
      * We are in the second phase of the joint, i.e. the local data is moved
      * to the master. There is nothing to do on the local rank - all data will
@@ -165,7 +165,7 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * anymore and nobody is expecting this node to send any information.
      *
      *
-     * !!! Code is not joining with master
+     * <h2> Code is not joining with master </h2>
      *
      * If the vertex is not remote (it holds the local rank number as adjacent
      * number as well), send a copy to the neighbour. If the join with the
@@ -173,7 +173,7 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * Otherwise, we can take the plain copy but have to pass it to the event
      * handle before.
      *
-     * !!! Vertex is not adjacent to local domain
+     * <h2> Vertex is not adjacent to local domain </h2>
      *
      * In this case, the vertex has not to be sent away. The local rank is not
      * adjacent to it, so it is not involved in any communication for this
@@ -182,7 +182,7 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * vertex anymore. Consequently, we can call a destroy event for this
      * vertex and coarse it.
      *
-     * !!! Remote vertex detected throughout first traversal of new worker
+     * <h2> Remote vertex detected throughout first traversal of new worker </h2>
      *
      * If we detect a remote vertex in the first iteration on a worker, we
      * set all adjacency information to the local master: The vertex adjacency
@@ -210,7 +210,7 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
 
     /**
      *
-     * !!! Parallelisation
+     * <h2> Parallelisation </h2>
      *
      * Shall not be called for remote vertices, i.e. for such vertices the operation becomes nop.
      */
@@ -218,11 +218,11 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
 
     /**
      *
-     * !!! Parallelisation
+     * <h2> Parallelisation </h2>
      *
      * Shall not be called for remote vertices, i.e. for such vertices the operation becomes nop.
      *
-     * !!! Optimisation
+     * <h2> Optimisation </h2>
      *
      * Peano's mapping specifications would allow to skip this statement for
      * refined vertices if the marker is set to false. However, we observed
@@ -241,13 +241,13 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
     /**
      * Restrict the Information on Static Subtrees to the Coarser Levels
      *
-     * !!! Thread-safety
+     * <h2> Thread-safety </h2>
      *
      * Should be thread safe, as writes to the output stream are synchronised
      * anyway. The operation basically does the analysed tree grammar and its
      * behaviour is sketched below.
      *
-     * @image html StoreVertexLoopBody_updateCoarseGridTreeHeightAttributes.png
+     * @image html peano/grid/nodes/loops/StoreVertexLoopBody_updateCoarseGridTreeHeightAttributes.png
      *
      * This sketch stems from a regular grid for the unit square. The coloured
      * cells are inside cells. The grid is regular within the domain but very
@@ -262,7 +262,7 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * ideal case, there should be (for this sketch) one subgrid of height
      * three and no other regular patches.
      *
-     * !!! Tuning
+     * <h2> Tuning </h2>
      *
      * We can tune up the code significantly, if we realise the following two
      * constraints:
@@ -274,7 +274,7 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * montonically with each additional grid level, i.e. a grid of level k
      * always covers at least the domain covered by a grid of level k-1.
      *
-     * !!! Parallel mode
+     * <h2> Parallel mode </h2>
      *
      * If we compile with MPI, the operation restricts the flag
      * adjacentSubtreeForksIntoOtherRank. This flag is used at other places
@@ -302,7 +302,7 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * refine() in touchVertexFirstTime() and the code decides to refine
      * immediately.
      *
-     * @image html StoreVertexLoopBody_invalidateCoarseGridTreeHeightAttributesIfRefined.png
+     * @image html peano/grid/nodes/loops/StoreVertexLoopBody_invalidateCoarseGridTreeHeightAttributesIfRefined.png
      *
      * In the example above let the grey block be instationary, the blue one is
      * a regular tree. Grey is visited before blue. Within the grey block, the
