@@ -170,7 +170,7 @@ def plotConcurrency(rank):
   
   try:
     inputFile = open( inputFileName,  "r" )
-    print "parse concurrency of level " + str(rank)
+    print "parse concurrency level of rank " + str(rank)
     for line in inputFile:
       m = re.search( searchPattern, line )
       if (m):
