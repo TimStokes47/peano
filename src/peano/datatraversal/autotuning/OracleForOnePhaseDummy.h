@@ -24,6 +24,17 @@ namespace peano {
 
 
 /**
+ * Default oracle (dummy)
+ *
+ * This oracle allows you to configure some fixed default values for all grid
+ * run throughs. By default, it enables multithreading and also splits up the
+ * tree, while is does not measure any runtimes.
+ *
+ * If you run this oracle on a decently fine grid with sufficient regularity,
+ * you will obtain forked tasks in the background. To avoid those, you have to
+ * set the third parameter in the constructor (splitTheTree) to 0.
+ *
+ *
  * @author Tobias Weinzierl
  */
 class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::datatraversal::autotuning::OracleForOnePhase {
@@ -58,19 +69,6 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
   public:
     /**
      * Dummy oracle
-     *
-     * The magic numbers in the default arguments are taken from the following
-     * table:
-     *
-     *
-|| dim || Phase/trace                        ||    p=2   ||    p=4    ||   p=6   ||    p=8    ||   p=16    || choice
-|| 2   || ascend-regular-stationary          | 1640/4    |  1640/8,12 | 1640/12  | 1640/64    | 1640/3     || 1640/3
-||     || call-enter-cell-regular-stationary |   20/1-8  |    20/2    |   20/2   |   20/2     |   20/2-6   ||   20/2
-||     || touch-first-regular-stationary     | 6724/2-8  |  6724/64   | 6724/18  | 6724/12    | 6724/2-7   || 6724/64
-||     || touch-last-regular-stationary      | 6724/2,8  |  6724/8    | 6724/12  | 6724/10    | 6724/3,4,5 || 6724/64
-||     || split-load                         |  900/2,8  |   900/3,8  |  900/2,4 |  900/40,2  |  900/8,24  ||  900/8
-||     || split-store                        |  900/~128 |   900/128  |  900/18  |  900/18    |  900/18    ||  900/8
-     *
      *
      * @param splitTheTree (0=no, 1=yes and parallelise, 2=yes, but do not parallelise any events on the regular subgrid
      */
