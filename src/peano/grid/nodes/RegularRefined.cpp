@@ -2,6 +2,7 @@
 
 
 int peano::grid::nodes::transformOracleResult( int oracleResult, int TreeDepth, int NumberOfVerticesInSubtree ) {
+  static tarch::logging::Log _log( "peano::grid::nodes" );
   assertion1(oracleResult>=0,oracleResult);
 
   int result;
@@ -15,6 +16,8 @@ int peano::grid::nodes::transformOracleResult( int oracleResult, int TreeDepth, 
       NumberOfVerticesInSubtree /= THREE_POWER_D;
     }
   }
+
+  logDebug("transformOracleResult(int,int,int)", "oracleResult=" << oracleResult << ",TreeDepth=" << TreeDepth << ",NumberOfVerticesInSubtree" << NumberOfVerticesInSubtree << ",result=" << result );
 
   return result;
 }
