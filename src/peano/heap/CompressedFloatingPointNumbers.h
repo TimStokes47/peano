@@ -44,6 +44,11 @@ namespace peano {
      * !!! Bug/interoperability
      *
      * This operation works if and only if your system maps a long int onto a 64 bit value.
+     *
+     * We noticed that this operation yields invalid results with GCC if we
+     * switch on optimisation. It works fine with ICC and any optimisation
+     * level. We thus make the code translate with -O0 locally if ICC is not
+     * used.
      */
     void decomposeIntoEightVariants(
       double        value,

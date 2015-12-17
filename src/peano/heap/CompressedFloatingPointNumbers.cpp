@@ -1,11 +1,16 @@
 #include "peano/heap/CompressedFloatingPointNumbers.h"
 #include "tarch/Assertions.h"
+#include "tarch/compiler/CompilerSpecificSettings.h"
 
 
 #include <bitset>
 
 
+#ifdef CompilerICC
 void peano::heap::decomposeIntoEightVariants(
+#else
+void __attribute__((optimize("O0"))) peano::heap::decomposeIntoEightVariants(
+#endif
   double        value,
   char          exponent[8],
   long int      mantissa[8],
