@@ -39,7 +39,7 @@ namespace peano {
          * Consequently, we have to translate the result due to the following
          * formula:
          *
-         * - oracleResult=0, return 0
+         * - oracleResult=0, return -1
          * - otherwise return T-s
          *
          * where s is the normalised grain size, i.e. the size divided by the total
