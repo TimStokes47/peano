@@ -8,6 +8,8 @@ bool peano::grid::mayForkLoadOrStoreVertexTaskOnRegularSubtree(
   const int   coarsestLevelOfThisTask,
   const int   expectedNumberOfLoadsOrStores
 ) {
+  static tarch::logging::Log _log("peano::grid");
+
   const bool result = !isParentCellAtPatchBoundary &&
          expectedNumberOfLoadsOrStores>0 &&
          maxLevelToFork>=currentLevel &&

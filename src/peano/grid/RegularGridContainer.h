@@ -81,10 +81,25 @@ namespace peano {
      * the level that is to be loaded next. Consequently,
      * cellsPerAxisOnCurrentLevel also refers to currentLevel and not to the
      * current coarse grid cell.
+     *
+     * This operation is used by StoreVerticesOnRegularRefinedPatch and
+     * LoadVerticesOnRegularRefinedPatch. They also fix the maxLevelToFork for
+     * a whole subtree. It results from the variable SplitStoreVerticesTask
+     * there. This variable in turn is the result of peano::grid::nodes::transformOracleResult()
+     * which can be found in RegularRefined.
+     *
+     * @param currentLevel                 Current level of the root of a subtree that might be deployed to a thread of its own. This is always
+     *                                     relative to the root of the whole regular subtree that might be split up among different tasks.
+     * @param isParentCellAtPatchBoundary  If the parent cell is adjacent to the patch boundary, we may not deploy a subtree to a thread of its own
+     * @param maxLevelToFork               It does not pay off to fork too small subtrees. This flag indicates how big a subtree has to be at least.
+     *                                     The parameter also allows us to switch off all parallelisation completely.
+     * @param coarsestLevelOfThisTask      If coarsestLevelofThisTask<currentLevel then this operation is not called for the root of a subtree.
+     * @param expectedNumberOfLoadsOrStores If there are no loads or stored coming from a particular task, it does not make sense to deploy it onto
+     *                                     a thread of its own. We want split tasks to read whole blocks from the input stack en block.
      */
     bool mayForkLoadOrStoreVertexTaskOnRegularSubtree(
       const int   currentLevel,
-      const bool  isParentCellAtPathBoundary,
+      const bool  isParentCellAtPatchBoundary,
       const int   maxLevelToFork,
       const int   coarsestLevelOfThisTask,
       const int   expectedNumberOfLoadsOrStores
