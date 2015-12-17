@@ -296,13 +296,10 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
     );
   public:
     /**
-     *
-     * @param maxNumberOfForks The oracles do not support recursive analysis,
-     *                         i.e. we have to determine once a priori, how
-     *                         often we may split up a tree load process.
      * @param loadProcessRunsInParallelToOtherTasks This flag is true if we may
      *                         run another task in parallel to the load, i.e.
      *                         if we do a pipelining of the code.
+     * @param maxLevelToFork   Required by peano::grid::mayForkLoadOrStoreVertexTaskOnRegularSubtree().
      */
     LoadVerticesOnRegularRefinedPatch(
       const bool                                                        isTraversalInverted,

@@ -155,9 +155,12 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
    );
 
   public:
+    /**
+     * @param maxLevelToFork Required by peano::grid::mayForkLoadOrStoreVertexTaskOnRegularSubtree().
+     */
     StoreVerticesOnRegularRefinedPatch(
       const bool                                                        isTraversalInverted,
-      peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
+      peano::grid::RegularGridContainer<Vertex,Cell>&                   regularGridContainer,
       VertexStack&                                                      vertexStack,
       bool                                                              storeProcessRunsInParallelToOtherTasks,
       int                                                               maxLevelToFork
