@@ -212,6 +212,12 @@ def plotConcurrency(rank):
   
   ax.autoscale_view()
   ax.set_yscale('symlog', basey=2)
+  
+  pylab.yticks( 
+    [1,2,8,12,16,18,24,60,72,120,180,240,480], 
+    ["1","2","8","12","16","18","24","60","72","120","180","240","480"] 
+  )
+  
   pylab.xlabel('t')
   pylab.ylabel('Concurrency level')
   pylab.grid(True)
