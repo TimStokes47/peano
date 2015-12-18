@@ -22,7 +22,7 @@ bool peano::grid::mayForkLoadOrStoreVertexTaskOnRegularSubtree(
     ",maxLevelToFork=" << maxLevelToFork <<
     ",coarsestLevelOfThisTask=" << coarsestLevelOfThisTask <<
     ",expectedNumberOfLoadsOrStores=" << expectedNumberOfLoadsOrStores <<
-    ",result=" result
+    ",result=" << result
   );
 
   return result;
