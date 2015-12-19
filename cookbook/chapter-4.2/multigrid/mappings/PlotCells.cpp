@@ -194,7 +194,11 @@ void multigrid::mappings::PlotCells::enterCell(
         vertexIndex[iScalar] = _vertex2IndexMap[currentVertexPosition];
       enddforx
 
+      #ifdef Dim2
+      const int cellIndex = _cellWriter->plotQuadrangle(vertexIndex);
+      #elif Dim3
       const int cellIndex = _cellWriter->plotHexahedron(vertexIndex);
+      #endif
 
       _epsilonWriter->plotCell( cellIndex, fineGridCell.getEpsilon() );
       _fWriter->plotCell(       cellIndex, fineGridCell.getF() );
