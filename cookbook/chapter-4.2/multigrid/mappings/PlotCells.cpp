@@ -1,4 +1,5 @@
 #include "multigrid/mappings/PlotCells.h"
+#include "peano/utils/Loop.h"
 
 
 
@@ -59,8 +60,158 @@ peano::MappingSpecification   multigrid::mappings::PlotCells::descendSpecificati
 
 
 tarch::logging::Log                multigrid::mappings::PlotCells::_log( "multigrid::mappings::PlotCells" ); 
+int                                                                                          multigrid::mappings::PlotCells::_snapshotCounter(0);
+std::map<tarch::la::Vector<DIMENSIONS,double> , int, tarch::la::VectorCompare<DIMENSIONS> >  multigrid::mappings::PlotCells::_vertex2IndexMap;
 
 
+void multigrid::mappings::PlotCells::beginIteration(
+  multigrid::State&  solverState
+) {
+  logTraceInWith1Argument( "beginIteration(State)", solverState );
+
+  _vertex2IndexMap.clear();
+
+  _vtkWriter = new tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter();
+  assertion( _vtkWriter != 0 );
+
+  _vertexWriter     = _vtkWriter->createVertexWriter();
+  _cellWriter       = _vtkWriter->createCellWriter();
+
+  _epsilonWriter    = _vtkWriter->createCellDataWriter("epsilon", 1);
+  _fWriter          = _vtkWriter->createCellDataWriter("f", 1);
+  _vWriter          = _vtkWriter->createCellDataWriter("v", DIMENSIONS);
+
+
+  logTraceOutWith1Argument( "beginIteration(State)", solverState);
+}
+
+
+void multigrid::mappings::PlotCells::endIteration(
+  multigrid::State&  solverState
+) {
+  logTraceInWith1Argument( "endIteration(State)", solverState );
+
+  _vertexWriter->close();
+  _cellWriter->close();
+
+  _epsilonWriter->close();
+  _fWriter->close();
+  _vWriter->close();
+
+  delete _vertexWriter;
+  delete _cellWriter;
+
+  delete _epsilonWriter;
+  delete _fWriter;
+  delete _vWriter;
+
+  _vertexWriter     = nullptr;
+  _cellWriter       = nullptr;
+
+  _epsilonWriter    = nullptr;
+  _fWriter          = nullptr;
+  _vWriter          = nullptr;
+
+
+  std::ostringstream snapshotFileName;
+  snapshotFileName << "solution"
+                   #ifdef Parallel
+                   << "-rank-" << tarch::parallel::Node::getInstance().getRank()
+                   #endif
+                   << "-" << _snapshotCounter << ".vtk";
+  _vtkWriter->writeToFile( snapshotFileName.str() );
+
+  delete _vtkWriter;
+  _vtkWriter = nullptr;
+
+  _snapshotCounter++;
+
+  logTraceOutWith1Argument( "endIteration(State)", solverState);
+}
+
+
+
+void multigrid::mappings::PlotCells::touchVertexFirstTime(
+      multigrid::Vertex&               fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  if ( _vertex2IndexMap.find(fineGridX) == _vertex2IndexMap.end() ) {
+    _vertex2IndexMap[fineGridX] = _vertexWriter->plotVertex(fineGridX);
+  }
+
+  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
+}
+
+
+void multigrid::mappings::PlotCells::createHangingVertex(
+      multigrid::Vertex&     fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                fineGridH,
+      multigrid::Vertex * const   coarseGridVertices,
+      const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
+      multigrid::Cell&       coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  if ( _vertex2IndexMap.find(fineGridX) == _vertex2IndexMap.end() ) {
+    _vertex2IndexMap[fineGridX] = _vertexWriter->plotVertex(fineGridX);
+  }
+
+  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
+}
+
+
+void multigrid::mappings::PlotCells::enterCell(
+      multigrid::Cell&                 fineGridCell,
+      multigrid::Vertex * const        fineGridVertices,
+      const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
+) {
+  logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
+
+  if (!fineGridCell.isRefined()) {
+      int vertexIndex[TWO_POWER_D];
+      dfor2(i)
+        tarch::la::Vector<DIMENSIONS,double> currentVertexPosition = fineGridVerticesEnumerator.getVertexPosition(i);
+        assertion4 (
+          _vertex2IndexMap.find(currentVertexPosition) != _vertex2IndexMap.end(),
+          currentVertexPosition,
+          coarseGridVerticesEnumerator.toString(),
+          fineGridVertices[fineGridVerticesEnumerator(i)].toString(),
+          fineGridCell.toString()
+        );
+        vertexIndex[iScalar] = _vertex2IndexMap[currentVertexPosition];
+      enddforx
+
+      const int cellIndex = _cellWriter->plotHexahedron(vertexIndex);
+
+      _epsilonWriter->plotCell( cellIndex, fineGridCell.getEpsilon() );
+      _fWriter->plotCell(       cellIndex, fineGridCell.getF() );
+      _vWriter->plotCell(       cellIndex, fineGridCell.getV() );
+  }
+
+
+  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
+}
+
+
+
+
+//
+//   NOP
+// =======
+//
 multigrid::mappings::PlotCells::PlotCells() {
   logTraceIn( "PlotCells()" );
   // @todo Insert your code here
@@ -91,19 +242,6 @@ void multigrid::mappings::PlotCells::mergeWithWorkerThread(const PlotCells& work
 #endif
 
 
-void multigrid::mappings::PlotCells::createHangingVertex(
-      multigrid::Vertex&     fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                fineGridH,
-      multigrid::Vertex * const   coarseGridVertices,
-      const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
-      multigrid::Cell&       coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
-}
 
 
 void multigrid::mappings::PlotCells::destroyHangingVertex(
@@ -367,20 +505,6 @@ void multigrid::mappings::PlotCells::mergeWithWorker(
 }
 #endif
 
-void multigrid::mappings::PlotCells::touchVertexFirstTime(
-      multigrid::Vertex&               fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
-}
-
 
 void multigrid::mappings::PlotCells::touchVertexLastTime(
       multigrid::Vertex&         fineGridVertex,
@@ -394,21 +518,6 @@ void multigrid::mappings::PlotCells::touchVertexLastTime(
   logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
   // @todo Insert your code here
   logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
-}
-
-
-void multigrid::mappings::PlotCells::enterCell(
-      multigrid::Cell&                 fineGridCell,
-      multigrid::Vertex * const        fineGridVertices,
-      const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
-) {
-  logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
 
 
@@ -426,23 +535,6 @@ void multigrid::mappings::PlotCells::leaveCell(
   logTraceOutWith1Argument( "leaveCell(...)", fineGridCell );
 }
 
-
-void multigrid::mappings::PlotCells::beginIteration(
-  multigrid::State&  solverState
-) {
-  logTraceInWith1Argument( "beginIteration(State)", solverState );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "beginIteration(State)", solverState);
-}
-
-
-void multigrid::mappings::PlotCells::endIteration(
-  multigrid::State&  solverState
-) {
-  logTraceInWith1Argument( "endIteration(State)", solverState );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "endIteration(State)", solverState);
-}
 
 
 

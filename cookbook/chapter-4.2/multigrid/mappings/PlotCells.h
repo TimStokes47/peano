@@ -23,10 +23,14 @@
 #include "multigrid/State.h"
 
 
+#include "tarch/plotter/griddata/unstructured/vtk/VTKBinaryFileWriter.h"
+#include "tarch/la/VectorCompare.h"
+
+
 namespace multigrid {
-      namespace mappings {
-        class PlotCells;
-      } 
+  namespace mappings {
+    class PlotCells;
+  }
 }
 
 
@@ -43,6 +47,16 @@ class multigrid::mappings::PlotCells {
      * Logging device for the trace macros.
      */
     static tarch::logging::Log  _log;
+
+    tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter*                  _vtkWriter;
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*      _vertexWriter;
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*        _cellWriter;
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*    _epsilonWriter;
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*    _fWriter;
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*    _vWriter;
+
+    static int                                                                                          _snapshotCounter;
+    static std::map<tarch::la::Vector<DIMENSIONS,double> , int, tarch::la::VectorCompare<DIMENSIONS> >  _vertex2IndexMap;
   public:
     /**
      * These flags are used to inform Peano about your operation. It tells the 
