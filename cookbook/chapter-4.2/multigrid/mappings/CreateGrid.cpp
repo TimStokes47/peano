@@ -81,29 +81,19 @@ void multigrid::mappings::CreateGrid::createInnerVertex(
     fineGridVertex.refine();
   }
 
-  if (_scenario==Poisson) {
-/*
+  if (
+    _scenario==Poisson
+    ||
+    _scenario==AnisotropicPoisson
+  ) {
     double f = DIMENSIONS * tarch::la::PI;
     for (int d=0; d<DIMENSIONS; d++) {
-      f *= std::sin( tarch::la::PI * fineGridVerticesEnumerator.getCellCenter()(d) );
+      f *= std::sin( tarch::la::PI * fineGridX(d) );
     }
-    fineGridCell.init(
-      tarch::la::Vector<DIMENSIONS,double>(1.0), // epsilon
-      f, // f
-      tarch::la::Vector<DIMENSIONS,double>(0.0) // v
-    );
-  else if (_scenario==Poisson) {
-    double f = DIMENSIONS * tarch::la::PI;
-    for (int d=0; d<DIMENSIONS; d++) {
-      f *= std::sin( tarch::la::PI * fineGridVerticesEnumerator.getCellCenter()(d) );
-    }
-    fineGridCell.init(
-      tarch::la::Vector<DIMENSIONS,double>(epsilon), // epsilon
-      f, // f
-      tarch::la::Vector<DIMENSIONS,double>(0.0) // v
-    );
+    fineGridVertex.initInnerVertex(f);
   }
-*/
+  else {
+    assertionMsg( false, "not implemented yet" );
   }
 
   logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
@@ -123,6 +113,18 @@ void multigrid::mappings::CreateGrid::createBoundaryVertex(
 
   if ( fineGridH(0)>0.1 ) {
     fineGridVertex.refine();
+  }
+
+
+  if (
+    _scenario==Poisson
+    ||
+    _scenario==AnisotropicPoisson
+  ) {
+    fineGridVertex.initDirichletVertex(0.0);
+  }
+  else {
+    assertionMsg( false, "not implemented yet" );
   }
 
 
