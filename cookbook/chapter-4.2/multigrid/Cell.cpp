@@ -18,8 +18,8 @@ multigrid::Cell::Cell(const Base::PersistentCell& argument):
 }
 
 
-double multigrid::Cell::getEpsilon() const {
-    return _cellData.getEpsilon();
+tarch::la::Vector<DIMENSIONS,double> multigrid::Cell::getEpsilon() const {
+  return _cellData.getEpsilon();
 }
 
 
@@ -33,7 +33,7 @@ tarch::la::Vector<DIMENSIONS,double> multigrid::Cell::getV() const {
 }
 
 
-void multigrid::Cell::init(double epsilon, double f, const tarch::la::Vector<DIMENSIONS,double>& v) {
+void multigrid::Cell::init(const tarch::la::Vector<DIMENSIONS,double>& epsilon, double f, const tarch::la::Vector<DIMENSIONS,double>& v) {
   _cellData.setEpsilon(epsilon);
   _cellData.setF(f);
   _cellData.setV(v);

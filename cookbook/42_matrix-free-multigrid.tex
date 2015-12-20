@@ -11,10 +11,98 @@
 
 In this section, we sketch how to solve the convection-diffusion equation
 \[
-  \partial _t u - \nabla (\epsilon \nabla) u = 0
+  - \nabla (\epsilon \nabla) u + \nabla (v\ u) = f \qquad \mbox{with } v \in
+  \mathbb{R}^d, \epsilon \in \mathbb{R}^{d \times d}
 \]
-with various geometric multigrid solvers. 
-The solvers use the spacetree as computational grid.
+with various geometric multigrid solvers. $epsilon$ is a diagonal matrix with
+entries $\epsilon _1, \epsilon _2$ or $\epsilon _1, \epsilon _2, \epsilon _3$,
+respectively.
+Our realisation is based upon a few design decisions:
+
+\begin{enumerate}
+  \item The solvers use the spacetree as computational grid.
+  \item We use a finite element formalism with $d$-linear shape functions.
+  \item The material parameters $\epsilon $ and $v$ are given per cell.
+\end{enumerate}
+
+
+\noindent
+For the implementation, we use Peano's \texttt{matrixfree} toolbox. 
+This is a tiny little collection of helper classes to work with stencils and
+local assembly matrix. 
+It is neither fast, i.e.~computationally mature, nor can it cope with real
+stencil libraries, but it does the job.
+
+
+
+\subsection{Setup}
+
+We start with Peano's PDT and generate a project. We also link Peano's sources
+into the project and unzip the \texttt{matrixfree} toolbox. 
+\begin{code}
+  java -jar pdt.jar --create-project multigrid multigrid
+  ln -s mypath/src/peano 
+  ln -s mypath/src/tarch
+  cp mypath/tarballs/toolboxes/matrixfree.tar.gz .
+  tar -xzvf matrixfree.tar.gz
+\end{code}
+
+
+\noindent
+We add our material parameters to the \texttt{Cell.def} file
+\begin{code}
+Packed-Type: short int;
+
+Constant: DIMENSIONS;
+
+class multigrid::records::Cell {  
+  persistent parallelise double   epsilon[DIMENSIONS];
+  persistent parallelise double   v[DIMENSIONS];
+  persistent parallelise double   f;
+};
+\end{code}
+
+\noindent
+and create a simple first specification file:
+\begin{code}
+component: Multigrid
+
+namespace: ::multigrid
+
+vertex:
+  dastgen-file: Vertex.def
+  
+cell:
+  dastgen-file: Cell.def
+
+state:
+  dastgen-file: State.def
+
+event-mapping:
+  name: SetupGrid
+
+event-mapping:
+  name: PlotCells
+
+adapter:
+  name: CreateGrid
+  merge-with-user-defined-mapping: SetupGrid
+  merge-with-user-defined-mapping: PlotCells
+\end{code}
+
+\noindent
+We run this specification file through the PDT
+
+\begin{code}
+java -jar pdt.jar --generate-gluecode multigrid/project.peano-specification multigrid
+\end{code}
+
+
+\noindent
+and implement both the plotter and the creational mapping such that we have a
+few characteristic setups. 
+
+We next introduce an operation \texttt{Cell::}
 
 
 
@@ -22,6 +110,7 @@ The solvers use the spacetree as computational grid.
 
 \begin{itemize}
   \item  Reps, Bram and Weinzierl, Tobias: t.b.d.
+  \item Weinzierl, Marion: {\em Diss} t.b.d.
   \item   Muntean, Ioan Lucian, Mehl, Miriam, Neckel, Tobias and Weinzierl,
   Tobias (2008). {\em Concepts for Efficient Flow Solvers Based on Adaptive
   Cartesian Grids}. In High Performance Computing in Science and Engineering, Garching 2007. Wagner, Siegfried, Steinmetz, Matthias, Bode, Arndt & Brehm, Matthias Berlin Heidelberg New York: Springer.

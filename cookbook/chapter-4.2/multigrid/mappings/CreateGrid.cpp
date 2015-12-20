@@ -118,13 +118,25 @@ void multigrid::mappings::CreateGrid::createCell(
   logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
   if (_scenario==Poisson) {
-    // Poissn
     double f = DIMENSIONS * tarch::la::PI;
     for (int d=0; d<DIMENSIONS; d++) {
       f *= std::sin( tarch::la::PI * fineGridVerticesEnumerator.getCellCenter()(d) );
     }
     fineGridCell.init(
-      1.0, // epsilon
+      tarch::la::Vector<DIMENSIONS,double>(1.0), // epsilon
+      f, // f
+      tarch::la::Vector<DIMENSIONS,double>(0.0) // v
+    );
+  }
+  else if (_scenario==Poisson) {
+    double f = DIMENSIONS * tarch::la::PI;
+    for (int d=0; d<DIMENSIONS; d++) {
+      f *= std::sin( tarch::la::PI * fineGridVerticesEnumerator.getCellCenter()(d) );
+    }
+    tarch::la::Vector<DIMENSIONS,double> epsilon = tarch::la::Vector<DIMENSIONS,double>(1.0);
+    epsilon(0) = 0.1;
+    fineGridCell.init(
+      tarch::la::Vector<DIMENSIONS,double>(epsilon), // epsilon
       f, // f
       tarch::la::Vector<DIMENSIONS,double>(0.0) // v
     );

@@ -42,14 +42,11 @@ class multigrid::mappings::CreateGrid {
 
     enum Scenario {
       Poisson,
+      AnisotropicPoisson,
       ShiftedMinimalCheckerboard,
       LayerProblem,
       DiagonalFlow,
-      RecirculatingFlow,
-      ShiftedMinimalCheckerboardWithDiagonalFlow,
-      ShiftedMinimalCheckerboardWithRecirculatingFlow,
-      LayerProblemWithDiagonalFlow,
-      LayerProblemWithRecirculatingFlow
+      RecirculatingFlow
     };
 
     static Scenario _scenario;

@@ -39,19 +39,20 @@ int main(int argc, char** argv) {
               << std::endl
               << "Valid scenarios:" << std::endl
               <<  "Poisson" << std::endl
+              <<  "AnisotropicPoisson" << std::endl
               <<  "ShiftedMinimalCheckerboard" << std::endl
               <<  "LayerProblem" << std::endl
               <<  "DiagonalFlow" << std::endl
               <<  "RecirculatingFlow" << std::endl
-              <<  "ShiftedMinimalCheckerboardWithDiagonalFlow" << std::endl
-              <<  "ShiftedMinimalCheckerboardWithRecirculatingFlow" << std::endl
-              <<  "LayerProblemWithDiagonalFlow" << std::endl
-              <<  "LayerProblemWithRecirculatingFlo" << std::endl;
+              << std::endl;
     programExitCode = 1;
   }
   else {
     if (std::string(argv[1])=="Poisson") {
       multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::Poisson;
+    }
+    else if (std::string(argv[1])=="AnisotropicPoisson") {
+      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AnisotropicPoisson;
     }
     else if (std::string(argv[1])=="ShiftedMinimalCheckerboard") {
       multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::ShiftedMinimalCheckerboard;
@@ -64,18 +65,6 @@ int main(int argc, char** argv) {
     }
     else if (std::string(argv[1])=="RecirculatingFlow") {
       multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::RecirculatingFlow;
-    }
-    else if (std::string(argv[1])=="ShiftedMinimalCheckerboardWithDiagonalFlow") {
-      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::ShiftedMinimalCheckerboardWithDiagonalFlow;
-    }
-    else if (std::string(argv[1])=="ShiftedMinimalCheckerboardWithRecirculatingFlow") {
-      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::ShiftedMinimalCheckerboardWithRecirculatingFlow;
-    }
-    else if (std::string(argv[1])=="LayerProblemWithDiagonalFlow") {
-      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::LayerProblemWithDiagonalFlow;
-    }
-    else if (std::string(argv[1])=="LayerProblemWithRecirculatingFlow") {
-      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::LayerProblemWithRecirculatingFlow;
     }
     else {
       std::cerr << "invalid scenario. Please run without arguments to see list of supported scenarios" << std::endl;

@@ -77,7 +77,7 @@ void multigrid::mappings::PlotCells::beginIteration(
   _vertexWriter     = _vtkWriter->createVertexWriter();
   _cellWriter       = _vtkWriter->createCellWriter();
 
-  _epsilonWriter    = _vtkWriter->createCellDataWriter("epsilon", 1);
+  _epsilonWriter    = _vtkWriter->createCellDataWriter("epsilon", DIMENSIONS);
   _fWriter          = _vtkWriter->createCellDataWriter("f", 1);
   _vWriter          = _vtkWriter->createCellDataWriter("v", DIMENSIONS);
 

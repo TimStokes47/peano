@@ -57,11 +57,11 @@ class multigrid::Cell: public peano::grid::Cell< multigrid::records::Cell > {
     Cell(const Base::PersistentCell& argument);
 
 
-    double getEpsilon() const;
+    tarch::la::Vector<DIMENSIONS,double> getEpsilon() const;
     double getF() const;
     tarch::la::Vector<DIMENSIONS,double> getV() const;
 
-    void init(double epsilon, double f, const tarch::la::Vector<DIMENSIONS,double>& v);
+    void init(const tarch::la::Vector<DIMENSIONS,double>&  epsilon, double f, const tarch::la::Vector<DIMENSIONS,double>& v);
 };
 
 
