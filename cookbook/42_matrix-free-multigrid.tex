@@ -110,9 +110,9 @@ matrixfree::stencil::ElementWiseAssemblyMatrix multigrid::Cell::getElementsAssem
   matrixfree::stencil::ElementWiseAssemblyMatrix result;
 
   const matrixfree::stencil::Stencil laplacianStencil = 
-    matrixfree::stencil::StencilFactory::getLaplacian(_cellData.getEpsilon(), h);
+    matrixfree::stencil::getLaplacian(_cellData.getEpsilon(), h);
 
-  return matrixfree::stencil::ElementMatrix::getElementWiseAssemblyMatrix(laplacianStencil);
+  return matrixfree::stencil::getElementWiseAssemblyMatrix(laplacianStencil);
 }
 \end{code}
 which returns the $\mathbf{R}^{2^d \times 2^d}$ local system matrix. 
@@ -123,7 +123,7 @@ Finally, it uses \texttt{getElementWiseAssemblyMatrix} to extract the actual
 matrix from this stencil.
 
 \begin{remark}
-  Peano supports all stencil/la operations also for complex-valued equations.
+  Peano supports all stencil/linear algebra operations for complex values.
 \end{remark}
 
 

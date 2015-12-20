@@ -11,6 +11,8 @@
 
 #include "multigrid/records/Cell.h"
 #include "peano/grid/Cell.h"
+#include "matrixfree/stencil/Stencil.h"
+#include "matrixfree/stencil/ElementMatrix.h"
 
 
 namespace multigrid { 
@@ -62,6 +64,13 @@ class multigrid::Cell: public peano::grid::Cell< multigrid::records::Cell > {
     tarch::la::Vector<DIMENSIONS,double> getV() const;
 
     void init(const tarch::la::Vector<DIMENSIONS,double>&  epsilon, double f, const tarch::la::Vector<DIMENSIONS,double>& v);
+
+
+    /**
+     * @param h Size of the current cell.
+     */
+    matrixfree::stencil::ElementWiseAssemblyMatrix getElementsAssemblyMatrix(const tarch::la::Vector<DIMENSIONS,double>&  h) const;
+
 };
 
 

@@ -1,4 +1,6 @@
 #include "multigrid/Cell.h"
+#include "matrixfree/stencil/StencilFactory.h"
+#include "matrixfree/stencil/ElementMatrix.h"
 
 
 multigrid::Cell::Cell():
@@ -39,3 +41,11 @@ void multigrid::Cell::init(const tarch::la::Vector<DIMENSIONS,double>& epsilon, 
   _cellData.setV(v);
 }
 
+
+matrixfree::stencil::ElementWiseAssemblyMatrix multigrid::Cell::getElementsAssemblyMatrix(const tarch::la::Vector<DIMENSIONS,double>&  h) const {
+  matrixfree::stencil::ElementWiseAssemblyMatrix result;
+
+  const matrixfree::stencil::Stencil laplacianStencil = matrixfree::stencil::getLaplacian(_cellData.getEpsilon(), h);
+
+  return matrixfree::stencil::getElementWiseAssemblyMatrix(laplacianStencil);
+}
