@@ -110,7 +110,7 @@ void multigrid::mappings::PlotCells::endIteration(
 
 
   std::ostringstream snapshotFileName;
-  snapshotFileName << "solution"
+  snapshotFileName << "cell-data"
                    #ifdef Parallel
                    << "-rank-" << tarch::parallel::Node::getInstance().getRank()
                    #endif
