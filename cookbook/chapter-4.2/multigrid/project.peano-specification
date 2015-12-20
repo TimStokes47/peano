@@ -15,14 +15,10 @@ event-mapping:
   name: CreateGrid
 
 event-mapping:
-  name: InitNewCells
-
-event-mapping:
   name: PlotCells
 
 adapter:
   name: CreateGrid
   merge-with-user-defined-mapping: CreateGrid
-  merge-with-user-defined-mapping: InitNewCells
   merge-with-user-defined-mapping: PlotCells
  

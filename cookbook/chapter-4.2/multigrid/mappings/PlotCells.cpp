@@ -78,7 +78,6 @@ void multigrid::mappings::PlotCells::beginIteration(
   _cellWriter       = _vtkWriter->createCellWriter();
 
   _epsilonWriter    = _vtkWriter->createCellDataWriter("epsilon", DIMENSIONS);
-  _fWriter          = _vtkWriter->createCellDataWriter("f", 1);
   _vWriter          = _vtkWriter->createCellDataWriter("v", DIMENSIONS);
 
 
@@ -95,21 +94,18 @@ void multigrid::mappings::PlotCells::endIteration(
   _cellWriter->close();
 
   _epsilonWriter->close();
-  _fWriter->close();
   _vWriter->close();
 
   delete _vertexWriter;
   delete _cellWriter;
 
   delete _epsilonWriter;
-  delete _fWriter;
   delete _vWriter;
 
   _vertexWriter     = nullptr;
   _cellWriter       = nullptr;
 
   _epsilonWriter    = nullptr;
-  _fWriter          = nullptr;
   _vWriter          = nullptr;
 
 
@@ -201,7 +197,6 @@ void multigrid::mappings::PlotCells::enterCell(
       #endif
 
       _epsilonWriter->plotCell( cellIndex, fineGridCell.getEpsilon() );
-      _fWriter->plotCell(       cellIndex, fineGridCell.getF() );
       _vWriter->plotCell(       cellIndex, fineGridCell.getV() );
   }
 

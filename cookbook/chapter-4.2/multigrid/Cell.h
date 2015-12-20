@@ -60,10 +60,9 @@ class multigrid::Cell: public peano::grid::Cell< multigrid::records::Cell > {
 
 
     tarch::la::Vector<DIMENSIONS,double> getEpsilon() const;
-    double getF() const;
     tarch::la::Vector<DIMENSIONS,double> getV() const;
 
-    void init(const tarch::la::Vector<DIMENSIONS,double>&  epsilon, double f, const tarch::la::Vector<DIMENSIONS,double>& v);
+    void init(const tarch::la::Vector<DIMENSIONS,double>&  epsilon, const tarch::la::Vector<DIMENSIONS,double>& v);
 
 
     /**

@@ -52,7 +52,6 @@ class multigrid::mappings::PlotCells {
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*      _vertexWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*        _cellWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*    _epsilonWriter;
-    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*    _fWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*    _vWriter;
 
     static int                                                                                          _snapshotCounter;

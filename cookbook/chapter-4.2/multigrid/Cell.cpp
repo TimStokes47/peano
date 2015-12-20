@@ -25,19 +25,13 @@ tarch::la::Vector<DIMENSIONS,double> multigrid::Cell::getEpsilon() const {
 }
 
 
-double multigrid::Cell::getF() const {
-  return _cellData.getF();
-}
-
-
 tarch::la::Vector<DIMENSIONS,double> multigrid::Cell::getV() const {
   return _cellData.getV();
 }
 
 
-void multigrid::Cell::init(const tarch::la::Vector<DIMENSIONS,double>& epsilon, double f, const tarch::la::Vector<DIMENSIONS,double>& v) {
+void multigrid::Cell::init(const tarch::la::Vector<DIMENSIONS,double>& epsilon, const tarch::la::Vector<DIMENSIONS,double>& v) {
   _cellData.setEpsilon(epsilon);
-  _cellData.setF(f);
   _cellData.setV(v);
 }
 
