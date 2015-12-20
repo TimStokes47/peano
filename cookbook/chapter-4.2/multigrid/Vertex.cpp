@@ -24,10 +24,17 @@ multigrid::Vertex::Vertex(const Base::PersistentVertex& argument):
 void multigrid::Vertex::initInnerVertex(double f) {
   _vertexData.setVertexType( Records::Unknown );
   _vertexData.setU(0.0);
-  _vertexData.setF(0.0);
+  _vertexData.setF(f);
+}
+
+
+void multigrid::Vertex::initDirichletVertex(double u) {
+  _vertexData.setVertexType( Records::Unknown );
+  _vertexData.setU(u);
 }
 
 
 double multigrid::Vertex::getF() const {
   return _vertexData.getF();
 }
+
