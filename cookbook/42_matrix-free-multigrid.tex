@@ -58,7 +58,6 @@ Constant: DIMENSIONS;
 class multigrid::records::Cell {  
   persistent parallelise double   epsilon[DIMENSIONS];
   persistent parallelise double   v[DIMENSIONS];
-  persistent parallelise double   f;
 };
 \end{code}
 
@@ -79,15 +78,16 @@ state:
   dastgen-file: State.def
 
 event-mapping:
-  name: SetupGrid
+  name: CreateGrid
 
 event-mapping:
   name: PlotCells
 
 adapter:
   name: CreateGrid
-  merge-with-user-defined-mapping: SetupGrid
+  merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: PlotCells
+  
 \end{code}
 
 \noindent
@@ -126,6 +126,86 @@ matrix from this stencil.
   Peano supports all stencil/linear algebra operations for complex values.
 \end{remark}
 
+
+\subsection{Jacobi smoother}
+
+The basic building block of all of our solvers is a simple Jacobi smoother
+working on adaptive grids as well as on multiple scales.
+Its realisation is an extension of the solver in \ref{section:applications:heat-equation}.
+To make it work without the assembly of any global matrix, we associate each
+vertex a residual value as well as the actual value. 
+There are a few other features such as boundary properties or some level
+analysis that we either use later on or we pass to the used toolboxes. 
+Their exact semantics and rationale have to be taken from the source code.
+
+\begin{code}
+Packed-Type: short int;
+
+
+class multigrid::records::Vertex {  
+  /**
+   * Solution
+   */
+  persistent parallelise double  u;
+
+  /**
+   * Rhs
+   */
+  persistent parallelise double  f;
+  
+  /**
+   * Residual
+   */
+  persistent parallelise double   r;
+
+  /**
+   * Diagonal element
+   */
+  persistent parallelise double   d;
+  
+  enum VertexType {
+    Unknown, Dirichlet, Neumann
+  };
+  
+  persistent VertexType vertexType;
+  
+  // some other attributes
+};
+\end{code}
+
+\noindent
+Besides a proper initialisation of the vertices, we extend the specification
+similar to the heat equation.
+\begin{code}
+component: Multigrid
+
+namespace: ::multigrid
+
+vertex:
+  dastgen-file: Vertex.def
+  read scalar(double): U
+  read scalar(double): R
+  read scalar(double): D
+  read scalar(double): F
+  write scalar(double): U
+  write scalar(double): R
+  write scalar(double): D
+  
+...
+
+adapter:
+  name: CreateGrid
+  merge-with-user-defined-mapping: CreateGrid
+  merge-with-user-defined-mapping: PlotCells
+  merge-with-predefined-mapping: VTKPlotVertexValue(f,getF,f)
+\end{code}
+
+\noindent
+Once this code framework passes, we can introduce a new mapping/adapter
+\texttt{JacobiSmoother}, call this one a couple of hundred times in the runner
+and plot the result file then. 
+For the latter, it makes sense to use a predefined plotter.
+The interesting new aspects can be found in three routines of the smoother:
 
 \subsection*{Further reading}
 
