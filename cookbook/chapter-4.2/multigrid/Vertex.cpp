@@ -26,3 +26,8 @@ void multigrid::Vertex::initInnerVertex(double f) {
   _vertexData.setU(0.0);
   _vertexData.setF(0.0);
 }
+
+
+double multigrid::Vertex::getF() const {
+  return _vertexData.getF();
+}

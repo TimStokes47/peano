@@ -65,6 +65,8 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
     Vertex(const Base::PersistentVertex& argument);
 
     void initInnerVertex(double f);
+
+    double getF() const;
 };
 
 

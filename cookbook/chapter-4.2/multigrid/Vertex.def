@@ -1,3 +1,4 @@
+
 Packed-Type: short int;
 
 
@@ -72,10 +73,23 @@ class multigrid::records::Vertex {
    */
   persistent parallelise double  si;
 
-
   /**
-   * BoxMG
-   * =====
+   * Additive multigrid/BPX
+   * ======================
    */
   persistent int  mgStencilPointer;
+
+  /**
+   * Additi
+   * =====
+   */
+  persistent parallelise int  numberOfSuccessorLevels;
+
+  /**
+   * Dynamic refinement criterion
+   * ============================
+   *
+   * Linear surplus of solution
+   */
+  discard parallelise double   linearSurplus;
 };
