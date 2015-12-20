@@ -102,8 +102,29 @@ java -jar pdt.jar --generate-gluecode multigrid/project.peano-specification mult
 and implement both the plotter and the creational mapping such that we have a
 few characteristic setups. 
 
-We next introduce an operation \texttt{Cell::}
+We next introduce an operation 
+\begin{code}
+matrixfree::stencil::ElementWiseAssemblyMatrix multigrid::Cell::getElementsAssemblyMatrix(
+  const tarch::la::Vector<DIMENSIONS,double>&  h
+) const {
+  matrixfree::stencil::ElementWiseAssemblyMatrix result;
 
+  const matrixfree::stencil::Stencil laplacianStencil = 
+    matrixfree::stencil::StencilFactory::getLaplacian(_cellData.getEpsilon(), h);
+
+  return matrixfree::stencil::ElementMatrix::getElementWiseAssemblyMatrix(laplacianStencil);
+}
+\end{code}
+which returns the $\mathbf{R}^{2^d \times 2^d}$ local system matrix. 
+The method sets up the stencils that correspond to a regular Cartesian system
+given the given mesh size \textt{h} and the material parameters.
+Here, also the convective term has to be handled.
+Finally, it uses \texttt{getElementWiseAssemblyMatrix} to extract the actual
+matrix from this stencil.
+
+\begin{remark}
+  Peano supports all stencil/la operations also for complex-valued equations.
+\end{remark}
 
 
 \subsection*{Further reading}
