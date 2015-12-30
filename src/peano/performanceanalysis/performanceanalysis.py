@@ -756,6 +756,11 @@ def plotLogicalTopology():
 def setGeneralPlotSettings():
   pylab.xlabel('t')
   pylab.grid(True)
+  # pylab.style.use('greyscale')
+  # bmh              Hintergrund ist grau. Passt nicht so richtig hier. Im Gegensatz zu ggplot sind Gitterlinien gestrichelt
+  # fivethirtyeight  Hintergrundfarbe ist homogen grau, kein Gitter. Es gibt einen grossen, dicken Rand. Passt zu Business-Grafiken 
+  # ggplot           Hintergrund ist grau. Passt nicht so richtig hier 
+  # greyscale        Geht bei mir nicht
   try:
     pylab.legend(fontsize=9, framealpha=0.5)
   except:
