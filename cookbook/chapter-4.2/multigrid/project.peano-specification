@@ -32,6 +32,9 @@ event-mapping:
   name: CreateGrid
 
 event-mapping:
+  name: JacobiSmoother
+
+event-mapping:
   name: PlotCells
 
 adapter:
@@ -39,4 +42,17 @@ adapter:
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: PlotCells
   merge-with-predefined-mapping: VTKPlotVertexValue(f,getF,f)
+ 
+adapter:
+  name: Jacobi
+  merge-with-user-defined-mapping: CreateGrid
+  merge-with-user-defined-mapping: JacobiSmoother
+ 
+adapter:
+  name: JacobiAndPlot
+  merge-with-user-defined-mapping: CreateGrid
+  merge-with-user-defined-mapping: JacobiSmoother
+  merge-with-user-defined-mapping: PlotCells
+  merge-with-predefined-mapping: VTKPlotVertexValue(f,getF,f)
+ 
  

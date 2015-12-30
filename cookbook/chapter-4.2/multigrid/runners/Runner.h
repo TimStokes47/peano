@@ -9,6 +9,10 @@
 #define _MULTIGRID_RUNNERS_RUNNER_H_ 
 
 
+#include "tarch/logging/Log.h"
+
+
+
 namespace multigrid {
     namespace runners {
       class Runner;
