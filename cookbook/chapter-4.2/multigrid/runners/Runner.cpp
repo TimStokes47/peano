@@ -88,6 +88,8 @@ int multigrid::runners::Runner::runAsMaster(multigrid::repositories::Repository&
       ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
       ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates()
     );
+
+    repository.getState().clearAccumulatedAttributes();
   }
  
  
