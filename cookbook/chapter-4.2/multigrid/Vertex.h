@@ -68,6 +68,12 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
     void initDirichletVertex(double u);
 
     double getF() const;
+    double getR() const;
+    double getU() const;
+
+    void clearAccumulatedAttributes();
+
+    void performJacobiSmoothingStep( double omega );
 };
 
 

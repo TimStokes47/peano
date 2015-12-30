@@ -38,3 +38,27 @@ double multigrid::Vertex::getF() const {
   return _vertexData.getF();
 }
 
+
+double multigrid::Vertex::getR() const {
+  return _vertexData.getR();
+}
+
+
+
+double multigrid::Vertex::getU() const {
+  return _vertexData.getU();
+}
+
+
+void multigrid::Vertex::clearAccumulatedAttributes() {
+  _vertexData.setR(0.0);
+  _vertexData.setD(0.0);
+}
+
+
+void multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
+  assertion1( _vertexData.getD()>0.0, toString() );
+  assertion2( omega>0.0, toString(), omega );
+
+  _vertexData.setU( _vertexData.getU() + omega / _vertexData.getD() * _vertexData.getR() );
+}
