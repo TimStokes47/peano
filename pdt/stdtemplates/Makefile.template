@@ -111,9 +111,16 @@ all: header build
 files.mk:
 	touch files.mk
 	echo "SOURCES=\\" > files.mk
-	find -H $(PEANO_HOME)/peano -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
-	find -H $(PEANO_HOME)/tarch -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
-	find $(PROJECT_HOME) -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+	find -H $(PEANO_HOME)/peano -name '*.cpp' | tr '\n' ' ' >> files.mk
+	find -H $(PEANO_HOME)/tarch -name '*.cpp' | tr '\n' ' ' >> files.mk
+	find $(PROJECT_HOME) -name '*.cpp' | tr '\n' ' ' >> files.mk
+	#
+	# if you want to work with awk rather than tr, try the following snippets instead
+	# of the previous three lines:
+	#find -H $(PEANO_HOME)/peano -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+	#find -H $(PEANO_HOME)/tarch -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+	#find $(PROJECT_HOME) -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+	#
 	# if you encouter problems with awk, use the following snippets (through they
 	# do in turn not work with all bash versions. In particular not with MACs:
 	#
