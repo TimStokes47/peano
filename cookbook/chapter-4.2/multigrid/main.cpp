@@ -7,6 +7,7 @@
 
 #include "multigrid/runners/Runner.h"
 #include "multigrid/mappings/CreateGrid.h"
+#include "multigrid/mappings/JacobiSmoother.h"
 
 
 tarch::logging::Log _log("");
@@ -34,8 +35,8 @@ int main(int argc, char** argv) {
 
   int programExitCode = 0;
 
-  if (argc!=2) {
-    std::cout << "Usage: ./executable scenario" << std::endl
+  if (argc!=3) {
+    std::cout << "Usage: ./executable scenario omega" << std::endl
               << std::endl
               << "Valid scenarios:" << std::endl
               <<  "Poisson" << std::endl
@@ -70,6 +71,8 @@ int main(int argc, char** argv) {
       std::cerr << "invalid scenario. Please run without arguments to see list of supported scenarios" << std::endl;
       programExitCode = 2;
     }
+
+    multigrid::mappings::JacobiSmoother::omega = atof( argv[2] );
   }
 
   // Configure the output
