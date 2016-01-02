@@ -6,7 +6,8 @@
     1--2 days.
   }
   {
-    Chapter \ref{chapter:quickstart}.
+    Chapter \ref{chapter:quickstart}. It is advantageous if the reader has
+    studied the implementation of the heat equation before.
   }
 
 In this section, we sketch how to solve the convection-diffusion equation
@@ -206,13 +207,13 @@ adapter:
   name: CreateGrid
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: PlotCells
-  merge-with-predefined-mapping: VTKPlotVertexValue(f,getF,f)
+  merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
 \end{code}
 
 \noindent
-Once this code framework passes, we can introduce a new mapping/adapter
-\texttt{JacobiSmoother}, call this one a couple of hundred times in the runner
-and plot the result file then. 
+Once this code framework passes (only minor technical helper routines have to
+be implemented, but by now this should be straightforward to any user), we can
+introduce a new mapping/adapter \texttt{JacobiSmoother}, call this one a couple of hundred times in the runner and plot the result file then. 
 For the latter, it makes sense to use a predefined plotter.
 The interesting new aspects can be found in three routines of the smoother.
 The design of the code realises matrix-free element-wise mat-vecs 1:1: 
@@ -251,22 +252,67 @@ void multigrid::Vertex::clearAccumulatedAttributes() {
     \]
     \begin{code}
 void multigrid::mappings::JacobiSmoother::touchVertexLastTime(...) {
-  if (fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined) {
-    fineGridVertex.performJacobiSmoothingStep( omega );
-  }
+  const bool hasUpdated = fineGridVertex.performJacobiSmoothingStep( omega );
+  
+  ...
 }
 
 // in Vertex files
 
-void multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
- assertion1( _vertexData.getD()>0.0, toString() );
- assertion2( omega>0.0, toString(), omega );
+double multigrid::Vertex::getResidual() const {
+  return _vertexData.getF() + _vertexData.getR();
+}
 
- _vertexData.setU( _vertexData.getU() + omega / _vertexData.getD() * _vertexData.getR() );
+
+bool multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
+  if (
+    getRefinementControl()==Vertex::Records::Unrefined
+    &&
+    _vertexData.getVertexType()== Records::Unknown
+  ) {
+    assertion1( _vertexData.getD()>0.0, toString() );
+    assertion2( omega>0.0, toString(), omega );
+    _vertexData.setU( _vertexData.getU() + omega / _vertexData.getD() * getResidual() );
+    return true;
+  }
+  else {
+    return false;
+  }
 }
     \end{code} 
-
-
+    
+    \noindent
+    Please note that the residual here is modelled as sum of the right-hand
+    side and the accumulated value (cf.~helper operation
+    \texttt{getResidual()}).
+    We anticipate the minus from the definition 
+    \[ r = f - Au \]
+    already in the accumulation, i.e.~sum up $-Au$ in the vertex attribute $r$.
+    An additional pitfal is this context stems from the usage of a finite
+    element method.
+    It implies that we have to ensure that $f$ is scaled with $h^d$ ($h$ being the local mesh width), which is something we typically
+    do already in the initialisation. 
+    
+    \begin{remark}
+    It is obvious that the Jacobi update scheme may only update inner
+    unrefined vertices as well as Neumann boundary points. Peano does not offer
+    vertex types. It distinguishes only inner and outer vertices. As we need
+    more flags than inside and outside (at least two boundary
+    flags), we have to offer these on our own\footnotemark .
+    \end{remark}
+    \footnotetext{Up to
+    early 2016, Peano had a three-valued logic with inner, outer and boundary vertices. I
+    removed this from the kernel as most applications need way more vertex
+    types anyway.}
+    
+    
+    In the present implementation, we make the Jacobi update return a flag that
+    indicates whether a fine grid update has been done or not. 
+    Most codes will like to track global data such as a global residual or the
+    maximum value of the solution and can use this flag to decide whether a
+    vertex contributes to global data or not. Please study the accompanying
+    source code for details.
+    
     \item The most complicated part is obviously the evaluation of the local
     mat-vec contributions. Here, we rely on the cell's
     \texttt{getElementsAssemblyMatrix} as well as operations from \newline
@@ -290,7 +336,7 @@ void multigrid::mappings::JacobiSmoother::enterCell(...) {
   const matrixfree::stencil::ElementWiseAssemblyMatrix A =
     fineGridCell.getElementsAssemblyMatrix( fineGridVerticesEnumerator.getCellSize() );
 
-  tarch::la::Vector<TWO_POWER_D,double> r = rOld + A * u;
+  tarch::la::Vector<TWO_POWER_D,double> r = rOld - A * u;
   tarch::la::Vector<TWO_POWER_D,double> d = dOld + tarch::la::diag(A);
 
   VertexOperations::writeR( fineGridVerticesEnumerator, fineGridVertices, r );
@@ -366,6 +412,18 @@ class multigrid::records::State {
   \end{code}
 \end{enumerate}
 
+
+\noindent
+We may run this code for example the
+well-known Poisson benchmark ($\epsilon = 1, v=0, f=d\ \pi ^2 \prod _i \sin
+\left( x_i \pi \right) $ ), and observe the well-known dependency of Jacobi on
+the mesh width (below grids with two, three or four compute grid levels):
+
+\begin{center}
+  \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/Poisson3.png}
+  \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/Poisson4.png}
+  \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/Poisson5.png}
+\end{center}
 
 \subsection*{Further reading}
 
