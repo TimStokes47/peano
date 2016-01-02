@@ -21,15 +21,15 @@ multigrid::Vertex::Vertex(const Base::PersistentVertex& argument):
 }
 
 
-void multigrid::Vertex::initInnerVertex(double f) {
+void multigrid::Vertex::initInnerVertex(double f, const tarch::la::Vector<DIMENSIONS,double>&  fineGridH) {
   _vertexData.setVertexType( Records::Unknown );
   _vertexData.setU(0.0);
-  _vertexData.setF(f);
+  _vertexData.setF(f * tarch::la::volume(fineGridH));
 }
 
 
 void multigrid::Vertex::initDirichletVertex(double u) {
-  _vertexData.setVertexType( Records::Unknown );
+  _vertexData.setVertexType( Records::Dirichlet );
   _vertexData.setU(u);
 }
 
@@ -39,10 +39,16 @@ double multigrid::Vertex::getF() const {
 }
 
 
+/*
 double multigrid::Vertex::getR() const {
   return _vertexData.getR();
 }
+*/
 
+
+double multigrid::Vertex::getResidual() const {
+  return _vertexData.getF() + _vertexData.getR();
+}
 
 
 double multigrid::Vertex::getU() const {
@@ -56,9 +62,18 @@ void multigrid::Vertex::clearAccumulatedAttributes() {
 }
 
 
-void multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
-  assertion1( _vertexData.getD()>0.0, toString() );
-  assertion2( omega>0.0, toString(), omega );
-
-  _vertexData.setU( _vertexData.getU() + omega / _vertexData.getD() * _vertexData.getR() );
+bool multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
+  if (
+    getRefinementControl()==Vertex::Records::Unrefined
+    &&
+    _vertexData.getVertexType()== Records::Unknown
+  ) {
+    assertion1( _vertexData.getD()>0.0, toString() );
+    assertion2( omega>0.0, toString(), omega );
+    _vertexData.setU( _vertexData.getU() + omega / _vertexData.getD() * getResidual() );
+    return true;
+  }
+  else {
+    return false;
+  }
 }

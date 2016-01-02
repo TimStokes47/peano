@@ -39,19 +39,47 @@ int main(int argc, char** argv) {
     std::cout << "Usage: ./executable scenario omega" << std::endl
               << std::endl
               << "Valid scenarios:" << std::endl
-              <<  "Poisson" << std::endl
+              <<  "PoissonX" << std::endl
+              <<  "AdaptivePoissonX" << std::endl
+/*
               <<  "AnisotropicPoisson" << std::endl
               <<  "ShiftedMinimalCheckerboard" << std::endl
               <<  "LayerProblem" << std::endl
               <<  "DiagonalFlow" << std::endl
               <<  "RecirculatingFlow" << std::endl
+*/
+              << std::endl
+              << std::endl
+              << "Please replace the X with 2,3,4 or 5. It denotes the maximum depth of the gid."
               << std::endl;
     programExitCode = 1;
   }
   else {
-    if (std::string(argv[1])=="Poisson") {
-      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::Poisson;
-    }
+      if (std::string(argv[1])=="Poisson2") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::Poisson2;
+      }
+      else if (std::string(argv[1])=="Poisson3") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::Poisson3;
+      }
+      else if (std::string(argv[1])=="Poisson4") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::Poisson4;
+      }
+      else if (std::string(argv[1])=="Poisson5") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::Poisson5;
+      }
+      else if (std::string(argv[1])=="AdaptivePoisson2") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AdaptivePoisson2;
+      }
+      else if (std::string(argv[1])=="AdaptivePoisson3") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AdaptivePoisson3;
+      }
+      else if (std::string(argv[1])=="AdaptivePoisson4") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AdaptivePoisson4;
+      }
+      else if (std::string(argv[1])=="AdaptivePoisson5") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AdaptivePoisson5;
+      }
+/*
     else if (std::string(argv[1])=="AnisotropicPoisson") {
       multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AnisotropicPoisson;
     }
@@ -67,6 +95,7 @@ int main(int argc, char** argv) {
     else if (std::string(argv[1])=="RecirculatingFlow") {
       multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::RecirculatingFlow;
     }
+*/
     else {
       std::cerr << "invalid scenario. Please run without arguments to see list of supported scenarios" << std::endl;
       programExitCode = 2;

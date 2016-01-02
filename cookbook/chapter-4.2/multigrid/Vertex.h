@@ -1,3 +1,4 @@
+
 // This file originally was created by pdt (Peano Development Toolkit) as part
 // of a code based upon the Peano project by Tobias Weinzierl. For conditions 
 // of distribution and use of this project, please see the copyright notice at
@@ -64,16 +65,21 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
      */
     Vertex(const Base::PersistentVertex& argument);
 
-    void initInnerVertex(double f);
+    void initInnerVertex(double f, const tarch::la::Vector<DIMENSIONS,double>&  fineGridH);
     void initDirichletVertex(double u);
 
     double getF() const;
-    double getR() const;
+
+    /**
+     * This getter is not getR. Instead it returns the
+     * residual, i.e. f-Au which is f+r.
+     */
+    double getResidual() const;
     double getU() const;
 
     void clearAccumulatedAttributes();
 
-    void performJacobiSmoothingStep( double omega );
+    bool performJacobiSmoothingStep( double omega );
 };
 
 

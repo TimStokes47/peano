@@ -77,6 +77,7 @@ int multigrid::runners::Runner::runAsMaster(multigrid::repositories::Repository&
 
   repository.switchToJacobiAndPlot();
   for (int i=0; i<100; i++) {
+    repository.getState().clearAccumulatedAttributes();
     repository.iterate();
 
     logInfo(
@@ -84,12 +85,10 @@ int multigrid::runners::Runner::runAsMaster(multigrid::repositories::Repository&
       "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
       ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
       ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
-      ",|u|_2=" << repository.getState().getSolutionIn2Norm() <<
+      ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
       ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
       ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates()
     );
-
-    repository.getState().clearAccumulatedAttributes();
   }
  
  

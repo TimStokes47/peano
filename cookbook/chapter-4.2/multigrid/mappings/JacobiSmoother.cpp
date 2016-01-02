@@ -118,10 +118,10 @@ void multigrid::mappings::JacobiSmoother::touchVertexLastTime(
 ) {
   logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  if (fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined) {
-    fineGridVertex.performJacobiSmoothingStep( omega );
+  const bool hasUpdated = fineGridVertex.performJacobiSmoothingStep( omega );
+  if (hasUpdated) {
     _state.notifyAboutFineGridVertexUpdate(
-      fineGridVertex.getR(),
+      fineGridVertex.getResidual(),
       fineGridVertex.getU(),
       fineGridH
     );
@@ -151,7 +151,7 @@ void multigrid::mappings::JacobiSmoother::enterCell(
   const matrixfree::stencil::ElementWiseAssemblyMatrix A =
     fineGridCell.getElementsAssemblyMatrix( fineGridVerticesEnumerator.getCellSize() );
 
-  tarch::la::Vector<TWO_POWER_D,double> r = rOld + A * u;
+  tarch::la::Vector<TWO_POWER_D,double> r = rOld - A * u;
   tarch::la::Vector<TWO_POWER_D,double> d = dOld + tarch::la::diag(A);
 
   VertexOperations::writeR( fineGridVerticesEnumerator, fineGridVertices, r );

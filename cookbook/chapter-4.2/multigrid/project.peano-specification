@@ -53,6 +53,6 @@ adapter:
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: JacobiSmoother
   merge-with-user-defined-mapping: PlotCells
-  merge-with-predefined-mapping: VTKPlotVertexValue(f,getF,f)
+  merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
  
  

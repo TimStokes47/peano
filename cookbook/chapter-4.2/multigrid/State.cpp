@@ -26,7 +26,6 @@ void multigrid::State::readFromCheckpoint( const peano::grid::Checkpoint<multigr
 }
 
 
-
 void multigrid::State::clearAccumulatedAttributes() {
   _stateData.setResidual2Norm(0.0);
   _stateData.setResidualMaxNorm(0.0);
@@ -38,9 +37,11 @@ void multigrid::State::clearAccumulatedAttributes() {
 
 void multigrid::State::merge(const State& state) {
   _stateData.setResidual2Norm(          _stateData.getResidual2Norm()          + state._stateData.getResidual2Norm() );
-  _stateData.setResidualMaxNorm(        _stateData.getResidualMaxNorm()        + state._stateData.getResidualMaxNorm() );
   _stateData.setSolutionL2Norm(         _stateData.getSolutionL2Norm()         + state._stateData.getSolutionL2Norm() );
-  _stateData.setSolutionMaxNorm(        _stateData.getSolutionMaxNorm()        + state._stateData.getSolutionMaxNorm() );
+
+  _stateData.setResidualMaxNorm(        std::max( _stateData.getResidualMaxNorm(), state._stateData.getResidualMaxNorm() ) );
+  _stateData.setSolutionMaxNorm(        std::max( _stateData.getSolutionMaxNorm(), state._stateData.getSolutionMaxNorm() ) );
+
   _stateData.setNumberOfStencilUpdates( _stateData.getNumberOfStencilUpdates() + state._stateData.getNumberOfStencilUpdates() );
 }
 

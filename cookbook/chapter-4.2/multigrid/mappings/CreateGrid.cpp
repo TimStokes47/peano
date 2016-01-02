@@ -66,6 +66,51 @@ multigrid::mappings::CreateGrid::Scenario  multigrid::mappings::CreateGrid::_sce
 
 
 
+void multigrid::mappings::CreateGrid::refineInitialGrid(
+  multigrid::Vertex&               fineGridVertex,
+  int                              vertexLevel,
+  bool                             isBoundary
+) {
+  if ( _scenario==Poisson2 && vertexLevel<=2 ) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==Poisson3 && vertexLevel<=3 ) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==Poisson4 && vertexLevel<=4 ) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==Poisson5 && vertexLevel<=5 ) {
+    fineGridVertex.refine();
+  }
+
+  if ( _scenario==AdaptivePoisson2 && vertexLevel<=2 && isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson2 && vertexLevel<=2 && !isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson3 && vertexLevel<=3 && isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson3 && vertexLevel<=2 && !isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson4 && vertexLevel<=4 && isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson4 && vertexLevel<=2 && !isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson5 && vertexLevel<=5 && isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson5 && vertexLevel<=2 && !isBoundary) {
+    fineGridVertex.refine();
+  }
+}
+
+
 void multigrid::mappings::CreateGrid::createInnerVertex(
       multigrid::Vertex&               fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
@@ -77,20 +122,18 @@ void multigrid::mappings::CreateGrid::createInnerVertex(
 ) {
   logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  if ( fineGridH(0)>0.1 ) {
-    fineGridVertex.refine();
-  }
+  refineInitialGrid(fineGridVertex,coarseGridVerticesEnumerator.getLevel()+1, false);
 
   if (
-    _scenario==Poisson
+    _scenario==Poisson2         || _scenario==Poisson3         || _scenario==Poisson4         || _scenario==Poisson5
     ||
-    _scenario==AnisotropicPoisson
+    _scenario==AdaptivePoisson2 || _scenario==AdaptivePoisson3 || _scenario==AdaptivePoisson4 || _scenario==AdaptivePoisson5
   ) {
-    double f = DIMENSIONS * tarch::la::PI;
+    double f = DIMENSIONS * tarch::la::PI * tarch::la::PI;
     for (int d=0; d<DIMENSIONS; d++) {
       f *= std::sin( tarch::la::PI * fineGridX(d) );
     }
-    fineGridVertex.initInnerVertex(f);
+    fineGridVertex.initInnerVertex(f,fineGridH);
   }
   else {
     assertionMsg( false, "not implemented yet" );
@@ -111,15 +154,12 @@ void multigrid::mappings::CreateGrid::createBoundaryVertex(
 ) {
   logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  if ( fineGridH(0)>0.1 ) {
-    fineGridVertex.refine();
-  }
-
+  refineInitialGrid(fineGridVertex,coarseGridVerticesEnumerator.getLevel()+1, true);
 
   if (
-    _scenario==Poisson
+    _scenario==Poisson2         || _scenario==Poisson3         || _scenario==Poisson4         || _scenario==Poisson5
     ||
-    _scenario==AnisotropicPoisson
+    _scenario==AdaptivePoisson2 || _scenario==AdaptivePoisson3 || _scenario==AdaptivePoisson4 || _scenario==AdaptivePoisson5
   ) {
     fineGridVertex.initDirichletVertex(0.0);
   }
@@ -143,12 +183,17 @@ void multigrid::mappings::CreateGrid::createCell(
 ) {
   logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
-  if (_scenario==Poisson) {
+  if (
+    _scenario==Poisson2         || _scenario==Poisson3         || _scenario==Poisson4         || _scenario==Poisson5
+    ||
+    _scenario==AdaptivePoisson2 || _scenario==AdaptivePoisson3 || _scenario==AdaptivePoisson4 || _scenario==AdaptivePoisson5
+  ) {
     fineGridCell.init(
       tarch::la::Vector<DIMENSIONS,double>(1.0), // epsilon
       tarch::la::Vector<DIMENSIONS,double>(0.0)  // v
     );
   }
+/*
   else if (_scenario==Poisson) {
     tarch::la::Vector<DIMENSIONS,double> epsilon = tarch::la::Vector<DIMENSIONS,double>(1.0);
     epsilon(0) = 0.1;
@@ -157,6 +202,7 @@ void multigrid::mappings::CreateGrid::createCell(
       tarch::la::Vector<DIMENSIONS,double>(0.0) // v
     );
   }
+*/
   else {
     logError( "createCell(...)", "not supported yet" );
     assertion(false);
