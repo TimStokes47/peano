@@ -425,6 +425,116 @@ the mesh width (below grids with two, three or four compute grid levels):
   \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/Poisson5.png}
 \end{center}
 
+
+\subsection{Dynamically adaptive Jacobi mit FAC}
+
+\noindent 
+We next implement a dynamically adaptive Jacobi solver that implements the FAC
+scheme.
+Its fundamental idea is that the Jacobi smootherr is applied on each and every
+grid level in parallel.
+Any hanging node's value is interpolated from coarser grids.
+While we update all grid levels, we do overwrite coarse vertices with fine grid
+values for all vertices that do exist on finer grid resolutions as well.
+We inject the solution from the fine grids onto coarser grids.
+This first solver is capable to handle dynamically adaptive grids with
+arbitrary refinement pattern.
+It also is a preliminary exercise how to implement multigrid full approximation
+storage (FAS).
+
+We extend the grid setup slightly such that it creates a very coarse grid even
+if we prescribe a fine minimum mesh size.
+Next, we validate that \texttt{enterCell} evaluates the stencil on each grid
+level anyway.
+This leaves two tasks incomplete: interpolatation and injection.
+The injection is basically the same we have used in the heat equation before:
+\begin{code}
+void multigrid::mappings::JacobiSmoother::touchVertexLastTime(...) {
+ // see code snippets introduced before
+
+ if (
+  peano::grid::SingleLevelEnumerator::isVertexPositionAlsoACoarseVertexPosition(
+    fineGridPositionOfVertex
+  )
+ ) {
+  const peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex coarseGridPosition =
+    peano::grid::SingleLevelEnumerator::getVertexPositionOnCoarserLevel
+    (fineGridPositionOfVertex);
+  coarseGridVertices[ coarseGridVerticesEnumerator(coarseGridPosition) ].inject(fineGridVertex);
+ }
+}
+
+
+// in the vertex
+
+void multigrid::Vertex::inject(const Vertex& fineGridVertex) {
+  _vertexData.setU( fineGridVertex._vertexData.getU() );
+}
+\end{code}
+
+
+
+\begin{remark}
+  The \texttt{matrixfree} toolbox offers a type \texttt{solver::Smoother} that
+  realises a Jacobi smoother that automatically tracks different residual and
+  solution norms. In the present example we do not use this smoother while we
+  use the toolbox's multigrid class. This is kind of inconsistent. It would
+  probably be better to use the smoother as well.
+\end{remark}
+
+\noindent
+The interpolation follows the idea of the heat equation solver, too.
+However, we propose to rely on a premanufactored interpolation operation from
+the \texttt{matrixfree} toolbox.
+For this, we make our smoother mapping hold an instance of
+\texttt{matrixfree::solver::Multigrid  \_multigrid}.
+This object in tun 
+
+\begin{code}
+void multigrid::mappings::JacobiSmoother::createHangingVertex(...) {
+  logTraceInWith6Arguments( "createHangingVertex(...)", ... );
+
+  fineGridVertex.setU(
+    _multigrid.getDLinearInterpolatedValue(
+      VertexOperations::readU( coarseGridVerticesEnumerator, coarseGridVertices ),
+      fineGridPositionOfVertex
+    )
+  );
+
+  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
+}
+\end{code}
+
+Obviously, the vertex requires an additional \texttt{setU( double )} operation.
+But that's the only additional extension required.
+If we adopt the setup, we should obtain start grids alike:
+
+\begin{center}
+  \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/AdaptivePoisson3.png}
+  \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/AdaptivePoisson4.png}
+  \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/AdaptivePoisson5.png}
+\end{center}
+
+\noindent
+
+We close our discussion on the Jacobi smoother with the introducton of a dynamic
+refinement criterion.
+This is, on purpose, very simple:
+
+@todo
+
+
+\noindent
+
+One final remark is worth trying: We have so far always used a
+predefined visualisation routine that visualises the finest grid of a
+simulation.
+Among the set of standard visualisation routines also is a plotter that plots
+the individual levels of a grid.
+Given that we inject \ldots
+
+@todo Multilevel visualisierung
+
 \subsection*{Further reading}
 
 \begin{itemize}

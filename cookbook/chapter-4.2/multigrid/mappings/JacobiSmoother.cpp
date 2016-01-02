@@ -108,13 +108,13 @@ void multigrid::mappings::JacobiSmoother::touchVertexFirstTime(
 
 
 void multigrid::mappings::JacobiSmoother::touchVertexLastTime(
-      multigrid::Vertex&         fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                    fineGridH,
-      multigrid::Vertex * const  coarseGridVertices,
-      const peano::grid::VertexEnumerator&          coarseGridVerticesEnumerator,
-      multigrid::Cell&           coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
+  multigrid::Vertex&                           fineGridVertex,
+  const tarch::la::Vector<DIMENSIONS,double>&  fineGridX,
+  const tarch::la::Vector<DIMENSIONS,double>&  fineGridH,
+  multigrid::Vertex * const                    coarseGridVertices,
+  const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator,
+  multigrid::Cell&                             coarseGridCell,
+  const tarch::la::Vector<DIMENSIONS,int>&     fineGridPositionOfVertex
 ) {
   logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
@@ -125,6 +125,16 @@ void multigrid::mappings::JacobiSmoother::touchVertexLastTime(
       fineGridVertex.getU(),
       fineGridH
     );
+  }
+
+  if (
+   peano::grid::SingleLevelEnumerator::isVertexPositionAlsoACoarseVertexPosition(
+     fineGridPositionOfVertex
+   )
+  ) {
+    const peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex coarseGridPosition =
+      peano::grid::SingleLevelEnumerator::getVertexPositionOnCoarserLevel(fineGridPositionOfVertex);
+    coarseGridVertices[ coarseGridVerticesEnumerator(coarseGridPosition) ].inject(fineGridVertex);
   }
 
   logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
@@ -161,6 +171,29 @@ void multigrid::mappings::JacobiSmoother::enterCell(
 }
 
 
+void multigrid::mappings::JacobiSmoother::createHangingVertex(
+  multigrid::Vertex&                           fineGridVertex,
+  const tarch::la::Vector<DIMENSIONS,double>&  fineGridX,
+  const tarch::la::Vector<DIMENSIONS,double>&  fineGridH,
+  multigrid::Vertex * const                    coarseGridVertices,
+  const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator,
+  multigrid::Cell&                             coarseGridCell,
+  const tarch::la::Vector<DIMENSIONS,int>&     fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  fineGridVertex.setU(
+    _multigrid.getDLinearInterpolatedValue(
+      VertexOperations::readU( coarseGridVerticesEnumerator, coarseGridVertices ),
+      fineGridPositionOfVertex
+    )
+  );
+
+  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
+}
+
+
+
 //
 //   NOP
 // =======
@@ -193,21 +226,6 @@ void multigrid::mappings::JacobiSmoother::mergeWithWorkerThread(const JacobiSmoo
   logTraceOut( "mergeWithWorkerThread(JacobiSmoother)" );
 }
 #endif
-
-
-void multigrid::mappings::JacobiSmoother::createHangingVertex(
-      multigrid::Vertex&     fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                fineGridH,
-      multigrid::Vertex * const   coarseGridVertices,
-      const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
-      multigrid::Cell&       coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
-}
 
 
 void multigrid::mappings::JacobiSmoother::destroyHangingVertex(
