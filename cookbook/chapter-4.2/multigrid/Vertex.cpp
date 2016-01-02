@@ -77,3 +77,13 @@ bool multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
     return false;
   }
 }
+
+
+void multigrid::Vertex::inject(const Vertex& fineGridVertex) {
+  _vertexData.setU( fineGridVertex._vertexData.getU() );
+}
+
+
+void multigrid::Vertex::setU( double u ) {
+  _vertexData.setU( u );
+}

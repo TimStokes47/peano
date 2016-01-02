@@ -80,6 +80,10 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
     void clearAccumulatedAttributes();
 
     bool performJacobiSmoothingStep( double omega );
+
+    void inject(const Vertex& fineGridVertex);
+
+    void setU( double u );
 };
 
 
