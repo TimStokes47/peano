@@ -13,15 +13,15 @@ vertex:
   read scalar(double): RHierarchical
   read scalar(double): D
   read scalar(double): F
-  read scalar(double): LinearSurplus
+  read vector(double): LinearSurplus
   write scalar(double): U
   write scalar(double): Sc
   write scalar(double): Sf
   write scalar(double): R
   write scalar(double): RHierarchical
   write scalar(double): D
-  write scalar(double): LinearSurplus 
-  
+  write vector(double): LinearSurplus 
+    
 cell:
   dastgen-file: Cell.def
 
@@ -30,6 +30,9 @@ state:
 
 event-mapping:
   name: CreateGrid
+
+event-mapping:
+  name: RefinementCriterion
 
 event-mapping:
   name: JacobiSmoother
@@ -47,12 +50,15 @@ adapter:
   name: Jacobi
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: JacobiSmoother
+  merge-with-user-defined-mapping: RefinementCriterion
  
 adapter:
   name: JacobiAndPlot
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: JacobiSmoother
+  merge-with-user-defined-mapping: RefinementCriterion
   merge-with-user-defined-mapping: PlotCells
   merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleU,getU,u)
  
  

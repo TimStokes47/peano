@@ -1,4 +1,5 @@
 
+
 Packed-Type: short int;
 
 
@@ -91,5 +92,5 @@ class multigrid::records::Vertex {
    *
    * Linear surplus of solution
    */
-  discard parallelise double   linearSurplus;
+  discard parallelise double linearSurplus[DIMENSIONS];
 };
