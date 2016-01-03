@@ -65,6 +65,9 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
      */
     Vertex(const Base::PersistentVertex& argument);
 
+    /**
+     * @param f  Nodal value of rhs in this particular vertex.
+     */
     void initInnerVertex(double f, const tarch::la::Vector<DIMENSIONS,double>&  fineGridH);
     void initDirichletVertex(double u);
 

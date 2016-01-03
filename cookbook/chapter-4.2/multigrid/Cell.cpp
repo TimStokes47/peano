@@ -39,7 +39,7 @@ void multigrid::Cell::init(const tarch::la::Vector<DIMENSIONS,double>& epsilon, 
 matrixfree::stencil::ElementWiseAssemblyMatrix multigrid::Cell::getElementsAssemblyMatrix(const tarch::la::Vector<DIMENSIONS,double>&  h) const {
   matrixfree::stencil::ElementWiseAssemblyMatrix result;
 
-  const matrixfree::stencil::Stencil laplacianStencil = matrixfree::stencil::getLaplacian(_cellData.getEpsilon(), h);
+  const matrixfree::stencil::Stencil laplacianStencil = matrixfree::stencil::getLaplacian(h,_cellData.getEpsilon());
 
   return matrixfree::stencil::getElementWiseAssemblyMatrix(laplacianStencil);
 }
