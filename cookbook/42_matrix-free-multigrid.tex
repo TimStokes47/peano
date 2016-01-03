@@ -505,6 +505,8 @@ void multigrid::mappings::JacobiSmoother::createHangingVertex(...) {
 }
 \end{code}
 
+
+\noindent
 Obviously, the vertex requires an additional \texttt{setU( double )} operation.
 But that's the only additional extension required.
 If we adopt the setup, we should obtain start grids alike:
@@ -515,25 +517,46 @@ If we adopt the setup, we should obtain start grids alike:
   \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/AdaptivePoisson5.png}
 \end{center}
 
-\noindent
 
+\noindent
 We close our discussion on the Jacobi smoother with the introducton of a dynamic
 refinement criterion.
-This is, on purpose, very simple:
-
-@todo
-
-
-\noindent
+For this, we rely on a predefined refinement criterion offered with the
+matrixfree toolbox.
+We use
+\texttt{matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterionWithFixedMeshSizes}.
+There is an extensive documentation how to use it in its superclass' header, so
+we do not reiterate this here.
 
 One final remark is worth trying: We have so far always used a
 predefined visualisation routine that visualises the finest grid of a
 simulation.
 Among the set of standard visualisation routines also is a plotter that plots
 the individual levels of a grid.
-Given that we inject \ldots
+Given that we inject the solution to coarse levels anyway, this allows us to
+visualise all data in a multilevel fashion.
+To use it, we again extend our specification, regenerate the glue code and
+recompile.
 
-@todo Multilevel visualisierung
+\begin{code}
+adapter:
+  name: JacobiAndPlot
+  merge-with-user-defined-mapping: CreateGrid
+  merge-with-user-defined-mapping: JacobiSmoother
+  merge-with-user-defined-mapping: PlotCells
+  merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleU,getU,u)
+\end{code}
+
+
+
+
+Adaptives Verfeineren. Dann muss man richtig interpolieren bei neuen Werten,
+sonst gibt es Kaese
+
+
+
+
 
 \subsection*{Further reading}
 
