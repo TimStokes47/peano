@@ -22,20 +22,17 @@ namespace matrixfree {
 /**
  * Encapsulates Smoothness-based Refinement and Coarsening
  *
- *
- * !!! Criterion choice
- *
  * This class is not abstract, but it should not be used directly. Use a subclass instead.
  *
  *
- * !!! Usage
+ * <h2> Usage </h2>
  *
  * To use this class, you have to do the following operations:
  *
- * - Add your dof a double vector of size dimensions:
- *   \code
+ * - Add your dof/vertex a double vector of size dimensions:
+ *   <pre>
   discard parallelise double linearSurplus[DIMENSIONS];
-\endcode
+     </pre>
  *   This attribute typically is a discard attribute. Alternatively, you can
  *   use a scalar. The vector version is more accurate, as it is able to
  *   detect saddle points. The scalar version however works as good in most
@@ -43,30 +40,42 @@ namespace matrixfree {
  *
  * - You need the following operations on your vertex that are to be specified
  *   in the specification file:
- *   \code
+ *   <pre>
      read vector(double): linearSurplus
      read vector(double): solution
      write vector(double): linearSurplus
-\endcode
-     Please adopt the term solution accordingly. If you decide to work with
-     scalars only, exchange the vectors by scalars.
-
+     </pre>
+ *
+ *    Please adopt the term solution accordingly. If you decide to work with
+ *    scalars only, exchange the vectors by scalars.
+ *
  * - Make your PDE-solver/mapping hold an instance of matrixfree::solver::LinearSurplusRefinementCriterion.
  *
  * - Augment your mapping accordingly:
- *   - Constructor: Make it pass the instance of LinearSurplusRefinementCriterion reasonable
- *     values (you might also decide to plug in meaningless values for the time
- *     being and then reset those values later in beginIteration()).
- *   - beginIteration(): invoke clearMeasurements()
- *   - touchVertexFirstTime(): clear the surplus values of your vertex
- *   - enterCell(): invoke getNewLinearSurplus()
- *   - touchVertexLastTime(): invoke analyse() and getNewLinearSurplusContributionFromFineGrid()
+ *   - Constructor: Make it pass the instance of
+ *     LinearSurplusRefinementCriterion reasonable values (you might also
+ *     decide to plug in meaningless values for the time being and then reset
+ *     those values later in beginIteration()). Please note that there are two
+ *     subtypes of this class. You have to choose one of them.
+ *   - beginIteration(): invoke clearMeasurements(). The operation might
+ *     require an argument. Check the documentation of the subclass you have
+ *     chosen.
+ *   - touchVertexFirstTime(): clear the surplus values of your vertex. If you
+ *     include VertexOperations.h, you may call
+ *     <pre>
+ *       VertexOperations::writeLinearSurplus(fineGridVertex,0.0);
+ *     </pre>
+ *   - enterCell(): invoke getNewLinearSurplus(). See the method's
+ *     documentation for more details how to invoke the operation.
+ *   - touchVertexLastTime(): invoke analyse() and
+ *     getNewLinearSurplusContributionFromFineGrid(). See code snippet below
+ *     for a typical usage pattern.
  *
  *  Please ensure that you do the analysis only for inner points. The linear
  *  surplus is invalid for boundary vertices.
  *
  *
- * !!! Remarks on the refinement criterion
+ * <h2> Remarks on the refinement criterion </h2>
  *
  * touchVertexLastTime() invokes analyse to identify whether a vertex is to be
  * refined/coarsened or not. This is only a textbook guideline. In practice, it
@@ -93,38 +102,66 @@ namespace matrixfree {
  *   to scale the refinement criterion with the volume of fineGridH. In most
  *   cases however this scaling has no severe impact.
  *
- * A typical snippet for an elliptic code then resembles:
+ * A typical snippet for an elliptic code then is given below.
  *
- * \code
+ * <h2>Typical touchVertexLastTime</h2>
+ *
+ * <pre>
+touchVertexLastTime(
+  multigrid::Vertex&                           fineGridVertex,
+  const tarch::la::Vector<DIMENSIONS,double>&  fineGridX,
+  const tarch::la::Vector<DIMENSIONS,double>&  fineGridH,
+  multigrid::Vertex * const                    coarseGridVertices,
+  const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator,
+  multigrid::Cell&                             coarseGridCell,
+  const tarch::la::Vector<DIMENSIONS,int>&     fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  if ( fineGridVertex.isInside() ) {
+    const tarch::la::Vector<TWO_POWER_D_TIMES_D,double > coarseGridLinearSurplus =
+      VertexOperations::readLinearSurplus(coarseGridVerticesEnumerator, coarseGridVertices)
+      +
+      _refinementCriterion.getLinearSurplusContributionFromFineGrid(
+        VertexOperations::readLinearSurplus( fineGridVertex ),
+        fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined,
+        fineGridPositionOfVertex
+      );
+
+    VertexOperations::writeLinearSurplus( coarseGridVerticesEnumerator, coarseGridVertices, coarseGridLinearSurplus );
+
     switch (
       _refinementCriterion.analyse(
-        fineGridVertex.getLinearSurplus(),
+        VertexOperations::readLinearSurplus(fineGridVertex),
         fineGridVertex.getRefinementControl()==Vertex::Records::Refined,
         fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined,
         fineGridH
       )
     ) {
-      case matrixfree::solver::LinearSurplusRefinementCriterion::Refine:
-        if ( tarch::la::abs(
-          fineGridVertex.getR() / fineGridVertex.getD() * tarch::la::volume(fineGridH)
-        )<convergenceThreshold) {
+      case matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion::Refine:
+        if ( tarch::la::abs( fineGridVertex.getResidual() )<_convergenceThreshold) {
           fineGridVertex.refine();
         }
         else {
           logDebug( "touchVertexLastTime(...)", "skip refinement as vertex has not converged yet. r=" << fineGridVertex.getR() << ", |r|=" << tarch::la::abs(fineGridVertex.getR()) );
         }
         break;
-      case matrixfree::solver::LinearSurplusRefinementCriterion::Delete:
-        fineGridVertex.erase();
+      case matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion::Delete:
+        //fineGridVertex.erase();
         break;
-      case matrixfree::solver::LinearSurplusRefinementCriterion::NoAction:
+      case matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion::NoAction:
         break;
     }
+  }
 
-\endcode
+  ...
+
+  logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
+}
+    </pre>
  *
  *
- * !!! Oscillations with MLAT-type algorithms
+ * <h2> Oscillations with MLAT-type algorithms </h2>
  *
  * For partially overlapping domain decomposition approaches (MLAT, e.g.) in
  * combination with Jacobi or other single-level solvers, we observe that the
@@ -151,11 +188,11 @@ namespace matrixfree {
  * - Do not refine before the solution has not converged globally. In this
  *   case, the dents cannot pop up as well.
  *
- * !!! Complex-valued PDEs
+ * <h2> Complex-valued PDEs </h2>
  *
  * This class should also work for complex-valued PDEs.
  *
- * !!! inf values on vertices (also important for plotting) and 3:1 balancing
+ * <h2> inf values on vertices (also important for plotting) and 3:1 balancing </h2>
  *
  * The refinement criterion ensures that it never erases more than one level.
  * For this, it does a very simple trick: Usually, getLinearSurplusContributionFromFineGrid()
@@ -259,6 +296,9 @@ class matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion {
 
     double getBinOffset(int bin) const;
 
+    /**
+     * @see Other analyse() operation.
+     */
     Action analyse(
       double maxOfLinearSurplus,
       double maxOfH,
@@ -304,16 +344,16 @@ class matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion {
      *
      * To be called by each enterCell operation, even if the cell is not
      * refined. A typical usage pattern looks as follows:
-     * \code
+     * <pre>
     VertexOperations::writeLinearSurplus(
       fineGridVerticesEnumerator,
       fineGridVertices,
       _refinementCriterion.getNewLinearSurplus(
-        SpacetreeGridVertex::readU(fineGridVerticesEnumerator,fineGridVertices),
-        SpacetreeGridVertex::readLinearSurplus(fineGridVerticesEnumerator,fineGridVertices)
+        VertexOperations::readU(fineGridVerticesEnumerator,fineGridVertices),
+        VertexOperations::readLinearSurplus(fineGridVerticesEnumerator,fineGridVertices)
       )
     );
-       \endcode
+       </pre>
      */
     tarch::la::Vector<TWO_POWER_D_TIMES_D,double> getNewLinearSurplus(
       const tarch::la::Vector<TWO_POWER_D,double>&          u,

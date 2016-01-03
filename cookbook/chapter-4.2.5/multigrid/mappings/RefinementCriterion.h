@@ -22,12 +22,14 @@
 #include "multigrid/Cell.h"
 #include "multigrid/State.h"
 
-#include "matrixfree/adaptivitycriteria/LinearSurplusCriterionWithFixedMeshSizes.h"
+#include "matrixfree/adaptivitycriteria/LinearSurplusRefinementCriterionWithFixedMeshSizes.h"
+
+
 
 namespace multigrid {
-      namespace mappings {
-        class RefinementCriterion;
-      } 
+  namespace mappings {
+    class RefinementCriterion;
+  }
 }
 
 
@@ -45,11 +47,13 @@ class multigrid::mappings::RefinementCriterion {
      */
     static tarch::logging::Log  _log;
 
+    static double _convergenceThreshold;
+
     /**
      * My refinement criterion. See class header file for a documentation how
      * to use it.
      */
-    matrixfree::adaptivitycriteria::LinearSurplusCriterionWithFixedMeshSizes  _refinementCriterion;
+    matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterionWithFixedMeshSizes  _refinementCriterion;
   public:
     /**
      * These flags are used to inform Peano about your operation. It tells the 

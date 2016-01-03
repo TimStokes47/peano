@@ -48,12 +48,7 @@ class multigrid::mappings::CreateGrid {
       AdaptivePoisson2,
       AdaptivePoisson3,
       AdaptivePoisson4,
-      AdaptivePoisson5,
-      AnisotropicPoisson,
-      ShiftedMinimalCheckerboard,
-      LayerProblem,
-      DiagonalFlow,
-      RecirculatingFlow
+      AdaptivePoisson5
     };
 
     static Scenario _scenario;

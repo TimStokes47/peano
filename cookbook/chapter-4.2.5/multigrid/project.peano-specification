@@ -43,8 +43,6 @@ event-mapping:
 adapter:
   name: CreateGrid
   merge-with-user-defined-mapping: CreateGrid
-  merge-with-user-defined-mapping: PlotCells
-  merge-with-predefined-mapping: VTKPlotVertexValue(f,getF,f)
  
 adapter:
   name: Jacobi
@@ -59,6 +57,6 @@ adapter:
   merge-with-user-defined-mapping: RefinementCriterion
   merge-with-user-defined-mapping: PlotCells
   merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexValue(f,getF,f)
   merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleU,getU,u)
- 
- 
+  

@@ -24,7 +24,7 @@ multigrid::Vertex::Vertex(const Base::PersistentVertex& argument):
 void multigrid::Vertex::initInnerVertex(double f, const tarch::la::Vector<DIMENSIONS,double>&  fineGridH) {
   _vertexData.setVertexType( Records::Unknown );
   _vertexData.setU(0.0);
-  _vertexData.setF(f * tarch::la::volume(fineGridH));
+  _vertexData.setF(f * tarch::la::volume(fineGridH) );
 }
 
 
