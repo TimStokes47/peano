@@ -79,27 +79,10 @@ int main(int argc, char** argv) {
       else if (std::string(argv[1])=="AdaptivePoisson5") {
         multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AdaptivePoisson5;
       }
-/*
-    else if (std::string(argv[1])=="AnisotropicPoisson") {
-      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AnisotropicPoisson;
-    }
-    else if (std::string(argv[1])=="ShiftedMinimalCheckerboard") {
-      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::ShiftedMinimalCheckerboard;
-    }
-    else if (std::string(argv[1])=="LayerProblem") {
-      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::LayerProblem;
-    }
-    else if (std::string(argv[1])=="DiagonalFlow") {
-      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::DiagonalFlow;
-    }
-    else if (std::string(argv[1])=="RecirculatingFlow") {
-      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::RecirculatingFlow;
-    }
-*/
-    else {
-      std::cerr << "invalid scenario. Please run without arguments to see list of supported scenarios" << std::endl;
-      programExitCode = 2;
-    }
+      else {
+        std::cerr << "invalid scenario. Please run without arguments to see list of supported scenarios" << std::endl;
+        programExitCode = 2;
+      }
 
     multigrid::mappings::JacobiSmoother::omega = atof( argv[2] );
   }
