@@ -52,6 +52,24 @@ into the project and unzip the \texttt{matrixfree} toolbox.
 \noindent
 I recommend to hold \texttt{matrixfree} parallel to the \texttt{multigrid},
 \texttt{peano} and \texttt{tarch} directory.
+As soon as we use such a toolbox, we also might have to adopt our makefile
+accordingly: we have to add the matrixfree directory to the find pathes when we
+build up a list of source codes.
+Furthermore, you might have to add an additional search directory. If you place
+your toolbox parallel to \texttt{peano} and \texttt{tarch}, this however should
+not be necessary.
+Here's the corresponding excerp from the makefile:
+\begin{code}
+files.mk:
+    touch files.mk
+    echo -n SOURCES= > files.mk
+    find -H $(PEANO_HOME)/peano -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+    find -H $(PEANO_HOME)/tarch -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+    find -H $(PEANO_HOME)/matrixfree -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+    find $(PROJECT_HOME) -name '*.cpp' | awk '{ printf "%s ", $$0 }' >> files.mk
+\end{code}
+
+\noindent
 We next add our material parameters to the \texttt{Cell.def} file
 \begin{code}
 Packed-Type: short int;
