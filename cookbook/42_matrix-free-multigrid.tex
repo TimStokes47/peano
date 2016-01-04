@@ -145,7 +145,7 @@ matrixfree::stencil::ElementWiseAssemblyMatrix multigrid::Cell::getElementsAssem
 \end{code}
 which returns the $\mathbf{R}^{2^d \times 2^d}$ local system matrix. 
 The method sets up the stencils that correspond to a regular Cartesian system
-given the given mesh size \textt{h} and the material parameters.
+given the mesh size \textt{h} and the material parameters.
 Here, also the convective term has to be handled.
 Finally, it uses \texttt{getElementWiseAssemblyMatrix} to extract the actual
 matrix from this stencil.
@@ -579,8 +579,11 @@ sonst gibt es Kaese
 \subsection*{Further reading}
 
 \begin{itemize}
-  \item  Reps, Bram and Weinzierl, Tobias: t.b.d.
-  \item Weinzierl, Marion: {\em Diss} t.b.d.
+  \item  Reps, Bram and Weinzierl, Tobias: {\em Complex additive geometric
+  multilevel solvers for Helmholtz equations on spacetrees}, tech report,  
+  arXiv:1508.03954
+  \item Weinzierl, Marion: {\em Hybrid Geometric-Algebraic Matrix-Free Multigrid on
+Spacetrees}, Dissertation, Technische Universit\"at M\"unchen, 2013
   \item   Muntean, Ioan Lucian, Mehl, Miriam, Neckel, Tobias and Weinzierl,
   Tobias (2008). {\em Concepts for Efficient Flow Solvers Based on Adaptive
   Cartesian Grids}. In High Performance Computing in Science and Engineering, Garching 2007. Wagner, Siegfried, Steinmetz, Matthias, Bode, Arndt & Brehm, Matthias Berlin Heidelberg New York: Springer.
