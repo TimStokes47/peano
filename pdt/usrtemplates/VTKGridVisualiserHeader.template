@@ -48,7 +48,13 @@ class __NAMESPACE__::adapters::__THIS_TYPENAME__ {
      */
     static std::map<tarch::la::Vector<DIMENSIONS,double> , int, tarch::la::VectorCompare<DIMENSIONS> >  _vertex2IndexMap;
     
-    tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter*               _vtkWriter;
+    #if defined(Debug) || defined(Asserts)    
+    typedef  tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter         UsedWriter;
+    #else
+    typedef  tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter       UsedWriter;
+    #endif
+
+    UsedWriter*                                                                     _vtkWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*   _vertexWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*     _cellWriter;
     

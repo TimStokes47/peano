@@ -428,7 +428,7 @@ void __THIS_QUALIFIED_TYPENAME__::beginIteration(
   
   _cellCounter = 0;
   
-  _vtkWriter = new tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter();
+  _vtkWriter = new UsedWriter();
   
   _vertexWriter     = _vtkWriter->createVertexWriter();
   _cellWriter       = _vtkWriter->createCellWriter();

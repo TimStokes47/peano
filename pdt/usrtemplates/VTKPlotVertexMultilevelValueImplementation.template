@@ -63,7 +63,7 @@ __THIS_QUALIFIED_TYPENAME__::__THIS_TYPENAME__::LevelDataset::LevelDataset():
   _cellStateWriter(0),
   _cellLocalWorkloadWriter(0),
   _cellTotalWorkloadWriter(0) {
-  _vtkWriter = new tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter();
+  _vtkWriter = new UsedWriter();
   assertion( _vtkWriter != 0 );
   
   _vertexWriter     = _vtkWriter->createVertexWriter();
