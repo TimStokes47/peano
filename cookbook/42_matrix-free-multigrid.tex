@@ -1,3 +1,4 @@
+
 \section{Matrix-free multigrid}
   \label{section:applications:matrix-free-multigrid}
 
@@ -599,9 +600,7 @@ void multigrid::mappings::RefinementCriterion::touchVertexLastTime(...) {
       )
     ) {
       case matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion::Refine:
-        if ( tarch::la::abs( fineGridVertex.getResidual() )<_convergenceThreshold) {
-          fineGridVertex.refine();
-        }
+        fineGridVertex.refine();
         break;
       case matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion::Delete:
       case matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion::NoAction:
@@ -620,7 +619,7 @@ The other way round, we assume that vertices with a big difference are critical,
 and we would benefit a lot if we would refine around this vertex.
 
 The offered criterion class bucket sorts the linear surplus values. This is not
-exact, but it does not require a real sort being in $\mathcal{O}(n log
+exact, but it does not require a real sort being in $\mathcal{O}(n \log
 n)$---actually nothing is sorted, but each bucket is flagged (refine, coarse,
 do nothing).
 If a vertex falls into a particular bucket, the criterion returns the
@@ -675,28 +674,83 @@ This can be achieved if we check within each cell whether there is a boundary
 vertex and whether one vertex is refined.
 If both properties hold, all unrefined boundary vertices have to be refined. 
 The class \texttt{peano::grid::aspects::VertexStateAnalysis} provides generic
-helper routines to realise this behaviour with a few lines.
+helper routines to realise this behaviour with a few lines:
 
+\begin{code}
+#include "peano/grid/aspects/VertexStateAnalysis.h"
+#include "peano/utils/Loop.h"
 
+void multigrid::mappings::RefinementCriterion::enterCell(...) {
+  ...
+  if (
+    fineGridCell.isRefined()
+    &&
+    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
+      fineGridVertices, fineGridVerticesEnumerator, Vertex::Records::Unrefined
+    )
+  ) {
+    bool isOneVertexABoundaryVertex = false;
+    dfor2(k)
+      isOneVertexABoundaryVertex |= 
+        fineGridVertices[ fineGridVerticesEnumerator(k) ].isBoundary();
+    enddforx
+    if (isOneVertexABoundaryVertex) {
+      dfor2(k)
+        if (fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl()
+          ==Vertex::Records::Unrefined) {
+          fineGridVertices[ fineGridVerticesEnumerator(k) ].refine();
+        }
+      enddforx
+    }
+  }
+ 
+}
+\end{code}
+
+\noindent
 Second, many codes require a proper balancing. 
 As Peano relies on three-partitioning, a 3:1 balancing is something many codes
 would like to have: 
 No two neighbouring cells differ in their maximum refinement level by more than
 one.
 This can be realised manually within a mapping. 
-Or you may decide to merge the predefined mapping 
+Or you may decide to merge the predefined mapping \texttt{GridBalancer3to1} into 
+your adapters. 
 
- Adaptives Verfeineren. Dann muss man richtig interpolieren
-bei neuen Werten, sonst gibt es Kaese
 
+
+Finally, any dynamically adaptive code should properly initialise new vertices. 
+In the present example, a proper initialisation could rely on $d$-linear
+interpolation again.
+For multigrid, higher order schemes are desireable (though in practice I again
+observed that linear interpolation is sufficient), but higher order
+interpolation then has to be realised manually with helper variables or some
+additional code applying the stencil to newly generated vertices.
+We stick to the linear case here:
+\begin{code}
+void ...::createInnerVertex(...) {
+  fineGridVertex.setU(
+    _multigrid.getDLinearInterpolatedValue(
+      VertexOperations::readU( coarseGridVerticesEnumerator, coarseGridVertices ),
+      fineGridPositionOfVertex
+    )
+  );
+}
+\end{code}
 
 
 \begin{center}
-  \includegraphics[width=0.24\textwidth]{42_matrix-free-multigrid/DynamicB.png}
+  \includegraphics[width=0.34\textwidth]{42_matrix-free-multigrid/DynamicB.png}
+  \includegraphics[width=0.45\textwidth]{42_matrix-free-multigrid/MultiLevel.png}
 \end{center}
 
+\noindent
+The right image above presents the result of the multilevel plotter:
+Each grid resolution level is written to a separate file.
+It is obvious that finer grid solution approximations overwrite coarser vertex
+values, while the coarse values determine the hanging node values.
+We also see that the grid is refined towards the boundary here.
 
-Boundary
 
 
 \subsection*{Further reading}
