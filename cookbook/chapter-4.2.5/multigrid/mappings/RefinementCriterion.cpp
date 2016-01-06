@@ -1,6 +1,11 @@
+
 #include "multigrid/mappings/RefinementCriterion.h"
 #include "multigrid/mappings/CreateGrid.h"
 #include "multigrid/VertexOperations.h"
+
+
+#include "peano/grid/aspects/VertexStateAnalysis.h"
+#include "peano/utils/Loop.h"
 
 
 /**
@@ -144,6 +149,26 @@ void multigrid::mappings::RefinementCriterion::enterCell(
     )
   );
 
+
+  if (
+    fineGridCell.isRefined()
+    &&
+    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
+      fineGridVertices, fineGridVerticesEnumerator, Vertex::Records::Unrefined
+    )
+  ) {
+    bool isOneVertexABoundaryVertex = false;
+    dfor2(k)
+      isOneVertexABoundaryVertex |= fineGridVertices[ fineGridVerticesEnumerator(k) ].isBoundary();
+    enddforx
+    if (isOneVertexABoundaryVertex) {
+      dfor2(k)
+        if (fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Unrefined) {
+          fineGridVertices[ fineGridVerticesEnumerator(k) ].refine();
+        }
+      enddforx
+    }
+  }
 
   logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
