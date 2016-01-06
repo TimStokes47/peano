@@ -154,7 +154,10 @@ void multigrid::mappings::CreateGrid::createBoundaryVertex(
 ) {
   logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  refineInitialGrid(fineGridVertex,coarseGridVerticesEnumerator.getLevel()+1, true);
+
+  // set boolean constant to true if you wanna start with the finest mesh along the boundary
+  //refineInitialGrid(fineGridVertex,coarseGridVerticesEnumerator.getLevel()+1, true);
+  refineInitialGrid(fineGridVertex,coarseGridVerticesEnumerator.getLevel()+1, false);
 
   if (
     _scenario==Poisson2         || _scenario==Poisson3         || _scenario==Poisson4         || _scenario==Poisson5

@@ -463,9 +463,9 @@ storage (FAS).
 We extend the grid setup slightly such that it creates a very coarse grid even
 if we prescribe a fine minimum mesh size.
 Next, we validate that \texttt{enterCell} evaluates the stencil on each grid
-level anyway.
-This leaves two tasks incomplete: interpolatation and injection.
-The injection is basically the same we have used in the heat equation before:
+level.
+This leaves two tasks: interpolatation and injection.
+The injection is basically the same we have used in the heat equation before.
 \begin{code}
 void multigrid::mappings::JacobiSmoother::touchVertexLastTime(...) {
  // see code snippets introduced before
@@ -502,11 +502,11 @@ void multigrid::Vertex::inject(const Vertex& fineGridVertex) {
 
 \noindent
 The interpolation follows the idea of the heat equation solver, too.
-However, we propose to rely on a premanufactored interpolation operation from
+However, we propose to rely on a premanufactured interpolation operation from
 the \texttt{matrixfree} toolbox.
 For this, we make our smoother mapping hold an instance of
 \texttt{matrixfree::solver::Multigrid  \_multigrid}.
-This object in tun 
+This object offers us an operation \texttt{getDLinearInterpolatedValue}: 
 
 \begin{code}
 void multigrid::mappings::JacobiSmoother::createHangingVertex(...) {
@@ -525,14 +525,18 @@ void multigrid::mappings::JacobiSmoother::createHangingVertex(...) {
 
 
 \noindent
-Obviously, the vertex requires an additional \texttt{setU( double )} operation.
-But that's the only additional extension required.
-If we adopt the setup, we should obtain start grids alike:
+Obviously, the vertex requires an additional \texttt{setU( double )} operation
+to make this snippet work.
+Its implementation is trivial.
+This is the only additional extension required.
+If we adopt the setup, we might solve the equation on grids alike below where
+the mesh is resolved up to the finest level along the boundaries. 
+The latter is a proper choice for many problems, though inadequate and thus
+only a proof of concept for the present case:
 
 \begin{center}
   \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/AdaptivePoisson3.png}
   \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/AdaptivePoisson4.png}
-  \includegraphics[width=0.3\textwidth]{42_matrix-free-multigrid/AdaptivePoisson5.png}
 \end{center}
 
 
@@ -545,8 +549,100 @@ We use
 \texttt{matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterionWithFixedMeshSizes}.
 There is an extensive documentation how to use it in its superclass' header, so
 we do not reiterate this here.
+Instead we just show some of the added code:
 
-One final remark is worth trying: We have so far always used a
+\begin{code}
+multigrid::mappings::RefinementCriterion::RefinementCriterion():
+  _refinementCriterion(
+    0.1,                   // refinementPercentage,
+    0.0,                   // deletePercentage,
+    0.5,                   // minimumMeshSize,
+    0.5                    // maximumMeshSize
+  ) {
+}
+
+void multigrid::mappings::RefinementCriterion::touchVertexFirstTime(...) {
+  VertexOperations::writeLinearSurplus(fineGridVertex,0.0);
+}
+
+void multigrid::mappings::RefinementCriterion::enterCell(...) {
+  VertexOperations::writeLinearSurplus(
+    fineGridVerticesEnumerator,
+    fineGridVertices,
+    _refinementCriterion.getNewLinearSurplus(
+      VertexOperations::readU(fineGridVerticesEnumerator,fineGridVertices),
+      VertexOperations::readLinearSurplus(fineGridVerticesEnumerator,fineGridVertices)
+    )
+  );
+}
+
+void multigrid::mappings::RefinementCriterion::touchVertexLastTime(...) {
+  if ( fineGridVertex.isInside() ) {
+    const tarch::la::Vector<TWO_POWER_D_TIMES_D,double > coarseGridLinearSurplus =
+      VertexOperations::readLinearSurplus(coarseGridVerticesEnumerator, coarseGridVertices)
+      +
+      _refinementCriterion.getLinearSurplusContributionFromFineGrid(
+        VertexOperations::readLinearSurplus( fineGridVertex ),
+        fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined,
+        fineGridPositionOfVertex
+      );
+
+    VertexOperations::writeLinearSurplus( coarseGridVerticesEnumerator, 
+      coarseGridVertices, coarseGridLinearSurplus );
+
+    switch (
+      _refinementCriterion.analyse(
+        VertexOperations::readLinearSurplus(fineGridVertex),
+        fineGridVertex.getRefinementControl()==Vertex::Records::Refined,
+        fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined,
+        fineGridH
+      )
+    ) {
+      case matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion::Refine:
+        if ( tarch::la::abs( fineGridVertex.getResidual() )<_convergenceThreshold) {
+          fineGridVertex.refine();
+        }
+        break;
+      case matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion::Delete:
+      case matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion::NoAction:
+        break;
+    }
+  }
+}
+\end{code}
+
+\noindent
+The criterion's idea is to evaluate a stencil that allows us to compare the
+linear interpoland of the solution within a vertex to the actual vertex's
+solution value.
+We anticipate what would happen if we could remove a particular vertex alone.
+The other way round, we assume that vertices with a big difference are critical,
+and we would benefit a lot if we would refine around this vertex.
+
+The offered criterion class bucket sorts the linear surplus values. This is not
+exact, but it does not require a real sort being in $\mathcal{O}(n log
+n)$---actually nothing is sorted, but each bucket is flagged (refine, coarse,
+do nothing).
+If a vertex falls into a particular bucket, the criterion returns the
+corresponding flag.
+More sophisticated criteria might yield better approximation patterns, but this
+generic one works surprisingly well.
+
+\begin{center}
+  \includegraphics[width=0.24\textwidth]{42_matrix-free-multigrid/DynamicA00.png}
+  \includegraphics[width=0.24\textwidth]{42_matrix-free-multigrid/DynamicA01.png}
+  \includegraphics[width=0.24\textwidth]{42_matrix-free-multigrid/DynamicA02.png}
+  \includegraphics[width=0.24\textwidth]{42_matrix-free-multigrid/DynamicA03.png}
+\end{center}
+
+\noindent
+This code marks up to ten percent of the vertices for refinemenet and
+consequently refines all the surrounding cells given that the residual in
+the vertices underruns the given threshold \\
+\texttt{\_convergenceThreshold}.
+The latter magic constant is set to $10^{-2}$ for the plots above.
+
+Now, one simple feature is worth trying: We have so far always used a
 predefined visualisation routine that visualises the finest grid of a
 simulation.
 Among the set of standard visualisation routines also is a plotter that plots
@@ -566,14 +662,41 @@ adapter:
   merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleU,getU,u)
 \end{code}
 
+\noindent
+Some minor remarks on proper initialisation that are often encountered shall
+close the discussion.
+First, the presented refinement criterion does not properly refine along the
+domain's boundary, as it does not distinguish whether a stencil is applied along
+the boundary. 
+In practice, it is reasonable to ensure that the boundary is always refined at
+least as fine as the vertices next to the boundary. 
+In practive, it is reasonable to avoid hanging vertices along the boundary. 
+This can be achieved if we check within each cell whether there is a boundary
+vertex and whether one vertex is refined.
+If both properties hold, all unrefined boundary vertices have to be refined. 
+The class \texttt{peano::grid::aspects::VertexStateAnalysis} provides generic
+helper routines to realise this behaviour with a few lines.
+
+
+Second, many codes require a proper balancing. 
+As Peano relies on three-partitioning, a 3:1 balancing is something many codes
+would like to have: 
+No two neighbouring cells differ in their maximum refinement level by more than
+one.
+This can be realised manually within a mapping. 
+Or you may decide to merge the predefined mapping 
+
+ Adaptives Verfeineren. Dann muss man richtig interpolieren
+bei neuen Werten, sonst gibt es Kaese
 
 
 
-Adaptives Verfeineren. Dann muss man richtig interpolieren bei neuen Werten,
-sonst gibt es Kaese
+\begin{center}
+  \includegraphics[width=0.24\textwidth]{42_matrix-free-multigrid/DynamicB.png}
+\end{center}
 
 
-
+Boundary
 
 
 \subsection*{Further reading}
