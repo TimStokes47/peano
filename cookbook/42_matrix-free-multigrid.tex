@@ -541,13 +541,27 @@ only a proof of concept for the present case:
 \end{center}
 
 
+
+\begin{remark}
+  On some machines, the resulting code will fail in \texttt{Assert} mode as the
+  plotters complain about nan for the right-hand side. In the release
+  mode, i.e.~without assertions, no complaint is raised, but some visualisation
+  software might complain about the nans. To fix this issue with the plotting,
+  it is important to set the right-hand side $f$ to zero for hanging nodes and
+  for boundary nodes. We propose to introduce a \texttt{clearF()} operation and
+  to call it prior to any plotting (in the \texttt{CreateGrid} mapping for
+  example) for hanging and boundary vertices.
+\end{remark}
+
 \noindent
 We close our discussion on the Jacobi smoother with the introducton of a dynamic
 refinement criterion.
 For this, we rely on a predefined refinement criterion offered with the
 matrixfree toolbox.
 We use
-\texttt{matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterionWithFixedMeshSizes}.
+\texttt{LinearSurplusRefinementCriterionWithFixedMeshSizes}
+from \\
+\texttt{matrixfree::adaptivitycriteria}.
 There is an extensive documentation how to use it in its superclass' header, so
 we do not reiterate this here.
 Instead we just show some of the added code:
