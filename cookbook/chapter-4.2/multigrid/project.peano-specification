@@ -5,22 +5,12 @@ namespace: ::multigrid
 vertex:
   dastgen-file: Vertex.def
   read scalar(double): U
-  read scalar(double): UHierarchical
-  read scalar(double): Sc
-  read scalar(double): Sf
-  read scalar(double): Si
   read scalar(double): R
-  read scalar(double): RHierarchical
   read scalar(double): D
   read scalar(double): F
-  read scalar(double): LinearSurplus
   write scalar(double): U
-  write scalar(double): Sc
-  write scalar(double): Sf
   write scalar(double): R
-  write scalar(double): RHierarchical
   write scalar(double): D
-  write scalar(double): LinearSurplus 
   
 cell:
   dastgen-file: Cell.def

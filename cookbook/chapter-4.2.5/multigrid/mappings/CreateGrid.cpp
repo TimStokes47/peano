@@ -170,6 +170,7 @@ void multigrid::mappings::CreateGrid::createBoundaryVertex(
     assertionMsg( false, "not implemented yet" );
   }
 
+  fineGridVertex.clearF();
 
   logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
 }
@@ -196,22 +197,30 @@ void multigrid::mappings::CreateGrid::createCell(
       tarch::la::Vector<DIMENSIONS,double>(0.0)  // v
     );
   }
-/*
-  else if (_scenario==Poisson) {
-    tarch::la::Vector<DIMENSIONS,double> epsilon = tarch::la::Vector<DIMENSIONS,double>(1.0);
-    epsilon(0) = 0.1;
-    fineGridCell.init(
-      tarch::la::Vector<DIMENSIONS,double>(epsilon), // epsilon
-      tarch::la::Vector<DIMENSIONS,double>(0.0) // v
-    );
-  }
-*/
   else {
     logError( "createCell(...)", "not supported yet" );
     assertion(false);
   }
 
   logTraceOutWith1Argument( "createCell(...)", fineGridCell );
+}
+
+
+
+void multigrid::mappings::CreateGrid::createHangingVertex(
+      multigrid::Vertex&     fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                fineGridH,
+      multigrid::Vertex * const   coarseGridVertices,
+      const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
+      multigrid::Cell&       coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  fineGridVertex.clearF();
+
+  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
 }
 
 
@@ -248,21 +257,6 @@ void multigrid::mappings::CreateGrid::mergeWithWorkerThread(const CreateGrid& wo
   logTraceOut( "mergeWithWorkerThread(CreateGrid)" );
 }
 #endif
-
-
-void multigrid::mappings::CreateGrid::createHangingVertex(
-      multigrid::Vertex&     fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                fineGridH,
-      multigrid::Vertex * const   coarseGridVertices,
-      const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
-      multigrid::Cell&       coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
-}
 
 
 void multigrid::mappings::CreateGrid::destroyHangingVertex(

@@ -39,11 +39,9 @@ double multigrid::Vertex::getF() const {
 }
 
 
-/*
-double multigrid::Vertex::getR() const {
-  return _vertexData.getR();
+void multigrid::Vertex::clearF() {
+  return _vertexData.setF(0.0);
 }
-*/
 
 
 double multigrid::Vertex::getResidual() const {

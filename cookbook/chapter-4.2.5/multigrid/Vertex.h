@@ -84,6 +84,8 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
     void inject(const Vertex& fineGridVertex);
 
     void setU( double u );
+
+    void clearF();
 };
 
 
