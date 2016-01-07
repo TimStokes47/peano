@@ -16,12 +16,12 @@ class multigrid::records::Vertex {
   /**
    * Residual
    */
-  persistent parallelise double   r;
+  discard parallelise double   r;
 
   /**
    * Diagonal element
    */
-  persistent parallelise double   d;
+  discard parallelise double   d;
   
   enum VertexType {
     Unknown, Dirichlet, Neumann

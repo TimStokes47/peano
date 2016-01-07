@@ -767,6 +767,167 @@ We also see that the grid is refined towards the boundary here.
 
 
 
+\subsection{Multigrid}
+
+We start with some metaphilosophical considerations.
+Multigrid algorithms work in two types of spaces: the ansatz
+(discretisation) space holding the solution and a set of correction spaces.
+The latter either are updated all at once (additive multigrid) or one after
+another (multiplicative) before their contribution is added back to the actual
+representation.
+In the present discussion, we restrict ourselves to geometrically inspired
+multigrid where both the correction and the discretisation space are spanned by
+the spacetree's grid levels.
+On the previous pages, we have realised a Jacobi directly within the
+discretisation space without assembling any bigger matrix.
+Obviously, such an approach also works for the correction equations.
+
+
+
+At first glance, we then however need two variable sets per vertex: one set for
+the actual discretisation and one for the correction equations.
+As long as we work on regular grids only, there is no need to store different
+types of variables within the vertices: refined vertices hold correction
+equations, fine grid vertices hold the discretisation.
+This approach becomes problematic for adaptive grids. 
+Still, unrefined vertices of the fine grid hold the discretised PDE. 
+On the same level of an arbitrary unrefined level, there might however also be
+an area that is refined further.
+Here, we solve a correction equation. 
+If we realised both the correction equation and the discretisation with the same
+set of variables, what would the right vertex values at the transition between
+unrefined and correction areas be? 
+We have to distinguish carefully in each cell which type of equation we are
+solving, unless \ldots
+
+
+\ldots we solve also the correction equation in a discretisation space. This is
+the idea of full approximation storage (FAS) which fits perfectly to our
+injection that we realised anyway. Instead of solving
+\[ 
+  A_{3h} e = \hat f 
+\]
+in areas that are refined further and thus hold a correction to the actual
+solution iterate, we solve
+\begin{eqnarray*}
+  A_{3h} \left( Iu_h + e \right)  & = & \hat f +  A_{3h} Iu_h \qquad \mbox{added
+  an additional term on both sides} \\
+  & = & R r_h + RA_hPIu_h \\
+  & = & R \left( r_h + A_hPIu_h \right) \\
+  & = & R \left( f_h - A_hu_h + A_hPIu_h \right) \\
+  & = & R \left( f_h - A_h\left( id - PI\right)u_h \right) \\
+  & =: & R \left( f_h - A_h \hat u_h \right)  =: R \hat r_h  
+\end{eqnarray*}
+i.e.~work with a coarsened solution as input to the correction solve 
+which is a formalism introduced by Griebel as HTMG.
+
+
+So we can stick to our injections of the solution. 
+In each traversal, we have to determine the hierarchical surplus in each vertex
+$\hat u = u - PIu_h$ which is simple, as $Iu_h$ is available anyway.
+This hierarchical transform is a temporary helper. 
+We can throw it away after the traversal again.
+We can model it as \texttt{discard} in the \texttt{Vertex.def}.
+
+Once we have $\hat u$, we can simultaneously determine the residual $r$ as well
+as its hierarchical counterpart $\hat r$. 
+With the residual $r$, we update the solution if we have to---a detail subject
+of discussion in a minute when we finalise whether to realise a multiplicative
+or additive scheme.
+The hierarchical residual $\hat r$ in turn is not used to update any solution
+directly.
+It is restricted to the next coarser level to yield a right-hand side there.
+
+
+We finally observe that we may not just update the solution with the residual.
+If we did that we would loose the knowledge which correction to prolong to the
+next finer level.
+We therefore store the updates in another helper variable (Reps and
+Weinzierl motivate these variables in more detail) and use this update to
+prolong it to a finer level later on.
+
+
+
+\begin{code}
+class multigrid::records::Vertex {  
+  persistent parallelise double  u;             // Solution
+  persistent parallelise double  f;             // Rhs
+  discard parallelise double     r;             // Residual
+  discard parallelise double     d;             // Diagonal element
+  discard parallelise double     hierarchicalU; // Hierarchical solution
+  discard parallelise double     hierarchicalR; // Hierarchical residual
+  persistent parallelise double  uUpdate;       // Update of solution
+  discard parallelise double     linearSurplus[DIMENSIONS];
+
+  enum VertexType {
+    Unknown, Dirichlet, Neumann
+  };
+  persistent VertexType vertexType;
+};
+\end{code}
+
+
+\noindent
+The hierarchical surplus has to be determined in \texttt{touchVertexFirstTime}
+where we also clear the temporary variables.
+
+
+
+
+We close the preparatory work with the remark that the specification has to be
+augmented by additional readers and writers to make our code snippets work:
+
+\begin{code}
+component: Multigrid
+
+namespace: ::multigrid
+
+vertex:
+  dastgen-file: Vertex.def
+  read scalar(double): U
+  read scalar(double): F
+  read scalar(double): R
+  read scalar(double): D
+  read scalar(double): HierarchicalU
+  read scalar(double): HierarchicalR
+  write scalar(double): U
+  write scalar(double): R
+  write scalar(double): D
+  write scalar(double): HierarchicalU
+  write scalar(double): HierarchicalR
+
+...
+\end{code}
+
+
+\subsection{Multiplicative Geometric Multigrid}
+
+
+\subsection{Additive Geometric Multigrid}
+
+In additive multigrid, we may not use the same relaxation factor on each and
+every level. 
+Instead, it is important that the coarser the level the smaller the contribution
+to the solution update.
+Otherwise, the solver tends to overshoot and become unstable. 
+We propose to use relaxation factors $\omega ^k$ with $k=1$ on the fine grid
+level and increasing by one for each level up the hierarchy.
+$\omega $ obviously has to be adopted if the grid changes.
+It is thus straightforward to compute it on-the-fly. 
+For this, we add an additional variable to the vertex
+
+\begin{code}
+class multigrid::records::Vertex {  
+  persistent parallelise int  numberOfFinerLevelsAtSamePosition;
+};
+\end{code}
+
+\noindent
+and make the grid traversal determine the correct value of this attribute
+on the fly:
+
+
+
 \subsection*{Further reading}
 
 \begin{itemize}
