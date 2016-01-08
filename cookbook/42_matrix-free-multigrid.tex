@@ -842,9 +842,18 @@ It is restricted to the next coarser level to yield a right-hand side there.
 We finally observe that we may not just update the solution with the residual.
 If we did that we would loose the knowledge which correction to prolong to the
 next finer level.
-We therefore store the updates in another helper variable (Reps and
-Weinzierl motivate these variables in more detail) and use this update to
+We therefore store the updates in another helper variable and use this update to
 prolong it to a finer level later on.
+
+\begin{remark}
+  The update helper variable obviously is not the only valid choice to
+  distinguish coarse grid updates from fine grid representation. It is obviously
+  that we also might store the hierarchical surplus persistently and then
+  reconstruct the nodal value with the relation $u_h=\hat u_h+Pu_{3h}$. This is
+  the implementation variant discussed in (Weinzierl:09), while a more detailed
+  analysis of required helper variables for additive multigrid can be found in
+  (Reps:16).
+\end{remark}
 
 
 
