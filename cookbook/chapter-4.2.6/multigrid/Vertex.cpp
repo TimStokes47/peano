@@ -49,6 +49,11 @@ double multigrid::Vertex::getResidual() const {
 }
 
 
+double multigrid::Vertex::getHierarchicalResidual() const {
+  return _vertexData.getF() + _vertexData.getHierarchicalR();
+}
+
+
 double multigrid::Vertex::getU() const {
   return _vertexData.getU();
 }
@@ -61,15 +66,13 @@ void multigrid::Vertex::clearAccumulatedAttributes() {
 
 
 bool multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
-  if (
-    getRefinementControl()==Vertex::Records::Unrefined
-    &&
-    _vertexData.getVertexType()== Records::Unknown
-  ) {
+  if ( _vertexData.getVertexType()== Records::Unknown ) {
     assertion1( _vertexData.getD()>0.0, toString() );
     assertion2( omega>0.0, toString(), omega );
-    _vertexData.setU( _vertexData.getU() + omega / _vertexData.getD() * getResidual() );
-    return true;
+    const double update = omega / _vertexData.getD() * getResidual();
+    _vertexData.setU( _vertexData.getU() + update );
+    _vertexData.setUUpdate( update );
+     return getRefinementControl()==Vertex::Records::Unrefined;
   }
   else {
     return false;
@@ -87,7 +90,17 @@ void multigrid::Vertex::setU( double u ) {
 }
 
 
+void multigrid::Vertex::incF(double value) {
+  _vertexData.setF( _vertexData.getF()+value );
+}
+
+
 void multigrid::Vertex::clearHierarchicalValues() {
   _vertexData.setHierarchicalU(0.0);
   _vertexData.setHierarchicalR(0.0);
+}
+
+
+void multigrid::Vertex::determineUHierarchical(double Pu_3h) {
+  _vertexData.setHierarchicalU( _vertexData.getU()-Pu_3h );
 }

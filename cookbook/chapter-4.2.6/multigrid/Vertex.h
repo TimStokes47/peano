@@ -75,6 +75,7 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
      * residual, i.e. f-Au which is f+r.
      */
     double getResidual() const;
+    double getHierarchicalResidual() const;
     double getU() const;
 
     void clearAccumulatedAttributes();
@@ -87,7 +88,12 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
 
     void clearF();
 
+    void incF(double value);
+
     void clearHierarchicalValues();
+
+    void determineUHierarchical(double Pu_3h);
+
 };
 
 

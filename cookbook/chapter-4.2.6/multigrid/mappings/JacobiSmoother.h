@@ -22,6 +22,8 @@
 #include "multigrid/Cell.h"
 #include "multigrid/State.h"
 
+#include "matrixfree/solver/Multigrid.h"
+
 
 namespace multigrid {
       namespace mappings {
@@ -42,8 +44,13 @@ class multigrid::mappings::JacobiSmoother {
     /**
      * Logging device for the trace macros.
      */
-    static tarch::logging::Log  _log;
+    static tarch::logging::Log     _log;
+
+    State                          _state;
+    matrixfree::solver::Multigrid  _multigrid;
   public:
+    static double omega;
+
     /**
      * These flags are used to inform Peano about your operation. It tells the 
      * framework whether the operation is empty, whether it works only on the 

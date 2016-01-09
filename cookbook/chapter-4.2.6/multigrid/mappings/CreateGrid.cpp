@@ -61,6 +61,174 @@ peano::MappingSpecification   multigrid::mappings::CreateGrid::descendSpecificat
 tarch::logging::Log                multigrid::mappings::CreateGrid::_log( "multigrid::mappings::CreateGrid" ); 
 
 
+
+multigrid::mappings::CreateGrid::Scenario  multigrid::mappings::CreateGrid::_scenario;
+
+
+
+void multigrid::mappings::CreateGrid::refineInitialGrid(
+  multigrid::Vertex&               fineGridVertex,
+  int                              vertexLevel,
+  bool                             isBoundary
+) {
+  if ( _scenario==Poisson2 && vertexLevel<=2 ) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==Poisson3 && vertexLevel<=3 ) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==Poisson4 && vertexLevel<=4 ) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==Poisson5 && vertexLevel<=5 ) {
+    fineGridVertex.refine();
+  }
+
+  if ( _scenario==AdaptivePoisson2 && vertexLevel<=2 && isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson2 && vertexLevel<=2 && !isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson3 && vertexLevel<=3 && isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson3 && vertexLevel<=2 && !isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson4 && vertexLevel<=4 && isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson4 && vertexLevel<=2 && !isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson5 && vertexLevel<=5 && isBoundary) {
+    fineGridVertex.refine();
+  }
+  if ( _scenario==AdaptivePoisson5 && vertexLevel<=2 && !isBoundary) {
+    fineGridVertex.refine();
+  }
+}
+
+
+void multigrid::mappings::CreateGrid::createInnerVertex(
+      multigrid::Vertex&               fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  refineInitialGrid(fineGridVertex,coarseGridVerticesEnumerator.getLevel()+1, false);
+
+  if (
+    _scenario==Poisson2         || _scenario==Poisson3         || _scenario==Poisson4         || _scenario==Poisson5
+    ||
+    _scenario==AdaptivePoisson2 || _scenario==AdaptivePoisson3 || _scenario==AdaptivePoisson4 || _scenario==AdaptivePoisson5
+  ) {
+    double f = DIMENSIONS * tarch::la::PI * tarch::la::PI;
+    for (int d=0; d<DIMENSIONS; d++) {
+      f *= std::sin( tarch::la::PI * fineGridX(d) );
+    }
+    fineGridVertex.initInnerVertex(f,fineGridH);
+  }
+  else {
+    assertionMsg( false, "not implemented yet" );
+  }
+
+  logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
+}
+
+
+void multigrid::mappings::CreateGrid::createBoundaryVertex(
+      multigrid::Vertex&               fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+
+  // set boolean constant to true if you wanna start with the finest mesh along the boundary
+  //refineInitialGrid(fineGridVertex,coarseGridVerticesEnumerator.getLevel()+1, true);
+  refineInitialGrid(fineGridVertex,coarseGridVerticesEnumerator.getLevel()+1, false);
+
+  if (
+    _scenario==Poisson2         || _scenario==Poisson3         || _scenario==Poisson4         || _scenario==Poisson5
+    ||
+    _scenario==AdaptivePoisson2 || _scenario==AdaptivePoisson3 || _scenario==AdaptivePoisson4 || _scenario==AdaptivePoisson5
+  ) {
+    fineGridVertex.initDirichletVertex(0.0);
+  }
+  else {
+    assertionMsg( false, "not implemented yet" );
+  }
+
+  fineGridVertex.clearF();
+
+  logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
+}
+
+
+void multigrid::mappings::CreateGrid::createCell(
+      multigrid::Cell&                 fineGridCell,
+      multigrid::Vertex * const        fineGridVertices,
+      const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
+) {
+  logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
+
+  if (
+    _scenario==Poisson2         || _scenario==Poisson3         || _scenario==Poisson4         || _scenario==Poisson5
+    ||
+    _scenario==AdaptivePoisson2 || _scenario==AdaptivePoisson3 || _scenario==AdaptivePoisson4 || _scenario==AdaptivePoisson5
+  ) {
+    fineGridCell.init(
+      tarch::la::Vector<DIMENSIONS,double>(1.0), // epsilon
+      tarch::la::Vector<DIMENSIONS,double>(0.0)  // v
+    );
+  }
+  else {
+    logError( "createCell(...)", "not supported yet" );
+    assertion(false);
+  }
+
+  logTraceOutWith1Argument( "createCell(...)", fineGridCell );
+}
+
+
+
+void multigrid::mappings::CreateGrid::createHangingVertex(
+      multigrid::Vertex&     fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                fineGridH,
+      multigrid::Vertex * const   coarseGridVertices,
+      const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
+      multigrid::Cell&       coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  fineGridVertex.clearF();
+
+  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
+}
+
+
+
+//
+//   NOP
+// =======
+//
 multigrid::mappings::CreateGrid::CreateGrid() {
   logTraceIn( "CreateGrid()" );
   // @todo Insert your code here
@@ -91,21 +259,6 @@ void multigrid::mappings::CreateGrid::mergeWithWorkerThread(const CreateGrid& wo
 #endif
 
 
-void multigrid::mappings::CreateGrid::createHangingVertex(
-      multigrid::Vertex&     fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                fineGridH,
-      multigrid::Vertex * const   coarseGridVertices,
-      const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
-      multigrid::Cell&       coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
-}
-
-
 void multigrid::mappings::CreateGrid::destroyHangingVertex(
       const multigrid::Vertex&   fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
@@ -121,36 +274,6 @@ void multigrid::mappings::CreateGrid::destroyHangingVertex(
 }
 
 
-void multigrid::mappings::CreateGrid::createInnerVertex(
-      multigrid::Vertex&               fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
-}
-
-
-void multigrid::mappings::CreateGrid::createBoundaryVertex(
-      multigrid::Vertex&               fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "createBoundaryVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
-}
-
-
 void multigrid::mappings::CreateGrid::destroyVertex(
       const multigrid::Vertex&   fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
@@ -163,21 +286,6 @@ void multigrid::mappings::CreateGrid::destroyVertex(
   logTraceInWith6Arguments( "destroyVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
   // @todo Insert your code here
   logTraceOutWith1Argument( "destroyVertex(...)", fineGridVertex );
-}
-
-
-void multigrid::mappings::CreateGrid::createCell(
-      multigrid::Cell&                 fineGridCell,
-      multigrid::Vertex * const        fineGridVertices,
-      const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
-) {
-  logTraceInWith4Arguments( "createCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createCell(...)", fineGridCell );
 }
 
 

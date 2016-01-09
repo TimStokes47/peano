@@ -38,11 +38,31 @@ namespace multigrid {
  * @version $Revision: 1.10 $
  */
 class multigrid::mappings::CreateGrid {
+  public:
+
+    enum Scenario {
+      Poisson2,
+      Poisson3,
+      Poisson4,
+      Poisson5,
+      AdaptivePoisson2,
+      AdaptivePoisson3,
+      AdaptivePoisson4,
+      AdaptivePoisson5
+    };
+
+    static Scenario _scenario;
   private:
     /**
      * Logging device for the trace macros.
      */
     static tarch::logging::Log  _log;
+
+    void refineInitialGrid(
+      multigrid::Vertex&               fineGridVertex,
+      int                              vertexLevel,
+      bool                             isBoundary
+    );
   public:
     /**
      * These flags are used to inform Peano about your operation. It tells the 

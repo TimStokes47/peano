@@ -1,4 +1,5 @@
 #include "multigrid/mappings/JacobiSmoother.h"
+#include "multigrid/VertexOperations.h"
 
 
 
@@ -58,9 +59,169 @@ peano::MappingSpecification   multigrid::mappings::JacobiSmoother::descendSpecif
 }
 
 
-tarch::logging::Log                multigrid::mappings::JacobiSmoother::_log( "multigrid::mappings::JacobiSmoother" ); 
+tarch::logging::Log  multigrid::mappings::JacobiSmoother::_log( "multigrid::mappings::JacobiSmoother" );
+double               multigrid::mappings::JacobiSmoother::omega(0.0);
 
 
+
+
+void multigrid::mappings::JacobiSmoother::beginIteration(
+  multigrid::State&  solverState
+) {
+  logTraceInWith1Argument( "beginIteration(State)", solverState );
+
+  _state = solverState;
+  _state.clearAccumulatedAttributes();
+
+  logTraceOutWith1Argument( "beginIteration(State)", solverState);
+}
+
+
+void multigrid::mappings::JacobiSmoother::endIteration(
+  multigrid::State&  solverState
+) {
+  logTraceInWith1Argument( "endIteration(State)", solverState );
+
+  solverState.merge(_state);
+
+  logTraceOutWith1Argument( "endIteration(State)", solverState);
+}
+
+
+
+
+void multigrid::mappings::JacobiSmoother::touchVertexFirstTime(
+  multigrid::Vertex&               fineGridVertex,
+  const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+  const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+  multigrid::Vertex * const        coarseGridVertices,
+  const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+  multigrid::Cell&                 coarseGridCell,
+  const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  fineGridVertex.clearAccumulatedAttributes();
+
+  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
+}
+
+
+void multigrid::mappings::JacobiSmoother::touchVertexLastTime(
+  multigrid::Vertex&                           fineGridVertex,
+  const tarch::la::Vector<DIMENSIONS,double>&  fineGridX,
+  const tarch::la::Vector<DIMENSIONS,double>&  fineGridH,
+  multigrid::Vertex * const                    coarseGridVertices,
+  const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator,
+  multigrid::Cell&                             coarseGridCell,
+  const tarch::la::Vector<DIMENSIONS,int>&     fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  const bool hasUpdated = fineGridVertex.performJacobiSmoothingStep( omega );
+  if (hasUpdated) {
+    _state.notifyAboutFineGridVertexUpdate(
+      fineGridVertex.getResidual(),
+      fineGridVertex.getU(),
+      fineGridH
+    );
+  }
+
+  if (
+   peano::grid::SingleLevelEnumerator::isVertexPositionAlsoACoarseVertexPosition(
+     fineGridPositionOfVertex
+   )
+  ) {
+    const peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex coarseGridPosition =
+      peano::grid::SingleLevelEnumerator::getVertexPositionOnCoarserLevel(fineGridPositionOfVertex);
+    coarseGridVertices[ coarseGridVerticesEnumerator(coarseGridPosition) ].inject(fineGridVertex);
+  }
+
+  logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
+}
+
+
+void multigrid::mappings::JacobiSmoother::enterCell(
+  multigrid::Cell&                 fineGridCell,
+  multigrid::Vertex * const        fineGridVertices,
+  const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
+  multigrid::Vertex * const        coarseGridVertices,
+  const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+  multigrid::Cell&                 coarseGridCell,
+  const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
+) {
+  logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
+
+  const tarch::la::Vector<TWO_POWER_D,double> u    =
+    VertexOperations::readU( fineGridVerticesEnumerator, fineGridVertices );
+  const tarch::la::Vector<TWO_POWER_D,double> dOld    =
+    VertexOperations::readD( fineGridVerticesEnumerator, fineGridVertices );
+  const tarch::la::Vector<TWO_POWER_D,double> rOld =
+    VertexOperations::readR( fineGridVerticesEnumerator, fineGridVertices );
+  const matrixfree::stencil::ElementWiseAssemblyMatrix A =
+    fineGridCell.getElementsAssemblyMatrix( fineGridVerticesEnumerator.getCellSize() );
+
+  tarch::la::Vector<TWO_POWER_D,double> r = rOld - A * u;
+  tarch::la::Vector<TWO_POWER_D,double> d = dOld + tarch::la::diag(A);
+
+  VertexOperations::writeR( fineGridVerticesEnumerator, fineGridVertices, r );
+  VertexOperations::writeD( fineGridVerticesEnumerator, fineGridVertices, d );
+
+  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
+}
+
+
+void multigrid::mappings::JacobiSmoother::createHangingVertex(
+  multigrid::Vertex&                           fineGridVertex,
+  const tarch::la::Vector<DIMENSIONS,double>&  fineGridX,
+  const tarch::la::Vector<DIMENSIONS,double>&  fineGridH,
+  multigrid::Vertex * const                    coarseGridVertices,
+  const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator,
+  multigrid::Cell&                             coarseGridCell,
+  const tarch::la::Vector<DIMENSIONS,int>&     fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  fineGridVertex.setU(
+    _multigrid.getDLinearInterpolatedValue(
+      VertexOperations::readU( coarseGridVerticesEnumerator, coarseGridVertices ),
+      fineGridPositionOfVertex
+    )
+  );
+
+  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
+}
+
+
+
+void multigrid::mappings::JacobiSmoother::createInnerVertex(
+      multigrid::Vertex&               fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  fineGridVertex.setU(
+    _multigrid.getDLinearInterpolatedValue(
+      VertexOperations::readU( coarseGridVerticesEnumerator, coarseGridVertices ),
+      fineGridPositionOfVertex
+    )
+  );
+
+  logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
+}
+
+
+
+
+//
+//   NOP
+// =======
+//
 multigrid::mappings::JacobiSmoother::JacobiSmoother() {
   logTraceIn( "JacobiSmoother()" );
   // @todo Insert your code here
@@ -91,21 +252,6 @@ void multigrid::mappings::JacobiSmoother::mergeWithWorkerThread(const JacobiSmoo
 #endif
 
 
-void multigrid::mappings::JacobiSmoother::createHangingVertex(
-      multigrid::Vertex&     fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                fineGridH,
-      multigrid::Vertex * const   coarseGridVertices,
-      const peano::grid::VertexEnumerator&      coarseGridVerticesEnumerator,
-      multigrid::Cell&       coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
-}
-
-
 void multigrid::mappings::JacobiSmoother::destroyHangingVertex(
       const multigrid::Vertex&   fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
@@ -118,21 +264,6 @@ void multigrid::mappings::JacobiSmoother::destroyHangingVertex(
   logTraceInWith6Arguments( "destroyHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
   // @todo Insert your code here
   logTraceOutWith1Argument( "destroyHangingVertex(...)", fineGridVertex );
-}
-
-
-void multigrid::mappings::JacobiSmoother::createInnerVertex(
-      multigrid::Vertex&               fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
 }
 
 
@@ -367,50 +498,6 @@ void multigrid::mappings::JacobiSmoother::mergeWithWorker(
 }
 #endif
 
-void multigrid::mappings::JacobiSmoother::touchVertexFirstTime(
-      multigrid::Vertex&               fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
-}
-
-
-void multigrid::mappings::JacobiSmoother::touchVertexLastTime(
-      multigrid::Vertex&         fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                    fineGridH,
-      multigrid::Vertex * const  coarseGridVertices,
-      const peano::grid::VertexEnumerator&          coarseGridVerticesEnumerator,
-      multigrid::Cell&           coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
-}
-
-
-void multigrid::mappings::JacobiSmoother::enterCell(
-      multigrid::Cell&                 fineGridCell,
-      multigrid::Vertex * const        fineGridVertices,
-      const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
-) {
-  logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
-}
-
 
 void multigrid::mappings::JacobiSmoother::leaveCell(
       multigrid::Cell&           fineGridCell,
@@ -425,25 +512,6 @@ void multigrid::mappings::JacobiSmoother::leaveCell(
   // @todo Insert your code here
   logTraceOutWith1Argument( "leaveCell(...)", fineGridCell );
 }
-
-
-void multigrid::mappings::JacobiSmoother::beginIteration(
-  multigrid::State&  solverState
-) {
-  logTraceInWith1Argument( "beginIteration(State)", solverState );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "beginIteration(State)", solverState);
-}
-
-
-void multigrid::mappings::JacobiSmoother::endIteration(
-  multigrid::State&  solverState
-) {
-  logTraceInWith1Argument( "endIteration(State)", solverState );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "endIteration(State)", solverState);
-}
-
 
 
 void multigrid::mappings::JacobiSmoother::descend(
