@@ -6,6 +6,8 @@
 #include "peano/peano.h"
 
 #include "multigrid/runners/Runner.h"
+#include "multigrid/mappings/CreateGrid.h"
+#include "multigrid/mappings/JacobiSmoother.h"
 
 
 tarch::logging::Log _log("");
@@ -33,9 +35,74 @@ int main(int argc, char** argv) {
 
   int programExitCode = 0;
 
-  // @todo Please insert your code here and reset programExitCode
-  //       if something goes wrong. 
-  // ============================================================  
+  if (argc!=3) {
+    std::cout << "Usage: ./executable scenario omega" << std::endl
+              << std::endl
+              << "Valid scenarios:" << std::endl
+              <<  "PoissonX" << std::endl
+              <<  "AdaptivePoissonX" << std::endl
+/*
+              <<  "AnisotropicPoisson" << std::endl
+              <<  "ShiftedMinimalCheckerboard" << std::endl
+              <<  "LayerProblem" << std::endl
+              <<  "DiagonalFlow" << std::endl
+              <<  "RecirculatingFlow" << std::endl
+*/
+              << std::endl
+              << std::endl
+              << "Please replace the X with 2,3,4 or 5. It denotes the maximum depth of the gid."
+              << std::endl;
+    programExitCode = 1;
+  }
+  else {
+      if (std::string(argv[1])=="Poisson2") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::Poisson2;
+      }
+      else if (std::string(argv[1])=="Poisson3") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::Poisson3;
+      }
+      else if (std::string(argv[1])=="Poisson4") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::Poisson4;
+      }
+      else if (std::string(argv[1])=="Poisson5") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::Poisson5;
+      }
+      else if (std::string(argv[1])=="AdaptivePoisson2") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AdaptivePoisson2;
+      }
+      else if (std::string(argv[1])=="AdaptivePoisson3") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AdaptivePoisson3;
+      }
+      else if (std::string(argv[1])=="AdaptivePoisson4") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AdaptivePoisson4;
+      }
+      else if (std::string(argv[1])=="AdaptivePoisson5") {
+        multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AdaptivePoisson5;
+      }
+/*
+    else if (std::string(argv[1])=="AnisotropicPoisson") {
+      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::AnisotropicPoisson;
+    }
+    else if (std::string(argv[1])=="ShiftedMinimalCheckerboard") {
+      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::ShiftedMinimalCheckerboard;
+    }
+    else if (std::string(argv[1])=="LayerProblem") {
+      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::LayerProblem;
+    }
+    else if (std::string(argv[1])=="DiagonalFlow") {
+      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::DiagonalFlow;
+    }
+    else if (std::string(argv[1])=="RecirculatingFlow") {
+      multigrid::mappings::CreateGrid::_scenario = multigrid::mappings::CreateGrid::RecirculatingFlow;
+    }
+*/
+    else {
+      std::cerr << "invalid scenario. Please run without arguments to see list of supported scenarios" << std::endl;
+      programExitCode = 2;
+    }
+
+    multigrid::mappings::JacobiSmoother::omega = atof( argv[2] );
+  }
 
   // Configure the output
   tarch::logging::CommandLineLogger::getInstance().clearFilterList();
@@ -44,15 +111,11 @@ int main(int argc, char** argv) {
 //  tarch::logging::CommandLineLogger::getInstance().setLogFormat( ... please consult source code documentation );
 
   // Runs the unit tests
-  tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();  
-  programExitCode = tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().getNumberOfErrors();
+  if (programExitCode==0) {
+    tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();
+    programExitCode = tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().getNumberOfErrors();
+  }
 
-  // Runs the integration tests
-  //if (programExitCode==0) {
-  //  tarch::tests::TestCaseRegistry::getInstance().getIntegrationTestCaseCollection().run();  
-  //  programExitCode = tarch::tests::TestCaseRegistry::getInstance().getIntegrationTestCaseCollection().getNumberOfErrors();
-  //}
-  
   // dummy call to runner
   if (programExitCode==0) {
     tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", -1, "multigrid", false ) );
@@ -60,8 +123,6 @@ int main(int argc, char** argv) {
     programExitCode = runner.run();
   }
   
-  // ============================================================  
-
   if (programExitCode==0) {
     #ifdef Parallel
     if (tarch::parallel::Node::getInstance().isGlobalMaster()) {

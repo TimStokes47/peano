@@ -31,6 +31,9 @@ event-mapping:
 event-mapping:
   name: PlotCells
 
+event-mapping:
+  name: HierarchicalTransformAndRHSRestriction
+
 adapter:
   name: CreateGrid
   merge-with-user-defined-mapping: CreateGrid
@@ -41,11 +44,13 @@ adapter:
   name: Jacobi
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: JacobiSmoother
+  merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
  
 adapter:
   name: JacobiAndPlot
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: JacobiSmoother
+  merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
   merge-with-user-defined-mapping: PlotCells
   merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
  

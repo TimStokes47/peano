@@ -73,6 +73,17 @@ class multigrid::State: public peano::grid::State< multigrid::records::State > {
      * type standard constructor.
      */
     State(const Base::PersistentState& argument);
+
+    void clearAccumulatedAttributes();
+    void merge(const State& state);
+
+    double getResidualIn2Norm() const;
+    double getResidualInMaxNorm() const;
+    double getSolutionIn2Norm() const;
+    double getSolutionInMaxNorm() const;
+    double getNumberOfStencilUpdates() const;
+
+    void notifyAboutFineGridVertexUpdate( double res, double newU, const tarch::la::Vector<DIMENSIONS,double>&  h);
 };
 
 
