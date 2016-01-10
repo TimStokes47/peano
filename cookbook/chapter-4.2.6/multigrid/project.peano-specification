@@ -10,11 +10,14 @@ vertex:
   read scalar(double): D
   read scalar(double): HierarchicalU
   read scalar(double): HierarchicalR
+  read scalar(double): UUpdate
+  read vector(double): LinearSurplus
   write scalar(double): U
   write scalar(double): R
   write scalar(double): D
   write scalar(double): HierarchicalU
   write scalar(double): HierarchicalR
+  write vector(double): LinearSurplus 
   
 cell:
   dastgen-file: Cell.def
@@ -33,6 +36,9 @@ event-mapping:
 
 event-mapping:
   name: HierarchicalTransformAndRHSRestriction
+
+event-mapping:
+  name: AdditiveMGProlongation
 
 adapter:
   name: CreateGrid
@@ -53,5 +59,28 @@ adapter:
   merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
   merge-with-user-defined-mapping: PlotCells
   merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleU,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleHierarchicalU,getHierarchicalU,u)
+ 
+ adapter:
+  name: AdditiveMG
+  merge-with-user-defined-mapping: AdditiveMGProlongation // has to be first->@todo Docu
+  merge-with-user-defined-mapping: CreateGrid
+  merge-with-user-defined-mapping: JacobiSmoother
+  merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
+ 
+adapter:
+  name: AdditiveMGAndPlot
+  merge-with-user-defined-mapping: AdditiveMGProlongation
+  merge-with-user-defined-mapping: CreateGrid
+  merge-with-user-defined-mapping: JacobiSmoother
+  merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
+  merge-with-user-defined-mapping: PlotCells
+  merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleU,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleHierarchicalU,getHierarchicalU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud(multiscaleResidual,getResidual,res)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud(multiscaleHierarchicalResidual,getHierarchicalResidual,res)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud(f,getF,f)
  
  

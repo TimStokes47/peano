@@ -33,14 +33,18 @@ int main(int argc, char** argv) {
     return sharedMemorySetup;
   }
 
-  int programExitCode = 0;
-
-  if (argc!=3) {
-    std::cout << "Usage: ./executable scenario omega" << std::endl
+  int                                programExitCode = 0;
+  multigrid::runners::Runner::Solver solver          = multigrid::runners::Runner::None;
+  if (argc!=4) {
+    std::cout << "Usage: ./executable scenario solver omega" << std::endl
+              << std::endl
+              << "Valid solvers:" << std::endl
+              << "\tJacobi" << std::endl
+              << "\tAdditiveMG" << std::endl
               << std::endl
               << "Valid scenarios:" << std::endl
-              <<  "PoissonX" << std::endl
-              <<  "AdaptivePoissonX" << std::endl
+              << "\tPoissonX" << std::endl
+              << "\tAdaptivePoissonX" << std::endl
 /*
               <<  "AnisotropicPoisson" << std::endl
               <<  "ShiftedMinimalCheckerboard" << std::endl
@@ -101,7 +105,18 @@ int main(int argc, char** argv) {
       programExitCode = 2;
     }
 
-    multigrid::mappings::JacobiSmoother::omega = atof( argv[2] );
+    if (std::string(argv[2])=="Jacobi") {
+      solver = multigrid::runners::Runner::Jacobi;
+    }
+    else if (std::string(argv[2])=="AdditiveMG") {
+      solver = multigrid::runners::Runner::AdditiveMG;
+    }
+    else {
+      std::cerr << "invalid solver. Please run without arguments to see list of supported solvers" << std::endl;
+      programExitCode = 3;
+    }
+
+    multigrid::mappings::JacobiSmoother::omega = atof( argv[3] );
   }
 
   // Configure the output
@@ -120,7 +135,7 @@ int main(int argc, char** argv) {
   if (programExitCode==0) {
     tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", -1, "multigrid", false ) );
     multigrid::runners::Runner runner;
-    programExitCode = runner.run();
+    programExitCode = runner.run( solver );
   }
   
   if (programExitCode==0) {

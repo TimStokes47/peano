@@ -59,6 +59,11 @@ double multigrid::Vertex::getU() const {
 }
 
 
+double multigrid::Vertex::getHierarchicalU() const {
+  return _vertexData.getHierarchicalU();
+}
+
+
 void multigrid::Vertex::clearAccumulatedAttributes() {
   _vertexData.setR(0.0);
   _vertexData.setD(0.0);
@@ -77,6 +82,12 @@ bool multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
   else {
     return false;
   }
+}
+
+
+void multigrid::Vertex::correctU( double update ) {
+  _vertexData.setU( _vertexData.getU() + update );
+  _vertexData.setUUpdate( _vertexData.getUUpdate() + update );
 }
 
 

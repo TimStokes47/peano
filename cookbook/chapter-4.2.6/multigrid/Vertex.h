@@ -77,6 +77,7 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
     double getResidual() const;
     double getHierarchicalResidual() const;
     double getU() const;
+    double getHierarchicalU() const;
 
     void clearAccumulatedAttributes();
 
@@ -85,6 +86,7 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
     void inject(const Vertex& fineGridVertex);
 
     void setU( double u );
+    void correctU( double u );
 
     void clearF();
 

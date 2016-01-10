@@ -16,6 +16,9 @@
 #include "peano/geometry/Hexahedron.h" 
 
 
+tarch::logging::Log  multigrid::runners::Runner::_log( "multigrid::runners::Runner" );
+
+
 multigrid::runners::Runner::Runner() {
   // @todo Insert your code here
 }
@@ -26,7 +29,7 @@ multigrid::runners::Runner::~Runner() {
 }
 
 
-int multigrid::runners::Runner::run() {
+int multigrid::runners::Runner::run(Solver solver) {
   // @todo Insert your geometry generation here and adopt the repository 
   //       generation to your needs. There is a dummy implementation to allow 
   //       for a quick start, but this is really very dummy (it generates 
@@ -48,7 +51,7 @@ int multigrid::runners::Runner::run() {
   
   int result = 0;
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    result = runAsMaster( *repository );
+    result = runAsMaster( *repository, solver );
   }
   #ifdef Parallel
   else {
@@ -62,19 +65,59 @@ int multigrid::runners::Runner::run() {
 }
 
 
-int multigrid::runners::Runner::runAsMaster(multigrid::repositories::Repository& repository) {
+int multigrid::runners::Runner::runAsMaster(multigrid::repositories::Repository& repository, Solver solver) {
   peano::utils::UserInterface userInterface;
   userInterface.writeHeader();
 
-  // @todo Insert your code here
-  
-  // Start of dummy implementation
-  
   repository.switchToCreateGrid(); repository.iterate();
-  repository.switchToJacobi(); repository.iterate();
-  repository.switchToJacobiAndPlot(); repository.iterate();
 
- 
+  switch (solver) {
+    case Jacobi:
+      #if defined(Asserts) || defined(Debug)
+      repository.switchToJacobiAndPlot();
+      #else
+      repository.switchToJacobi();
+      #endif
+      for (int i=0; i<100; i++) {
+        repository.getState().clearAccumulatedAttributes();
+        repository.iterate();
+
+        logInfo(
+          "runAsMaster(...)",
+          "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
+          ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
+          ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
+          ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
+          ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
+          ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates()
+        );
+      }
+      break;
+    case AdditiveMG:
+      #if defined(Asserts) || defined(Debug)
+      repository.switchToAdditiveMGAndPlot();
+      #else
+      repository.switchToAdditiveMG();
+      #endif
+      for (int i=0; i<100; i++) {
+        repository.getState().clearAccumulatedAttributes();
+        repository.iterate();
+
+        logInfo(
+          "runAsMaster(...)",
+          "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
+          ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
+          ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
+          ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
+          ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
+          ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates()
+        );
+      }
+      break;
+    case None:
+      assertionMsg( false, "may not happen" );
+      break;
+  }
  
   repository.logIterationStatistics();
   repository.terminate();

@@ -126,7 +126,7 @@ void multigrid::mappings::HierarchicalTransformAndRHSRestriction::enterCell(
   const tarch::la::Vector<TWO_POWER_D,double> hierarchicalU    =
      VertexOperations::readHierarchicalU( fineGridVerticesEnumerator, fineGridVertices );
    const tarch::la::Vector<TWO_POWER_D,double> hierarchicalROld =
-     VertexOperations::readR( fineGridVerticesEnumerator, fineGridVertices );
+     VertexOperations::readHierarchicalR( fineGridVerticesEnumerator, fineGridVertices );
    const matrixfree::stencil::ElementWiseAssemblyMatrix A =
      fineGridCell.getElementsAssemblyMatrix( fineGridVerticesEnumerator.getCellSize() );
 

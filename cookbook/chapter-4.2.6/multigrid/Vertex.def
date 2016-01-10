@@ -52,4 +52,6 @@ class multigrid::records::Vertex {
    * Linear surplus of solution
    */
   discard parallelise double linearSurplus[DIMENSIONS];
+
+  discard parallelise int numberOfFinerLevelsAtSamePosition;
 };

@@ -9,6 +9,10 @@
 #define _MULTIGRID_RUNNERS_RUNNER_H_ 
 
 
+
+#include "tarch/logging/Log.h"
+
+
 namespace multigrid {
     namespace runners {
       class Runner;
@@ -26,8 +30,17 @@ namespace multigrid {
  *
  */
 class multigrid::runners::Runner {
+  public:
+    enum Solver {
+      None,
+      Jacobi,
+      AdditiveMG
+    };
+
   private:
-    int runAsMaster(multigrid::repositories::Repository& repository);
+    static tarch::logging::Log   _log;
+
+    int runAsMaster(multigrid::repositories::Repository& repository, Solver solver);
     
     #ifdef Parallel
     int runAsWorker(multigrid::repositories::Repository& repository);
@@ -48,7 +61,7 @@ class multigrid::runners::Runner {
     /**
      * Run
      */
-    int run(); 
+    int run(Solver solver);
 };
 
 #endif
