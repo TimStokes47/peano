@@ -1,4 +1,3 @@
-
 \section{Matrix-free multigrid}
   \label{section:applications:matrix-free-multigrid}
 
@@ -879,8 +878,120 @@ class multigrid::records::Vertex {
 \noindent
 The hierarchical surplus has to be determined in \texttt{touchVertexFirstTime}
 where we also clear the temporary variables.
+I decided to realise the generic multigrid operations in a mapping of its own. 
+It is called \texttt{HierarchicalTransformAndRHSRestriction}.
+Once more, we rely on an instance of the Multigrid class.
+
+\begin{code}
+void
+multigrid::mappings::HierarchicalTransformAndRHSRestriction::createHangingVertex(...) { 
+  fineGridVertex.clearHierarchicalValues();
+}
+
+void multigrid::mappings::HierarchicalTransformAndRHSRestriction::touchVertexFirstTime(...) {
+  fineGridVertex.clearHierarchicalValues();
+
+  if ( fineGridVertex.isInside() ) {
+    const tarch::la::Vector<TWO_POWER_D,double > u_3h  = VertexOperations::readU
+      (coarseGridVerticesEnumerator,coarseGridVertices);
+    const double                                 Pu_3h = _multigrid.getDLinearInterpolatedValue
+      (u_3h,fineGridPositionOfVertex);
+
+    fineGridVertex.determineUHierarchical(Pu_3h);
+
+    if (fineGridVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
+      fineGridVertex.clearF();
+    }
+  }
+}
+
+void multigrid::Vertex::determineUHierarchical(double Pu_3h) {
+  _vertexData.setHierarchicalU( _vertexData.getU()-Pu_3h );
+}
+\end{code}
 
 
+
+\noindent
+The accumulation of the hierarchical surplus itself is more or less a
+cut-n-paste from the Jacobi smoother:
+\begin{code}
+
+void multigrid::mappings::HierarchicalTransformAndRHSRestriction::enterCell(...) { 
+  const tarch::la::Vector<TWO_POWER_D,double> hierarchicalU    =
+     VertexOperations::readHierarchicalU( fineGridVerticesEnumerator, fineGridVertices );
+   const tarch::la::Vector<TWO_POWER_D,double> hierarchicalROld =
+     VertexOperations::readHierarchicalR( fineGridVerticesEnumerator, fineGridVertices );
+   const matrixfree::stencil::ElementWiseAssemblyMatrix A =
+     fineGridCell.getElementsAssemblyMatrix( fineGridVerticesEnumerator.getCellSize() );
+
+   tarch::la::Vector<TWO_POWER_D,double> hierarchicalR = 
+     hierarchicalROld - A * hierarchicalU;
+
+   VertexOperations::writeHierarchicalR
+     ( fineGridVerticesEnumerator, fineGridVertices, hierarchicalR );
+}
+\end{code}
+
+\noindent 
+For the restriction, we again rely on the multigrid object, where a specialised
+prolongation function does exist that uses $d$-linear interpolation.
+Furthermore, we stick to the convention $R=P^T$ and thus can write:
+
+\begin{code}
+void
+multigrid::mappings::HierarchicalTransformAndRHSRestriction::touchVertexLastTime(...) {
+  if ( fineGridVertex.isInside() ) {
+    const tarch::la::Vector<TWO_POWER_D, double > P = 
+      _multigrid.calculateP(fineGridPositionOfVertex);
+
+    dfor2(k)
+      // There is no need to exclude boundary points here (the rhs does not play
+      // there a role anyway), but it makes the visualisation nicer.
+      if (
+        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].getRefinementControl()==
+          Vertex::Records::Refined
+        &&
+        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].isInside()
+      ) {
+        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].incF(  
+          P(kScalar) * fineGridVertex.getHierarchicalResidual() 
+        );
+      }
+    enddforx
+  }
+}
+
+void multigrid::Vertex::incF(double value) {
+  _vertexData.setF( _vertexData.getF()+value );
+}
+
+double multigrid::Vertex::getHierarchicalResidual() const {
+  return _vertexData.getF() + _vertexData.getHierarchicalR();
+}
+
+bool multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
+  if ( _vertexData.getVertexType()== Records::Unknown ) {
+    assertion1( _vertexData.getD()>0.0, toString() );
+    assertion2( omega>0.0, toString(), omega );
+    const double update = omega / _vertexData.getD() * getResidual();
+    _vertexData.setU( _vertexData.getU() + update );
+    _vertexData.setUUpdate( update );
+     return getRefinementControl()==Vertex::Records::Unrefined;
+  }
+  else {
+    return false;
+  }
+}
+\end{code}
+
+
+\noindent
+We note that the new Jacobi update works on all vertices on all grid levels. 
+The result clearly indicates that only updates on the finest grid level may
+contribute to the calculation of the global residual, i.e.~any smoother should
+check the result and update global values if and only if
+\textttt{performJacobiSmoothingStep} returns true.
 
 
 We close the preparatory work with the remark that the specification has to be
@@ -908,9 +1019,48 @@ vertex:
 ...
 \end{code}
 
+\begin{center}
+  \includegraphics[width=0.8\textwidth]{42_matrix-free-multigrid/Hierarchical-Jacobi.png}
+\end{center}
 
-\subsection{Multiplicative Geometric Multigrid}
+\noindent
+We see above a Jacobi smoother (100 iterations) for the Poisson equation on the
+unit square (left) as well as the hierarchical representation (right).
+We also may augment the adapters with plots of the temporary data 
 
+\begin{code}
+adapter:
+  name: AnyAdapter
+  ...
+  merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleU,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelValue
+    (multiscaleHierarchicalU,getHierarchicalU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud
+    (multiscaleResidual,getResidual,res)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud
+    (multiscaleHierarchicalResidual,getHierarchicalResidual,res)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud(f,getF,f)
+\end{code}
+
+\noindent
+and note that we basically have almost all multigrid ingreditents at hands.
+Missing is a projection from coarse grid updates to fine grid values.
+So far, we update the coarse grid values according to the right-hand side.
+These updates however are not projected.
+Instead, the updated approximation in a FAS sense are overwritten at the end of
+the subsequent iteration with fine grid solution data. 
+
+
+\begin{remark}
+  Most default VTK plotters plot the grid as well as values and (for
+  consistency reasons imposed by the VTK data file format) have to plug into
+  \texttt{touchVertexFirstTime}. For residuals and other temporary data, we
+  typically however are interested to plot the value at the end of the
+  iteration. A quick solution here is to plot the grid with one mapping and to
+  use a second mapping that solely plots a point cloud with the vertex values.
+  We then can visualise both data sets simultaneously.
+\end{remark}
 
 \subsection{Additive Geometric Multigrid}
 
@@ -934,6 +1084,23 @@ class multigrid::records::Vertex {
 \noindent
 and make the grid traversal determine the correct value of this attribute
 on the fly:
+
+
+
+@todo Instabil. Relaxation mit aufnehmen
+
+@todo Kleiner Fehler mit der Injektion. Auf Bram verweisen, aber so lassen
+
+
+
+
+
+
+
+\subsection{Multiplicative Geometric Multigrid}
+
+V2,2?
+
 
 
 
