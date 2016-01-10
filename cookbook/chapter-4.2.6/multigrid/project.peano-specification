@@ -29,6 +29,9 @@ event-mapping:
   name: CreateGrid
 
 event-mapping:
+  name: RefinementCriterion
+
+event-mapping:
   name: JacobiSmoother
 
 event-mapping:
@@ -51,6 +54,7 @@ adapter:
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: JacobiSmoother
   merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
+  merge-with-user-defined-mapping: RefinementCriterion
  
 adapter:
   name: JacobiAndPlot
@@ -58,6 +62,7 @@ adapter:
   merge-with-user-defined-mapping: JacobiSmoother
   merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
   merge-with-user-defined-mapping: PlotCells
+  merge-with-user-defined-mapping: RefinementCriterion
   merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
   merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleU,getU,u)
   merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleHierarchicalU,getHierarchicalU,u)
@@ -67,6 +72,7 @@ adapter:
   merge-with-user-defined-mapping: AdditiveMG
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
+  merge-with-user-defined-mapping: RefinementCriterion
  
 adapter:
   name: AdditiveMGAndPlot
@@ -74,6 +80,7 @@ adapter:
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
   merge-with-user-defined-mapping: PlotCells
+  merge-with-user-defined-mapping: RefinementCriterion
   merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
   merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleU,getU,u)
   merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleHierarchicalU,getHierarchicalU,u)

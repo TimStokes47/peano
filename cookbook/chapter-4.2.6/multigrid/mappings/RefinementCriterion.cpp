@@ -210,7 +210,7 @@ void multigrid::mappings::RefinementCriterion::touchVertexLastTime(
           fineGridVertex.refine();
         }
         else {
-          logDebug( "touchVertexLastTime(...)", "skip refinement as vertex has not converged yet. r=" << fineGridVertex.getR() << ", |r|=" << tarch::la::abs(fineGridVertex.getR()) );
+          logDebug( "touchVertexLastTime(...)", "skip refinement as vertex has not converged yet. r=" << fineGridVertex.getResidual() );
         }
         break;
       case matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterion::Delete:

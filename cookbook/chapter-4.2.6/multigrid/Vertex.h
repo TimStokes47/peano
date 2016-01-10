@@ -17,12 +17,12 @@
 
 
 namespace multigrid { 
-      class Vertex; 
+  class Vertex;
       
-      /**
-       * Forward declaration
-       */ 
-      class VertexOperations;
+  /**
+   * Forward declaration
+   */
+  class VertexOperations;
 }
 
 

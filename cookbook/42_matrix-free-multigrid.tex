@@ -837,7 +837,7 @@ We therefore store the updates in another helper variable and use this update to
 prolong it to a finer level later on.
 
 \begin{remark}
-  The update helper variable obviously is not the only valid choice to
+  The update helper variable is not the only valid choice to
   distinguish coarse grid updates from fine grid representation. It is obviously
   that we also might store the hierarchical surplus persistently and then
   reconstruct the nodal value with the relation $u_h=\hat u_h+Pu_{3h}$. This is
@@ -893,8 +893,8 @@ void multigrid::mappings::HierarchicalTransformAndRHSRestriction::touchVertexFir
    const double                                 Pe_3h =
      _multigrid.getDLinearInterpolatedValue(e_3h,fineGridPositionOfVertex);
 
-   fineGridVertex.determineUHierarchical(Pu_3h);
    fineGridVertex.correctU(Pe_3h);
+   fineGridVertex.determineUHierarchical(Pu_3h);
 
    if (fineGridVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
      fineGridVertex.clearF();
@@ -914,7 +914,7 @@ void multigrid::Vertex::determineUHierarchical(double Pu_3h) {
   In this presentation, we make the solvers restrict residuals on all levels all
   the time and prolong all updates all the time.
   The actual distinction between additive and multiplicative multigrid stems from the decision which
-  level is smoothed. This is
+  level is smoothed, i.e.~where we find an update. This is
   highly inefficient.
   Good solvers would compute only those residuals and right-hand sides that have changed and
   are required. But the purpose of this presentation is to introduce a quick,
@@ -982,13 +982,6 @@ double multigrid::Vertex::getHierarchicalResidual() const {
 
 
 \noindent
-We note that the new Jacobi update works on all vertices on all grid levels. 
-The result clearly indicates that only updates on the finest grid level may
-contribute to the calculation of the global residual, i.e.~any smoother should
-check the result and update global values if and only if
-\textttt{performJacobiSmoothingStep} returns true.
-
-
 We close the preparatory work with the remark that the specification has to be
 augmented by additional readers and writers to make our code snippets work:
 
@@ -1039,7 +1032,7 @@ adapter:
 \end{code}
 
 \noindent
-and note that we basically have almost all multigrid ingreditents at hands.
+and emphasise that we basically have almost all multigrid ingredients at hands.
 Missing is a projection from coarse grid updates to fine grid values.
 So far, we update the coarse grid values according to the right-hand side.
 These updates however are not projected.

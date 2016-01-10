@@ -38,13 +38,14 @@ int main(int argc, char** argv) {
   if (argc!=4) {
     std::cout << "Usage: ./executable scenario solver omega" << std::endl
               << std::endl
+              << "Valid scenarios:" << std::endl
+              << "\tPoissonX" << std::endl
+              << "\tAdaptivePoissonX" << std::endl
+              << std::endl
               << "Valid solvers:" << std::endl
               << "\tJacobi" << std::endl
               << "\tAdditiveMG" << std::endl
               << std::endl
-              << "Valid scenarios:" << std::endl
-              << "\tPoissonX" << std::endl
-              << "\tAdaptivePoissonX" << std::endl
 /*
               <<  "AnisotropicPoisson" << std::endl
               <<  "ShiftedMinimalCheckerboard" << std::endl
