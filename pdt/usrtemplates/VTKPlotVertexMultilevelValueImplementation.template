@@ -60,9 +60,7 @@ __THIS_QUALIFIED_TYPENAME__::__THIS_TYPENAME__::LevelDataset::LevelDataset():
   _vertexAdjacentCellsHeight(0),
   _vertexHangingNodeWriter(0),
   _vertexValueWriter(0),
-  _cellStateWriter(0),
-  _cellLocalWorkloadWriter(0),
-  _cellTotalWorkloadWriter(0) {
+  _cellStateWriter(0) {
   _vtkWriter = new UsedWriter();
   assertion( _vtkWriter != 0 );
   
@@ -76,10 +74,6 @@ __THIS_QUALIFIED_TYPENAME__::__THIS_TYPENAME__::LevelDataset::LevelDataset():
   _vertexValueWriter              = _vtkWriter->createVertexDataWriter( "PARAM2" ,1);
   
   _cellStateWriter                = _vtkWriter->createCellDataWriter( "cell-flag(>=-1=stationary,-1=parallel-boundary,<=-2=not-stationary" ,1);
-  #ifdef Parallel
-  _cellLocalWorkloadWriter        = _vtkWriter->createCellDataWriter( "local-workload" ,1);
-  _cellTotalWorkloadWriter        = _vtkWriter->createCellDataWriter( "total-workload" ,1);
-  #endif
 
   assertion( _vertexWriter != 0 );
   assertion( _cellWriter != 0 );
@@ -89,14 +83,6 @@ __THIS_QUALIFIED_TYPENAME__::__THIS_TYPENAME__::LevelDataset::LevelDataset():
   assertion( _vertexHangingNodeWriter != 0 );
   assertion( _vertexValueWriter != 0 );
   assertion( _cellStateWriter != 0 );
-  
-  #ifdef Parallel
-  assertion( _cellLocalWorkloadWriter != 0 );
-  assertion( _cellTotalWorkloadWriter != 0 );
-  #else
-  assertion( _cellLocalWorkloadWriter == 0 );
-  assertion( _cellTotalWorkloadWriter == 0 );
-  #endif
 }
 
 
@@ -108,13 +94,6 @@ void __THIS_QUALIFIED_TYPENAME__::LevelDataset::close(const std::string& filenam
   assertion( _vertexAdjacentCellsHeight != 0 );  
   assertion( _vertexHangingNodeWriter != 0 );  
   assertion( _vertexValueWriter != 0 );  
-  #ifdef Parallel
-  assertion( _cellLocalWorkloadWriter != 0 );
-  assertion( _cellTotalWorkloadWriter != 0 );
-  #else
-  assertion( _cellLocalWorkloadWriter == 0 );
-  assertion( _cellTotalWorkloadWriter == 0 );
-  #endif
 
   _vertexWriter->close();
   _cellWriter->close();
@@ -125,10 +104,6 @@ void __THIS_QUALIFIED_TYPENAME__::LevelDataset::close(const std::string& filenam
   _vertexHangingNodeWriter->close();
   _vertexValueWriter->close();
   _cellStateWriter->close();
-  #ifdef Parallel
-  _cellLocalWorkloadWriter->close();
-  _cellTotalWorkloadWriter->close();
-  #endif
     
   delete _vertexWriter;
   delete _cellWriter;
@@ -139,11 +114,6 @@ void __THIS_QUALIFIED_TYPENAME__::LevelDataset::close(const std::string& filenam
   delete _vertexValueWriter;
   delete _cellStateWriter;
   
-  #ifdef Parallel
-  delete _cellLocalWorkloadWriter;
-  delete _cellTotalWorkloadWriter;
-  #endif
-  
   _vertexWriter                  = 0;
   _cellWriter                    = 0;
   _vertexTypeWriter              = 0;
@@ -152,8 +122,6 @@ void __THIS_QUALIFIED_TYPENAME__::LevelDataset::close(const std::string& filenam
   _vertexHangingNodeWriter       = 0;
   _vertexValueWriter             = 0;
   _cellStateWriter               = 0;
-  _cellLocalWorkloadWriter       = 0;
-  _cellTotalWorkloadWriter       = 0;  
   
   _vtkWriter->writeToFile( filename );
   
@@ -511,12 +479,6 @@ void __THIS_QUALIFIED_TYPENAME__::enterCell(
   }
   
   _dataset[coarseGridVerticesEnumerator.getLevel()+1]._cellStateWriter->plotCell(cellIndex,fineGridVerticesEnumerator.getCellFlags());
-
-  #ifdef Parallel
-  _dataset[coarseGridVerticesEnumerator.getLevel()+1]._cellLocalWorkloadWriter->plotCell( cellIndex, fineGridCell.getLocalWorkload() );
-  _dataset[coarseGridVerticesEnumerator.getLevel()+1]._cellTotalWorkloadWriter->plotCell( cellIndex, fineGridCell.getTotalWorkload() );
-  }
-  #endif
 }
 
 
