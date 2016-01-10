@@ -38,7 +38,7 @@ event-mapping:
   name: HierarchicalTransformAndRHSRestriction
 
 event-mapping:
-  name: AdditiveMGProlongation
+  name: AdditiveMG
 
 adapter:
   name: CreateGrid
@@ -64,16 +64,14 @@ adapter:
  
  adapter:
   name: AdditiveMG
-  merge-with-user-defined-mapping: AdditiveMGProlongation // has to be first->@todo Docu
+  merge-with-user-defined-mapping: AdditiveMG
   merge-with-user-defined-mapping: CreateGrid
-  merge-with-user-defined-mapping: JacobiSmoother
   merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
  
 adapter:
   name: AdditiveMGAndPlot
-  merge-with-user-defined-mapping: AdditiveMGProlongation
+  merge-with-user-defined-mapping: AdditiveMG
   merge-with-user-defined-mapping: CreateGrid
-  merge-with-user-defined-mapping: JacobiSmoother
   merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
   merge-with-user-defined-mapping: PlotCells
   merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
@@ -82,5 +80,10 @@ adapter:
   merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud(multiscaleResidual,getResidual,res)
   merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud(multiscaleHierarchicalResidual,getHierarchicalResidual,res)
   merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud(f,getF,f)
+  
+adapter:
+  name: Plot
+  merge-with-user-defined-mapping: PlotCells
+  merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
  
  

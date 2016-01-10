@@ -5,8 +5,8 @@
 // this file and your project to your needs as long as the license is in 
 // agreement with the original Peano user constraints. A reference to/citation  
 // of  Peano and its author is highly appreciated.
-#ifndef MULTIGRID_MAPPINGS_AdditiveMGProlongation_H_
-#define MULTIGRID_MAPPINGS_AdditiveMGProlongation_H_
+#ifndef MULTIGRID_MAPPINGS_AdditiveMG_H_
+#define MULTIGRID_MAPPINGS_AdditiveMG_H_
 
 
 #include "tarch/logging/Log.h"
@@ -27,7 +27,7 @@
 
 namespace multigrid {
   namespace mappings {
-    class AdditiveMGProlongation;
+    class AdditiveMG;
   }
 }
 
@@ -39,13 +39,14 @@ namespace multigrid {
  * @author Peano Development Toolkit (PDT) by  Tobias Weinzierl
  * @version $Revision: 1.10 $
  */
-class multigrid::mappings::AdditiveMGProlongation {
+class multigrid::mappings::AdditiveMG {
   private:
     /**
      * Logging device for the trace macros.
      */
     static tarch::logging::Log  _log;
 
+    State                          _state;
     matrixfree::solver::Multigrid  _multigrid;
   public:
     /**
@@ -97,7 +98,7 @@ class multigrid::mappings::AdditiveMGProlongation {
      * that your code works on a parallel machine and for any mapping/algorithm 
      * modification.
      */
-    AdditiveMGProlongation();
+    AdditiveMG();
 
     #if defined(SharedMemoryParallelisation)
     /**
@@ -110,13 +111,13 @@ class multigrid::mappings::AdditiveMGProlongation {
      *
      * @see mergeWithWorkerThread()
      */
-    AdditiveMGProlongation(const AdditiveMGProlongation& masterThread);
+    AdditiveMG(const AdditiveMG& masterThread);
     #endif
 
     /**
      * Destructor. Typically does not implement any operation.
      */
-    virtual ~AdditiveMGProlongation();
+    virtual ~AdditiveMG();
   
     #if defined(SharedMemoryParallelisation)
     /**
@@ -147,7 +148,7 @@ class multigrid::mappings::AdditiveMGProlongation {
      * on the heap. However, you should protect this object by a BooleanSemaphore 
      * and a lock to serialise all accesses to the plotter.    
      */   
-    void mergeWithWorkerThread(const AdditiveMGProlongation& workerThread);
+    void mergeWithWorkerThread(const AdditiveMG& workerThread);
     #endif
 
     /**
@@ -1142,7 +1143,7 @@ class multigrid::mappings::AdditiveMGProlongation {
      * beginIteration() might not be called prior to any other event. See the 
      * documentation of CommunicationSpecification for details.
      *
-     * @see AdditiveMGProlongation()
+     * @see AdditiveMG()
      */
     void beginIteration(
       multigrid::State&  solverState
@@ -1175,7 +1176,7 @@ class multigrid::mappings::AdditiveMGProlongation {
      * might not be called after all other events. See the documentation 
      * of CommunicationSpecification for details.
      *
-     * @see AdditiveMGProlongation()
+     * @see AdditiveMG()
      */
     void endIteration(
       multigrid::State&  solverState

@@ -99,14 +99,19 @@ void multigrid::mappings::HierarchicalTransformAndRHSRestriction::touchVertexFir
 
   if ( fineGridVertex.isInside() ) {
     const tarch::la::Vector<TWO_POWER_D,double > u_3h  = VertexOperations::readU(coarseGridVerticesEnumerator,coarseGridVertices);
+    const tarch::la::Vector<TWO_POWER_D,double > e_3h  = VertexOperations::readUUpdate(coarseGridVerticesEnumerator,coarseGridVertices);
     const double                                 Pu_3h = _multigrid.getDLinearInterpolatedValue(u_3h,fineGridPositionOfVertex);
+    const double                                 Pe_3h = _multigrid.getDLinearInterpolatedValue(e_3h,fineGridPositionOfVertex);
 
+    fineGridVertex.correctU(Pe_3h);  // the order of these two operations is important
     fineGridVertex.determineUHierarchical(Pu_3h);
 
     if (fineGridVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
       fineGridVertex.clearF();
     }
   }
+
+  fineGridVertex.clearAccumulatedAttributes();
 
   logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
 }

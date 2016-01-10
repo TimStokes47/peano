@@ -67,21 +67,18 @@ double multigrid::Vertex::getHierarchicalU() const {
 void multigrid::Vertex::clearAccumulatedAttributes() {
   _vertexData.setR(0.0);
   _vertexData.setD(0.0);
+
+  _vertexData.setNumberOfFinerLevelsAtSamePosition( 1 );
 }
 
 
-bool multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
-  if ( _vertexData.getVertexType()== Records::Unknown ) {
-    assertion1( _vertexData.getD()>0.0, toString() );
-    assertion2( omega>0.0, toString(), omega );
-    const double update = omega / _vertexData.getD() * getResidual();
-    _vertexData.setU( _vertexData.getU() + update );
-    _vertexData.setUUpdate( update );
-     return getRefinementControl()==Vertex::Records::Unrefined;
-  }
-  else {
-    return false;
-  }
+void multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
+  assertion1( _vertexData.getVertexType()==Records::Unknown, toString() );
+  assertion1( _vertexData.getD()>0.0, toString() );
+  assertion2( omega>0.0, toString(), omega );
+  const double update = omega / _vertexData.getD() * getResidual();
+  _vertexData.setU( _vertexData.getU() + update );
+  _vertexData.setUUpdate( update );
 }
 
 
@@ -93,6 +90,16 @@ void multigrid::Vertex::correctU( double update ) {
 
 void multigrid::Vertex::inject(const Vertex& fineGridVertex) {
   _vertexData.setU( fineGridVertex._vertexData.getU() );
+
+  assertion2(_vertexData.getNumberOfFinerLevelsAtSamePosition()>=1,toString(),fineGridVertex.toString());
+  assertion2(fineGridVertex._vertexData.getNumberOfFinerLevelsAtSamePosition()>=1,toString(),fineGridVertex.toString());
+
+  _vertexData.setNumberOfFinerLevelsAtSamePosition(
+    std::max(
+      _vertexData.getNumberOfFinerLevelsAtSamePosition(),
+      fineGridVertex._vertexData.getNumberOfFinerLevelsAtSamePosition()+1
+    )
+  );
 }
 
 
@@ -114,4 +121,12 @@ void multigrid::Vertex::clearHierarchicalValues() {
 
 void multigrid::Vertex::determineUHierarchical(double Pu_3h) {
   _vertexData.setHierarchicalU( _vertexData.getU()-Pu_3h );
+}
+
+
+double multigrid::Vertex::getDampingFactorForAdditiveCoarseGridCorrection(double omega) const {
+  assertion(omega>0.0);
+  assertion(omega<1.0);
+  assertion1(_vertexData.getNumberOfFinerLevelsAtSamePosition()>=1,toString());
+  return std::pow( omega, static_cast<double>(_vertexData.getNumberOfFinerLevelsAtSamePosition()) );
 }

@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
   tarch::logging::CommandLineLogger::getInstance().clearFilterList();
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", false ) );
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "debug", true ) );
-//  tarch::logging::CommandLineLogger::getInstance().setLogFormat( ... please consult source code documentation );
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( ::tarch::logging::CommandLineLogger::FilterListEntry( "info", -1, "peano::grid", true ) );
 
   // Runs the unit tests
   if (programExitCode==0) {

@@ -30,6 +30,6 @@ Was not able to create directories myproject. Probably directory has existed bef
 To clean up the directory, type in
 
 > make -f multigrid/makefile clean
-> rm -rf *.vtk file.mk multigrid/adapters multigrid/dastgen multigrid/records multigrid/repositories multigrid/tests \
+> rm -rf *.vtk files.mk multigrid/adapters multigrid/dastgen multigrid/records multigrid/repositories multigrid/tests \
 multigrid/VertexOperations.* multigrid/runners/RunnerParallelWorker.cpp
 

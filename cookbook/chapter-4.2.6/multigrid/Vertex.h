@@ -81,7 +81,7 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
 
     void clearAccumulatedAttributes();
 
-    bool performJacobiSmoothingStep( double omega );
+    void performJacobiSmoothingStep( double omega );
 
     void inject(const Vertex& fineGridVertex);
 
@@ -96,6 +96,7 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
 
     void determineUHierarchical(double Pu_3h);
 
+    double getDampingFactorForAdditiveCoarseGridCorrection(double omega) const;
 };
 
 

@@ -73,52 +73,75 @@ int multigrid::runners::Runner::runAsMaster(multigrid::repositories::Repository&
 
   switch (solver) {
     case Jacobi:
-      #if defined(Asserts) || defined(Debug)
-      repository.switchToJacobiAndPlot();
-      #else
-      repository.switchToJacobi();
-      #endif
-      for (int i=0; i<100; i++) {
-        repository.getState().clearAccumulatedAttributes();
-        repository.iterate();
+      {
+        double oldResidualIn2Norm   = 1.0;
+        double oldResidualInMaxNorm = 1.0;
+        #if defined(Asserts) || defined(Debug)
+        repository.switchToJacobiAndPlot();
+        #else
+        repository.switchToJacobi();
+        #endif
+        for (int i=0; i<100; i++) {
+          repository.getState().clearAccumulatedAttributes();
+          repository.iterate();
 
-        logInfo(
-          "runAsMaster(...)",
-          "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
-          ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
-          ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
-          ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
-          ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
-          ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates()
-        );
+          logInfo(
+            "runAsMaster(...)",
+            "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
+            ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
+            ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
+            ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
+            ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
+            ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates() <<
+            ",rho_2=" << (repository.getState().getResidualIn2Norm()/oldResidualIn2Norm) <<
+            ",|res|_max=" << (repository.getState().getResidualInMaxNorm()/oldResidualInMaxNorm)
+          );
+
+          oldResidualIn2Norm   = repository.getState().getResidualIn2Norm();
+          oldResidualInMaxNorm = repository.getState().getResidualInMaxNorm();
+        }
       }
       break;
     case AdditiveMG:
-      #if defined(Asserts) || defined(Debug)
-      repository.switchToAdditiveMGAndPlot();
-      #else
-      repository.switchToAdditiveMG();
-      #endif
-      for (int i=0; i<100; i++) {
-        repository.getState().clearAccumulatedAttributes();
-        repository.iterate();
+      {
+        double oldResidualIn2Norm   = 1.0;
+        double oldResidualInMaxNorm = 1.0;
+        #if defined(Asserts) || defined(Debug)
+        repository.switchToAdditiveMGAndPlot();
+        #else
+        repository.switchToAdditiveMG();
+        #endif
+        for (int i=0; i<100; i++) {
+          repository.getState().clearAccumulatedAttributes();
+          repository.iterate();
 
-        logInfo(
-          "runAsMaster(...)",
-          "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
-          ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
-          ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
-          ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
-          ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
-          ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates()
-        );
+          logInfo(
+            "runAsMaster(...)",
+            "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
+            ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
+            ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
+            ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
+            ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
+            ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates() <<
+            ",rho_2=" << (repository.getState().getResidualIn2Norm()/oldResidualIn2Norm) <<
+            ",|res|_max=" << (repository.getState().getResidualInMaxNorm()/oldResidualInMaxNorm)
+          );
+
+          oldResidualIn2Norm   = repository.getState().getResidualIn2Norm();
+          oldResidualInMaxNorm = repository.getState().getResidualInMaxNorm();
+        }
       }
       break;
     case None:
       assertionMsg( false, "may not happen" );
       break;
   }
- 
+
+  #if !defined(Asserts) && !defined(Debug)
+  repository.switchToPlot();
+  repository.iterate();
+  #endif
+
   repository.logIterationStatistics();
   repository.terminate();
   // End of dummy implementation

@@ -1,4 +1,5 @@
-#include "multigrid/mappings/AdditiveMGProlongation.h"
+#include "multigrid/mappings/AdditiveMG.h"
+#include "multigrid/mappings/JacobiSmoother.h"
 #include "multigrid/VertexOperations.h"
 
 
@@ -6,7 +7,7 @@
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::CommunicationSpecification   multigrid::mappings::AdditiveMGProlongation::communicationSpecification() {
+peano::CommunicationSpecification   multigrid::mappings::AdditiveMG::communicationSpecification() {
   return peano::CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime,false);
 }
 
@@ -14,7 +15,7 @@ peano::CommunicationSpecification   multigrid::mappings::AdditiveMGProlongation:
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::touchVertexLastTimeSpecification() {
+peano::MappingSpecification   multigrid::mappings::AdditiveMG::touchVertexLastTimeSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
 }
 
@@ -22,7 +23,7 @@ peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::touch
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::touchVertexFirstTimeSpecification() { 
+peano::MappingSpecification   multigrid::mappings::AdditiveMG::touchVertexFirstTimeSpecification() { 
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
 }
 
@@ -30,7 +31,7 @@ peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::touch
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::enterCellSpecification() {
+peano::MappingSpecification   multigrid::mappings::AdditiveMG::enterCellSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
 }
 
@@ -38,7 +39,7 @@ peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::enter
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::leaveCellSpecification() {
+peano::MappingSpecification   multigrid::mappings::AdditiveMG::leaveCellSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
 }
 
@@ -46,7 +47,7 @@ peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::leave
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::ascendSpecification() {
+peano::MappingSpecification   multigrid::mappings::AdditiveMG::ascendSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
 }
 
@@ -54,76 +55,30 @@ peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::ascen
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   multigrid::mappings::AdditiveMGProlongation::descendSpecification() {
+peano::MappingSpecification   multigrid::mappings::AdditiveMG::descendSpecification() {
   return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
 }
 
 
-tarch::logging::Log                multigrid::mappings::AdditiveMGProlongation::_log( "multigrid::mappings::AdditiveMGProlongation" ); 
+tarch::logging::Log                multigrid::mappings::AdditiveMG::_log( "multigrid::mappings::AdditiveMG" ); 
 
 
 
-void multigrid::mappings::AdditiveMGProlongation::touchVertexFirstTime(
-  multigrid::Vertex&               fineGridVertex,
-  const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
-  const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
-  multigrid::Vertex * const        coarseGridVertices,
-  const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-  multigrid::Cell&                 coarseGridCell,
-  const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+
+void multigrid::mappings::AdditiveMG::beginIteration(
+  multigrid::State&  solverState
 ) {
-  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+  logTraceInWith1Argument( "beginIteration(State)", solverState );
 
-  if (fineGridVertex.isInside()) {
-    const tarch::la::Vector<TWO_POWER_D,double > e_3h  = VertexOperations::readUUpdate(coarseGridVerticesEnumerator,coarseGridVertices);
-    const double                                 Pe_3h = _multigrid.getDLinearInterpolatedValue(e_3h,fineGridPositionOfVertex);
+  _state = solverState;
+  _state.clearAccumulatedAttributes();
 
-    fineGridVertex.correctU( Pe_3h );
-  }
-
-  // hier muss ich auch noch die Level beruecksichtigen. Das kann aber innerhalb der Vertex erfolgen.
-
-  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
+  logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
 
 
 
-//
-//   NOP
-// =======
-//
-
-multigrid::mappings::AdditiveMGProlongation::AdditiveMGProlongation() {
-  logTraceIn( "AdditiveMGProlongation()" );
-  // @todo Insert your code here
-  logTraceOut( "AdditiveMGProlongation()" );
-}
-
-
-multigrid::mappings::AdditiveMGProlongation::~AdditiveMGProlongation() {
-  logTraceIn( "~AdditiveMGProlongation()" );
-  // @todo Insert your code here
-  logTraceOut( "~AdditiveMGProlongation()" );
-}
-
-
-#if defined(SharedMemoryParallelisation)
-multigrid::mappings::AdditiveMGProlongation::AdditiveMGProlongation(const AdditiveMGProlongation&  masterThread) {
-  logTraceIn( "AdditiveMGProlongation(AdditiveMGProlongation)" );
-  // @todo Insert your code here
-  logTraceOut( "AdditiveMGProlongation(AdditiveMGProlongation)" );
-}
-
-
-void multigrid::mappings::AdditiveMGProlongation::mergeWithWorkerThread(const AdditiveMGProlongation& workerThread) {
-  logTraceIn( "mergeWithWorkerThread(AdditiveMGProlongation)" );
-  // @todo Insert your code here
-  logTraceOut( "mergeWithWorkerThread(AdditiveMGProlongation)" );
-}
-#endif
-
-
-void multigrid::mappings::AdditiveMGProlongation::createHangingVertex(
+void multigrid::mappings::AdditiveMG::createHangingVertex(
       multigrid::Vertex&     fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                fineGridH,
@@ -133,12 +88,168 @@ void multigrid::mappings::AdditiveMGProlongation::createHangingVertex(
       const tarch::la::Vector<DIMENSIONS,int>&                   fineGridPositionOfVertex
 ) {
   logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
+
+  fineGridVertex.setU(
+    _multigrid.getDLinearInterpolatedValue(
+      VertexOperations::readU( coarseGridVerticesEnumerator, coarseGridVertices ),
+      fineGridPositionOfVertex
+    )
+  );
+
   logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::destroyHangingVertex(
+void multigrid::mappings::AdditiveMG::createInnerVertex(
+      multigrid::Vertex&               fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  fineGridVertex.setU(
+    _multigrid.getDLinearInterpolatedValue(
+      VertexOperations::readU( coarseGridVerticesEnumerator, coarseGridVertices ),
+      fineGridPositionOfVertex
+    )
+  );
+
+  logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
+}
+
+
+void multigrid::mappings::AdditiveMG::enterCell(
+      multigrid::Cell&                 fineGridCell,
+      multigrid::Vertex * const        fineGridVertices,
+      const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
+) {
+  logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
+
+  const tarch::la::Vector<TWO_POWER_D,double> u    =
+    VertexOperations::readU( fineGridVerticesEnumerator, fineGridVertices );
+  const tarch::la::Vector<TWO_POWER_D,double> dOld    =
+    VertexOperations::readD( fineGridVerticesEnumerator, fineGridVertices );
+  const tarch::la::Vector<TWO_POWER_D,double> rOld =
+    VertexOperations::readR( fineGridVerticesEnumerator, fineGridVertices );
+  const matrixfree::stencil::ElementWiseAssemblyMatrix A =
+    fineGridCell.getElementsAssemblyMatrix( fineGridVerticesEnumerator.getCellSize() );
+
+  tarch::la::Vector<TWO_POWER_D,double> r = rOld - A * u;
+  tarch::la::Vector<TWO_POWER_D,double> d = dOld + tarch::la::diag(A);
+
+  VertexOperations::writeR( fineGridVerticesEnumerator, fineGridVertices, r );
+  VertexOperations::writeD( fineGridVerticesEnumerator, fineGridVertices, d );
+
+  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
+}
+
+
+void multigrid::mappings::AdditiveMG::touchVertexLastTime(
+  multigrid::Vertex&         fineGridVertex,
+  const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
+  const tarch::la::Vector<DIMENSIONS,double>&                    fineGridH,
+  multigrid::Vertex * const  coarseGridVertices,
+  const peano::grid::VertexEnumerator&          coarseGridVerticesEnumerator,
+  multigrid::Cell&           coarseGridCell,
+  const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+
+  if (
+    fineGridVertex.isInside()
+  ) {
+    fineGridVertex.performJacobiSmoothingStep(
+     fineGridVertex.getDampingFactorForAdditiveCoarseGridCorrection(multigrid::mappings::JacobiSmoother::omega)
+    );
+    if (
+      fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
+    ) {
+      _state.notifyAboutFineGridVertexUpdate(
+        fineGridVertex.getResidual(),
+        fineGridVertex.getU(),
+        fineGridH
+      );
+    }
+
+    if (
+     peano::grid::SingleLevelEnumerator::isVertexPositionAlsoACoarseVertexPosition(
+       fineGridPositionOfVertex
+     )
+    ) {
+      const peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex coarseGridPosition =
+        peano::grid::SingleLevelEnumerator::getVertexPositionOnCoarserLevel(fineGridPositionOfVertex);
+      coarseGridVertices[ coarseGridVerticesEnumerator(coarseGridPosition) ].inject(fineGridVertex);
+    }
+  }
+
+
+  logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
+}
+
+
+void multigrid::mappings::AdditiveMG::endIteration(
+  multigrid::State&  solverState
+) {
+  logTraceInWith1Argument( "endIteration(State)", solverState );
+
+  solverState.merge(_state);
+
+  logTraceOutWith1Argument( "endIteration(State)", solverState);
+}
+
+
+
+
+//
+//   NOP
+// =======
+//
+void multigrid::mappings::AdditiveMG::touchVertexFirstTime(
+      multigrid::Vertex&               fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+) {
+}
+
+
+multigrid::mappings::AdditiveMG::AdditiveMG() {
+}
+
+
+multigrid::mappings::AdditiveMG::~AdditiveMG() {
+}
+
+
+#if defined(SharedMemoryParallelisation)
+multigrid::mappings::AdditiveMG::AdditiveMG(const AdditiveMG&  masterThread) {
+  logTraceIn( "AdditiveMG(AdditiveMG)" );
+  // @todo Insert your code here
+  logTraceOut( "AdditiveMG(AdditiveMG)" );
+}
+
+
+void multigrid::mappings::AdditiveMG::mergeWithWorkerThread(const AdditiveMG& workerThread) {
+  logTraceIn( "mergeWithWorkerThread(AdditiveMG)" );
+  // @todo Insert your code here
+  logTraceOut( "mergeWithWorkerThread(AdditiveMG)" );
+}
+#endif
+
+
+void multigrid::mappings::AdditiveMG::destroyHangingVertex(
       const multigrid::Vertex&   fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridH,
@@ -153,22 +264,7 @@ void multigrid::mappings::AdditiveMGProlongation::destroyHangingVertex(
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::createInnerVertex(
-      multigrid::Vertex&               fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
-}
-
-
-void multigrid::mappings::AdditiveMGProlongation::createBoundaryVertex(
+void multigrid::mappings::AdditiveMG::createBoundaryVertex(
       multigrid::Vertex&               fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
@@ -183,7 +279,7 @@ void multigrid::mappings::AdditiveMGProlongation::createBoundaryVertex(
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::destroyVertex(
+void multigrid::mappings::AdditiveMG::destroyVertex(
       const multigrid::Vertex&   fineGridVertex,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
       const tarch::la::Vector<DIMENSIONS,double>&                    fineGridH,
@@ -198,7 +294,7 @@ void multigrid::mappings::AdditiveMGProlongation::destroyVertex(
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::createCell(
+void multigrid::mappings::AdditiveMG::createCell(
       multigrid::Cell&                 fineGridCell,
       multigrid::Vertex * const        fineGridVertices,
       const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -213,7 +309,7 @@ void multigrid::mappings::AdditiveMGProlongation::createCell(
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::destroyCell(
+void multigrid::mappings::AdditiveMG::destroyCell(
       const multigrid::Cell&           fineGridCell,
       multigrid::Vertex * const        fineGridVertices,
       const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -228,7 +324,7 @@ void multigrid::mappings::AdditiveMGProlongation::destroyCell(
 }
 
 #ifdef Parallel
-void multigrid::mappings::AdditiveMGProlongation::mergeWithNeighbour(
+void multigrid::mappings::AdditiveMG::mergeWithNeighbour(
   multigrid::Vertex&  vertex,
   const multigrid::Vertex&  neighbour,
   int                                           fromRank,
@@ -241,7 +337,7 @@ void multigrid::mappings::AdditiveMGProlongation::mergeWithNeighbour(
   logTraceOut( "mergeWithNeighbour(...)" );
 }
 
-void multigrid::mappings::AdditiveMGProlongation::prepareSendToNeighbour(
+void multigrid::mappings::AdditiveMG::prepareSendToNeighbour(
   multigrid::Vertex&  vertex,
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS,double>&   x,
@@ -253,7 +349,7 @@ void multigrid::mappings::AdditiveMGProlongation::prepareSendToNeighbour(
   logTraceOut( "prepareSendToNeighbour(...)" );
 }
 
-void multigrid::mappings::AdditiveMGProlongation::prepareCopyToRemoteNode(
+void multigrid::mappings::AdditiveMG::prepareCopyToRemoteNode(
   multigrid::Vertex&  localVertex,
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS,double>&   x,
@@ -265,7 +361,7 @@ void multigrid::mappings::AdditiveMGProlongation::prepareCopyToRemoteNode(
   logTraceOut( "prepareCopyToRemoteNode(...)" );
 }
 
-void multigrid::mappings::AdditiveMGProlongation::prepareCopyToRemoteNode(
+void multigrid::mappings::AdditiveMG::prepareCopyToRemoteNode(
   multigrid::Cell&  localCell,
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS,double>&   cellCentre,
@@ -277,7 +373,7 @@ void multigrid::mappings::AdditiveMGProlongation::prepareCopyToRemoteNode(
   logTraceOut( "prepareCopyToRemoteNode(...)" );
 }
 
-void multigrid::mappings::AdditiveMGProlongation::mergeWithRemoteDataDueToForkOrJoin(
+void multigrid::mappings::AdditiveMG::mergeWithRemoteDataDueToForkOrJoin(
   multigrid::Vertex&  localVertex,
   const multigrid::Vertex&  masterOrWorkerVertex,
   int                                       fromRank,
@@ -290,7 +386,7 @@ void multigrid::mappings::AdditiveMGProlongation::mergeWithRemoteDataDueToForkOr
   logTraceOut( "mergeWithRemoteDataDueToForkOrJoin(...)" );
 }
 
-void multigrid::mappings::AdditiveMGProlongation::mergeWithRemoteDataDueToForkOrJoin(
+void multigrid::mappings::AdditiveMG::mergeWithRemoteDataDueToForkOrJoin(
   multigrid::Cell&  localCell,
   const multigrid::Cell&  masterOrWorkerCell,
   int                                       fromRank,
@@ -303,7 +399,7 @@ void multigrid::mappings::AdditiveMGProlongation::mergeWithRemoteDataDueToForkOr
   logTraceOut( "mergeWithRemoteDataDueToForkOrJoin(...)" );
 }
 
-bool multigrid::mappings::AdditiveMGProlongation::prepareSendToWorker(
+bool multigrid::mappings::AdditiveMG::prepareSendToWorker(
   multigrid::Cell&                 fineGridCell,
   multigrid::Vertex * const        fineGridVertices,
   const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -319,7 +415,7 @@ bool multigrid::mappings::AdditiveMGProlongation::prepareSendToWorker(
   return true;
 }
 
-void multigrid::mappings::AdditiveMGProlongation::prepareSendToMaster(
+void multigrid::mappings::AdditiveMG::prepareSendToMaster(
   multigrid::Cell&                       localCell,
   multigrid::Vertex *                    vertices,
   const peano::grid::VertexEnumerator&       verticesEnumerator, 
@@ -334,7 +430,7 @@ void multigrid::mappings::AdditiveMGProlongation::prepareSendToMaster(
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::mergeWithMaster(
+void multigrid::mappings::AdditiveMG::mergeWithMaster(
   const multigrid::Cell&           workerGridCell,
   multigrid::Vertex * const        workerGridVertices,
  const peano::grid::VertexEnumerator& workerEnumerator,
@@ -355,7 +451,7 @@ void multigrid::mappings::AdditiveMGProlongation::mergeWithMaster(
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::receiveDataFromMaster(
+void multigrid::mappings::AdditiveMG::receiveDataFromMaster(
       multigrid::Cell&                        receivedCell, 
       multigrid::Vertex *                     receivedVertices,
       const peano::grid::VertexEnumerator&        receivedVerticesEnumerator,
@@ -373,7 +469,7 @@ void multigrid::mappings::AdditiveMGProlongation::receiveDataFromMaster(
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::mergeWithWorker(
+void multigrid::mappings::AdditiveMG::mergeWithWorker(
   multigrid::Cell&           localCell, 
   const multigrid::Cell&     receivedMasterCell,
   const tarch::la::Vector<DIMENSIONS,double>&  cellCentre,
@@ -386,7 +482,7 @@ void multigrid::mappings::AdditiveMGProlongation::mergeWithWorker(
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::mergeWithWorker(
+void multigrid::mappings::AdditiveMG::mergeWithWorker(
   multigrid::Vertex&        localVertex,
   const multigrid::Vertex&  receivedMasterVertex,
   const tarch::la::Vector<DIMENSIONS,double>&   x,
@@ -400,37 +496,7 @@ void multigrid::mappings::AdditiveMGProlongation::mergeWithWorker(
 #endif
 
 
-void multigrid::mappings::AdditiveMGProlongation::touchVertexLastTime(
-      multigrid::Vertex&         fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                    fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                    fineGridH,
-      multigrid::Vertex * const  coarseGridVertices,
-      const peano::grid::VertexEnumerator&          coarseGridVerticesEnumerator,
-      multigrid::Cell&           coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
-}
-
-
-void multigrid::mappings::AdditiveMGProlongation::enterCell(
-      multigrid::Cell&                 fineGridCell,
-      multigrid::Vertex * const        fineGridVertices,
-      const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfCell
-) {
-  logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
-}
-
-
-void multigrid::mappings::AdditiveMGProlongation::leaveCell(
+void multigrid::mappings::AdditiveMG::leaveCell(
       multigrid::Cell&           fineGridCell,
       multigrid::Vertex * const  fineGridVertices,
       const peano::grid::VertexEnumerator&          fineGridVerticesEnumerator,
@@ -445,26 +511,8 @@ void multigrid::mappings::AdditiveMGProlongation::leaveCell(
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::beginIteration(
-  multigrid::State&  solverState
-) {
-  logTraceInWith1Argument( "beginIteration(State)", solverState );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "beginIteration(State)", solverState);
-}
 
-
-void multigrid::mappings::AdditiveMGProlongation::endIteration(
-  multigrid::State&  solverState
-) {
-  logTraceInWith1Argument( "endIteration(State)", solverState );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "endIteration(State)", solverState);
-}
-
-
-
-void multigrid::mappings::AdditiveMGProlongation::descend(
+void multigrid::mappings::AdditiveMG::descend(
   multigrid::Cell * const          fineGridCells,
   multigrid::Vertex * const        fineGridVertices,
   const peano::grid::VertexEnumerator&                fineGridVerticesEnumerator,
@@ -478,7 +526,7 @@ void multigrid::mappings::AdditiveMGProlongation::descend(
 }
 
 
-void multigrid::mappings::AdditiveMGProlongation::ascend(
+void multigrid::mappings::AdditiveMG::ascend(
   multigrid::Cell * const    fineGridCells,
   multigrid::Vertex * const  fineGridVertices,
   const peano::grid::VertexEnumerator&          fineGridVerticesEnumerator,

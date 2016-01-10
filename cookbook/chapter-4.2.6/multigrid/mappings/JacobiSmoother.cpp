@@ -118,8 +118,14 @@ void multigrid::mappings::JacobiSmoother::touchVertexLastTime(
 ) {
   logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  const bool hasUpdated = fineGridVertex.performJacobiSmoothingStep( omega );
-  if (hasUpdated) {
+
+  if (
+    fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
+    &&
+    fineGridVertex.isInside()
+  ) {
+    fineGridVertex.performJacobiSmoothingStep( omega );
+
     _state.notifyAboutFineGridVertexUpdate(
       fineGridVertex.getResidual(),
       fineGridVertex.getU(),

@@ -282,19 +282,11 @@ double multigrid::Vertex::getResidual() const {
 }
 
 
-bool multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
-  if (
-    getRefinementControl()==Vertex::Records::Unrefined
-    &&
-    _vertexData.getVertexType()== Records::Unknown
-  ) {
+void multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
+  if (_vertexData.getVertexType()== Records::Unknown) {
     assertion1( _vertexData.getD()>0.0, toString() );
     assertion2( omega>0.0, toString(), omega );
     _vertexData.setU( _vertexData.getU() + omega / _vertexData.getD() * getResidual() );
-    return true;
-  }
-  else {
-    return false;
   }
 }
     \end{code} 
@@ -885,24 +877,31 @@ Once more, we rely on an instance of the Multigrid class.
 \begin{code}
 void
 multigrid::mappings::HierarchicalTransformAndRHSRestriction::createHangingVertex(...) { 
-  fineGridVertex.clearHierarchicalValues();
+ fineGridVertex.clearHierarchicalValues();
 }
 
 void multigrid::mappings::HierarchicalTransformAndRHSRestriction::touchVertexFirstTime(...) {
-  fineGridVertex.clearHierarchicalValues();
+ fineGridVertex.clearHierarchicalValues();
 
-  if ( fineGridVertex.isInside() ) {
-    const tarch::la::Vector<TWO_POWER_D,double > u_3h  = VertexOperations::readU
-      (coarseGridVerticesEnumerator,coarseGridVertices);
-    const double                                 Pu_3h = _multigrid.getDLinearInterpolatedValue
-      (u_3h,fineGridPositionOfVertex);
+ if ( fineGridVertex.isInside() ) {
+   const tarch::la::Vector<TWO_POWER_D,double > u_3h  = 
+     VertexOperations::readU(coarseGridVerticesEnumerator,coarseGridVertices);
+   const tarch::la::Vector<TWO_POWER_D,double > e_3h  = 
+     VertexOperations::readUUpdate(coarseGridVerticesEnumerator,coarseGridVertices);
+   const double                                 Pu_3h = 
+     _multigrid.getDLinearInterpolatedValue(u_3h,fineGridPositionOfVertex);
+   const double                                 Pe_3h =
+     _multigrid.getDLinearInterpolatedValue(e_3h,fineGridPositionOfVertex);
 
-    fineGridVertex.determineUHierarchical(Pu_3h);
+   fineGridVertex.determineUHierarchical(Pu_3h);
+   fineGridVertex.correctU(Pe_3h);
 
-    if (fineGridVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
-      fineGridVertex.clearF();
-    }
-  }
+   if (fineGridVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
+     fineGridVertex.clearF();
+   }
+ }
+
+ fineGridVertex.clearAccumulatedAttributes();
 }
 
 void multigrid::Vertex::determineUHierarchical(double Pu_3h) {
@@ -911,6 +910,16 @@ void multigrid::Vertex::determineUHierarchical(double Pu_3h) {
 \end{code}
 
 
+\begin{remark}
+  In this presentation, we make the solvers restrict residuals on all levels all
+  the time and prolong all updates all the time.
+  The actual distinction between additive and multiplicative multigrid stems from the decision which
+  level is smoothed. This is
+  highly inefficient.
+  Good solvers would compute only those residuals and right-hand sides that have changed and
+  are required. But the purpose of this presentation is to introduce a quick,
+  brief prototype. Speed is a different topic.
+\end{remark}
 
 \noindent
 The accumulation of the hierarchical surplus itself is more or less a
@@ -968,20 +977,6 @@ void multigrid::Vertex::incF(double value) {
 
 double multigrid::Vertex::getHierarchicalResidual() const {
   return _vertexData.getF() + _vertexData.getHierarchicalR();
-}
-
-bool multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
-  if ( _vertexData.getVertexType()== Records::Unknown ) {
-    assertion1( _vertexData.getD()>0.0, toString() );
-    assertion2( omega>0.0, toString(), omega );
-    const double update = omega / _vertexData.getD() * getResidual();
-    _vertexData.setU( _vertexData.getU() + update );
-    _vertexData.setUUpdate( update );
-     return getRefinementControl()==Vertex::Records::Unrefined;
-  }
-  else {
-    return false;
-  }
 }
 \end{code}
 
@@ -1062,6 +1057,10 @@ the subsequent iteration with fine grid solution data.
   We then can visualise both data sets simultaneously.
 \end{remark}
 
+
+
+
+
 \subsection{Additive Geometric Multigrid}
 
 In additive multigrid, we may not use the same relaxation factor on each and
@@ -1086,6 +1085,48 @@ and make the grid traversal determine the correct value of this attribute
 on the fly:
 
 
+
+void multigrid::Vertex::clearAccumulatedAttributes() {
+  _vertexData.setR(0.0);
+  _vertexData.setD(0.0);
+  
+  _vertexData.setNumberOfFinerLevelsAtSamePosition( 1 );
+}
+
+
+void multigrid::mappings::AdditiveMGProlongation::touchVertexFirstTime(
+  multigrid::Vertex&               fineGridVertex,
+  const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+  const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+  multigrid::Vertex * const        coarseGridVertices,
+  const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+  multigrid::Cell&                 coarseGridCell,
+  const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  if (fineGridVertex.isInside()) {
+    const tarch::la::Vector<TWO_POWER_D,double > e_3h  = VertexOperations::readUUpdate(coarseGridVerticesEnumerator,coarseGridVertices);
+    const double                                 Pe_3h = _multigrid.getDLinearInterpolatedValue(e_3h,fineGridPositionOfVertex);
+
+    fineGridVertex.correctU(
+      Pe_3h
+      *
+      fineGridVertex.getDampingFactorForAdditiveCoarseGridCorrection(multigrid::mappings::JacobiSmoother::omega)
+    );
+  }
+
+  // hier muss ich auch noch die Level beruecksichtigen. Das kann aber innerhalb der Vertex erfolgen.
+
+  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
+}
+
+
+Update doch spezifisch
+
+
+
+inject ein bischen falsch. Eigentlich besser R. 
 
 @todo Instabil. Relaxation mit aufnehmen
 
