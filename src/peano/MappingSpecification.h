@@ -40,7 +40,6 @@ namespace peano {
 ||                ||                           | Introduces @f$ 2^d @f$ colouring.
 ||                ||                           | Variant is undefined (and thus may not be chosen) for inter-level
 ||                ||                           | events such as ascend.
-||                || RunConcurrentlyOnFineGrid | Peano does not care about dependencies
  *
  * The order is Serial>AvoidCoarseGridRaces>AvoidFineGridRaces>RunConcurrentlyOnFineGrid.
  * If two mappings are combined one holding AvoidCoarseGridRaces and one holding
