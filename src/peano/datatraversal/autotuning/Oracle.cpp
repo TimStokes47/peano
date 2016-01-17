@@ -51,11 +51,20 @@ int peano::datatraversal::autotuning::Oracle::getKey(const MethodTrace& askingMe
 }
 
 
-void peano::datatraversal::autotuning::Oracle::plotStatistics() {
+void peano::datatraversal::autotuning::Oracle::plotStatistics(const std::string& filename) {
   assertion(_oracles!=0);
   for (int i=0; i<getTotalNumberOfOracles();i++) {
     assertion(_oracles[i]._oracle!=0);
-    _oracles[i]._oracle->plotStatistics();
+    _oracles[i]._oracle->plotStatistics(filename);
+  }
+}
+
+
+void peano::datatraversal::autotuning::Oracle::loadStatistics(const std::string& filename) {
+  assertion(_oracles!=0);
+  for (int i=0; i<getTotalNumberOfOracles();i++) {
+    assertion(_oracles[i]._oracle!=0);
+    _oracles[i]._oracle->loadStatistics(filename);
   }
 }
 

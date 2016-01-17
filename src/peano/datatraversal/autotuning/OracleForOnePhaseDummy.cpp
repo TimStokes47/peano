@@ -3,6 +3,8 @@
 
 #include <cstdlib>
 #include <limits>
+#include <iostream>
+#include <fstream>
 
 
 tarch::logging::Log  peano::datatraversal::autotuning::OracleForOnePhaseDummy::_log( "peano::datatraversal::autotuning::OracleForOnePhaseDummy" );
@@ -121,17 +123,36 @@ void peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelSectionHa
 }
 
 
-void peano::datatraversal::autotuning::OracleForOnePhaseDummy::plotStatistics() const {
+void peano::datatraversal::autotuning::OracleForOnePhaseDummy::loadStatistics(const std::string& filename) {
+}
+
+
+void peano::datatraversal::autotuning::OracleForOnePhaseDummy::plotStatistics(const std::string& filename) const {
+  std::ofstream out;
+  if (!filename.empty()) {
+    out.open(filename);
+  }
+
   for (std::map<int, tarch::timing::Measurement>::const_iterator p=_executionTime.begin(); p!=_executionTime.end(); p++) {
     if (p->second.getNumberOfMeasurements()>0) {
-      logInfo(
-        "plotRuntimes()",
-        "averaged runtime for " << peano::datatraversal::autotuning::toString(_methodTrace)
-        << " in " << _adapterNumber-peano::datatraversal::autotuning::NumberOfPredefinedAdapters+1 << "th adapter "
-        << " for problem size " << p->first << ": " <<
-        p->second.toString()
-      );
+      std::ostringstream msg;
+      msg <<
+          "averaged runtime for " << peano::datatraversal::autotuning::toString(_methodTrace)
+          << " in " << _adapterNumber-peano::datatraversal::autotuning::NumberOfPredefinedAdapters+1 << "th adapter "
+          << " for problem size " << p->first << ": " <<
+          p->second.toString();
+
+      if (filename.empty()) {
+        logInfo( "plotRuntimes()", msg.str() );
+      }
+      else {
+        out << msg.str() << std::endl;
+      }
     }
+  }
+
+  if (!filename.empty()) {
+    out.close();
   }
 }
 

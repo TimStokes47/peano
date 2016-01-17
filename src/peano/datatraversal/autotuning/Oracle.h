@@ -94,8 +94,17 @@ class peano::datatraversal::autotuning::Oracle {
     /**
      * Plot some statistics on the parallel usage. You have to call this
      * operation explicitly, if you are interested in the statistics.
+     *
+     * @see OracleForOnePhase
      */
-    void plotStatistics();
+    void plotStatistics(const std::string& filename);
+
+    /**
+     *
+     * @see OracleForOnePhase
+     *
+     */
+    void loadStatistics(const std::string& filename);
 
     /**
      * Tell the oracle how many different adapters you'll gonna use.

@@ -82,9 +82,20 @@ class peano::datatraversal::autotuning::OracleForOnePhase {
     virtual void parallelSectionHasTerminated(double elapsedCalendarTime) = 0;
 
     /**
-     * Plot something to info log device.
+     * Plot statistics.
+     *
+     * Plot the statistics data into a file. If the filename is empty, all
+     * statistics are written onto the info log level. Several oracles also are
+     * able to use statistics to configure themselves and, thus, are able to
+     * read statistics as well.
      */
-    virtual void plotStatistics() const = 0;
+    virtual void plotStatistics(const std::string& filename) const = 0;
+
+    /**
+     * Load statistics from a file. Not every oracle has to support this
+     * operation, i.e. the code might be empty.
+     */
+    virtual void loadStatistics(const std::string& filename) = 0;
 
     /**
      * This operation is called by the oracle (management) on all oracles. Can

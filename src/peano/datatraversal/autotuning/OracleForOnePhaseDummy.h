@@ -94,7 +94,12 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
 
     virtual std::pair<int,bool> parallelise(int problemSize);
     virtual void parallelSectionHasTerminated(double elapsedCalendarTime);
-    virtual void plotStatistics() const;
+    virtual void plotStatistics(const std::string& filename) const;
+
+    /**
+     * Not implemented
+     */
+    virtual void loadStatistics(const std::string& filename);
 
     virtual void informAboutElapsedTimeOfLastTraversal(double elapsedTime);
 
