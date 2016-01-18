@@ -30,7 +30,7 @@ matrixfree::adaptivitycriteria::LinearSurplusRefinementCriterionWithFixedMeshSiz
   if (1.0/numberOfBins>refinementPercentage) {
     logWarning( "LinearSurplusRefinementCriterionWithFixedMeshSizes()", "refinement percentage of " << refinementPercentage << "% cannot be resolved properly with only " << numberOfBins << " bin(s). Increase bin count." );
   }
-  if (1.0/numberOfBins>deletePercentage) {
+  if (1.0/numberOfBins>deletePercentage && deletePercentage>0.0) {
     logWarning( "LinearSurplusRefinementCriterionWithFixedMeshSizes()", "delete percentage of " << deletePercentage << "% cannot be resolved properly with only " << numberOfBins << " bin(s). Increase bin count." );
   }
 }

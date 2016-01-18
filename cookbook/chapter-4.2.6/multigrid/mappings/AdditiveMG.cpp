@@ -95,6 +95,7 @@ void multigrid::mappings::AdditiveMG::createHangingVertex(
       fineGridPositionOfVertex
     )
   );
+  fineGridVertex.clearHierarchicalValues();
 
   logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
 }
@@ -119,6 +120,39 @@ void multigrid::mappings::AdditiveMG::createInnerVertex(
   );
 
   logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
+}
+
+
+void multigrid::mappings::AdditiveMG::touchVertexFirstTime(
+      multigrid::Vertex&               fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  fineGridVertex.clearHierarchicalValues();
+
+  if ( fineGridVertex.isInside() ) {
+    const tarch::la::Vector<TWO_POWER_D,double > u_3h  = VertexOperations::readU(coarseGridVerticesEnumerator,coarseGridVertices);
+    const tarch::la::Vector<TWO_POWER_D,double > e_3h  = VertexOperations::readUUpdate(coarseGridVerticesEnumerator,coarseGridVertices);
+    const double                                 Pu_3h = _multigrid.getDLinearInterpolatedValue(u_3h,fineGridPositionOfVertex);
+    const double                                 Pe_3h = _multigrid.getDLinearInterpolatedValue(e_3h,fineGridPositionOfVertex);
+
+    fineGridVertex.correctU(Pe_3h);  // the order of these two operations is important
+    fineGridVertex.determineUHierarchical(Pu_3h);
+
+    if (fineGridVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
+      fineGridVertex.clearF();
+    }
+  }
+
+  fineGridVertex.clearAccumulatedAttributes();
+
+  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
 }
 
 
@@ -148,7 +182,16 @@ void multigrid::mappings::AdditiveMG::enterCell(
   VertexOperations::writeR( fineGridVerticesEnumerator, fineGridVertices, r );
   VertexOperations::writeD( fineGridVerticesEnumerator, fineGridVertices, d );
 
-  logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
+  const tarch::la::Vector<TWO_POWER_D,double> hierarchicalU    =
+     VertexOperations::readHierarchicalU( fineGridVerticesEnumerator, fineGridVertices );
+   const tarch::la::Vector<TWO_POWER_D,double> hierarchicalROld =
+     VertexOperations::readHierarchicalR( fineGridVerticesEnumerator, fineGridVertices );
+
+   tarch::la::Vector<TWO_POWER_D,double> hierarchicalR = hierarchicalROld - A * hierarchicalU;
+
+   VertexOperations::writeHierarchicalR( fineGridVerticesEnumerator, fineGridVertices, hierarchicalR );
+
+   logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
 
 
@@ -162,7 +205,6 @@ void multigrid::mappings::AdditiveMG::touchVertexLastTime(
   const tarch::la::Vector<DIMENSIONS,int>&                       fineGridPositionOfVertex
 ) {
   logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-
 
   if (
     fineGridVertex.isInside()
@@ -179,6 +221,9 @@ void multigrid::mappings::AdditiveMG::touchVertexLastTime(
         fineGridH
       );
     }
+    else {
+      _state.incNumberOfStencilEvaluations();
+    }
 
     if (
      peano::grid::SingleLevelEnumerator::isVertexPositionAlsoACoarseVertexPosition(
@@ -189,8 +234,21 @@ void multigrid::mappings::AdditiveMG::touchVertexLastTime(
         peano::grid::SingleLevelEnumerator::getVertexPositionOnCoarserLevel(fineGridPositionOfVertex);
       coarseGridVertices[ coarseGridVerticesEnumerator(coarseGridPosition) ].inject(fineGridVertex);
     }
-  }
 
+    const tarch::la::Vector<TWO_POWER_D, double > P = _multigrid.calculateP(fineGridPositionOfVertex);
+
+    dfor2(k)
+      // There is no need to exclude boundary points here (the rhs does not play
+      // there a role anyway), but it makes the visualisation nicer.
+      if (
+        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Refined
+        &&
+        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].isInside()
+      ) {
+        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].incF(  P(kScalar) * fineGridVertex.getHierarchicalResidual() );
+      }
+    enddforx
+  }
 
   logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
 }
@@ -213,18 +271,6 @@ void multigrid::mappings::AdditiveMG::endIteration(
 //   NOP
 // =======
 //
-void multigrid::mappings::AdditiveMG::touchVertexFirstTime(
-      multigrid::Vertex&               fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
-) {
-}
-
-
 multigrid::mappings::AdditiveMG::AdditiveMG() {
 }
 

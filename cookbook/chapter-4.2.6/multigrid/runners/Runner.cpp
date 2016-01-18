@@ -65,6 +65,154 @@ int multigrid::runners::Runner::run(Solver solver) {
 }
 
 
+void multigrid::runners::Runner::runJacobi(multigrid::repositories::Repository& repository) {
+  double oldResidualIn2Norm   = 1.0;
+  double oldResidualInMaxNorm = 1.0;
+  double totalNumberOfStencilUpdates = 0.0;
+  #if defined(Asserts) || defined(Debug)
+  repository.switchToJacobiAndPlot();
+  #else
+  repository.switchToJacobi();
+  #endif
+  for (int i=0; i<100; i++) {
+    repository.getState().clearAccumulatedAttributes();
+    repository.iterate();
+
+    totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
+
+    logInfo(
+      "runAsMaster(...)",
+      "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
+      ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
+      ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
+      ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
+      ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
+      ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates() <<
+      ",rho_2=" << (repository.getState().getResidualIn2Norm()/oldResidualIn2Norm) <<
+      ",|res|_max=" << (repository.getState().getResidualInMaxNorm()/oldResidualInMaxNorm) <<
+      ",#total-stencil-updates=" << totalNumberOfStencilUpdates
+    );
+
+    oldResidualIn2Norm   = repository.getState().getResidualIn2Norm();
+    oldResidualInMaxNorm = repository.getState().getResidualInMaxNorm();
+  }
+}
+
+
+void multigrid::runners::Runner::runAdditiveMG(multigrid::repositories::Repository& repository) {
+  double oldResidualIn2Norm   = 1.0;
+  double oldResidualInMaxNorm = 1.0;
+  int    iterations           = 0;
+  double rhoL2                = 1.0;
+  double rhoMax               = 1.0;
+  double totalNumberOfStencilUpdates = 0.0;
+  #if defined(Asserts) || defined(Debug)
+  repository.switchToAdditiveMGAndPlot();
+  #else
+  repository.switchToAdditiveMG();
+  #endif
+  while (oldResidualIn2Norm>1e-12 && iterations<1000 && (rhoL2<2.0 || rhoMax<2.0 ) ) {
+    repository.getState().clearAccumulatedAttributes();
+    repository.iterate();
+
+    rhoL2  = repository.getState().isGridStationary() ? (repository.getState().getResidualIn2Norm()/oldResidualIn2Norm)     : 0.0;
+    rhoMax = repository.getState().isGridStationary() ? (repository.getState().getResidualInMaxNorm()/oldResidualInMaxNorm) : 0.0;
+
+    totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
+
+    logInfo(
+      "runAsMaster(...)",
+      "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
+      ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
+      ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
+      ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
+      ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
+      ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates() <<
+      ",rho_2=" << rhoL2 <<
+      ",|res|_max=" << rhoMax <<
+      ",#total-stencil-updates=" << totalNumberOfStencilUpdates
+    );
+
+    oldResidualIn2Norm   = repository.getState().getResidualIn2Norm();
+    oldResidualInMaxNorm = repository.getState().getResidualInMaxNorm();
+    iterations++;
+  }
+}
+
+
+void multigrid::runners::Runner::runMultiplicativeMG(multigrid::repositories::Repository& repository, int preSmoothingSteps, int postSmoothingSteps) {
+  double oldResidualIn2Norm   = 1.0;
+  double oldResidualInMaxNorm = 1.0;
+  int    iterations           = 0;
+  double rhoL2                = 1.0;
+  double rhoMax               = 1.0;
+  double totalNumberOfStencilUpdates = 0.0;
+
+  repository.switchToMultiplicativeMG();
+
+  repository.getState().setMultiplicativeMultigridPhase(State::Init);
+
+  while (oldResidualIn2Norm>1e-12 && iterations<1000 && (rhoL2<2.0 || rhoMax<2.0 ) ) {
+    while (repository.getState().getActiveSmoothingLevel()>2) {
+      for (int i=0; i<preSmoothingSteps-1; i++) {
+        repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::Smooth);
+        repository.getState().clearAccumulatedAttributes();
+        repository.iterate();
+        totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
+      }
+      repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::SmoothAndRestrict);
+      repository.getState().clearAccumulatedAttributes();
+      repository.iterate();
+      totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
+    }
+    while (repository.getState().getActiveSmoothingLevel()<repository.getState().getMaxLevel()) {
+      #if defined(Asserts) || defined(Debug)
+      if (repository.getState().getActiveSmoothingLevel()==repository.getState().getMaxLevel()) {
+        repository.switchToMultiplicativeMGAndPlot();
+      }
+      else
+      #else
+      repository.switchToMultiplicativeMG();
+      #endif
+
+      repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::SmoothAndProlong);
+      repository.getState().clearAccumulatedAttributes();
+      repository.iterate();
+      totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
+
+      for (int i=0; i<postSmoothingSteps-1; i++) {
+        repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::Smooth);
+        repository.getState().clearAccumulatedAttributes();
+        repository.iterate();
+        totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
+      }
+    }
+
+    rhoL2  = repository.getState().isGridStationary() ? (repository.getState().getResidualIn2Norm()/oldResidualIn2Norm)     : 0.0;
+    rhoMax = repository.getState().isGridStationary() ? (repository.getState().getResidualInMaxNorm()/oldResidualInMaxNorm) : 0.0;
+
+    totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
+
+    logInfo(
+      "runAsMaster(...)",
+      "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
+      ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
+      ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
+      ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
+      ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
+      ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates() <<
+      ",rho_2=" << rhoL2 <<
+      ",|res|_max=" << rhoMax <<
+      ",#total-stencil-updates=" << totalNumberOfStencilUpdates
+    );
+
+    oldResidualIn2Norm   = repository.getState().getResidualIn2Norm();
+    oldResidualInMaxNorm = repository.getState().getResidualInMaxNorm();
+
+    iterations++;
+  }
+}
+
 int multigrid::runners::Runner::runAsMaster(multigrid::repositories::Repository& repository, Solver solver) {
   peano::utils::UserInterface userInterface;
   userInterface.writeHeader();
@@ -73,79 +221,19 @@ int multigrid::runners::Runner::runAsMaster(multigrid::repositories::Repository&
 
   switch (solver) {
     case Jacobi:
-      {
-        double oldResidualIn2Norm   = 1.0;
-        double oldResidualInMaxNorm = 1.0;
-        double totalNumberOfStencilUpdates = 0.0;
-        #if defined(Asserts) || defined(Debug)
-        repository.switchToJacobiAndPlot();
-        #else
-        repository.switchToJacobi();
-        #endif
-        for (int i=0; i<100; i++) {
-          repository.getState().clearAccumulatedAttributes();
-          repository.iterate();
-
-          totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
-
-          logInfo(
-            "runAsMaster(...)",
-            "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
-            ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
-            ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
-            ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
-            ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
-            ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates() <<
-            ",rho_2=" << (repository.getState().getResidualIn2Norm()/oldResidualIn2Norm) <<
-            ",|res|_max=" << (repository.getState().getResidualInMaxNorm()/oldResidualInMaxNorm) <<
-            ",#total-stencil-updates=" << totalNumberOfStencilUpdates
-          );
-
-          oldResidualIn2Norm   = repository.getState().getResidualIn2Norm();
-          oldResidualInMaxNorm = repository.getState().getResidualInMaxNorm();
-        }
-      }
+      runJacobi(repository);
       break;
     case AdditiveMG:
-      {
-        double oldResidualIn2Norm   = 1.0;
-        double oldResidualInMaxNorm = 1.0;
-        int    iterations           = 0;
-        double rhoL2                = 1.0;
-        double rhoMax               = 1.0;
-        double totalNumberOfStencilUpdates = 0.0;
-        #if defined(Asserts) || defined(Debug)
-        repository.switchToAdditiveMGAndPlot();
-        #else
-        repository.switchToAdditiveMG();
-        #endif
-        while (oldResidualIn2Norm>1e-12 && iterations<1000 && (rhoL2<2.0 || rhoMax<2.0 ) ) {
-          repository.getState().clearAccumulatedAttributes();
-          repository.iterate();
-
-          rhoL2  = repository.getState().isGridStationary() ? (repository.getState().getResidualIn2Norm()/oldResidualIn2Norm)     : 0.0;
-          rhoMax = repository.getState().isGridStationary() ? (repository.getState().getResidualInMaxNorm()/oldResidualInMaxNorm) : 0.0;
-
-          totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
-
-          logInfo(
-            "runAsMaster(...)",
-            "#vertices=" << repository.getState().getNumberOfInnerLeafVertices() <<
-            ",|res|_2=" << repository.getState().getResidualIn2Norm() <<
-            ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
-            ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
-            ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
-            ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates() <<
-            ",rho_2=" << rhoL2 <<
-            ",|res|_max=" << rhoMax <<
-            ",#total-stencil-updates=" << totalNumberOfStencilUpdates
-          );
-
-          oldResidualIn2Norm   = repository.getState().getResidualIn2Norm();
-          oldResidualInMaxNorm = repository.getState().getResidualInMaxNorm();
-          iterations++;
-        }
-      }
+      runAdditiveMG(repository);
+      break;
+    case MultiplicativeV11:
+      runMultiplicativeMG(repository, 1, 1);
+      break;
+    case MultiplicativeV22:
+      runMultiplicativeMG(repository, 2, 2);
+      break;
+    case MultiplicativeV33:
+      runMultiplicativeMG(repository, 3, 3);
       break;
     case None:
       assertionMsg( false, "may not happen" );

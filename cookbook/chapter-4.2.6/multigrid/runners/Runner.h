@@ -14,13 +14,13 @@
 
 
 namespace multigrid {
-    namespace runners {
-      class Runner;
-    }
+  namespace runners {
+    class Runner;
+  }
 
-    namespace repositories {
-      class Repository;
-    }
+  namespace repositories {
+    class Repository;
+  }
 }
 
 
@@ -34,7 +34,10 @@ class multigrid::runners::Runner {
     enum Solver {
       None,
       Jacobi,
-      AdditiveMG
+      AdditiveMG,
+      MultiplicativeV11,
+      MultiplicativeV22,
+      MultiplicativeV33
     };
 
   private:
@@ -42,6 +45,10 @@ class multigrid::runners::Runner {
 
     int runAsMaster(multigrid::repositories::Repository& repository, Solver solver);
     
+    void runJacobi(multigrid::repositories::Repository& repository);
+    void runAdditiveMG(multigrid::repositories::Repository& repository);
+    void runMultiplicativeMG(multigrid::repositories::Repository& repository, int preSmoothingSteps, int postSmoothingSteps);
+
     #ifdef Parallel
     int runAsWorker(multigrid::repositories::Repository& repository);
     

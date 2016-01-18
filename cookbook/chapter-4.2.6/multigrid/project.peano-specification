@@ -38,10 +38,10 @@ event-mapping:
   name: PlotCells
 
 event-mapping:
-  name: HierarchicalTransformAndRHSRestriction
+  name: AdditiveMG
 
 event-mapping:
-  name: AdditiveMG
+  name: MultiplicativeMG
 
 adapter:
   name: CreateGrid
@@ -53,14 +53,12 @@ adapter:
   name: Jacobi
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: JacobiSmoother
-  merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
   merge-with-user-defined-mapping: RefinementCriterion
  
 adapter:
   name: JacobiAndPlot
   merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: JacobiSmoother
-  merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
   merge-with-user-defined-mapping: PlotCells
   merge-with-user-defined-mapping: RefinementCriterion
   merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
@@ -71,14 +69,31 @@ adapter:
   name: AdditiveMG
   merge-with-user-defined-mapping: AdditiveMG
   merge-with-user-defined-mapping: CreateGrid
-  merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
   merge-with-user-defined-mapping: RefinementCriterion
  
 adapter:
   name: AdditiveMGAndPlot
   merge-with-user-defined-mapping: AdditiveMG
   merge-with-user-defined-mapping: CreateGrid
-  merge-with-user-defined-mapping: HierarchicalTransformAndRHSRestriction
+  merge-with-user-defined-mapping: PlotCells
+  merge-with-user-defined-mapping: RefinementCriterion
+  merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleU,getU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelValue(multiscaleHierarchicalU,getHierarchicalU,u)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud(multiscaleResidual,getResidual,res)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud(multiscaleHierarchicalResidual,getHierarchicalResidual,res)
+  merge-with-predefined-mapping: VTKPlotVertexMultilevelPointCloud(f,getF,f)
+  
+ adapter:
+  name: MultiplicativeMG
+  merge-with-user-defined-mapping: MultiplicativeMG
+  merge-with-user-defined-mapping: CreateGrid
+  merge-with-user-defined-mapping: RefinementCriterion
+ 
+adapter:
+  name: MultiplicativeMGAndPlot
+  merge-with-user-defined-mapping: MultiplicativeMG
+  merge-with-user-defined-mapping: CreateGrid
   merge-with-user-defined-mapping: PlotCells
   merge-with-user-defined-mapping: RefinementCriterion
   merge-with-predefined-mapping: VTKPlotVertexValue(u,getU,u)

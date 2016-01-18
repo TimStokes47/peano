@@ -45,6 +45,9 @@ int main(int argc, char** argv) {
               << "Valid solvers:" << std::endl
               << "\tJacobi" << std::endl
               << "\tAdditiveMG" << std::endl
+              << "\tMultiplicativeV11" << std::endl
+              << "\tMultiplicativeV22" << std::endl
+              << "\tMultiplicativeV33" << std::endl
               << std::endl
 /*
               <<  "AnisotropicPoisson" << std::endl
@@ -111,6 +114,15 @@ int main(int argc, char** argv) {
     }
     else if (std::string(argv[2])=="AdditiveMG") {
       solver = multigrid::runners::Runner::AdditiveMG;
+    }
+    else if (std::string(argv[2])=="MultiplicativeV11") {
+      solver = multigrid::runners::Runner::MultiplicativeV11;
+    }
+    else if (std::string(argv[2])=="MultiplicativeV22") {
+      solver = multigrid::runners::Runner::MultiplicativeV22;
+    }
+    else if (std::string(argv[2])=="MultiplicativeV33") {
+      solver = multigrid::runners::Runner::MultiplicativeV33;
     }
     else {
       std::cerr << "invalid solver. Please run without arguments to see list of supported solvers" << std::endl;

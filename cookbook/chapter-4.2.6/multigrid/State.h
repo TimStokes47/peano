@@ -84,6 +84,19 @@ class multigrid::State: public peano::grid::State< multigrid::records::State > {
     double getNumberOfStencilUpdates() const;
 
     void notifyAboutFineGridVertexUpdate( double res, double newU, const tarch::la::Vector<DIMENSIONS,double>&  h);
+    void incNumberOfStencilEvaluations();
+
+    enum MultigridPhase {
+      Init,
+      Smooth,
+      SmoothAndRestrict,
+      SmoothAndProlong
+    };
+
+    void setMultiplicativeMultigridPhase(MultigridPhase phase);
+
+    int getActiveSmoothingLevel() const;
+    int getOldActiveSmoothingLevel() const;
 };
 
 

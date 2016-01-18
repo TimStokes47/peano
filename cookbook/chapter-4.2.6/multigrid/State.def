@@ -8,4 +8,10 @@ class multigrid::records::State {
   persistent parallelise double solutionL2Norm;
   persistent parallelise double solutionMaxNorm;
   persistent parallelise double numberOfStencilUpdates;
+  
+  /**
+   * For multiplicative solver
+   */
+  persistent parallelise double activeLevel;
+  persistent parallelise double oldActiveLevel;
 };

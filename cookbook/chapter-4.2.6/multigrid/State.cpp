@@ -82,3 +82,39 @@ void multigrid::State::notifyAboutFineGridVertexUpdate( double res, double newU,
 
   _stateData.setNumberOfStencilUpdates( _stateData.getNumberOfStencilUpdates() + 1 );
 }
+
+
+void multigrid::State::setMultiplicativeMultigridPhase(MultigridPhase phase) {
+  switch (phase) {
+    case Init:
+      _stateData.setActiveLevel( getMaxLevel() );
+      _stateData.setOldActiveLevel( getMaxLevel() );
+      break;
+    case Smooth:
+      _stateData.setOldActiveLevel( _stateData.getActiveLevel() );
+      break;
+    case SmoothAndRestrict:
+      _stateData.setOldActiveLevel( _stateData.getActiveLevel() );
+      _stateData.setActiveLevel( _stateData.getActiveLevel()-1 );
+      break;
+    case SmoothAndProlong:
+      _stateData.setOldActiveLevel( _stateData.getActiveLevel() );
+      _stateData.setActiveLevel( _stateData.getActiveLevel()+1 );
+      break;
+  }
+}
+
+
+void multigrid::State::incNumberOfStencilEvaluations() {
+  _stateData.setNumberOfStencilUpdates( _stateData.getNumberOfStencilUpdates() + 1 );
+}
+
+
+int multigrid::State::getActiveSmoothingLevel() const {
+  return _stateData.getActiveLevel();
+}
+
+
+int multigrid::State::getOldActiveSmoothingLevel() const {
+  return _stateData.getOldActiveLevel();
+}
