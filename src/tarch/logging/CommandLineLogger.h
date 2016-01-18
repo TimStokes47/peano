@@ -87,6 +87,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
 
       bool operator<(const FilterListEntry& b) const;
       bool operator==(const FilterListEntry& b) const;
+      bool operator!=(const FilterListEntry& b) const;
 
       /**
        * Construct filter list entry for one target without any

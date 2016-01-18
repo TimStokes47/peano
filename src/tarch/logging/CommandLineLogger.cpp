@@ -94,6 +94,11 @@ bool tarch::logging::CommandLineLogger::FilterListEntry::operator==(const Filter
 }
 
 
+bool tarch::logging::CommandLineLogger::FilterListEntry::operator!=(const FilterListEntry& b) const {
+  return not operator==(b);
+}
+
+
 tarch::logging::CommandLineLogger::CommandLineLogger():
   _outputStream(0),
   _hasWrittenToOuputStream(false),
