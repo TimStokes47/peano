@@ -8,6 +8,7 @@
 #include "tarch/la/VectorCompare.h"
 #include "tarch/logging/Log.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
 #include "tarch/plotter/griddata/unstructured/vtk/VTKBinaryFileWriter.h"
 
 #include "peano/MappingSpecification.h"
