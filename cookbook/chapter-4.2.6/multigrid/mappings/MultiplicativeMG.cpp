@@ -64,6 +64,103 @@ tarch::logging::Log                multigrid::mappings::MultiplicativeMG::_log( 
 
 
 
+bool multigrid::mappings::MultiplicativeMG::smooth(
+  multigrid::Vertex&                           fineGridVertex,
+  const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator
+) const {
+  return
+    fineGridVertex.isInside() &&
+    (
+      _state.getActiveSmoothingLevel()==coarseGridVerticesEnumerator.getLevel()+1
+      ||
+      (
+       _state.getActiveSmoothingLevel()>coarseGridVerticesEnumerator.getLevel()+1
+       &&
+       fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
+      )
+    );
+}
+
+
+bool multigrid::mappings::MultiplicativeMG::smooth(
+  multigrid::Cell&                             fineGridCell,
+  const peano::grid::VertexEnumerator&         fineGridVerticesEnumerator
+) const {
+  return
+    _state.getActiveSmoothingLevel()==fineGridVerticesEnumerator.getLevel()
+    ||
+    (
+     _state.getActiveSmoothingLevel()>fineGridVerticesEnumerator.getLevel()
+     &&
+     !fineGridCell.isRefined()
+    );
+}
+
+
+bool multigrid::mappings::MultiplicativeMG::inject(
+  multigrid::Vertex&                           fineGridVertex,
+  const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator
+) const {
+  return
+    fineGridVertex.isInside()
+    &&
+    _state.getActiveSmoothingLevel()>=coarseGridVerticesEnumerator.getLevel()+1;
+}
+
+
+bool multigrid::mappings::MultiplicativeMG::prolongFromCoarseGrid(
+  multigrid::Vertex&                           fineGridVertex,
+  const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator
+) const {
+  return
+    fineGridVertex.isInside()
+    &&
+    _state.getActiveSmoothingLevel()>_state.getOldActiveSmoothingLevel()
+    &&
+    _state.getActiveSmoothingLevel()==coarseGridVerticesEnumerator.getLevel()+1;
+}
+
+
+
+bool multigrid::mappings::MultiplicativeMG::computeRhs(
+  multigrid::Vertex&                           fineGridVertex,
+  const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator
+) const {
+  return
+    fineGridVertex.isInside()
+    &&
+    _state.getActiveSmoothingLevel()<_state.getOldActiveSmoothingLevel()
+    &&
+    _state.getActiveSmoothingLevel()==coarseGridVerticesEnumerator.getLevel()+1
+    &&
+    fineGridVertex.getRefinementControl()!=Vertex::Records::Unrefined;
+}
+
+
+bool multigrid::mappings::MultiplicativeMG::computeHierarchicalResidual(
+  multigrid::Vertex&                           fineGridVertex,
+  const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator
+) const {
+  return
+    fineGridVertex.isInside()
+    &&
+    _state.getActiveSmoothingLevel()<_state.getOldActiveSmoothingLevel()
+    &&
+    _state.getOldActiveSmoothingLevel()==coarseGridVerticesEnumerator.getLevel()+1;
+}
+
+
+bool multigrid::mappings::MultiplicativeMG::computeHierarchicalResidual(
+  multigrid::Cell&                             fineGridCell,
+  const peano::grid::VertexEnumerator&         fineGridVerticesEnumerator
+) const {
+  return
+    _state.getActiveSmoothingLevel()<_state.getOldActiveSmoothingLevel()
+    &&
+    _state.getOldActiveSmoothingLevel()==fineGridVerticesEnumerator.getLevel();
+}
+
+
 void multigrid::mappings::MultiplicativeMG::beginIteration(
   multigrid::State&  solverState
 ) {
@@ -93,11 +190,10 @@ void multigrid::mappings::MultiplicativeMG::createHangingVertex(
       fineGridPositionOfVertex
     )
   );
+  fineGridVertex.clearHierarchicalValues();
 
   logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
 }
-
-
 
 
 void multigrid::mappings::MultiplicativeMG::createInnerVertex(
@@ -122,6 +218,54 @@ void multigrid::mappings::MultiplicativeMG::createInnerVertex(
 }
 
 
+void multigrid::mappings::MultiplicativeMG::touchVertexFirstTime(
+      multigrid::Vertex&               fineGridVertex,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+      multigrid::Vertex * const        coarseGridVertices,
+      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+      multigrid::Cell&                 coarseGridCell,
+      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+) {
+  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+
+  logDebug(
+    "touchVertexFirstTime(...)",
+    "clear-r="<< smooth(fineGridVertex,coarseGridVerticesEnumerator) <<
+    ",clear-f=" << computeRhs(fineGridVertex,coarseGridVerticesEnumerator) <<
+    ",clear-hatr=" << computeHierarchicalResidual(fineGridVertex,coarseGridVerticesEnumerator) <<
+    ",prolong=" << prolongFromCoarseGrid(fineGridVertex,coarseGridVerticesEnumerator) <<
+    ",l_active=" << _state.getActiveSmoothingLevel() <<
+    ",l_old=" << _state.getOldActiveSmoothingLevel() <<
+    ",v=" << fineGridVertex.toString()
+  );
+
+  if ( smooth(fineGridVertex,coarseGridVerticesEnumerator) ) {
+    fineGridVertex.clearAccumulatedAttributes();
+  }
+
+  if ( computeRhs(fineGridVertex,coarseGridVerticesEnumerator) ) {
+    fineGridVertex.clearFAndUUpdate();
+  }
+
+  if ( computeHierarchicalResidual(fineGridVertex,coarseGridVerticesEnumerator) ) {
+    fineGridVertex.clearHierarchicalValues();
+
+    const tarch::la::Vector<TWO_POWER_D,double > u_3h  = VertexOperations::readU(coarseGridVerticesEnumerator,coarseGridVertices);
+    const double                                 Pu_3h = _multigrid.getDLinearInterpolatedValue(u_3h,fineGridPositionOfVertex);
+
+    fineGridVertex.determineUHierarchical(Pu_3h);
+  }
+
+  if (prolongFromCoarseGrid(fineGridVertex,coarseGridVerticesEnumerator)) {
+    const tarch::la::Vector<TWO_POWER_D,double > e_3h  = VertexOperations::readUUpdate(coarseGridVerticesEnumerator,coarseGridVertices);
+    const double                                 Pe_3h = _multigrid.getDLinearInterpolatedValue(e_3h,fineGridPositionOfVertex);
+    fineGridVertex.correctU(Pe_3h);  // the order of these two operations is important
+  }
+  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
+}
+
+
 void multigrid::mappings::MultiplicativeMG::enterCell(
       multigrid::Cell&                 fineGridCell,
       multigrid::Vertex * const        fineGridVertices,
@@ -141,16 +285,28 @@ void multigrid::mappings::MultiplicativeMG::enterCell(
     VertexOperations::readR( fineGridVerticesEnumerator, fineGridVertices );
   const matrixfree::stencil::ElementWiseAssemblyMatrix A =
     fineGridCell.getElementsAssemblyMatrix( fineGridVerticesEnumerator.getCellSize() );
+  const tarch::la::Vector<TWO_POWER_D,double> hierarchicalU    =
+    VertexOperations::readHierarchicalU( fineGridVerticesEnumerator, fineGridVertices );
+  const tarch::la::Vector<TWO_POWER_D,double> hierarchicalROld =
+    VertexOperations::readHierarchicalR( fineGridVerticesEnumerator, fineGridVertices );
 
-  tarch::la::Vector<TWO_POWER_D,double> r = rOld - A * u;
-  tarch::la::Vector<TWO_POWER_D,double> d = dOld + tarch::la::diag(A);
+  logDebug( "enterCell(...)", "smooth=" << smooth(fineGridCell,fineGridVerticesEnumerator) << ", comp-hierarch=" << computeHierarchicalResidual(fineGridCell,fineGridVerticesEnumerator) );
+  if (smooth(fineGridCell,fineGridVerticesEnumerator)) {
+    tarch::la::Vector<TWO_POWER_D,double> r = rOld - A * u;
+    tarch::la::Vector<TWO_POWER_D,double> d = dOld + tarch::la::diag(A);
 
-  VertexOperations::writeR( fineGridVerticesEnumerator, fineGridVertices, r );
-  VertexOperations::writeD( fineGridVerticesEnumerator, fineGridVertices, d );
+    VertexOperations::writeR( fineGridVerticesEnumerator, fineGridVertices, r );
+    VertexOperations::writeD( fineGridVerticesEnumerator, fineGridVertices, d );
+  }
+
+  if (computeHierarchicalResidual(fineGridCell,fineGridVerticesEnumerator)) {
+    tarch::la::Vector<TWO_POWER_D,double> hierarchicalR = hierarchicalROld - A * hierarchicalU;
+
+    VertexOperations::writeHierarchicalR( fineGridVerticesEnumerator, fineGridVertices, hierarchicalR );
+  }
 
   logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
-
 
 
 void multigrid::mappings::MultiplicativeMG::touchVertexLastTime(
@@ -164,23 +320,8 @@ void multigrid::mappings::MultiplicativeMG::touchVertexLastTime(
 ) {
   logTraceInWith6Arguments( "touchVertexLastTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  const bool vertexIsSmoothingCandidate =
-      _state.getActiveSmoothingLevel()==coarseGridVerticesEnumerator.getLevel()+1
-      ||
-      (
-       _state.getActiveSmoothingLevel()>coarseGridVerticesEnumerator.getLevel()+1
-       &&
-       fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
-      );
-
-  if (
-    fineGridVertex.isInside()
-    &&
-    vertexIsSmoothingCandidate
-  ) {
-    fineGridVertex.performJacobiSmoothingStep(
-     fineGridVertex.getDampingFactorForAdditiveCoarseGridCorrection(multigrid::mappings::JacobiSmoother::omega)
-    );
+  if ( smooth(fineGridVertex,coarseGridVerticesEnumerator) ) {
+    fineGridVertex.performJacobiSmoothingStep( multigrid::mappings::JacobiSmoother::omega );
     if (
       fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
     ) {
@@ -193,18 +334,33 @@ void multigrid::mappings::MultiplicativeMG::touchVertexLastTime(
     else {
       _state.incNumberOfStencilEvaluations();
     }
-
-    if (
-     peano::grid::SingleLevelEnumerator::isVertexPositionAlsoACoarseVertexPosition(
-       fineGridPositionOfVertex
-     )
-    ) {
-      const peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex coarseGridPosition =
-        peano::grid::SingleLevelEnumerator::getVertexPositionOnCoarserLevel(fineGridPositionOfVertex);
-      coarseGridVertices[ coarseGridVerticesEnumerator(coarseGridPosition) ].inject(fineGridVertex);
-    }
   }
 
+  if (
+    inject(fineGridVertex,coarseGridVerticesEnumerator)
+    &&
+    peano::grid::SingleLevelEnumerator::isVertexPositionAlsoACoarseVertexPosition( fineGridPositionOfVertex )
+  ) {
+    const peano::grid::SingleLevelEnumerator::LocalVertexIntegerIndex coarseGridPosition =
+      peano::grid::SingleLevelEnumerator::getVertexPositionOnCoarserLevel(fineGridPositionOfVertex);
+    coarseGridVertices[ coarseGridVerticesEnumerator(coarseGridPosition) ].inject(fineGridVertex);
+  }
+
+  if (computeHierarchicalResidual(fineGridVertex,coarseGridVerticesEnumerator)) {
+    const tarch::la::Vector<TWO_POWER_D, double > P = _multigrid.calculateP(fineGridPositionOfVertex);
+
+    dfor2(k)
+      // There is no need to exclude boundary points here (the rhs does not play
+      // there a role anyway), but it makes the visualisation nicer.
+      if (
+        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Refined
+        &&
+        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].isInside()
+      ) {
+        coarseGridVertices[ coarseGridVerticesEnumerator(k) ].incF(  P(kScalar) * fineGridVertex.getHierarchicalResidual() );
+      }
+    enddforx
+  }
 
   logTraceOutWith1Argument( "touchVertexLastTime(...)", fineGridVertex );
 }
@@ -500,20 +656,6 @@ void multigrid::mappings::MultiplicativeMG::mergeWithWorker(
   logTraceOutWith1Argument( "mergeWithWorker(...)", localVertex.toString() );
 }
 #endif
-
-void multigrid::mappings::MultiplicativeMG::touchVertexFirstTime(
-      multigrid::Vertex&               fineGridVertex,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
-      const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
-      multigrid::Vertex * const        coarseGridVertices,
-      const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-      multigrid::Cell&                 coarseGridCell,
-      const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-  // @todo Insert your code here
-  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
-}
 
 
 void multigrid::mappings::MultiplicativeMG::leaveCell(

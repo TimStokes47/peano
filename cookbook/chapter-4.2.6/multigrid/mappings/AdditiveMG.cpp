@@ -146,7 +146,7 @@ void multigrid::mappings::AdditiveMG::touchVertexFirstTime(
     fineGridVertex.determineUHierarchical(Pu_3h);
 
     if (fineGridVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
-      fineGridVertex.clearF();
+      fineGridVertex.clearFAndUUpdate();
     }
   }
 

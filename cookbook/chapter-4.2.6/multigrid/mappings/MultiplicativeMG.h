@@ -49,6 +49,42 @@ class multigrid::mappings::MultiplicativeMG {
 
     State                          _state;
     matrixfree::solver::Multigrid  _multigrid;
+
+    bool smooth(
+      multigrid::Vertex&                           fineGridVertex,
+      const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator
+    ) const;
+
+    bool smooth(
+      multigrid::Cell&                             fineGridCell,
+      const peano::grid::VertexEnumerator&         fineGridVerticesEnumerator
+    ) const;
+
+    bool computeRhs(
+      multigrid::Vertex&                           fineGridVertex,
+      const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator
+    ) const;
+
+    bool prolongFromCoarseGrid(
+      multigrid::Vertex&                           fineGridVertex,
+      const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator
+    ) const;
+
+    bool computeHierarchicalResidual(
+      multigrid::Vertex&                           fineGridVertex,
+      const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator
+    ) const;
+
+    bool computeHierarchicalResidual(
+      multigrid::Cell&                             fineGridCell,
+      const peano::grid::VertexEnumerator&         fineGridVerticesEnumerator
+    ) const;
+
+    bool inject(
+      multigrid::Vertex&                           fineGridVertex,
+      const peano::grid::VertexEnumerator&         coarseGridVerticesEnumerator
+    ) const;
+
   public:
     /**
      * These flags are used to inform Peano about your operation. It tells the 

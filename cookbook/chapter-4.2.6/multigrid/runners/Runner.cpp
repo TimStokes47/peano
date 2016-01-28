@@ -130,6 +130,7 @@ void multigrid::runners::Runner::runAdditiveMG(multigrid::repositories::Reposito
       ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates() <<
       ",rho_2=" << rhoL2 <<
       ",|res|_max=" << rhoMax <<
+      ",level_max=" << repository.getState().getMaxLevel() <<
       ",#total-stencil-updates=" << totalNumberOfStencilUpdates
     );
 
@@ -152,20 +153,30 @@ void multigrid::runners::Runner::runMultiplicativeMG(multigrid::repositories::Re
 
   repository.getState().setMultiplicativeMultigridPhase(State::Init);
 
-  while (oldResidualIn2Norm>1e-12 && iterations<1000 && (rhoL2<2.0 || rhoMax<2.0 ) ) {
-    while (repository.getState().getActiveSmoothingLevel()>2) {
+  const int MaxIterations = 1000; // 1000
+  repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::Smooth);
+  logDebug( "runMultiplicativeMG()","start smoothing" );
+  while (oldResidualIn2Norm>1e-12 && iterations<MaxIterations && (rhoL2<2.0 || rhoMax<2.0 ) ) {
+    while (repository.getState().getActiveSmoothingLevel()>=2) {
+      repository.getState().clearAccumulatedAttributes();
+      logDebug( "runMultiplicativeMG()","state=" <<  repository.getState().toString() );
+      repository.iterate();
+      totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
       for (int i=0; i<preSmoothingSteps-1; i++) {
         repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::Smooth);
+        logDebug( "runMultiplicativeMG()","switch to smooth" );
         repository.getState().clearAccumulatedAttributes();
+        logDebug( "runMultiplicativeMG()","state=" <<  repository.getState().toString() );
         repository.iterate();
         totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
       }
-      repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::SmoothAndRestrict);
-      repository.getState().clearAccumulatedAttributes();
-      repository.iterate();
-      totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
+      repository.getState().setMultiplicativeMultigridPhase( State::MultigridPhase::SmoothAndRestrict );
+      logDebug( "runMultiplicativeMG()","switch to smooth and restrict" );
     }
-    while (repository.getState().getActiveSmoothingLevel()<repository.getState().getMaxLevel()) {
+    logDebug( "runMultiplicativeMG()","cancel last switch and then switch to smooth" );
+    repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::SmoothAndProlong);
+    repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::Smooth);
+    while (repository.getState().getActiveSmoothingLevel()<=repository.getState().getMaxLevel()) {
       #if defined(Asserts) || defined(Debug)
       if (repository.getState().getActiveSmoothingLevel()==repository.getState().getMaxLevel()) {
         repository.switchToMultiplicativeMGAndPlot();
@@ -175,18 +186,28 @@ void multigrid::runners::Runner::runMultiplicativeMG(multigrid::repositories::Re
       repository.switchToMultiplicativeMG();
       #endif
 
-      repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::SmoothAndProlong);
       repository.getState().clearAccumulatedAttributes();
+      logDebug( "runMultiplicativeMG()","state=" <<  repository.getState().toString() );
       repository.iterate();
       totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
 
       for (int i=0; i<postSmoothingSteps-1; i++) {
         repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::Smooth);
+        logDebug( "runMultiplicativeMG()","switch to smooth" );
         repository.getState().clearAccumulatedAttributes();
+        logDebug( "runMultiplicativeMG()","state=" <<  repository.getState().toString() );
         repository.iterate();
         totalNumberOfStencilUpdates += repository.getState().getNumberOfStencilUpdates();
       }
+
+
+      repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::SmoothAndProlong);
+      logDebug( "runMultiplicativeMG()","switch to smooth and prolong" );
     }
+
+    logDebug( "runMultiplicativeMG()","cancel last switch and then switch to smooth" );
+    repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::SmoothAndRestrict);
+    repository.getState().setMultiplicativeMultigridPhase(State::MultigridPhase::Smooth);
 
     rhoL2  = repository.getState().isGridStationary() ? (repository.getState().getResidualIn2Norm()/oldResidualIn2Norm)     : 0.0;
     rhoMax = repository.getState().isGridStationary() ? (repository.getState().getResidualInMaxNorm()/oldResidualInMaxNorm) : 0.0;
@@ -200,9 +221,9 @@ void multigrid::runners::Runner::runMultiplicativeMG(multigrid::repositories::Re
       ",|res|_max=" << repository.getState().getResidualInMaxNorm() <<
       ",|u|_L2=" << repository.getState().getSolutionIn2Norm() <<
       ",|u|_max=" << repository.getState().getSolutionInMaxNorm() <<
-      ",#stencil-updates=" << repository.getState().getNumberOfStencilUpdates() <<
       ",rho_2=" << rhoL2 <<
       ",|res|_max=" << rhoMax <<
+      ",level_max=" << repository.getState().getMaxLevel() <<
       ",#total-stencil-updates=" << totalNumberOfStencilUpdates
     );
 
@@ -229,11 +250,29 @@ int multigrid::runners::Runner::runAsMaster(multigrid::repositories::Repository&
     case MultiplicativeV11:
       runMultiplicativeMG(repository, 1, 1);
       break;
+    case MultiplicativeV12:
+      runMultiplicativeMG(repository, 1, 2);
+      break;
     case MultiplicativeV22:
-      runMultiplicativeMG(repository, 2, 2);
+      runMultiplicativeMG(repository, 2, 1);
+      break;
+    case MultiplicativeV21:
+      runMultiplicativeMG(repository, 2, 1);
+      break;
+    case MultiplicativeV31:
+      runMultiplicativeMG(repository, 3, 1);
+      break;
+    case MultiplicativeV32:
+      runMultiplicativeMG(repository, 3, 2);
       break;
     case MultiplicativeV33:
       runMultiplicativeMG(repository, 3, 3);
+      break;
+    case MultiplicativeV23:
+      runMultiplicativeMG(repository, 2, 3);
+      break;
+    case MultiplicativeV13:
+      runMultiplicativeMG(repository, 1, 3);
       break;
     case None:
       assertionMsg( false, "may not happen" );

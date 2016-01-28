@@ -36,8 +36,14 @@ class multigrid::runners::Runner {
       Jacobi,
       AdditiveMG,
       MultiplicativeV11,
+      MultiplicativeV12,
       MultiplicativeV22,
-      MultiplicativeV33
+      MultiplicativeV21,
+      MultiplicativeV31,
+      MultiplicativeV32,
+      MultiplicativeV33,
+      MultiplicativeV23,
+      MultiplicativeV13
     };
 
   private:

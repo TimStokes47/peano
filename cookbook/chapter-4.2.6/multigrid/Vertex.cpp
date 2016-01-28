@@ -39,8 +39,9 @@ double multigrid::Vertex::getF() const {
 }
 
 
-void multigrid::Vertex::clearF() {
-  return _vertexData.setF(0.0);
+void multigrid::Vertex::clearFAndUUpdate() {
+  _vertexData.setF(0.0);
+  _vertexData.setUUpdate( 0.0 );
 }
 
 
@@ -78,7 +79,7 @@ void multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
   assertion2( omega>0.0, toString(), omega );
   const double update = omega / _vertexData.getD() * getResidual();
   _vertexData.setU( _vertexData.getU() + update );
-  _vertexData.setUUpdate( update );
+  _vertexData.setUUpdate( _vertexData.getUUpdate() + update );
 }
 
 
@@ -91,7 +92,8 @@ void multigrid::Vertex::correctU( double update ) {
 void multigrid::Vertex::inject(const Vertex& fineGridVertex) {
   _vertexData.setU( fineGridVertex._vertexData.getU() );
 
-  assertion2(_vertexData.getNumberOfFinerLevelsAtSamePosition()>=1,toString(),fineGridVertex.toString());
+  // can only be evaluated if we use the additive mg
+  // assertion2(_vertexData.getNumberOfFinerLevelsAtSamePosition()>=1,toString(),fineGridVertex.toString());
   assertion2(fineGridVertex._vertexData.getNumberOfFinerLevelsAtSamePosition()>=1,toString(),fineGridVertex.toString());
 
   _vertexData.setNumberOfFinerLevelsAtSamePosition(
