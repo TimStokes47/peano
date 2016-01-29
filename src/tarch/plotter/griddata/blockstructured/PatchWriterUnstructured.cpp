@@ -165,6 +165,4 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PatchWriterUnstruc
 
 
 void tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::SinglePatchWriter::close() {
-  _vertexWriter.close();
-  _cellWriter.close();
 }
