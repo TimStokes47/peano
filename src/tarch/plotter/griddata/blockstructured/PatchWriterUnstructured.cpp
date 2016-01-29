@@ -28,11 +28,8 @@ tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::~PatchWriter
 
 
 void tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::writeToFile( const std::string& filename ) {
-  delete _vertexWriter;
-  delete _cellWriter;
-
-  _vertexWriter = 0;
-  _cellWriter   = 0;
+  assertionMsg( _vertexWriter==nullptr, "call close() on patch writer before" );
+  assertionMsg( _cellWriter==nullptr,   "call close() on patch writer before" );
 
   _writer->writeToFile( filename );
 }
@@ -49,10 +46,7 @@ void tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::clear()
 
 
 tarch::plotter::griddata::blockstructured::PatchWriter::SinglePatchWriter*   tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::createSinglePatchWriter() {
-  return new tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::SinglePatchWriter(
-    *_vertexWriter,
-    *_cellWriter
-  );
+  return new tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::SinglePatchWriter(*this);
 }
 
 
@@ -67,11 +61,9 @@ tarch::plotter::griddata::Writer::VertexDataWriter*  tarch::plotter::griddata::b
 
 
 tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::SinglePatchWriter::SinglePatchWriter(
-  tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter&  vertexWriter,
-  tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter&    cellWriter
+    tarch::plotter::griddata::blockstructured::PatchWriterUnstructured& base
 ):
-  _vertexWriter(vertexWriter),
-  _cellWriter(cellWriter) {
+  _base(base) {
 }
 
 
@@ -93,7 +85,7 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PatchWriterUnstruc
     p(0) = offset(0) + x * size(0) / cells(0);
     p(1) = offset(1) + y * size(1) / cells(1);
 
-    const int newVertexNumber = _vertexWriter.plotVertex(p);
+    const int newVertexNumber = _base._vertexWriter->plotVertex(p);
     firstVertex = firstVertex==-1 ? newVertexNumber : firstVertex;
   }
 
@@ -106,7 +98,7 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PatchWriterUnstruc
     cellsVertexIndices[1] = firstVertex + (x+1) + (y+0) * (cells(0)+1);
     cellsVertexIndices[2] = firstVertex + (x+0) + (y+1) * (cells(0)+1);
     cellsVertexIndices[3] = firstVertex + (x+1) + (y+1) * (cells(0)+1);
-    const int newCellNumber = _cellWriter.plotQuadrangle(cellsVertexIndices);
+    const int newCellNumber = _base._cellWriter->plotQuadrangle(cellsVertexIndices);
     firstCell = firstCell==-1 ? newCellNumber : firstCell;
   }
 
@@ -138,7 +130,7 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PatchWriterUnstruc
     p(1) = offset(1) + y * size(1) / cells(1);
     p(2) = offset(2) + z * size(2) / cells(2);
 
-    const int newVertexNumber = _vertexWriter.plotVertex(p);
+    const int newVertexNumber = _base._vertexWriter->plotVertex(p);
     firstVertex = firstVertex==-1 ? newVertexNumber : firstVertex;
   }
 
@@ -156,7 +148,7 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PatchWriterUnstruc
     cellsVertexIndices[5] = firstVertex + (x+1) + (y+0) * (cells(0)+1) + (z+1) * (cells(0)+1) * (cells(1)+1);
     cellsVertexIndices[6] = firstVertex + (x+0) + (y+1) * (cells(0)+1) + (z+1) * (cells(0)+1) * (cells(1)+1);
     cellsVertexIndices[7] = firstVertex + (x+1) + (y+1) * (cells(0)+1) + (z+1) * (cells(0)+1) * (cells(1)+1);
-    const int newCellNumber = _cellWriter.plotHexahedron(cellsVertexIndices);
+    const int newCellNumber = _base._cellWriter->plotHexahedron(cellsVertexIndices);
     firstCell = firstCell==-1 ? newCellNumber : firstCell;
   }
 
@@ -165,4 +157,15 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PatchWriterUnstruc
 
 
 void tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::SinglePatchWriter::close() {
+  assertion( _base._vertexWriter!=nullptr );
+  assertion( _base._cellWriter!=nullptr   );
+
+  _base._vertexWriter->close();
+  _base._cellWriter->close();
+
+  delete _base._vertexWriter;
+  delete _base._cellWriter;
+
+  _base._vertexWriter = nullptr;
+  _base._cellWriter   = nullptr;
 }

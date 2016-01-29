@@ -29,33 +29,15 @@ namespace tarch {
  */
 class tarch::plotter::griddata::blockstructured::PatchWriterUnstructured:
   public tarch::plotter::griddata::blockstructured::PatchWriter {
-  private:
-    /**
-     * General vtk writer
-     */
-    tarch::plotter::griddata::unstructured::UnstructuredGridWriter*                               _writer;
-
-    /**
-     * Plotter for vertices
-     */
-    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*                 _vertexWriter;
-
-    /**
-     * Plotter for cells
-     */
-    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*                   _cellWriter;
-
   public:
     class SinglePatchWriter: public tarch::plotter::griddata::blockstructured::PatchWriter::SinglePatchWriter {
       private:
         friend class tarch::plotter::griddata::blockstructured::PatchWriterUnstructured;
 
-        tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter&  _vertexWriter;
-        tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter&    _cellWriter;
+        tarch::plotter::griddata::blockstructured::PatchWriterUnstructured&   _base;
 
         SinglePatchWriter(
-          tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter&  vertexWriter,
-          tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter&    cellWriter
+          tarch::plotter::griddata::blockstructured::PatchWriterUnstructured& base
         );
       public:
         virtual ~SinglePatchWriter();
@@ -84,6 +66,24 @@ class tarch::plotter::griddata::blockstructured::PatchWriterUnstructured:
         virtual void close();
     };
 
+   private:
+    friend class SinglePatchWriter;
+
+    /**
+     * General vtk writer
+     */
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter*                               _writer;
+
+    /**
+     * Plotter for vertices
+     */
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*                 _vertexWriter;
+
+    /**
+     * Plotter for cells
+     */
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*                   _cellWriter;
+  public:
     /**
      * Pass the patch writer an instance of an unstructured writer. The patch
      * writer afterwards is responsible for that instance, i.e. will delete it
