@@ -62,9 +62,6 @@ class tarch::plotter::griddata::blockstructured::PatchWriter:
      \endcode
      */
     class SinglePatchWriter {
-      private:
-        static tarch::multicore::BooleanSemaphore _semaphore;
-
       public:
         virtual ~SinglePatchWriter() {}
 
