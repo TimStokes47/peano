@@ -88,7 +88,8 @@ class multigrid::Vertex: public peano::grid::Vertex< multigrid::records::Vertex 
     void setU( double u );
     void correctU( double u );
 
-    void clearFAndUUpdate();
+    void clearF();
+    void clearUUpdate();
 
     void incF(double value);
 

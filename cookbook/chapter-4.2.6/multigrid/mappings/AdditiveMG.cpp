@@ -146,7 +146,8 @@ void multigrid::mappings::AdditiveMG::touchVertexFirstTime(
     fineGridVertex.determineUHierarchical(Pu_3h);
 
     if (fineGridVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
-      fineGridVertex.clearFAndUUpdate();
+      fineGridVertex.clearF();
+//      fineGridVertex.clearUUpdate();
     }
   }
 
@@ -209,6 +210,7 @@ void multigrid::mappings::AdditiveMG::touchVertexLastTime(
   if (
     fineGridVertex.isInside()
   ) {
+    fineGridVertex.clearUUpdate();
     fineGridVertex.performJacobiSmoothingStep(
      fineGridVertex.getDampingFactorForAdditiveCoarseGridCorrection(multigrid::mappings::JacobiSmoother::omega)
     );

@@ -39,8 +39,12 @@ double multigrid::Vertex::getF() const {
 }
 
 
-void multigrid::Vertex::clearFAndUUpdate() {
+void multigrid::Vertex::clearF() {
   _vertexData.setF(0.0);
+}
+
+
+void multigrid::Vertex::clearUUpdate() {
   _vertexData.setUUpdate( 0.0 );
 }
 

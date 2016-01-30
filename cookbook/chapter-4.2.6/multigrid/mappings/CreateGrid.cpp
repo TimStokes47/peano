@@ -170,7 +170,8 @@ void multigrid::mappings::CreateGrid::createBoundaryVertex(
     assertionMsg( false, "not implemented yet" );
   }
 
-  fineGridVertex.clearFAndUUpdate();
+  fineGridVertex.clearF();
+  fineGridVertex.clearUUpdate();
 
   logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
 }
@@ -218,7 +219,8 @@ void multigrid::mappings::CreateGrid::createHangingVertex(
 ) {
   logTraceInWith6Arguments( "createHangingVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  fineGridVertex.clearFAndUUpdate();
+  fineGridVertex.clearF();
+  fineGridVertex.clearUUpdate();
 
   logTraceOutWith1Argument( "createHangingVertex(...)", fineGridVertex );
 }

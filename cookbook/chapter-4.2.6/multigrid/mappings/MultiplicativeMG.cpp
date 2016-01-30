@@ -245,7 +245,8 @@ void multigrid::mappings::MultiplicativeMG::touchVertexFirstTime(
   }
 
   if ( computeRhs(fineGridVertex,coarseGridVerticesEnumerator) ) {
-    fineGridVertex.clearFAndUUpdate();
+    fineGridVertex.clearF();
+    fineGridVertex.clearUUpdate();
   }
 
   if ( computeHierarchicalResidual(fineGridVertex,coarseGridVerticesEnumerator) ) {
