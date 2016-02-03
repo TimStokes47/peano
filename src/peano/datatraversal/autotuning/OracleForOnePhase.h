@@ -88,8 +88,10 @@ class peano::datatraversal::autotuning::OracleForOnePhase {
      * statistics are written onto the info log level. Several oracles also are
      * able to use statistics to configure themselves and, thus, are able to
      * read statistics as well.
+     *
+     * The statistics usually are
      */
-    virtual void plotStatistics(const std::string& filename) const = 0;
+    virtual void plotStatistics(std::ostream& out) const = 0;
 
     /**
      * Load statistics from a file. Not every oracle has to support this

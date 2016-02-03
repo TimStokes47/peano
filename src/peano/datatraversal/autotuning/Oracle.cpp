@@ -8,6 +8,10 @@
 #endif
 
 
+#include <fstream>
+#include <sstream>
+
+
 tarch::logging::Log  peano::datatraversal::autotuning::Oracle::_log( "peano::datatraversal::autotuning::Oracle" ) ;
 
 
@@ -53,9 +57,28 @@ int peano::datatraversal::autotuning::Oracle::getKey(const MethodTrace& askingMe
 
 void peano::datatraversal::autotuning::Oracle::plotStatistics(const std::string& filename) {
   assertion(_oracles!=0);
-  for (int i=0; i<getTotalNumberOfOracles();i++) {
-    assertion(_oracles[i]._oracle!=0);
-    _oracles[i]._oracle->plotStatistics(filename);
+
+  if (!filename.empty()) {
+    std::ofstream f(filename.c_str(),std::ios::out );
+    if (f.is_open()) {
+      for (int i=0; i<getTotalNumberOfOracles();i++) {
+        assertion(_oracles[i]._oracle!=0);
+        _oracles[i]._oracle->plotStatistics(f);
+      }
+      f.flush();
+      f.close();
+    }
+    else {
+      logError("plotStatistics", "could not write into " << filename);
+    }
+  }
+  else {
+    std::ostringstream f;
+    for (int i=0; i<getTotalNumberOfOracles();i++) {
+      assertion(_oracles[i]._oracle!=0);
+      _oracles[i]._oracle->plotStatistics(f);
+    }
+    logInfo( "plotStatistics(string)", f.str() );
   }
 }
 

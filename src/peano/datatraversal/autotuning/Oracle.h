@@ -93,7 +93,9 @@ class peano::datatraversal::autotuning::Oracle {
 
     /**
      * Plot some statistics on the parallel usage. You have to call this
-     * operation explicitly, if you are interested in the statistics.
+     * operation explicitly, if you are interested in the statistics. The data
+     * goes into a file if a filename is specified. If no filename is specified
+     * (empty string), we plot into the logInfo device.
      *
      * @see OracleForOnePhase
      */
