@@ -3,6 +3,9 @@
 #include "multigrid/mappings/JacobiSmoother.h"
 
 
+#include "peano/grid/aspects/VertexStateAnalysis.h"
+
+
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
@@ -83,7 +86,7 @@ bool multigrid::mappings::MultiplicativeMG::smooth(
 
 
 bool multigrid::mappings::MultiplicativeMG::smooth(
-  multigrid::Cell&                             fineGridCell,
+  multigrid::Vertex * const                    fineGridCell,
   const peano::grid::VertexEnumerator&         fineGridVerticesEnumerator
 ) const {
   return
@@ -92,7 +95,13 @@ bool multigrid::mappings::MultiplicativeMG::smooth(
     (
      _state.getActiveSmoothingLevel()>fineGridVerticesEnumerator.getLevel()
      &&
+     /*
+      * We would like to use
      !fineGridCell.isRefined()
+      * but we may not as we have these slight domain overlaps in FAC along the
+      * resolution boundaries.
+      */
+     !peano::grid::aspects::VertexStateAnalysis::doAllVerticesCarryRefinementFlag(fineGridVertices,fineGridVerticesEnumerator,Vertex::Records::Refined)
     );
 }
 
@@ -207,12 +216,15 @@ void multigrid::mappings::MultiplicativeMG::createInnerVertex(
 ) {
   logTraceInWith6Arguments( "createInnerVertex(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
+/*
+ * Already done by createGrid
   fineGridVertex.setU(
     _multigrid.getDLinearInterpolatedValue(
       VertexOperations::readU( coarseGridVerticesEnumerator, coarseGridVertices ),
       fineGridPositionOfVertex
     )
   );
+*/
 
   logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
 }
@@ -249,7 +261,11 @@ void multigrid::mappings::MultiplicativeMG::touchVertexFirstTime(
     fineGridVertex.clearUUpdate();
   }
 
-  if ( computeHierarchicalResidual(fineGridVertex,coarseGridVerticesEnumerator) ) {
+  if (
+    computeHierarchicalResidual(fineGridVertex,coarseGridVerticesEnumerator)
+    ||
+    fineGridVertex.isBoundary()
+  ) {
     fineGridVertex.clearHierarchicalValues();
 
     const tarch::la::Vector<TWO_POWER_D,double > u_3h  = VertexOperations::readU(coarseGridVerticesEnumerator,coarseGridVertices);
@@ -292,7 +308,7 @@ void multigrid::mappings::MultiplicativeMG::enterCell(
     VertexOperations::readHierarchicalR( fineGridVerticesEnumerator, fineGridVertices );
 
   logDebug( "enterCell(...)", "smooth=" << smooth(fineGridCell,fineGridVerticesEnumerator) << ", comp-hierarch=" << computeHierarchicalResidual(fineGridCell,fineGridVerticesEnumerator) );
-  if (smooth(fineGridCell,fineGridVerticesEnumerator)) {
+  if (smooth(fineGridVertices,fineGridVerticesEnumerator)) {
     tarch::la::Vector<TWO_POWER_D,double> r = rOld - A * u;
     tarch::la::Vector<TWO_POWER_D,double> d = dOld + tarch::la::diag(A);
 
@@ -326,6 +342,14 @@ void multigrid::mappings::MultiplicativeMG::touchVertexLastTime(
     if (
       fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
     ) {
+      // Different to the additive case, it is very important that we clear the
+      // update here. As long as we stick to regular grids, it does not make a
+      // difference - the multiplicative correction (uUpdate) on the finest
+      // level is not used. If we have however an adaptive grid, we may not
+      // interpolate any correction from fine grid vertices to nearby vertices
+      // that life on an even finer level.
+      fineGridVertex.clearMultiplicativeUUpdate();
+
       _state.notifyAboutFineGridVertexUpdate(
         fineGridVertex.getResidual(),
         fineGridVertex.getU(),
