@@ -41,7 +41,7 @@ namespace peano {
  */
 class peano::datatraversal::autotuning::Oracle {
   private:
-    static const int AdapterStatesReservedForRepostorySteering = 4;
+    static const int AdapterStatesReservedForRepositorySteering = 4;
 
     static tarch::logging::Log  _log;
 

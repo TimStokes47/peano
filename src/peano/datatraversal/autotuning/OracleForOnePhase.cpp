@@ -42,6 +42,34 @@ std::string peano::datatraversal::autotuning::toString( const MethodTrace& metho
       return "ascend-on-regular-stationary-grid";
     case DescendOnRegularStationaryGrid:
       return "descend-on-regular-stationary-grid";
+
+    case UserDefined0:
+      return "user-defined-0";
+    case UserDefined1:
+      return "user-defined-1";
+    case UserDefined2:
+      return "user-defined-2";
+    case UserDefined3:
+      return "user-defined-3";
+    case UserDefined4:
+      return "user-defined-4";
+    case UserDefined5:
+      return "user-defined-5";
+    case UserDefined6:
+      return "user-defined-6";
+    case UserDefined7:
+      return "user-defined-7";
+    case UserDefined8:
+      return "user-defined-8";
+    case UserDefined9:
+      return "user-defined-9";
+    case UserDefined10:
+      return "user-defined-10";
+    case UserDefined11:
+      return "user-defined-11";
+    case UserDefined12:
+      return "user-defined-12";
+
     case NumberOfDifferentMethodsCalling:
       return "<error>";
   }
@@ -92,6 +120,34 @@ peano::datatraversal::autotuning::MethodTrace peano::datatraversal::autotuning::
       return AscendOnRegularStationaryGrid;
     case static_cast<int>(DescendOnRegularStationaryGrid):
       return DescendOnRegularStationaryGrid;
+
+    case static_cast<int>(UserDefined0):
+      return UserDefined0;
+    case static_cast<int>(UserDefined1):
+      return UserDefined1;
+    case static_cast<int>(UserDefined2):
+      return UserDefined2;
+    case static_cast<int>(UserDefined3):
+      return UserDefined3;
+    case static_cast<int>(UserDefined4):
+      return UserDefined4;
+    case static_cast<int>(UserDefined5):
+      return UserDefined5;
+    case static_cast<int>(UserDefined6):
+      return UserDefined6;
+    case static_cast<int>(UserDefined7):
+      return UserDefined7;
+    case static_cast<int>(UserDefined8):
+      return UserDefined8;
+    case static_cast<int>(UserDefined9):
+      return UserDefined9;
+    case static_cast<int>(UserDefined10):
+      return UserDefined10;
+    case static_cast<int>(UserDefined11):
+      return UserDefined11;
+    case static_cast<int>(UserDefined12):
+      return UserDefined12;
+
     case static_cast<int>(NumberOfDifferentMethodsCalling):
       return NumberOfDifferentMethodsCalling;
   }

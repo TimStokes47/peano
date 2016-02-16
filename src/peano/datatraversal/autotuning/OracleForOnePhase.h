@@ -33,7 +33,22 @@ namespace peano {
         SplitStoreVerticesTaskOnRegularStationaryGrid    = 16,
         AscendOnRegularStationaryGrid                    = 17,
         DescendOnRegularStationaryGrid                   = 18,
-        NumberOfDifferentMethodsCalling                  = 19
+
+        UserDefined0  = 19,
+        UserDefined1  = 20,
+        UserDefined2  = 21,
+        UserDefined3  = 22,
+        UserDefined4  = 23,
+        UserDefined5  = 24,
+        UserDefined6  = 25,
+        UserDefined7  = 26,
+        UserDefined8  = 27,
+        UserDefined9  = 28,
+        UserDefined10 = 29,
+        UserDefined11 = 30,
+        UserDefined12 = 31,
+
+        NumberOfDifferentMethodsCalling                  = 32
       };
 
       /**

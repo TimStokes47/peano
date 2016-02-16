@@ -46,7 +46,7 @@ void peano::datatraversal::autotuning::Oracle::setOracle( OracleForOnePhase* ora
 
 
 int peano::datatraversal::autotuning::Oracle::getTotalNumberOfOracles() const {
-  return (_numberOfOracles+AdapterStatesReservedForRepostorySteering)*peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling;
+  return (_numberOfOracles+AdapterStatesReservedForRepositorySteering)*peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling;
 }
 
 
