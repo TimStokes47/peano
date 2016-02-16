@@ -13,6 +13,7 @@ tarch::logging::Log  peano::datatraversal::autotuning::OracleForOnePhaseDummy::_
 peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy(
   bool useMultithreading                  ,
   bool measureRuntimes                    ,
+  int  grainSizeOfUserDefinedRegions      ,
   int  splitTheTree                       ,
   bool pipelineDescendProcessing          ,
   bool pipelineAscendProcessing           ,
@@ -29,6 +30,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
 ):
   _useMulticore(useMultithreading),
   _measureRuntimes(measureRuntimes),
+  _grainSizeOfUserDefinedRegions(grainSizeOfUserDefinedRegions),
   _executionTime(),
   _adapterNumber(adapterNumber),
   _methodTrace(methodTrace),
@@ -93,6 +95,13 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
     _grainSize           = grainSizeForSplitLoadStore;
     _smallestProblemSize = smallestGrainSizeForSplitLoadStore;
   }
+  else if (
+    _methodTrace>=UserDefined0 && _methodTrace<=UserDefined12
+  )
+  {
+    _grainSize           = grainSizeOfUserDefinedRegions;
+    _smallestProblemSize = grainSizeOfUserDefinedRegions;
+  }
 }
 
 
@@ -148,6 +157,7 @@ peano::datatraversal::autotuning::OracleForOnePhase* peano::datatraversal::autot
   return new OracleForOnePhaseDummy(
     _useMulticore,
     _measureRuntimes,
+    _grainSizeOfUserDefinedRegions,
     _splitTheTree,
     _pipelineDescendProcessing,
     _pipelineAscendProcessing,

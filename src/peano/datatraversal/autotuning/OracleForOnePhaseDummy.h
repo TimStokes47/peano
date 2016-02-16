@@ -43,6 +43,7 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
 
     const bool                                 _useMulticore;
     const bool                                 _measureRuntimes;
+    const int                                  _grainSizeOfUserDefinedRegions;
     std::map<int, tarch::timing::Measurement>  _executionTime;
     const int                                  _adapterNumber;
     const MethodTrace                          _methodTrace;
@@ -75,6 +76,7 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
     OracleForOnePhaseDummy(
       bool useMultithreading                  = true,
       bool measureRuntimes                    = false,
+      int  grainSizeOfUserDefinedRegions      = 0,
       int  splitTheTree                       = 1,
       bool pipelineDescendProcessing          = false,
       bool pipelineAscendProcessing           = false,
