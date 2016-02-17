@@ -200,13 +200,17 @@ int peano::datatraversal::autotuning::Oracle::parallelise(int problemSize, Metho
   assertion2( !_oracles[key]._recursiveCallsForThisOracle>=0, toString( askingMethod), _currentPhase );
   _oracles[key]._recursiveCallsForThisOracle++;
 
-  if (problemSize>0) {
+  if (problemSize>0 && _oracles[key]._recursiveCallsForThisOracle==1) {
     const std::pair<int,bool> oracleDecision =  _oracles[key]._oracle->parallelise(problemSize);
-    result = oracleDecision.first;
-    _oracles[key]._measureTime = oracleDecision.second;
-    if ( oracleDecision.second && _oracles[key]._recursiveCallsForThisOracle==1 ) {
+    result                               = oracleDecision.first;
+    _oracles[key]._lastGrainSizeReturned = oracleDecision.first;
+    _oracles[key]._measureTime           = oracleDecision.second;
+    if ( oracleDecision.second ) {
       _oracles[key]._watch->startTimer();
     }
+  }
+  else if (problemSize>0) {
+    result = _oracles[key]._lastGrainSizeReturned;
   }
   else {
     result = 0;

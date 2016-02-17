@@ -56,6 +56,7 @@ class peano::datatraversal::autotuning::Oracle {
        * the asserts mode, we check that no recursive calls do pop up.
        */
       int                    _recursiveCallsForThisOracle;
+      int                    _lastGrainSizeReturned;
       bool                   _measureTime;
       tarch::timing::Watch*  _watch;
       OracleForOnePhase*     _oracle;
