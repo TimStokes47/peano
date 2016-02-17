@@ -9,6 +9,7 @@
 
 #include "tarch/logging/Log.h"
 #include "tarch/timing/Watch.h"
+#include "tarch/multicore/BooleanSemaphore.h"
 #include "peano/datatraversal/autotuning/OracleForOnePhase.h"
 
 
@@ -45,16 +46,16 @@ class peano::datatraversal::autotuning::Oracle {
 
     static tarch::logging::Log  _log;
 
+    static tarch::multicore::BooleanSemaphore  _semaphore;
+
     Oracle();
 
     struct ValuesPerOracleKey {
-      #ifdef Asserts
       /**
        * The oracle mechanism does not support recursive usage (anymore). In
        * the asserts mode, we check that no recursive calls do pop up.
        */
-      bool                   _recursiveCallsForThisOracle;
-      #endif
+      int                    _recursiveCallsForThisOracle;
       bool                   _measureTime;
       tarch::timing::Watch*  _watch;
       OracleForOnePhase*     _oracle;

@@ -2,6 +2,7 @@
 #include "peano/datatraversal/autotuning/OracleForOnePhaseDummy.h"
 #include "tarch/Assertions.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/Lock.h"
 
 #if defined(SharedCobra)
 #include "tarch/multicore/cobra/Core.h"
@@ -12,7 +13,8 @@
 #include <sstream>
 
 
-tarch::logging::Log  peano::datatraversal::autotuning::Oracle::_log( "peano::datatraversal::autotuning::Oracle" ) ;
+tarch::logging::Log                 peano::datatraversal::autotuning::Oracle::_log( "peano::datatraversal::autotuning::Oracle" ) ;
+tarch::multicore::BooleanSemaphore  peano::datatraversal::autotuning::Oracle::_semaphore;
 
 
 peano::datatraversal::autotuning::Oracle& peano::datatraversal::autotuning::Oracle::getInstance() {
@@ -128,15 +130,12 @@ void peano::datatraversal::autotuning::Oracle::createOracles() {
     _oracles = new ValuesPerOracleKey[getTotalNumberOfOracles()];
 
     for (int i=0; i<getTotalNumberOfOracles(); i++) {
-      #ifdef Asserts
-      _oracles[i]._recursiveCallsForThisOracle  = false;
-      #endif
-
       const int                phase = i/peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling;
       const MethodTrace        trace = toMethodTrace(i-phase*peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling);
       _oracles[i]._measureTime = false;
       _oracles[i]._watch       = new tarch::timing::Watch("peano::datatraversal::autotuning::Oracle", "createOracles(int)", false);
       _oracles[i]._oracle      = _oraclePrototype->createNewOracle(phase,trace);
+      _oracles[i]._recursiveCallsForThisOracle  = 0;
     }
   }
 
@@ -196,16 +195,16 @@ int peano::datatraversal::autotuning::Oracle::parallelise(int problemSize, Metho
   assertion(key>=0);
   assertion(key<getTotalNumberOfOracles());
 
-  #ifdef Asserts
-  assertion2( !_oracles[key]._recursiveCallsForThisOracle, toString( askingMethod), _currentPhase );
-  _oracles[key]._recursiveCallsForThisOracle = true;
-  #endif
+  tarch::multicore::Lock lock(_semaphore);
+
+  assertion2( !_oracles[key]._recursiveCallsForThisOracle>=0, toString( askingMethod), _currentPhase );
+  _oracles[key]._recursiveCallsForThisOracle++;
 
   if (problemSize>0) {
     const std::pair<int,bool> oracleDecision =  _oracles[key]._oracle->parallelise(problemSize);
     result = oracleDecision.first;
     _oracles[key]._measureTime = oracleDecision.second;
-    if ( oracleDecision.second ) {
+    if ( oracleDecision.second && _oracles[key]._recursiveCallsForThisOracle==1 ) {
       _oracles[key]._watch->startTimer();
     }
   }
@@ -235,12 +234,12 @@ void peano::datatraversal::autotuning::Oracle::parallelSectionHasTerminated(Meth
   assertion(key>=0);
   assertion(key<getTotalNumberOfOracles());
 
-  #ifdef Asserts
-  assertion2( _oracles[key]._recursiveCallsForThisOracle, toString( askingMethod), _currentPhase );
-  _oracles[key]._recursiveCallsForThisOracle = false;
-  #endif
+  tarch::multicore::Lock lock(_semaphore);
 
-  if (_oracles[key]._measureTime ) {
+  _oracles[key]._recursiveCallsForThisOracle--;
+  assertion2( _oracles[key]._recursiveCallsForThisOracle>=0, toString( askingMethod), _currentPhase );
+
+  if (_oracles[key]._measureTime && _oracles[key]._recursiveCallsForThisOracle==0 ) {
     _oracles[key]._watch->stopTimer();
     _oracles[key]._oracle->parallelSectionHasTerminated(_oracles[key]._watch->getCalendarTime());
   }
