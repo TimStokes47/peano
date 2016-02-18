@@ -292,6 +292,38 @@
     }
 
 
+    #define assertion25(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13,param14,param15,param16,param17,param18,param19,param20,param21,param22,param23,param24) if (!(expr)) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #expr <<  std::endl; \
+      std::cerr << "parameter " << #param0 << ": " << param0 << std::endl; \
+      std::cerr << "parameter " << #param1 << ": " << param1 << std::endl; \
+      std::cerr << "parameter " << #param2 << ": " << param2 << std::endl; \
+      std::cerr << "parameter " << #param3 << ": " << param3 << std::endl; \
+      std::cerr << "parameter " << #param4 << ": " << param4 << std::endl; \
+      std::cerr << "parameter " << #param5 << ": " << param5 << std::endl; \
+      std::cerr << "parameter " << #param6 << ": " << param6 << std::endl; \
+      std::cerr << "parameter " << #param7 << ": " << param7 << std::endl; \
+      std::cerr << "parameter " << #param8 << ": " << param8 << std::endl; \
+      std::cerr << "parameter " << #param9 << ": " << param9 << std::endl; \
+      std::cerr << "parameter " << #param10 << ": " << param10 << std::endl; \
+      std::cerr << "parameter " << #param11 << ": " << param11 << std::endl; \
+      std::cerr << "parameter " << #param12 << ": " << param12 << std::endl; \
+      std::cerr << "parameter " << #param13 << ": " << param13 << std::endl; \
+      std::cerr << "parameter " << #param14 << ": " << param14 << std::endl; \
+      std::cerr << "parameter " << #param15 << ": " << param15 << std::endl; \
+      std::cerr << "parameter " << #param16 << ": " << param16 << std::endl; \
+      std::cerr << "parameter " << #param17 << ": " << param17 << std::endl; \
+      std::cerr << "parameter " << #param18 << ": " << param18 << std::endl; \
+      std::cerr << "parameter " << #param19 << ": " << param19 << std::endl; \
+      std::cerr << "parameter " << #param20 << ": " << param20 << std::endl; \
+      std::cerr << "parameter " << #param21 << ": " << param21 << std::endl; \
+      std::cerr << "parameter " << #param22 << ": " << param22 << std::endl; \
+      std::cerr << "parameter " << #param23 << ": " << param23 << std::endl; \
+      std::cerr << "parameter " << #param24 << ": " << param24 << std::endl; \
+      assertionTriggersExit; \
+    }
+
+
     /**
      * @see ASSERTION_EXIT_CODE
      *
@@ -871,6 +903,7 @@
     #define assertion10(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9)
     #define assertion11(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10)
     #define assertion12(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11)
+    #define assertion25(expr,param0,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10,param11,param12,param13,param14,param15,param16,param17,param18,param19,param20,param21,param22,param23,param24)
     #define assertion1WithExplanation(expr,param,explanation)
     #define assertionEquals(lhs,rhs)
     #define assertionEqualsMsg(lhs,rhs,msg)
