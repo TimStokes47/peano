@@ -37,7 +37,7 @@ namespace peano {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   19/02/2016 12:28
+    * @date   19/02/2016 12:36
     */
    class peano::grid::tests::records::TestVertex { 
       
@@ -50,7 +50,7 @@ namespace peano {
          };
          
          enum RefinementControl {
-            Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6
+            Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
          };
          
          struct PersistentRecords {
@@ -357,7 +357,7 @@ namespace peano {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   19/02/2016 12:28
+       * @date   19/02/2016 12:36
        */
       class peano::grid::tests::records::TestVertexPacked { 
          
@@ -679,7 +679,7 @@ namespace peano {
           *
           * 		   build date: 09-02-2014 14:40
           *
-          * @date   19/02/2016 12:28
+          * @date   19/02/2016 12:36
           */
          class peano::grid::tests::records::TestVertex { 
             
@@ -692,7 +692,7 @@ namespace peano {
                };
                
                enum RefinementControl {
-                  Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6
+                  Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
                };
                
                struct PersistentRecords {
@@ -931,7 +931,7 @@ namespace peano {
              *
              * 		   build date: 09-02-2014 14:40
              *
-             * @date   19/02/2016 12:28
+             * @date   19/02/2016 12:36
              */
             class peano::grid::tests::records::TestVertexPacked { 
                
@@ -1186,7 +1186,7 @@ namespace peano {
              *
              * 		   build date: 09-02-2014 14:40
              *
-             * @date   19/02/2016 12:28
+             * @date   19/02/2016 12:36
              */
             class peano::grid::tests::records::TestVertex { 
                
@@ -1199,7 +1199,7 @@ namespace peano {
                   };
                   
                   enum RefinementControl {
-                     Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6
+                     Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
                   };
                   
                   struct PersistentRecords {
@@ -1472,7 +1472,7 @@ namespace peano {
                 *
                 * 		   build date: 09-02-2014 14:40
                 *
-                * @date   19/02/2016 12:28
+                * @date   19/02/2016 12:36
                 */
                class peano::grid::tests::records::TestVertexPacked { 
                   
@@ -1761,7 +1761,7 @@ namespace peano {
                 *
                 * 		   build date: 09-02-2014 14:40
                 *
-                * @date   19/02/2016 12:28
+                * @date   19/02/2016 12:36
                 */
                class peano::grid::tests::records::TestVertex { 
                   
@@ -1774,7 +1774,7 @@ namespace peano {
                      };
                      
                      enum RefinementControl {
-                        Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6
+                        Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
                      };
                      
                      struct PersistentRecords {
@@ -2047,7 +2047,7 @@ namespace peano {
                    *
                    * 		   build date: 09-02-2014 14:40
                    *
-                   * @date   19/02/2016 12:28
+                   * @date   19/02/2016 12:36
                    */
                   class peano::grid::tests::records::TestVertexPacked { 
                      

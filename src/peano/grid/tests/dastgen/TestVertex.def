@@ -20,7 +20,8 @@ class peano::grid::tests::records::TestVertex {
 
   enum RefinementControl {
     Unrefined,Refined,RefinementTriggered,
-    Refining,EraseTriggered,Erasing,RefineDueToJoinThoughWorkerIsAlreadyErasing
+    Refining,EraseTriggered,Erasing,RefineDueToJoinThoughWorkerIsAlreadyErasing,
+    EnforceRefinementTriggered
   };
 
   persistent parallelise packed bool               isHangingNode;
