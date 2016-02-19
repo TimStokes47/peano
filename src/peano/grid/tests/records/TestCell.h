@@ -36,9 +36,9 @@ namespace peano {
     * 		   2007-2009 Wolfgang Eckhardt
     * 		   2012      Tobias Weinzierl
     *
-    * 		   build date: 12-04-2013 09:18
+    * 		   build date: 09-02-2014 14:40
     *
-    * @date   02/08/2013 09:46
+    * @date   19/02/2016 12:28
     */
    class peano::grid::tests::records::TestCell { 
       
@@ -252,9 +252,14 @@ namespace peano {
             
             static void shutdownDatatype();
             
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            /**
+             * @param communicateSleep -1 Data exchange through blocking mpi
+             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+             */
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
             
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             
@@ -270,9 +275,9 @@ namespace peano {
        * 		   2007-2009 Wolfgang Eckhardt
        * 		   2012      Tobias Weinzierl
        *
-       * 		   build date: 12-04-2013 09:18
+       * 		   build date: 09-02-2014 14:40
        *
-       * @date   02/08/2013 09:46
+       * @date   19/02/2016 12:28
        */
       class peano::grid::tests::records::TestCellPacked { 
          
@@ -488,9 +493,14 @@ namespace peano {
                
                static void shutdownDatatype();
                
-               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+               /**
+                * @param communicateSleep -1 Data exchange through blocking mpi
+                * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                */
+               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                
-               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                
                static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                
@@ -508,9 +518,9 @@ namespace peano {
           * 		   2007-2009 Wolfgang Eckhardt
           * 		   2012      Tobias Weinzierl
           *
-          * 		   build date: 12-04-2013 09:18
+          * 		   build date: 09-02-2014 14:40
           *
-          * @date   02/08/2013 09:46
+          * @date   19/02/2016 12:28
           */
          class peano::grid::tests::records::TestCell { 
             
@@ -703,9 +713,14 @@ namespace peano {
                   
                   static void shutdownDatatype();
                   
-                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  /**
+                   * @param communicateSleep -1 Data exchange through blocking mpi
+                   * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                   * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                   */
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                   
-                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                   
                   static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                   
@@ -721,9 +736,9 @@ namespace peano {
              * 		   2007-2009 Wolfgang Eckhardt
              * 		   2012      Tobias Weinzierl
              *
-             * 		   build date: 12-04-2013 09:18
+             * 		   build date: 09-02-2014 14:40
              *
-             * @date   02/08/2013 09:46
+             * @date   19/02/2016 12:28
              */
             class peano::grid::tests::records::TestCellPacked { 
                
@@ -918,9 +933,14 @@ namespace peano {
                      
                      static void shutdownDatatype();
                      
-                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                     /**
+                      * @param communicateSleep -1 Data exchange through blocking mpi
+                      * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                      * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                      */
+                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                      
-                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                      
                      static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                      
@@ -939,9 +959,9 @@ namespace peano {
              * 		   2007-2009 Wolfgang Eckhardt
              * 		   2012      Tobias Weinzierl
              *
-             * 		   build date: 12-04-2013 09:18
+             * 		   build date: 09-02-2014 14:40
              *
-             * @date   02/08/2013 09:46
+             * @date   19/02/2016 12:28
              */
             class peano::grid::tests::records::TestCell { 
                
@@ -1281,9 +1301,14 @@ namespace peano {
                      
                      static void shutdownDatatype();
                      
-                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                     /**
+                      * @param communicateSleep -1 Data exchange through blocking mpi
+                      * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                      * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                      */
+                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                      
-                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                      
                      static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                      
@@ -1299,9 +1324,9 @@ namespace peano {
                 * 		   2007-2009 Wolfgang Eckhardt
                 * 		   2012      Tobias Weinzierl
                 *
-                * 		   build date: 12-04-2013 09:18
+                * 		   build date: 09-02-2014 14:40
                 *
-                * @date   02/08/2013 09:46
+                * @date   19/02/2016 12:28
                 */
                class peano::grid::tests::records::TestCellPacked { 
                   
@@ -1643,9 +1668,14 @@ namespace peano {
                         
                         static void shutdownDatatype();
                         
-                        void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                        /**
+                         * @param communicateSleep -1 Data exchange through blocking mpi
+                         * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                         * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                         */
+                        void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                         
-                        void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                        void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                         
                         static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                         
@@ -1664,9 +1694,9 @@ namespace peano {
                 * 		   2007-2009 Wolfgang Eckhardt
                 * 		   2012      Tobias Weinzierl
                 *
-                * 		   build date: 12-04-2013 09:18
+                * 		   build date: 09-02-2014 14:40
                 *
-                * @date   02/08/2013 09:46
+                * @date   19/02/2016 12:28
                 */
                class peano::grid::tests::records::TestCell { 
                   
@@ -1838,9 +1868,14 @@ namespace peano {
                         
                         static void shutdownDatatype();
                         
-                        void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                        /**
+                         * @param communicateSleep -1 Data exchange through blocking mpi
+                         * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                         * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                         */
+                        void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                         
-                        void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                        void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                         
                         static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                         
@@ -1856,9 +1891,9 @@ namespace peano {
                    * 		   2007-2009 Wolfgang Eckhardt
                    * 		   2012      Tobias Weinzierl
                    *
-                   * 		   build date: 12-04-2013 09:18
+                   * 		   build date: 09-02-2014 14:40
                    *
-                   * @date   02/08/2013 09:46
+                   * @date   19/02/2016 12:28
                    */
                   class peano::grid::tests::records::TestCellPacked { 
                      
@@ -2032,9 +2067,14 @@ namespace peano {
                            
                            static void shutdownDatatype();
                            
-                           void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                           /**
+                            * @param communicateSleep -1 Data exchange through blocking mpi
+                            * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                            * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                            */
+                           void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                            
-                           void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                           void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                            
                            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                            
@@ -2053,9 +2093,9 @@ namespace peano {
                    * 		   2007-2009 Wolfgang Eckhardt
                    * 		   2012      Tobias Weinzierl
                    *
-                   * 		   build date: 12-04-2013 09:18
+                   * 		   build date: 09-02-2014 14:40
                    *
-                   * @date   02/08/2013 09:46
+                   * @date   19/02/2016 12:28
                    */
                   class peano::grid::tests::records::TestCell { 
                      
@@ -2458,9 +2498,14 @@ namespace peano {
                            
                            static void shutdownDatatype();
                            
-                           void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                           /**
+                            * @param communicateSleep -1 Data exchange through blocking mpi
+                            * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                            * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                            */
+                           void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                            
-                           void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                           void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                            
                            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                            
@@ -2476,9 +2521,9 @@ namespace peano {
                       * 		   2007-2009 Wolfgang Eckhardt
                       * 		   2012      Tobias Weinzierl
                       *
-                      * 		   build date: 12-04-2013 09:18
+                      * 		   build date: 09-02-2014 14:40
                       *
-                      * @date   02/08/2013 09:46
+                      * @date   19/02/2016 12:28
                       */
                      class peano::grid::tests::records::TestCellPacked { 
                         
@@ -2883,9 +2928,14 @@ namespace peano {
                               
                               static void shutdownDatatype();
                               
-                              void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                              /**
+                               * @param communicateSleep -1 Data exchange through blocking mpi
+                               * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                               * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                               */
+                              void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                               
-                              void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                              void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                               
                               static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                               
@@ -2904,9 +2954,9 @@ namespace peano {
                       * 		   2007-2009 Wolfgang Eckhardt
                       * 		   2012      Tobias Weinzierl
                       *
-                      * 		   build date: 12-04-2013 09:18
+                      * 		   build date: 09-02-2014 14:40
                       *
-                      * @date   02/08/2013 09:46
+                      * @date   19/02/2016 12:28
                       */
                      class peano::grid::tests::records::TestCell { 
                         
@@ -3267,9 +3317,14 @@ namespace peano {
                               
                               static void shutdownDatatype();
                               
-                              void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                              /**
+                               * @param communicateSleep -1 Data exchange through blocking mpi
+                               * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                               * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                               */
+                              void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                               
-                              void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                              void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                               
                               static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                               
@@ -3285,9 +3340,9 @@ namespace peano {
                          * 		   2007-2009 Wolfgang Eckhardt
                          * 		   2012      Tobias Weinzierl
                          *
-                         * 		   build date: 12-04-2013 09:18
+                         * 		   build date: 09-02-2014 14:40
                          *
-                         * @date   02/08/2013 09:46
+                         * @date   19/02/2016 12:28
                          */
                         class peano::grid::tests::records::TestCellPacked { 
                            
@@ -3650,9 +3705,14 @@ namespace peano {
                                  
                                  static void shutdownDatatype();
                                  
-                                 void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                                 /**
+                                  * @param communicateSleep -1 Data exchange through blocking mpi
+                                  * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                                  * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                                  */
+                                 void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                  
-                                 void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                                 void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                  
                                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                                  
@@ -3671,9 +3731,9 @@ namespace peano {
                          * 		   2007-2009 Wolfgang Eckhardt
                          * 		   2012      Tobias Weinzierl
                          *
-                         * 		   build date: 12-04-2013 09:18
+                         * 		   build date: 09-02-2014 14:40
                          *
-                         * @date   02/08/2013 09:46
+                         * @date   19/02/2016 12:28
                          */
                         class peano::grid::tests::records::TestCell { 
                            
@@ -4055,9 +4115,14 @@ namespace peano {
                                  
                                  static void shutdownDatatype();
                                  
-                                 void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                                 /**
+                                  * @param communicateSleep -1 Data exchange through blocking mpi
+                                  * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                                  * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                                  */
+                                 void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                  
-                                 void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                                 void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                  
                                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                                  
@@ -4073,9 +4138,9 @@ namespace peano {
                             * 		   2007-2009 Wolfgang Eckhardt
                             * 		   2012      Tobias Weinzierl
                             *
-                            * 		   build date: 12-04-2013 09:18
+                            * 		   build date: 09-02-2014 14:40
                             *
-                            * @date   02/08/2013 09:46
+                            * @date   19/02/2016 12:28
                             */
                            class peano::grid::tests::records::TestCellPacked { 
                               
@@ -4459,9 +4524,14 @@ namespace peano {
                                     
                                     static void shutdownDatatype();
                                     
-                                    void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                                    /**
+                                     * @param communicateSleep -1 Data exchange through blocking mpi
+                                     * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                                     * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                                     */
+                                    void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                     
-                                    void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                                    void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                     
                                     static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                                     
@@ -4480,9 +4550,9 @@ namespace peano {
                             * 		   2007-2009 Wolfgang Eckhardt
                             * 		   2012      Tobias Weinzierl
                             *
-                            * 		   build date: 12-04-2013 09:18
+                            * 		   build date: 09-02-2014 14:40
                             *
-                            * @date   02/08/2013 09:46
+                            * @date   19/02/2016 12:28
                             */
                            class peano::grid::tests::records::TestCell { 
                               
@@ -4717,9 +4787,14 @@ namespace peano {
                                     
                                     static void shutdownDatatype();
                                     
-                                    void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                                    /**
+                                     * @param communicateSleep -1 Data exchange through blocking mpi
+                                     * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                                     * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                                     */
+                                    void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                     
-                                    void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                                    void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                     
                                     static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                                     
@@ -4735,9 +4810,9 @@ namespace peano {
                                * 		   2007-2009 Wolfgang Eckhardt
                                * 		   2012      Tobias Weinzierl
                                *
-                               * 		   build date: 12-04-2013 09:18
+                               * 		   build date: 09-02-2014 14:40
                                *
-                               * @date   02/08/2013 09:46
+                               * @date   19/02/2016 12:28
                                */
                               class peano::grid::tests::records::TestCellPacked { 
                                  
@@ -4974,9 +5049,14 @@ namespace peano {
                                        
                                        static void shutdownDatatype();
                                        
-                                       void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                                       /**
+                                        * @param communicateSleep -1 Data exchange through blocking mpi
+                                        * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                                        * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                                        */
+                                       void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                        
-                                       void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                                       void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                                        
                                        static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                                        
