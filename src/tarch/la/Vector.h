@@ -40,6 +40,7 @@ struct tarch::la::Vector {
   public:
     Vector ();
 
+    Vector (Scalar* values);
     Vector (Scalar value0, Scalar value1);
     Vector (Scalar value0, Scalar value1, Scalar value2);
 
