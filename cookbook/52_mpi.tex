@@ -92,6 +92,7 @@ workers that blindfolded follow their masters.
   else {
     result = runAsWorker( *repository );
   }
+  ...
 \end{code}
 
 \noindent
@@ -158,6 +159,15 @@ The ranks do not communicate to come up with load balancing decisions.
 In such a case, you could use different oracles on different ranks. 
 In general, this is not a good idea and all ranks should run the same oracle.
  
+\begin{remark}
+Peano's MPI routines are written with the idea in mind that \texttt{#ifdef}s
+pollute your code and basically introduce many different branches of your source
+code that are more difficult to maintain than one single strand. The high level
+MPI-related function calls thus all work in a serial code, too. If you
+compile without \texttt{-DParallel}, they degenerate to nop (no operation), but
+you always can be sure that everything compiles, is consistent and lots of
+assertions are built in in non-release mode.
+\end{remark}
  
 MPI code tends to be very sensitive to proper buffer sizes.
 While the default buffer sizes in Peano should be properly chosen, you can
