@@ -28,13 +28,13 @@ tarch::la::VectorAssignList<Size,Scalar>::VectorAssignList(
 
 template<int Size, typename Scalar>
 tarch::la::VectorAssignList<Size,Scalar>::~VectorAssignList() {
-  assertion1( _index==Size, toString() );
+  assertion1WithExplanation( _index==Size, toString(), "list assigned to vector with v=v1,v2,v3,...,vn is too short" );
 }
 
 
 template<int Size, typename Scalar>
 tarch::la::VectorAssignList<Size,Scalar>&  tarch::la::VectorAssignList<Size,Scalar>::operator=(const Scalar&  toAssign) {
-  assertion1( _index < Size, toString() );
+  assertion1WithExplanation( _index < Size, toString(), "list assigned to vector with v=v1,v2,v3,...,vn is too long" );
   _vector(_index) = toAssign;
   _index ++;
   return *this;
