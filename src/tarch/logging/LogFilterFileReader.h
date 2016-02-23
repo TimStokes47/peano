@@ -72,6 +72,10 @@ class tarch::logging::LogFilterFileReader {
      * If the file does not exist or the parse did not succeed, the operation
      * writes an error and returns false. Otherwise, it returns true.
      *
+     * If the routine fails, it switches on all log information automatically.
+     * If you want to create a (hard-coded) fall-back logging, you thus might
+     * have to call clearFilterList() again before you continue.
+     *
      * @return Parsing has been successful
      */
     static bool parsePlainTextFile( const std::string& filename );
