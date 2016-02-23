@@ -87,8 +87,8 @@ For this, the logger provides a particular setter.
 Please consult the header or the webpage for details on the semantics of the
 arguments:
 \begin{code}
-  tarch::logging::CommandLineLogger::getInstance().setLogFormat(
-    " ", true, false, false, true, true, "helmholtz.log-file" );
+tarch::logging::CommandLineLogger::getInstance().setLogFormat(
+  " ", true, false, false, true, true, "my-fancy.log-file" );
 \end{code} 
 
 \noindent
@@ -96,10 +96,25 @@ This interface also allows you to pipe the output into a file rather than to the
 terminal.
 This is particular useful for MPI applications, as each rank is assigned a file
 of its own and messages are not screwed up.
-
 Typically, the logger is configured in the \texttt{main} of the application.
 
-\subsubsection{Log filters}
+If you run Peano for long simulations and, notably, if you run Peano with debug
+information switched on (\texttt{-DDebug}), log files soon become massive.
+To ease the pain, Peano's command line logger offers an operation 
+\begin{code}
+tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
+\end{code} 
+\noindent
+that works if you have specified an output file before (see
+\texttt{setLogFormat} above). Per close, you close all output files and start to
+stream the output into a new file.
+Typically, developers use this operation in their iterative schemes to stream
+each iteration to a different file.
+The output files are enumerated automatically.
+
+
+
+\subsubsection{Log filter}
 
 The amount of log information often becomes hard to track; notably if you run in
 debug mode.
@@ -124,6 +139,23 @@ different log information.
 Therefore, the \texttt{CommandLineLogger} also offers a routine that allows you
 to load log filter entries from a text file.
 This facilitates work with log filters.
+The usage is straightforward
+\begin{code}
+tarch::logging::LogFilterFileReader::parsePlainTextFile( "my.log-filter" );
+\end{code}
+
+\noindent
+and the format is very simple:
+\begin{verbatim}
+# Level  Trace    Rank   Black or white list entry
+# (info or debug) (-1 means all ranks)
+debug    tarch    -1     black
+debug    peano    -1     black
+info     tarch    -1     black
+info     peano    -1     black
+\end{verbatim}
+
+
 
 
 \subsubsection{Tracing}
