@@ -227,49 +227,8 @@ class peano::grid::Cell {
      */
     void replaceAccessNumbersAndEvenFlags( const Cell& otherCell );
 
-    /**
-     * Get Workload
-     *
-     * This operation returns the node's serial workload plus the workload of
-     * all children (recursively). For this workload analysis, it does not take
-     * any remote node into account, i.e. you get the workload on the local
-     * rank.
-     *
-     * Please note that this workload is updated on regular subgrids if and
-     * only if you specify your mapping to call ascend on the whole tree. On
-     * changing/instationary subgrids, I update it in each traversal.
-     *
-     * @todo I think we should remove this workload model from the code
-     */
-    double getLocalWorkload() const;
-
-    /**
-     * Get Serial Workload
-     *
-     * This operation returns the node's serial workload plus the workload of
-     * all children (recursively). For this workload analysis, it does not
-     * distinguish between remote and local cells.
-     *
-     * Please note that this workload is updated on regular subgrids if and
-     * only if you specify your mapping to call ascend on the whole tree. On
-     * changing/instationary subgrids, I update it in each traversal.
-     */
-    double getTotalWorkload() const;
-
-    double getMinWorkload() const;
-    double getMaxWorkload() const;
-    /**
-     * Set Node Workload
-     *
-     * Each node has an attribute denoting its workload. Use this operation to
-     * calibrate the workload. By default, it is set to 0 for outer cells and 1
-     * for inner cells. Note that you can also modify out cell's workload within
-     * the destroyCell() event.
-     */
-    void setNodeWorkload( double value );
-
-    void clearWorkloadAndSubtreeFlags();
-    void incWorkloadAndReduceSubtreeFlags( const Cell& childCell );
+    void clearSubtreeFlags();
+    void reduceSubtreeFlags( const Cell& childCell );
 
     /**
      * Copy mechanism. Works for both worker and master.

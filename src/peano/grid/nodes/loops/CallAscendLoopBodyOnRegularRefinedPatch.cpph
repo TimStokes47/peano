@@ -68,9 +68,9 @@ void peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch<Vertex,C
   }
 
   #ifdef Parallel
-  currentCell.clearWorkloadAndSubtreeFlags();
+  currentCell.clearSubtreeFlags();
   dfor3(i)
-    currentCell.incWorkloadAndReduceSubtreeFlags( _regularGridContainer.getCell(_coarseLevel+1)[ _fineGridEnumerator.cell(i) ] );
+    currentCell.reduceSubtreeFlags( _regularGridContainer.getCell(_coarseLevel+1)[ _fineGridEnumerator.cell(i) ] );
   enddforx
   #endif
 

@@ -81,12 +81,7 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
       double  workerNumberOfInnerCells,
       double  workerNumberOfOuterCells,
       int     workerMaxLevel,
-      double  workerLocalWorkload,
-      double  workerTotalWorkload,
-      double  workerMaxWorkload,
-      double  workerMinWorkload,
       int     currentLevel,
-      double  parentCellLocalWorkload,
       const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
       const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
       bool    workerCouldNotEraseDueToDecomposition

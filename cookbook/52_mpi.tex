@@ -105,7 +105,8 @@ However, we typically realise it within \texttt{run} just before or after the
 operation splits up into the function for the global master and all other ranks.
 
 
-One for the first steps {\bf ran only on the global master} is to configure a
+{\bf Choose a load balancing request answering strategy on the global master}.
+One for the first steps on the global master is to configure a
 proper load balancing strategy. 
 Peano realises a hybrid centralised-decentralised load balancing by default,
 where load balancing decisions are, whenever possible, made centrally. 
@@ -131,18 +132,38 @@ might decide to bundle requests to get an overview who asks for resources first
 before any rank assignment is performed) and hands out MPI ranks as long as
 there are still idle workers available.
 
-Once the node pool is initialised, we have to restart it. 
-This has to be done {\bf on all ranks}. 
-On the global master, it really restarts the node pool.
+{\bf Restart the load balancing on all ranks}.
+Once the node pool
+is initialised, we have to restart it.
+This has to be done on all ranks. 
+On the global master, the operation really restarts the node pool.
 On all other ranks, it establishes the connection to the central node pool
 and informs the latter how many ranks are available.
 
 \begin{code}
 tarch::parallel::NodePool::getInstance().restart();
+tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();
 \end{code}
 
+\begin{remark}
+Many sophisticated load balancing schemes can deal with MPI ranks signing in and
+out throughout the computation dynamically.
+Peano per se can deal with dynamic rank allocation.  
+However, the default FCFS strategy is not that elaborate. 
+It requires that all ranks are well-known when it starts up and that they do not
+change.
+Therefore, it is mandatory to add the \texttt{waitForAllNodesToBecomeIdle()}
+instruction here which ensures that all nodes register at the central node pool
+and tell the central node pool strategy that they are idle and free for new
+jobs. 
+Though not mandatory, you might want to add this statement anyway at runtime to
+ensure your whole system is up properly.
+\end{remark}
+
 \noindent
-In a next step, we configure the actual load balancing. 
+{\bf Configure the load balancing strategy on all ranks}.
+In a next step, we configure the
+actual load balancing.
 Again, we rely on a default balancing that simply yields a static partitioning. 
 This partitioning is established by a greedy grid decomposition while the grid
 is built up.
@@ -168,12 +189,15 @@ compile without \texttt{-DParallel}, they degenerate to nop (no operation), but
 you always can be sure that everything compiles, is consistent and lots of
 assertions are built in in non-release mode.
 \end{remark}
- 
+
+\noindent 
+{\bf Set buffer sizes on all ranks}.
 MPI code tends to be very sensitive to proper buffer sizes.
-While the default buffer sizes in Peano should be properly chosen, you can
-always change them if you like.
-However, you have to ensure that all ranks work with the same buffer sizes
-(otherwise the exchange of buffers will fail):
+In Peano, you have to ensure that all ranks work with the same buffer sizes
+(otherwise the exchange of buffers will fail) and that you set them before you
+actually exchange data. 
+Please note that it is not recommended to change these buffer sizes throughout
+any computation. 
 
 \begin{code}
 peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize( bufferSize );
@@ -182,6 +206,7 @@ peano::parallel::JoinDataBufferPool::getInstance().setBufferSize( bufferSize );
 
 
 \noindent
+{\bf Configure deadlock time outs on all ranks (optional)}.
 Peano's MPI communication routines all have some built-in deadlock detection. 
 To enable it, you have to quantify what MPI waiting time is to be considered to
 be a deadlock.
@@ -211,6 +236,7 @@ waiting strategy exactly the other way round.
 \end{code}
 
 \noindent
+{\bf Clean up all the ranks}.
 It is finally good practice to make the node pool terminate just before
 \texttt{run} has terminated.
 You might also want to release all MPI datatypes Peano has created, as some
@@ -252,8 +278,32 @@ logInfo(
 A serial code should continue to quit the \texttt{do} loop after one sweep. 
 A parallel code might run through the grid several times.
 
-  
+\noindent
+{\bf Two first, almost-parallel runs}.
+Before you continue, I recommend to run your code with \texttt{mpirun} and only
+one active process. 
+Just ensure that your code continues to behave as the serial code does even
+though MPI features are compiled into the sources.
+Next, I recommmend you to run the code with two ranks and check whether
+everything continues to work.
+
+\begin{remark}
+Peano by default implements a special policy for rank 0. Rank 0 is the global
+master responsible for global load balancing decisions. Those decisions are
+critical. 
+Thus, rank 0 always deploys all work to other ranks and focuses exclusively on
+load balancing and on running the overall algorithm control,
+i.e.~\texttt{runAsMaster()}.
+If you run the code with two MPI ranks, you should thus get similar runtime
+results as with one rank.
+\end{remark}
  
+\begin{remark}
+For fair and proper runtime comparisons, it might make sense to place the first
+two MPI ranks on one CPU and make them share the resources.
+Alternatively, you may want to reduce the number of actual ranks in your
+measurements by one.
+\end{remark}
 
 \subsection{Exchanging the global state}
 

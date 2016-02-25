@@ -83,12 +83,6 @@ class __NAMESPACE__::records::Cell {
 
   persistent parallelise bool    subtreeHoldsWorker;
   
-  persistent parallelise double  nodeWorkload;
-  persistent parallelise double  localWorkload;
-  persistent parallelise double  totalWorkload;
-  persistent parallelise double  maxWorkload;
-  persistent parallelise double  minWorkload;
-  
   persistent packed bool         cellIsAForkCandidate;
   #endif
   
