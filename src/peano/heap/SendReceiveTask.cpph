@@ -1,7 +1,7 @@
 #include "tarch/la/VectorCompare.h"
 
 template <class Data>
-tarch::logging::Log  peano::heap::SendReceiveTask<Data>::_log( "peano::heap::SendReceiveTask" );
+tarch::logging::Log  peano::heap::SendReceiveTask<Data>::_log( "peano::heap::SendReceiveTask<Data>" );
 
 
 #ifdef Asserts

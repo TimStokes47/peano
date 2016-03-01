@@ -13,13 +13,17 @@
 #include "peano/heap/PlainBoundaryDataExchanger.h"
 #include "peano/heap/RLEBoundaryDataExchanger.h"
 
+#include "peano/heap/HeapAllocator.h"
 #include "peano/heap/records/FloatHeapData.h"
 #include "peano/heap/records/CharHeapData.h"
 #include "peano/heap/records/DoubleHeapData.h"
 #include "peano/heap/records/BooleanHeapData.h"
 #include "peano/heap/records/IntegerHeapData.h"
 
+#include "peano/utils/Globals.h"
+
 #include "tarch/logging/Log.h"
+
 #include "tarch/services/Service.h"
 
 
@@ -82,7 +86,7 @@ namespace peano {
     };
 
     /**
-     * Plean heap over integers.
+     * Plain heap over integers.
      *
      * I recommend to use this for first prototyping or applications with a low
      * communication memory footprint. It is pretty fast. However, I also
@@ -102,9 +106,13 @@ namespace peano {
      * observe that this heap implementation plains to deadlock quickly for big
      * data sets where lots of messages are exchanged. In that case, I
      * recommend to use the RLEHeap below.
+     *
+     * You might want to have a closer look into the DoubleHeap in DoubleHeap.h or
+     * FixedSizeDoubleHeap which are specialised versions of the heap for doubles
+     * and come along with a smaller overhead.
      */
-    typedef PlainHeap<peano::heap::records::DoubleHeapData>   PlainDoubleHeap;
-    typedef RLEHeap<peano::heap::records::DoubleHeapData>     RLEDoubleHeap;
+    typedef PlainHeap<peano::heap::records::DoubleHeapData>   PlainDoubleHeapWithDaStGenRecords;
+    typedef RLEHeap<peano::heap::records::DoubleHeapData>     RLEDoubleHeapWithDaStGenRecords;
 
 
     /**
@@ -178,7 +186,7 @@ namespace peano {
  * Since a heap is kind of a global thing, this class is a singleton. Please
  * consult init() when you use the heap.
  *
- * !!! MPI Handling
+ * <h1>MPI Handling</h1>
  *
  * The elements stored on the heap have to be modeled due to DaStGen. As a
  * result, we can send individual elements as well as sequences of classes
@@ -237,10 +245,10 @@ namespace peano {
  * heap data again after you've sent out heap data before is the grid traversal
  * where you also receive data.
  *
- * !!! Memory footprint
+ * <h1> Memory footprint and alignment </h1>
  *
- * To reduce the memory footprint of the heaps, you may want to apply two different
- * optimisation:
+ * To reduce the memory footprint of the heaps, you may want to apply two
+ * different optimisations:
  *
  * - The define PackRecordsInHeaps (by default, it is defined) allows you to
  *   remove padding on the heap. This is different to packing in the context
@@ -249,13 +257,24 @@ namespace peano {
  *   case however, you have to ensure that you convert all data types properly
  *   in your code.
  *
- * !!! Efficiency note
+ * In Peano, we typically use the heaps to work with aligned data.
+ * Unfortunately, it is very hard to make the C++ std::vector use aligned data.
+ * I therefore decided not to use the standard C++ class, but to define my own
+ * Vector.h. If you use the flag
+ *
+ * -DAlignDataOnHeaps=16
+ *
+ * to a value greater than 0, you thus automatically should have proper
+ * alignment.
+ *
+ *
+ * <h1> Efficiency notes </h1>
  *
  * If a lot of heap data is exchanged, the asynchronous exchange of information
  * can block all MPI buffers. In this case, it is useful to call
  * receiveDanglingMessages() from time to time manually within your mappings.
  *
- * !!! Heap data exchange throughout forks, joins, and master-worker exchange
+ * <h1> Heap data exchange throughout forks, joins, and master-worker exchange </h1>
  *
  * The arguing above (with the inversed read order in most cases) does not hold
  * for the forks and joins, and it also does not hold if a master sends heap
@@ -264,14 +283,14 @@ namespace peano {
  * deployed to a separate tag to avoid confusion. You switch to this mode due
  * to the synchronous flag of the send and receive operation.
  *
- * !!! Multithreading
+ * <h1> Multithreading </h1>
  *
  * The heap class is not thread-safe and does not provide any threading
  * facilities. If you use it within a multithreaded application, you have to
  * ensure all the data consistency - either via semaphores or an a priori
  * exclusion of races.
  *
- * !!! Troubleshooting
+ * <h1> Troubleshooting </h1>
  *
  * - Is your receiving mapping also calling startToSendOrReceiveHeapData()?
  * - Does each node send exactly the same number of vertices to the other nodes
@@ -279,12 +298,6 @@ namespace peano {
  *   the same but each vertex that wants to receive data also has to send a
  *   (probably empty) record the the corresponding neighbour.
  *
- * !!! Rationale
- *
- * SynchronousDataExchange hier ist nix symmetrisch. Deshalb koennen wir keine map verwenden - da wuerden uns daten entgehen
- * Stattdessen muessen wir all ranks testen und einfuegen
- *
- * Boundary ist immer symmetrisch
  *
  * @author Kristof Unterweger, Tobias Weinzierl
  */
