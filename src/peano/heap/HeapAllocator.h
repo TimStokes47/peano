@@ -4,86 +4,107 @@
 #define _PEANO_HEAP_HEAP_VECTOR_H_
 
 
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
+#ifdef CompilerICC
 #include <malloc.h>
-#include <memory>
-
-
-/**
- * STL-compliant allocator that allocates aligned memory.
- * @tparam T Type of the element to allocate.
- * @tparam Alignment Alignment of the allocation, e.g. 16.
- * @ingroup AlignedAllocator
- */
-template <class T, size_t Alignment>
-struct aligned_allocator
-        : public std::allocator<T> // Inherit construct(), destruct() etc.
-{
-#if 0
-        typedef size_t    size_type;
-        typedef ptrdiff_t difference_type;
-        typedef T*        pointer;
-        typedef const T*  const_pointer;
-        typedef T&        reference;
-        typedef const T&  const_reference;
-        typedef T         value_type;
-#endif
-        typedef typename std::allocator<T>::size_type size_type;
-        typedef typename std::allocator<T>::pointer pointer;
-        typedef typename std::allocator<T>::const_pointer const_pointer;
-
-        /// Defines an aligned allocator suitable for allocating elements of type
-        /// @c U.
-        template <class U>
-        struct rebind {         typedef aligned_allocator<U,Alignment> other; };
-
-        /// Default-constructs an allocator.
-        aligned_allocator() throw() { }
-
-        /// Copy-constructs an allocator.
-        aligned_allocator(const aligned_allocator& other) throw()
-                : std::allocator<T>(other) { }
-
-        /// Convert-constructs an allocator.
-        template <class U>
-        aligned_allocator(const aligned_allocator<U,Alignment>&) throw() { }
-
-        /// Destroys an allocator.
-        ~aligned_allocator() throw() { }
-
-        /// Allocates @c n elements of type @c T, aligned to a multiple of
-        /// @c Alignment.
-        pointer allocate(size_type n)
-        {
-                return allocate(n, const_pointer(0));
-        }
-
-        /// Allocates @c n elements of type @c T, aligned to a multiple of
-        /// @c Alignment.
-        pointer allocate(size_type n, const_pointer /* hint */)
-        {
-                void *p;
-#ifndef _WIN32
-                if (posix_memalign(&p, Alignment, n*sizeof(T)) != 0)
-                        p = NULL;
+//#include <mm_malloc.h>
 #else
-                p = _aligned_malloc(n*sizeof(T), Alignment);
+#include <stdio.h>
+#include <stdlib.h>
 #endif
-                if (!p)
-                        throw std::bad_alloc();
-                return static_cast<pointer>(p);
-        }
 
 
-        /// Frees the memory previously allocated by an aligned allocator.
-        void deallocate(pointer p, size_type /* n */)
-        {
-#ifndef _WIN32
-                free(p);
-#else
-                _aligned_free(p);
-#endif
+
+namespace peano {
+  namespace heap {
+    /**
+     * STL-compliant allocator that allocates aligned memory.
+     *
+     * This code is inspired by a version from
+     *  https://code.google.com/archive/p/mastermind-strategy/source/default/source
+     *  where
+     * /mastermind-strategy/tags/release-1.0.0/src/util/aligned_allocator.hpp
+     *
+     * subject to the MIT License. We have however removed all the Windows
+     * affinities and instead tailored it to GCC vs. Intel. The heart of the
+     * class, the two functions allocate and deallocate are thus completely
+     * rewritten.
+     *
+     * @param Alignment Alignment of the allocation, e.g. 16. If you set 0,
+     *                  then we use the standard C heap management
+     */
+    template <class T, size_t Alignment>
+    struct HeapAllocator: public std::allocator<T> {
+      typedef typename std::allocator<T>::size_type size_type;
+      typedef typename std::allocator<T>::pointer pointer;
+      typedef typename std::allocator<T>::const_pointer const_pointer;
+
+
+      template <class U>
+      struct rebind {
+        typedef HeapAllocator<U,Alignment> other;
+      };
+
+
+      HeapAllocator() throw() { }
+
+
+      HeapAllocator(const HeapAllocator& other) throw():
+        std::allocator<T>(other) {
+      }
+
+
+      template <class U>
+      HeapAllocator(const HeapAllocator<U,Alignment>&) throw() { }
+
+
+      ~HeapAllocator() throw() { }
+
+
+      pointer allocate(size_type n) {
+        return allocate(n, const_pointer(0));
+      }
+
+
+      pointer allocate(size_type n, const_pointer /* hint */) {
+        void *p;
+
+        if (Alignment==0) {
+          p = malloc(n*sizeof(T));
         }
-};
+        else {
+          #ifdef CompilerICC
+          p = _mm_alloc(n*sizeof(T), Alignment);
+          #else
+          // The arguments here are permuted compared to _mm_alloc
+          p = aligned_alloc(Alignment, n*sizeof(T));
+          #endif
+        }
+
+        if (!p) {
+          throw std::bad_alloc();
+        }
+        return static_cast<pointer>(p);
+      }
+
+
+      void deallocate(pointer p, size_type n) {
+        if (Alignment==0) {
+          free(p);
+        }
+        else {
+          #ifdef CompilerICC
+          _mm_free(p);
+          #else
+          free(p);
+          #endif
+        }
+      }
+    };
+  }
+}
+
 
 /**
  * Checks whether two aligned allocators are equal. Two allocators are equal
@@ -92,10 +113,10 @@ struct aligned_allocator
  * @ingroup AlignedAllocator
  */
 template <class T1, size_t A1, class T2, size_t A2>
-bool operator == (const aligned_allocator<T1,A1> &, const aligned_allocator<T2,A2> &)
-{
-        return true;
+bool operator == (const peano::heap::HeapAllocator<T1,A1> &, const peano::heap::HeapAllocator<T2,A2> &) {
+  return true;
 }
+
 
 /**
  * Checks whether two aligned allocators are not equal. Two allocators are equal
@@ -104,11 +125,9 @@ bool operator == (const aligned_allocator<T1,A1> &, const aligned_allocator<T2,A
  * @ingroup AlignedAllocator
  */
 template <class T1, size_t A1, class T2, size_t A2>
-bool operator != (const aligned_allocator<T1,A1> &, const aligned_allocator<T2,A2> &)
-{
-        return false;
+bool operator != (const peano::heap::HeapAllocator<T1,A1> &, const peano::heap::HeapAllocator<T2,A2> &) {
+  return false;
 }
-
 
 
 #endif

@@ -13,18 +13,31 @@ namespace peano {
       class MasterWorkerExchanger,
       class JoinForkExchanger,
       class NeighbourdoubleExchanger,
+      // @tood Perhaps remove default and always align?
       class VectorContainer = std::vector<double>
     >
     class DoubleHeap;
+
 
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true >,
       SynchronousDataExchanger< double, true >,
       PlainBoundaryDataExchanger< double, true >
-//    ,
-      // @todo Adopt
-//      aligned_allocator<double, sizeof(double)>
     >     PlainDoubleHeap;
+
+    typedef DoubleHeap<
+      SynchronousDataExchanger< double, true >,
+      SynchronousDataExchanger< double, true >,
+      PlainBoundaryDataExchanger< double, true >,
+      std::vector< double, HeapAllocator<double, 32 > >
+    >     PlainDoubleHeapAlignment32;
+
+    typedef DoubleHeap<
+      SynchronousDataExchanger< double, true >,
+      SynchronousDataExchanger< double, true >,
+      PlainBoundaryDataExchanger< double, true >,
+      std::vector< double, HeapAllocator<double, 64 > >
+    >     PlainDoubleHeapAlignment64;
 
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true >,
@@ -32,11 +45,48 @@ namespace peano {
       RLEBoundaryDataExchanger< double, true >
     >     RLEDoubleHeap;
 
+    typedef DoubleHeap<
+      SynchronousDataExchanger< double, true >,
+      SynchronousDataExchanger< double, true >,
+      RLEBoundaryDataExchanger< double, true >,
+      std::vector< double, HeapAllocator<double, 32 > >
+    >     RLEDoubleHeapAlignment32;
+
+    typedef DoubleHeap<
+      SynchronousDataExchanger< double, true >,
+      SynchronousDataExchanger< double, true >,
+      RLEBoundaryDataExchanger< double, true >,
+      std::vector< double, HeapAllocator<double, 64 > >
+    >     RLEDoubleHeapAlignment64;
+
   }
 }
 
 
 
+/**
+ * DoubleHeap
+ *
+ * This is a specialised variant of the heap for doubles. It works directly
+ * with doubles held in a std::vector. It does not rely on DaStGen for the
+ * data at all and not wrap any data into DaStGen records. It thus should be
+ * faster than the standard version.
+ *
+ * <h1> Working with plain double pointer </h1>
+ *
+ * With this class, you may use getData().data() yielding a plain double
+ * pointer. It is probably aligned if you choose alignment.
+ *
+ *
+ * <h1> Alignment </h1>
+ *
+ * A big difference to the standard heap class is that this class can work with
+ * aligned data structuures. This makes the class however incompatible with
+ * other std::vector<double> instances where no alignment is used. Please consult
+ * the HeapAllocator for defails on the alignment.
+ *
+ * @author Tobias Weinzierl
+ */
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourdoubleExchanger, class VectorContainer>
 class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::AbstractHeap {
   private:
