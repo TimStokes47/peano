@@ -20,9 +20,10 @@ namespace peano {
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true >,
       SynchronousDataExchanger< double, true >,
-      PlainBoundaryDataExchanger< double, true >,
+      PlainBoundaryDataExchanger< double, true >
+//    ,
       // @todo Adopt
-      aligned_allocator<double, sizeof(double)>
+//      aligned_allocator<double, sizeof(double)>
     >     PlainDoubleHeap;
 
     typedef DoubleHeap<
