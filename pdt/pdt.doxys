@@ -14,8 +14,39 @@ has the same structure:
 - Mappings.
 - Adapters.
 
+<h1>Re-building the PDT</h1>
 
-!!! Vertex specification
+Usually, it should not be necessary to rebuild the PDT. However, if you have 
+to, type in 
+
+\code
+ant clean
+ant createParser
+ant compile
+ant dist 
+\endcode
+
+which gives you both a new jar and the corresponding zip with sources. Usually, 
+you have to do this if and only if you have an older Java version that is not 
+supported by the one online. You might also think about cross-compiling in 
+this case. To cross-compile type in 
+
+\code
+update-alternatives --config java
+
+  Auswahl      Pfad                                            Priorität Status
+------------------------------------------------------------
+* 0            /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java   1081      automatischer Modus
+  1            /usr/lib/jvm/java-6-openjdk-amd64/jre/bin/java   1061      manueller Modus
+  2            /usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java   1071      manueller Modus
+  3            /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java   1081      manueller Modus
+\endcode  
+
+as superuser and select another Java version.
+
+
+
+<h1> Vertex specification </h1>
 
 The vertex specification first links to a DaStGen definition file. pdt hands 
 over this one to DaStGen and translates it into plain C++ code. After the 
@@ -54,51 +85,6 @@ be a vector of size @f$ 2^d \cdot 3^d @f$.
 ||  stencil(int)               |              3^d             |        2^d * 3^d                  |  int
 ||  intergrid-operator(int)    |              5^d             |        2^d * 5^d                  |  int
 
-
-
-
-
- !! Building DaStGen / The Ant-File
-
-In order to recreate the PDT, we rely on ANT:
-
-
-\code
-ant clean
-ant createParser
-ant compile
-ant dist 
-\endcode
-
-
-
-!!! Manual recreation/recompilation
-
-  
-To (re-)create the parser, change into the pdt directory and type in
-\code
-java -jar lib/sablecc.jar -d src pdt.grammar
-\endcode
-
-
-To (re-)create the jar file, please type in
-\code
-cd bin
-jar xvf ../lib/DaStGen.jar
-jar xvf ../lib/jargs.jar
-cd ..
-jar cvfm pdt.jar Manifest.txt stdtemplates lib/DaStGen.jar -C bin .
-\endcode
-We here assume that all class files are held in a directory bin and that the 
-command is invoked in the pdt directory. 
-
-
-To create a zip with all the sources, invoke
-\code
-tar -cvf pdt.tar src stdtemplates Manifest.txt pdt.doxys pdt.grammar --exclude=.svn
-gzip pdt.tar
-mv pdt.tar.gz ../tarballs
-\endcode
 
 */
 
