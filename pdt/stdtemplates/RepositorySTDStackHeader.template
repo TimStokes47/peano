@@ -94,7 +94,7 @@ class __NAMESPACE__::repositories::RepositorySTDStack: public __NAMESPACE__::rep
     #endif
 
     virtual void setMaximumMemoryFootprintForTemporaryRegularGrids(double value);
-    virtual void logIterationStatistics() const;
+    virtual void logIterationStatistics(bool logAllAdapters) const;
     virtual void clearIterationStatistics();
 };
 

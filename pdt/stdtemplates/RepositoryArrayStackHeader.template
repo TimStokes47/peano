@@ -100,7 +100,7 @@ class __NAMESPACE__::repositories::RepositoryArrayStack: public __NAMESPACE__::r
     #endif
 
     virtual void setMaximumMemoryFootprintForTemporaryRegularGrids(double value);
-    virtual void logIterationStatistics() const;
+    virtual void logIterationStatistics(bool logAllAdapters) const;
     virtual void clearIterationStatistics();
 };
 

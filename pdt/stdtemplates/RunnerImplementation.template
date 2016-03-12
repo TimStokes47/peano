@@ -73,7 +73,7 @@ int __NAMESPACE__::runners::Runner::runAsMaster(__NAMESPACE__::repositories::Rep
  __x__NONQUALIFIED_ADAPTER_TYPE__ repository.switchTo__NONQUALIFIED_ADAPTER_TYPE__(); repository.iterate();
  
  
-  repository.logIterationStatistics();
+  repository.logIterationStatistics( true );
   repository.terminate();
   // End of dummy implementation
 

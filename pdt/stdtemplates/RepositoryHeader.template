@@ -70,8 +70,12 @@ class __NAMESPACE__::repositories::Repository {
      *
      * This operation gives you a table which tells you for each adapter how 
      * much time was spent in it. The result is written to the info log device. 
+     *
+     * @param logAllAdapters If it is set to true then all adapters
+     *          are shown. If you hand in false, then only those adapters that
+     *          have been in use are displayed.
      */
-    virtual void logIterationStatistics() const = 0;
+    virtual void logIterationStatistics(bool logAllAdapters) const = 0;
         
     virtual void clearIterationStatistics() = 0;
 
