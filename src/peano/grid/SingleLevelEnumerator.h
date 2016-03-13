@@ -161,9 +161,16 @@ class peano::grid::SingleLevelEnumerator: public peano::grid::VertexEnumerator {
     static LocalVertexIntegerIndex getParentVertex(const LocalVertexIntegerIndex& index );
 
     /**
-     * @return Tells you whether a vertex coincides with a vertex on the next coarser level
+     * @return Tells you whether a vertex coincides with a vertex on the next
+     * coarser level
      */
     static bool isVertexPositionAlsoACoarseVertexPosition(const LocalVertexIntegerIndex& index );
+
+    /**
+     * Returns true if any entry in the index equals 0 or 3, i.e. when the
+     * vertex position coincides with coarse grid grid lines.
+     */
+    static bool isVertexPositionAlsoACoarseGridPosition(const LocalVertexIntegerIndex& index );
 
     /**
      * A coarse grid index is a d-tuple with zeros and ones. The entries of the

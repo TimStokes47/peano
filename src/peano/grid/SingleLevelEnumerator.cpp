@@ -214,6 +214,16 @@ bool peano::grid::SingleLevelEnumerator::isVertexPositionAlsoACoarseVertexPositi
 }
 
 
+bool peano::grid::SingleLevelEnumerator::isVertexPositionAlsoACoarseGridPosition(const LocalVertexIntegerIndex& index ) {
+  bool result = false;
+  // @todo Deploy this to lookup table, at least for d=2,3, and 4
+  for (int d=0; d<DIMENSIONS; d++ ) {
+    result  |= ((index(d)==0) || (index(d)==3));
+  }
+  return result;
+}
+
+
 bool peano::grid::SingleLevelEnumerator::doesCoarseGridVertexInfluenceFineGridVertex(
   const LocalVertexIntegerIndex&  positionInCoarseGridCell,
   const LocalVertexIntegerIndex&  positionInFineGridCell
