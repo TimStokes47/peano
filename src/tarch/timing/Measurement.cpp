@@ -164,3 +164,8 @@ double tarch::timing::Measurement::min() const {
   assertion1( isAccurateValue(), toString() );
   return _min;
 }
+
+
+double tarch::timing::Measurement::getAccuracy() const {
+  return _accuracy;
+}

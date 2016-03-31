@@ -121,6 +121,8 @@ class tarch::timing::Measurement {
     double min() const;
 
     void erase();
+
+    double getAccuracy() const;
 };
 
 #endif
