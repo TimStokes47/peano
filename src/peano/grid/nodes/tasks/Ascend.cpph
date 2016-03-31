@@ -198,21 +198,9 @@ template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator() () {
   _treeRemainsStatic = true;
 
-  for (int level=_treeDepth+1; level>=1; level--) {
-    if (level==1) {
-      ascend(level);
-      touchVerticesLastTime( level );
-    }
-    else if (level==_treeDepth+1) {
-      leaveCells(level-1);
-    }
-    else {
-      ascend(level);
-      touchVerticesLastTime( level );
-      leaveCells(level-1);
-    }
-  }
+  // @todo Documentation why this has to be here and not after the actual traversal (if we use pipelining)
 
+  // @todo Lock only if we do parallel
   tarch::multicore::BooleanSemaphore performVertexTransitionSemaphore;
 
   if (_eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop) {
@@ -243,6 +231,22 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
         }
       endpfor
     endpfor
+  }
+
+
+  for (int level=_treeDepth+1; level>=1; level--) {
+    if (level==1) {
+      ascend(level);
+      touchVerticesLastTime( level );
+    }
+    else if (level==_treeDepth+1) {
+      leaveCells(level-1);
+    }
+    else {
+      ascend(level);
+      touchVerticesLastTime( level );
+      leaveCells(level-1);
+    }
   }
 
   // The original loop body is not destroyed yet, i.e. has not merged. Furthermore,
