@@ -198,19 +198,22 @@ template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator() () {
   _treeRemainsStatic = true;
 
-  // @todo Documentation why this has to be here and not after the actual traversal (if we use pipelining)
-
-  // @todo Lock only if we do parallel
-  tarch::multicore::BooleanSemaphore performVertexTransitionSemaphore;
+  tarch::multicore::BooleanSemaphore  performVertexTransitionSemaphore;
 
   if (_eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop) {
     const int NumberOfVertices = tarch::la::volume(_gridContainer.getNumberOfVertices(_treeDepth));
 
     pfor(i,0,NumberOfVertices,peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings)
+      tarch::multicore::Lock              lock(performVertexTransitionSemaphore,false);
       if (!_gridContainer.isToBeWrittenToTemporaryStack(_treeDepth,i) ) {
         Vertex&   currentVertex  = _gridContainer.getVertex(_treeDepth,i);
-        tarch::multicore::Lock lock(performVertexTransitionSemaphore);
+        if (peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings<NumberOfVertices) {
+          lock.lock();
+        }
         _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,_treeDepth);
+        if (peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings<NumberOfVertices) {
+          lock.free();
+        }
       }
     endpfor
   }

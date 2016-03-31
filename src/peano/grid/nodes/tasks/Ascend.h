@@ -79,6 +79,18 @@ class peano::grid::nodes::tasks::Ascend {
       RegularGridContainer&  gridContainer
     );
 
+    /**
+     *
+     * <h2>Ascend with nop or only leaves</h2>
+     *
+     * If we do ascend with no operations active or with operations only on the
+     * leaves, the purpose of the present class is to update the vertex flags
+     * (depth of adjacent subtrees, e.g.). Furthermore, we 'release' the
+     * individual levels to touchVertexLastTime. If pipelining is active, the
+     * touch last will run in parallel. As touch last relies on valid vertex
+     * flags, it is therefore important to set/invalidate all flags before
+     * asap - notably before we release the levels.
+     */
     void operator() ();
 };
 
