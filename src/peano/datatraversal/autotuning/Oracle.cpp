@@ -63,6 +63,11 @@ void peano::datatraversal::autotuning::Oracle::plotStatistics(const std::string&
   if (!filename.empty()) {
     std::ofstream f(filename.c_str(),std::ios::out );
     if (f.is_open()) {
+      f << "total-number-of-oracles=" << getTotalNumberOfOracles() << std::endl;
+      f << "number-of-adapters=" << _numberOfOracles << std::endl;
+      f << "adapters-reserved-for-repository-steering=" << AdapterStatesReservedForRepositorySteering << std::endl;
+      f << "no-of-methods-calling=" << peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling << std::endl;
+
       for (int i=0; i<getTotalNumberOfOracles();i++) {
         assertion(_oracles[i]._oracle!=0);
         _oracles[i]._oracle->plotStatistics(f);
