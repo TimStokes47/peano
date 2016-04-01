@@ -256,9 +256,11 @@ void tarch::logging::CommandLineLogger::info(double timestamp, const std::string
 
     tarch::multicore::Lock lockCout( _semaphore );
     out() << outputMessage;
+    #if !defined(__APPLE__)
     if (out()!=std::cout) {
       std::cout << outputMessage;
     }
+    #endif
   }
 }
 
