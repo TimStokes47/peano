@@ -98,10 +98,10 @@ void peano::heap::SendReceiveTask<double>::triggerReceive(int tag) {
 
   #ifdef Parallel
   logTraceInWith2Arguments( "triggerReceive(int)", tag, _metaInformation.toString() );
-  _data = new typename SendReceiveTask<double>::MPIdouble[ _metaInformation.getLength() ];
+  _data = new double[ _metaInformation.getLength() ];
 
   const int  result = MPI_Irecv(
-    _data, _metaInformation.getLength(), MPIdouble::doubletype,
+    _data, _metaInformation.getLength(), MPI_DOUBLE,
     _rank, tag, tarch::parallel::Node::getInstance().getCommunicator(),
     &_request
   );

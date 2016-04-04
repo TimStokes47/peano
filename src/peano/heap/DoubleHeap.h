@@ -12,7 +12,7 @@ namespace peano {
     template<
       class MasterWorkerExchanger,
       class JoinForkExchanger,
-      class NeighbourdoubleExchanger,
+      class NeighbourDataExchanger,
       // @tood Perhaps remove default and always align?
       class VectorContainer = std::vector<double>
     >
@@ -87,7 +87,7 @@ namespace peano {
  *
  * @author Tobias Weinzierl
  */
-template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourdoubleExchanger, class VectorContainer>
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::AbstractHeap {
   private:
     /**
@@ -119,12 +119,12 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
      * create a new exchanger. For the synchronous data exchangers, we may
      * create tags on-the-fly.
      */
-    int                                    _neighbourdoubleExchangerMetadoubleTag;
-    int                                    _neighbourdoubleExchangerdoubleTag;
+    int                                    _neighbourDataExchangerMetaDataTag;
+    int                                    _neighbourDataExchangerDataTag;
 
     MasterWorkerExchanger                  _masterWorkerExchanger;
     JoinForkExchanger                      _joinForkExchanger;
-    std::map<int, NeighbourdoubleExchanger>  _neighbourdoubleExchanger;
+    std::map<int, NeighbourDataExchanger>  _neighbourDataExchanger;
     #endif
 
     /**
