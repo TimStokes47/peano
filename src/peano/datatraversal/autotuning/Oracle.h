@@ -77,11 +77,11 @@ class peano::datatraversal::autotuning::Oracle {
      * Oracle, method and problem size must not change between the
      * parallelise() and loopHasTerminated() calls.
      */
-    int                                        _currentPhase;
+    int                                        _currentAdapter;
 
     OracleForOnePhase*                         _oraclePrototype;
 
-    int                                        _numberOfOracles;
+    int                                        _numberOfAdapters;
 
     void createOracles();
     void deleteOracles();
@@ -113,7 +113,7 @@ class peano::datatraversal::autotuning::Oracle {
     /**
      * Tell the oracle how many different adapters you'll gonna use.
      */
-    void setNumberOfOracles(int value);
+    void setNumberOfOracles(int numberOfAdapters);
 
     /**
      * Tell the oracle which adapter is used right now.

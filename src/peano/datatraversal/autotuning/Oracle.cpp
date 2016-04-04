@@ -4,10 +4,6 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/multicore/Lock.h"
 
-#if defined(SharedCobra)
-#include "tarch/multicore/cobra/Core.h"
-#endif
-
 
 #include <fstream>
 #include <sstream>
@@ -26,9 +22,9 @@ peano::datatraversal::autotuning::Oracle& peano::datatraversal::autotuning::Orac
 peano::datatraversal::autotuning::Oracle::Oracle():
   _oracles(),
   _watchSinceLastSwitchCall("peano::datatraversal::autotuning::Oracle", "Oracle()", false),
-  _currentPhase(0),
+  _currentAdapter(0),
   _oraclePrototype(0),
-  _numberOfOracles(0) {
+  _numberOfAdapters(0) {
 }
 
 
@@ -48,12 +44,17 @@ void peano::datatraversal::autotuning::Oracle::setOracle( OracleForOnePhase* ora
 
 
 int peano::datatraversal::autotuning::Oracle::getTotalNumberOfOracles() const {
-  return (_numberOfOracles+AdapterStatesReservedForRepositorySteering)*peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling;
+  return (_numberOfAdapters+AdapterStatesReservedForRepositorySteering)*peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling;
 }
 
 
 int peano::datatraversal::autotuning::Oracle::getKey(const MethodTrace& askingMethod ) const {
-  return _currentPhase*peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling + askingMethod;
+  assertion( askingMethod>=0 );
+  assertion( askingMethod<peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling );
+  int result = _currentAdapter*peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling + askingMethod;
+  assertion(result>=0);
+  assertion(result<getTotalNumberOfOracles());
+  return result;
 }
 
 
@@ -64,7 +65,7 @@ void peano::datatraversal::autotuning::Oracle::plotStatistics(const std::string&
     std::ofstream f(filename.c_str(),std::ios::out );
     if (f.is_open()) {
       f << "total-number-of-oracles=" << getTotalNumberOfOracles() << std::endl;
-      f << "number-of-adapters=" << _numberOfOracles << std::endl;
+      f << "number-of-adapters=" << _numberOfAdapters << std::endl;
       f << "adapters-reserved-for-repository-steering=" << AdapterStatesReservedForRepositorySteering << std::endl;
       f << "no-of-methods-calling=" << peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling << std::endl;
 
@@ -112,9 +113,7 @@ void peano::datatraversal::autotuning::Oracle::setNumberOfOracles(int value) {
   assertion( value>0 );
   logTraceInWith1Argument( "setNumberOfOracles(int)", value);
 
-  deleteOracles();
-  _numberOfOracles=value;
-  createOracles();
+  _numberOfAdapters=value;
 
   logTraceOut( "setNumberOfOracles(int)");
 }
@@ -134,13 +133,18 @@ void peano::datatraversal::autotuning::Oracle::createOracles() {
 
     _oracles = new ValuesPerOracleKey[getTotalNumberOfOracles()];
 
-    for (int i=0; i<getTotalNumberOfOracles(); i++) {
-      const int                phase = i/peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling;
-      const MethodTrace        trace = toMethodTrace(i-phase*peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling);
-      _oracles[i]._measureTime = false;
-      _oracles[i]._watch       = new tarch::timing::Watch("peano::datatraversal::autotuning::Oracle", "createOracles(int)", false);
-      _oracles[i]._oracle      = _oraclePrototype->createNewOracle(phase,trace);
-      _oracles[i]._recursiveCallsForThisOracle  = 0;
+
+    // @todo _numberOfAdapters -> numberOfAdapters
+    for (int currentAdapter=0; currentAdapter<_numberOfAdapters+AdapterStatesReservedForRepositorySteering; currentAdapter++) {
+        // @todo currentAdapter
+      _currentAdapter = currentAdapter;
+      for (int methodTraceNumber=0; methodTraceNumber<peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling; methodTraceNumber++) {
+        int key = getKey( toMethodTrace(methodTraceNumber) );
+        _oracles[key]._measureTime = false;
+        _oracles[key]._watch       = new tarch::timing::Watch("peano::datatraversal::autotuning::Oracle", "createOracles(int)", false);
+        _oracles[key]._oracle      = _oraclePrototype->createNewOracle(currentAdapter,toMethodTrace(methodTraceNumber));
+        _oracles[key]._recursiveCallsForThisOracle  = 0;
+      }
     }
   }
 
@@ -180,7 +184,7 @@ void peano::datatraversal::autotuning::Oracle::switchToOracle(int id) {
     _oracles[i]._oracle->informAboutElapsedTimeOfLastTraversal(erasedTime);
   }
 
-  _currentPhase=id;
+  _currentAdapter=id;
 
   _watchSinceLastSwitchCall.startTimer();
   #endif
@@ -202,7 +206,7 @@ int peano::datatraversal::autotuning::Oracle::parallelise(int problemSize, Metho
 
   tarch::multicore::Lock lock(_semaphore);
 
-  assertion2( !_oracles[key]._recursiveCallsForThisOracle>=0, toString( askingMethod), _currentPhase );
+  assertion2( !_oracles[key]._recursiveCallsForThisOracle>=0, toString( askingMethod), _currentAdapter );
   _oracles[key]._recursiveCallsForThisOracle++;
 
   if (problemSize>0 && _oracles[key]._recursiveCallsForThisOracle==1) {
@@ -246,7 +250,7 @@ void peano::datatraversal::autotuning::Oracle::parallelSectionHasTerminated(Meth
   tarch::multicore::Lock lock(_semaphore);
 
   _oracles[key]._recursiveCallsForThisOracle--;
-  assertion2( _oracles[key]._recursiveCallsForThisOracle>=0, toString( askingMethod), _currentPhase );
+  assertion2( _oracles[key]._recursiveCallsForThisOracle>=0, toString( askingMethod), _currentAdapter );
 
   if (_oracles[key]._measureTime && _oracles[key]._recursiveCallsForThisOracle==0 ) {
     _oracles[key]._watch->stopTimer();
