@@ -549,3 +549,29 @@ the vertex counterpart.
 \subsection{Specifying the communication pattern}
 
 \subsection{Doing something special on a worker}
+
+
+
+\subsection{Other MPI components}
+
+\begin{itemize}
+  \item If you couple Peano with another component using MPI, and the two codes
+  shall not interfer with collectives, you can change Peano's {\bf
+  communicator}.
+  For this, have a look into \texttt{tarch::parallel::Node}. All Peano kernel
+  routines ask the \texttt{Node} class which communicator to use. So change it
+  there and you switch Peano to a different communicator.
+  \item Peano uses various MPI {\bf tags} to exchange data. Most Peano
+  components grab a tag from a central data base and then work with this tag,
+  i.e.~the tags are hidden from the user. If you want to exchange your own data
+  with MPI commands and want to ensure not to interfer with any Peano messages,
+  use the static operation \texttt{reserveFreeTag} from
+  \texttt{tarch::parallel::Node} in the system setup to reserve a tag for your
+  own purposes that then exclusive to you.
+  \item If you want to exchange data along the master-worker {\bf topology} or
+  with the {\bf global rank}, it is best to ask the
+  texttt{tarch::parallel::NodePool} for the right ranks. Usually, rank 0 is the
+  global master. However, Peano can be reconfigured to change this
+  behaviour---which is particularly useful if you couple the AMR framework with
+  some other codes.
+\end{itemize}
