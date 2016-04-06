@@ -104,9 +104,12 @@ class peano::datatraversal::autotuning::Oracle {
     void plotStatistics(const std::string& filename);
 
     /**
-     *
-     * @see OracleForOnePhase
-     *
+     * It is important that statistics files are loaded after we have created
+     * all oracles through setNumberOfOracles(). The routine runs through all
+     * existing oracles and tells each one to load the statistics file. It is
+     * consequently important that these do exist before. setNumberOfOracles()
+     * is invoked by the repository constructor, i.e. if you have created your
+     * repository before you load a statistics file, you are fine.
      */
     void loadStatistics(const std::string& filename);
 
