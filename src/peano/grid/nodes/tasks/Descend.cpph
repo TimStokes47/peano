@@ -51,30 +51,33 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
     #endif
 
     const tarch::la::Vector<DIMENSIONS,int> NumberOfVertices      = _gridContainer.getNumberOfVertices(level);
-    const int                               sharedMemoryGrainSize =
-      _eventHandle.touchVertexFirstTimeSpecification().multithreading == peano::MappingSpecification::Serial ? 0 :
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-        tarch::la::volume(NumberOfVertices),
-        peano::datatraversal::autotuning::CallTouchFirstTimeOnRegularStationaryGrid
-      );
     _touchVertexFirstTimeLoopBody.setLevel(level);
 
     int  colouring = -1;
+    int  problemSize = tarch::la::volume(NumberOfVertices);
     switch (_eventHandle.touchVertexFirstTimeSpecification().multithreading) {
       case peano::MappingSpecification::Serial:
         colouring = peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial;
         break;
       case peano::MappingSpecification::AvoidCoarseGridRaces:
-        colouring = peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::SevenPowerDColouring;
+        colouring    = peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::SevenPowerDColouring;
+        problemSize /= SEVEN_POWER_D;
         break;
       case peano::MappingSpecification::AvoidFineGridRaces:
-        colouring = peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::TwoPowerDColouring;
+        colouring    = peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::TwoPowerDColouring;
+        problemSize /= TWO_POWER_D;
         break;
       case peano::MappingSpecification::RunConcurrentlyOnFineGrid:
         colouring = peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::NoColouring;
         break;
     }
     assertion( colouring>=0 );
+    const int                               sharedMemoryGrainSize =
+      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial ? 0 :
+      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+        problemSize,
+        peano::datatraversal::autotuning::CallTouchFirstTimeOnRegularStationaryGrid
+      );
 
     peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>(
       NumberOfVertices,
@@ -83,7 +86,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
       colouring
     );
 
-    if (_eventHandle.touchVertexFirstTimeSpecification().multithreading != peano::MappingSpecification::Serial) {
+    if (colouring!=peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial) {
       peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallTouchFirstTimeOnRegularStationaryGrid);
     }
   }
@@ -101,29 +104,32 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
 
     _enterCellLoopBody.setLevel(level);
 
-    const int sharedMemoryGrainSize   =
-      _eventHandle.enterCellSpecification().multithreading == peano::MappingSpecification::Serial ?
-      0 :
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-        tarch::la::volume(NumberOfCells),
-        peano::datatraversal::autotuning::CallEnterCellOnRegularStationaryGrid
-      );
     int  colouring = -1;
+    int  problemSize = tarch::la::volume(NumberOfCells);
     switch (_eventHandle.enterCellSpecification().multithreading) {
       case peano::MappingSpecification::Serial:
         colouring = peano::datatraversal::dForLoop<EnterCellLoopBody>::Serial;
         break;
       case peano::MappingSpecification::AvoidCoarseGridRaces:
-        colouring = peano::datatraversal::dForLoop<EnterCellLoopBody>::SixPowerDColouring;
+        colouring    = peano::datatraversal::dForLoop<EnterCellLoopBody>::SixPowerDColouring;
+        problemSize /= SIX_POWER_D;
         break;
       case peano::MappingSpecification::AvoidFineGridRaces:
-        colouring = peano::datatraversal::dForLoop<EnterCellLoopBody>::TwoPowerDColouring;
+        colouring   = peano::datatraversal::dForLoop<EnterCellLoopBody>::TwoPowerDColouring;
+        problemSize /= TWO_POWER_D;
         break;
       case peano::MappingSpecification::RunConcurrentlyOnFineGrid:
         colouring = peano::datatraversal::dForLoop<EnterCellLoopBody>::NoColouring;
         break;
     }
     assertion( colouring>=0 );
+    const int sharedMemoryGrainSize   =
+      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial ?
+      0 :
+      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+        problemSize,
+        peano::datatraversal::autotuning::CallEnterCellOnRegularStationaryGrid
+      );
 
     peano::datatraversal::dForLoop<EnterCellLoopBody> loop(
       NumberOfCells,
@@ -132,7 +138,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
       colouring
     );
 
-    if ( _eventHandle.enterCellSpecification().multithreading != peano::MappingSpecification::Serial ) {
+    if ( colouring!=peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial ) {
       peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallEnterCellOnRegularStationaryGrid);
     }
   }
@@ -150,20 +156,15 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
 
     _descendLoopBody.setCoarseGridLevel(fineGridLevel-1);
 
-    const int sharedMemoryGrainSize   =
-      _eventHandle.descendSpecification().multithreading == peano::MappingSpecification::Serial ?
-      0 :
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-        tarch::la::volume(NumberOfCoarseGridCells),
-        peano::datatraversal::autotuning::DescendOnRegularStationaryGrid
-      );
-    int  colouring = -1;
+    int  colouring   = -1;
+    int  problemSize = tarch::la::volume(NumberOfCoarseGridCells);
     switch (_eventHandle.descendSpecification().multithreading) {
       case peano::MappingSpecification::Serial:
         colouring = peano::datatraversal::dForLoop<DescendLoopBody>::Serial;
         break;
       case peano::MappingSpecification::AvoidCoarseGridRaces:
-        colouring = peano::datatraversal::dForLoop<DescendLoopBody>::TwoPowerDColouring;
+        colouring    = peano::datatraversal::dForLoop<DescendLoopBody>::TwoPowerDColouring;
+        problemSize /= TWO_POWER_D;
         break;
       case peano::MappingSpecification::AvoidFineGridRaces:
         assertionMsg( false, "ascend configuration " << _eventHandle.descendSpecification().toString() << " not supported. You cannot avoid fine grid races, you can only avoid coarse grid races" );
@@ -173,6 +174,13 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
         break;
     }
     assertion( colouring>=0 );
+    const int sharedMemoryGrainSize   =
+      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial ?
+      0 :
+      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+        problemSize,
+        peano::datatraversal::autotuning::DescendOnRegularStationaryGrid
+      );
 
     peano::datatraversal::dForLoop<DescendLoopBody> loop(
       NumberOfCoarseGridCells,
@@ -181,7 +189,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
       colouring
     );
 
-    if ( _eventHandle.descendSpecification().multithreading != peano::MappingSpecification::Serial ) {
+    if ( colouring!=peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial ) {
       peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::DescendOnRegularStationaryGrid);
     }
   }
