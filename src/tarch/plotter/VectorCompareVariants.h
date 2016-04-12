@@ -11,28 +11,28 @@ namespace tarch {
     template<int N>
     struct VectorCompare1e_14: public tarch::la::VectorCompare<N> {
       VectorCompare1e_14():
-        tarch::la::VectorCompare<N>(1,0e-14) {}
+        tarch::la::VectorCompare<N>(1.0e-14) {}
     };
 
 
     template<int N>
     struct VectorCompare1e_12: public tarch::la::VectorCompare<N> {
       VectorCompare1e_12():
-        tarch::la::VectorCompare<N>(1,0e-12) {}
+        tarch::la::VectorCompare<N>(1.0e-12) {}
     };
 
 
     template<int N>
     struct VectorCompare1e_8: public tarch::la::VectorCompare<N> {
       VectorCompare1e_8():
-        tarch::la::VectorCompare<N>(1,0e-8) {}
+        tarch::la::VectorCompare<N>(1.0e-8) {}
     };
 
 
     template<int N>
     struct VectorCompare1e_4: public tarch::la::VectorCompare<N> {
       VectorCompare1e_4():
-        tarch::la::VectorCompare<N>(1,0e-4) {}
+        tarch::la::VectorCompare<N>(1.0e-4) {}
     };
   }
 }
