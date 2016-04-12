@@ -30,12 +30,20 @@ namespace tarch {
  */
 template<int N>
 struct tarch::la::VectorCompare {
-  bool operator()(
-    const Vector<N,double>& left,
-    const Vector<N,double>& right
-  ) const {
-    return firstGreater(right, left);
-  }
+  private:
+    const double  _accuracy;
+  public:
+    VectorCompare(double accuracy=NUMERICAL_ZERO_DIFFERENCE):
+      _accuracy(accuracy) {
+    }
+
+
+    bool operator()(
+      const Vector<N,double>& left,
+      const Vector<N,double>& right
+    ) const {
+      return firstGreater(right, left, _accuracy);
+    }
 };
 
 
