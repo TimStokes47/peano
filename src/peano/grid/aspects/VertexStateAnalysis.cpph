@@ -66,15 +66,29 @@ bool peano::grid::aspects::VertexStateAnalysis::doAllNonHangingVerticesCarryRefi
 
 
 template <class Vertex>
-bool peano::grid::aspects::VertexStateAnalysis::isOneCoarseGridVertexOutsideDomain(
-  Vertex*                                                coarseGridVertices,
-  const peano::grid::VertexEnumerator&  coarseGridVerticesEnumerator
+bool peano::grid::aspects::VertexStateAnalysis::isOneVertexOutsideDomain(
+  Vertex*                               vertices,
+  const peano::grid::VertexEnumerator&  verticesEnumerator
 ) {
-  bool oneOfTheFatherElementsIsOutside = false;
+  bool result = false;
   dfor2(k)
-    oneOfTheFatherElementsIsOutside |= coarseGridVertices[ coarseGridVerticesEnumerator(k) ].isOutside();
+    result |= vertices[ verticesEnumerator(k) ].isOutside();
   enddforx
-  return oneOfTheFatherElementsIsOutside;
+  return result;
+}
+
+
+
+template <class Vertex>
+bool peano::grid::aspects::VertexStateAnalysis::areAllVerticesInsideDomain(
+  Vertex*                               vertices,
+  const peano::grid::VertexEnumerator&  verticesEnumerator
+) {
+  bool result = true;
+  dfor2(k)
+    result &= vertices[ verticesEnumerator(k) ].isInside();
+  enddforx
+  return result;
 }
 
 

@@ -55,17 +55,22 @@ class peano::grid::aspects::VertexStateAnalysis {
     );
 
     /**
-     * Analyse parent vertices
+     * Analyse vertices
      *
-     * The operation analyses the vertices of one path whether one of the
-     * parent vertices is outside the domain. Such an operation is important
-     * for example if you wanna plot your solution but if you don't want to
-     * plot hanging vertices that are outside the domain.
+     * The operation analyses the vertices of one cell whether one of them
+     * is outside the domain.
      */
     template <class Vertex>
-    static bool isOneCoarseGridVertexOutsideDomain(
-      Vertex*                               coarseGridVertices,
-      const peano::grid::VertexEnumerator&  coarseGridVerticesEnumerator
+    static bool isOneVertexOutsideDomain(
+      Vertex*                               vertices,
+      const peano::grid::VertexEnumerator&  verticesEnumerator
+    );
+
+
+    template <class Vertex>
+    static bool areAllVerticesInsideDomain(
+      Vertex*                               vertices,
+      const peano::grid::VertexEnumerator&  verticesEnumerator
     );
 
 

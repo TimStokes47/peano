@@ -383,7 +383,11 @@ class peano::grid::Vertex {
      *
      * This operation has primarily impact on the semantics of
      * StoreVertexLoopBody::updateCoarseGridTreeHeightAttributes()
-     * where the adjacency information is restricted bottom-up in the spacetree.
+     * where the adjacency information is restricted bottom-up in the
+     * spacetree. The routine uses setCurrentAdjacentCellsHeight().
+     * In the regular grid counterpart, we find the update of the vertex state
+     * in CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch::performVertexTransition()
+     * while the invalidation is done in LoadVerticesOnRegularRefinedPatch::loadVerticesOfOneCellAtBoundaryofSubtree().
      *
      * !!! Parallel remarks
      *
@@ -401,6 +405,10 @@ class peano::grid::Vertex {
      */
     peano::grid::CellFlags getCurrentAdjacentCellsHeight() const;
     peano::grid::CellFlags getAdjacentCellsHeightOfPreviousIteration() const;
+
+    /**
+     * @see saveAndClearAdjacentCellsInformation()
+     */
     void setCurrentAdjacentCellsHeight(peano::grid::CellFlags value);
 
     /**

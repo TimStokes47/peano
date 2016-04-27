@@ -85,7 +85,11 @@ void peano::grid::Vertex<VertexData>::toString( std::ostream& out ) const {
 
 template <class VertexData>
 void peano::grid::Vertex<VertexData>::switchToNonhangingNode() {
-  assertion1( _vertexData.getRefinementControl()==VertexData::Unrefined, _vertexData.toString() );
+  assertion2(
+    _vertexData.getRefinementControl()==VertexData::Unrefined,
+    _vertexData.toString(),
+    "you may not switch a refined node into a nonhanging node; however, refine() always should fail on hanging nodes, so data consistency was harmed before"
+  );
 
   _vertexData.setIsHangingNode(false);
 
