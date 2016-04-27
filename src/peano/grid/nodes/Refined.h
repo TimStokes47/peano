@@ -11,21 +11,15 @@
 #include <bitset>
 
 
+
 /**
  * Refined Node
  *
- * !!! Order of events on one cell level
+ * <h1> Order of events on one cell level</h1>
  *
- * We study an arbitrary @f$ 3^d @f$ cell patch. The following statements on the
- * (partial) event order hold:
- *
- * - touchVertexFirstTime() is called for each vertex.
- * - The refined node invokes descend() for the @f$ 3^d @f$ patch plus its parent.
- * - enterCell() is called for the @f$ 3^d @f$ fine patch cells.
- * - Recursion
- * - leaveCell() is called for the @f$ 3^d @f$ fine patch cells.
- * - The refined node invokes ascend() for the @f$ 3^d @f$ patch plus its parent.
- * - touchVertexLastTime() is invoked for those vertices that are not used anymore.
+ * There is a detailed description on the order of the events on the page
+ * "Order of cell events in serial code". See the webpages created from the
+ * sources or consult the file event-order.doxys.
  *
  * @author Tobias Weinzierl
  */
