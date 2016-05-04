@@ -189,6 +189,13 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
      *
      * Please hand in the state's traversal bool that informs the heap about
      * the direction of the Peano space-filling curve.
+     *
+     * Typical usage:
+     * <pre>
+         MyMapping::beginIteration( State& solverState) {
+           MyDataHeap::getInstance().startToSendBoundaryData( solverState.isTraversalInverted() );
+         }
+       </pre>
      */
     virtual void startToSendBoundaryData(bool isTraversalInverted);
 
