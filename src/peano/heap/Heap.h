@@ -160,7 +160,7 @@ namespace peano {
      * Flags to specify which kind of message is sent or
      * received.
      */
-    enum MessageType {
+    enum class MessageType {
       NeighbourCommunication,
       ForkOrJoinCommunication,
       MasterWorkerCommunication

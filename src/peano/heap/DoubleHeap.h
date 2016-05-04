@@ -391,7 +391,7 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
     );
 
     void sendData(
-      const VectorContainer&                    data,
+      const VectorContainer&                        data,
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level,

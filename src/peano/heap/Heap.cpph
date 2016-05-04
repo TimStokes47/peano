@@ -319,7 +319,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
   #ifdef Parallel
   switch (messageType) {
-    case NeighbourCommunication:
+    case MessageType::NeighbourCommunication:
       if (_neighbourDataExchanger.count(toRank)==0) {
         _neighbourDataExchanger.insert(
           std::pair<int, NeighbourDataExchanger>(
@@ -331,10 +331,10 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
       }
       _neighbourDataExchanger[toRank].sendData(data,position,level);
       break;
-    case ForkOrJoinCommunication:
+    case MessageType::ForkOrJoinCommunication:
       _joinForkExchanger.sendData(data,toRank,position,level);
       break;
-    case MasterWorkerCommunication:
+    case MessageType::MasterWorkerCommunication:
       _masterWorkerExchanger.sendData(data,toRank,position,level);
       break;
   }
@@ -369,14 +369,14 @@ std::vector< Data > peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExcha
 ) {
   #ifdef Parallel
   switch (messageType) {
-    case NeighbourCommunication:
+    case MessageType::NeighbourCommunication:
       assertion5( _neighbourDataExchanger.count(fromRank)==1, fromRank, position, level, "tried to receive heap data from neighbour but never sent heap data to this neighbour", toString() );
       return _neighbourDataExchanger[fromRank].receiveData(position,level);
       break;
-    case ForkOrJoinCommunication:
+    case MessageType::ForkOrJoinCommunication:
       return _joinForkExchanger.receiveData(fromRank,position,level);
       break;
-    case MasterWorkerCommunication:
+    case MessageType::MasterWorkerCommunication:
       return _masterWorkerExchanger.receiveData(fromRank,position,level);
       break;
   }
