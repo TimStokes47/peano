@@ -494,7 +494,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if (
-    (Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early)
+    (Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Action::Early)
     &&
     !tarch::parallel::Node::getInstance().isGlobalMaster()
   ) {
@@ -520,7 +520,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if (
-    (Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early)
+    (Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Action::Early)
     &&
     !tarch::parallel::Node::getInstance().isGlobalMaster()
   ) {
@@ -586,7 +586,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
       #ifdef Parallel
       if (
-        (Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Late)
+        (Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Action::Late)
         &&
         (currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1))
         &&
@@ -600,7 +600,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         Base::_eventHandle.beginIteration(state);
       }
       else if (
-        (Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Skip)
+        (Base::_eventHandle.communicationSpecification().receiveStateFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Action::Skip)
         &&
         (currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1))
         &&
@@ -621,7 +621,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       }
 
       if (
-        (Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Early)
+        (Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Action::Early)
         &&
         !tarch::parallel::Node::getInstance().isGlobalMaster()
       ) {
@@ -633,7 +633,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         );
       }
       else if (
-        (Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Late)
+        (Base::_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Action::Late)
         &&
         (currentCellTraversal==tarch::la::Vector<DIMENSIONS,int>(1))
         &&
@@ -701,7 +701,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         fineGridEnumerator.setOffset( tarch::la::Vector<DIMENSIONS,int>(1) );
 
         if (
-          (Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Early)
+          (Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Action::Early)
           &
           !tarch::parallel::Node::getInstance().isGlobalMaster()
         ) {
@@ -718,7 +718,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           }
         }
         else if (
-          (Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Skip)
+          (Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Action::Skip)
           &
           !tarch::parallel::Node::getInstance().isGlobalMaster()
         ) {
@@ -736,11 +736,11 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         }
 
         if (
-          (Base::_eventHandle.communicationSpecification().sendStateBackToMaster()==peano::CommunicationSpecification::Early)
+          (Base::_eventHandle.communicationSpecification().sendStateBackToMaster()==peano::CommunicationSpecification::Action::Early)
           &&
           !tarch::parallel::Node::getInstance().isGlobalMaster()
         ) {
-          assertion( Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Early );
+          assertion( Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Action::Early );
           state.sendStateToMaster();
         }
         #endif
@@ -773,7 +773,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   #ifdef Parallel
   if (
-    (Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Late)
+    (Base::_eventHandle.communicationSpecification().sendDataBackToMaster()==peano::CommunicationSpecification::Action::Late)
     &&
     !tarch::parallel::Node::getInstance().isGlobalMaster()
   ) {
@@ -792,7 +792,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
   if (
-    (Base::_eventHandle.communicationSpecification().sendStateBackToMaster()==peano::CommunicationSpecification::Late)
+    (Base::_eventHandle.communicationSpecification().sendStateBackToMaster()==peano::CommunicationSpecification::Action::Late)
     &&
     !tarch::parallel::Node::getInstance().isGlobalMaster()
   ) {

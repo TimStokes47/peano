@@ -139,7 +139,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     if ( state.reduceDataFromWorker(currentWorker) ) {
       peano::parallel::loadbalancing::Oracle::getInstance().masterStartsToWaitForWorkers();
 
-      if (_eventHandle.communicationSpecification().sendDataBackToMaster()!=peano::CommunicationSpecification::Skip) {
+      if (_eventHandle.communicationSpecification().sendDataBackToMaster()!=peano::CommunicationSpecification::Action::Skip) {
         receivedWorkerCell.receive(
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
@@ -348,7 +348,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       state.setReduceStateAndCell(currentWorker,false);
     }
 
-    if (_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Skip) {
+    if (_eventHandle.communicationSpecification().receiveDataFromMaster(state.mayUseLazyStateAndDataReceives())==peano::CommunicationSpecification::Action::Skip) {
       logInfo( "updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(...)", "skip send of startup data to rank " << currentWorker );
     }
     else {

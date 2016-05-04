@@ -78,7 +78,7 @@ bool operator!=(const peano::CommunicationSpecification& lhs, const peano::Commu
  */
 struct peano::CommunicationSpecification {
   public:
-    enum ExchangeMasterWorkerData {
+    enum class ExchangeMasterWorkerData {
       /**
        * All data has to be available on the worker before it does anything.
        * Should be default. Is typically slow as the worker cannot start to
@@ -116,7 +116,7 @@ struct peano::CommunicationSpecification {
       MaskOutMasterWorkerDataAndStateExchange
     };
 
-    enum ExchangeWorkerMasterData {
+    enum class ExchangeWorkerMasterData {
       /**
        * Send back both data and state after everything has completed locally.
        *
@@ -152,7 +152,7 @@ struct peano::CommunicationSpecification {
       MaskOutWorkerMasterDataAndStateExchange
     };
 
-    enum Action {
+    enum class Action {
       Early,
       Late,
       Skip
