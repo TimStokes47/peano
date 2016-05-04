@@ -216,6 +216,14 @@ namespace tarch {
       const Scalar  tolerance = NUMERICAL_ZERO_DIFFERENCE
     );
 
+
+    template<int Size>
+    int equalsReturnIndex (
+      const Vector<Size,int>&  lhs,
+      const Vector<Size,int>&  rhs
+    );
+
+
     /**
      * Run through both vectors and count how many entries are the same.
      */

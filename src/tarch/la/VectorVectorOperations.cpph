@@ -301,6 +301,18 @@ int tarch::la::equalsReturnIndex(
 
 
 template<int Size>
+int tarch::la::equalsReturnIndex(
+  const Vector<Size,int>&  lhs,
+  const Vector<Size,int>&  rhs
+){
+  for (int i=0; i < Size; i++) {
+    if (lhs(i)!=rhs(i)) return i;
+  }
+  return -1;
+}
+
+
+template<int Size>
 int tarch::la::countEqualEntries (
   const Vector<Size,int>&  lhs,
   const Vector<Size,int>&  rhs
