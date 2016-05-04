@@ -399,6 +399,18 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
     );
 
     /**
+     * Send away a double array of length size.
+     */
+    void sendData(
+      const double*                                 data,
+      int                                           size,
+      int                                           toRank,
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level,
+      MessageType                                   messageType
+    );
+
+    /**
      * Receive heap data associated to one index from one rank.
      *
      * Wrapper forwarding to the other receivedouble() operation with default
@@ -418,6 +430,15 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
      * @see receivedouble(int)
      */
     VectorContainer receiveData(
+      int                                           fromRank,
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level,
+      MessageType                                   messageType
+    );
+
+    void receiveData(
+      double*                                       data,
+      int                                           size,
       int                                           fromRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level,

@@ -304,6 +304,21 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 }
 
 
+
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::sendData(
+  const double*                                 data,
+  int                                           size,
+  int                                           toRank,
+  const tarch::la::Vector<DIMENSIONS, double>&  position,
+  int                                           level,
+  MessageType                                   messageType
+) {
+  VectorContainer  dataWrapper(data,data+size);
+  sendData(dataWrapper,toRank,position,level,messageType);
+}
+
+
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::sendData(
   const VectorContainer&                        data,
@@ -399,6 +414,21 @@ int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourD
 }
 
 
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::receiveData(
+  double*                                       data,
+  int                                           size,
+  int                                           fromRank,
+  const tarch::la::Vector<DIMENSIONS, double>&  position,
+  int                                           level,
+  MessageType                                   messageType
+) {
+  VectorContainer receivedData = receiveData( fromRank, position, level, messageType );
+  assertionEquals( receivedData.size(), size);
+  for (int i=0; i<size; i++) {
+    data[i] = receivedData[i];
+  }
+}
 
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
