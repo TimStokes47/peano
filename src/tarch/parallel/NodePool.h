@@ -333,7 +333,7 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      *
      * Each worker listens on this tag for a fork message.
      *
-     * Originall, I wanted ot use the tag afterwards also to exchange the
+     * Originally, I wanted to use the tag afterwards also to exchange the
      * join and fork data. This is not a good idea, as the forks and joins
      * are realised within a service that polls the mpi queue permanently.
      * Consequently, it might happen that the fork message overtakes the
