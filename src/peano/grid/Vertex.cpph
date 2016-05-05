@@ -397,10 +397,13 @@ bool peano::grid::Vertex<VertexData>::isRefinedOrRefining() const {
       getRefinementControl()==Vertex::Records::EraseTriggered
       |
       getRefinementControl()==Vertex::Records::Erasing
+#ifdef Parallel
       |
       getRefinementControl()==Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing
       |
-      getRefinementControl()==Vertex::Records::EnforceRefinementTriggered;
+      getRefinementControl()==Vertex::Records::EnforceRefinementTriggered
+#endif
+      ;
 }
 
 
