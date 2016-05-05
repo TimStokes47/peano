@@ -100,7 +100,7 @@ bool tarch::logging::CommandLineLogger::FilterListEntry::operator!=(const Filter
 
 
 tarch::logging::CommandLineLogger::CommandLineLogger():
-  _outputStream(0),
+  _outputStream(nullptr),
   _hasWrittenToOuputStream(false),
   _iterationCounter(0) {
   configureOutputStreams();
@@ -125,7 +125,7 @@ tarch::logging::CommandLineLogger& tarch::logging::CommandLineLogger::getInstanc
 
 
 std::ostream& tarch::logging::CommandLineLogger::out() {
-  if (_outputStream==0) {
+  if (_outputStream==nullptr) {
     return std::cout;
   }
   else {
@@ -153,9 +153,9 @@ tarch::logging::CommandLineLogger::CommandLineLogger(const CommandLineLogger& pa
 
 
 tarch::logging::CommandLineLogger::~CommandLineLogger() {
-  if (_outputStream!=0) {
+  if (_outputStream!=nullptr) {
     delete _outputStream;
-    _outputStream = 0;
+    _outputStream = nullptr;
   }
 }
 
@@ -256,11 +256,9 @@ void tarch::logging::CommandLineLogger::info(double timestamp, const std::string
 
     tarch::multicore::Lock lockCout( _semaphore );
     out() << outputMessage;
-    #if !defined(__APPLE__)
-    if (out()!=std::cout) {
+    if (_outputStream!=nullptr) {
       std::cout << outputMessage;
     }
-    #endif
   }
 }
 
@@ -279,15 +277,8 @@ void tarch::logging::CommandLineLogger::warning(double timestamp, const std::str
 
     tarch::multicore::Lock lockCout( _semaphore );
     out().flush();
-    #ifdef CompilerCLX
-    if(out()!=std::cout) {
-      std::cout << outputMessage;
-      std::cout.flush();
-    }
-    #else
     std::cerr << outputMessage;
     std::cerr.flush();
-    #endif
   }
 }
 
@@ -305,15 +296,8 @@ void tarch::logging::CommandLineLogger::error(double timestamp, const std::strin
 
     tarch::multicore::Lock lockCout( _semaphore );
     out().flush();
-    #ifdef CompilerCLX
-    if(out()!=std::cout) {
-      std::cout << outputMessage;
-      std::cout.flush();
-    }
-    #else
     std::cerr << outputMessage;
     std::cerr.flush();
-    #endif
   }
 }
 
@@ -355,14 +339,14 @@ void tarch::logging::CommandLineLogger::indent( bool indent, const std::string& 
 void tarch::logging::CommandLineLogger::reopenOutputStream() {
   tarch::multicore::Lock lock( _semaphore );
 
-  if (_outputStream!=0 && _hasWrittenToOuputStream) {
+  if (_outputStream!=nullptr && _hasWrittenToOuputStream) {
     _outputStream->flush();
     delete _outputStream;
-    _outputStream            = 0;
+    _outputStream            = nullptr;
     _hasWrittenToOuputStream = false;
   }
 
-  if (!_outputFileName.empty() && _outputStream==0) {
+  if (!_outputFileName.empty() && _outputStream==nullptr) {
     std::ostringstream fileName;
     if (_iterationCounter>0) {
       int leadingZeros = 1;
