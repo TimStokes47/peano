@@ -388,6 +388,22 @@ void peano::grid::Vertex<VertexData>::refineVertexIfItHasOnlyRefinedAdjacentCell
 }
 
 
+template <class VertexData>
+bool peano::grid::Vertex<VertexData>::isRefinedOrRefining() const {
+  return getRefinementControl()==Vertex::Records::Refined
+      |
+      getRefinementControl()==Vertex::Records::Refining
+      |
+      getRefinementControl()==Vertex::Records::EraseTriggered
+      |
+      getRefinementControl()==Vertex::Records::Erasing
+      |
+      getRefinementControl()==Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing
+      |
+      getRefinementControl()==Vertex::Records::EnforceRefinementTriggered;
+}
+
+
 #ifdef Asserts
 template <class VertexData>
 tarch::la::Vector<DIMENSIONS,double> peano::grid::Vertex<VertexData>::getX() const {

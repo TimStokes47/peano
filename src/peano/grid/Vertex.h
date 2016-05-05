@@ -659,6 +659,13 @@ class peano::grid::Vertex {
 
     void eliminateAllAdjacencyInformationThatIdentifiesNeitherWorkerNorMaster();
     #endif
+
+    /**
+     * Returns true if we have Refining,EraseTriggered,Erasing,RefineDueToJoinThoughWorkerIsAlreadyErasing,
+    EnforceRefinementTriggered
+     *
+     */
+    bool  isRefinedOrRefining() const;
 };
 
 
