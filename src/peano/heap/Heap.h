@@ -165,6 +165,8 @@ namespace peano {
       ForkOrJoinCommunication,
       MasterWorkerCommunication
     };
+
+    std::string toString(MessageType type);
   }
 }
 

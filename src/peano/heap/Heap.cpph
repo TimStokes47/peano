@@ -315,7 +315,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   int                                           level,
   MessageType                                   messageType
 ) {
-  logTraceInWith6Arguments( "sendData(...)", _name, toRank, position, level, messageType, data.size() );
+  logTraceInWith6Arguments( "sendData(...)", _name, toRank, position, level, toString(messageType), data.size() );
 
   #ifdef Parallel
   switch (messageType) {
@@ -352,7 +352,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   int                                           level,
   MessageType                                   messageType
 ) {
-  logTraceInWith6Arguments( "sendData(...)", _name, index, toRank, position, level, messageType );
+  logTraceInWith6Arguments( "sendData(...)", _name, index, toRank, position, level, toString(messageType) );
 
   sendData( getData(index), toRank, position, level, messageType );
 
@@ -395,7 +395,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   int                                           level,
   MessageType                                   messageType
 ) {
-  const std::vector< Data >  receivedData = receiveData(fromRank, position, level, messageType);
+  const std::vector< Data >  receivedData = receiveData(fromRank, position, level, toString(messageType));
   std::vector< Data >&       localData    = getData(index);
   localData.insert( localData.end(), receivedData.begin(), receivedData.end() );
   return static_cast<int>( receivedData.size() );
