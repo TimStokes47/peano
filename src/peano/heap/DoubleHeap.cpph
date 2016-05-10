@@ -327,7 +327,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   int                                           level,
   MessageType                                   messageType
 ) {
-  logTraceInWith6Arguments( "sendData(...)", _name, toRank, position, level, toString(messageType), data.size() );
+  logTraceInWith6Arguments( "sendData(...)", _name, toRank, position, level, peano::heap::toString(messageType), data.size() );
 
   #ifdef Parallel
   switch (messageType) {
