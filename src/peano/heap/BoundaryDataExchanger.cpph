@@ -61,9 +61,9 @@ template<class Data>
 void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalInverted) {
   logTraceInWith1Argument( "startToSendData(bool)", isTraversalInverted );
 
-  assertion(_receiveTasks[1-_currentReceiveBuffer].empty());
   assertion(_currentReceiveBuffer>=0);
   assertion(_currentReceiveBuffer<=1);
+  assertionMsg(_receiveTasks[1-_currentReceiveBuffer].empty(), "finishedToSendData() has not been called before. Check whether allHeapsFinishedToSendBoundaryData() on AbstractHeap has been invoked or your mappings delegate heap management to kernel");
 
   assertion3(!_isCurrentlySending, _identifier, _rank, "call once per traversal" );
 
