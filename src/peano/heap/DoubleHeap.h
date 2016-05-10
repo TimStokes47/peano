@@ -273,12 +273,12 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
     /**
      * Retrieves the data that corresponds to the given index.
      */
-    VectorContainer& getData(int index);
+    HeapEntries& getData(int index);
 
     /**
      * Retrieves the data that corresponds to the given index.
      */
-    const VectorContainer& getData(int index) const;
+    const HeapEntries& getData(int index) const;
 
     /**
      * Create new heap entry
@@ -391,7 +391,7 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
     );
 
     void sendData(
-      const VectorContainer&                        data,
+      const HeapEntries&                            data,
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level,
@@ -429,7 +429,7 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
      * @see Heap
      * @see receivedouble(int)
      */
-    VectorContainer receiveData(
+    HeapEntries receiveData(
       int                                           fromRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level,

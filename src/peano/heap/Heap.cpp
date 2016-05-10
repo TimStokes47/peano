@@ -3,11 +3,11 @@
 
 std::string peano::heap::toString(MessageType type) {
   switch (type) {
-    case NeighbourCommunication:
+    case MessageType::NeighbourCommunication:
       return "neighbour";
-    case ForkOrJoinCommunication:
+    case MessageType::ForkOrJoinCommunication:
       return "fork-or-join";
-    case MasterWorkerCommunication:
+    case MessageType::MasterWorkerCommunication:
       return "master-worker";
   }
 }
