@@ -111,6 +111,7 @@ peano::datatraversal::autotuning::Oracle::~Oracle() {
 
 void peano::datatraversal::autotuning::Oracle::setNumberOfOracles(int value) {
   assertion( value>0 );
+  assertionMsg( _numberOfAdapters==0, "you may not reset total number of oracles at runtime" );
   logTraceInWith1Argument( "setNumberOfOracles(int)", value);
 
   _numberOfAdapters=value;
@@ -122,6 +123,7 @@ void peano::datatraversal::autotuning::Oracle::setNumberOfOracles(int value) {
 void peano::datatraversal::autotuning::Oracle::createOracles() {
   #if defined(SharedMemoryParallelisation)
   logTraceIn( "createOracles()");
+  assertionMsg( _numberOfAdapters>0, "total number of oracles not set. Invoke setNumberOfOracles() first. This happens if shared memory oracle is initialised before repository is created. Create repository first" );
 
   if (_oraclePrototype==0) {
 	  logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::datatraversal::autotuning::Oracle::setOracle(). Peano uses default oracle" );
@@ -172,16 +174,15 @@ void peano::datatraversal::autotuning::Oracle::switchToOracle(int id) {
   #if defined(SharedMemoryParallelisation)
   assertion1( id>=0, id );
 
-  #if defined(SharedCobra)
-  tarch::multicore::cobra::Core::getInstance().getScheduler().gc();
-  #endif
   _watchSinceLastSwitchCall.stopTimer();
 
   assertion(_oraclePrototype!=0);
 
   const double erasedTime = _watchSinceLastSwitchCall.getCalendarTime();
-  for (int i=0; i<getTotalNumberOfOracles(); i++) {
-    _oracles[i]._oracle->informAboutElapsedTimeOfLastTraversal(erasedTime);
+
+  for (int methodTraceNumber=0; methodTraceNumber<peano::datatraversal::autotuning::NumberOfDifferentMethodsCalling; methodTraceNumber++) {
+    int key = getKey( toMethodTrace(methodTraceNumber) );
+    _oracles[key]._oracle->informAboutElapsedTimeOfLastTraversal(erasedTime);
   }
 
   _currentAdapter=id;
