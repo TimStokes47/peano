@@ -1,0 +1,132 @@
+\section{Diffusion-convection with PETSc}
+  \label{section:applications:petsc}
+
+\chapterDescription
+  {
+    60 minutes.
+  }
+  {
+    Chapter \ref{chapter:quickstart} and a working PETSc installation.
+  }
+
+I wrote Peano with matrix-free methods from CFD in mind. 
+It turns out that it is not too complicated to use it for other application
+areas or to established linear algebra packages.
+We assume that you have PETSc plus BLAS, Lapack and MPI (if required) ready
+installed on your system.
+I have tested all the present concepts with PETSc 3.7.2 but everything discussed
+here is pretty basic, so it should work with older versions as well.
+Please note that this is a feasibility study and we do not optimise at all.
+
+
+\subsection{Preparation of Peano}
+
+If we use explicit assembly, we need an enumeration of our grid. 
+So we do start with a grid
+\begin{code}
+> java -jar <mypath>/pdt.jar --create-project petsc chapter-4.3
+\end{code}
+
+\noindent
+and add each vertex an index. 
+We do restrict to a discretisation with one degree of freedom per vertex for the
+time being:
+
+\begin{code}
+Packed-Type: short int;
+
+class petsc::records::Vertex {  
+  parallelise persistent int index;
+};
+\end{code}
+
+\noindent
+For the present exercise, we will have four different things to do:
+create the grid, create and assemble the matrix, solve the problem and plot the
+result.
+The solve is a pure PETSc operation.
+For each of the remaining three phases, we need a mapping/adapter in Peano and
+we also want access to \texttt{index}.
+For the latter, we could write setters and getters and stick to an
+object-oriented paradigm.
+But this way, it is easier (though not as beautiful):
+
+\begin{code}
+component: MyFancyPETScProject
+
+namespace: ::petsc
+
+vertex:
+  dastgen-file: Vertex.def
+  read scalar(int): Index   // mind the uppercase
+  write scalar(int): Index
+  
+cell:
+  dastgen-file: Cell.def
+
+state:
+  dastgen-file: State.def
+
+event-mapping:
+  name: CreateGrid
+
+event-mapping:
+  name: Assemble
+
+adapter:
+  name: CreateGrid
+  merge-with-user-defined-mapping: CreateGrid
+
+adapter:
+  name: Assemble
+  merge-with-user-defined-mapping: Assemble
+ 
+adapter:
+  name: Plot
+  merge-with-predefined-mapping: VTKPlotVertexValue(result,getU,u)
+\end{code}
+
+We generate all glue code
+\begin{code}
+> java -jar <mypath>/pdt.jar --generate-gluecode \
+  petsc/project.peano-specification petsc <mypath>/pdt/usrtemplates
+> make -f petsc/makefile
+\end{code}
+
+\noindent
+We recognise that this code does not compile yet as we have not yet realised \texttt{double Vertex::getU() const}.
+For the time being, we make the routine return 0.
+Finally, we change into the mapping the creational events yield a regular grid:
+
+\begin{code}
+void petsc::mappings::CreateGrid::createInnerVertex(...) {
+  logTraceInWith6Arguments( "createInnerVertex(...)", ... );
+
+  if (coarseGridVerticesEnumerator.getLevel()<3) {
+	fineGridVertex.refine();
+  }
+
+  logTraceOutWith1Argument( "createInnerVertex(...)", fineGridVertex );
+}
+
+
+void petsc::mappings::CreateGrid::createBoundaryVertex(...) {
+  logTraceInWith6Arguments( "createBoundaryVertex(...)", ... );
+
+  if (coarseGridVerticesEnumerator.getLevel()<3) {
+	fineGridVertex.refine();
+  }
+
+  logTraceOutWith1Argument( "createBoundaryVertex(...)", fineGridVertex );
+}
+\end{code}
+
+\noindent
+Compile it, run it, visualise the output.
+
+
+\subsection{Connecting to PETSc}
+
+PETSc philosophy is pretty straightforward and they do not hijack main and
+others. So it is a perfect fit to Peano.
+
