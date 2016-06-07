@@ -10,4 +10,7 @@ std::string peano::heap::toString(MessageType type) {
     case MessageType::MasterWorkerCommunication:
       return "master-worker";
   }
+
+  assertionMsg( false, "should not be entered ever" );
+  return "<undef>";
 }
