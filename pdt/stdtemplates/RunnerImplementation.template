@@ -63,8 +63,7 @@ int __NAMESPACE__::runners::Runner::run() {
 
 
 int __NAMESPACE__::runners::Runner::runAsMaster(__NAMESPACE__::repositories::Repository& repository) {
-  peano::utils::UserInterface userInterface;
-  userInterface.writeHeader();
+  peano::utils::UserInterface::writeHeader();
 
   // @todo Insert your code here
   
