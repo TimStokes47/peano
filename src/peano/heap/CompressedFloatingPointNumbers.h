@@ -2,6 +2,8 @@
 #define _PEANO_HEAP_COMPRESSED_FLOATING_POINT_NUMBERS_H_
 
 
+
+
 namespace peano {
   namespace heap {
     /**
@@ -41,7 +43,7 @@ namespace peano {
      * @return mantissa Sequence of mantissas belonging to the eight decompositions.
      * @return error    Errors associated to the decompositions. They are all positive values.
      *
-     * !!! Bug/interoperability
+     * <h2> Bug/interoperability </h2>
      *
      * This operation works if and only if your system maps a long int onto a 64 bit value.
      *
@@ -49,6 +51,13 @@ namespace peano {
      * switch on optimisation. It works fine with ICC and any optimisation
      * level. We thus make the code translate with -O0 locally if ICC is not
      * used.
+     *
+     * <h2> Continue to work with results </h2>
+     *
+     * See decompose() how to continue to work with one of the result entries.
+     *
+     * @see compose( char, long int, int )
+     *
      */
     void decomposeIntoEightVariants(
       double        value,
@@ -68,6 +77,51 @@ namespace peano {
     );
 
     /**
+     * Analyses the handed data and determines the most aggressive compression.
+     *
+     * The operation returns the number of bytes used in the mantissa. If you
+     * use this index and reduce it by one, you find the right entry in
+     * decomposeIntoFourVariants().
+     *
+     * @return Value between 1 and 7
+     */
+    int findMostAgressiveCompression(
+      double        value,
+      double        maxError
+    );
+
+    /**
+     * Wrapper around findMostAgressiveCompression() that works for an array of
+     * count entries.
+     */
+    int findMostAgressiveCompression(
+      double        values[],
+      int           count,
+      double        maxError
+    );
+
+
+    /**
+     * If you wanna the decompose values into compressed char series, use
+     *
+     * <pre>
+     char* pMantissa = reinterpret_cast<char*>( &(mantissa) );
+     for (int j=0; j<requiredBytesPerMantissa; j++) {
+       do something with mantissa[j]
+     }
+       </pre>
+     *
+     * Don't forget to invoke shrink_to_fit() on your std::vector containers if
+     * you use them. Otherwise, C++ most likely won't free your memory.
+     */
+    void decompose(
+      double        value,
+      char&         exponent,
+      long int&     mantissa,
+      int           bytesUsedForMantissa
+    );
+
+    /**
      * Counterpart of decompose( const double&, char& , T& )
      */
     template <class T>
@@ -83,11 +137,20 @@ namespace peano {
      * return arrays you used. However, it is increased by one, i.e. if you
      * pass 1, the operation assumes that you've taken the entry exponent[0]
      * of decompose, e.g.
+     *
+     *
+     * Typically usage:
+     *
+     * <pre>
+     * @todo
+       </pre>
+     *
+     *
      */
     double compose(
       char         exponent,
       long int     mantissa,
-      int          bytesUsed
+      int          bytesUsedForMantissa
     );
   }
 }
