@@ -31,28 +31,28 @@ class peano::utils::UserInterface {
      * This method prints the datatype statistics (size of datatypes, numerical
      * epsilon, etc.).
      */
-    void writeDatatypeStatisticsHeader();
+    static void writeDatatypeStatisticsHeader();
 
     /**
      * This method currently does not print any information.
      */
-    void writeDatatypeStatisticsTrailer();
+    static void writeDatatypeStatisticsTrailer();
 
     /**
      * Formats a text. SpacesPerColumn should equal the floats' size. Result
      * is centered.
      */
-    std::string format( int SpacesPerColumn, const std::string& text ) const;
+    static std::string format( int SpacesPerColumn, const std::string& text );
 
     /**
      * Formats a number. Result is aligned right.
      */
-    std::string format( int SpacesPerColumn, int number ) const;
+    static std::string format( int SpacesPerColumn, int number );
 
     /**
      * Formats a number. Result is aligned right.
      */
-    std::string format( int SpacesPerColumn, double number ) const;
+    static std::string format( int SpacesPerColumn, double number );
 
     /**
      * Method for getting memory usage of peano-process at current state in byte.
@@ -65,7 +65,7 @@ class peano::utils::UserInterface {
      *
      * @return memory usage (in bytes?) contained in /proc/<peano-process-ID>/stat.
      */
-    std::size_t getMemoryUsage() const;
+    static std::size_t getMemoryUsage();
 
     static const std::string _PeanoHeader;
     static const std::string _PeanoCopyrightURL;
@@ -82,11 +82,12 @@ class peano::utils::UserInterface {
     static const int _WidthOfGridIterationColumn;
     static const int _WidthOfIntegerColumn;
 
-  public:
     /**
      * Standard constructor.
      */
-	  UserInterface();
+    UserInterface();
+
+  public:
     /**
      * Standard destructor.
      */
@@ -95,13 +96,13 @@ class peano::utils::UserInterface {
     /**
      * Write the static program header to be plotted at startup.
      */
-    void writeHeader(const std::string& experimentName = "");
+    static void writeHeader(const std::string& experimentName = "");
 
     /**
      * Write some information about the amount of data / datatypes used.
      */
     template <class Vertex, class Cell, class State>
-    void writeDatatypeStatistics();
+    static void writeDatatypeStatistics();
 
     /**
      * Method for getting the application's memory footprint
@@ -120,7 +121,7 @@ class peano::utils::UserInterface {
      * \see getMemoryUsage()
      * \see reportMemoryUsageMB()
      */
-    int getMemoryUsageKB() const;
+    static int getMemoryUsageKB();
 
     /**
      * Method for getting the application's memory footprint
@@ -138,9 +139,9 @@ class peano::utils::UserInterface {
      * \see getMemoryUsage()
      * \see reportMemoryUsageKB()
      */
-    int getMemoryUsageMB() const;
+    static int getMemoryUsageMB();
 
-    void reportRegisteredServices();
+    static void reportRegisteredServices();
 };
 
 #include "peano/utils/UserInterface.cpph"

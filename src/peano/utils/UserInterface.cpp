@@ -67,7 +67,7 @@ void peano::utils::UserInterface::reportRegisteredServices() {
 }
 
 
-std::string peano::utils::UserInterface::format( int SpacesPerColumn, const std::string& text ) const {
+std::string peano::utils::UserInterface::format( int SpacesPerColumn, const std::string& text ) {
   int leadingSpaces = SpacesPerColumn - static_cast<int>(text.length());
   leadingSpaces /= 2;
 
@@ -85,7 +85,7 @@ std::string peano::utils::UserInterface::format( int SpacesPerColumn, const std:
 }
 
 
-std::string peano::utils::UserInterface::format( int SpacesPerColumn, int value ) const {
+std::string peano::utils::UserInterface::format( int SpacesPerColumn, int value ) {
   std::ostringstream result;
 
   int leadingSpaces = SpacesPerColumn-1;
@@ -104,7 +104,7 @@ std::string peano::utils::UserInterface::format( int SpacesPerColumn, int value 
 }
 
 
-std::string peano::utils::UserInterface::format( int SpacesPerColumn, double value ) const {
+std::string peano::utils::UserInterface::format( int SpacesPerColumn, double value ) {
   std::ostringstream result;
 
   result << value;
@@ -113,7 +113,7 @@ std::string peano::utils::UserInterface::format( int SpacesPerColumn, double val
 }
 
 
-std::size_t peano::utils::UserInterface::getMemoryUsage() const {
+std::size_t peano::utils::UserInterface::getMemoryUsage() {
   #if defined(CompilerHasProcStat)
   char   work[4096];
   FILE*  f;
@@ -147,7 +147,7 @@ std::size_t peano::utils::UserInterface::getMemoryUsage() const {
 }
 
 
-int peano::utils::UserInterface::getMemoryUsageKB() const {
+int peano::utils::UserInterface::getMemoryUsageKB() {
   long u = getMemoryUsage();
   long kilo = 1024;
   long usageKB = ((u + (kilo/2)) / kilo );
@@ -161,7 +161,7 @@ int peano::utils::UserInterface::getMemoryUsageKB() const {
 }
 
 
-int peano::utils::UserInterface::getMemoryUsageMB() const {
+int peano::utils::UserInterface::getMemoryUsageMB() {
   long u = getMemoryUsage();
   long mega = 1024 * 1024;
   long usageMB ((u + (mega/2)) / mega );
