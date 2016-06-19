@@ -60,6 +60,9 @@
 				destdir="${bin.dir}"
 				classpathref="lib.path"
                 includeantruntime="true"
+                target="1.7"
+                source="1.7"
+                fork="true"
 		/>
 		<!-- copy all created resources (exept .java files) to ./bin -->
 		<copy todir="${bin.dir}">
