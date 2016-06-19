@@ -1,0 +1,25 @@
+\chapter{Troubleshooting}
+
+\section{PDT}
+
+\begin{itemize}
+  \item {\bf The PDT does not pass as the jar file is built with the wrong Java
+  version.} Download the whole Peano project (from sourceforge via subversion),
+  change into the directory \texttt{pdt}, and run
+  \begin{code}
+  ant createParser
+  ant compile
+  ant dist
+  \end{code}
+  Use the \texttt{pdt.jar} from the \texttt{pdt} directory now. 
+\end{itemize}
+
+
+
+\section{Programming}
+
+\begin{itemize}
+  \item {\bf How can I find out the location of a cell}. See the documentation
+  of the \texttt{VertexEnumerator}. The object has routines to query cell
+  position, size and level in the spacetree.
+\end{itemize}
