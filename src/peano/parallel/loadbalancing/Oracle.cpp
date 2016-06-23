@@ -19,7 +19,8 @@ peano::parallel::loadbalancing::Oracle::Oracle():
   _oraclePrototype(0),
   _workers(),
   _startCommand(Continue),
-  _loadBalancingActivated(true) {
+  _loadBalancingActivated(true),
+  _numberOfOracles(0) {
 }
 
 
@@ -175,8 +176,11 @@ void peano::parallel::loadbalancing::Oracle::masterStartsToWaitForWorkers() {
 
 void peano::parallel::loadbalancing::Oracle::setNumberOfOracles(int value) {
   assertion( value>0 );
+
+  _numberOfOracles = value;
+
   deleteOracles();
-  createOracles(value);
+  createOracles();
 }
 
 
@@ -196,9 +200,8 @@ void peano::parallel::loadbalancing::Oracle::setOracle( OracleForOnePhase* oracl
   }
   _oraclePrototype = oraclePrototype;
 
-  int numberOfOracles = static_cast<int>(_oracles.size());
   deleteOracles();
-  createOracles(numberOfOracles);
+  createOracles();
 }
 
 
@@ -328,15 +331,18 @@ void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
 }
 
 
-void peano::parallel::loadbalancing::Oracle::createOracles(int numberOfOracles) {
+void peano::parallel::loadbalancing::Oracle::createOracles() {
   assertion( _oracles.size()==0 );
 
   if (_oraclePrototype==0) {
     logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
   }
+  else if (_numberOfOracles==0) {
+    logWarning( "createOracles(int)", "no number of oracles set. Have you created repositories before?" );
+  }
   else {
     assertion( _oraclePrototype!=0 );
-    for (int i=0; i<numberOfOracles; i++) {
+    for (int i=0; i<_numberOfOracles; i++) {
       OracleForOnePhase* newOracle = _oraclePrototype->createNewOracle(i);
       _oracles.push_back( newOracle );
     }

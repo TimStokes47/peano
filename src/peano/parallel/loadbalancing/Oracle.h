@@ -83,7 +83,9 @@ class peano::parallel::loadbalancing::Oracle {
 
     bool                                     _loadBalancingActivated;
 
-    void createOracles(int numberOfOracles);
+    int                                      _numberOfOracles;
+
+    void createOracles();
     void deleteOracles();
 
     Oracle();
