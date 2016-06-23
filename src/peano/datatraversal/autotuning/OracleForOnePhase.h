@@ -99,12 +99,7 @@ class peano::datatraversal::autotuning::OracleForOnePhase {
     /**
      * Plot statistics.
      *
-     * Plot the statistics data into a file. If the filename is empty, all
-     * statistics are written onto the info log level. Several oracles also are
-     * able to use statistics to configure themselves and, thus, are able to
-     * read statistics as well.
-     *
-     * The statistics usually are
+     * Plot the statistics data into a file. You may also hand in std::cout.
      */
     virtual void plotStatistics(std::ostream& out) const = 0;
 
