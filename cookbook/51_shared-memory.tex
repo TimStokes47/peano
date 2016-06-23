@@ -81,9 +81,6 @@ For the time being, insert a commands into your runner.
 \begin{code}
 int mynamespace::runners::Runner::run() {
   #ifdef SharedMemoryParallelisation
-  // We assume that the workload per cell is that big that we can set the enterCell
-  // grain size to 1 as well as the minimum grain size. All the other values remain
-  // the default values.
   peano::datatraversal::autotuning::Oracle::getInstance().setOracle(
     new peano::datatraversal::autotuning::OracleForOnePhaseDummy(true)
   );
@@ -236,7 +233,6 @@ void mynamespace::MyMapping::::mergeWithWorkerThread(
 \end{code}
 
 
-
 \subsection{Tailoring the oracle}
 
 The oracle is the central point of control to decide whether event should be
@@ -284,12 +280,22 @@ When you study performance, it might be particular interesting that all oracles
 can fed with real-time data about their performance and provide statistics. To
 obtain the statistics, call
 \begin{code}
-  peano::datatraversal::autotuning::Oracle::getInstance().plotStatistics();
+  peano::datatraversal::autotuning::Oracle::getInstance().plotStatistics( "" );
 \end{code}
+
+
 \noindent
 If you do not need real-time measurements, please construct the oracle (see
 \texttt{new} call in the snippet before) accordingly and disable the clocking.
 It is expensive.
+
+The routine expects an filename, as most applications that do real-time
+measurements want to have this data in a file. 
+Furthermore, many oracles (the classes that decide when and how to split up
+data into concurrent chunks) provide routines to reload these statistics.
+This way, statistical data is not always created from scratch but incrementally
+updated.
+You may pass an empty string to get the data piped directly to the terminal.
 
 
 \subsection{Working with Peano's tasks, semaphores, locks and loops}
@@ -300,7 +306,24 @@ Peano provides a wrapper around those which allows you to create one
 implementation that then runs with OpenMP, TBBs and so forth.
 To use them, I recommend to study all classes stored in
 \texttt{tarch::multicore}.
-Notably \texttt{BooleanSemaphore} and \texttt{Lock} are of interest.
+Notably \texttt{BooleanSemaphore} and \texttt{Lock} are of interest:
+
+\begin{code}
+  static tarch::multicore::BooleanSemaphore  mysemaphore;
+  
+  
+  tarch::multicore::Lock   myLock(mysemaphore);
+  
+  ...            // critical section
+  
+  myLock.free(); // destructor would free semaphore automatically
+\end{code}
+
+
+\noindent
+The code above is removed automatically if you do not use OpenMP or TBB.
+Otherwise, it introduces a critical section that is processed by at most one
+thread at a time.
 
 Furthermore, the header \texttt{Loop.h} might be of interest. 
 It provides very useful macros:
@@ -313,6 +336,60 @@ It provides very useful macros:
   within a cell, e.g., where you have to do something with all vertices, while
   all vertices can be processed in parallel.
 \end{itemize}
+
+
+Peano's task concept basically mirrors TBB's task concept. 
+However, if you implement everything within Peano's context, you can also switch
+to OpenMP later on.
+The idea is very simple: You create a new class that does you job and
+you create an instance of this class in your code.
+Ensure that the class has a functor:
+
+\begin{code}
+  void MyTaskClass::operator()() {
+   ...   // do whatever you wanna do in your task 
+  } 
+\end{code}
+
+\noindent
+and then pass it over to the \texttt{TaskSet} class:
+
+\begin{code}
+  MyTaskClass myTask(...); // pass in the constructor whatever dataa your task needs 
+  peano::datatraversal::TaskSet( myTask ); // the task now runs in the background
+\end{code}
+
+\noindent
+This constructor sends \texttt{myTask} to the background and continues. 
+It does not wait for the task to finish.
+A classic pattern is that you introduce a boolean set to false before you launch
+the task.
+Modifications to the boolean are protected by a semaphore.
+Once the task's \texttt{operator()} function finishes, it sets the bool.
+The main thread meanwhile continues, but then there's a while loop that
+continues to poll the boolean
+
+\begin{code}
+  bool terminated = false;
+  while (!terminated) {
+    tarch::multicore::Lock myLock( _myStaticSemphore );
+    terminated = _myGlobalBool;
+  }
+\end{code}
+
+\noindent
+until it is set.
+
+Finally, there are two useful static operations in \texttt{BooleanSemaphore}.
+The operation \linebreak
+\texttt{tarch::multicore::BooleanSemaphore::sendTaskToBack()}
+which is useful to realise low-priority tasks: Other tasks in the system (see
+section below) are activated if you call this operation.
+
+
+Please note that there are other constructors of \texttt{TaskSet} that run
+multiple tasks in parallel and wait until both have terminated. 
+See the class description for details.
 
 
 

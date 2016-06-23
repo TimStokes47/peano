@@ -190,7 +190,13 @@ you always can be sure that everything compiles, is consistent and lots of
 assertions are built in in non-release mode.
 \end{remark}
 
-\noindent 
+\noindent
+Please note that the oracles typically should be set {\em after} you have
+created the repository.
+The oracles have to know how many adapters do exist.
+This information is encoded in the repository.
+
+%\noindent 
 {\bf Set buffer sizes on all ranks}.
 MPI code tends to be very sensitive to proper buffer sizes.
 In Peano, you have to ensure that all ranks work with the same buffer sizes
