@@ -213,7 +213,7 @@ void peano::parallel::loadbalancing::Oracle::receivedStartCommand( int  commandF
   assertion2( commandFromMaster!=UndefinedLoadBalancingFlag, _workers.size(), tarch::parallel::Node::getInstance().getRank() );
 
   if (_oraclePrototype==0) {
-    logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
+    logWarning( "receivedStartCommand(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
   }
   else {
     _oracles[_currentOracle]->receivedStartCommand(commandFromMaster);
@@ -243,7 +243,7 @@ void peano::parallel::loadbalancing::Oracle::forkFailed() {
   assertion( _currentOracle<static_cast<int>(_oracles.size()));
 
   if (_oraclePrototype==0) {
-    logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
+    logWarning( "forkFailed(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
   }
   else {
     _oracles[_currentOracle]->forkFailed();
@@ -268,7 +268,7 @@ int peano::parallel::loadbalancing::Oracle::getCommandForWorker(
 
   int result = UndefinedLoadBalancingFlag;
   if (_oraclePrototype==0) {
-    logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
+    logWarning( "getCommandForWorker(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
     result = peano::parallel::loadbalancing::Continue;
   }
   else {
@@ -334,13 +334,10 @@ void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
 void peano::parallel::loadbalancing::Oracle::createOracles() {
   assertion( _oracles.size()==0 );
 
-  if (_oraclePrototype==0) {
-    logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
-  }
-  else if (_numberOfOracles==0) {
+  if (_numberOfOracles==0) {
     logWarning( "createOracles(int)", "no number of oracles set. Have you created repositories before?" );
   }
-  else {
+  else if (_oraclePrototype!=0) {
     assertion( _oraclePrototype!=0 );
     for (int i=0; i<_numberOfOracles; i++) {
       OracleForOnePhase* newOracle = _oraclePrototype->createNewOracle(i);
