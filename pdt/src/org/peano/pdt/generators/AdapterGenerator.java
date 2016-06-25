@@ -63,6 +63,10 @@ public class AdapterGenerator extends DepthFirstAdapter {
   }
 */
 
+  /**
+   * We clear the tables (_mappings, e.g.), befill them upon call backs. 
+   * outAAdapter then created the actual adapter.
+   */
   public void inAAdapter(AAdapter node) {
     _mappings              = new java.util.Vector<String>();
     _fullQualifiedMappings = new java.util.Vector<String>();
@@ -73,6 +77,8 @@ public class AdapterGenerator extends DepthFirstAdapter {
     }
 */    
     _currentAdapterName = node.getName().getText().trim();
+
+	System.out.println( "-create adapter " + _currentAdapterName );
   }
 
   
@@ -121,6 +127,8 @@ public class AdapterGenerator extends DepthFirstAdapter {
 	_mappings.add( adapterType );
 	_fullQualifiedMappings.add( "mappings::" + adapterType );
 	_mappingsPath.add( "mappings/" + adapterType );
+	
+	System.out.println( "-- adapter calls " + adapterType );
   }
 
   /**
