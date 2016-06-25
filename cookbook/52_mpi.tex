@@ -170,15 +170,26 @@ is built up.
 
 \begin{code}
 peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
- new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(true)
-);
+ new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(false)
+ );
 \end{code}
 
 \noindent
 This trivial load balancing runs embarrassingly parallel on all ranks. 
-The ranks do not communicate to come up with load balancing decisions.
-In such a case, you could use different oracles on different ranks. 
-In general, this is not a good idea and all ranks should run the same oracle.
+The \texttt{false} switches off joins, i.e.~we decompose the grid in a greedy
+fashion.
+
+Peano's general idea is the these oracles implement the load balancing and you
+can create your own oracle tailored to your needs if you wish.
+There are also some default oracles available from the homepage (though not
+included in the kernel---the above one is the only one in the kernel to allow
+you a quick start) that might suit you.
+In principle, you could use different oracles on different ranks and make them
+communicate with each other to globally optimise the load balancing
+though, in general, it seems to be a good idea to make all ranks 
+run the same oracle.
+The default oracles don't communicate. 
+Each rank is autonomous.
  
 \begin{remark}
 Peano's MPI routines are written with the idea in mind that \texttt{#ifdef}s
