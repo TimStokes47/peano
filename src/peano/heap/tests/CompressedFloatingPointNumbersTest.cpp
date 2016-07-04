@@ -25,7 +25,9 @@ peano::heap::tests::CompressedFloatingPointNumbersTest::~CompressedFloatingPoint
 
 
 void peano::heap::tests::CompressedFloatingPointNumbersTest::run() {
-  testMethod( testDecomposeWithLongInt );
+  #if __x86_64__ || __ppc64__
+  testMethod( testDecomposeWithLongInt ); // Doesn't work with 32 bit as there's no long int defined
+  #endif
   testMethod( testDecomposeWithInt );
   testMethod( testDecomposeWithChar );
   testMethod( testBatchDecomposition );
