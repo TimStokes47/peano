@@ -14,14 +14,29 @@
 #include "peano/grid/VertexEnumerator.h"
 #include "peano/utils/Globals.h"
 
+/**
+ * We want to use the vectors and matrices from PETSc:
+ */
+#include "petscvec.h"
+#include "petscmat.h"
+
+
 
 namespace petsc { 
-      class Vertex; 
+  class Vertex;
       
-      /**
-       * Forward declaration
-       */ 
-      class VertexOperations;
+  /**
+   * Forward declaration
+   */
+  class VertexOperations;
+
+  /**
+   * These are the global vectors that we use to make the adapter communicate
+   * with PETSc:
+   */
+  extern Vec  x;
+  extern Vec  rhs;
+  extern Mat  A;
 }
 
 

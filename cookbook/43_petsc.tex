@@ -227,10 +227,11 @@ int main(int argc, char** argv) {
 
 
 
-\subsection{Setting up the PETSc data structures}
+\subsection{Letting PETSc do the work}
 
 Once we have created the grid (and perhaps visualised it), we can start to set
-up the PETSc data structures corresponding to the grid. 
+up the PETSc data structures corresponding to the grid, we can call its solver,
+and we can finally free everything afterwards.
 We stick to the regular case for the time being.
 
 Every fine grid vertex in the grid has a right-hand side and a solution entry. 
@@ -238,12 +239,138 @@ Different to previous sections, we do not store this data in the vertex.
 Instead, we will make PETSc hold two vectors $rhs$ and $x$ and
 make each vertex hold the index, i.e.~each vertex knows which entry in the two
 vertices is associated with the vertex.
+So this means that the runner has to create these vectors and destroy them
+afterwards as well:
 
-
-
-@todo Discuss the whole Assemble.cpp as well as the header.
-
+\begin{code}
+/**
+ * We want to use the vectors and matrices from PETSc:
+ */
 #include "petscvec.h"
+#include "petscmat.h"
+
+[...]
+
+int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& repository) {
+  peano::utils::UserInterface::writeHeader();
+
+
+  /**
+   * Build up the grid. Afterwards, we know how many vertices exist.
+   */
+  repository.switchToCreateGrid(); repository.iterate();
+
+
+  /**
+   * These are the global vectors that we use to make the adapter communicate
+   * with PETSc:
+   */
+  Vec  x;
+  Vec  rhs;
+  Mat  A;
+
+  /**
+   * Create the global vector required for our work with PETSc.
+   */
+  PetscErrorCode errorX   = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &x);
+  PetscErrorCode errorRhs = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &rhs);
+  PetscErrorCode errorA   = MatCreate(tarch::parallel::Node::getInstance().getCommunicator(), &A);
+
+  if (errorX!=0) {
+    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__, errorX,  PETSC_ERROR_INITIAL, // first time we detect this error
+      "creating global solution vector failed" );
+  }
+  if (errorRhs!=0) {
+    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__, errorRhs,  PETSC_ERROR_INITIAL, // first time we detect this error
+      "creating global rhs vector failed" );
+  }
+  if (errorA!=0) {
+    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__, errorA,  PETSC_ERROR_INITIAL, // first time we detect this error
+      "creating system matrix failed" );
+  }
+
+
+  /**
+   * Local size (first parameter) and global size are the same for the time
+   * being. Peano uses doubles to count vertices, as the number of vertices
+   * sometimes exceed int. So we have to use an ugly cast here.
+   */
+  const PetscInt numberOfUnknowns = static_cast<int>(repository.getState().getNumberOfInnerLeafVertices());
+
+  assertion1( numberOfUnknowns>0, numberOfUnknowns );
+
+  VecSetSizes(x,  PETSC_DECIDE,numberOfUnknowns);
+  VecSetSizes(rhs,PETSC_DECIDE,numberOfUnknowns);
+  MatSetType(A,MATSEQAIJ);
+  
+  repository.switchToAssemble(); repository.iterate();
+
+  // @todo Do the real solve here
+
+  repository.switchToPlot(); repository.iterate();
+
+
+  /**
+   * Clean up PETSc data structures
+   */
+  VecDestroy(&x);
+  VecDestroy(&rhs);
+  MatDestroy(&A);
+
+  repository.logIterationStatistics( true );
+  repository.terminate();
+
+  return 0;
+}
+\end{code}
+
+\noindent
+That's basically the structure of our whole solver.
+What is missing is to set up the system matrix and to befill the $rhs$ vector.
+For this, we have to ensure that the assembly process (and also the plot later
+on) know the respective data structures.
+For convenience, I thus recommend to move the three important data variables
+into \texttt{Vertex.h}:
+
+\begin{code}
+/**
+ * We want to use the vectors and matrices from PETSc:
+ */
+#include "petscvec.h"
+#include "petscmat.h"
+
+
+namespace petsc { 
+  class Vertex;
+      
+  /**
+   * Forward declaration
+   */
+  class VertexOperations;
+
+  /**
+   * These are the global vectors that we use to make the adapter communicate
+   * with PETSc:
+   */
+  extern Vec  x;
+  extern Vec  rhs;
+  extern Mat  A;
+}
+\end{code}
+
+\noindent
+Please note that we move these variables, i.e.~their declaration has to be
+removed from \texttt{runAsMaster}. Furthermore, we have to add their definition
+to \texttt{Vertex.cpp}:
+
+\begin{code}
+Vec  petsc::x;
+Vec  petsc::rhs;
+Mat  petsc::A;
+\end{code}
 
 
 

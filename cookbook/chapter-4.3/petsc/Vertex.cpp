@@ -3,6 +3,31 @@
 #include "peano/grid/Checkpoint.h"
 
 
+/*
+namespace petsc {
+  class Vertex;
+
+  *
+   * Forward declaration
+
+  class VertexOperations;
+
+  *
+   * These are the global vectors that we use to make the adapter communicate
+   * with PETSc:
+
+  extern Vec  x;
+  extern Vec  rhs;
+  extern Mat  A;
+}
+*/
+
+Vec  petsc::x;
+Vec  petsc::rhs;
+Mat  petsc::A;
+
+
+
 petsc::Vertex::Vertex():
   Base() { 
   // @todo Insert your code here
