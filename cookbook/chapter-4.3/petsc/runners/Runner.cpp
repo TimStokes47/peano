@@ -17,8 +17,15 @@
 #include "peano/parallel/loadbalancing/OracleForOnePhaseWithGreedyPartitioning.h"
 
 
-// @todo Remove this include as soon as you've created your real-world geometry
 #include "peano/geometry/Hexahedron.h" 
+
+
+
+/**
+ * We want to use the vectors from PETSc:
+ */
+#include "petscvec.h"
+
 
 
 petsc::runners::Runner::Runner() {
@@ -88,19 +95,69 @@ int petsc::runners::Runner::run() {
 int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& repository) {
   peano::utils::UserInterface::writeHeader();
 
-  // @todo Insert your code here
-  
-  // Start of dummy implementation
-  
+
+  /**
+   * Build up the grid. Afterwards, we know how many vertices exist.
+   */
   repository.switchToCreateGrid(); repository.iterate();
+
+
+  /**
+   * These are the global vectors that we use to make the adapter communicate
+   * with PETSc:
+   */
+  Vec  _x;
+  Vec  _rhs;
+
+  /**
+   * Create the global vector required for our work with PETSc.
+   */
+  PetscErrorCode errorX   = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &_x);
+  PetscErrorCode errorRhs = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &_rhs);
+
+  if (errorX!=0) {
+    PetscError(
+      tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__,
+      errorX,  PETSC_ERROR_INITIAL, // first time we detect this error
+      "creating global solution vector failed"
+    );
+  }
+  if (errorRhs!=0) {
+    PetscError(
+      tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__,
+      errorRhs,  PETSC_ERROR_INITIAL, // first time we detect this error
+      "creating global rhs vector failed"
+    );
+  }
+
+
+  /**
+   * Local size (first parameter) and global size are the same for the time
+   * being. Peano uses doubles to count vertices, as the number of vertices
+   * sometimes exceed int. So we have to use an ugly cast here.
+   */
+  const PetscInt numberOfUnknowns = static_cast<int>(repository.getState().getNumberOfInnerLeafVertices());
+
+  assertion1( numberOfUnknowns>0, numberOfUnknowns );
+
+  VecSetSizes(_x,  PETSC_DECIDE,numberOfUnknowns);
+  VecSetSizes(_rhs,PETSC_DECIDE,numberOfUnknowns);
+  
   repository.switchToAssemble(); repository.iterate();
   repository.switchToPlot(); repository.iterate();
 
+
+  /**
+   * Clean up PETSc data structures
+   */
+  VecDestroy(&_x);
+  VecDestroy(&_rhs);
  
  
   repository.logIterationStatistics( true );
   repository.terminate();
-  // End of dummy implementation
 
   return 0;
 }
