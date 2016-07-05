@@ -127,6 +127,129 @@ Compile it, run it, visualise the output.
 
 \subsection{Connecting to PETSc}
 
-PETSc philosophy is pretty straightforward and they do not hijack main and
-others. So it is a perfect fit to Peano.
+As PETSc's philosophy is pretty straightforward and minimalistic (they do, e.g.,
+not hijack the main), the initialisation and integration are straightforward.
+Please note that we stick to serial jobs in the first part of this section.
+Nevertheless, we use the MPI compiler wrapper to translate the code as I faced
+issues when I tried to use PETSc without MPI\footnote{Please consult
+\url{http://www.mcs.anl.gov/petsc/petsc-current/docs/installation.html#i-dont-want-to-use-mpi}
+for the usage with OpenMPI as the \texttt{LD\_LIBRARY\_PATH} has to be set
+properly.}.
+
+
+\begin{enumerate}
+  \item Before we start to code with PETSc, we have to make the makefile know
+  where PETSc is installed. If you use your own build environment, adopt all
+  pathes accordingly. If you use the pre-generated makefile, open it and add
+  your PETSc include directory to the search path. Also switch to
+  \texttt{mpiCC}.
+  \begin{code}
+    PROJECT_CFLAGS = -DDebug -DAsserts -DParallel \
+      -DMPICH_IGNORE_CXX_SEEK -I/opt/petsc/include 
+    PROJECT_LFLAGS = -L/opt/petsc/lib -lpetsc 
+    PROJECT_LFLAGS = -L/opt/petsc/lib -lpetsc
+
+    [...]
+
+    CC=/opt/openmpi/bin/mpiCC
+  \end{code}
+  Please adopt all pathes accordingly. Depending on your MPI version, you also
+  might run into issues with the compiler's error management. I recommend to
+  remove \texttt{-Werror -pedantic-errors} from your makefile in this case.
+  \item As the present PETSc solutions use MPI (through they run serially), we
+  have to make a few modifications in the runner. These modifications are
+  detailed in Chapter \ref{section:parallelisation:mpi}, so we simply show
+  what has to be changed in \texttt{runners/Runner.cpp}. This solution should
+  work out-of-the-box.
+  For a description of its semantics, please see the aforementioned chapter.
+  \begin{code}
+#include "tarch/parallel/FCFSNodePoolStrategy.h"
+#include "peano/parallel/loadbalancing/OracleForOnePhaseWithGreedyPartitioning.h"
+
+[...]
+
+int petsc::runners::Runner::run() {
+
+  [...]
+
+  petsc::repositories::Repository* repository = 
+    petsc::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
+      geometry,
+      tarch::la::Vector<DIMENSIONS,double>(1.0),   // domainSize,
+      tarch::la::Vector<DIMENSIONS,double>(0.0)    // computationalDomainOffset
+    );
+  
+
+  // This is new because of PETSc:
+  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    tarch::parallel::NodePool::getInstance().setStrategy(
+      new tarch::parallel::FCFSNodePoolStrategy()
+    );
+  }
+  tarch::parallel::NodePool::getInstance().restart();
+  tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();
+  peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
+    new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(false)
+  );
+
+  [...]
+}
+  \end{code}
+  \item Finally, we have to initialise and shut down PETSc properly in
+  \texttt{main.cpp}:
+  \begin{code}
+#include "petscsys.h"
+
+[...]
+
+int main(int argc, char** argv) {
+  [...]
+  PetscInitialize(&argc,&argv,(char*)0,(char*)0);
+
+  int programExitCode = 0;
+
+  if (programExitCode==0) {
+    [...]
+    petsc::runners::Runner runner;
+    programExitCode = runner.run();
+  }
+
+  PetscFinalize();
+  [...]
+}  
+  \end{code}
+  According to PETSc's documentation, we could use PETSc's initialisation to set
+  up MPI instead of the Peano initialisation. However, Peano's initialisation
+  does not check whether MPI has been set up before where PETSc does. So it
+  makes sense to initialise Peano first.
+\end{enumerate}
+
+
+
+
+\subsection{Setting up the PETSc data structures}
+
+Once we have created the grid (and perhaps visualised it), we can start to set
+up the PETSc data structures corresponding to the grid. 
+We stick to the regular case for the time being.
+
+Every fine grid vertex in the grid has a right-hand side and a solution entry. 
+Different to previous sections, we do not store this data in the vertex.
+Instead, we will make PETSc hold two vectors $rhs$ and $x$ and
+make each vertex hold the index, i.e.~each vertex knows which entry in the two
+vertices is associated with the vertex.
+
+
+
+@todo Discuss the whole Assemble.cpp as well as the header.
+
+#include "petscvec.h"
+
+
+
+\subsection{Serial assembly with a parallel PETSc}
+
+
+\subsection{Using PETSc and MPI}
+% others. So it is a perfect fit to Peano.
 
