@@ -152,10 +152,16 @@ public class Main {
          System.out.println(" ... ok");
         
          System.out.print("generate adapters");
-         document.apply(new org.peano.pdt.generators.AdapterGenerator(
+         org.peano.pdt.generators.AdapterGenerator adapterGenerator = new org.peano.pdt.generators.AdapterGenerator(
            dirGenerator, translationTable
-         ));
-         System.out.println(" ... ok");
+         );
+         document.apply(adapterGenerator);
+         if (adapterGenerator.wasSuccessful()) {
+           System.out.println(" ... ok");
+         }
+         else {
+           System.out.println(" ... failed");
+         }
         
          System.out.print("generate makefiles");
          document.apply(new org.peano.pdt.generators.MakefileGenerator(
