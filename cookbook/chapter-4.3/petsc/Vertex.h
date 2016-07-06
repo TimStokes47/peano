@@ -79,6 +79,7 @@ class petsc::Vertex: public peano::grid::Vertex< petsc::records::Vertex > {
      */
     Vertex(const Base::PersistentVertex& argument);
 
+    void setRhs(double value);
     double getU() const;
 };
 

@@ -47,6 +47,21 @@ petsc::Vertex::Vertex(const Base::PersistentVertex& argument):
 
 
 double petsc::Vertex::getU() const {
-  return 0.0;
+  double result = 0.0;
+  if (isInside()) {
+    PetscInt     indices[] = {_vertexData.getIndex()};
+    PetscScalar  values[]  = {0.0};
+
+    VecGetValues(x,1,indices,values);
+
+    result = values[0];
+  }
+  return result;
 }
 
+
+void petsc::Vertex::setRhs(double value) {
+  PetscInt     indices[] = {_vertexData.getIndex()};
+  PetscScalar  values[]  = {value};
+  VecSetValues(rhs,1,indices,values, INSERT_VALUES);
+}

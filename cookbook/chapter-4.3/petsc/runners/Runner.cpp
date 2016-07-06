@@ -1,6 +1,8 @@
 #include "petsc/runners/Runner.h"
 
 
+#include "petsc/Vertex.h"
+
 #include "petsc/repositories/Repository.h"
 #include "petsc/repositories/RepositoryFactory.h"
 
@@ -21,10 +23,7 @@
 
 
 
-/**
- * We want to use the vectors from PETSc:
- */
-#include "petscvec.h"
+#include "petscksp.h"
 
 
 
@@ -101,35 +100,27 @@ int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& reposit
    */
   repository.switchToCreateGrid(); repository.iterate();
 
-
-  /**
-   * These are the global vectors that we use to make the adapter communicate
-   * with PETSc:
-   */
-  Vec  _x;
-  Vec  _rhs;
-
   /**
    * Create the global vector required for our work with PETSc.
    */
-  PetscErrorCode errorX   = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &_x);
-  PetscErrorCode errorRhs = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &_rhs);
+  PetscErrorCode errorX   = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &petsc::x);
+  PetscErrorCode errorRhs = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &rhs);
+  PetscErrorCode errorA   = MatCreate(tarch::parallel::Node::getInstance().getCommunicator(), &A);
 
   if (errorX!=0) {
-    PetscError(
-      tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__,
-      errorX,  PETSC_ERROR_INITIAL, // first time we detect this error
-      "creating global solution vector failed"
-    );
+    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__, errorX,  PETSC_ERROR_INITIAL, // first time we detect this error
+      "creating global solution vector failed" );
   }
   if (errorRhs!=0) {
-    PetscError(
-      tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__,
-      errorRhs,  PETSC_ERROR_INITIAL, // first time we detect this error
-      "creating global rhs vector failed"
-    );
+    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__, errorRhs,  PETSC_ERROR_INITIAL, // first time we detect this error
+      "creating global rhs vector failed" );
+  }
+  if (errorA!=0) {
+    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__, errorA,  PETSC_ERROR_INITIAL, // first time we detect this error
+      "creating system matrix failed" );
   }
 
 
@@ -142,20 +133,47 @@ int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& reposit
 
   assertion1( numberOfUnknowns>0, numberOfUnknowns );
 
-  VecSetSizes(_x,  PETSC_DECIDE,numberOfUnknowns);
-  VecSetSizes(_rhs,PETSC_DECIDE,numberOfUnknowns);
+  VecSetSizes(x,  PETSC_DECIDE,numberOfUnknowns);
+  VecSetSizes(rhs,PETSC_DECIDE,numberOfUnknowns);
+  VecSetType(x,VECMPI);
+  VecSetType(rhs,VECSEQ);
+  MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,numberOfUnknowns,numberOfUnknowns);
+  MatSetType(A,MATSEQAIJ);
+  MatSetUp(A);
   
   repository.switchToAssemble(); repository.iterate();
+  MatView(A,PETSC_VIEWER_DRAW_WORLD);
+  std::cin.get();
+
+  // =========================
+  // Let PETSc do all the work
+  // =========================
+  KSP krylovSolver;
+  PC  preconditioner;
+
+  KSPCreate(tarch::parallel::Node::getInstance().getCommunicator(),&krylovSolver);
+  KSPSetOperators(krylovSolver,A,A); // use matrix from Vector.h
+
+  // connect/get preconditioner
+  KSPGetPC(krylovSolver,&preconditioner);
+
+  // set Jacobi as preconditioner
+  PCSetType(preconditioner,PCBJACOBI);
+
+  KSPSolve(krylovSolver,rhs,x);
+
+  KSPDestroy(&krylovSolver);
+
   repository.switchToPlot(); repository.iterate();
 
 
   /**
    * Clean up PETSc data structures
    */
-  VecDestroy(&_x);
-  VecDestroy(&_rhs);
- 
- 
+  VecDestroy(&x);
+  VecDestroy(&rhs);
+  MatDestroy(&A);
+
   repository.logIterationStatistics( true );
   repository.terminate();
 
