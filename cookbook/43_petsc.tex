@@ -243,9 +243,10 @@ So this means that the runner has to create these vectors and destroy them
 afterwards as well:
 
 \begin{code}
-/**
- * We want to use the vectors and matrices from PETSc:
- */
+  thisIsATest++;
+\end{code}
+
+\begin{code}
 #include "petscvec.h"
 #include "petscmat.h"
 
@@ -254,57 +255,55 @@ afterwards as well:
 int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& repository) {
   peano::utils::UserInterface::writeHeader();
 
-
-  /**
-   * Build up the grid. Afterwards, we know how many vertices exist.
-   */
+  // Build up the grid. Afterwards, we know how many vertices exist.
   repository.switchToCreateGrid(); repository.iterate();
 
 
-  /**
-   * These are the global vectors that we use to make the adapter communicate
-   * with PETSc:
-   */
+  // These are the global vectors that we use to make the adapter communicate with PETSc:
   Vec  x;
   Vec  rhs;
   Mat  A;
 
-  /**
-   * Create the global vector required for our work with PETSc.
-   */
-  PetscErrorCode errorX   = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &x);
-  PetscErrorCode errorRhs = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &rhs);
-  PetscErrorCode errorA   = MatCreate(tarch::parallel::Node::getInstance().getCommunicator(), &A);
+  // Create the global vector required for our work with PETSc.
+  PetscErrorCode errorX   = 
+    VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &x);
+  PetscErrorCode errorRhs = 
+    VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &rhs);
+  PetscErrorCode errorA   = 
+    MatCreate(tarch::parallel::Node::getInstance().getCommunicator(), &A);
 
   if (errorX!=0) {
     PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorX,  PETSC_ERROR_INITIAL, // first time we detect this error
+      __LINE__,  __FUNCT__,  __FILE__, errorX,  PETSC_ERROR_INITIAL,
       "creating global solution vector failed" );
   }
   if (errorRhs!=0) {
     PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorRhs,  PETSC_ERROR_INITIAL, // first time we detect this error
+      __LINE__,  __FUNCT__,  __FILE__, errorRhs,  PETSC_ERROR_INITIAL,
       "creating global rhs vector failed" );
   }
   if (errorA!=0) {
     PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorA,  PETSC_ERROR_INITIAL, // first time we detect this error
+      __LINE__,  __FUNCT__,  __FILE__, errorA,  PETSC_ERROR_INITIAL,
       "creating system matrix failed" );
   }
 
 
-  /**
-   * Local size (first parameter) and global size are the same for the time
-   * being. Peano uses doubles to count vertices, as the number of vertices
-   * sometimes exceed int. So we have to use an ugly cast here.
-   */
-  const PetscInt numberOfUnknowns = static_cast<int>(repository.getState().getNumberOfInnerLeafVertices());
+  // Local size (first parameter) and global size are the same for the time
+  // being. Peano uses doubles to count vertices, as the number of vertices
+  // sometimes exceed int. So we have to use an ugly cast here.
+  const PetscInt numberOfUnknowns = static_cast<int>(
+    repository.getState().getNumberOfInnerLeafVertices());
 
   assertion1( numberOfUnknowns>0, numberOfUnknowns );
 
   VecSetSizes(x,  PETSC_DECIDE,numberOfUnknowns);
   VecSetSizes(rhs,PETSC_DECIDE,numberOfUnknowns);
+  VecSetType(x,VECMPI);
+  VecSetType(rhs,VECSEQ);
+  MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,numberOfUnknowns,numberOfUnknowns);
   MatSetType(A,MATSEQAIJ);
+  MatSetUp(A);
   
   repository.switchToAssemble(); repository.iterate();
 
@@ -313,9 +312,7 @@ int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& reposit
   repository.switchToPlot(); repository.iterate();
 
 
-  /**
-   * Clean up PETSc data structures
-   */
+  // Clean up PETSc data structures
   VecDestroy(&x);
   VecDestroy(&rhs);
   MatDestroy(&A);
@@ -336,9 +333,6 @@ For convenience, I thus recommend to move the three important data variables
 into \texttt{Vertex.h}:
 
 \begin{code}
-/**
- * We want to use the vectors and matrices from PETSc:
- */
 #include "petscvec.h"
 #include "petscmat.h"
 
@@ -346,15 +340,11 @@ into \texttt{Vertex.h}:
 namespace petsc { 
   class Vertex;
       
-  /**
-   * Forward declaration
-   */
+  // Forward declaration
   class VertexOperations;
 
-  /**
-   * These are the global vectors that we use to make the adapter communicate
-   * with PETSc:
-   */
+  // These are the global vectors that we use to make the adapter communicate
+  // with PETSc:
   extern Vec  x;
   extern Vec  rhs;
   extern Mat  A;
@@ -371,6 +361,222 @@ Vec  petsc::x;
 Vec  petsc::rhs;
 Mat  petsc::A;
 \end{code}
+
+We finally have to solve the actual equation system in the runner. For this, we
+plug into the \texttt{@todo} from the snippet above and furthermore include
+\texttt{\#include "petscksp.h"}. We use a simple Krylov CG solver here with a
+diagonal value preconditioner.
+
+\begin{code}
+KSP krylovSolver;
+PC  preconditioner;
+
+KSPCreate(tarch::parallel::Node::getInstance().getCommunicator(),&krylovSolver);
+KSPSetOperators(krylovSolver,A,A); // use matrix from Vector.h
+
+// connect/get preconditioner
+KSPGetPC(krylovSolver,&preconditioner);
+
+// set Jacobi as preconditioner
+PCSetType(preconditioner,PCBJACOBI);
+
+KSPSolve(krylovSolver,rhs,x);
+KSPDestroy(&krylovSolver);
+\end{code}
+
+\noindent
+This is not a particular sophisticated code, but it does the job. 
+No need to rewrite parts of the excellent PETSc documentation.
+
+\subsection{Connecting the vertices to PETSc}
+
+We next have to couple the vertices from our grid to the PETSc unknowns. 
+For this, we add a field     
+
+\begin{code}
+int  _unknownCounter;
+\end{code}
+
+\noindent
+to the class \texttt{Assemble} and make each fine grid vertex hold a unique
+index which is basically the corresponding entry in the $x$ and $rhs$ vector.
+If we do so, we can also set $rhs$ already.
+
+\begin{code}
+#include "petsc/VertexOperations.h"
+
+void petsc::mappings::Assemble::beginIteration(
+  petsc::State&  solverState
+) {
+  logTraceInWith1Argument( "beginIteration(State)", solverState );
+
+  _unknownCounter = 0;
+
+  logTraceOutWith1Argument( "beginIteration(State)", solverState);
+}
+
+void petsc::mappings::Assemble::touchVertexFirstTime(
+  ...
+) {
+  logTraceInWith6Arguments( "touchVertexFirstTime(...)", ... );
+
+  if (
+    fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
+    &&
+    fineGridVertex.isInside() // it is not a boundary point
+  ) {
+    VertexOperations::writeIndex(fineGridVertex,_unknownCounter);
+    _unknownCounter++;
+    
+    fineGridVertex.setRhs( 1.0 ); // See routines below
+  }
+
+  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
+}
+\end{code}
+
+\noindent
+There are many technical ways to couple the vertex to PETSc.
+We do it via the vertices:
+
+\begin{code}
+double petsc::Vertex::getU() const {
+  double result = 0.0;
+  if (isInside()) {
+    PetscInt     indices[] = {_vertexData.getIndex()};
+    PetscScalar  values[]  = {0.0};
+
+    VecGetValues(x,1,indices,values);
+
+    result = values[0];
+  }
+  return result;
+}
+
+
+void petsc::Vertex::setRhs(double value) {
+  PetscInt     indices[] = {_vertexData.getIndex()};
+  PetscScalar  values[]  = {value};
+  VecSetValues(rhs,1,indices,values, INSERT_VALUES);
+}
+\end{code}
+
+
+
+\subsection{Assembling and retrieving data from PETSc}
+
+We finally assemble our systems. The key activity is on the one hand to tell
+PETSc that we have finished the assembly
+
+\begin{code}
+void petsc::mappings::Assemble::endIteration(
+  petsc::State&  solverState
+) {
+  logTraceInWith1Argument( "endIteration(State)", solverState );
+
+  logInfo( "beginIteration(State)", "finalise assembly" );
+
+  VecAssemblyBegin( x );
+  VecAssemblyBegin( rhs );
+  VecAssemblyEnd( x );
+  VecAssemblyEnd( rhs );
+
+  MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
+
+  logInfo( "beginIteration(State)", "assembly finished" );
+
+  logTraceOutWith1Argument( "endIteration(State)", solverState);
+}
+\end{code}
+
+\noindent
+and on the other hand to fill entries into the matrix:
+\begin{code}
+#include "tarch/la/Matrix.h"
+
+
+void petsc::mappings::Assemble::enterCell(
+  ...
+) {
+ logTraceInWith4Arguments( "enterCell(...)", ... );
+
+ if ( not fineGridCell.isRefined() ) {
+  tarch::la::Matrix<4,4,double> localA;
+  localA = 0.5,  -0.25, -0.25, 0,
+           -0.25, 0.5,  0,    -0.25,
+           -0.25, 0,    0.5,  -0.25,
+           0,    -0.25, -0.25, 0.5;
+
+  for(int ii=0; ii<4; ii++)
+  for(int jj=0; jj<4; jj++) {
+   if (
+    fineGridVertices[fineGridVerticesEnumerator(ii)].isInside()
+    &&
+    fineGridVertices[fineGridVerticesEnumerator(jj)].isInside()
+   ) {
+    PetscInt row = VertexOperations::readIndex( fineGridVertices[fineGridVerticesEnumerator(ii)] );
+    PetscInt col = VertexOperations::readIndex( fineGridVertices[fineGridVerticesEnumerator(jj)] );
+    MatSetValue(A,row,col,localA(ii,jj),ADD_VALUES);
+   }
+  }
+ }
+
+ logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
+}
+\end{code}
+
+\noindent
+Needless to say, this is a 2d example. 3d requires more indices. You might want
+to have a look into the Peano utilities for dimension-generic routines. And it
+is also obvious that this is not a very elegant and fast solution as we write
+into the matrix entry by entry rather than in batches.
+
+Once the matrix is assembled, it makes sense to add statements alike
+\begin{code}
+  KSPCreate(tarch::parallel::Node::getInstance().getCommunicator(),&krylovSolver);
+  KSPSetOperators(krylovSolver,A,A); // use matrix from Vector.h
+\end{code}
+
+\noindent
+into the runner to see the matrix pattern, e.g.
+
+
+
+\subsection{Some discontinuous Galerkin}
+
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.6\textwidth]{43_dg/dg-data-layout.pdf}
+  \end{center}
+  \caption{One possible data layout for DG with PETSc. All indices are stored
+  within vertices.}
+  \label{figure:43_petsc:data-layout}
+\end{figure}
+
+There are various ways to implement discontinuous Galerkin in Peano. 
+We sketch a vertex-based variant  at
+hands of bi-quadratic shape functions.
+For such an approach, we have to store nine unknown per cell.
+However, we propose not to store indices within a cell but within vertices.
+This is advantageous as we have, without additional effort, only vertices within
+a cell at hand. 
+We do not know neighbour cells.
+
+So we propose to hold nine integer indices within each individual vertex.
+Basically, every unknown is stored within its closest neighbouring vertex
+(Figure \ref{figure:43_petsc:data-layout}). 
+For those where multiple options do exist, we store it to the left bottom.
+The corresponding vertex data structure reads as follows:
+\begin{code}
+Packed-Type: short int;
+
+class petsc::records::Vertex {  
+  parallelise persistent int index[9];
+};
+\end{code}
+
 
 
 
