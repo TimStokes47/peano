@@ -279,7 +279,7 @@ int peano::parallel::loadbalancing::Oracle::getCommandForWorker(
     );
   }
 
-  assertion5( result!=UndefinedLoadBalancingFlag, workerRank, forkIsAllowed, joinIsAllowed, (_oraclePrototype==0), _loadBalancingActivated );
+  assertion6( result!=UndefinedLoadBalancingFlag, workerRank, forkIsAllowed, joinIsAllowed, (_oraclePrototype==0), _loadBalancingActivated, result );
 
   logTraceOutWith1Argument( "getCommandForWorker(int)", convertLoadBalancingFlagToString(result) );
   return result;
