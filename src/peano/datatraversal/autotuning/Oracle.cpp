@@ -110,10 +110,10 @@ peano::datatraversal::autotuning::Oracle::~Oracle() {
 
 
 void peano::datatraversal::autotuning::Oracle::setNumberOfOracles(int value) {
-  assertion( value>0 );
-  assertionMsg( _numberOfAdapters==0, "you may not reset total number of oracles at runtime" );
   logTraceInWith1Argument( "setNumberOfOracles(int)", value);
+  assertion( value>0 );
 
+  deleteOracles();
   _numberOfAdapters=value;
 
   logTraceOut( "setNumberOfOracles(int)");
