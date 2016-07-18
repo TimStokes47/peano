@@ -1025,10 +1025,10 @@ def plotStatisticsForRank(currentRank):
   #
   # If multiple ranks plot to one terminal, lines can be mixed up and parsing can fail. 
   #
-  if (len(tcentralElementCalendar)==len(centralElementCalendar)):
+  if len(tcentralElementCalendar)==len(centralElementCalendar):
     pylab.plot(tcentralElementCalendar, centralElementCalendar, 'v--', label='local elements traversal', color='#00aaaa', markersize=10)
   else:
-    print "- error in centralElementCalendar"
+    print "ERROR: tcentralElementCalendar has lenght " + str(len((tcentralElementCalendar)) + " while centralElementCalendar has lenght " + str(len(centralElementCalendar))
 
   pylab.plot(tworkerWaitTimeCalendar, workerWaitTimeCalendar, '3-', label='wait for worker', color='#667766', markersize=10)
 
