@@ -863,7 +863,7 @@ def plotWalltimeOverview():
 def createRankDetails(rank):
   #searchPattern = "(\d+),rank:" + str(rank) + ".*::repositories::.*::restart(...).*start node for subdomain"
   #searchPattern = str(rank) + ".*repositories.*restart.*start node for subdomain"
-  searchPattern = "rank:" + str(rank) + ".*repositories.*restart.*start node for subdomain"
+  searchPattern = "rank:" + str(rank) + " .*repositories.*restart.*start node for subdomain"
 
   outFile.write( "<h4>Rank details:</h4>" );
   outFile.write( "<ol>" );
