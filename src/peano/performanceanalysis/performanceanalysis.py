@@ -1137,13 +1137,6 @@ if (numberOfRanks>0):
   print "boundary data exchange"
   plotBoundaryLateSends()
 
-  for rank in range(0,numberOfRanks):
-    print "plot statistics for rank " + str(rank)
-    plotStatisticsForRank(rank)
-  
-
-
-
 
 #
 # Header of report
@@ -1648,3 +1641,14 @@ outFile.write( "</body>" )
 outFile.write( "</html>" )
 outFile.close()
 print "html file written"
+
+
+
+#
+# Create individual plots - lasts long so I prefer to finish writing the HTML 
+# file first.
+#
+if (numberOfRanks>0):      
+  for rank in range(0,numberOfRanks):
+    print "plot statistics for rank " + str(rank)
+    plotStatisticsForRank(rank)
