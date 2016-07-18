@@ -1020,15 +1020,15 @@ def plotStatisticsForRank(currentRank):
   if len(tasynchronousHeapDataCalendar)==len(asynchronousHeapDataCalendar):
     pylab.plot(tasynchronousHeapDataCalendar, asynchronousHeapDataCalendar, '1-', label='asynchronous heap', color='#aa00aa', markersize=10)
   else:
-    print "ERROR: tasynchronousHeapDataCalendar has lenght " + str(len((tasynchronousHeapDataCalendar)) + " while asynchronousHeapDataCalendar has lenght " + str(len(asynchronousHeapDataCalendar))
+    print "ERROR: tasynchronousHeapDataCalendar has lenght " + str(len(tasynchronousHeapDataCalendar)) + " while asynchronousHeapDataCalendar has lenght " + str(len(asynchronousHeapDataCalendar))
 
   #
   # If multiple ranks plot to one terminal, lines can be mixed up and parsing can fail. 
   #
-  if len(tcentralElementCalendar)==len(centralElementCalendar):
+  if (len(tcentralElementCalendar)==len(centralElementCalendar)):
     pylab.plot(tcentralElementCalendar, centralElementCalendar, 'v--', label='local elements traversal', color='#00aaaa', markersize=10)
   else:
-    print "ERROR: tcentralElementCalendar has lenght " + str(len((tcentralElementCalendar)) + " while centralElementCalendar has lenght " + str(len(centralElementCalendar))
+    print "ERROR: tcentralElementCalendar has lenght " + str(len(tcentralElementCalendar)) + " while centralElementCalendar has lenght " + str(len(centralElementCalendar))
 
   pylab.plot(tworkerWaitTimeCalendar, workerWaitTimeCalendar, '3-', label='wait for worker', color='#667766', markersize=10)
 
@@ -1649,6 +1649,7 @@ print "html file written"
 # file first.
 #
 if (numberOfRanks>0):      
+  print "continue to write individual rank statistics ... html file however should be readable already"
   for rank in range(0,numberOfRanks):
     print "plot statistics for rank " + str(rank)
     plotStatisticsForRank(rank)
