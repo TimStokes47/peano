@@ -322,7 +322,10 @@ def plotMPIPhases():
   pylab.savefig( outputFileName + ".mpi-phases.png" )
   pylab.savefig( outputFileName + ".mpi-phases.pdf" )
   switchToLargePlot()
-  pylab.yticks([i for i in range(0,numberOfRanks)]) 
+  if numberOfRanks<=16:
+    pylab.yticks([i for i in range(0,numberOfRanks)]) 
+  else:
+    pylab.yticks([i*16 for i in range(0,numberOfRanks/16)]) 
   pylab.savefig( outputFileName + ".mpi-phases.large.png" )
   pylab.savefig( outputFileName + ".mpi-phases.large.pdf" )
   switchBackToStandardPlot()  
