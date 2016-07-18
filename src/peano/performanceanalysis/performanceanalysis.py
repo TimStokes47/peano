@@ -1000,27 +1000,27 @@ def plotStatisticsForRank(currentRank):
   if len(ttotalTimeCalendar)==len(totalTimeCalendar):
     pylab.plot(ttotalTimeCalendar, totalTimeCalendar, 'x-', label='total', color='#FF0000', markersize=10)
   else:
-    print "ERROR: ttotalTimeCalendar has lenght " + len(ttotalTimeCalendar) + " while totalTimeCalendar has lenght " + len(totalTimeCalendar)
+    print "ERROR: ttotalTimeCalendar has lenght " + str(len(ttotalTimeCalendar)) + " while totalTimeCalendar has lenght " + str(len(totalTimeCalendar))
 
   if len(tjoinTimeCalendar)==len(joinTimeCalendar):
     pylab.plot(tjoinTimeCalendar, joinTimeCalendar, 'o-', label='join', color='#00FF00', markersize=10)
   else:
-    print "ERROR: tjoinTimeCalendar has lenght " + len(tjoinTimeCalendar) + " while joinTimeCalendar has lenght " + len(joinTimeCalendar)
+    print "ERROR: tjoinTimeCalendar has lenght " + str(len(tjoinTimeCalendar)) + " while joinTimeCalendar has lenght " + str(len(joinTimeCalendar))
 
   if len(tboundaryTimeCalendar)==len(boundaryTimeCalendar):
     pylab.plot(tboundaryTimeCalendar, boundaryTimeCalendar, '^-', label='boundary exchange', color='#0000FF', markersize=10)
   else:
-    print "ERROR: tboundaryTimeCalendar has lenght " + len(tboundaryTimeCalendar) + " while boundaryTimeCalendar has lenght " + len(boundaryTimeCalendar)
+    print "ERROR: tboundaryTimeCalendar has lenght " + str(len(tboundaryTimeCalendar)) + " while boundaryTimeCalendar has lenght " + str(len(boundaryTimeCalendar))
 
   if len(tsynchronousHeapDataCalendar)==len(synchronousHeapDataCalendar):
     pylab.plot(tsynchronousHeapDataCalendar, synchronousHeapDataCalendar, '+-', label='synchronous heap', color='#aaaa00', markersize=10)
   else:
-    print "ERROR: tsynchronousHeapDataCalendar has lenght " + len(tsynchronousHeapDataCalendar) + " while synchronousHeapDataCalendar has lenght " + len(synchronousHeapDataCalendar)
+    print "ERROR: tsynchronousHeapDataCalendar has lenght " + str(len(tsynchronousHeapDataCalendar)) + " while synchronousHeapDataCalendar has lenght " + str(len(synchronousHeapDataCalendar))
 
   if len(tasynchronousHeapDataCalendar)==len(asynchronousHeapDataCalendar):
     pylab.plot(tasynchronousHeapDataCalendar, asynchronousHeapDataCalendar, '1-', label='asynchronous heap', color='#aa00aa', markersize=10)
   else:
-    print "ERROR: tasynchronousHeapDataCalendar has lenght " + len(tasynchronousHeapDataCalendar) + " while asynchronousHeapDataCalendar has lenght " + len(asynchronousHeapDataCalendar)
+    print "ERROR: tasynchronousHeapDataCalendar has lenght " + str(len((tasynchronousHeapDataCalendar)) + " while asynchronousHeapDataCalendar has lenght " + str(len(asynchronousHeapDataCalendar))
 
   #
   # If multiple ranks plot to one terminal, lines can be mixed up and parsing can fail. 
