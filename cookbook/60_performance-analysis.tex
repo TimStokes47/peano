@@ -47,6 +47,23 @@ out time stamps as well as trace information. If you use your own logger or a
 modified log format, the Python script will fail.
 \end{remark}
 
+\begin{remark}
+The present document suggests to pipe all output data from the terminal into a
+file and to process this file. 
+For many applications with low rank count this works fine.
+The more ranks you have however the higher the probability that concurrent
+writes to the terminal mess up your piped file.
+In most cases, the performance analysis still succeeds. 
+However, there are cases where the postprocessing fails.
+In this case, it is better to use \texttt{setLogFormat} of the
+\texttt{CommandLineLogger} to make the logger pipe output from different ranks
+into different files.
+There's an additional script in the \texttt{performanceanalysis} directory that
+you can then use to fuse the various output files into one file before you start
+the actual postprocessing.
+\end{remark}
+
+
 
 \noindent
 If you browse through your directory, you will notice that all graphs are
