@@ -793,7 +793,8 @@ def plotGlobalGridOverview():
     startRank = 0
   for rank in range(startRank,numberOfRanks):
     x = pylab.arange(0, len(numberOfLocalCells[rank]), 1.0)
-    pylab.plot(tTotal[rank], numberOfLocalCells[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
+    if len(tTotal[rank])==len(numberOfLocalCells[rank]):
+      pylab.plot(tTotal[rank], numberOfLocalCells[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
   pylab.xlabel('t')
   pylab.savefig( outputFileName + ".local-cells.png" )
   pylab.savefig( outputFileName + ".local-cells.pdf" )
@@ -840,7 +841,8 @@ def plotGlobalGridOverview():
     startRank = 0
   for rank in range(startRank,numberOfRanks):
     x = pylab.arange(0, len(numberOfLocalVertices[rank]), 1.0)
-    pylab.plot(tTotal[rank], numberOfLocalVertices[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
+    if len(tTotal[rank])==len(numberOfLocalVertices[rank]):
+      pylab.plot(tTotal[rank], numberOfLocalVertices[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
   pylab.xlabel('t')
   pylab.savefig( outputFileName + ".local-vertices.png" )
   pylab.savefig( outputFileName + ".local-vertices.pdf" )
@@ -857,7 +859,8 @@ def plotWalltimeOverview():
     startRank = 0
   for rank in range(startRank,numberOfRanks):
     x = pylab.arange(0, len(tTraversal[rank]), 1.0)
-    pylab.plot(tTotal[rank], tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
+    if len(tTotal[rank])==len(tTraversal[rank]):
+      pylab.plot(tTotal[rank], tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
   setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".walltime.png" )
   pylab.savefig( outputFileName + ".walltime.pdf" )
