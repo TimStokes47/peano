@@ -620,7 +620,11 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     const bool DomainDecompositionPermitsRefinement =
       !_fineGridVertices[positionInArray].isAdjacentToRemoteRank() &&
       !_state.isInvolvedInJoinOrFork();
-    assertion1( !(_state.isInvolvedInJoinOrFork() && _fineGridVertices[positionInArray].getRefinementControl()==Vertex::Records::EnforceRefinementTriggered), _fineGridVertices[positionInArray].toString() );
+    assertion2(
+      !(_state.isInvolvedInJoinOrFork() && _fineGridVertices[positionInArray].getRefinementControl()==Vertex::Records::EnforceRefinementTriggered),
+      _fineGridVertices[positionInArray].toString(),
+      _state.toString()
+    );
     const bool UpdateRefinementFlagsAfterLoadImmediately = DomainDecompositionPermitsRefinement || _fineGridVertices[positionInArray].getRefinementControl()==Vertex::Records::EnforceRefinementTriggered;
     #else
     const bool UpdateRefinementFlagsAfterLoadImmediately = true;
