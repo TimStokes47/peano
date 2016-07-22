@@ -917,12 +917,20 @@ def plotStatisticsForRank(currentRank):
 
   pylab.clf()
   pylab.title( "Cells" )
-  pylab.plot(tTotal[currentRank], numberOfLocalCells[currentRank], '-',  markersize=10, color='b', label='local cells' )
+  
+  if len(tTotal[currentRank]) == len(numberOfLocalCells[currentRank]):
+    pylab.plot(tTotal[currentRank], numberOfLocalCells[currentRank], '-',  markersize=10, color='b', label='local cells' )
+  else:
+    print "WARNING: arrays tTotal and numberOfLocalCells of rank " + str(currentRank) + " have different sizes. Input file might be corrupted"
+  
   startRank = 1
   if (numberOfRanks==1):
     startRank = 0
   for rank in range(startRank,numberOfRanks):
-    pylab.plot(tTotal[rank], numberOfLocalCells[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
+    if len(tTotal[rank]) == len(numberOfLocalCells[rank]):
+      pylab.plot(tTotal[rank], numberOfLocalCells[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
+    else:
+      print "WARNING: arrays tTotal and numberOfLocalCells of rank " + str(rank) + " have different sizes. Input file might be corrupted"
   setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".local-cells-rank-" + str(currentRank) + ".png" )
   pylab.savefig( outputFileName + ".local-cells-rank-" + str(currentRank) + ".pdf" )
