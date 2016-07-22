@@ -103,6 +103,24 @@ the domain boundary), there is a pretty huge refined surface that connects each
 of the eight workers of rank 1 with rank 0. 
 And now rank 0 becomes a bottleneck though rank 0 does no computation at all.
 
+\begin{center}
+  \includegraphics[width=0.45\textwidth]{62_quick-tuning/boundary-data-exchange.pdf}
+  \includegraphics[width=0.45\textwidth]{62_quick-tuning/local-cells-rank-0.pdf}
+  \\
+\end{center}
+  {
+  \footnotesize
+  Smells on the global master in the performance analysis output.
+  Standard run on unit square, regular grid, $d=2$ with 10 ranks. 
+  Left: Rank 0 is a boundary data exchange bottleneck though it has deployed all
+  of its work to rank 1.
+  Right:
+  Rank 0 holds a significant number of cells (solid line) cmp.~to the cells on
+  the other ranks (red dots) though it has deployed the domain completely.
+  \vspace{0.8cm}
+  
+  }
+
 One solution is to extend the bounding box around the computational domain by a
 halo region.
 For a unit square, using an offset of $-1/7 \times -1/7$ and a bounding box
