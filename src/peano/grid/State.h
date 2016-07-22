@@ -348,6 +348,9 @@ class peano::grid::State {
      * In parallel, it is does either a good idea to use isGridBalanced() or,
      * even more precise, to combine both operations.
      *
+     * This operation is valid when a traversal just has terminated. It is not
+     * valid throughout the computation as many of its attributes are
+     *
      * @see isGridBalanced()
      * @see isInvolvedInJoinOrFork().
      * @see getCouldNotEraseDueToDecompositionFlag()
