@@ -380,6 +380,9 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * If this operation is called for a code compiled without -DParallel,
      * it returns true always.
      *
+     * You are not allowed to call this operation on any rank besides the
+     * global master.
+     *
      * @return true If there are not idle workers left
      */
     bool areAllNodesWorking() const;
