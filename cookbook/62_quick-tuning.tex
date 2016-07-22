@@ -74,3 +74,65 @@ this variant:
 You are never allowed to run a global step if any rank is involved in a join or
 fork. 
 
+
+\subsection{Reduce data exchange with global master}
+
+\begin{smell}
+  It seems that rank 0 is involved in lots of data exchange (the performance
+  analysis says that it is a neighbour data exchange bottleneck), and we see
+  that rank 0 holds a significant number of total vertices and cells.
+\end{smell}
+
+Peano takes the computational Domain (the unit square, e.g.) and embeds it into
+a $3^d$ patch. This surrounding patch is held by rank 0 being the global master.
+This rank deploys the central element, i.e. the whole domain, immediately to
+rank 1 and sticks himself with administrative duties (the node pool server
+realising domain decomposition decisions, e.g.) only. 
+We have a situation as sketched below on the left:
+
+\begin{center}
+  \includegraphics[width=0.5\textwidth]{62_quick-tuning/domain-layout.pdf}
+\end{center}
+
+The global master 0 deploys the real domain (filled) to rank 1 and then rank 1
+continues to split up its domain further.
+Though rank 0 has deployed all cells to other ranks, still many workers of rank
+1 (up to eight) are adjacent to rank 0. 
+If they refine (and they most probably will do as most PDE solvers refine along
+the domain boundary), there is a pretty huge refined surface that connects each
+of the eight workers of rank 1 with rank 0. 
+And now rank 0 becomes a bottleneck though rank 0 does no computation at all.
+
+One solution is to extend the bounding box around the computational domain by a
+halo region.
+For a unit square, using an offset of $-1/7 \times -1/7$ and a bounding box
+size of $9/7 \times  9/7$ has proven of value. 
+This way, all halo cells of rank 0 are sufficiently away from the domain's real
+boundary. 
+So, if a worker of rank 1 refines, it does not share additional Vertices with rank 0. 0 is not a bottleneck anymore.
+The drawback of this approach is that the first few coarser levels on the ranks
+are not involved in any computation (makes a difference for multigrid, e.g.) as
+they overlap the whole computational domain. 
+Only the third or fourth level of the spacetree actually holds valid compute
+data.
+
+To identify whether you can benefit from this technique, try a simple run with a
+regular grid and only two ranks. 
+In this case, you should not see any speedup, as all work is deployed by rank 0 to rank 1. 
+However, you should also not observe a significant runtime penalty. 
+If you do observe a penalty, try to realise this fix:
+
+
+\begin{code}
+// the actual computational domain remains the same - we are not altering the
+// physics
+peano::geometry::Hexahedron geometry(
+  tarch::la::Vector<DIMENSIONS,double>(1.0),
+  tarch::la::Vector<DIMENSIONS,double>(0.0) );
+myproject::repositories::Repository* repository = 
+  myproject::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
+  geometry,
+  tarch::la::Vector<DIMENSIONS,double>(9.0/7.0),   // has been 1.0 before
+  tarch::la::Vector<DIMENSIONS,double>(-1.0/7.0)   // has been 0.0 before
+  computationalDomainOffset );
+\end{code}

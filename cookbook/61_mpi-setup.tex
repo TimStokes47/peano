@@ -15,8 +15,7 @@ were able to postprocess your performance analysis outputs. We discuss issues
 that arise over and over again for parallel applications.
 
 
-\vspace{0.6cm}
-{\bf \large Massive grid on rank 0 with long redistribution phase
+\subsection{Massive grid on rank 0 with long redistribution phase
 afterwards}
 
 \begin{center}
@@ -116,8 +115,7 @@ This situation is discussed in the following bad smell.
 
 
 
-\vspace{0.6cm}
-{\bf \large Incremental grid setup though detailed grid structure is
+\subsection{Incremental grid setup though detailed grid structure is
 known/all nodes are already busy}
 
 
@@ -261,9 +259,7 @@ void myproject::mappings::RegularMesh::refineVertexIfNecessary(
 
 
 
-\pagebreak 
-
-{\bf The load balancing kicks in immediately while I build up my grid but it
+\subsection{The load balancing kicks in immediately while I build up my grid but it
 yields non-reasonable partitions}
 
 

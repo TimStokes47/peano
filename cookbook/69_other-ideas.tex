@@ -1,63 +1,6 @@
 \section{Other ideas}
 
 
-, we assume that you've a reasonable load balancing but see that all
-the
-  
-  The smell
-  
-  Solution
-  
-  Related pitfalls \& ideas
-  
-  
-  
-
-
-
-Peano takes the computational Domain (the unit square, e.g.) and embeds it into a 3^d patch. This surrounding patch is held by rank 0 being the global master. This rank deploys the central element, i.e. the whole domain, immediately to rank 1 and sticks himself with administrative duties (node pool server, e.g.) only. We soon end up with a situation sketched below on the left:
-
-foobar
-
-Though rank 0 has deployed all cells to other ranks, still all workers of rank 1 are adjacent to rank 0. If they refine (and they most probably will do as most PDE solvers refine along the domain boundary), there is a pretty huge refined surface that connects each of the eight workers of rank 1 with rank 0. And now rank 0 becomes a bottleneck though rank 0 does no computation at all.
-
-One solution is to extend the computational domain by a halo region. For a unit square, using an offset of [-1/7 x -1/7] and a bounding box size of [9/7 x 9/7] has proven of value. This way, all halo cells of rank 0 are sufficiently away from the domain's real boundary. So, if a worker of rank 1 refines, it does not share additional Vertices with rank 0. 0 is not a bottleneck anymore.
-
-To identify whether you can benefit from this technique, try a simple run with a regular grid and only two ranks. In this case, you should not see any speedup, as all work is deployed by rank 0 to rank 1. However, you should also not observe a significant runtime penalty. If you do observe, try this fix.
-
-To realise the change, you might change
-
-peano::geometry::Hexahedron geometry(
-  tarch::la::Vector<DIMENSIONS,double>(1.0),
-  tarch::la::Vector<DIMENSIONS,double>(0.0)
- );
-particles::pit::repositories::Repository* repository = 
-    particles::pit::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
-    geometry,
-    tarch::la::Vector<DIMENSIONS,double>(1.0),   // domainSize,
-    tarch::la::Vector<DIMENSIONS,double>(0.0)    // computationalDomainOffset
-  );
-
-into
-
-peano::geometry::Hexahedron geometry(
-  tarch::la::Vector<DIMENSIONS,double>(1.0),
-  tarch::la::Vector<DIMENSIONS,double>(0.0)
- );
-particles::pit::repositories::Repository* repository = 
-    particles::pit::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
-    geometry,
-    tarch::la::Vector<DIMENSIONS,double>(9.0/7.0),   // domainSize,
-    tarch::la::Vector<DIMENSIONS,double>(-1.0/7.0)    // computationalDomainOffset
-  );
-
-Disable load balancing
-
-Joins and forks are expensive operations and furthermore hinder Peano to use its shared memory parallelisation, i.e. Peano always switches off multithreading if it has to rebalance a rank. As a consequence, it often makes sense to switch the load balancing oracles - to use an oracle not rebalancing at all most of the time but to identify critical steps where another òracle rebalancing is us used.
-Check the load balancing and node weights
-
-One of the first tuning activities is to analyse the load balancing. Peano has a mpianalysis interface and there analysis tools around. However, also the simple Default mpianalysis does the job - at least for stationary partitions, i.e. as long as you don't rebalance. Run your application and switch of the info output of tarch::mpianalysis. Pipe the results into a file and run the Shell/Python script from the mpianalysis directory on the output. This should result in a picture and you can analyse whether the partitioning fits to your expectations.
-
 If it doesn't, you can tune your load balancing. Prior to this, I however recommend that you write down a cost model - how expensive should one cell be to solve? Then you can use the load per cell individually in your mappings and thus guide the load balancing (actually any load balancing you intend later on to use) how costly different subtrees are.
 Doublecheck the multiscale concurrency
 
