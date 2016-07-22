@@ -899,12 +899,18 @@ def plotStatisticsForRank(currentRank):
   pylab.clf()
   pylab.title( "Walltime" )
   pylab.plot(tTotal[0], tTraversal[0], '-',  markersize=10, color='#000066', label='time per traversal (global master)' )
-  pylab.plot(tTotal[currentRank], tTraversal[currentRank], '-',  markersize=10, color='#550000', label='time per traversal (only inside local domain)' )
+  if len(tTotal[currentRank])==len(tTraversal[currentRank]):
+    pylab.plot(tTotal[currentRank], tTraversal[currentRank], '-',  markersize=10, color='#550000', label='time per traversal (only inside local domain)' )
+  else:
+    print "WARNING: tTotal and tTraversal for rank " + str(currentRank) + " do not hold the same number of entries. Input file seems to be corrupted"
   startRank = 1
   if (numberOfRanks==1):
     startRank = 0
   for rank in range(startRank,numberOfRanks):
-    pylab.plot(tTotal[rank], tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
+    if len(tTotal[rank])==len(tTraversal[rank]):
+      pylab.plot(tTotal[rank], tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
+    else:
+      print "WARNING: tTotal and tTraversal for rank " + str(rank) + " do not hold the same number of entries. Input file seems to be corrupted"
   setGeneralPlotSettings()
   pylab.savefig( outputFileName + ".walltime-rank-" + str(currentRank) + ".png" )
   pylab.savefig( outputFileName + ".walltime-rank-" + str(currentRank) + ".pdf" )
