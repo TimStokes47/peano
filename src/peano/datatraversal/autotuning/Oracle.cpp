@@ -207,8 +207,7 @@ int peano::datatraversal::autotuning::Oracle::parallelise(int problemSize, Metho
 
   tarch::multicore::Lock lock(_semaphore);
 
-  assertion2( !_oracles[key]._recursiveCallsForThisOracle>=0, toString( askingMethod), _currentAdapter );
-  _oracles[key]._recursiveCallsForThisOracle++;
+   _oracles[key]._recursiveCallsForThisOracle++;
 
   if (problemSize>0 && _oracles[key]._recursiveCallsForThisOracle==1) {
     const std::pair<int,bool> oracleDecision =  _oracles[key]._oracle->parallelise(problemSize);
