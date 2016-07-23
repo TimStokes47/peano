@@ -93,29 +93,18 @@ if the tree traversal direction is not inverted:
 Peano runs forth and back through the grid, so this effectively switches off
 refinement every second iteration. 
 
-The deluxe version is a code that refines only every fifth traversal (which is
-one count less than what we need to make a grid balanced). 
-I often introduce a global counter in my grid creation mapping, increment this
-counter in \textt{beginIteration} and also use it to veto refinements:
-\begin{code}
-void exahype::mappings::RegularMesh::beginIteration(
-  exahype::State& solverState
-) {
-  ADERDGCellDescriptionHeap::getInstance().setName("ADERDGCellDescriptionHeap");
-  DataHeap::getInstance().setName("DataHeap");
-  _vetoRefinement = _traversalCounter%5!=0 
-                 && tarch::parallel::Node::getInstance().getNumberOfNodes()>1;
-  _traversalCounter++;
-}
-\end{code} 
-\noindent
-Obviously, this is a very bad idea if no idle nodes are available anymore. 
+The deluxe version is a code that refines only if the previous grid traversal
+did not change the mesh, if no load balancing is going anymore and, for example,
+\texttt{isTraversalInverted()} does not hold. This postpones any refinement
+further.
+However, such an approach is a bad idea if no idle nodes are available anymore. 
 In this case, it is better not to veto the refinement anymore.
-This situation is discussed in the following bad smell. 
+This situation is discussed in the following bad smell, where we propose a
+sophisticated solution to both smells.
 
 
 
-\subsection{Incremental grid setup though detailed grid structure is
+\subsection{Incremental, slow grid setup though detailed grid structure is
 known/all nodes are already busy}
 
 
@@ -172,37 +161,60 @@ We thus propose to augment the \texttt{State.def} by a new flag:
 \end{code}
 
 \noindent
-This flag is set in the mapping's \texttt{beginIteration} on the global state
+Per rank, we now create a copy of the global state that is propagated through
+the tree (the state is used to determine the refinement strategy)
 \begin{code}
-  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
-    solverState.updateRegularInitialGridRefinementStrategy(_traversalCounter%5==0);
-  }
   _localState = solverState;
 \end{code}
 
 \noindent
-and we futhermore hold per rank per mapping a copy of the state to be able to
-evaluate it throughout the traversal.
+and we furthermore plug into the mapping's \texttt{endIteration} on modify this
+global state on the global master. 
+It has to be the global master as only the global master may ask the node pool
+about idle nodes. 
+Furthermore, it knows the (fork/join) state of all other ranks.
+It is important to plug into \texttt{endIteration}, as this is the earliest
+point where we have all information about the grid state at hands. 
+The underlying status variables all are accumulated, i.e.~they might be already
+cleared in the subsequent \texttt{beginIteration}:
+\begin{code}
+  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
+    solverState.updateRegularInitialGridRefinementStrategy();
+  }
+\end{code}
+
+\noindent
 The state transitions then are
 \begin{code}
-void myproject::State::updateRegularInitialGridRefinementStrategy(bool isFifthIteration) { 
+void exahype::State::updateRegularInitialGridRefinementStrategy() {
   assertion( tarch::parallel::Node::getInstance().isGlobalMaster() );
 
   #ifdef Parallel
   if (
-    tarch::parallel::Node::getInstance().getNumberOfNodes()>1
-    &&
+    tarch::parallel::Node::getInstance().getNumberOfNodes()==1
+    ||
+    _stateData.getGridConstructionState()==exahype::records::State::Aggressive
+  ) {
+    _stateData.setGridConstructionState( exahype::records::State::Aggressive );
+  }
+  else if (
     tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()==0
     &&
-    isGridBalanced()
+    isGridStationary()
   ) {
-    _stateData.setGridConstructionState( myproject::records::State::Aggressive );
+    _stateData.setGridConstructionState( exahype::records::State::Aggressive );
   }
-  else if (!isFifthIteration && tarch::parallel::Node::getInstance().getNumberOfNodes()>1) {
-    _stateData.setGridConstructionState( myproject::records::State::Veto );
+  else if (
+    isInvolvedInJoinOrFork()
+    ||
+    !isTraversalInverted()
+    ||
+    !isGridStationary()
+  ) {
+    _stateData.setGridConstructionState( exahype::records::State::Veto );
   }
   else {
-    _stateData.setGridConstructionState( myproject::records::State::Default );
+    _stateData.setGridConstructionState( exahype::records::State::Default );
   }
   #endif
 }
