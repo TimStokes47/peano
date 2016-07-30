@@ -5,9 +5,10 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
-#ifdef Parallel
 #include "tarch/parallel/Node.h"
 #include "tarch/parallel/NodePool.h"
+
+#ifdef Parallel
 #include "peano/parallel/SendReceiveBufferPool.h"
 #include "peano/parallel/loadbalancing/Oracle.h"
 #endif

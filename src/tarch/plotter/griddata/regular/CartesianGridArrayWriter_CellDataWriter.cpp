@@ -43,6 +43,15 @@ void tarch::plotter::griddata::regular::CartesianGridArrayWriter::CellDataWriter
 }
 
 
+void tarch::plotter::griddata::regular::CartesianGridArrayWriter::CellDataWriter::plotCell( int index, double* values, int numberOfValues ) {
+  for (int i=0; i<numberOfValues; i++) {
+    if (values[i]<_minValue) _minValue = values[i];
+    if (values[i]>_maxValue) _maxValue = values[i];
+    _dataSet._data[ index * _dataSet._recordsPerEntry + i] = values[i];
+  }
+}
+
+
 double tarch::plotter::griddata::regular::CartesianGridArrayWriter::CellDataWriter::getMinValue() const {
   return _minValue;
 }

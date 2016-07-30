@@ -242,6 +242,54 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataW
 }
 
 
+void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataWriter::plotCell( int index, double* values, int numberOfValues ) {
+  assertion(_lastWriteCommandCellNumber>=-1);
+  assertion(numberOfValues<=_recordsPerCell);
+
+  for( int i=0; i<numberOfValues; i++) {
+    assertion1( values[i] != std::numeric_limits<double>::infinity(), values[i] );
+    assertion1( values[i] == values[i], values[i] );  // test for not a number
+  }
+
+  while (_lastWriteCommandCellNumber<index-1) {
+    plotCell(_lastWriteCommandCellNumber+1,0.0);
+  }
+
+  _lastWriteCommandCellNumber = index;
+
+  if (_myWriter._precision < 7){
+    float tmp;
+    for( int i=0; i<numberOfValues; i++) {
+      tmp = values[i];
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
+    tmp = 0.0;
+    for (int i=numberOfValues; i<_recordsPerCell; i++) {
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
+  } else {
+    double tmp;
+    for( int i=0; i<numberOfValues; i++) {
+      tmp = values[i];
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
+    tmp = 0.0;
+    for (int i=numberOfValues; i<_recordsPerCell; i++) {
+      tmp = byteSwapForParaviewBinaryFiles(tmp);
+      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    }
+  }
+
+  for( int i=0; i<numberOfValues; i++) {
+    if (values[i]<_minValue) _minValue = values[i];
+    if (values[i]>_maxValue) _maxValue = values[i];
+  }
+}
+
+
 double tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataWriter::getMinValue() const {
   return _minValue;
 }

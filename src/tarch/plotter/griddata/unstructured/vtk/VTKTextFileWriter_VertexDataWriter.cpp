@@ -157,6 +157,35 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
 }
 
 
+void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataWriter::plotVertex( int index, double* values, int numberOfValues ) {
+  assertion(_lastWriteCommandVertexNumber>=-1);
+  assertion(numberOfValues<=_recordsPerVertex);
+
+  for( int i=0; i<numberOfValues; i++) {
+    assertion1( values[i] != std::numeric_limits<double>::infinity(), values[i] );
+    assertion1( values[i] == values[i], values[i] );  // test for not a number
+  }
+
+  while (_lastWriteCommandVertexNumber<index-1) {
+    plotVertex(_lastWriteCommandVertexNumber+1,0.0);
+  }
+
+  _lastWriteCommandVertexNumber = index;
+
+  for( int i=0; i<numberOfValues; i++) {
+    _out << values[i] << " ";
+  }
+  for (int i=numberOfValues; i<_recordsPerVertex; i++) {
+    _out << 0.0 << " ";
+  }
+
+  for( int i=0; i<numberOfValues; i++) {
+    if (values[i]<_minValue) _minValue = values[i];
+    if (values[i]>_maxValue) _maxValue = values[i];
+  }
+}
+
+
 double tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataWriter::getMinValue() const {
   return _minValue;
 }

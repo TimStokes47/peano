@@ -200,6 +200,7 @@ class tarch::plotter::griddata::regular::CartesianGridArrayWriter:
         virtual void plotCell( int index, double value );
         virtual void plotCell( int index, const tarch::la::Vector<2,double>& value );
         virtual void plotCell( int index, const tarch::la::Vector<3,double>& value );
+        virtual void plotCell( int index, double* values, int numberOfValues );
 
         virtual double getMinValue() const;
         virtual double getMaxValue() const;
@@ -238,6 +239,7 @@ class tarch::plotter::griddata::regular::CartesianGridArrayWriter:
         virtual void plotVertex( int index, double value );
         virtual void plotVertex( int index, const tarch::la::Vector<2,double>& value );
         virtual void plotVertex( int index, const tarch::la::Vector<3,double>& value );
+        virtual void plotVertex( int index, double* values, int numberOfValues );
 
         virtual double getMinValue() const;
         virtual double getMaxValue() const;

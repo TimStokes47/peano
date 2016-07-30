@@ -179,6 +179,35 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWri
 }
 
 
+void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::plotCell( int index, double* values, int numberOfValues ) {
+  assertion(_lastWriteCommandCellNumber>=-1);
+  assertion(numberOfValues<=_recordsPerCell);
+
+  for( int i=0; i<numberOfValues; i++) {
+    assertion1( values[i] != std::numeric_limits<double>::infinity(), values[i] );
+    assertion1( values[i] == values[i], values[i] );  // test for not a number
+  }
+
+  while (_lastWriteCommandCellNumber<index-1) {
+    plotCell(_lastWriteCommandCellNumber+1,0.0);
+  }
+
+  _lastWriteCommandCellNumber = index;
+  for( int i=0; i<numberOfValues; i++) {
+    _out << values[i] << " ";
+  }
+  for (int i=numberOfValues; i<_recordsPerCell; i++) {
+    _out << 0.0 << " ";
+  }
+  _out << std::endl;
+
+  for( int i=0; i<numberOfValues; i++) {
+    if (values[i]<_minValue) _minValue = values[i];
+    if (values[i]>_maxValue) _maxValue = values[i];
+  }
+}
+
+
 double tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::getMinValue() const {
   return _minValue;
 }

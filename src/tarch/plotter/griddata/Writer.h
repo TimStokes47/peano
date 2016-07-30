@@ -80,6 +80,7 @@ class tarch::plotter::griddata::Writer {
         virtual void plotCell( int index, double value ) = 0;
         virtual void plotCell( int index, const tarch::la::Vector<2,double>& value ) = 0;
         virtual void plotCell( int index, const tarch::la::Vector<3,double>& value ) = 0;
+        virtual void plotCell( int index, double* values, int numberOfValues ) = 0;
 
         virtual double getMinValue() const = 0;
         virtual double getMaxValue() const = 0;
@@ -115,6 +116,7 @@ class tarch::plotter::griddata::Writer {
         virtual void plotVertex( int index, double value ) = 0;
         virtual void plotVertex( int index, const tarch::la::Vector<2,double>& value ) = 0;
         virtual void plotVertex( int index, const tarch::la::Vector<3,double>& value ) = 0;
+        virtual void plotVertex( int index, double* values, int numberOfValues ) = 0;
 
         virtual double getMinValue() const = 0;
         virtual double getMaxValue() const = 0;
