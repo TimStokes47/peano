@@ -154,3 +154,67 @@ myproject::repositories::Repository* repository =
   tarch::la::Vector<DIMENSIONS,double>(-1.0/7.0)   // has been 0.0 before
   computationalDomainOffset );
 \end{code}
+
+
+
+\subsection{Work with better balanced domains}
+
+\noindent
+Peano controls its load balancing via MPI oracles and a node pool strategy. 
+On the long term, there is almost no way around tailored MPI domain
+decomposition routines.
+There is however a mpi balancing toolbox that provides some generic load
+balancing routines that are superior to the default implementations in the
+kernel.
+So it can be wise to try out these (and perhaps use them as starting point for
+better load balancing).
+
+\begin{smell}
+  The load balancing yields a strongly irregular load decomposition though the
+  problem is very regular and geometrically simple.
+\end{smell}
+
+\noindent
+With the help of the performance analysis such a behaviour materialises in
+ill-balanced logical topology graphs.
+The visualisation should, for a regular domain and a regular grid, yield a
+tree-type graph where most ranks with the same distance from the root node 0
+have roughly the same number of children.
+
+\begin{center} 
+  \includegraphics[width=0.4\textwidth]{62_quick-tuning/topology.pdf}
+  \includegraphics[width=0.4\textwidth]{62_quick-tuning/local-cells.pdf}
+\end{center}
+
+\noindent
+Another smell indicator is a fork table where too many levels are actually
+populated. 
+If you have a regular grid on the unit square---you might already use a slightly
+modified bounding box; in this case you have to adopt the esimates---1 nodes
+should be used on level 1, 8 nodes should be used on level 2, $8 \cdot 8$ nodes
+should be used on level 3, and so forth.
+If level 4 and 5 for example are used while level 3 comes along with smaller
+fork counts, it might be that one rank in the domain forks aggressively and
+leaves no idle ranks for the other ranks working on other subpartitions.
+
+A third indicator for such a behaviour is the overview over the local cells.
+All local cell counts should roughly be in the same order of magnitude. 
+At least there should not be many groups of ranks with different cell counts.
+In the picture above, this does not hold.
+It implies that we have ill-balanced partitions.
+
+To solve the problem, you can use one of the \texttt{Balancing} classes from the
+toolbox \texttt{mpibalancing} in your \texttt{runAsMaster} routine.
+Please consult their header for detailed information on the class behaviour.
+
+\begin{code}
+peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
+  new mpibalancing::StaticBalancing(false)
+);
+\end{code}
+
+
+
+\subsection{Avoid races for idle ranks}
+
+@todo hier auch was rein zu machine-specific lb
