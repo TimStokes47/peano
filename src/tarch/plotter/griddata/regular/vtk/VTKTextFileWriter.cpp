@@ -120,5 +120,8 @@ void tarch::plotter::griddata::regular::vtk::VTKTextFileWriter::writeToFile( con
 
     _writtenToFile = true;
   }
+  else {
+    logError( "writeToFile(filename)", "failed to write to file " << filename );
+  }
   logTraceOut( "writeToFile(filename)" );
 }

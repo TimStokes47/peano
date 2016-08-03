@@ -12,23 +12,29 @@ std::string peano::parallel::loadbalancing::convertLoadBalancingFlagToString(int
 
   std::ostringstream result;
   switch (flag) {
+    case ContinueButTryToJoinWorkers:
+      result << "continue-but-try-to-join-workers";
+      break;
     case Continue:
-      result << "Continue";
+      result << "continue";
       break;
     case Join:
-      result << "Join";
+      result << "join";
+      break;
+    case UndefinedLoadBalancingFlag:
+      result << "undefined-lb-flag";
       break;
     case ForkOnce:
-      result << "ForkOnce";
+      result << "Fork-once";
       break;
     case ForkGreedy:
-      result << "ForkGreedy";
+      result << "Fork-greedy";
       break;
     case ForkAllChildrenAndBecomeAdministrativeRank:
-      result << "ForkAllChildrenAndBecomeAdministrativeRank";
+      result << "fork-all-children/become-administrative-rank";
       break;
     default:
-      result << "Fork-" << static_cast<int>(flag) << "-Times";
+      result << "fork-" << static_cast<int>(flag) << "-times";
       break;
   }
   return result.str();
