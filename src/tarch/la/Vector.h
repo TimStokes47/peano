@@ -154,6 +154,19 @@ struct tarch::la::Vector {
 
     template <typename NewScalarType>
     tarch::la::Vector<Size,NewScalarType> convertScalar() const;
+
+    /**
+     * This routine returns a pointer to the first data element. Not a
+     * beautiful one as it harms the OO idea, but in many cases it is
+     * convenient to have this operation.
+     */
+    Scalar* data() {
+      return _values;
+    }
+
+    const Scalar *  data() const {
+      return _values;
+    }
 };
 
 
