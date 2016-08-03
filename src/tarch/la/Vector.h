@@ -97,7 +97,7 @@ struct tarch::la::Vector {
       #endif
       {
         assertion3 ( index >= 0, index, Size, toString() );
-        assertion3 ( index < Size, index, Size, toString() );
+        assertion4 ( index < Size, index, Size, toString(), "you may not take the indexth entry from a vector with only Size components" );
         return _values[index];
       }
 
