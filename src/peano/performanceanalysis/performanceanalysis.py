@@ -4,6 +4,7 @@ import matplotlib
 matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 import pylab
 import networkx 
+import datetime
 
 
 
@@ -1165,6 +1166,7 @@ outFile.write(
   "<html>\
      <body>\
      <h1>Peano Performance Report</h1>\
+     <p>Report time stamp: " + str(datetime.datetime.utcnow()) + "</p>\
      <p>Peano's default performance analysis</p>\
      <p>Author: Tobias Weinzierl</p>\
      <p>Data file: " + inputFileName + "</p>\
