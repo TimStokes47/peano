@@ -3,6 +3,7 @@ from argparse import RawTextHelpFormatter
 
 import pylab
 import networkx
+import datetime
 
 
 def getNumberOfRanks():
@@ -45,6 +46,19 @@ parser.add_argument('-dimension',required=True,help="Dimension of problem. Eithe
 parser.add_argument('-domainoffset',nargs="+",required=True,help="Offset of bounding box.")
 parser.add_argument('-domainsize',nargs="+",required=True,help="Size of domain's bounding box.")
 args   = parser.parse_args();
+
+
+outputFileName  = args.file + ".html"
+outFile        = open( outputFileName, "w" )
+outFile.write( 
+  "<html>\
+     <body>\
+     <h1>Peano Domain Decomposition Report</h1>\
+     <p>Report time stamp: " + str(datetime.datetime.utcnow()) + "</p>\
+     <p>Author: Tobias Weinzierl</p>\
+     <p>Data file: " + args.file + "</p>\
+  ")
+
 
 dim = int(args.dimension)
 
@@ -114,6 +128,8 @@ networkx.draw(
 )
 pylab.savefig( args.file + ".topology.png" )
 pylab.savefig( args.file + ".topology.pdf" )
+outFile.write( "<h2>Logical topology</h2>" )
+outFile.write( "<img src=\"" + args.file + ".topology.png\" />" )
 print " done "
 
 
@@ -219,10 +235,14 @@ ax.autoscale_view()
 ax.set_yscale('symlog', basey=10)
 pylab.savefig( args.file + ".work.png" )
 pylab.savefig( args.file + ".work.pdf" )
+outFile.write( "<h2>Work statistics</h2>" )
+outFile.write( "<img src=\"" + args.file + ".work.png\" />" )
+outFile.write( "<p>The filled region is the actual local work volume of a rank. It has to be smaller than the region of responsibility that might overlap the actual domain.</p>" )
 print "done"
 
 
 if dim==2:
+ outFile.write( "<h2>Domain decomposition (level by level)</h2>" )
  for l in range(1,maxLevel):
   print "plot domain decomposition on level " + str(l),
   pylab.clf()
@@ -237,10 +257,16 @@ if dim==2:
         offset[i][1] + volume[i][1]/2,
         str(i)
       )
-      print "\noffset=" + str(offset[i]) + ", volume=" + str(volume[i]),
+      #print "\noffset=" + str(offset[i]) + ", volume=" + str(volume[i]),
   print ".",
   pylab.xlim( float(args.domainoffset[0]), float(args.domainoffset[0])+float(args.domainsize[0]) )
   pylab.ylim( float(args.domainoffset[1]), float(args.domainoffset[1])+float(args.domainsize[1]) )
   pylab.savefig( args.file + ".level" + str(l) + ".png" )
   pylab.savefig( args.file + ".level" + str(l) + ".pdf" )
+  outFile.write( "<img src=\"" + args.file + ".level" + str(l) + ".png\" />" )
   print "done"
+ 
+ 
+outFile.write( "</html>" )
+
+  
