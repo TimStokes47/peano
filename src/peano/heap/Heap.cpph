@@ -395,7 +395,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   int                                           level,
   MessageType                                   messageType
 ) {
-  const std::vector< Data >  receivedData = receiveData(fromRank, position, level, toString(messageType));
+  const std::vector< Data >  receivedData = receiveData(fromRank, position, level, messageType);
   std::vector< Data >&       localData    = getData(index);
   localData.insert( localData.end(), receivedData.begin(), receivedData.end() );
   return static_cast<int>( receivedData.size() );
