@@ -266,6 +266,12 @@ void myproject::mappings::RegularMesh::refineVertexIfNecessary(
 }
 \end{code}
 
+\begin{remark}
+If you decide to activate your grid refinement only every second iteration
+(\texttt{isTraversalInverted}), then it makes sense to do always two iterations
+in the loop body that runs the grid construction steps until
+\texttt{isGridBalanced} holds. This way, you never miss a refinement. 
+\end{remark}
 
 
 

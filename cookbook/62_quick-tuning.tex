@@ -155,6 +155,17 @@ myproject::repositories::Repository* repository =
   computationalDomainOffset );
 \end{code}
 
+\begin{remark}
+If you use non-cubic domains, you have to scale both quantities with the size of
+the domain's bounding box.
+If you know a prior how many regular levels your grid will have, then you should
+choose the bounding box such that one cell of the finest grid overlaps into the
+outer region. 
+In the example above, the minimal level would be two.
+If you use a tailored/sophisticated load balancing oracle, this oracle should be
+aware of this level as well.
+\end{remark}
+
 
 
 \subsection{Work with better balanced domains}
@@ -214,6 +225,36 @@ peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
 \end{code}
 
 
+\subsection{Increase the grid regularity}
+
+If grid parts change or are strongly adaptive, Peano does not decompose these
+grid regions through MPI. 
+Furthermore, most load balancing strategies can quickly decompose regular grid
+levels, while decomposing adaptive regions is tricky.
+
+\begin{center}
+  \includegraphics[width=0.6\textwidth]{62_quick-tuning/regularity.pdf}
+\end{center}
+
+\noindent
+In the example above, Peano often struggles to split up the boundary as the
+adaptivity pattern around the boundary is complex.
+We often end up with a situation where the whole boundary ends up on one rank.
+If we increase the grid regularity manually (right example), the scaling
+improves.
+
+\begin{smell}
+  The domain decomposition works properly. Nevertheless, some ranks responsible
+  for the boundary are slow (w.r.t.~boundary data exchange) though they are
+  properly balanced.
+\end{smell}
+
+\noindent
+To increase the regularity, you can manually tailor your adaptivity criterion or
+you can increase the value returned by the oracles.
+They prescribe a maximum regularity level that is also anticipated outside of
+the domain and thus avoids adaptive grids outside of $\Omega $ up to a certain
+level.
 
 \subsection{Avoid races for idle ranks}
 
