@@ -214,10 +214,16 @@ pylab.figure(figsize=(numberOfRanks/10,4))
 ranks = [x for x in range(0,numberOfRanks)]
 
 print ".",
-pylab.plot(ranks, volumes, '-o', label="area of responsibility", markevery=numberOfRanks/10, color='#000000', markersize=10)
+_markevery = numberOfRanks
+if numberOfRanks>11:
+  _markevery = _markevery / 11
+pylab.plot(ranks, volumes, '-o', label="area of responsibility", markevery=_markevery, color='#000000', markersize=10)
 
 print ".",
-pylab.plot(ranks, overlaps, '-s', label="area of responsibility $\cap \Omega$", markevery=numberOfRanks/11, color='#ff0000', markersize=10)
+_markevery = numberOfRanks
+if numberOfRanks>11:
+  _markevery = _markevery / 11
+pylab.plot(ranks, overlaps, '-s', label="area of responsibility $\cap \Omega$", markevery=_markevery, color='#ff0000', markersize=10)
 
 print ".",
 #pylab.plot(ranks, work, '-v', label="work", markevery=numberOfRanks/12, color='#0000bb', markersize=10)
