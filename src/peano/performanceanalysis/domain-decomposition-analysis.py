@@ -250,7 +250,7 @@ if dim==2:
   for i in range(0,numberOfRanks):
     if level[i]==l:
       print ".",
-      pylab.gca().add_patch(pylab.Rectangle(offset[i], volume[i][0]*0.9, volume[i][1]*0.9, color="#aabbaa"))
+      pylab.gca().add_patch(pylab.Rectangle(offset[i]+(volume[i][0]*0.01,volume[i][0]*0.01), volume[i][0]*0.98, volume[i][1]*0.98, color="#aabbaa"))
       
       pylab.text(
         offset[i][0] + volume[i][0]/2,
