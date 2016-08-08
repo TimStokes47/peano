@@ -210,6 +210,7 @@ print " done "
 
 print "plot ",
 pylab.clf()
+pylab.figure(figsize=(numberOfRanks/10,4))
 ranks = [x for x in range(0,numberOfRanks)]
 
 print ".",
@@ -221,6 +222,12 @@ pylab.plot(ranks, overlaps, '-s', label="area of responsibility $\cap \Omega$", 
 print ".",
 #pylab.plot(ranks, work, '-v', label="work", markevery=numberOfRanks/12, color='#0000bb', markersize=10)
 pylab.fill_between(ranks, work, color='#0000bb', alpha=0.4)
+
+maxLocalWork = max(work)
+for i in range(0,numberOfRanks):
+  if work[i]>maxLocalWork/10:
+    pylab.text(i,volumes[i]+10,str(i))
+    pylab.plot([i,i], [0, volumes[i]], '--', color="#000000")
 
 pylab.xlabel('rank')
 pylab.ylabel('$\Omega $')
