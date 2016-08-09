@@ -79,7 +79,7 @@ class peano::parallel::loadbalancing::Oracle {
     /**
      * Typically of type LoadBalancingFlag.
      */
-    int                                      _startCommand;
+    peano::parallel::loadbalancing::LoadBalancingFlag  _startCommand;
 
     bool                                     _loadBalancingActivated;
 
@@ -198,7 +198,7 @@ class peano::parallel::loadbalancing::Oracle {
      *
      * @param commandFromMaster Usually is a value from the enum LoadBalancingFlag
      */
-    void receivedStartCommand(int commandFromMaster);
+    void receivedStartCommand(peano::parallel::loadbalancing::LoadBalancingFlag commandFromMaster);
 
     /**
      * Return last start command
@@ -208,7 +208,7 @@ class peano::parallel::loadbalancing::Oracle {
      *
      * @see forkFailed()
      */
-    int getLastStartCommand() const;
+    peano::parallel::loadbalancing::LoadBalancingFlag getLastStartCommand() const;
 
     /**
      * Get the command for a worker
@@ -221,26 +221,7 @@ class peano::parallel::loadbalancing::Oracle {
      * @param workerRank Rank of the worker for which the load balancing would
      *                   be interested in a command
      */
-    int getCommandForWorker( int workerRank, bool forkIsAllowed = true, bool joinIsAllowed = true);
-
-    /**
-     * Notification mechanism that the master is finished. This might not be
-     * sent after a getCommandForWorker() call if the bottom-up communication
-     * is switched off.
-     */
-    void receivedTerminateCommand(
-      int     workerRank,
-      double  workerNumberOfInnerVertices,
-      double  workerNumberOfBoundaryVertices,
-      double  workerNumberOfOuterVertices,
-      double  workerNumberOfInnerCells,
-      double  workerNumberOfOuterCells,
-      int     workerMaxLevel,
-      int     currentLevel,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
-      bool    workerCouldNotEraseDueToDecomposition
-    );
+    peano::parallel::loadbalancing::LoadBalancingFlag getCommandForWorker( int workerRank, bool forkIsAllowed = true, bool joinIsAllowed = true);
 
     /**
      * Notifies the oracle that from now on, the master starts to wait for workers.

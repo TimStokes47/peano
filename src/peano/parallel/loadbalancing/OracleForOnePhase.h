@@ -20,7 +20,7 @@ namespace peano {
       /**
        * Represents action to be done.
        */
-      enum LoadBalancingFlag {
+      enum class LoadBalancingFlag {
         ContinueButTryToJoinWorkers=-3,
         Continue=-2,
         Join=-1,
@@ -30,7 +30,7 @@ namespace peano {
         ForkAllChildrenAndBecomeAdministrativeRank=THREE_POWER_D
       };
 
-      std::string convertLoadBalancingFlagToString(int flag);
+      std::string convertLoadBalancingFlagToString(LoadBalancingFlag flag);
     }
   }
 }
@@ -44,7 +44,7 @@ namespace peano {
  * their work, shall merge their domains with their master (where this
  * oracle is running on), or whether they should try to fork further. The
  * important operations of this class are OracleForOnePhase::receivedStartCommand(),
- * OracleForOnePhase::getCommandForWorker(), and OracleForOnePhase::receivedTerminateCommand().
+ * OracleForOnePhase::getCommandForWorker().
  *
  * @image html peano/parallel/loadbalancing/OracleForOnePhase0.png
  *
@@ -78,7 +78,7 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      *
      * @param commandFromMaster Usually is a value from the enum LoadBalancingFlag
      */
-    virtual void receivedStartCommand( int commandFromMaster ) = 0;
+    virtual void receivedStartCommand( LoadBalancingFlag commandFromMaster ) = 0;
 
     /**
      * Get command for one single worker
@@ -89,12 +89,7 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      * with the master. The latter is not allowed all the time, i.e. if
      * joinIsAllowed is not set, please do not return Join as result.
      *
-     * The operation provides a way to implement dynamic load balancing. You
-     * always are notices by receivedTerminateCommand() how long a worker has
-     * needed to complete its tasks. This is the right plugin point for an
-     * oracle for one phase to keep track of the runtimes. If a worker is too
-     * slow, you should pass im a fork command the next time it is asking for
-     * getCommandForWorker().
+     * The operation provides a way to implement dynamic load balancing.
      *
      * There is one oracle per phase, i.e. per adapter. Usually, one or two
      * different adapter coin the runtime, while others have completely different
@@ -108,88 +103,18 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      * When you design your load balancing, please keep in mind that the whole
      * Peano code defines a logical tree topology on all the ranks, and that the
      * oracles are not working globally but do exist on each MPI rank. This
-     * directly yields the design of getCommandForWorker() and
-     * receivedTerminateCommand(): The global automaton runs through the spacetree
+     * directly yields the design of getCommandForWorker(): The global automaton runs through the spacetree
      * (or regular grid) top-down. Throughout the top-down steps or traversal,
      * respectively, it invokes getCommandForWorker() for its workers. They then
      * start to traverse their own stuff (and to invoke their own workers in
      * turn). When the local tree/grid is traversed, the node waits for its
-     * workers and, as soon as they have finished their stuff, calls
-     * receivedTerminateCommand().
+     * workers and, as soon as they have finished their stuff, invoked the mapping's
+     * receiveDataFromWorker command that you might wanna use to instruct your
+     * oracle on further load balancing decisions.
      *
      * @see Oracle
-     * @see receivedTerminateCommand()
      */
-    virtual int getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed ) = 0;
-
-    /**
-     * Information about termination call
-     *
-     * Is called whenever the master receives the acknowledgement from the
-     * worker that the latter has finished its local traversal. Provides
-     * statistics that you might want to bookkeep for load balancing. All t
-     * the workload doubles stem from the cells' workload. See
-     * Cell::setNodeWorkload() to adopt these figures to your own workload
-     * model.
-     *
-     * @see receivedStartCommand()
-     * @see getCommandForWorker()
-     * @see Oracle
-     *
-     * @param workerRank   Rank of the worker that has just reported that it
-     *                     finished its traversal.
-     * @param workerNumberOfInnerVertices  Number of inner vertices handled by
-     *                     this worker. If you require the total number, you
-     *                     have to feed your oracle manually within
-     *                     endIteration(). Here, you have access to the state
-     *                     object holding the total numbers.
-     * @param workerNumberOfBoundaryVertices Number of boundary vertices
-     *                     handled by this worker.
-     * @param workerNumberOfOuterVertices Number of outer vertices handled by
-     *                     this worker.
-     * @param workerNumberOfInnerCells Number of inner cells handled by
-     *                     this worker.
-     * @param workerNumberOfOuterCells Number of outer cells handled by this
-     *                     worker.
-     * @param workerMaxLevel Maximum level handled by the worker. If you
-     *                     compare it to current level, you have information
-     *                     about the height of the worker tree.
-     * @param workerLocalWorkload The workload handled by the worker. This is
-     *                     the worker's local workload, i.e. if the worker has
-     *                     forked itself again, workload of these children is
-     *                     not contained within this figure.
-     * @param workerTotalWorkload The workload represented by the worker. This
-     *                     number is equal to workerLocalWorkload if the worker
-     *                     has not forked again, i.e. if it does not have any
-     *                     children. Otherwise, total workload comprises both
-     *                     the worker's workload and those of its children.
-     * @param currentLevel Current level, i.e. level of the root cell of the
-     *                     worker partition.
-     * @param parentCellLocalWorkload Local workload of the next coarser cell
-     *                     on this rank. This number does not comprise workload
-     *                     of any worker, i.e. it does in particular neither
-     *                     comprise workerLocalWorkload nor
-     *                     workerTotalWorkload.
-     * @param parentCellTotalWorkload Total workload of the next coarser cell
-     *                     comprising the ranks workload of the whole tree
-     *                     induced by this cell plus the workloads of all
-     *                     forked subtrees.
-     * @param boundingBoxOffset Bounding box of this worker subtree.
-     * @param boundingBoxSize   Bounding box of this worker subtree.
-     */
-    virtual void receivedTerminateCommand(
-      int     workerRank,
-      double  workerNumberOfInnerVertices,
-      double  workerNumberOfBoundaryVertices,
-      double  workerNumberOfOuterVertices,
-      double  workerNumberOfInnerCells,
-      double  workerNumberOfOuterCells,
-      int     workerMaxLevel,
-      int     currentLevel,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
-      bool    workerCouldNotEraseDueToDecomposition
-    ) = 0;
+    virtual LoadBalancingFlag getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed ) = 0;
 
     /**
      * Plot something to info log device.

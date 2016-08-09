@@ -54,21 +54,23 @@ class peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch {
 
     State&                                     _state;
 
-#if defined(SharedMemoryParallelisation)
+    #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
     EventHandle                                                 _threadLocalEventHandle;
-#else
+    #else
     EventHandle&                                                _eventHandle;
     EventHandle&                                                _threadLocalEventHandle;
-#endif
+    #endif
 
     peano::grid::RegularGridContainer<Vertex,Cell>&  _regularGridContainer;
 
+    #ifdef TrackGridStatistics
     double _numberOfInnerCells;
     double _numberOfOuterCells;
 
     double _numberOfInnerLeafCells;
     double _numberOfOuterLeafCells;
+    #endif
 
     UnrolledLevelEnumerator  _fineGridEnumerator;
     UnrolledLevelEnumerator  _coarseGridEnumerator;

@@ -6,31 +6,31 @@
 #include <sstream>
 
 
-std::string peano::parallel::loadbalancing::convertLoadBalancingFlagToString(int flag) {
-  assertion1( flag>=ContinueButTryToJoinWorkers, flag );
-  assertion1( flag<=ForkAllChildrenAndBecomeAdministrativeRank, flag );
+std::string peano::parallel::loadbalancing::convertLoadBalancingFlagToString(LoadBalancingFlag flag) {
+  assertion( static_cast<int>(flag)>=static_cast<int>(LoadBalancingFlag::ContinueButTryToJoinWorkers) );
+  assertion( static_cast<int>(flag)<=static_cast<int>(LoadBalancingFlag::ForkAllChildrenAndBecomeAdministrativeRank) );
 
   std::ostringstream result;
   switch (flag) {
-    case ContinueButTryToJoinWorkers:
+    case LoadBalancingFlag::ContinueButTryToJoinWorkers:
       result << "continue-but-try-to-join-workers";
       break;
-    case Continue:
+    case LoadBalancingFlag::Continue:
       result << "continue";
       break;
-    case Join:
+    case LoadBalancingFlag::Join:
       result << "join";
       break;
-    case UndefinedLoadBalancingFlag:
+    case LoadBalancingFlag::UndefinedLoadBalancingFlag:
       result << "undefined-lb-flag";
       break;
-    case ForkOnce:
+    case LoadBalancingFlag::ForkOnce:
       result << "Fork-once";
       break;
-    case ForkGreedy:
+    case LoadBalancingFlag::ForkGreedy:
       result << "Fork-greedy";
       break;
-    case ForkAllChildrenAndBecomeAdministrativeRank:
+    case LoadBalancingFlag::ForkAllChildrenAndBecomeAdministrativeRank:
       result << "fork-all-children/become-administrative-rank";
       break;
     default:

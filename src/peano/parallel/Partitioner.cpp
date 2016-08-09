@@ -65,17 +65,12 @@ void peano::parallel::Partitioner::reserveNodes() {
   #ifdef Parallel
   assertionEquals( _ranks.size(), 0 );
   assertion(peano::parallel::messages::ForkMessage::Datatype!=0);
-  assertion(
-    (peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()>=peano::parallel::loadbalancing::ForkOnce)
-    ||
-    tarch::parallel::Node::getInstance().isGlobalMaster()
-  );
   #endif
 
   const int NodesToBook = static_cast<int>(peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand());
         int LocalCells  = static_cast<int>(_localCellsOfPatch.count());
 
-  if (NodesToBook!=peano::parallel::loadbalancing::ForkAllChildrenAndBecomeAdministrativeRank) {
+  if (NodesToBook!=static_cast<int>(peano::parallel::loadbalancing::LoadBalancingFlag::ForkAllChildrenAndBecomeAdministrativeRank)) {
     LocalCells--;
   }
 

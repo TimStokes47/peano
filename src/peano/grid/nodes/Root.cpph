@@ -112,8 +112,10 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     createFineGridCellsAndFillCellStacks();
   }
   
+  #ifdef TrackGridStatistics
   state.incNumberOfOuterCells(THREE_POWER_D+1);
   state.incNumberOfOuterVertices(TWO_POWER_D+FOUR_POWER_D-TWO_POWER_D);
+  #endif
   state.updateRefinementHistoryAfterLoad( true, false, false, true );
 
   logTraceOut( "restart()" );

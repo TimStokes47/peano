@@ -434,7 +434,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
   #ifdef Parallel
   if (
     peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated() &&
-    (peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()>=peano::parallel::loadbalancing::ForkOnce) &&
+    (static_cast<int>(peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand())>=static_cast<int>(peano::parallel::loadbalancing::LoadBalancingFlag::ForkOnce)) &&
     state.reduceDataToMaster()
   ) {
     const std::bitset<THREE_POWER_D> localInnerCells =

@@ -53,13 +53,13 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
     int*                                      _counter;
     VertexStack&                              _vertexStack;
 
-#if defined(SharedMemoryParallelisation)
+    #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
     EventHandle                                                 _threadLocalEventHandle;
-#else
+    #else
     EventHandle&                                                _eventHandle;
     EventHandle&                                                _threadLocalEventHandle;
-#endif
+    #endif
 
     /**
      * Usually, the geometry should be const. See getters of geometry for a
@@ -67,7 +67,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      */
     peano::geometry::Geometry&                _geometry;
 
-
+    #ifdef TrackGridStatistics
     double _numberOfInnerVertices;
     double _numberOfBoundaryVertices;
     double _numberOfOuterVertices;
@@ -75,6 +75,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
     double _numberOfInnerLeafVertices;
     double _numberOfBoundaryLeafVertices;
     double _numberOfOuterLeafVertices;
+    #endif
 
     bool   _hasRefined;
     bool   _hasErased;

@@ -182,6 +182,7 @@ class peano::grid::State {
      */
     void toString(std::ostream& out) const;
 
+    #ifdef TrackGridStatistics
     /**
      * @see getMaximumMeshWidth() for comments on the validity of the result
      */
@@ -310,6 +311,7 @@ class peano::grid::State {
     void incNumberOfOuterLeafVertices( double increment  );
     void incNumberOfInnerLeafCells( double increment );
     void incNumberOfOuterLeafCells( double incrementLeaf );
+    #endif
 
     bool isTraversalInverted() const;
 

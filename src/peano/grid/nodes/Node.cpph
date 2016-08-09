@@ -193,20 +193,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
       fineGridCell.setRemoteCellWorkloadAndSubtreeFlags(receivedWorkerCell);
 
-      peano::parallel::loadbalancing::Oracle::getInstance().receivedTerminateCommand(
-        currentWorker,
-        workerState.getNumberOfInnerVertices(),
-        workerState.getNumberOfBoundaryVertices(),
-        workerState.getNumberOfOuterVertices(),
-        workerState.getNumberOfInnerCells(),
-        workerState.getNumberOfOuterCells(),
-        workerState.getMaxLevel(),
-        fineGridVerticesEnumerator.getLevel(),
-        workerEnumerator.getVertexPosition(),
-        workerEnumerator.getCellSize(),
-        workerState.getCouldNotEraseDueToDecompositionFlag()
-      );
-
       // Does not hold if heaps are used
       // tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
     }
@@ -299,10 +285,12 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     peano::parallel::messages::LoadBalancingMessage loadBalancingMessage;
 
     loadBalancingMessage.setLoadBalancingFlag(
+      static_cast<int>(
       peano::parallel::loadbalancing::Oracle::getInstance().getCommandForWorker(
         currentWorker,
         state.mayForkDueToLoadBalancing(),
         state.mayJoinDueToLoadBalancing() && !fineGridCell.thisSubtreeHoldsWorker()
+      )
       )
     );
 
@@ -312,7 +300,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       loadBalancingMessage.toString()
     );
 
-    if (loadBalancingMessage.getLoadBalancingFlag()==peano::parallel::loadbalancing::Join) {
+    if (loadBalancingMessage.getLoadBalancingFlag()==static_cast<int>(peano::parallel::loadbalancing::LoadBalancingFlag::Join) ) {
       state.joinWithRank(currentWorker);
 
       peano::parallel::JoinDataBufferPool::getInstance().createVertexBufferManually<Vertex>( true, currentWorker );
@@ -331,7 +319,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       currentWorker
     );
 
-    if (loadBalancingMessage.getLoadBalancingFlag()!=peano::parallel::loadbalancing::Continue) {
+    if (loadBalancingMessage.getLoadBalancingFlag()!=static_cast<int>(peano::parallel::loadbalancing::LoadBalancingFlag::Continue)) {
       eventHandlesRequestReduction = true;
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "reset worker's reduction flag due to load balancing" );
     }
@@ -979,7 +967,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   #ifdef Parallel
   if (
-    peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()>peano::parallel::loadbalancing::Continue
+    peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()!=peano::parallel::loadbalancing::LoadBalancingFlag::Continue
     ||
     state.isInvolvedInJoinOrFork()
   ) {

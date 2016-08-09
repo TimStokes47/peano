@@ -22,17 +22,17 @@ peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::~Oracle
 }
 
 
-void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::receivedStartCommand(int commandFromMaster ) {
-  if (commandFromMaster==Join) {
+void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::receivedStartCommand(LoadBalancingFlag commandFromMaster ) {
+  if (commandFromMaster==LoadBalancingFlag::Join) {
     _idleWorkers.clear();
   }
 }
 
 
-int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed ) {
+peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed ) {
   logTraceInWith5Arguments( "getCommandForWorker(int,bool)", workerRank, forkIsAllowed, joinIsAllowed, _joinsAllowed, _idleWorkers.count(workerRank) );
 
-  int result = Continue;
+  LoadBalancingFlag result = LoadBalancingFlag::Continue;
 
   if ( joinIsAllowed
     && _joinsAllowed
@@ -40,33 +40,14 @@ int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::get
   ) {
     _idleWorkers.clear();
     _forkHasFailed = false;
-    result         = Join;
+    result         = LoadBalancingFlag::Join;
   }
   else if (!_forkHasFailed && forkIsAllowed && _forksAllowed) {
-    result = ForkGreedy;
+    result = LoadBalancingFlag::ForkGreedy;
   }
 
   logTraceOutWith1Argument( "getCommandForWorker(int,bool)", convertLoadBalancingFlagToString(result) );
   return result;
-}
-
-
-void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::receivedTerminateCommand(
-  int     workerRank,
-  double  workerNumberOfInnerVertices,
-  double  workerNumberOfBoundaryVertices,
-  double  workerNumberOfOuterVertices,
-  double  workerNumberOfInnerCells,
-  double  workerNumberOfOuterCells,
-  int     workerMaxLevel,
-  int     currentLevel,
-  const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-  const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
-  bool    workerCouldNotEraseDueToDecomposition
-) {
-  if ( tarch::la::equals( workerNumberOfInnerCells, tarch::la::NUMERICAL_ZERO_DIFFERENCE ) ) {
-    _idleWorkers.insert( workerRank );
-  }
 }
 
 

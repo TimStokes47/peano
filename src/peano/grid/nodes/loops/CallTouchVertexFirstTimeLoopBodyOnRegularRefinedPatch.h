@@ -54,16 +54,17 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
 
     State&                                     _state;
 
-#if defined(SharedMemoryParallelisation)
+    #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
     EventHandle                                                 _threadLocalEventHandle;
-#else
+    #else
     EventHandle&                                                _eventHandle;
     EventHandle&                                                _threadLocalEventHandle;
-#endif
+    #endif
 
     peano::grid::RegularGridContainer<Vertex,Cell>&  _regularGridContainer;
 
+    #ifdef TrackGridStatistics
     double _numberOfInnerVertices;
     double _numberOfBoundaryVertices;
     double _numberOfOuterVertices;
@@ -71,6 +72,7 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
     double _numberOfInnerLeafVertices;
     double _numberOfBoundaryLeafVertices;
     double _numberOfOuterLeafVertices;
+    #endif
 
     UnrolledLevelEnumerator  _fineGridEnumerator;
     UnrolledLevelEnumerator  _coarseGridEnumerator;

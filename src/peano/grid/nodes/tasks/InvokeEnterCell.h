@@ -47,19 +47,21 @@ class peano::grid::nodes::tasks::InvokeEnterCell {
     const peano::grid::SingleLevelEnumerator&  _coarseGridVerticesEnumerator;
     const tarch::la::Vector<DIMENSIONS,int>&                    _fineGridPositionOfCell;
 
-#if defined(SharedMemoryParallelisation)
+    #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
     EventHandle                                                 _threadLocalEventHandle;
-#else
+    #else
     EventHandle&                                                _eventHandle;
     EventHandle&                                                _threadLocalEventHandle;
-#endif
+    #endif
 
+    #ifdef TrackGridStatistics
     double  _innerCells;
     double  _outerCells;
 
     double  _innerLeafCells;
     double  _outerLeafCells;
+    #endif
 
   public:
     InvokeEnterCell(

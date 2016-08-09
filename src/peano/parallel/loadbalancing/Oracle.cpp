@@ -18,7 +18,7 @@ peano::parallel::loadbalancing::Oracle::Oracle():
   _currentOracle(-1),
   _oraclePrototype(0),
   _workers(),
-  _startCommand(Continue),
+  _startCommand(peano::parallel::loadbalancing::LoadBalancingFlag::Continue),
   _loadBalancingActivated(true),
   _numberOfOracles(0) {
 }
@@ -54,11 +54,11 @@ void peano::parallel::loadbalancing::Oracle::addWorker(
   assertion4( !workersListContainsRank(rank), rank, boundingBoxOffset, boundingBoxSize, level );
   assertion4( level>=0, rank, boundingBoxOffset, boundingBoxSize, level );
   _workers.push_back( WorkerEntry(rank, level, boundingBoxOffset, boundingBoxSize) );
-  if (_startCommand>ForkOnce) {
-    _startCommand = _startCommand-1;
+  if (static_cast<int>(_startCommand)>static_cast<int>(peano::parallel::loadbalancing::LoadBalancingFlag::ForkOnce)) {
+    _startCommand = static_cast<LoadBalancingFlag>(static_cast<int>(_startCommand)-1);
   }
-  else if (_startCommand==ForkOnce) {
-    _startCommand = Continue;
+  else if (_startCommand==peano::parallel::loadbalancing::LoadBalancingFlag::ForkOnce) {
+    _startCommand = LoadBalancingFlag::Continue;
   }
 
   peano::performanceanalysis::Analysis::getInstance().addWorker(rank,level);
@@ -205,12 +205,12 @@ void peano::parallel::loadbalancing::Oracle::setOracle( OracleForOnePhase* oracl
 }
 
 
-void peano::parallel::loadbalancing::Oracle::receivedStartCommand( int  commandFromMaster ) {
+void peano::parallel::loadbalancing::Oracle::receivedStartCommand( peano::parallel::loadbalancing::LoadBalancingFlag  commandFromMaster ) {
   assertion( _currentOracle>=0 );
   assertion( _currentOracle<static_cast<int>(_oracles.size()));
 
-  assertion2( commandFromMaster!=Join || _workers.empty(),   _workers.size(), tarch::parallel::Node::getInstance().getRank() );
-  assertion2( commandFromMaster!=UndefinedLoadBalancingFlag, _workers.size(), tarch::parallel::Node::getInstance().getRank() );
+  assertion2( commandFromMaster!=LoadBalancingFlag::Join || _workers.empty(),   _workers.size(), tarch::parallel::Node::getInstance().getRank() );
+  assertion2( commandFromMaster!=LoadBalancingFlag::UndefinedLoadBalancingFlag, _workers.size(), tarch::parallel::Node::getInstance().getRank() );
 
   if (_oraclePrototype==0) {
     logWarning( "receivedStartCommand(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
@@ -231,8 +231,8 @@ int peano::parallel::loadbalancing::Oracle::getCoarsestRegularInnerAndOuterGridL
 }
 
 
-int peano::parallel::loadbalancing::Oracle::getLastStartCommand() const {
-  assertion( _startCommand!=UndefinedLoadBalancingFlag );
+peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::Oracle::getLastStartCommand() const {
+  assertion( _startCommand!=LoadBalancingFlag::UndefinedLoadBalancingFlag );
   return _startCommand;
 }
 
@@ -247,14 +247,14 @@ void peano::parallel::loadbalancing::Oracle::forkFailed() {
   }
   else {
     _oracles[_currentOracle]->forkFailed();
-    if (_startCommand>=ForkOnce) {
-      _startCommand = Continue;
+    if (_startCommand>=LoadBalancingFlag::ForkOnce) {
+      _startCommand = LoadBalancingFlag::Continue;
     }
   }
 }
 
 
-int peano::parallel::loadbalancing::Oracle::getCommandForWorker(
+peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::Oracle::getCommandForWorker(
   int workerRank,
   bool forkIsAllowed,
   bool joinIsAllowed
@@ -266,10 +266,10 @@ int peano::parallel::loadbalancing::Oracle::getCommandForWorker(
 
   joinIsAllowed &= !tarch::parallel::Node::getInstance().isGlobalMaster();
 
-  int result = UndefinedLoadBalancingFlag;
+  peano::parallel::loadbalancing::LoadBalancingFlag result = LoadBalancingFlag::UndefinedLoadBalancingFlag;
   if (_oraclePrototype==0) {
     logWarning( "getCommandForWorker(int)", "no oracle type configured. Perhaps forgot to call peano::kernel::loadbalancing::Oracle::setOracle()" );
-    result = peano::parallel::loadbalancing::Continue;
+    result = peano::parallel::loadbalancing::LoadBalancingFlag::Continue;
   }
   else {
     result = _oracles[_currentOracle]->getCommandForWorker(
@@ -279,7 +279,7 @@ int peano::parallel::loadbalancing::Oracle::getCommandForWorker(
     );
   }
 
-  assertion6( result!=UndefinedLoadBalancingFlag, workerRank, forkIsAllowed, joinIsAllowed, (_oraclePrototype==0), _loadBalancingActivated, result );
+/*  assertion6( result!=LoadBalancingFlag::UndefinedLoadBalancingFlag, workerRank, forkIsAllowed, joinIsAllowed, (_oraclePrototype==0), _loadBalancingActivated, result );*/
 
   logTraceOutWith1Argument( "getCommandForWorker(int)", convertLoadBalancingFlagToString(result) );
   return result;
@@ -293,41 +293,6 @@ void peano::parallel::loadbalancing::Oracle::activateLoadBalancing(bool value) {
 
 bool peano::parallel::loadbalancing::Oracle::isLoadBalancingActivated() const {
   return _loadBalancingActivated;
-}
-
-
-void peano::parallel::loadbalancing::Oracle::receivedTerminateCommand(
-  int     workerRank,
-  double  workerNumberOfInnerVertices,
-  double  workerNumberOfBoundaryVertices,
-  double  workerNumberOfOuterVertices,
-  double  workerNumberOfInnerCells,
-  double  workerNumberOfOuterCells,
-  int     workerMaxLevel,
-  int     currentLevel,
-  const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-  const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
-  bool    workerCouldNotEraseDueToDecomposition
-) {
-  assertion( _currentOracle>=0 );
-  assertion( _currentOracle<static_cast<int>(_oracles.size()));
-
-
-  _oracles[_currentOracle]->receivedTerminateCommand(
-    workerRank,
-    workerNumberOfInnerVertices,
-    workerNumberOfBoundaryVertices,
-    workerNumberOfOuterVertices,
-    workerNumberOfInnerCells,
-    workerNumberOfOuterCells,
-    workerMaxLevel,
-    currentLevel,
-    boundingBoxOffset,
-    boundingBoxSize,
-    workerCouldNotEraseDueToDecomposition
-  );
-
-  peano::performanceanalysis::Analysis::getInstance().endToReceiveDataFromWorker(workerRank);
 }
 
 

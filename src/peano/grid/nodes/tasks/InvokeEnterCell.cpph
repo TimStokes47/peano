@@ -26,11 +26,15 @@ peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::
   _coarseGridVerticesEnumerator(coarseGridVerticesEnumerator),
   _fineGridPositionOfCell(fineGridPositionOfCell),
   _eventHandle(eventHandle),
-  _threadLocalEventHandle(eventHandle),
+  _threadLocalEventHandle(eventHandle)
+  #ifdef TrackGridStatistics
+  ,
   _innerCells(0),
   _outerCells(0),
   _innerLeafCells(0),
-  _outerLeafCells(0) {
+  _outerLeafCells(0)
+  #endif
+  {
 }
 
 template < class Vertex, class Cell, class State, class EventHandle>
@@ -62,20 +66,25 @@ void peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandl
       _coarseGridCell,
       _fineGridPositionOfCell
     );
+
+    #ifdef TrackGridStatistics
     if (_fineGridCell.isRefined()) {
       _innerCells += 1.0;
     }
     else {
       _innerLeafCells += 1.0;
     }
+    #endif
   }
   else {
+    #ifdef TrackGridStatistics
     if (_fineGridCell.isRefined()) {
       _outerCells += 1.0;
     }
     else {
       _outerLeafCells += 1.0;
     }
+    #endif
   }
 
   logTraceOut( "operator()" );
@@ -84,11 +93,13 @@ void peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandl
 
 template < class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::~InvokeEnterCell() {
+  #ifdef TrackGridStatistics
   _state.incNumberOfOuterCells( _outerCells );
   _state.incNumberOfInnerCells( _innerCells );
 
   _state.incNumberOfOuterLeafCells( _outerLeafCells );
   _state.incNumberOfInnerLeafCells( _innerLeafCells );
+  #endif
 
   #if defined(SharedMemoryParallelisation)
   _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );

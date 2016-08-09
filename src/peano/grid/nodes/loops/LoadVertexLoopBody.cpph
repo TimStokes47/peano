@@ -50,12 +50,14 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   _eventHandle(eventHandle),
   _threadLocalEventHandle(eventHandle),
   _geometry(geometry),
+  #ifdef TrackGridStatistics
   _numberOfInnerVertices(0.0),
   _numberOfBoundaryVertices(0.0),
   _numberOfOuterVertices(0.0),
   _numberOfInnerLeafVertices(0.0),
   _numberOfBoundaryLeafVertices(0.0),
   _numberOfOuterLeafVertices(0.0),
+  #endif
   _hasRefined(false),
   _hasErased(false),
   _hasFailedToEraseDueToDomainDecomposition(false),
@@ -72,6 +74,7 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
     lock.lock();
   }
 
+  #ifdef TrackGridStatistics
   _state.incNumberOfInnerVertices(_numberOfInnerVertices);
   _state.incNumberOfBoundaryVertices(_numberOfBoundaryVertices);
   _state.incNumberOfOuterVertices(_numberOfOuterVertices);
@@ -79,6 +82,7 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   _state.incNumberOfInnerLeafVertices(_numberOfInnerLeafVertices);
   _state.incNumberOfBoundaryLeafVertices(_numberOfBoundaryLeafVertices);
   _state.incNumberOfOuterLeafVertices(_numberOfOuterLeafVertices);
+  #endif
 
   _state.updateRefinementHistoryAfterLoad( _hasRefined, _hasErased, _hasFailedToEraseDueToDomainDecomposition, _hasChangedVertexState );
 
@@ -487,6 +491,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       _coarseGridCell,
       _fineGridPositionOfCell + positionInLocalCell
     );
+    #ifdef TrackGridStatistics
     if (_fineGridVertices[positionInVertexArray].isBoundary() && _fineGridVertices[positionInVertexArray].getRefinementControl()!=Vertex::Records::Unrefined) {
       _numberOfBoundaryVertices += 1.0;
     }
@@ -501,8 +506,10 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       _numberOfInnerVertices     += 1.0;
       _numberOfInnerLeafVertices += 1.0;
     }
+    #endif
   }
   else {
+    #ifdef TrackGridStatistics
     if (_fineGridVertices[positionInVertexArray].getRefinementControl()!=Vertex::Records::Unrefined) {
       _numberOfOuterVertices += 1.0;
     }
@@ -510,6 +517,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       _numberOfOuterVertices     += 1.0;
       _numberOfOuterLeafVertices += 1.0;
     }
+    #endif
   }
 
   logTraceOutWith1Argument( "invokeLoadVertexEvents(...)", _fineGridVertices[positionInVertexArray] );

@@ -61,31 +61,12 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
     OracleForOnePhaseWithGreedyPartitioning(bool joinsAllowed, bool forkIsAllowed = true);
     virtual ~OracleForOnePhaseWithGreedyPartitioning();
 
-    virtual void receivedStartCommand(int commandFromMaster );
+    void receivedStartCommand(LoadBalancingFlag commandFromMaster ) override;
 
     /**
      * This operation is not const, as it might update some local stuff.
      */
-    virtual int getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed );
-
-    /**
-     * Notification mechanism that the master is finished. This might not be
-     * sent after a getCommandForWorker() call if the bottom-up communication
-     * is switched off.
-     */
-    virtual void receivedTerminateCommand(
-      int     workerRank,
-      double  workerNumberOfInnerVertices,
-      double  workerNumberOfBoundaryVertices,
-      double  workerNumberOfOuterVertices,
-      double  workerNumberOfInnerCells,
-      double  workerNumberOfOuterCells,
-      int     workerMaxLevel,
-      int     currentLevel,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxOffset,
-      const tarch::la::Vector<DIMENSIONS,double>& boundingBoxSize,
-      bool    workerCouldNotEraseDueToDecomposition
-    );
+    LoadBalancingFlag getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed ) override;
 
     /**
      * Plot something to info log device.

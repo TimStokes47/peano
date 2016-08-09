@@ -210,7 +210,8 @@ print " done "
 
 print "plot ",
 pylab.clf()
-pylab.figure(figsize=(numberOfRanks/10,4))
+if numberOfRanks>32:
+  pylab.figure(figsize=(numberOfRanks/10,4))
 ranks = [x for x in range(0,numberOfRanks)]
 
 print ".",
@@ -256,7 +257,7 @@ print "done"
 
 if dim==2:
  outFile.write( "<h2>Domain decomposition (level by level)</h2>" )
- for l in range(1,maxLevel):
+ for l in range(1,maxLevel+1):
   print "plot domain decomposition on level " + str(l),
   pylab.clf()
   pylab.figure(figsize=(float(args.domainsize[0]),float(args.domainsize[1])))
