@@ -217,12 +217,9 @@ It implies that we have ill-balanced partitions.
 To solve the problem, you can use one of the \texttt{Balancing} classes from the
 toolbox \texttt{mpibalancing} in your \texttt{runAsMaster} routine.
 Please consult their header for detailed information on the class behaviour.
+Most balancing strategies require you to invest some work to feed the
+oracles a cost model.
 
-\begin{code}
-peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
-  new mpibalancing::StaticBalancing(false)
-);
-\end{code}
 
 
 \subsection{Increase the grid regularity}
@@ -259,3 +256,9 @@ level.
 \subsection{Avoid races for idle ranks}
 
 @todo hier auch was rein zu machine-specific lb
+
+@todo Die drei regular grid specs (maximal mesh width, overlap of DD und oracle)
+muessen synchronisiert sein.
+
+@todo dann neues Time stepping und eliminieren von Reduktionen
+

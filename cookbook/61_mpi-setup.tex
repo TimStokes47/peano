@@ -208,8 +208,6 @@ void exahype::State::updateRegularInitialGridRefinementStrategy() {
     isInvolvedInJoinOrFork()
     ||
     !isTraversalInverted()
-    ||
-    !isGridStationary()
   ) {
     _stateData.setGridConstructionState( exahype::records::State::Veto );
   }
@@ -266,12 +264,12 @@ void myproject::mappings::RegularMesh::refineVertexIfNecessary(
 }
 \end{code}
 
-\begin{remark}
-If you decide to activate your grid refinement only every second iteration
-(\texttt{isTraversalInverted}), then it makes sense to do always two iterations
-in the loop body that runs the grid construction steps until
-\texttt{isGridBalanced} holds. This way, you never miss a refinement. 
-\end{remark}
+% \begin{remark}
+% If you decide to activate your grid refinement only every second iteration
+% (\texttt{isTraversalInverted}), then it makes sense to do always two iterations
+% in the loop body that runs the grid construction steps until
+% \texttt{isGridBalanced} holds. This way, you never miss a refinement. 
+% \end{remark}
 
 
 
@@ -316,3 +314,42 @@ void myproject::runners::Runner::runGlobalStep() {
 to switch off load balancing globally.
 
 
+
+\subsection{The load balancing seems not to use all ranks}
+
+\noindent
+Peano uses a subscriber pattern to manage all the MPI ranks, while rank 0 is
+resopnsible for the actual load/rank assignments.
+At startup, rank 0 knows nothing about all the other MPI ranks available.
+They have to register at rank 0 (the node pool).
+Ranks that want to shared work, ask at the node pool for free ranks and then get
+assigned no co-workers.
+It thus may happen that a rank asks at the node pool for idle MPI ranks and is
+told that no rank is registers though the registration message was just pending
+in the queue, i.e.~there would have been further MPI ranks available.
+This happens rarely (you then might receive a fork failed notice; depending on
+your load balancing), but there is another indicator.
+
+\begin{smell}
+  At startup, I receive a lot of messages alike \texttt{node pool does not
+  contain entry for rank 3. Message from rank 3 might have overtaken
+  registration message. Waiting for registration} if I compile with
+  \texttt{-DAsserts}.
+\end{smell}
+
+\noindent
+A solution to this problem is simple though it (very slightly) increases the
+code's startup time.
+Please note that it will not make this particular message go away:  
+It usually shows up if a rank (here it is rank 3) requests work though its
+registration message is still in the queue and hasn't been processed yet.
+
+What you can do is invoke 
+\begin{code}
+  tarch::parallel::NodePool::getInstance().restart();
+  tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();
+\end{code}
+\noindent
+just after the restart.
+The wait command degenerates to nop if you call it on a rank that is not the
+global master, so it is save to call it on every rank.
