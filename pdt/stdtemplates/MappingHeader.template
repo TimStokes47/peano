@@ -608,6 +608,11 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * has been called, the current vertex can be prepared for being sent to
      * the neighbouring computation node in this method. 
      *
+     * To keep vertices consistent, Peano also does exchange outside vertices.
+     * This allows you to make regions out of the domain refine, e.g., which 
+     * can be advantageous for load balancing and concave domains. Anyway, 
+     * please note that vertex.isOutside() might hold.
+     *
      * @param vertex        Local vertex.
      * @param toRank        Rank of the neighbour if isForkOrJoin is unset.  
      *                      Otherwise, it is the rank of the master.
