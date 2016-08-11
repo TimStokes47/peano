@@ -55,9 +55,9 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
   );
   assertionMsg(
     _lastWriteCommandVertexNumber==_myWriter._numberOfVertices-1,
-    "one record has to be written per cell on writer " << _identifier <<
-    " (cell entries written=" <<  _lastWriteCommandVertexNumber <<
-    ", cell entries expected=" << _myWriter._numberOfVertices << ")"
+    "one record has to be written per vertex on writer " << _identifier <<
+    " (vertex entries written=" <<  _lastWriteCommandVertexNumber <<
+    ", vertex entries expected=" << _myWriter._numberOfVertices << ")"
   );
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() or assignRemainingVerticesDefaultValues() on a data writer before you destroy your writer for value " << _identifier );
 
