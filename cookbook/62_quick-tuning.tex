@@ -255,7 +255,71 @@ level.
 
 \subsection{Avoid races for idle ranks}
 
-@todo hier auch was rein zu machine-specific lb
+\begin{smell}
+  The balancing seems to work fine for small rank counts (up to 256 ranks,
+  e.g.). If I use more ranks, the balancing at first glance seems to be fine,
+  but some ranks just seem to be more successful in booking additional ranks.
+\end{smell}
+
+\noindent
+This smell manifests quickly if you use the script
+\texttt{domain-decomposition-analysis.py} from Peano's
+\texttt{performanceanalysis} directory. 
+We discuss this at hands of the graphs below running a job with 512 ranks: 
+
+\begin{center}
+  \includegraphics[width=0.3\textwidth]{62_quick-tuning/rank-races.pdf}
+  \includegraphics[width=0.3\textwidth]{62_quick-tuning/rank-races-level4.pdf}
+  \includegraphics[width=0.3\textwidth]{62_quick-tuning/rank-races-level5.pdf}
+\end{center}
+
+\noindent
+The balancing seems to be reasonable (left graph), and the work per rank
+graph (not shown here) shows a reaonsable work distribution.
+We continue to study the first four levels of the multiscale grid 
+and still all results seem to be very reasonable. 
+Level one to three are not shown, the middle graph above is level four.
+Each rank (we are tackling a $d=2$-dimensional setup) forks per level eight
+cubes to other rank.
+On level four (right) and five (not shown) however, we see a very localised rank
+employment.
+This means that some ranks responsible for level three are very successful in
+booking additional ranks for their subdomains, while others are left
+empty-handed.
+
+The best fix to this problem is to write a node pool strategy that is aware
+which rank should be used for which subdomain and how many additional
+worker ranks any rank is allowed to book.
+This is a laborious endeavour (though required for extreme-scale runs). 
+For the time being, Peano offers a fair node pool strategy where the node pool
+gathers rank requests and then hands out ranks to those ranks first that haven't
+got any additional ranks yet.
+This strategy is only to be set on the global master.
+
+\begin{code}
+tarch::parallel::NodePool::getInstance().setStrategy(
+  new mpibalancing::FairNodePoolStrategy()
+);
+\end{code}
+
+\noindent
+It allows you furthermore to instruct the balancing now many MPI ranks are
+placed on each individual node. 
+The strategy then tries to assign each node roughly the same number of ranks for
+any level.
+For regular grids, this helps to keep the peak memory requirements per node
+bounded.
+
+
+\subsection{Next \ldots}
+
+
+
+
+@todo hier auch was rein zu machine-specific lb -> Das gehoert aber nicht hier
+rein, sondern ist schon sophisticated (also nimmer quick)
+
+GLeiches gilt fuer den Rest
 
 @todo Die drei regular grid specs (maximal mesh width, overlap of DD und oracle)
 muessen synchronisiert sein.
