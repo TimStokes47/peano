@@ -46,7 +46,7 @@
 tarch::logging::Log peano::utils::UserInterface::_log("peano::utils::UserInterface");
 
 
-const std::string peano::utils::UserInterface::_PeanoHeader("Application based upon the PDE framework Peano - Release P3");
+const std::string peano::utils::UserInterface::_PeanoHeader("Application based upon the PDE framework Peano - 3rd Generation");
 const std::string peano::utils::UserInterface::_PeanoCopyrightURL("(C) 2005 - 2016   www.peano-framework.org");
 
 const int peano::utils::UserInterface::_WidthOfSolverIterationColumn(22);
