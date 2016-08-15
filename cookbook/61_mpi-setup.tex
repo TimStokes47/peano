@@ -208,6 +208,8 @@ void exahype::State::updateRegularInitialGridRefinementStrategy() {
     isInvolvedInJoinOrFork()
     ||
     !isTraversalInverted()
+    ||
+    !isGridStationary()
   ) {
     _stateData.setGridConstructionState( exahype::records::State::Veto );
   }
@@ -271,7 +273,32 @@ void myproject::mappings::RegularMesh::refineVertexIfNecessary(
 % \texttt{isGridBalanced} holds. This way, you never miss a refinement. 
 % \end{remark}
 
-
+\noindent
+Creating a good runner that does not stop a grid setup too early, i.e.~before
+the grid is built up completely and all load balancing has terminated, often
+looks similar to
+\begin{code}
+int gridSetupIterations      = 0;
+int gridSetupIterationsToRun = 3;
+while (gridSetupIterationsToRun>0) {
+  repository.iterate();
+  gridSetupIterations++;
+   
+  if ( UseStationaryCriterion && repository.getState().isGridStationary() ) {
+    gridSetupIterationsToRun--;
+  }
+  else if ( !repository.getState().isGridBalanced() && 
+    tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()>0 ) {
+    gridSetupIterationsToRun=3;  // we need at least 3 sweeps to recover from ongoing lb 
+  }
+  else if ( !repository.getState().isGridBalanced()  ) {
+    gridSetupIterationsToRun=1;  // one additional step to get adjacency right
+  }
+  else {
+    gridSetupIterationsToRun--;
+  }
+}
+\end{code}
 
 
 

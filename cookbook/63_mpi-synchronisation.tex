@@ -17,14 +17,15 @@ mpianalysis reports), you can kind of weaken the communication constraints.
 Often, some data is not required immediately, not required globally all the
 time, or doesn't have to be 100\% correct at all algorithmic stages. This
 chapter discusses some things that you can do then.
+So we assume that you have proper load balancing.
 
-On the following pages, we assume that you have proper load balancing.
 
-
-\subsection{The smell}
-
-Strong synchronisation materialises in very regular patterns where each rank
-waits for rank 0 to start up a new traversal.
+\begin{smell}
+We face a very strong synchronisation.
+This materialises in very regular execution patterns
+where each rank waits for rank 0 to start up a new traversal.
+It can also be reported by Peano's performance analysis.
+\end{smell}
 
 \begin{center}
   \includegraphics[width=0.9\textwidth]{63_mpi-synchronisation/mpi-phases-before.pdf}
@@ -44,7 +45,81 @@ synchronisations---unless you can identify that you have a load balancing issue.
 \end{center}
 
 
+
+\subsection{Postpone and tailor master-worker and worker-master data exchange}
+
+In this section, we study the communication specification of the mappings. 
+By default, they are set to the most general case:
+Peano send away data from a local node if and only if it has traversed the whole local tree. 
+In return, it requires all input data before it starts to traverse anything.
+
+If you manage to send out data earlier, a rank's master can continue its local
+traversal earlier.
+If you manage to receive important data from the master, i.e.~from coarser
+mesh levels, later, your rank can start its traversal right away when it is
+informed which adapter is ran next.
+This allows you to overlap computations more aggressively. 
+
+
+\paragraph{Multiscale vertices and cells}
+
+If a cell in the spacetree is deployed to another rank (grey cell in the sketch
+below), the master continues to hold a replica of the deployed cell.
+At the begin of a traversal, it sends the replica together with its parent cell
+to the worker (blue instance) that is responsible for the actual data.
+When the worker has finished its traversal, it sends the blue cell plus its
+parent back to the master.
+The same holds for the vertices adjacent to the cells.
+
+\begin{center}
+  \includegraphics[width=0.35\textwidth]{63_mpi-synchronisation/master-worker.pdf}
+\end{center}
+
+\noindent
+Such a workflow allows you to realise multiscale algorithms where information is
+transferred through the cells or vertices from the master ot the worker and
+back.
+In return, the data exchange is rather critical as it runs synchronous.
+The master is not allowed to fire up the worker to do its traversal before it
+hasn't loaded all the vertices.
+A similar reasoning holds the other way round.
+Please note that the solver's state is exchanged along the very same lines,
+i.e.~when we start up a worker and when the worker traversal terminates.
+
+
+We notion that many codes do not require such a tight multiscale vertex
+synchronisation.
+If no multiscale data is exchanged at all, we do not need any of these
+synchronous data sends and receives.
+If we transfer data only through cells, we do not need the vertex copies before
+we start the fine grid traversal.
+We can wait until we do the very first \texttt{enterCell} on the worker.
+Only if we need the copies of the vertices before the first
+\texttt{touchVertexFirstTime}, we have to synchronise tightly.
+
+
+\begin{remark}
+In Peano, a cell that is deployed to a worker has exclusively refined adjacent
+vertices. 
+You can assume that a deployed cell (the greyish in the sketch) thus always is
+refined.
+\end{remark}
+
+
+If you want tailor the data exchange, you have to open all the mappings you use
+in your adapter.
+There are two enumeration values that allow you specify exactly which data you
+need at which time throughout a worker traversal.
+
+
+\begin{remark}
+Some codes may not skip multiscale data transfer all the time. See discussion in
+the sections below on details.
+\end{remark}
+
+
 \subsection{Weaken synchronisation with global master}
+\marginpar{Todo. Hier weiter machen}
 
 The global master (rank 0) is kind of a pulse generator for the whole code. 
 Whenever the \texttt{runAsMaster} operation triggers \texttt{iterate}, it tells
@@ -102,14 +177,23 @@ hidden in the background, i.e.~not visible anymore:
 
 
 
-\subsection{Postpone master-worker and worker-master data exchange}
-    Take the communication specification of each mapping. By default, they are set to the most general case. Adopt it to your algorithmic needs (see documentation of the communication specification class)/
-
-
-Introduce eager send and late receive
-
-By default, Peano send away data from a local node if and only if it has traversed the whole local tree. In return, it requires all input data before it starts to traverse anything. You may want to tailor this to your needs and send data earlier and receive data later which allows you to overlap computations more aggressively. To do so, you have to adopt the communication specification fields of your mappings. See the documentation of the underlying class for more details.
-Avoid communication with rank 0
 
 
 \subsection{Skip worker-master data transfer locally/sporadically}
+
+
+\subsection{Next \ldots}
+
+
+
+
+@todo hier auch was rein zu machine-specific lb -> Das gehoert aber nicht hier
+rein, sondern ist schon sophisticated (also nimmer quick)
+
+GLeiches gilt fuer den Rest
+
+@todo Die drei regular grid specs (maximal mesh width, overlap of DD und oracle)
+muessen synchronisiert sein.
+
+@todo dann neues Time stepping und eliminieren von Reduktionen
+
