@@ -230,9 +230,15 @@ print ".",
 #pylab.plot(ranks, work, '-v', label="work", markevery=numberOfRanks/12, color='#0000bb', markersize=10)
 pylab.fill_between(ranks, work, color='#0000bb', alpha=0.4)
 
-maxLocalWork = max(work)
+
+maxLocalWorkDisplayed = work[1]
+minLocalWorkDisplayed = work[0]
+for x in work[2:]:
+  if x>minLocalWorkDisplayed:
+    minLocalWorkDisplayed = maxLocalWorkDisplayed
+    maxLocalWorkDisplayed = x
 for i in range(0,numberOfRanks):
-  if work[i]>maxLocalWork/10:
+  if work[i]>=minLocalWorkDisplayed:
     pylab.text(i,volumes[i]+10,str(i))
     pylab.plot([i,i], [0, volumes[i]], '--', color="#000000")
 
