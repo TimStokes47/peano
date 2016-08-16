@@ -22,4 +22,15 @@
   \item {\bf How can I find out the location of a cell}. See the documentation
   of the \texttt{VertexEnumerator}. The object has routines to query cell
   position, size and level in the spacetree.
+  \item {\bf I need the state object in my mapping}. My recommendation is
+  clearly to create a copy of the state object in \texttt{beginIteration} and to
+  merge this copy back in \texttt{endIteration}. The reason is simple: Peano
+  updates the State itself. If you work with your own copy right from the start,
+  you can be sure that you do not interfere with Peano's internal state at any
+  time---even if you use shared memory parallelisation. There are however
+  situations where you need the ``real'' state: If you plug into the MPI events
+  and want to find out whether a rank just has been forked, e.g. In this case,
+  you can store a pointer to the state in \texttt{beginIteration} and then
+  access the state object. Keep in mind however that this version is not
+  thread-safe.
 \end{itemize}
