@@ -119,7 +119,36 @@ class peano::grid::VertexEnumerator {
      * The operation analyses vertex localVertexNumber given in the cell-wise
      * enumeration. It then returns a vector with the position of this vertex.
      *
-     * !!! Pitfall
+     * <h2> Usage </h2>
+     *
+     * Here is a 2d illustration of the method behaviour. Assume we study a
+     * rectangle with a left bottom vertex at (-2,-1) and the dimensions 4x2.
+     * Most codes in Peano use cubical mesh elements, but you can squeeze the
+     * mesh and the chosen example makes all used coordinates unique. The
+     * rectangle has four vertices that are enumerated along the vertex axis.
+     *
+     * - Vertex 0 is the bottom left vertex.
+     * - We continue along the x axis, so vertex 1 is the bottom right vertex.
+     * - Vertex 2 is the left top vertex as we do the y axis next, i.e. our
+     *   enumeration is some kind of z-curve.
+     * - Vertex 3 finally is the top right vertex.
+     *
+     * With the argument localVertexNumber, you choose the vertex. The result
+     * is a vector were you again might want to select entries with the ()
+     * operator:
+     *
+     * - myEnumerator.getVertexPosition(0)(0) consequently returns the vertex
+     *   0's x coordinate, i.e. -2.
+     * - myEnumerator.getVertexPosition(0)(1) yields its y-coordinate -1.
+     * - myEnumerator.getVertexPosition(2)(0) returns -2, too, while
+     * - myEnumerator.getVertexPosition(2)(1) returns 1.
+     * - myEnumerator.getVertexPosition(3) finally returns a tuple (2,1)
+     *   from which you can select the second entry (the y coordinate) with
+     *   myEnumerator.getVertexPosition(3)(1).
+     *
+     *
+     *
+     * <h2> Pitfall </h2>
      *
      * There is also a getX() operation for each vertex that returns you the
      * position of this vertex. However, getX() is defined in the Debug mode
