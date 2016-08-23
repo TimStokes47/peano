@@ -76,6 +76,7 @@ fork.
 
 
 \subsection{Reduce data exchange with global master}
+\label{subsection:62:reduce-data-exchange-with-global-master}
 
 \begin{smell}
   It seems that rank 0 is involved in lots of data exchange (the performance
@@ -252,6 +253,66 @@ you can increase the value returned by the oracles.
 They prescribe a maximum regularity level that is also anticipated outside of
 the domain and thus avoids adaptive grids outside of $\Omega $ up to a certain
 level.
+
+We have realised a related strategy in Section
+\ref{subsection:62:reduce-data-exchange-with-global-master} already. 
+If you strive for further grid regularity, you often find yourself using some
+assumptions on the grid in three places:
+\begin{itemize}
+  \item It is used for the bounding box computation to create some overlap of
+  the coarsest cell with the actual domain.
+  \item Your load balancing oracle is informed about some grid regularity. It
+  uses this information to fork aggressively up to a certain level and thus to
+  speed up the grid decomposition.
+  \item Your mappings that control the AMR take the regularity information and
+  ensure that no grid part is coarsened further, i.e.~the mappings ensure that
+  the regularity constraint is not violated.
+\end{itemize}
+
+\noindent
+A common pattern in the code is that you analyse manually which grid depth you
+actually need
+\begin{code}
+int exahype::runners::Runner::getCoarsestGridLevel() {
+  double boundingBox =  // bounding box of user's computational domain
+  double hMax        =  // from solver
+
+  int    result      = 1;
+  double currenthMax = std::numeric_limits<double>::max();
+  while (currenthMax>hMax) {
+    currenthMax = boundingBox / threePowI(result);
+    result++;
+  }
+
+  return result;
+}
+\end{code}
+
+\noindent
+This information then is used to extend the technical bounding box following  
+\ref{subsection:62:reduce-data-exchange-with-global-master}:
+\begin{code}
+  const double boundingBoxScaling = 
+    static_cast<double>(getCoarsestGridLevelOfAllSolvers()) /
+    (static_cast<double>(getCoarsestGridLevelOfAllSolvers())-2); 
+  const double boundingBoxShift   = (1.0-boundingBoxScaling)/2.0; 
+  
+  exahype::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
+      geometry,
+      applicationsBoxSize*boundingBoxScaling,
+      applicationsBoxOffset-boundingBoxShift*applicationsBoxSize
+      );
+\end{code}
+
+\noindent
+and we finally hand over the regularity information to the oracles for the load
+balancing, too.
+They then enforce regularity of the grid also outside of the domain and thus
+enable the balancing to load balance also boundaries of the domain.
+\begin{code}
+  new MyOracle( ... , getCoarsestGridLevelOfAllSolvers() );
+\end{code}
+
 
 \subsection{Avoid races for idle ranks}
 
