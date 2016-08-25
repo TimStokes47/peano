@@ -13,6 +13,153 @@ from argparse import RawTextHelpFormatter
 
 
 
+def  extractForkHistory():
+  outFile.write( "<table border=\"1\">" )
+
+  histogram        = []
+  lastParentForked = 0
+  
+  outFile.write( "<tr><td><b>Step\\Rank</b></td>" )
+  for i in range(0,numberOfRanks):
+    outFile.write( "<td><i>" + str(i) + "</td>" )
+  outFile.write( "</tr>" )
+
+ 
+  histogramLevelForks = []
+  histogramLevelJoins = []
+  forksPerRank        = [0 for a in range(0,numberOfRanks)]
+  joinsPerRank        = [0 for a in range(0,numberOfRanks)]
+  
+  outFile.write( "<tr>" )
+  outFile.write( "<td><b>0</b></td>" )
+  currentStep         = 1
+  try:
+    inputFile = open( inputFileName,  "r" )
+    print "parse forks/join history",
+    for line in inputFile:
+      searchPatternAddFork    = "peano::performanceanalysis::DefaultAnalyser::addWorker.*\d+->\d+\+\d+"
+      searchPatternAddJoin    = "peano::performanceanalysis::DefaultAnalyser::removeWorker.*\d+\+\d+->d+"
+      searchEndIteration      = "rank:0.*peano::performanceanalysis::DefaultAnalyser::endIteration"
+      if ("DefaultAnalyser" in line):
+        m = re.search( searchPatternAddFork, line )
+        if (m):
+          #
+          # parse
+          #
+          parent = int(m.group(0).split("->")[0].split(" ")[-1]) 
+          child  = int(m.group(0).split("+")[-1].split(" ")[-1])
+          level  = line.split("level:")[1].split("]")[0]
+
+          if parent<lastParentForked:
+            outFile.write( "</tr>" )
+            outFile.write( "<tr>" )
+            lastParentForked = -1
+          while lastParentForked<parent:
+            outFile.write( "<td />" )
+            lastParentForked = lastParentForked + 1
+          lastParentForked = lastParentForked + 1
+          outFile.write( "<td>" + str(parent) + "->" + str(parent) + "+" + str(child) + " (level=" + level + ")</td>" )        
+          #while len(histogram)<=int(level):
+          #  histogram.append( 0 )
+          #histogram[int(level)] = histogram[int(level)] + 1   
+          #lastParentForked = parent
+          #
+          # find right column in table
+          #
+          #if (lastColumnWrittenTo>parent):
+          #  outFile.write( "</td></tr><tr>" )
+          #  lastColumnWrittenTo=0
+          #for i in range(lastColumnWrittenTo,parent):
+          #  outFile.write( "</td>" )
+          #  outFile.write( "<td>" )        
+          #lastColumnWrittenTo = parent
+          #
+          # write entry
+          #
+          #outFile.write( str(parent) + "->" + str(parent) + "+" + str(child) + " (level=" + level + ")<br />" )
+          #
+          # update statistics
+          #        
+          while len(histogramLevelForks)<=int(level):
+            histogramLevelForks.append( 0 )
+            histogramLevelJoins.append( 0 )
+          #while len(forksPerRank)<=int(parent):
+          #  forksPerRank[parent] = forksPerRank[parent]+1
+          histogramLevelForks[int(level)] = histogramLevelForks[int(level)] + 1
+          forksPerRank[parent]            = forksPerRank[parent] + 1
+        m = re.search( searchPatternAddJoin, line )
+        if (m):
+          print "not written yet"
+          quit()
+        m = re.search( searchEndIteration, line )
+        if (m and lastParentForked>0):
+          outFile.write( "</tr><tr>" )
+          outFile.write( "<td><b>" + str(currentStep) + "</b></td>" )
+          currentStep      = currentStep + 1
+          lastParentForked = 0
+    print " done"
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+  outFile.write( "</tr>" )
+
+  outFile.write( "<tr><td><b>no of forks:</b></td>" )
+  for i in range(0,numberOfRanks):
+    outFile.write( "<td><i>" + str(forksPerRank[i]) + "</i></td>" )
+  outFile.write( "</tr>" )
+  outFile.write( "<tr><td><b>no of joins:</b></td>" )
+  for i in range(0,numberOfRanks):
+    outFile.write( "<td><i>" + str(joinsPerRank[i]) + "</i></td>" )
+  outFile.write( "</tr>" )
+  outFile.write( "</table>" )
+  
+  
+  outFile.write( "<h3>Histograms:</h3>" )
+  outFile.write( "<table border=\"1\">" )
+  outFile.write( "<tr><td><b>Level</b></td><td><b>Number of forks</b></td><td><b>Number of joins</b></td></tr>" )
+  for i in range(1,len(histogramLevelForks)):
+    outFile.write( "<tr><td>"  + str(i) + "</td>" )
+    if histogramLevelForks[i]>0:
+      outFile.write( "<td bgcolor=\"#aaaaFF\">"  + str(histogramLevelForks[i]) )
+    else:
+      outFile.write( "<td bgcolor=\"#FF0000\">"  + str(histogramLevelForks[i]) )
+    if histogramLevelJoins[i]==0:
+      outFile.write( "<td bgcolor=\"#aaaaFF\">"  + str(histogramLevelJoins[i]) )
+    else:
+      outFile.write( "<td bgcolor=\"#00FF00\">"  + str(histogramLevelJoins[i]) )
+    outFile.write( "</td></tr>" )
+  outFile.write( "</table>" )
+
+
+
+def createRankDetails(rank):
+  #searchPattern = "(\d+),rank:" + str(rank) + ".*::repositories::.*::restart(...).*start node for subdomain"
+  #searchPattern = str(rank) + ".*repositories.*restart.*start node for subdomain"
+  searchPattern = "rank:" + str(rank) + " .*repositories.*restart.*start node for subdomain"
+
+  outFile.write( "<h4>Rank details:</h4>" );
+  outFile.write( "<ol>" );
+ 
+  wroteDetails = False
+  #try:
+  inputFile = open( inputFileName,  "r" )
+  for line in inputFile:
+    m = re.search( searchPattern, line )
+    if (m):
+      wroteDetails = True
+      outFile.write( "<li>" );
+      outFile.write( line );
+      outFile.write( "</li>" );
+
+  #except:
+  #  pass
+    
+  if not wroteDetails:
+    outFile.write( "<li>Rank details are available if and only if info messages from the repositories subcomponent are switched on</li>" );
+  
+  outFile.write( "</ol>" );
+
+
 
 ########################################################################
 # START OF THE PROGRAM
@@ -38,12 +185,11 @@ numberOfRanks   = performanceanalysisroutines.getNumberOfRanks(args.file)
 numberOfThreads = performanceanalysisroutines.getNumberOfThreads(args.file)
 
 inputFileName   = args.file
-outputFileName  = args.file + ".html"
 
 print "start to process input file " + inputFileName + " with " + str(numberOfRanks) + " rank(s) and " + str(numberOfThreads) + " thread(s)" 
 
 
-outFile        = open( outputFileName, "w" )
+outFile        = open( inputFileName + ".html", "w" )
   
     
 
@@ -55,37 +201,47 @@ outFile        = open( outputFileName, "w" )
 #  
 performanceanalysisroutines.parseInputFile(numberOfRanks,inputFileName)
 
+
+dim = int(args.dimension)
+
+(parents,levels,offset,volume) = performanceanalysisroutines.plotLogicalTopology(args.file,numberOfRanks,dim);
+(volumes,overlaps,work) = performanceanalysisroutines.computeVolumesOverlapsWork(numberOfRanks,volume,offset,dim,args.domainoffset,args.domainsize,parents)
+
+performanceanalysisroutines.plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,work,args.file);
+
+if dim==2:
+ for l in range(1,max(levels)+1):
+  performanceanalysisroutines.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
+
+
 print "plot walltime overview"
-performanceanalysisroutines.plotWalltimeOverview()
+performanceanalysisroutines.plotWalltimeOverview(numberOfRanks,args.file)
 
 print "plot global grid overview"
-performanceanalysisroutines.plotGlobalGridOverview()
+performanceanalysisroutines.plotGlobalGridOverview(numberOfRanks,args.file)
 
-if (numberOfThreads>0):      
+if (numberOfThreads>1):      
   print "plot concurrency levels"
-  if (numberOfRanks>0):
+  if (numberOfRanks>1):
     for rank in range(0,numberOfRanks):
       print "plot concurrency levels for rank " + str(rank)
-      performanceanalysisroutines.plotConcurrency(rank)
+      performanceanalysisroutines.plotConcurrency(rank,args.file)
   else:
     print "plot concurrency levels"
     performanceanalysisroutines.plotConcurrency(0)
   
-if (numberOfRanks>0):      
-  print "plot logical grid topology"
-  performanceanalysisroutines.plotLogicalTopology()
-
+if (numberOfRanks>1):      
   print "extract fork and join statistics"
-  performanceanalysisroutines.plotForkJoinStatistics()
+  performanceanalysisroutines.plotForkJoinStatistics(numberOfRanks,args.file)
 
   print "plot mpi phases"
-  performanceanalysisroutines.plotMPIPhases()
+  performanceanalysisroutines.plotMPIPhases(numberOfRanks,args.file)
 
   print "master-worker data exchange"
-  performanceanalysisroutines.plotMasterWorkerLateSends()
+  GlobalSynchronisationOnRank0 = performanceanalysisroutines.plotMasterWorkerLateSends(numberOfRanks,inputFileName)
 
   print "boundary data exchange"
-  performanceanalysisroutines.plotBoundaryLateSends()
+  performanceanalysisroutines.plotBoundaryLateSends(numberOfRanks,inputFileName)
 
 
 #
@@ -101,7 +257,7 @@ outFile.write(
      <p>Data file: " + inputFileName + "</p>\
   ")
      
-if (numberOfRanks==0):      
+if (numberOfRanks==1):      
   outFile.write( "\
      <p>Ranks: no MPI used</p>\
   ")
@@ -110,7 +266,7 @@ else:
      <p>Ranks: " + str(numberOfRanks) + "</p>\
   ")
      
-if (numberOfThreads==0):      
+if (numberOfThreads==1):      
   outFile.write( "\
      <p>Threads: no multithreading used</p>\
   ")
@@ -135,13 +291,14 @@ outFile.write( "\
     ")
 
 
-if (numberOfThreads>0):      
+if (numberOfThreads>1):      
   outFile.write( "<li><a href=\"#concurrency\">Multithreading concurrency</a></li>")
   
   
-if (numberOfRanks>0):      
+if (numberOfRanks>1):      
   outFile.write( "\
      <li><a href=\"#logical-topology\">Logical topology</a></li>\
+     <li><a href=\"#work-distribution\">Work distribution</a></li>\
      <li><a href=\"#fork-join-statistics\">Fork and join statistics</a></li>\
      <li><a href=\"#fork-history\">Fork history</a></li>\
      <li><a href=\"#mpi-phases\">MPI phases</a></li>\
@@ -153,9 +310,6 @@ if (numberOfRanks>0):
 outFile.write( "\
    </ul>\
    ")
-
-
-
 
 
 
@@ -196,14 +350,14 @@ outFile.write( "\
     ")
     
     
-if (numberOfRanks>0):      
+if (numberOfRanks>1):      
   outFile.write( "\
     <img src=\"" + outputFileName + ".local-cells.png\" />\
     <img src=\"" + outputFileName + ".local-vertices.png\" />\
     <br /><br />\
     ")
 
-outFile.write( "\
+  outFile.write( "\
     <p>\
     <b>Remarks on the global cell/vertex and the master plots:</b> \
     If you are implementing a code that allows ranks to send up their state to the \
@@ -240,14 +394,12 @@ outFile.write( "\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
-
-
 #
 # Concurrency analysis
 #
-if (numberOfThreads>0):      
+if (numberOfThreads>1):      
   outFile.write( "<h2 id=\"concurrency\">Multithreading concurrency</h2>" )
-  if numberOfRanks==0:
+  if numberOfRanks==1:
     outFile.write( "<img src=\"" + outputFileName + "-rank-0.concurrency.png\" />" )
     outFile.write( "<br /><a href=\"" + outputFileName + "-rank-0.concurrency.large.png\">Big version</a>" )
 
@@ -278,23 +430,22 @@ if (numberOfThreads>0):
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
-  if (numberOfRanks>0):      
+  if (numberOfRanks>1):      
     pass
     
     
 
-if (numberOfRanks>0):      
+if (numberOfRanks>1):      
+
+
+
   #
   # Logical topology  
   #
   outFile.write( "\
     <h2 id=\"logical-topology\">Logical topology</h2>\
-    <img src=\"" + outputFileName + ".topology.png\" />\
+    <a href=\"" + args.file + ".topology.large.png\"><img src=\"" + args.file + ".topology.png\" /></a>\
     <br /><br />\
-    <p>\
-    A bigger version of the file can be found \
-    <a href=\"" + outputFileName + ".topology.large.png\">here</a>. \
-    </p>\
     <i>Performance hint: </i>\
     <p>\
     If the maximal number of working ranks is significantly smaller than the total number of ranks, your application might \
@@ -322,6 +473,14 @@ if (numberOfRanks>0):
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
+
+  outFile.write( "<h2 id=\"work-distribution\">Work distribution</h2>" )
+  outFile.write( "<a href=\"" + args.file + ".work-distribution.large.png\"><img src=\"" + args.file + ".work-distribution.png\" /></a>" )
+  outFile.write( "<p>The filled region is the actual local work volume of a rank. It has to be smaller than the region of responsibility that might overlap the actual domain.</p>" )
+  if dim==2:
+   outFile.write( "<h2>Domain decomposition (level by level)</h2>" )
+   for l in range(1,max(levels)+1):
+    outFile.write( "<img src=\"" + args.file + ".level" + str(l) + ".png\" />" )
 
 
   #
@@ -599,8 +758,8 @@ print "html file written"
 # Create individual plots - lasts long so I prefer to finish writing the HTML 
 # file first.
 #
-if (numberOfRanks>0):      
+if (numberOfRanks>1):      
   print "continue to write individual rank statistics ... html file however should be readable already"
   for rank in range(0,numberOfRanks):
     print "plot statistics for rank " + str(rank)
-    plotStatisticsForRank(rank)
+    performanceanalysisroutines.plotStatisticsForRank(rank,numberOfRanks,args.file)

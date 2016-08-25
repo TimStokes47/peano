@@ -1,5 +1,9 @@
 import sys
 import re
+
+import matplotlib
+matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
+
 import pylab
 import networkx 
 
@@ -51,10 +55,6 @@ tTraversal              = {}
 AlphaValue = 1.0
 
 
-GlobalSynchronisationOnRank0 = False
-
-
-
 #
 # Use these pairs also for sender and receiver
 #
@@ -101,14 +101,19 @@ def switchBackToStandardPlot():
 
 def drawTreeGraph(myGraph):
   try:
+    from networkx import graphviz_layout
     pos=networkx.graphviz_layout(myGraph,prog='twopi',args='')
-    #pos=networkx.graphviz_layout(myGraph,prog='dot',args='')
   except:
-    pos=networkx.spring_layout(myGraph)
+    try:
+      pos=networkx.graphviz_layout(myGraph,prog='dot',args='')
+    except:
+      pos=networkx.spring_layout(myGraph)
+      print "fall back to spring layout. Nicer graphs might result if either compatible PyGraphviz or Pydot packages were available"
   networkx.draw(
     myGraph,
     pos,
     with_labels=True,
+    arrows=True,
     node_color='#667766',
     node_size=10,
     alpha=0.2
@@ -182,7 +187,7 @@ def parseInputFile(numberOfRanks,inputFileName):
 
 
 
-def plotConcurrency(rank):
+def plotConcurrency(rank,inputFileName):
   pylab.clf()
   #pylab.title( "Concurrency levels" )
 
@@ -245,7 +250,7 @@ def plotConcurrency(rank):
 
         lastTimeStamp = timeStamp
         print ".",
-    pylab.plot([0,timeStamp],[1,1], "--", color="#000000")
+    #pylab.plot([0,timeStamp],[1,1], "--", color="#000000")
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
@@ -261,18 +266,27 @@ def plotConcurrency(rank):
   pylab.xlabel('t')
   pylab.ylabel('Concurrency level')
   pylab.grid(True)
-  pylab.savefig( outputFileName + "-rank-" + str(rank) + ".concurrency.png" )
-  pylab.savefig( outputFileName + "-rank-" + str(rank) + ".concurrency.pdf" )
+  pylab.savefig( inputFileName + ".html-rank-" + str(rank) + ".concurrency.png" )
+  pylab.savefig( inputFileName + ".html-rank-" + str(rank) + ".concurrency.pdf" )
   switchToLargePlot()
-  pylab.savefig( outputFileName + "-rank-" + str(rank) + ".concurrency.large.png" )
-  pylab.savefig( outputFileName + "-rank-" + str(rank) + ".concurrency.large.pdf" )
+  pylab.savefig( inputFileName + ".html-rank-" + str(rank) + ".concurrency.large.png" )
+  pylab.savefig( inputFileName + ".html-rank-" + str(rank) + ".concurrency.large.pdf" )
   switchBackToStandardPlot()  
 
 
 
 
-
-def plotMPIPhases():
+#
+# Creates the one big trace picture where we see what different ranks do at 
+# different times
+#
+# @writes A file inputFileName.mpi-phases.large.png
+# @writes A file inputFileName.mpi-phases.large.pdf
+# @writes A file inputFileName.mpi-phases.png
+# @writes A file inputFileName.mpi-phases.pdf
+#
+#
+def plotMPIPhases(numberOfRanks,inputFileName):
   inTraversalColor        = "#00ab00"
   beforeInTraversalColor  = "#ab0000"
   afterInTraversalColor   = "#560000"
@@ -359,20 +373,20 @@ def plotMPIPhases():
   ax.autoscale_view()
   pylab.xlabel('t')
   pylab.grid(True)
-  pylab.savefig( outputFileName + ".mpi-phases.png" )
-  pylab.savefig( outputFileName + ".mpi-phases.pdf" )
+  pylab.savefig( inputFileName + ".mpi-phases.png" )
+  pylab.savefig( inputFileName + ".mpi-phases.pdf" )
   switchToLargePlot()
   if numberOfRanks<=16:
     pylab.yticks([i for i in range(0,numberOfRanks)]) 
   else:
     pylab.yticks([i*16 for i in range(0,numberOfRanks/16)]) 
-  pylab.savefig( outputFileName + ".mpi-phases.large.png" )
-  pylab.savefig( outputFileName + ".mpi-phases.large.pdf" )
+  pylab.savefig( inputFileName + ".mpi-phases.large.png" )
+  pylab.savefig( inputFileName + ".mpi-phases.large.pdf" )
   switchBackToStandardPlot()  
 
 
 
-def plotForkJoinStatistics():
+def plotForkJoinStatistics(numberOfRanks,inputFileName):
   numberOfWorkingNodes = []
   numberOfIdleNodes    = []
   numberOfForks        = []
@@ -437,131 +451,15 @@ def plotForkJoinStatistics():
   
   setGeneralPlotSettings()
   
-  pylab.savefig( outputFileName + ".fork-join-statistics.png" )
-  pylab.savefig( outputFileName + ".fork-join-statistics.pdf" )
+  pylab.savefig( inputFileName + ".fork-join-statistics.png" )
+  pylab.savefig( inputFileName + ".fork-join-statistics.pdf" )
 
 
-def  extractForkHistory():
-  outFile.write( "<table border=\"1\">" )
-
-  histogram        = []
-  lastParentForked = 0
-  
-  outFile.write( "<tr><td><b>Step\\Rank</b></td>" )
-  for i in range(0,numberOfRanks):
-    outFile.write( "<td><i>" + str(i) + "</td>" )
-  outFile.write( "</tr>" )
-
- 
-  histogramLevelForks = []
-  histogramLevelJoins = []
-  forksPerRank        = [0 for a in range(0,numberOfRanks)]
-  joinsPerRank        = [0 for a in range(0,numberOfRanks)]
-  
-  outFile.write( "<tr>" )
-  outFile.write( "<td><b>0</b></td>" )
-  currentStep         = 1
-  try:
-    inputFile = open( inputFileName,  "r" )
-    print "parse forks/join history",
-    for line in inputFile:
-      searchPatternAddFork    = "peano::performanceanalysis::DefaultAnalyser::addWorker.*\d+->\d+\+\d+"
-      searchPatternAddJoin    = "peano::performanceanalysis::DefaultAnalyser::removeWorker.*\d+\+\d+->d+"
-      searchEndIteration      = "rank:0.*peano::performanceanalysis::DefaultAnalyser::endIteration"
-      if ("DefaultAnalyser" in line):
-        m = re.search( searchPatternAddFork, line )
-        if (m):
-          #
-          # parse
-          #
-          parent = int(m.group(0).split("->")[0].split(" ")[-1]) 
-          child  = int(m.group(0).split("+")[-1].split(" ")[-1])
-          level  = line.split("level:")[1].split("]")[0]
-
-          if parent<lastParentForked:
-            outFile.write( "</tr>" )
-            outFile.write( "<tr>" )
-            lastParentForked = -1
-          while lastParentForked<parent:
-            outFile.write( "<td />" )
-            lastParentForked = lastParentForked + 1
-          lastParentForked = lastParentForked + 1
-          outFile.write( "<td>" + str(parent) + "->" + str(parent) + "+" + str(child) + " (level=" + level + ")</td>" )        
-          #while len(histogram)<=int(level):
-          #  histogram.append( 0 )
-          #histogram[int(level)] = histogram[int(level)] + 1   
-          #lastParentForked = parent
-          #
-          # find right column in table
-          #
-          #if (lastColumnWrittenTo>parent):
-          #  outFile.write( "</td></tr><tr>" )
-          #  lastColumnWrittenTo=0
-          #for i in range(lastColumnWrittenTo,parent):
-          #  outFile.write( "</td>" )
-          #  outFile.write( "<td>" )        
-          #lastColumnWrittenTo = parent
-          #
-          # write entry
-          #
-          #outFile.write( str(parent) + "->" + str(parent) + "+" + str(child) + " (level=" + level + ")<br />" )
-          #
-          # update statistics
-          #        
-          while len(histogramLevelForks)<=int(level):
-            histogramLevelForks.append( 0 )
-            histogramLevelJoins.append( 0 )
-          #while len(forksPerRank)<=int(parent):
-          #  forksPerRank[parent] = forksPerRank[parent]+1
-          histogramLevelForks[int(level)] = histogramLevelForks[int(level)] + 1
-          forksPerRank[parent]            = forksPerRank[parent] + 1
-        m = re.search( searchPatternAddJoin, line )
-        if (m):
-          print "not written yet"
-          quit()
-        m = re.search( searchEndIteration, line )
-        if (m and lastParentForked>0):
-          outFile.write( "</tr><tr>" )
-          outFile.write( "<td><b>" + str(currentStep) + "</b></td>" )
-          currentStep      = currentStep + 1
-          lastParentForked = 0
-    print " done"
-  except Exception as inst:
-    print "failed to read " + inputFileName
-    print inst
-  outFile.write( "</tr>" )
-
-  outFile.write( "<tr><td><b>no of forks:</b></td>" )
-  for i in range(0,numberOfRanks):
-    outFile.write( "<td><i>" + str(forksPerRank[i]) + "</i></td>" )
-  outFile.write( "</tr>" )
-  outFile.write( "<tr><td><b>no of joins:</b></td>" )
-  for i in range(0,numberOfRanks):
-    outFile.write( "<td><i>" + str(joinsPerRank[i]) + "</i></td>" )
-  outFile.write( "</tr>" )
-  outFile.write( "</table>" )
-  
-  
-  outFile.write( "<h3>Histograms:</h3>" )
-  outFile.write( "<table border=\"1\">" )
-  outFile.write( "<tr><td><b>Level</b></td><td><b>Number of forks</b></td><td><b>Number of joins</b></td></tr>" )
-  for i in range(1,len(histogramLevelForks)):
-    outFile.write( "<tr><td>"  + str(i) + "</td>" )
-    if histogramLevelForks[i]>0:
-      outFile.write( "<td bgcolor=\"#aaaaFF\">"  + str(histogramLevelForks[i]) )
-    else:
-      outFile.write( "<td bgcolor=\"#FF0000\">"  + str(histogramLevelForks[i]) )
-    if histogramLevelJoins[i]==0:
-      outFile.write( "<td bgcolor=\"#aaaaFF\">"  + str(histogramLevelJoins[i]) )
-    else:
-      outFile.write( "<td bgcolor=\"#00FF00\">"  + str(histogramLevelJoins[i]) )
-    outFile.write( "</td></tr>" )
-  outFile.write( "</table>" )
 
 
   
 
-def plotBoundaryLateSends():
+def plotBoundaryLateSends(numberOfRanks,inputFileName):
   pairs = dict()
   totalMaxCardinality     = 0
   totalCount              = 0
@@ -625,36 +523,36 @@ def plotBoundaryLateSends():
   pylab.clf()
   pylab.title( "Late sends from neighbours" )
   drawTreeGraph(graph)
-  pylab.savefig( outputFileName + ".boundary-data-exchange.png" )
-  pylab.savefig( outputFileName + ".boundary-data-exchange.pdf" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.png" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.pdf" )
   switchToLargePlot()
-  pylab.savefig( outputFileName + ".boundary-data-exchange.large.png" )
-  pylab.savefig( outputFileName + ".boundary-data-exchange.large.pdf" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.large.png" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.large.pdf" )
   switchBackToStandardPlot()
 
   pylab.clf()
   pylab.title( "Late sends from neighbours (only edges with weight more than average)" )
   drawTreeGraph(sparseAverageGraph)
-  pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.png" )
-  pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.pdf" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.png" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.pdf" )
   switchToLargePlot()
-  pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.large.png" )
-  pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-average.large.pdf" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.png" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.pdf" )
   switchBackToStandardPlot()
 
   pylab.clf()
   pylab.title( "Late sends from neighbours (only 10% heaviest edges)" )
   drawTreeGraph(sparseMaxGraph)
-  pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.png" )
-  pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.pdf" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.png" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.pdf" )
   switchToLargePlot()
-  pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.large.png" )
-  pylab.savefig( outputFileName + ".boundary-data-exchange.sparse-max.large.pdf" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.png" )
+  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.pdf" )
   switchBackToStandardPlot()
 
 
-def plotMasterWorkerLateSends():
-  global GlobalSynchronisationOnRank0
+def plotMasterWorkerLateSends(numberOfRanks,inputFileName):
+  GlobalSynchronisationOnRank0 = False
   
   #  <a href=\"" + outputFileName + ".master-worker-data-exchange.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.png\" />\
   pairs = dict()
@@ -727,36 +625,51 @@ def plotMasterWorkerLateSends():
   pylab.clf()
   pylab.title( "Late workers" )
   drawTreeGraph(graph)
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.png" )
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.pdf" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.png" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.pdf" )
   switchToLargePlot()
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.large.png" )
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.large.pdf" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.large.png" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.large.pdf" )
   switchBackToStandardPlot()
 
   pylab.clf()
   pylab.title( "Late workers (only edges with weight more than average)" )
   drawTreeGraph(sparseAverageGraph)
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.png" )
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.pdf" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.png" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.pdf" )
   switchToLargePlot()
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.large.png" )
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-average.large.pdf" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.png" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.pdf" )
   switchBackToStandardPlot()
 
   pylab.clf()
   pylab.title( "Late workers (only 10% heaviest edges)" )
   drawTreeGraph(sparseMaxGraph)
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.png" )
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.pdf" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.png" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.pdf" )
   switchToLargePlot()
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.large.png" )
-  pylab.savefig( outputFileName + ".master-worker-data-exchange.sparse-max.large.pdf" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.png" )
+  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.pdf" )
   switchBackToStandardPlot()
 
+  return GlobalSynchronisationOnRank0
 
-
-def plotLogicalTopology(inputFileName,numberOfRanks):
+#
+# Plot topology to file and return an array where we bookmark for each rank what
+# its parent is. The second entry of the return tuple is an array of the 
+# corresponding levels.
+#
+def plotLogicalTopology(inputFileName,numberOfRanks,dim):
+  parents  = [-1 for x in range(0,numberOfRanks)]
+  levels   = [-1 for x in range(0,numberOfRanks)]
+  if dim==2:
+    volume = [(0.0,0.0) for x in range(0,numberOfRanks)]
+    offset = [(0.0,0.0) for x in range(0,numberOfRanks)]
+  else:
+    volume = [(0.0,0.0,0.0) for x in range(0,numberOfRanks)]
+    offset = [(0.0,0.0,0.0) for x in range(0,numberOfRanks)]
+  level = [ 0 for x in range(0,numberOfRanks)]
+  
   topologyGraph = networkx.MultiDiGraph()
   for rank in range(0,numberOfRanks):
     topologyGraph.add_node(str(rank))
@@ -766,21 +679,20 @@ def plotLogicalTopology(inputFileName,numberOfRanks):
     inputFile = open( inputFileName,  "r" )
     print "parse topology",
     for line in inputFile:
-      searchPatternAddFork    = "peano::performanceanalysis::DefaultAnalyser::addWorker.*\d+->\d+\+\d+"
-      searchPatternAddJoin    = "peano::performanceanalysis::DefaultAnalyser::removeWorker.*\d+\+\d+->d+"
-      if ("DefaultAnalyser" in line):
-          m = re.search( searchPatternAddFork, line )
-          if (m):
-            parent = m.group(0).split("->")[0].split(" ")[-1] 
-            child  = m.group(0).split("+")[-1].split(" ")[-1]
-            topologyGraph.add_edge(child,parent)
-            print ".",
-          m = re.search( searchPatternAddJoin, line )
-          if (m):
-            child  = m.group(0).split("+")[1].split("->")[0] 
-            parent = m.group(0).split("->")[-1] 
-            topologyGraph.add_edge(child,parent)
-            print ".",
+      if "start node for subdomain" in line:
+        print ".",
+        child = int(line.split( "rank:" )[1].split( " " )[0])
+        parent = int(line.split( "with master" )[1])
+        topologyGraph.add_edge(child,parent)
+        parents[child]=parent
+        fragments = getBoundingBox(line) 
+        if dim==2:
+          offset[child] = ( float(fragments[0]),float(fragments[1]) )
+          volume[child] = ( float(fragments[2]),float(fragments[3]) )
+        else:
+          offset[child] = ( float(fragments[0]),float(fragments[1]),float(fragments[2]) )
+          volume[child] = ( float(fragments[3]),float(fragments[4]),float(fragments[5]) )
+        levels[child] = int(line.split( "on level" )[1].split( " with" )[0])
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
@@ -794,6 +706,7 @@ def plotLogicalTopology(inputFileName,numberOfRanks):
   pylab.savefig( inputFileName + ".topology.large.png" )
   pylab.savefig( inputFileName + ".topology.large.pdf" )
   switchBackToStandardPlot()
+  return (parents,levels,offset,volume)
 
 
 def setGeneralPlotSettings():
@@ -813,7 +726,7 @@ def setGeneralPlotSettings():
 
 
 
-def plotGlobalGridOverview():
+def plotGlobalGridOverview(numberOfRanks,inputFileName):
   pylab.clf()
   pylab.title( "Cells on global master" )
 
@@ -823,8 +736,8 @@ def plotGlobalGridOverview():
   pylab.plot(tTotal[0], numberOfOuterCells[0],     'x-',  markersize=10, color='#00aa66', label='#outer cells' )
   setGeneralPlotSettings()
   pylab.legend(fontsize=9, loc='upper left', framealpha=0.5)
-  pylab.savefig( outputFileName + ".grid-overview-global-master.png" )
-  pylab.savefig( outputFileName + ".grid-overview-global-master.pdf" )
+  pylab.savefig( inputFileName + ".grid-overview-global-master.png" )
+  pylab.savefig( inputFileName + ".grid-overview-global-master.pdf" )
 
   pylab.clf()
   pylab.title( "Local cells" )
@@ -836,8 +749,8 @@ def plotGlobalGridOverview():
     if len(tTotal[rank])==len(numberOfLocalCells[rank]):
       pylab.plot(tTotal[rank], numberOfLocalCells[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
   pylab.xlabel('t')
-  pylab.savefig( outputFileName + ".local-cells.png" )
-  pylab.savefig( outputFileName + ".local-cells.pdf" )
+  pylab.savefig( inputFileName + ".local-cells.png" )
+  pylab.savefig( inputFileName + ".local-cells.pdf" )
 
   globalNumberOfInnerLeafCells = [a for a in numberOfInnerLeafCells[0]]
   globalNumberOfOuterLeafCells = [a for a in numberOfOuterLeafCells[0]]
@@ -871,8 +784,8 @@ def plotGlobalGridOverview():
   pylab.plot(tTotal[0], globalNumberOfOuterCells,     'x-',  markersize=10, color='#00aa66', label='#outer cells' )
   pylab.legend(fontsize=9, loc='upper left', framealpha=0.5)
   setGeneralPlotSettings()
-  pylab.savefig( outputFileName + ".grid-overview.png" )
-  pylab.savefig( outputFileName + ".grid-overview.pdf" )
+  pylab.savefig( inputFileName + ".grid-overview.png" )
+  pylab.savefig( inputFileName + ".grid-overview.pdf" )
 
   pylab.clf()
   pylab.title( "Local vertices" )
@@ -884,11 +797,11 @@ def plotGlobalGridOverview():
     if len(tTotal[rank])==len(numberOfLocalVertices[rank]):
       pylab.plot(tTotal[rank], numberOfLocalVertices[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
   pylab.xlabel('t')
-  pylab.savefig( outputFileName + ".local-vertices.png" )
-  pylab.savefig( outputFileName + ".local-vertices.pdf" )
+  pylab.savefig( inputFileName + ".local-vertices.png" )
+  pylab.savefig( inputFileName + ".local-vertices.pdf" )
 
 
-def plotWalltimeOverview():
+def plotWalltimeOverview(numberOfRanks,inputFileName): 
   pylab.clf()
   pylab.title( "Walltime" )
   pylab.ylabel( "time per grid sweep [t]=s" )
@@ -902,40 +815,14 @@ def plotWalltimeOverview():
     if len(tTotal[rank])==len(tTraversal[rank]):
       pylab.plot(tTotal[rank], tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
   setGeneralPlotSettings()
-  pylab.savefig( outputFileName + ".walltime.png" )
-  pylab.savefig( outputFileName + ".walltime.pdf" )
-
-
-def createRankDetails(rank):
-  #searchPattern = "(\d+),rank:" + str(rank) + ".*::repositories::.*::restart(...).*start node for subdomain"
-  #searchPattern = str(rank) + ".*repositories.*restart.*start node for subdomain"
-  searchPattern = "rank:" + str(rank) + " .*repositories.*restart.*start node for subdomain"
-
-  outFile.write( "<h4>Rank details:</h4>" );
-  outFile.write( "<ol>" );
- 
-  wroteDetails = False
-  #try:
-  inputFile = open( inputFileName,  "r" )
-  for line in inputFile:
-    m = re.search( searchPattern, line )
-    if (m):
-      wroteDetails = True
-      outFile.write( "<li>" );
-      outFile.write( line );
-      outFile.write( "</li>" );
-
-  #except:
-  #  pass
-    
-  if not wroteDetails:
-    outFile.write( "<li>Rank details are available if and only if info messages from the repositories subcomponent are switched on</li>" );
-  
-  outFile.write( "</ol>" );
+  pylab.savefig( inputFileName + ".walltime.png" )
+  pylab.savefig( inputFileName + ".walltime.pdf" )
 
 
 
-def plotStatisticsForRank(currentRank):
+
+
+def plotStatisticsForRank(currentRank,numberOfRanks,inputFileName):
   pylab.clf()
   pylab.title( "Walltime" )
   pylab.plot(tTotal[0], tTraversal[0], '-',  markersize=10, color='#000066', label='time per traversal (global master)' )
@@ -952,8 +839,8 @@ def plotStatisticsForRank(currentRank):
     else:
       print "WARNING: tTotal and tTraversal for rank " + str(rank) + " do not hold the same number of entries. Input file seems to be corrupted"
   setGeneralPlotSettings()
-  pylab.savefig( outputFileName + ".walltime-rank-" + str(currentRank) + ".png" )
-  pylab.savefig( outputFileName + ".walltime-rank-" + str(currentRank) + ".pdf" )
+  pylab.savefig( inputFileName + ".walltime-rank-" + str(currentRank) + ".png" )
+  pylab.savefig( inputFileName + ".walltime-rank-" + str(currentRank) + ".pdf" )
 
   pylab.clf()
   pylab.title( "Cells" )
@@ -972,8 +859,8 @@ def plotStatisticsForRank(currentRank):
     else:
       print "WARNING: arrays tTotal and numberOfLocalCells of rank " + str(rank) + " have different sizes. Input file might be corrupted"
   setGeneralPlotSettings()
-  pylab.savefig( outputFileName + ".local-cells-rank-" + str(currentRank) + ".png" )
-  pylab.savefig( outputFileName + ".local-cells-rank-" + str(currentRank) + ".pdf" )
+  pylab.savefig( inputFileName + ".local-cells-rank-" + str(currentRank) + ".png" )
+  pylab.savefig( inputFileName + ".local-cells-rank-" + str(currentRank) + ".pdf" )
   
   totalTimeCalendar            = []
   joinTimeCalendar             = []
@@ -1094,8 +981,8 @@ def plotStatisticsForRank(currentRank):
 
   setGeneralPlotSettings()
 
-  pylab.savefig( outputFileName + ".runtime-profile-calendar-rank-" + str(currentRank) + ".png" )
-  pylab.savefig( outputFileName + ".runtime-profile-calendar-rank-" + str(currentRank) + ".pdf" )
+  pylab.savefig( inputFileName + ".runtime-profile-calendar-rank-" + str(currentRank) + ".png" )
+  pylab.savefig( inputFileName + ".runtime-profile-calendar-rank-" + str(currentRank) + ".pdf" )
 
 
 
@@ -1118,16 +1005,134 @@ def plotStatisticsForRank(currentRank):
     print "- error in centralElementCPU"
 
   setGeneralPlotSettings()
-  pylab.savefig( outputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".png" )
-  pylab.savefig( outputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".pdf" )
+  pylab.savefig( inputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".png" )
+  pylab.savefig( inputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".pdf" )
 
+  
+def computeVolumesOverlapsWork(numberOfRanks,volume,offset,dim,domainoffset,domainsize,parents):
+  print "compute volumes, overlaps and work ",
+  volumes = [0.0 for x in offset]
+  for i in range(0,numberOfRanks):
+    print ".",
+    if dim==2:
+      volumes[i] = volume[i][0]*volume[i][1]
+    else:
+      volumes[i] = volume[i][0]*volume[i][1]*volume[i][2]
 
-def prepareDomainDecompositionDataStructures(numberOfRanks,dim):
-  if dim==2:
-    volume = [(0.0,0.0) for x in range(0,numberOfRanks)]
-    offset = [(0.0,0.0) for x in range(0,numberOfRanks)]
-  else:
-    volume = [(0.0,0.0,0.0) for x in range(0,numberOfRanks)]
-    offset = [(0.0,0.0,0.0) for x in range(0,numberOfRanks)]
-  level = [ 0 for x in range(0,numberOfRanks)]
-  return (volume,offset,level)
+  overlaps = [0.0 for x in offset]
+  for i in range(0,numberOfRanks):
+    print ".",
+    overlaps[i] = 1.0
+    for d in range(0,dim):
+      left  = max(offset[i][d],float(domainoffset[d]))
+      right = min(offset[i][d]+volume[i][d],float(domainoffset[d])+float(domainsize[d]))
+      delta = right-left
+      if delta<0:
+        print "ERROR for rank " + str(i) +  \
+              ": region=" + str(offset[i]) + "x" + str(volume[i]) + \
+              ", bonding box=" + str(domainoffset) + "x" + str(domainsize) + \
+              ", delta= " + str(delta) 
+      overlaps[i] = overlaps[i] * delta
+    if overlaps[i]>volume[i]:
+      print "ERROR for rank " + str(i) +  \
+            ": region=" + str(offset[i]) + "x" + str(volume[i]) + \
+            ", bounding box=" + str(domainoffset) + "x" + str(domainsize) + \
+            ", volume= " + str(volumes[i]) + ", overlaps=" + str(overlaps[i]) 
+  work = [x for x in overlaps]
+  for i in range(1,numberOfRanks):
+    if work[ parents[i] ]<overlaps[i]:
+      print "WARNING: work of rank " + str(parents[i]) + " will become negative as overlap of rank " + str(i) + " equals " + str(overlaps[i]) 
+    work[ parents[i] ] = work[ parents[i] ] - overlaps[i]
+  work[0] = 0.0     # can become negative
+
+  print " done "
+  return (volumes,overlaps,work)
+  
+  
+  
+  
+def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,work,outputFileName):
+ print "plot workload distribution ",
+ pylab.clf()
+ ranks = [x for x in range(0,numberOfRanks)]
+
+ print ".",
+ _markevery = numberOfRanks
+ if numberOfRanks>11:
+  _markevery = _markevery / 11
+ pylab.plot(ranks, volumes, '-o', label="area of responsibility", markevery=_markevery, color='#000000', markersize=10)
+
+ print ".",
+ _markevery = numberOfRanks
+ if numberOfRanks>11:
+   _markevery = _markevery / 11
+ pylab.plot(ranks, overlaps, '-s', label="area of responsibility $\cap \Omega$", markevery=_markevery, color='#ff0000', markersize=10)
+
+ print ".",
+ pylab.fill_between(ranks, work, color='#0000bb', alpha=0.4)
+
+ maxLocalWorkToGetExtraLabel = 0
+ ranksWithLabels = len(work)
+ while ranksWithLabels > numberOfRanks/10:
+   maxLocalWorkToGetExtraLabel = 0.5 * maxLocalWorkToGetExtraLabel + 0.5 * max(work)
+   ranksWithLabels = sum( i>maxLocalWorkToGetExtraLabel for i in work )
+ 
+ for i in range(0,numberOfRanks):
+   if work[i]>maxLocalWorkToGetExtraLabel:
+     pylab.text(i,volumes[i]+10,str(i))
+     pylab.plot([i,i], [0, volumes[i]], '--', color="#000000") 
+
+ ranksWithZeroResponsibility = 0
+ while volumes[ranksWithZeroResponsibility]==0.0:
+   ranksWithZeroResponsibility = ranksWithZeroResponsibility + 1
+ if (ranksWithZeroResponsibility>2):
+   pylab.text(ranksWithZeroResponsibility,volumes[ranksWithZeroResponsibility]+20,"ranks_per_node")
+   pylab.plot([ranksWithZeroResponsibility,ranksWithZeroResponsibility], [0, volumes[ranksWithZeroResponsibility]], '-', color="#000000") 
+ 
+ pylab.xlabel('rank')  
+ pylab.ylabel('$\Omega $')
+ try:
+   pylab.legend(fontsize=9, framealpha=0.5)
+ except:
+   # old pylab version
+   l = pylab.legend(prop={'size':9})
+   l.get_frame().set_alpha(0.5)
+ ax = pylab.gca()
+ ax.autoscale_view()
+ ax.set_yscale('symlog', basey=10)
+
+ #if numberOfRanks>32:
+ # pylab.figure(figsize=(numberOfRanks/10,4))
+
+ setGeneralPlotSettings()
+ pylab.savefig( outputFileName + ".work-distribution.png" )
+ pylab.savefig( outputFileName + ".work-distribution.pdf" )
+ switchToLargePlot()
+ pylab.savefig( outputFileName + ".work-distribution.large.png" )
+ pylab.savefig( outputFileName + ".work-distribution.large.pdf" )
+ switchBackToStandardPlot()
+ print "done"
+
+ 
+ 
+def plot2dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,offset,volume,levels,outputFileName):
+  print "plot domain decomposition on level " + str(l),
+  pylab.clf()
+  pylab.figure(figsize=(float(domainsize[0]),float(domainsize[1])))
+  for i in range(0,numberOfRanks):
+    if levels[i]==l:
+      print ".",
+      pylab.gca().add_patch(pylab.Rectangle(offset[i]+(volume[i][0]*0.01,volume[i][0]*0.01), volume[i][0]*0.98, volume[i][1]*0.98, color="#aabbaa"))
+      
+      pylab.text(
+        offset[i][0] + volume[i][0]/2,
+        offset[i][1] + volume[i][1]/2,
+        str(i)
+      )
+      #print "\noffset=" + str(offset[i]) + ", volume=" + str(volume[i]),
+  print ".",
+  pylab.xlim( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
+  pylab.ylim( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
+  pylab.savefig( outputFileName + ".level" + str(l) + ".png" )
+  pylab.savefig( outputFileName + ".level" + str(l) + ".pdf" )
+  print "done"
