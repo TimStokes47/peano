@@ -4,29 +4,8 @@ from argparse import RawTextHelpFormatter
 import pylab
 import networkx
 import datetime
+import performanceanalysisroutines
 
-
-def getNumberOfRanks():
-  print "parse input file header ",
-  try:
-    inputFile = open( args.file,  "r" )
-    for line in inputFile:
-      print ".",
-      if "processes:" in line:
-        numberOfRanks = int(line.split( "processes:" )[1].split( "," )[0])
-        print str(numberOfRanks) + " MPI ranks used"
-        return numberOfRanks
-
-  except Exception as inst:
-    print "failed to read " + args.file
-    print inst
-  return 0
-  
-  
-def getBoundingBox(line):
-  line    = line.replace( "]x[", "," )
-  results = line.split( "node for subdomain [")[1].split( "] on level" )[0].split( "," )
-  return results
 
 ########################################################################
 # START OF THE PROGRAM
@@ -63,74 +42,70 @@ outFile.write(
 dim = int(args.dimension)
 
 
-numberOfRanks = getNumberOfRanks()
-
+numberOfRanks = performanceanalysisroutines.getNumberOfRanks(args.file)
 
 print "prepare data structures ",
-if dim==2:
-  volume = [(0.0,0.0) for x in range(0,numberOfRanks)]
-  offset = [(0.0,0.0) for x in range(0,numberOfRanks)]
-else:
-  volume = [(0.0,0.0,0.0) for x in range(0,numberOfRanks)]
-  offset = [(0.0,0.0,0.0) for x in range(0,numberOfRanks)]
+(volume,offset,level) = performanceanalysisroutines.prepareDomainDecompositionDataStructures(numberOfRanks,dim)
 print "done"
-level = [ 0 for x in range(0,numberOfRanks)]
 
 
-pylab.clf()
-pylab.title( "Logical topology" )
-
-topologyGraph = networkx.MultiDiGraph()
-for rank in range(0,numberOfRanks):
-  topologyGraph.add_node(str(rank))
-
-print "parse input file ",
-parents  = [-1 for x in range(0,numberOfRanks)]
-maxLevel = 0
-try:
-  inputFile = open( args.file,  "r" )
-
-  for line in inputFile:
-    if "start node for subdomain" in line:
-      print ".",
-      child = int(line.split( "rank:" )[1].split( " " )[0])
-      parent = int(line.split( "with master" )[1])
-      topologyGraph.add_edge(child,parent)
-      parents[child]=parent
-      fragments = getBoundingBox(line) 
-      if dim==2:
-        offset[child] = ( float(fragments[0]),float(fragments[1]) )
-        volume[child] = ( float(fragments[2]),float(fragments[3]) )
-      else:
-        offset[child] = ( float(fragments[0]),float(fragments[1]),float(fragments[2]) )
-        volume[child] = ( float(fragments[3]),float(fragments[4]),float(fragments[5]) )
-      level[child] = int(line.split( "on level" )[1].split( " with" )[0])
-      maxLevel = max(maxLevel,level[child])
-  print " done"
-except Exception as inst:
-  print "failed to read " + args.file
-  print inst
-
-
-print "Plot logical topology ",
-try:
-  pos=networkx.graphviz_layout(topologyGraph,prog='twopi',args='')
-  #pos=networkx.graphviz_layout(topologyGraph,prog='dot',args='')
-except:
-  pos=networkx.spring_layout(topologyGraph)
-networkx.draw(
-  topologyGraph,
-  pos,
-  with_labels=True,
-  node_color='#667766',
-  node_size=10,
-  alpha=0.2
-)
-pylab.savefig( args.file + ".topology.png" )
-pylab.savefig( args.file + ".topology.pdf" )
+performanceanalysisroutines.plotLogicalTopology(args.file,numberOfRanks);
+#pylab.clf()
+#pylab.title( "Logical topology" )
+#
+#topologyGraph = networkx.MultiDiGraph()
+#for rank in range(0,numberOfRanks):
+#  topologyGraph.add_node(str(rank))##
+#
+#print "parse input file ",
+#parents  = [-1 for x in range(0,numberOfRanks)]
+#maxLevel = 0
+#try:
+#  inputFile = open( args.file,  "r" )#
+#
+#  for line in inputFile:
+#    if "start node for subdomain" in line:
+#      print ".",
+#      child = int(line.split( "rank:" )[1].split( " " )[0])
+#      parent = int(line.split( "with master" )[1])
+#      topologyGraph.add_edge(child,parent)
+#      parents[child]=parent
+#      fragments = performanceanalysisroutines.getBoundingBox(line) 
+#      if dim==2:
+#        offset[child] = ( float(fragments[0]),float(fragments[1]) )
+#        volume[child] = ( float(fragments[2]),float(fragments[3]) )
+#      else:
+#        offset[child] = ( float(fragments[0]),float(fragments[1]),float(fragments[2]) )
+#        volume[child] = ( float(fragments[3]),float(fragments[4]),float(fragments[5]) )
+#      level[child] = int(line.split( "on level" )[1].split( " with" )[0])
+#      maxLevel = max(maxLevel,level[child])
+#  print " done"
+#except Exception as inst:
+#  print "failed to read " + args.file
+#  print inst
+##
+#
+#print "Plot logical topology ",
+#try:
+#  pos=networkx.graphviz_layout(topologyGraph,prog='twopi',args='')
+#  #pos=networkx.graphviz_layout(topologyGraph,prog='dot',args='')
+#except:
+#  pos=networkx.spring_layout(topologyGraph)
+#networkx.draw(
+#  topologyGraph,
+#  pos,
+#  with_labels=True,
+#  node_color='#667766',
+#  node_size=10,
+#  alpha=0.2
+#)
+#pylab.savefig( args.file + ".topology.png" )
+#pylab.savefig( args.file + ".topology.pdf" )
 outFile.write( "<h2>Logical topology</h2>" )
 outFile.write( "<img src=\"" + args.file + ".topology.png\" />" )
 print " done "
+
+@todo Links auf die grosse Version
 
 
 print "compute volumes ",
@@ -230,15 +205,9 @@ print ".",
 #pylab.plot(ranks, work, '-v', label="work", markevery=numberOfRanks/12, color='#0000bb', markersize=10)
 pylab.fill_between(ranks, work, color='#0000bb', alpha=0.4)
 
-
-maxLocalWorkDisplayed = work[1]
-minLocalWorkDisplayed = work[0]
-for x in work[2:]:
-  if x>minLocalWorkDisplayed:
-    minLocalWorkDisplayed = maxLocalWorkDisplayed
-    maxLocalWorkDisplayed = x
+maxLocalWork = max(work)
 for i in range(0,numberOfRanks):
-  if work[i]>=minLocalWorkDisplayed:
+  if work[i]>maxLocalWork/10:
     pylab.text(i,volumes[i]+10,str(i))
     pylab.plot([i,i], [0, volumes[i]], '--', color="#000000")
 
