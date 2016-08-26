@@ -184,6 +184,8 @@ args   = parser.parse_args();
 numberOfRanks   = performanceanalysisroutines.getNumberOfRanks(args.file)
 numberOfThreads = performanceanalysisroutines.getNumberOfThreads(args.file)
 
+performanceanalysisroutines.AlphaValue = 1.0/numberOfRanks
+
 inputFileName   = args.file
 
 print "start to process input file " + inputFileName + " with " + str(numberOfRanks) + " rank(s) and " + str(numberOfThreads) + " thread(s)" 
@@ -318,7 +320,7 @@ outFile.write( "\
 #
 outFile.write( "\
     <h2 id=\"walltime-overview\">Walltime overview</h2>\
-     <img src=\"" + outputFileName + ".walltime.png\" />\
+     <img src=\"" + inputFileName + ".walltime.png\" />\
     <br /><br />\
     <p>\
     The fuzzy dots summarise the local runtimes of the individual ranks, \
@@ -344,16 +346,16 @@ outFile.write( "\
 #
 outFile.write( "\
     <h2 id=\"global-grid-overview\">Global grid overview</h2>\
-    <img src=\"" + outputFileName + ".grid-overview.png\" />\
-    <img src=\"" + outputFileName + ".grid-overview-global-master.png\" />\
+    <img src=\"" + inputFileName + ".grid-overview.png\" />\
+    <img src=\"" + inputFileName + ".grid-overview-global-master.png\" />\
     <br /><br />\
     ")
     
     
 if (numberOfRanks>1):      
   outFile.write( "\
-    <img src=\"" + outputFileName + ".local-cells.png\" />\
-    <img src=\"" + outputFileName + ".local-vertices.png\" />\
+    <img src=\"" + inputFileName + ".local-cells.png\" />\
+    <img src=\"" + inputFileName + ".local-vertices.png\" />\
     <br /><br />\
     ")
 
@@ -400,13 +402,13 @@ if (numberOfRanks>1):
 if (numberOfThreads>1):      
   outFile.write( "<h2 id=\"concurrency\">Multithreading concurrency</h2>" )
   if numberOfRanks==1:
-    outFile.write( "<img src=\"" + outputFileName + "-rank-0.concurrency.png\" />" )
-    outFile.write( "<br /><a href=\"" + outputFileName + "-rank-0.concurrency.large.png\">Big version</a>" )
+    outFile.write( "<img src=\"" + inputFileName + "-rank-0.concurrency.png\" />" )
+    outFile.write( "<br /><a href=\"" + inputFileName + "-rank-0.concurrency.large.png\">Big version</a>" )
 
   for rank in range(0,numberOfRanks):
     outFile.write( "<h3>Rank " + str(rank) + "</h2>" )
-    outFile.write( "<img src=\"" + outputFileName + "-rank-" + str(rank) + ".concurrency.png\" />" )
-    outFile.write( "<br /><a href=\"" + outputFileName + "-rank-" + str(rank) + ".concurrency.large.png\">Big version</a>" )
+    outFile.write( "<img src=\"" + inputFileName + "-rank-" + str(rank) + ".concurrency.png\" />" )
+    outFile.write( "<br /><a href=\"" + inputFileName + "-rank-" + str(rank) + ".concurrency.large.png\">Big version</a>" )
     
   outFile.write("\
     <br /><br />\
@@ -488,7 +490,7 @@ if (numberOfRanks>1):
   #
   outFile.write( "\
     <h2 id=\"fork-join-statistics\">Fork and join statistics</h2>\
-    <img src=\"" + outputFileName + ".fork-join-statistics.png\" />\
+    <img src=\"" + inputFileName + ".fork-join-statistics.png\" />\
     <br /><br />\
     <p>\
     The statistics use the node's timers. If the timers of nodes ran with MPI \
@@ -536,7 +538,7 @@ if (numberOfRanks>1):
   # 
   outFile.write( "\
     <h2 id=\"mpi-phases\">MPI Phases</h2>\
-    <a href=\"" + outputFileName + ".mpi-phases.large.png\"> <img src=\"" + outputFileName + ".mpi-phases.png\" /> </a> \
+    <a href=\"" + inputFileName + ".mpi-phases.large.png\"> <img src=\"" + inputFileName + ".mpi-phases.png\" /> </a> \
     <br /><br />\
     <h3>Legend:</h3>\
     <ul>\
@@ -571,11 +573,11 @@ if (numberOfRanks>1):
   outFile.write( "\
     <h2 id=\"master-worker-data-exchange\">Master-worker data exchange</h2>\
     <p>If an edge points from a to b, it means that master b had to wait for its worker a. The labels are wait times in seconds. </p>\
-    <a href=\"" + outputFileName + ".master-worker-data-exchange.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.png\" /></a>\
+    <a href=\"" + inputFileName + ".master-worker-data-exchange.large.png\" /><img src=\"" + inputFileName + ".master-worker-data-exchange.png\" /></a>\
     <p>The following graph holds only edges whose average is beyond the average of averages.</p>\
-    <a href=\"" + outputFileName + ".master-worker-data-exchange.sparse-average.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.sparse-average.png\" /></a>\
+    <a href=\"" + inputFileName + ".master-worker-data-exchange.sparse-average.large.png\" /><img src=\"" + inputFileName + ".master-worker-data-exchange.sparse-average.png\" /></a>\
     <p>The following graph holds only edges whose maximum weight is with 10% of the total maximum weight.</p>\
-    <a href=\"" + outputFileName + ".master-worker-data-exchange.sparse-max.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.sparse-max.png\" /></a>\
+    <a href=\"" + inputFileName + ".master-worker-data-exchange.sparse-max.large.png\" /><img src=\"" + inputFileName + ".master-worker-data-exchange.sparse-max.png\" /></a>\
     ")
 
   # This is one of the reasons why we have to generate the plots first    
@@ -630,11 +632,11 @@ if (numberOfRanks>1):
     <p>\
     In all diagrams, singular events, i.e. events waits only once or twice, are omitted.\
     </p>\
-    <a href=\"" + outputFileName + ".boundary-data-exchange.large.png\" /><img src=\"" + outputFileName + ".boundary-data-exchange.png\" /></a>\
+    <a href=\"" + inputFileName + ".boundary-data-exchange.large.png\" /><img src=\"" + inputFileName + ".boundary-data-exchange.png\" /></a>\
     <p>The following graph holds only edges whose average is beyond the average of averages.</p>\
-    <a href=\"" + outputFileName + ".boundary-data-exchange.sparse-average.large.png\" /><img src=\"" + outputFileName + ".boundary-data-exchange.sparse-average.png\" /></a>\
+    <a href=\"" + inputFileName + ".boundary-data-exchange.sparse-average.large.png\" /><img src=\"" + inputFileName + ".boundary-data-exchange.sparse-average.png\" /></a>\
     <p>The following graph holds only edges whose maximum weight is with 10% of the total maximum weight.</p>\
-    <a href=\"" + outputFileName + ".boundary-data-exchange.sparse-max.large.png\" /><img src=\"" + outputFileName + ".boundary-data-exchange.sparse-max.png\" /></a>\
+    <a href=\"" + inputFileName + ".boundary-data-exchange.sparse-max.large.png\" /><img src=\"" + inputFileName + ".boundary-data-exchange.sparse-max.png\" /></a>\
     ")
 
   outFile.write( "\
@@ -733,10 +735,10 @@ if (numberOfRanks>1):
     outFile.write( "<h3 id=\"runtime-rank-" + str(rank) + "\">Profile of rank " + str(rank) + "</h2>")
     createRankDetails(rank)  
     outFile.write( "\
-      <img src=\"" + outputFileName + ".walltime-rank-" + str(rank) + ".png\" />\
-      <img src=\"" + outputFileName + ".local-cells-rank-" + str(rank) + ".png\" />\
-      <img src=\"" + outputFileName + ".runtime-profile-calendar-rank-" + str(rank) + ".png\" />\
-      <img src=\"" + outputFileName + ".runtime-profile-cpu-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + inputFileName + ".walltime-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + inputFileName + ".local-cells-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + inputFileName + ".runtime-profile-calendar-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + inputFileName + ".runtime-profile-cpu-rank-" + str(rank) + ".png\" />\
     <br /><br />\
     <a href=\"#individual-ranks\">To rank overview</a>\
     <br /><br />\
