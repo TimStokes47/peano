@@ -16,7 +16,7 @@
  
  To create a tarball of the code, call
  \code
-  tar -cvf peano.tar . --exclude=.svn
+  tar -cvf peano.tar . --exclude=.svn --exclude=*.o
   gzip peano.tar
   mv peano.tar.gz ../tarballs
  \endcode
