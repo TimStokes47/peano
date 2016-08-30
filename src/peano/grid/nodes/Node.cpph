@@ -220,6 +220,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     fineGridCell.isRemote(state,false,false) &&
     !coarseGridCell.isRemote(state,false,false)
   ) {
+    logInfo( "updateCellsParallelStateBeforeStore(...)", "go into remote receive because of " << state.toString() );
     updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(
       state,
       fineGridCell,

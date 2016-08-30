@@ -109,7 +109,7 @@ class peano::grid::State {
 
     static const int IterationsInBetweenRebalancing;
 
-    enum LoadBalancingState {
+    enum class LoadBalancingState {
       NoRebalancing,
       ForkTriggered,
       Forking,

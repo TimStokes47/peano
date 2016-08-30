@@ -15,7 +15,7 @@ std::set<int>       peano::grid::State<StateData>::_loadRebalancingRemoteRanks;
 
 
 template <class StateData>
-typename peano::grid::State<StateData>::LoadBalancingState  peano::grid::State<StateData>::_loadRebalancingState;
+typename peano::grid::State<StateData>::LoadBalancingState  peano::grid::State<StateData>::_loadRebalancingState(peano::grid::State<StateData>::LoadBalancingState::NoRebalancing);
 
 
 template <class StateData>
@@ -32,12 +32,10 @@ peano::grid::State<StateData>::State():
   _stateData.setIsTraversalInverted(false);
 
   #ifdef Parallel
-  _loadRebalancingState = NoRebalancing;
   _stateData.setReduceStateAndCell(true);
-  _loadRebalancingRemoteRanks.clear();
   _iterationCounter = 0;
   _maxForkLevel = std::numeric_limits<int>::max();
-  _previousLoadRebalancingState = Undef;
+  _previousLoadRebalancingState = LoadBalancingState::Undef;
   #endif
 }
 
@@ -62,7 +60,7 @@ peano::grid::State<StateData>::~State() {
 template <class StateData>
 void peano::grid::State<StateData>::restart() {
   #ifdef Parallel
-  _loadRebalancingState = NoRebalancing;
+  _loadRebalancingState = LoadBalancingState::NoRebalancing;
   #endif
 }
 
@@ -79,34 +77,34 @@ std::string peano::grid::State<StateData>::toString() const {
 template <class StateData>
 std::string peano::grid::State<StateData>::toString(LoadBalancingState value) {
   switch (value) {
-    case NoRebalancing:
+    case LoadBalancingState::NoRebalancing:
       return "no-rebalancing";
       break;
-    case ForkTriggered:
+    case LoadBalancingState::ForkTriggered:
       return "fork-triggered";
       break;
-    case Forking:
+    case LoadBalancingState::Forking:
       return "forking";
       break;
-    case JoinTriggered:
+    case LoadBalancingState::JoinTriggered:
       return "join-triggered";
       break;
-    case Joining:
+    case LoadBalancingState::Joining:
       return "joining";
       break;
-    case JoinWithMasterTriggered:
+    case LoadBalancingState::JoinWithMasterTriggered:
       return "join-with-master-triggered";
       break;
-    case JoiningWithMaster:
+    case LoadBalancingState::JoiningWithMaster:
       return "joining-with-master";
       break;
-    case HasJoinedWithMaster:
+    case LoadBalancingState::HasJoinedWithMaster:
       return "has-joined-with-master";
       break;
-    case IsNewWorkerDueToForkOfExistingDomain:
+    case LoadBalancingState::IsNewWorkerDueToForkOfExistingDomain:
       return "is-new-worker";
       break;
-    case Undef:
+    case LoadBalancingState::Undef:
       return "undef";
       break;
   }
@@ -328,7 +326,7 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
   _stateWillReduce.clear();
 
   if (
-    _loadRebalancingState == NoRebalancing &&
+    _loadRebalancingState == LoadBalancingState::NoRebalancing &&
     static_cast<int>(peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand())>=static_cast<int>(peano::parallel::loadbalancing::LoadBalancingFlag::ForkOnce) &&
     _maxForkLevel < std::numeric_limits<int>::max()
   ) {
@@ -336,55 +334,55 @@ void peano::grid::State<StateData>::resetStateAtEndOfIteration() {
   }
 
   switch (_loadRebalancingState) {
-    case NoRebalancing:
+    case LoadBalancingState::NoRebalancing:
       assertion( _loadRebalancingRemoteRanks.empty());
       _stateData.setHasChangedVertexOrCellState(false);
       _iterationCounter++;
       break;
-    case ForkTriggered:
+    case LoadBalancingState::ForkTriggered:
       assertion( !_loadRebalancingRemoteRanks.empty());
       assertion2(!isGridStationary(),toString(),tarch::parallel::Node::getInstance().getRank());
-      _loadRebalancingState = Forking;
+      _loadRebalancingState = LoadBalancingState::Forking;
       _stateData.setHasChangedVertexOrCellState(true);
       _iterationCounter=0;
       break;
-    case Forking:
+    case LoadBalancingState::Forking:
       assertion( !_loadRebalancingRemoteRanks.empty());
-      _loadRebalancingState = NoRebalancing;
+      _loadRebalancingState = LoadBalancingState::NoRebalancing;
       _stateData.setHasChangedVertexOrCellState(true);
       _loadRebalancingRemoteRanks.clear();
       break;
-    case JoinTriggered:
+    case LoadBalancingState::JoinTriggered:
       assertion( !_loadRebalancingRemoteRanks.empty());
       assertion2(!isGridStationary(),toString(),tarch::parallel::Node::getInstance().getRank());
-      _loadRebalancingState = Joining;
+      _loadRebalancingState = LoadBalancingState::Joining;
       _stateData.setHasChangedVertexOrCellState(true);
       _iterationCounter=0;
       break;
-    case Joining:
+    case LoadBalancingState::Joining:
       assertion( !_loadRebalancingRemoteRanks.empty());
       assertion2(!isGridStationary(),toString(),tarch::parallel::Node::getInstance().getRank());
-      _loadRebalancingState = NoRebalancing;
+      _loadRebalancingState = LoadBalancingState::NoRebalancing;
       _stateData.setHasChangedVertexOrCellState(true);
       _loadRebalancingRemoteRanks.clear();
       break;
-    case IsNewWorkerDueToForkOfExistingDomain:
+    case LoadBalancingState::IsNewWorkerDueToForkOfExistingDomain:
       assertion2(!isGridStationary(),toString(),tarch::parallel::Node::getInstance().getRank());
       _stateData.setHasChangedVertexOrCellState(true);
-      _loadRebalancingState = NoRebalancing;
+      _loadRebalancingState = LoadBalancingState::NoRebalancing;
       _iterationCounter=0;
       break;
-    case JoinWithMasterTriggered:
+    case LoadBalancingState::JoinWithMasterTriggered:
       assertion(_loadRebalancingRemoteRanks.empty());
       _stateData.setHasChangedVertexOrCellState(true);
-      _loadRebalancingState = JoiningWithMaster;
+      _loadRebalancingState = LoadBalancingState::JoiningWithMaster;
       _iterationCounter=0;
       break;
-    case JoiningWithMaster:
+    case LoadBalancingState::JoiningWithMaster:
       assertion(_loadRebalancingRemoteRanks.empty());
       assertion2(!isGridStationary(), toString(),tarch::parallel::Node::getInstance().getRank() );
       _stateData.setHasChangedVertexOrCellState(true);
-      _loadRebalancingState = HasJoinedWithMaster;
+      _loadRebalancingState = LoadBalancingState::HasJoinedWithMaster;
       break;
     default:
       assertion3( false, "unknown rebalancing state", _stateData.toString(), tarch::parallel::Node::getInstance().getRank() );
@@ -432,7 +430,7 @@ void peano::grid::State<StateData>::resetStateAtBeginOfIteration() {
 
   #ifdef Parallel
   _stateData.setCouldNotEraseDueToDecompositionFlag(false);
-  _stateData.setSubWorkerIsInvolvedInJoinOrFork( _loadRebalancingState != NoRebalancing );
+  _stateData.setSubWorkerIsInvolvedInJoinOrFork( _loadRebalancingState != LoadBalancingState::NoRebalancing );
   #endif
 
   logTraceOutWith1Argument( "resetStateAtBeginOfIteration()", toString() );
@@ -644,16 +642,16 @@ void peano::grid::State<StateData>::joinWithRank( int rank ) {
   assertion( rank!=tarch::parallel::Node::getInstance().getRank() );
 
   if (rank==tarch::parallel::NodePool::getInstance().getMasterRank()) {
-    assertion(  _loadRebalancingState==NoRebalancing );
+    assertion(  _loadRebalancingState==LoadBalancingState::NoRebalancing );
     assertion( _loadRebalancingRemoteRanks.empty() );
-    _loadRebalancingState = JoinWithMasterTriggered;
+    _loadRebalancingState = LoadBalancingState::JoinWithMasterTriggered;
   }
   else {
     assertion(
-      (_loadRebalancingState == NoRebalancing) ||
-      (_loadRebalancingState == JoinTriggered)
+      (_loadRebalancingState == LoadBalancingState::NoRebalancing) ||
+      (_loadRebalancingState == LoadBalancingState::JoinTriggered)
     );
-    _loadRebalancingState = JoinTriggered;
+    _loadRebalancingState = LoadBalancingState::JoinTriggered;
     _loadRebalancingRemoteRanks.insert(rank);
   }
 
@@ -664,13 +662,13 @@ void peano::grid::State<StateData>::joinWithRank( int rank ) {
 template <class StateData>
 void peano::grid::State<StateData>::splitIntoRank( int rank ) {
   assertion(
-    (_loadRebalancingState==NoRebalancing) ||
-    (_loadRebalancingState==ForkTriggered)
+    (_loadRebalancingState==LoadBalancingState::NoRebalancing) ||
+    (_loadRebalancingState==LoadBalancingState::ForkTriggered)
   );
   assertion( rank!=tarch::parallel::Node::getInstance().getRank() );
   assertion( _loadRebalancingRemoteRanks.count(rank)==0 );
 
-  _loadRebalancingState = ForkTriggered;
+  _loadRebalancingState = LoadBalancingState::ForkTriggered;
   _loadRebalancingRemoteRanks.insert(rank);
 
   changedCellState();
@@ -679,19 +677,19 @@ void peano::grid::State<StateData>::splitIntoRank( int rank ) {
 
 template <class StateData>
 bool peano::grid::State<StateData>::isForking() {
-  return _loadRebalancingState == Forking;
+  return _loadRebalancingState == LoadBalancingState::Forking;
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::isInvolvedInJoinOrFork() {
-  return _loadRebalancingState != NoRebalancing;
+  return _loadRebalancingState != LoadBalancingState::NoRebalancing;
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::mayUseLazyStateAndDataReceives() const {
-  return (_loadRebalancingState == NoRebalancing) && _currentlyRunsMultipleIterations;
+  return (_loadRebalancingState == LoadBalancingState::NoRebalancing) && _currentlyRunsMultipleIterations;
 }
 
 
@@ -704,55 +702,55 @@ void peano::grid::State<StateData>::currentlyRunsMultipleIterations(bool value) 
 template <class StateData>
 bool peano::grid::State<StateData>::isForkTriggeredForRank(int rank) {
   assertion( rank!=tarch::parallel::Node::getInstance().getRank() || _loadRebalancingRemoteRanks.count(rank)==0 );
-  return (_loadRebalancingState == ForkTriggered) && (_loadRebalancingRemoteRanks.count(rank)>0);
+  return (_loadRebalancingState == LoadBalancingState::ForkTriggered) && (_loadRebalancingRemoteRanks.count(rank)>0);
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::isJoinTriggered() {
-  return (_loadRebalancingState == JoinTriggered) || (_loadRebalancingState == JoinWithMasterTriggered);
+  return (_loadRebalancingState == LoadBalancingState::JoinTriggered) || (_loadRebalancingState == LoadBalancingState::JoinWithMasterTriggered);
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::isJoinTriggeredForRank(int rank) {
   assertion( rank!=tarch::parallel::Node::getInstance().getRank() || _loadRebalancingRemoteRanks.count(rank)==0 );
-  return (_loadRebalancingState == JoinTriggered) && (_loadRebalancingRemoteRanks.count(rank)>0);
+  return (_loadRebalancingState == LoadBalancingState::JoinTriggered) && (_loadRebalancingRemoteRanks.count(rank)>0);
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::isForkTriggered() {
-  return _loadRebalancingState == ForkTriggered;
+  return _loadRebalancingState == LoadBalancingState::ForkTriggered;
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::isForkingRank( int rank ) {
     assertion( rank!=tarch::parallel::Node::getInstance().getRank() || _loadRebalancingRemoteRanks.count(rank)==0 );
-  return _loadRebalancingState == Forking && _loadRebalancingRemoteRanks.count(rank)>0;
+  return _loadRebalancingState == LoadBalancingState::Forking && _loadRebalancingRemoteRanks.count(rank)>0;
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::isJoiningRank(int rank) {
-  return (_loadRebalancingState == Joining && _loadRebalancingRemoteRanks.count(rank) > 0);
+  return (_loadRebalancingState == LoadBalancingState::Joining && _loadRebalancingRemoteRanks.count(rank) > 0);
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::isNewWorkerDueToForkOfExistingDomain() {
-  return _loadRebalancingState == IsNewWorkerDueToForkOfExistingDomain;
+  return _loadRebalancingState == LoadBalancingState::IsNewWorkerDueToForkOfExistingDomain;
 }
 
 
 template <class StateData>
 void peano::grid::State<StateData>::setIsNewWorkerDueToForkOfExistingDomain(bool value) {
   if (value) {
-    _loadRebalancingState = IsNewWorkerDueToForkOfExistingDomain;
+    _loadRebalancingState = LoadBalancingState::IsNewWorkerDueToForkOfExistingDomain;
   }
   else {
-    _loadRebalancingState = NoRebalancing;
+    _loadRebalancingState = LoadBalancingState::NoRebalancing;
   }
 }
 
@@ -765,25 +763,25 @@ bool peano::grid::State<StateData>::getCouldNotEraseDueToDecompositionFlag() con
 
 template <class StateData>
 bool peano::grid::State<StateData>::isJoinWithMasterTriggered() {
-  return _loadRebalancingState == JoinWithMasterTriggered;
+  return _loadRebalancingState == LoadBalancingState::JoinWithMasterTriggered;
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::isJoiningWithMaster() {
-  return _loadRebalancingState == JoiningWithMaster;
+  return _loadRebalancingState == LoadBalancingState::JoiningWithMaster;
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::isJoiningWithWorker() {
-  return _loadRebalancingState == Joining;
+  return _loadRebalancingState == LoadBalancingState::Joining;
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::hasJoinedWithMaster() {
-  bool result = _loadRebalancingState == HasJoinedWithMaster;
+  bool result = _loadRebalancingState == LoadBalancingState::HasJoinedWithMaster;
   return result;
 }
 
@@ -802,10 +800,13 @@ void peano::grid::State<StateData>::setReduceStateAndCell( int worker, bool valu
 
 template <class StateData>
 bool peano::grid::State<StateData>::reduceDataToMaster() const {
-  return _stateData.getReduceStateAndCell() &&
-         _loadRebalancingState != JoiningWithMaster &&
-         _loadRebalancingState != IsNewWorkerDueToForkOfExistingDomain &&
+  const bool result =
+         _stateData.getReduceStateAndCell() &&
+         _loadRebalancingState != LoadBalancingState::JoiningWithMaster &&
+         _loadRebalancingState != LoadBalancingState::IsNewWorkerDueToForkOfExistingDomain &&
          !tarch::parallel::Node::getInstance().isGlobalMaster();
+
+  return result;
 }
 
 
@@ -814,9 +815,9 @@ bool peano::grid::State<StateData>::reduceDataFromWorker( int rank ) const {
   assertion4(
     _stateWillReduce.count(rank)==1
     ||
-    _previousLoadRebalancingState==Forking
+    _previousLoadRebalancingState==LoadBalancingState::Forking
     ||
-    _previousLoadRebalancingState==Undef,  // Undef for the very first iteration
+    _previousLoadRebalancingState==LoadBalancingState::Undef,  // Undef for the very first iteration
     toString(_previousLoadRebalancingState),
     _stateWillReduce.count(rank),
     rank,
@@ -847,8 +848,8 @@ template <class StateData>
 bool peano::grid::State<StateData>::mayForkDueToLoadBalancing() const {
   if (_iterationCounter<IterationsInBetweenRebalancing) return false;
 
-  return _loadRebalancingState == NoRebalancing ||
-         _loadRebalancingState == ForkTriggered;
+  return _loadRebalancingState == LoadBalancingState::NoRebalancing ||
+         _loadRebalancingState == LoadBalancingState::ForkTriggered;
 }
 
 
@@ -856,7 +857,7 @@ template <class StateData>
 bool peano::grid::State<StateData>::mayJoinDueToLoadBalancing() const {
   if (_iterationCounter<IterationsInBetweenRebalancing) return false;
 
-  return _loadRebalancingState == NoRebalancing;
+  return _loadRebalancingState == LoadBalancingState::NoRebalancing;
 }
 
 
