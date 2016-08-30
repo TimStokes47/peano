@@ -92,6 +92,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * call. With this sometimes confusing persistency concept, we can ensure 
      * that your code works on a parallel machine and for any mapping/algorithm 
      * modification.
+     *
      */
     __THIS_TYPENAME__();
 
@@ -1123,10 +1124,10 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * mapping operation or touchVertexFirstTime() or handleCell() is called.
      * The operation receives a solver state that has to 
      * encode the solver's state. Take this attribute to set the mapping's 
-     * attributes. This class' attributes will remain valid until endIteration()
+     * attributes. This mapping's attributes will remain valid until endIteration()
      * is called. Afterwards they might contain garbage.
      *
-     * !!! Parallelisation
+     * <h2> Parallelisation </h2>
      *
      * If you run your code in parallel, beginIteration() and endIteration() 
      * realise the following lifecycle together with the state object:
@@ -1142,6 +1143,16 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * parallel case if you choose to receive data on the worker late. Then, 
      * beginIteration() might not be called prior to any other event. See the 
      * documentation of CommunicationSpecification for details.
+     *
+     * <h2> State persistency </h2>
+     *
+     * The state object handed into beginIteration() is not required to persist. 
+     * Do never store a pointer to solverState as the object might move around 
+     * in memory. If you require the state, copy it. There are some state attributes
+     * that do change over time. The most important example is the set of forked
+     * ranks. All those attributes that do change and that you may access within a 
+     * mapping besides in beginIteration() and endIteration() are static, so no 
+     * pointers to the state object are required.
      *
      * @see __THIS_TYPENAME__()
      */
