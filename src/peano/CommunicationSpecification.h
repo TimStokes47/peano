@@ -92,6 +92,10 @@ struct peano::CommunicationSpecification {
        * coarsen calls went through. But the data, i.e. the vertices and the
        * cell, may last a little bit longer to run through the network if this
        * flag is set.
+       *
+       * Please note that the operation receiveDataFromMaster() on the worker
+       * is called late now because it plugs into the data movement not into
+       * state movement.
        */
       SendDataBeforeDescendIntoLocalSubtreeSendStateBeforeFirstTouchVertexFirstTime,
       /**
