@@ -48,7 +48,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWri
 
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::close() {
-  if (_myWriter._numberOfCells==0) {
+  if (_myWriter._numberOfCells==0 && _lastWriteCommandCellNumber>0 ) {
     logWarning( "close()", "writer " << _identifier << " is closed though underlying grid writer does not hold any vertices/cells. Ensure you call close() on the vertex/cell writer before" );
   }
   assertion2(
