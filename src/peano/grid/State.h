@@ -24,7 +24,7 @@ namespace peano {
 /**
  * Super class for all states of the grid.
  *
- * !!! Remarks on the protected attribute _stateData
+ * <h2> Remarks on the protected attribute _stateData </h2>
  *
  * The state class or its pde-specific specialisation, respectively, are
  * basically semantic wrappers around the a records class that holds the
@@ -36,7 +36,7 @@ namespace peano {
  * use exclusively the modificators of the present class and study their
  * comments carefully.
  *
- * !!! Parallel state exchange
+ * <h2> Parallel state exchange </h2>
  *
  * The state is always copied from the master to the worker unless you use a
  * differing communication specification. It is then merged back into the
@@ -52,6 +52,12 @@ namespace peano {
  * It is called by Grid::iterate() as one of the very last actions, i.e. way
  * after the state has been sent up to the master. See both operations for
  * details information what they do.
+ *
+ * <h2> State copying </h2>
+ *
+ * Feel free to copy a state if you have to. However, do never ever hold a
+ * pointer to the state passed over to beginIteration() or endIteration().
+ * The state positions are not fixed.
  *
  * @author Tobias Weinzierl
  */
@@ -112,7 +118,8 @@ class peano::grid::State {
       JoinWithMasterTriggered,
       JoiningWithMaster,
       HasJoinedWithMaster,
-      IsNewWorkerDueToForkOfExistingDomain
+      IsNewWorkerDueToForkOfExistingDomain,
+      Undef
     };
 
     static std::string toString(LoadBalancingState value);
@@ -122,8 +129,8 @@ class peano::grid::State {
      * So, this flag either holds all the joining ranks or all the
      * forking ranks.
      */
-    std::set<int>       _loadRebalancingRemoteRanks;
-    LoadBalancingState  _loadRebalancingState;
+    static std::set<int>       _loadRebalancingRemoteRanks;
+    static LoadBalancingState  _loadRebalancingState;
 
     /**
      * Stores for each state whether to reduce or not. We reset it
@@ -480,7 +487,7 @@ class peano::grid::State {
     void joinWithRank( int rank );
     void splitIntoRank( int rank );
 
-    bool isInvolvedInJoinOrFork() const;
+    static bool isInvolvedInJoinOrFork();
 
     /**
      * The user may optimise the traversals by using multiple iterations in a
@@ -502,22 +509,22 @@ class peano::grid::State {
      */
     bool hasSubworkerRebalanced() const;
 
-    bool isForkTriggered() const;
-    bool isForkTriggeredForRank(int rank) const;
-    bool isForking() const;
+    static bool isForkTriggered();
+    static bool isForkTriggeredForRank(int rank);
+    static bool isForking();
 
-    bool isJoinTriggered() const;
-    bool isJoinTriggeredForRank(int rank) const;
-    bool isJoinWithMasterTriggered() const;
-    bool isJoiningWithWorker() const;
-    bool isJoiningWithMaster() const;
+    static bool isJoinTriggered();
+    static bool isJoinTriggeredForRank(int rank);
+    static bool isJoinWithMasterTriggered();
+    static bool isJoiningWithWorker();
+    static bool isJoiningWithMaster();
 
-    bool hasJoinedWithMaster() const;
+    static bool hasJoinedWithMaster();
 
-    bool isForkingRank(int rank) const;
-    bool isJoiningRank(int rank) const;
+    static bool isForkingRank(int rank);
+    static bool isJoiningRank(int rank);
 
-    bool isNewWorkerDueToForkOfExistingDomain() const;
+    static bool isNewWorkerDueToForkOfExistingDomain();
 
     /**
      * Inform the state that this is the very first iteration of the current worker
@@ -525,9 +532,9 @@ class peano::grid::State {
      * This operation is invoked by the root node of the spacetree on
      * construction time. It is not something a PDE solver should call.
      */
-    void setIsNewWorkerDueToForkOfExistingDomain(bool value);
+    static void setIsNewWorkerDueToForkOfExistingDomain(bool value);
 
-    std::set<int> getForkingOrJoiningOrTriggeredForRebalancingRanks() const;
+    static std::set<int> getForkingOrJoiningOrTriggeredForRebalancingRanks();
 
     bool getCouldNotEraseDueToDecompositionFlag() const;
 
