@@ -10,12 +10,14 @@
 #endif
 
 
+#ifdef Parallel
 template <class StateData>
 std::set<int>       peano::grid::State<StateData>::_loadRebalancingRemoteRanks;
 
 
 template <class StateData>
 typename peano::grid::State<StateData>::LoadBalancingState  peano::grid::State<StateData>::_loadRebalancingState(peano::grid::State<StateData>::LoadBalancingState::NoRebalancing);
+#endif
 
 
 template <class StateData>
