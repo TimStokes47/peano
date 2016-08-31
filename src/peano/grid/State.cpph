@@ -37,7 +37,9 @@ peano::grid::State<StateData>::State():
   _stateData.setReduceStateAndCell(true);
   _iterationCounter = 0;
   _maxForkLevel = std::numeric_limits<int>::max();
+  #ifdef Asserts
   _previousLoadRebalancingState = LoadBalancingState::Undef;
+  #endif
   #endif
 }
 
