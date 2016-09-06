@@ -28,7 +28,7 @@ bool tarch::logging::LogFilterFileReader::interpretTokens( const std::string& le
 
   bool isFilter = onOffToken=="black";
   if (onOffToken!="black" && onOffToken!="white") {
-    logError( "interpretTokens(...)", "expected \"black\" or \"white\" but got " << onOffToken );
+    logError( "interpretTokens(...)", "expected \"black\" or \"white\" but got \"" << onOffToken << "\"");
     result = false;
   }
 
