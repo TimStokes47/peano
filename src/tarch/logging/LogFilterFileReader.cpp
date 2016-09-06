@@ -15,7 +15,7 @@ tarch::logging::Log  tarch::logging::LogFilterFileReader::_log( "tarch::logging:
 bool tarch::logging::LogFilterFileReader::interpretTokens( const std::string& levelToken, const std::string& classNameToken, const std::string& rankToken, const std::string& onOffToken ) {
   bool result = true;
 
-  if ( levelToken!="debug" && levelToken!="info" ) {
+  if ( levelToken.compare("debug")!=0 && levelToken.compare("info")!=0 ) {
     logError( "interpretTokens(...)", "expected \"debug\" or \"info\" but got " << levelToken );
     result = false;
   }
@@ -27,7 +27,7 @@ bool tarch::logging::LogFilterFileReader::interpretTokens( const std::string& le
   }
 
   bool isFilter = onOffToken=="black";
-  if (onOffToken!="black" && onOffToken!="white") {
+  if (onOffToken.compare("black")!=0 && onOffToken.compare("white")!=0) {
     logError( "interpretTokens(...)", "expected \"black\" or \"white\" but got \"" << onOffToken << "\"");
     result = false;
   }
