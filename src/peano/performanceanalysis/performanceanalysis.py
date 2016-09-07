@@ -209,11 +209,43 @@ dim = int(args.dimension)
 (parents,levels,offset,volume) = performanceanalysisroutines.plotLogicalTopology(args.file,numberOfRanks,dim);
 (volumes,overlaps,work) = performanceanalysisroutines.computeVolumesOverlapsWork(numberOfRanks,volume,offset,dim,args.domainoffset,args.domainsize,parents)
 
+print "validate data ",
+for i in range(0,numberOfRanks):
+  print ".",
+  if overlaps[i]<0.0:
+    print "\nERROR for rank " + str(i) +  \
+          ": region=" + str(offset[i]) + "x" + str(volume[i]) + \
+          ", bounding box=" + str(args.domainoffset) + "x" + str(args.domainsize) + \
+          ", volume= " + str(volumes[i]) + ", overlaps=" + str(overlaps[i]) 
+    print "overlaps may not be negative"
+  if volumes[i]<0.0:
+    print "\nERROR for rank " + str(i) +  \
+          ": region=" + str(offset[i]) + "x" + str(volume[i]) + \
+          ", bounding box=" + str(args.domainoffset) + "x" + str(args.domainsize) + \
+          ", volume= " + str(volumes[i]) + ", overlaps=" + str(overlaps[i]) 
+    print "volumes may not be negative"
+  if overlaps[i]>volume[i]:
+    print "\nERROR for rank " + str(i) +  \
+          ": region=" + str(offset[i]) + "x" + str(volume[i]) + \
+          ", bounding box=" + str(args.domainoffset) + "x" + str(args.domainsize) + \
+          ", volume= " + str(volumes[i]) + ", overlaps=" + str(overlaps[i]) 
+    print "overlaps have to be bigger than volume"
+  if work[i]<0:
+    print "\nERROR for rank " + str(i) +  \
+          ": region=" + str(offset[i]) + "x" + str(volume[i]) + \
+          ", bounding box=" + str(args.domainoffset) + "x" + str(args.domainsize) + \
+          ", volume= " + str(volumes[i]) + ", overlaps=" + str(overlaps[i]) + ", work=" + str(work[i])
+    print "work has to be positive"
+print " done "
+
+
 performanceanalysisroutines.plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,work,args.file);
 
 if dim==2:
  for l in range(1,max(levels)+1):
   performanceanalysisroutines.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
+
+
 
 
 print "plot walltime overview"
@@ -464,7 +496,7 @@ if (numberOfRanks>1):
     switch on rebalancing only from time to time, and reduce the load balancing overhead. See \
     the section on 'Disable load balancing' in Peano's quick start guide. \
     </p>\
-    <p>\
+    <pplotWorkloadAndResponsibilityDistribution>\
     <i>Performance hint:</i></p><p>\
     Peano scales best if the coarsest grids are decomposed. In turn, it performs good if the logical topology tree is not too \
     wide, i.e. if it is deep and its breadth is bounded by 3^d you typically have a good performance. If your tree is shallow, \
