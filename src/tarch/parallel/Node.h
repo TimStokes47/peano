@@ -203,6 +203,14 @@ class tarch::parallel::Node {
     int getRank() const;
 
     /**
+     * Get the global master
+     *
+     * Peano sets up a logical tree topology on all the ranks. The root of this
+     * logical tree, i.e. the rank that is reponsible for all other ranks, is
+     * the global master. In contrast, every rank also has a local master that
+     * tells him what to do. This is the master and the parent within the
+     * topology tree. Use the NodePool to identify the rank of a rank's master.
+     *
      * @return 0
      */
     static int getGlobalMasterRank();
