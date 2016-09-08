@@ -30,7 +30,8 @@ class peano::grid::aspects::ParallelMerge {
      * three steps
      *
      * # merge the adjacency lists due to peano::kernel::parallel::getMergedAdjacencyLists(),
-     * # merge the refinement and vertex states (this operation), and
+     * # merge the refinement states, the counter of the adjacent refined cells
+     *   and the flag adjacentSubtreeForksIntoOtherRank (this operation), and
      * # call the mapping's merge operation, i.e. the one that is PDE-specific.
      *
      * mergeOnDomainBoundary() furthermore does some validation checks (in the
