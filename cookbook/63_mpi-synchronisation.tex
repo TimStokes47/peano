@@ -235,8 +235,21 @@ reduction on/off depending on your needs) multiple steps have to be realised:
 \noindent
 It is a popular strategy to skip reductions if and only if the load balancing is
 switched off.
-In turn, we have to keep in mind that any load balancing is automatically
-switched off if we run multiple traversals through one \texttt{iterate} command.
+Furthermore, we keep in mind that any load balancing is automatically
+switched off if we run multiple traversals through one \texttt{iterate} command
+and only reactivated in the very last traversal of a set of traversals.
 This also makes sense from the application point of view:
 If you want to load balance, master and worker ranks have to communicate with
 each other and may not skip any data/status exchange.
+So may codes use a strategy as follows:
+
+\begin{code}
+bool myproject::mappings::MyMapping::prepareSendToWorker(...) {
+  if (
+    !peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated()
+  ) {
+    return false;
+  }
+  else return true;
+}
+\end{code}
