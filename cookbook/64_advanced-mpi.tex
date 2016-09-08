@@ -13,7 +13,7 @@
 
 
 \subsection{Temporarilty switch off vertex data exchange}
-
+\label{section:64_advanced-mpi:switch-off-vertex-data-exchange}
 
 \begin{smell}
   The performance analysis identifies that some ranks slow down the computation
@@ -77,10 +77,19 @@ myRepository.iterate(numberOfIterationsToRunInOneRush,switchOffBoundaryExchange)
 \noindent
 The snippet runs one iteration where only boundary data is received but no
 iteration is sent out anymore.
-It then runs eight iterations where neither data is sent out nor received along
+It then runs nine iterations where neither data is sent out nor received along
 the boundary (from the grid; any heap data exchange is not affected).
-Finally, it runs one traversal where no data is received as none has been sent
-out but the domain boundary data is already sent out for the 11th traversal. 
+
+Please note that the boundary data exchange is not switched off before you call 
+\begin{code}
+myRepository.iterate(...,false);
+\end{code}
+\noindent
+once more. As soon as a \texttt{false} is passed, the subsequent first iteration
+will not receive anything but send out boundary data. 
+The iteration after, all communication, i.e.~both in and out, then is again
+happening.
+
 
 
 \begin{remark}
@@ -103,6 +112,20 @@ If we switch off boundary exchange, obviously no refinement should ever be done
 along domain boundaries as refinement triggers are not kept consistent.
 Peano does switch off the refinement automatically, but you have to be aware how
 a switch off of boundary information might affect your adaptivity patterns.
+
+If a code triggers a refinement along a parallel domain boundary while
+communication is switched off, this refinement does not pass through.
+However, the refinement flag still is set. 
+This means:
+\begin{itemize}
+  \item As soon as you reactive boundary data exchange, the code actually
+  exchanges the refinement request. In the subsequent iteration, it then
+  refines.
+  \item The state remains instationary, i.e.~the state's \texttt{isGridBalanced}
+  and \texttt{isGridStationary} return \texttt{false} as soon as the refinement
+  is requested though it does not pass through.
+\end{itemize}
+
 
 
 \subsection{Further tuning}

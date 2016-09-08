@@ -166,16 +166,23 @@ There are basically two ways to improve this situation:
 \subsection{Skip worker-master data transfer locally/sporadically}
 
 We next discuss the decond variant.
-Before we do so, we summarise typical smells that pop up once you have made 
-your code run a fixed number of iterations:
+We assume that your code already runs a fixed number of iterations per
+\texttt{iterate} call though this is not absolutely necessary.
+
+\begin{remark}
+The discussion of this feature is didactically out-of-place. We typically
+observe that strong synchronisation is not an issue after a code was changed to
+run multiple iterations in one sweep. Usually, the next smell are late boundary
+senders as discussed in Section
+\ref{section:64_advanced-mpi:switch-off-vertex-data-exchange}. Once these are
+eliminated, the present smell often arises.
+\end{remark}
+
 
 \begin{smell}
 You run multiple iterations with one \texttt{iterate} command but nevertheless
- \begin{itemize}
-  \item the performance analysis identifies strong synchronisation or
-  \item shows that some ranks permanently are late with their boundary data
-  while the MPI trace shows that the traversals are kind of in sync.
- \end{itemize}
+the performance analysis identifies strong synchronisation and/or
+the MPI trace shows that the traversals are in sync.
 \end{smell}
 
 \begin{center}
