@@ -1,0 +1,123 @@
+\section{Advanced MPI and boundary exchange optimisations}
+
+
+\chapterDescription
+  {
+    The techniques discussed here are rather technical and/or non-trivial to
+    implement, so realising them can be time-consuming.
+  }
+  {
+    A working MPI code that scales to some degree.
+  }
+
+
+
+\subsection{Temporarilty switch off vertex data exchange}
+
+
+\begin{smell}
+  The performance analysis identifies that some ranks slow down the computation
+  as they send out their boundary data late, i.e.~others have to wait. When we
+  study the distribution of the runtime of the involved ranks, we see that a
+  significand rato of the per-traversal runtime is spent on boundary data
+  exchange.
+\end{smell}
+
+
+\begin{center}
+  \includegraphics[width=0.5\textwidth]{64_advanced-mpi/boundary-exchange.pdf}
+\end{center}
+
+
+\noindent
+We observe such a behaviour typically if the computational load per rank is low
+(as we use low order finite elements, e.g.) or if all massive data exchange is
+realised through heaps.
+Heaps allow Peano to realise a more efficient data exchange than the standard
+stack-based grid data, but they cannot communicate grid changes.
+
+If we see such a pattern, it is worth to evaluate whether you can (temporarily)
+switch off the data exchange and make the ranks work autonomously.
+Peano passes control information along the MPI topology from masters to workers. 
+We can switch off boundary data exchange on the first rank, i.e.~the global
+master, and then this information is automatically propagated down to all the
+ranks: all switch off the boundary exchange.
+
+Peano realises a Jacobi-style boundary data exchange. 
+Boundary data of one iteration is sent out throughout or, the latest, at the end
+of the traversal.
+Prior to the next traversal, this data is received. 
+If we trigger a refine along a parallel boundary, this refine will thus become
+active only in the subsequent iteration, when all ranks that hold a replicate of
+the vertex have received copies of this vertex from all other ranks.
+If we thus switch off the boundary data exchange, the next traversal still
+receives vertices as they have been sent out the traversal before.
+It however does not send out any data anymore.
+In the second traversal (if we haven't switched on the boundary exchange again),
+not data is exchanged anymore at all.
+If we switch on the boundary data exchange again, the subsequent traversal sends
+out grid data along the domain boundaries. 
+Only in the second iteration after the switch on, both data is received and sent
+out again.
+
+While the description above claims that the boundary exchange control state is
+exchanged via the state, we have to clarify that it is the repositories' state,
+not the application-specific state. This is the state that also carries
+information which adapter to run, e.g.
+Therefore, the switch off is realised via the repository's \texttt{iterate}
+command. 
+
+\begin{code}
+// on global master
+const bool switchOffBoundaryExchange = true;
+const int  numberOfIterationsToRunInOneRush = 10;
+myRepository.iterate(numberOfIterationsToRunInOneRush,switchOffBoundaryExchange);
+\end{code}
+
+\noindent
+The snippet runs one iteration where only boundary data is received but no
+iteration is sent out anymore.
+It then runs eight iterations where neither data is sent out nor received along
+the boundary (from the grid; any heap data exchange is not affected).
+Finally, it runs one traversal where no data is received as none has been sent
+out but the domain boundary data is already sent out for the 11th traversal. 
+
+
+\begin{remark}
+  If you switch off boundary data exchange, no load balancing can take place.
+  Please also ensure that you switch off the exchange if and only if no
+  rebalancing is going on, i.e.~the iteration before no rank has been joining or
+  forking. 
+  Otherwise, Peano will crash (with an assertion if compiled with asserts).
+\end{remark}
+
+
+\subsection{Further tuning}
+This part has yet to be written, but I need documentation on 
+
+\begin{itemize}
+  \item \texttt{-DnoParallelExchangePackedRecordsAtBoundary}
+  \item \texttt{-DnoParallelExchangePackedRecordsBetweenMasterAndWorker}
+  \item \texttt{-DnoParallelExchangePackedRecordsInHeaps}
+  \item \texttt{-DnoParallelExchangePackedRecordsThroughoutJoinsAndForks}
+\end{itemize}
+
+Dann gibt es auch noch die Flags
+
+%
+
+%Become topology-aware
+
+
+% Throughout the bottom-up traversal, each mpi traversal first receives data from 
+% all its children, i.e. data deployed to remote traversals, and afterward sends 
+% data to its master in turn. Unfortunately, Peano has to do quite some 
+% algorithmic work after the last children record has been received if and only 
+% if some subtrees are also to be traversed locally. It hence might make sense to
+% introduce pure administrative ranks that do not take over any computation on the finest grid level. 
+% Again, we do a brief 1d toy case study:
+% 
+% foobar
+% 
+% In the upper case, the blue rank triggers the red one to traverse its subtree. The red one in turn tiggers 3 and 4. Afterward, it continues with 2 and then waits for 3 and 4 to finish. After the records from 3 and 4 have been received, it has to send its data to 0 to allow 0 to terminate the global traversal. However, between the last receive and the send, some administrative work has to be done, as the red node also holds local work (it has to run through the embedding cells to get the ordering of the boundary data exchange right, but that's irrelevant from a user point of view). This way, we've introduced an algorithmic latency: Some time elaps between 3 and 4 sending their data and the red one continuing with the data flow up the tree. This latency becomes severe for deep Splittings.
+
