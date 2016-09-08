@@ -100,7 +100,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      * operation also is serialised and there's no need to make it thread-safe
      * explicitly.
      *
-     * <h2> Parallel Computing </h2>
+     * <h2> Boundary data exchange with MPI </h2>
      *
      * The create-new-vertex operation can do an immediate refinement, i.e. it
      * can switch a vertex with refinement-triggered into a refining vertex
@@ -138,6 +138,24 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
      *   becoming persistent has hold the right adjacency information.
      *   Information that often is not available.
      *
+     * The immediate refine is switched off implicitly in operator() where
+     * updateRefinementFlagsOfVertexAfterLoad() is called after
+     * touchVertexFristTime (which is called through invokeLoadVertexEvents())
+     * if and only if IrregularStaticGrid is not set (parallel domain boundaries
+     * never are considered to be static, so this never holds) or
+     * DomainDecompositionPermitsRefinement is set. DomainDecompositionPermitsRefinement
+     * also never holds for boundary vertices.
+     *
+     * <h2> Switched off boundary data exchange</h2>
+     *
+     * If boundary data exchange is switched off, i.e. the send receive buffer
+     * pool does not deploy valid data, then you may not call
+     * updateRefinementFlagsOfVertexAfterLoad(). Again, we may neglect the new
+     * branch as vertices in this branch never are refined immediately. For
+     * persistent vertices at the domain boundary, we know that
+     * IrregularStaticGrid does not hold as boundaries are never static.
+     * Besides IrregularStaticGrid, we also ask the pool whether deployed data
+     * is valid before we update the refinement flags.
      */
     void updateRefinementFlagsOfVertexAfterLoad(int positionInArray, bool counterIsDelete);
 
