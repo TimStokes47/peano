@@ -753,7 +753,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * the worker. It is invoked only if reduction along the spacetree is 
      * switched on.
      *
-     * !!! Heap data
+     * <h2> Heap data </h2>
      *
      * If you are working with a heap data structure, your vertices or cells, 
      * respectively, hold pointers to the heap. The received records hold 
@@ -762,6 +762,15 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * Receive heap data instead separately without taking the pointers in 
      * the arguments into account.      
      *
+     *
+     * <h2> Remarks </h2>
+     *
+     * You can, at any point of your code, obtain information about your MPI 
+     * ranks from tarch::parallel::Node. If you require topological information 
+     * such as the rank of the rank's master, you have to ask the singleton 
+     * tarch::parallel::NodePool however.
+     *
+     *  
      * @param workerGridCell      Valid object iff data reduction is switched on. See State::reduceDataToMaster().
      * @param workerGridVertices  Valid object iff data reduction is switched on. See State::reduceDataToMaster().
      * @param workerEnumerator    Valid object iff data reduction is switched on. See State::reduceDataToMaster().
@@ -852,7 +861,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * available. The modified arguments then are forwarded by Peano to 
      * mergeWithWorker().
      *
-     * !!! Rationale
+     * <h2> Rationale </h2>
      * 
      * The split of the receive process into two stages seems to be artificial 
      * and not very much straightforward. However, two constraints make it 
@@ -864,7 +873,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
      *   element but an outer part of the tree, i.e. some vertices have to be 
      *   merged before we can also merge the cell and all other vertices.
      *
-     * !!! Heap data
+     * <h2> Heap data </h2>
      *
      * If you are working with a heap data structure, your vertices or cells, 
      * respectively, hold pointers to the heap. The received records hold 
@@ -881,6 +890,15 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * - Merge the heap data within mergeWithWorker().
      *
      * - Remove the heap entries created in this operation within mergeWithWorker().
+     *
+     * <h2> Remarks </h2>
+     *
+     * You can, at any point of your code, obtain information about your MPI 
+     * ranks from tarch::parallel::Node. If you require topological information 
+     * such as the rank of the rank's master, you have to ask the singleton 
+     * tarch::parallel::NodePool however.  
+     *
+     *
      *
      * @param coarseGridVertices  Copy of the coarse vertices of the master 
      *                            node as well worker's records. As you receive 
