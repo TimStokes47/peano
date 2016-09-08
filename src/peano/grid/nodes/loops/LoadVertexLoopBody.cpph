@@ -609,7 +609,11 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     #ifdef Parallel
     assertion(!_fineGridVertices[positionInArray].isAdjacentToRemoteRank() || !IrregularStaticGrid);
     #endif
-    if (!IrregularStaticGrid && peano::parallel::SendReceiveBufferPool::getInstance().deploysValidData()) {
+    if (
+      !IrregularStaticGrid 
+      &&
+      ( peano::parallel::SendReceiveBufferPool::getInstance().deploysValidData() || !_fineGridVertices[positionInArray].isAdjacentToRemoteRank() )
+    ) {
       updateRefinementFlagsOfVertexAfterLoad(positionInArray,_counter[positionInArray]==CounterPersistentNodeDelete);
     }
     logDebug( "operator()", "vertex at " << positionInArray << " is a persistent vertex from in/out stacks: " << _fineGridVertices[positionInArray].toString() );

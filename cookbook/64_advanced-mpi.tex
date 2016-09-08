@@ -92,6 +92,19 @@ out but the domain boundary data is already sent out for the 11th traversal.
 \end{remark}
 
 
+\noindent
+Peano does exchange vertices along the boundary after each grid sweep. 
+It then compares all the refinement flags and performs the actual refinement.
+This way, the grid remains consistent over all ranks: first, all refinement
+information is exchanged. 
+Once all ranks have received this information, the actual refinement is done.
+
+If we switch off boundary exchange, obviously no refinement should ever be done
+along domain boundaries as refinement triggers are not kept consistent.
+Peano does switch off the refinement automatically, but you have to be aware how
+a switch off of boundary information might affect your adaptivity patterns.
+
+
 \subsection{Further tuning}
 This part has yet to be written, but I need documentation on 
 
