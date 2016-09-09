@@ -352,7 +352,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   int                                           level,
   MessageType                                   messageType
 ) {
-  logTraceInWith6Arguments( "sendData(...)", _name, index, toRank, position, level, toString(messageType) );
+  logTraceInWith5Arguments( "sendData(...)", _name, index, toRank, position, level );
 
   sendData( getData(index), toRank, position, level, messageType );
 

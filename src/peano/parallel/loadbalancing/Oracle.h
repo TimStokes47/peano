@@ -270,6 +270,11 @@ class peano::parallel::loadbalancing::Oracle {
     int getCoarsestRegularInnerAndOuterGridLevel() const;
 
     /**
+     * Is solely forwarded to the currently active oracle.
+     */
+    void changeCoarsestRegularInnerAndOuterGridLevel(int value);
+
+    /**
      * You can switch off the load balancing via this value.
      */
     void activateLoadBalancing(bool value);

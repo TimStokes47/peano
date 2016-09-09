@@ -57,6 +57,7 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
      */
     std::set<int>               _idleWorkers;
 
+    static int _coarsestRegularInnerAndOuterGridLevel;
   public:
     OracleForOnePhaseWithGreedyPartitioning(bool joinsAllowed, bool forkIsAllowed = true);
     virtual ~OracleForOnePhaseWithGreedyPartitioning();
@@ -71,7 +72,7 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
     /**
      * Plot something to info log device.
      */
-    virtual void plotStatistics();
+    void plotStatistics() override;
 
     /**
      * Clone this oracle. This operation is used by the singleton whenever a
@@ -82,11 +83,12 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
      *        mapped to which state. You can even use the toString() operation
      *        there to map this parameter to a string.
      */
-    virtual OracleForOnePhase* createNewOracle(int adapterNumber) const;
+    OracleForOnePhase* createNewOracle(int adapterNumber) const override;
 
-    virtual void forkFailed();
+    void forkFailed() override;
 
-    virtual int getCoarsestRegularInnerAndOuterGridLevel() const;
+    int getCoarsestRegularInnerAndOuterGridLevel() const override;
+    void changeCoarsestRegularInnerAndOuterGridLevel(int value) override;
 };
 
 

@@ -231,6 +231,12 @@ int peano::parallel::loadbalancing::Oracle::getCoarsestRegularInnerAndOuterGridL
 }
 
 
+void peano::parallel::loadbalancing::Oracle::changeCoarsestRegularInnerAndOuterGridLevel(int value) {
+  _oracles[_currentOracle]->changeCoarsestRegularInnerAndOuterGridLevel(value);
+}
+
+
+
 peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::Oracle::getLastStartCommand() const {
   assertion( _startCommand!=LoadBalancingFlag::UndefinedLoadBalancingFlag );
   return _startCommand;
