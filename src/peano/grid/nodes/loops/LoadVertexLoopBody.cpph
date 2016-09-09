@@ -233,7 +233,9 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   logTraceInWith3Arguments( "updateRefinementFlagsOfVertexAfterLoad(...)", positionInVertexArray, counterIsDelete, _fineGridVertices[positionInVertexArray].toString() );
 
   assertion(!_fineGridVertices[positionInVertexArray].isHangingNode() );
+  #ifdef Parallel
   assertion( peano::parallel::SendReceiveBufferPool::getInstance().deploysValidData() || !_fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank() );
+  #endif
 
   if (counterIsDelete) {
     _fineGridVertices[positionInVertexArray].rollbackRefinementOrEraseTriggered();
@@ -611,8 +613,10 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     #endif
     if (
       !IrregularStaticGrid 
+      #ifdef Parallel
       &&
       ( peano::parallel::SendReceiveBufferPool::getInstance().deploysValidData() || !_fineGridVertices[positionInArray].isAdjacentToRemoteRank() )
+      #endif
     ) {
       updateRefinementFlagsOfVertexAfterLoad(positionInArray,_counter[positionInArray]==CounterPersistentNodeDelete);
     }
