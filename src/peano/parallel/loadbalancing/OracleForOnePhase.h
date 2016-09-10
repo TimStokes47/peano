@@ -140,12 +140,7 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
     /**
      * @see Oracle
      */
-    virtual int getCoarsestRegularInnerAndOuterGridLevel() const = 0;
-
-    /**
-     * @see getCoarsestRegularInnerAndOuterGridLevel()
-     */
-    virtual void changeCoarsestRegularInnerAndOuterGridLevel(int value) = 0;
+    virtual int getRegularLevelAlongBoundary() const = 0;
 };
 
 

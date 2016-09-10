@@ -8,7 +8,7 @@ tarch::logging::Log peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyP
 
 
 bool peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::_forkHasFailed = false;
-int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::_coarsestRegularInnerAndOuterGridLevel = 3;
+int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::_regularLevelAlongBoundary = 0;
 
 
 
@@ -57,15 +57,8 @@ void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::pl
 
 
 
-int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::getCoarsestRegularInnerAndOuterGridLevel() const {
-  return _coarsestRegularInnerAndOuterGridLevel;
-}
-
-
-
-void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::changeCoarsestRegularInnerAndOuterGridLevel(int value) {
-  assertion(value>=0);
-  _coarsestRegularInnerAndOuterGridLevel = value;
+int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::getRegularLevelAlongBoundary() const {
+  return _regularLevelAlongBoundary;
 }
 
 

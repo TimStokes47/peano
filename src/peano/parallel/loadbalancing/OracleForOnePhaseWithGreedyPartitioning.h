@@ -57,7 +57,7 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
      */
     std::set<int>               _idleWorkers;
 
-    static int _coarsestRegularInnerAndOuterGridLevel;
+    static int _regularLevelAlongBoundary;
   public:
     OracleForOnePhaseWithGreedyPartitioning(bool joinsAllowed, bool forkIsAllowed = true);
     virtual ~OracleForOnePhaseWithGreedyPartitioning();
@@ -87,8 +87,7 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
 
     void forkFailed() override;
 
-    int getCoarsestRegularInnerAndOuterGridLevel() const override;
-    void changeCoarsestRegularInnerAndOuterGridLevel(int value) override;
+    int getRegularLevelAlongBoundary() const override;
 };
 
 
