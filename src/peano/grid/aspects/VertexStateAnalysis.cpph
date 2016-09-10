@@ -80,6 +80,20 @@ bool peano::grid::aspects::VertexStateAnalysis::isOneVertexOutsideDomain(
 
 
 template <class Vertex>
+bool peano::grid::aspects::VertexStateAnalysis::isOneVertexBoundary(
+  Vertex*                               vertices,
+  const peano::grid::VertexEnumerator&  verticesEnumerator
+) {
+  bool result = false;
+  dfor2(k)
+    result |= vertices[ verticesEnumerator(k) ].isBoundary();
+  enddforx
+  return result;
+}
+
+
+
+template <class Vertex>
 bool peano::grid::aspects::VertexStateAnalysis::areAllVerticesInsideDomain(
   Vertex*                               vertices,
   const peano::grid::VertexEnumerator&  verticesEnumerator

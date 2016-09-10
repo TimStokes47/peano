@@ -66,6 +66,12 @@ class peano::grid::aspects::VertexStateAnalysis {
       const peano::grid::VertexEnumerator&  verticesEnumerator
     );
 
+    template <class Vertex>
+    static bool isOneVertexBoundary(
+      Vertex*                               vertices,
+      const peano::grid::VertexEnumerator&  verticesEnumerator
+    );
+
 
     template <class Vertex>
     static bool areAllVerticesInsideDomain(
