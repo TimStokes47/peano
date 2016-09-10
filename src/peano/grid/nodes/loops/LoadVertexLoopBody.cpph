@@ -334,7 +334,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   #ifdef Parallel
   const bool AnalyseVertex =  !_fineGridVertices[positionInVertexArray].isRemote(_state, false, true);
-  const int  CoarsestRegularInnerAndOuterGridLevel = peano::parallel::loadbalancing::Oracle::getInstance().getCoarsestRegularInnerAndOuterGridLevel();
+  const int  CoarsestRegularInnerAndOuterGridLevel = peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary();
   #else
   const bool AnalyseVertex = true;
   const int  CoarsestRegularInnerAndOuterGridLevel = 0;
@@ -357,13 +357,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       case peano::geometry::GeometryHelper::LeaveVertexUnaltered:
         break;
       case peano::geometry::GeometryHelper::LeaveOuterVertexUnaltered:
-        if (
-          _fineGridVerticesEnumerator.getLevel()<CoarsestRegularInnerAndOuterGridLevel
-          &&
-          _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Unrefined
-        ) {
-          _fineGridVertices[positionInVertexArray].refine();
-        }
         break;
       case peano::geometry::GeometryHelper::EraseOutsideVertex:
         logDebug( "updateGeometry(...)", "EraseOutsideVertex" );
@@ -375,6 +368,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         ) {
           _hasChangedVertexState = true;
           _fineGridVertices[positionInVertexArray].erase();
+          logDebug( "operator()", "erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity is set to " << peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary() );
         }
         break;
       case peano::geometry::GeometryHelper::CreateInnerVertex:
@@ -392,13 +386,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _fineGridVertices[positionInVertexArray].switchToInside();
         _hasChangedVertexState = true;
         logDebug( "load_vertices()", "switch vertex to inside. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
-        if (
-          _fineGridVerticesEnumerator.getLevel()<CoarsestRegularInnerAndOuterGridLevel
-          &&
-          _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Unrefined
-        ) {
-          _fineGridVertices[positionInVertexArray].refine();
-        }
         break;
       case peano::geometry::GeometryHelper::CreateBoundaryVertex:
         logDebug( "updateGeometry(...)", "CreateBoundaryVertex" );
@@ -414,13 +401,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToBoundary();
         _hasChangedVertexState = true;
-        if (
-          _fineGridVerticesEnumerator.getLevel()<CoarsestRegularInnerAndOuterGridLevel
-          &&
-          _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Unrefined
-        ) {
-          _fineGridVertices[positionInVertexArray].refine();
-        }
         break;
       case peano::geometry::GeometryHelper::DestroyVertexAndSwitchToOutside:
         logDebug( "updateGeometry(...)", "DestroyVertexAndSwitchToOutside" );

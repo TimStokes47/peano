@@ -41,20 +41,56 @@ template < class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::operator() () {
   logTraceInWith1Argument( "operator()", _fineGridCell.toString() );
 
-  #ifdef Parallel
-  const bool invokeEvent = _fineGridCell.isInside() && !_fineGridCell.isRemote(_state,true,true);
-  #else
-  const bool invokeEvent = _fineGridCell.isInside();
-  #endif
-
   // According to the specification, only refined cells where all adjacent
   // vertices are refined are to be excluded. This check is rather expensive,
   // so I do that simple one.
 //  const bool InvokeEventAccordingToSpecification =
 //    (_threadLocalEventHandle.enterCellSpecification.manipulates == peano::MappingSpecification::WHOLE_TREE) ||
 //    (_threadLocalEventHandle.enterCellSpecification.manipulates == peano::MappingSpecification::ONLY_LEAVES && !_fineGridCell.isRefined());
+
   const bool InvokeEventAccordingToSpecification =
     _threadLocalEventHandle.enterCellSpecification().manipulates != peano::MappingSpecification::Nop;
+
+  #ifdef Parallel
+  const bool invokeEvent = _fineGridCell.isInside() && !_fineGridCell.isRemote(_state,true,true);
+  if (
+    !_fineGridCell.isInside()
+    &&
+    _fineGridVerticesEnumerator.getLevel() < peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary()
+    &&
+    peano::grid::aspects::VertexStateAnalysis::isOneVertexOutsideDomain(
+      _fineGridVertices,
+      _fineGridVerticesEnumerator
+    )
+    &&
+    peano::grid::aspects::VertexStateAnalysis::isOneVertexBoundary(
+      _fineGridVertices,
+      _fineGridVerticesEnumerator
+    )
+    &&
+    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
+      _fineGridVertices,
+      _fineGridVerticesEnumerator,
+      Vertex::Records::Refined
+    )
+  ) {
+    dfor2(k)
+      if (
+        _fineGridVertices[_fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Unrefined
+        &&
+        !_fineGridVertices[_fineGridVerticesEnumerator(k)].isHangingNode()
+        &&
+        !_fineGridVertices[_fineGridVerticesEnumerator(k)].isRemote( _state, true, false)
+      ) {
+        logDebug( "operator()", "refine vertex " << _fineGridVertices[_fineGridVerticesEnumerator(k)].toString() << " manually as boundary regularity is set to " << peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary() );
+        _fineGridVertices[_fineGridVerticesEnumerator(k)].refine();
+      }
+    enddforx
+  }
+  #else
+  const bool invokeEvent = _fineGridCell.isInside();
+  #endif
+
 
   if (invokeEvent && InvokeEventAccordingToSpecification) {
     _threadLocalEventHandle.enterCell(
