@@ -309,7 +309,13 @@ might decide to postpone further grid refinements.
   \begin{code}
 void exahype::State::updateRegularInitialGridRefinementStrategy() {
   [...]
-  else if ( !isGridStationary() ) {
+  else if ( 
+      isInvolvedInJoinOrFork()
+    ||
+    !isTraversalInverted()
+    ||
+    !isGridStationary()
+  ) {
     _stateData.setGridConstructionState( exahype::records::State::Veto );
   }
   else if (
