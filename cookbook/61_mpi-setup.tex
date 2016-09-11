@@ -207,8 +207,6 @@ void exahype::State::updateRegularInitialGridRefinementStrategy() {
   else if (
     isInvolvedInJoinOrFork()
     ||
-    !isTraversalInverted()
-    ||
     !isGridStationary()
   ) {
     _stateData.setGridConstructionState( exahype::records::State::Veto );
@@ -301,6 +299,35 @@ while (gridSetupIterationsToRun>0) {
 \end{code}
 
 
+\begin{remark}
+Often the pattern above still allows for a too aggressive grid creation if the
+load balancing is very conservative and careful, i.e.~does only remove small
+fragments of the domain at a time. If this is the case, I found it advantageous
+to make the state of the global master memorise the number of idle ranks after
+each decision. If it recognises that some load balancing just has happened, it
+might decide to postpone further grid refinements.
+  \begin{code}
+void exahype::State::updateRegularInitialGridRefinementStrategy() {
+  [...]
+  else if ( !isGridStationary() ) {
+    _stateData.setGridConstructionState( exahype::records::State::Veto );
+  }
+  else if (
+    _idleRanksAtLastLookup != tarch::parallel::NodePool::getInstance().
+      getNumberOfIdleNodes()
+  ) {
+    _stateData.setGridConstructionState( exahype::records::State::Veto );
+    _idleRanksAtLastLookup = tarch::parallel::NodePool::getInstance().
+      getNumberOfIdleNodes();
+  }
+  else {
+    _stateData.setGridConstructionState( exahype::records::State::Default );
+  }
+  [...]
+}
+
+  \end{code}
+\end{remark}
 
 \subsection{The load balancing kicks in immediately while I build up my grid but it
 yields non-reasonable partitions}

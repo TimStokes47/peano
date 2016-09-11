@@ -226,9 +226,12 @@ oracles a cost model.
 \subsection{Increase the grid regularity}
 
 If grid parts change or are strongly adaptive, Peano does not decompose these
-grid regions through MPI. 
-Furthermore, most load balancing strategies can quickly decompose regular grid
-levels, while decomposing adaptive regions is tricky.
+grid regions through MPI:
+A cell and all of its children can be deployed to another rank if and only if
+all of its vertices are refined, i.e.~all of its surrounding cell neighbours are
+refined, too.
+Furthermore, most load balancing strategies can quickly decompose regular
+grid levels, while decomposing adaptive regions is tricky.
 
 \begin{center}
   \includegraphics[width=0.6\textwidth]{62_quick-tuning/regularity.pdf}
@@ -237,9 +240,10 @@ levels, while decomposing adaptive regions is tricky.
 \noindent
 In the example above, Peano often struggles to split up the boundary as the
 adaptivity pattern around the boundary is complex.
-We often end up with a situation where the whole boundary ends up on one rank.
-If we increase the grid regularity manually (right example), the scaling
-improves.
+This is a pattern reocurring often in Peano:
+we often end up with a situation where the whole boundary ends up on one rank.
+If we increased the grid regularity manually (right example), the scaling
+would improve.
 
 \begin{smell}
   The domain decomposition works properly. Nevertheless, some ranks responsible
@@ -248,11 +252,15 @@ improves.
 \end{smell}
 
 \noindent
-To increase the regularity, you can manually tailor your adaptivity criterion or
-you can increase the value returned by the oracles.
-They prescribe a maximum regularity level that is also anticipated outside of
-the domain and thus avoids adaptive grids outside of $\Omega $ up to a certain
-level.
+To increase the regularity, you can manually tailor your adaptivity criterion,
+but it remains tricky as the criterion can refine inside the domain and at the
+boundary.
+There is no plug in point for the mappings to control the refinement outside of
+the boundary. 
+However, there is a control mechanism available in the oracles.
+They prescribe a maximum regularity level along the boundary that is 
+also taken into account by the kerenl outside of the domain and thus avoids
+adaptive grids outside of $\Omega $ up to a certain level.
 
 We have realised a related strategy in Section
 \ref{subsection:62:reduce-data-exchange-with-global-master} already. 
@@ -312,6 +320,21 @@ enable the balancing to load balance also boundaries of the domain.
 \begin{code}
   new MyOracle( ... , getCoarsestGridLevelOfAllSolvers() );
 \end{code}
+
+
+\begin{remark}
+In the current Peano generation, the grid regularity imposed by the oracles is
+{\bf not} enforced automatically all over the place immediately. 
+It kicks in if and only if an adaptivity criterion refined near or at the
+boundary. 
+If the oracle detects this situation and the refinement level is smaller than
+the level prescribed to the oracle, then the kernel automatically also refines
+outside of the domain.
+It thus should be safe to set the value even to
+\texttt{std::numeric_limits<double>::min()}---the refinement is induced from
+refinement within the domain, i.e.~your user code.
+It does not automatically blow up the memory needs.
+\end{remark}
 
 
 \subsection{Avoid races for idle ranks}
