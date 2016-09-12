@@ -6,6 +6,10 @@
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Lock.h"
 
+#ifdef Asserts
+#include "peano/parallel/loadbalancing/Oracle.h"
+#endif
+
 
 template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator>
 tarch::logging::Log peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::_log( "peano::grid::nodes::loops::LoadVertexLoopBody" );
