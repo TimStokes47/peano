@@ -287,7 +287,7 @@ def plotConcurrency(rank,inputFileName):
 #
 #
 def plotMPIPhases(numberOfRanks,inputFileName):
-  beforeInTraversalColor  = "#ab0000"
+  beforeInTraversalColor  = "#ff3434"
   inTraversalColor        = "#00ab00"
   afterInTraversalColor   = "#560000"
   afterBoundaryExchange   = "#0000ab"
@@ -308,6 +308,8 @@ def plotMPIPhases(numberOfRanks,inputFileName):
 
   lastTimeStamp  = [0] * numberOfRanks
   
+  Alpha = 0.5
+  
   try:
     inputFile = open( inputFileName,  "r" )
     print "parse mpi phases",
@@ -319,8 +321,8 @@ def plotMPIPhases(numberOfRanks,inputFileName):
         lastTimeStamp[rank] = timeStamp
         print ".",
         if (rank==0):
-          pylab.plot((timeStamp, timeStamp), (-0.5, numberOfRanks+1), 'k-')
-        
+          pylab.plot((timeStamp, timeStamp), (-0.5, numberOfRanks+1), '--', color="#445544", alpha=Alpha)
+        pylab.plot((timeStamp, timeStamp), (rank-0.5, rank+0.5), '-', color="#000000" )
       m = re.search( enterCentralElementPattern, line )
       if (m):
         rank = int( m.group(2) )
@@ -328,7 +330,7 @@ def plotMPIPhases(numberOfRanks,inputFileName):
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
         rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=beforeInTraversalColor,edgecolor=beforeInTraversalColor)
+        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=beforeInTraversalColor,edgecolor=beforeInTraversalColor,alpha=Alpha)
         ax.add_patch(rect)
         lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
       m = re.search( leaveCentralElementPattern, line )
@@ -339,7 +341,7 @@ def plotMPIPhases(numberOfRanks,inputFileName):
           lastTimeStamp[rank] = timeStamp
         #rectLength = float( m.group(3) )
         rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=inTraversalColor,edgecolor=inTraversalColor)
+        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=inTraversalColor,edgecolor=inTraversalColor,alpha=Alpha)
         ax.add_patch(rect)
         lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
       m = re.search( endIterationPattern, line )
@@ -350,7 +352,7 @@ def plotMPIPhases(numberOfRanks,inputFileName):
           lastTimeStamp[rank] = timeStamp
         #rectLength = float( m.group(3) )
         rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=afterInTraversalColor,edgecolor=afterInTraversalColor)
+        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=afterInTraversalColor,edgecolor=afterInTraversalColor,alpha=Alpha)
         ax.add_patch(rect)
         lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
       m = re.search( endDataExchange, line )
@@ -360,7 +362,7 @@ def plotMPIPhases(numberOfRanks,inputFileName):
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
         rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=afterBoundaryExchange,edgecolor=afterBoundaryExchange)
+        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=afterBoundaryExchange,edgecolor=afterBoundaryExchange,alpha=Alpha)
         ax.add_patch(rect)
         lastTimeStamp[rank] = timeStamp
 

@@ -583,12 +583,16 @@ if (numberOfRanks>1):
       <td></td> \
       <td>Ranks.</td></tr> \
     <tr> \
-      <td>vertical black bars</td> \
+      <td>vertical grey dotted bars</td> \
       <td></td> \
       <td>End of iteration on master rank.</td></tr> \
     <tr> \
+      <td>vertical black bars</td> \
+      <td></td> \
+      <td>End of iteration on rank.</td></tr> \
+    <tr> \
       <td>bright red</td> \
-      <td bgcolor=\"#ab0000\">xxxxx</td> \
+      <td bgcolor=\"#ff3434\">xxxxx</td> \
       <td>Time spent outside of the domain prior to enter the actual local tree; comprises the time the node has to wait for data from the master if master-worker data exchange is not switched off.</td></tr> \
     <tr> \
       <td>green</td> \
