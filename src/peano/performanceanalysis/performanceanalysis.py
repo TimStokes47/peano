@@ -573,17 +573,44 @@ if (numberOfRanks>1):
     <a href=\"" + inputFileName + ".mpi-phases.large.png\"> <img src=\"" + inputFileName + ".mpi-phases.png\" /> </a> \
     <br /><br />\
     <h3>Legend:</h3>\
-    <ul>\
-    <li>x-axis: simulation time</li>\
-    <li>y-axis: ranks</li>\
-    <li>vertical black bars: end of iteration on master rank</li>\
-    <li>bright red: time spent outside of the domain prior to enter the actual local tree; comprises the time the node has to wait for data from the master if master-worker data exchange is not switched off.</li>\
-    <li>green: time spent within local tree</li>\
-    <li>dark red: time spent outside of the domain after local tree has been processed; comprises the time the node has to wait until data is successfully sent to the master if worker-master data exchange is not switched off. Usually this effect however is negligible as MPI buffers away the blocking messages</li>\
-    <li>dark red on master: time spent to wait for first worker</li>\
-    <li>blue: time required to exchange heap and boundary data; the heap data usually is for free as it overlaps into the subsequent traversal</li>\
-    <li>white: idle time and time used to exchange boundary and heap data</li>\
-    </ul>\
+    <table> \
+    <tr> \
+      <td>x-axis</td> \
+      <td></td> \
+      <td>Simulation time.</td></tr> \
+    <tr> \
+      <td>y-axis</td> \
+      <td></td> \
+      <td>Ranks.</td></tr> \
+    <tr> \
+      <td>vertical black bars</td> \
+      <td></td> \
+      <td>End of iteration on master rank.</td></tr> \
+    <tr> \
+      <td>bright red</td> \
+      <td bgcolor=\"#ab0000\">xxxxx</td> \
+      <td>Time spent outside of the domain prior to enter the actual local tree; comprises the time the node has to wait for data from the master if master-worker data exchange is not switched off.</td></tr> \
+    <tr> \
+      <td>green</td> \
+      <td bgcolor=\"#00ab00\">xxxxx</td> \
+      <td>Time spent within local tree.</td></tr> \
+    <tr> \
+      <td>dark red</td> \
+      <td bgcolor=\"#560000\">xxxxx</td> \
+      <td>Time spent outside of the domain after local tree has been processed; comprises the time the node has to wait until data is successfully sent to the master if worker-master data exchange is not switched off. Usually this effect however is negligible as MPI buffers away the blocking messages.</td></tr> \
+    <tr> \
+      <td>dark red on master</td> \
+      <td bgcolor=\"#560000\">xxxxx</td> \
+      <td>Time spent to wait for first worker.</td></tr> \
+    <tr> \
+      <td>blue</td> \
+      <td bgcolor=\"#0000ab\">xxxxx</td> \
+      <td>Time required to exchange heap and boundary data; the heap data usually is for free as it overlaps into the subsequent traversal.</td></tr> \
+    <tr> \
+      <td>white</td> \
+      <td></td> \
+      <td>Idle time and time used to exchange boundary and heap data.</td></tr> \
+    </table>\
     <i>Visualisation remarks/performance hints: </i>\
     <ul>\
     <li>The sampling accuracy is low, i.e. if your code has a very low \

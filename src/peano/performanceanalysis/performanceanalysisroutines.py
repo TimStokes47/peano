@@ -287,8 +287,8 @@ def plotConcurrency(rank,inputFileName):
 #
 #
 def plotMPIPhases(numberOfRanks,inputFileName):
-  inTraversalColor        = "#00ab00"
   beforeInTraversalColor  = "#ab0000"
+  inTraversalColor        = "#00ab00"
   afterInTraversalColor   = "#560000"
   afterBoundaryExchange   = "#0000ab"
 
