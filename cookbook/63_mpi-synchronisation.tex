@@ -164,6 +164,7 @@ There are basically two ways to improve this situation:
 
 
 \subsection{Skip worker-master data transfer locally/sporadically}
+\label{section:63_mpi-synchronisation:skip-worker-master}
 
 We next discuss the decond variant.
 We assume that your code already runs a fixed number of iterations per
@@ -260,3 +261,45 @@ bool myproject::mappings::MyMapping::prepareSendToWorker(...) {
   else return true;
 }
 \end{code}
+
+
+
+
+\subsection{Tackle late masters}
+
+After we have eliminated all late workers (skipped the reduction, Secction
+\ref{section:63_mpi-synchronisation:skip-worker-master}) and also hered with
+extensive boundary data exchange (Section
+\ref{section:64_advanced-mpi:switch-off-vertex-data-exchange}), it might happen
+that we end up with a setup where all ranks permanently wait for their master to
+start them up.
+This happens notably if the computational work per rank is reasonably small.
+
+\begin{smell}
+  Ranks wait for data from their master most of their time (bright red phases
+  in the performance analysis) and the global master seems to synchronise its
+  work with the work of the other ranks though we trigger multiple iterations in
+  one rush and switched off boundary exchange as well as the reduction.
+\end{smell}
+
+
+\begin{center}
+  \includegraphics[width=0.5\textwidth]{63_mpi-synchronisation/mpi-phases-late-master.png}
+\end{center}
+
+
+Before we dive deeper into this behaviour, we have to validate a few facts:
+\begin{itemize}
+  \item Do all the ranks employed on the coarsest level show the same behaviour
+  but are they desynchronised? In the example above, rank 8 and 16, e.g., are on
+  the same level and not synchronised with each other. However, they show the
+  same behaviour (two green active phases directly after each other). So we may
+  assume that the ranks are desynchronised w.r.t.~the boundary data exchanges.
+  Alternatively, we could also track the individual statistics and validate that
+  no time is spent in administering the boundary data.
+  \item Do all ranks or at least a significant number of them switch off any
+  reduction? In the example above, rank 0 immediately delegates all work to rank
+  0. Both have exactly the same runtime pattern (seem to wait for their
+  respective father---which is strange at least in the case of rank 4).
+\end{itemize}
+
