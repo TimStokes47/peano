@@ -1,6 +1,7 @@
 import sys
 import re
 import matplotlib
+import gc
 matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 import pylab
 import networkx 
@@ -268,10 +269,13 @@ if (numberOfRanks>1):
   print "extract fork and join statistics"
   performanceanalysisroutines.plotForkJoinStatistics(numberOfRanks,args.file)
 
+  gc.collect() 
   print "plot mpi phases"
   performanceanalysisroutines.plotMPIPhases(numberOfRanks,args.file)
+  gc.collect() 
 
   print "master-worker data exchange"
+  GlobalSynchronisationOnRank0 = False
   GlobalSynchronisationOnRank0 = performanceanalysisroutines.plotMasterWorkerLateSends(numberOfRanks,inputFileName)
 
   print "boundary data exchange"
@@ -626,7 +630,11 @@ if (numberOfRanks>1):
     <li>If all ranks have large blue blocks that all end at the same time, then you have a very tight coupling of the ranks through boundary data. Change your bounding box, e.g. (see remarks in guide book on boundary data skips).</li>\
     <li>If the green bars are significantly smaller than the other bars, your problem is too small for this number of ranks. All your time is spent on communication.</li>\
     </ul>\
-    <a href=\"#table-of-contents\">To table of contents</a>\
+    <p>The script automatically generated pdf versions of all images (simple exchange the estension .png), so you can include it in other documentation. However, it is also sometimes easier to study the MPI phase diagram as \
+    <a href=\"" + inputFileName + ".mpi-phases.pdf\">pdf</a> \
+    or as \
+    <a href=\"" + inputFileName + ".mpi-phases.large.pdf\">large pdf</a>. \
+    as they are vector formats. </p> \
     ")
 
 
