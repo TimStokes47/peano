@@ -374,7 +374,7 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   ax.invert_yaxis()
   ax.autoscale_view()
   pylab.xlabel('t')
-  pylab.grid(True)
+  pylab.grid(False)
   pylab.savefig( inputFileName + ".mpi-phases.png" )
   pylab.savefig( inputFileName + ".mpi-phases.pdf" )
   switchToLargePlot()
