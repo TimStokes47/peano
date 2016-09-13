@@ -615,6 +615,14 @@ if (numberOfRanks>1):
       <td bgcolor=\"#0000ab\">xxxxx</td> \
       <td>Time required to exchange heap and boundary data; the heap data usually is for free as it overlaps into the subsequent traversal.</td></tr> \
     <tr> \
+      <td>yellow</td> \
+      <td bgcolor=\"#ffff00\">xxxxx</td> \
+      <td>Time required to receive heap data from the master when the rank starts up.</td></tr> \
+    <tr> \
+      <td>yellow</td> \
+      <td bgcolor=\"#abab00\">xxxxx</td> \
+      <td>Time required to send heap data to the master when the rank just has finished.</td></tr> \
+    <tr> \
       <td>white</td> \
       <td></td> \
       <td>Idle time and time used to exchange boundary and heap data.</td></tr> \

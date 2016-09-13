@@ -291,6 +291,8 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   inTraversalColor        = "#00ab00"
   afterInTraversalColor   = "#560000"
   afterBoundaryExchange   = "#0000ab"
+  prepareAsynchronousBoundaryExchangeColor = "#ffff00"
+  releaseAsynchronousBoundaryExchangeColor = "#abab00"
 
   pylab.clf()
   pylab.title( "MPI phases overview" )
@@ -305,6 +307,8 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   leaveCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree.*t_central-tree-traversal=\(" + floatPattern
   endIterationPattern        = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_traversal=\(" + floatPattern
   endDataExchange            = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData"
+  prepareAsynchronousHeap    = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange"
+  releaseAsynchronousHeap    = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endToReleaseSynchronousHeapData"
 
   lastTimeStamp  = [0] * numberOfRanks
   
@@ -323,6 +327,26 @@ def plotMPIPhases(numberOfRanks,inputFileName):
         if (rank==0):
           pylab.plot((timeStamp, timeStamp), (-0.5, numberOfRanks+1), '--', color="#445544", alpha=Alpha)
         pylab.plot((timeStamp, timeStamp), (rank-0.5, rank+0.5), '-', color="#000000" )
+      m = re.search( prepareAsynchronousHeap, line )
+      if (m):
+        rank = int( m.group(2) )
+        timeStamp = float( m.group(1) )
+        if (lastTimeStamp[rank]==0):
+          lastTimeStamp[rank] = timeStamp
+        rectLength = timeStamp-lastTimeStamp[rank]
+        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=beforeInTraversalColor,edgecolor=prepareAsynchronousBoundaryExchangeColor,alpha=Alpha)
+        ax.add_patch(rect)
+        lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
+      m = re.search( releaseAsynchronousHeap, line )
+      if (m):
+        rank = int( m.group(2) )
+        timeStamp = float( m.group(1) )
+        if (lastTimeStamp[rank]==0):
+          lastTimeStamp[rank] = timeStamp
+        rectLength = timeStamp-lastTimeStamp[rank]
+        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=beforeInTraversalColor,edgecolor=releaseAsynchronousBoundaryExchangeColor,alpha=Alpha)
+        ax.add_patch(rect)
+        lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
       m = re.search( enterCentralElementPattern, line )
       if (m):
         rank = int( m.group(2) )
@@ -339,7 +363,6 @@ def plotMPIPhases(numberOfRanks,inputFileName):
         timeStamp = float( m.group(1) )
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
-        #rectLength = float( m.group(3) )
         rectLength = timeStamp-lastTimeStamp[rank]
         rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=inTraversalColor,edgecolor=inTraversalColor,alpha=Alpha)
         ax.add_patch(rect)
@@ -350,7 +373,6 @@ def plotMPIPhases(numberOfRanks,inputFileName):
         timeStamp = float( m.group(1) )
         if (lastTimeStamp[rank]==0):
           lastTimeStamp[rank] = timeStamp
-        #rectLength = float( m.group(3) )
         rectLength = timeStamp-lastTimeStamp[rank]
         rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=afterInTraversalColor,edgecolor=afterInTraversalColor,alpha=Alpha)
         ax.add_patch(rect)
@@ -370,6 +392,9 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
+  
+  #if (lastTimeStamp<numberOfRanks):
+  #  pylab.gcf().set_size_inches( (DefaultSize[1], DefaultSize[1]) )
   
   ax.invert_yaxis()
   ax.autoscale_view()

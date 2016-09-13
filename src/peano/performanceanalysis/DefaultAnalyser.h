@@ -91,10 +91,31 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     virtual void endToReceiveDataFromWorker( int fromRank );
 
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
+
+    /**
+     * @see endToReleaseSynchronousHeapData().
+     */
     virtual void beginToReleaseSynchronousHeapData();
+
+    /**
+     * Writes how long it took to release synchronous heap data. The
+     * counterpart beginToReleaseSynchronousHeapData() again does not
+     * write any information but starts a watch.
+     */
     virtual void endToReleaseSynchronousHeapData();
+
+    /**
+     * Does not write anything but start an internal watch so we can keep track
+     * how much asynchronous data is outstanding.
+     */
     virtual void beginToPrepareAsynchronousHeapDataExchange();
+
+    /**
+     * Now we write that we've basically done all the asynchronous exchange and we
+     * also give timings.
+     */
     virtual void endToPrepareAsynchronousHeapDataExchange();
+
     virtual void endReleaseOfJoinData();
     virtual void endReleaseOfBoundaryData();
 
