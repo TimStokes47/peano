@@ -296,10 +296,10 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   releaseAsynchronousBoundaryExchangeColor = "#abab00"
 
   pylab.clf()
-  pylab.figure(figsize=(numberOfRanks,numberOfRanks))
+  #pylab.figure(figsize=(numberOfRanks,numberOfRanks))
   pylab.title( "MPI phases overview" )
   ax = pylab.gca()
-  ax.set_aspect('equal','box')
+  #ax.set_aspect('equal','box')
   
   timeStampPattern = "([0-9]\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
