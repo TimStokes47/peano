@@ -1093,8 +1093,6 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,wor
    pylab.text(ranksWithZeroResponsibility,volumes[ranksWithZeroResponsibility]+20,"ranks_per_node")
    pylab.plot([ranksWithZeroResponsibility,ranksWithZeroResponsibility], [0, volumes[ranksWithZeroResponsibility]], '-', color="#000000") 
  
- pylab.xlabel('rank')  
- pylab.ylabel('$\Omega $')
  try:
    pylab.legend(fontsize=9, framealpha=0.5)
  except:
@@ -1109,6 +1107,8 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,wor
  # pylab.figure(figsize=(numberOfRanks/10,4))
 
  setGeneralPlotSettings()
+ pylab.xlabel('rank')  
+ pylab.ylabel('$\Omega $')
  pylab.savefig( outputFileName + ".work-distribution.png" )
  pylab.savefig( outputFileName + ".work-distribution.pdf" )
  switchToLargePlot()
