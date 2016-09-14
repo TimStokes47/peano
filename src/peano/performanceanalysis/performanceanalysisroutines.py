@@ -276,6 +276,7 @@ def plotConcurrency(rank,inputFileName):
 
 
 
+
 #
 # Creates the one big trace picture where we see what different ranks do at 
 # different times
@@ -295,6 +296,7 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   releaseAsynchronousBoundaryExchangeColor = "#abab00"
 
   pylab.clf()
+  pylab.figure(figsize=(numberOfRanks,numberOfRanks))
   pylab.title( "MPI phases overview" )
   ax = pylab.gca()
   ax.set_aspect('equal','box')
@@ -311,6 +313,14 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   releaseAsynchronousHeap    = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endToReleaseSynchronousHeapData"
 
   lastTimeStamp  = [0] * numberOfRanks
+
+  def plotMPIPhasesBar(rank,timeStamp,color):
+    if (lastTimeStamp[rank]==0):
+      lastTimeStamp[rank] = timeStamp
+    rectLength = timeStamp-lastTimeStamp[rank]
+    rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=color,edgecolor=color,alpha=Alpha)
+    ax.add_patch(rect)
+    lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
   
   Alpha = 0.5
   
@@ -331,70 +341,37 @@ def plotMPIPhases(numberOfRanks,inputFileName):
       if (m):
         rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        if (lastTimeStamp[rank]==0):
-          lastTimeStamp[rank] = timeStamp
-        rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=beforeInTraversalColor,edgecolor=prepareAsynchronousBoundaryExchangeColor,alpha=Alpha)
-        ax.add_patch(rect)
-        lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
+        plotMPIPhasesBar(rank,timeStamp,prepareAsynchronousBoundaryExchangeColor)
       m = re.search( releaseAsynchronousHeap, line )
       if (m):
         rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        if (lastTimeStamp[rank]==0):
-          lastTimeStamp[rank] = timeStamp
-        rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=beforeInTraversalColor,edgecolor=releaseAsynchronousBoundaryExchangeColor,alpha=Alpha)
-        ax.add_patch(rect)
-        lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
+        plotMPIPhasesBar(rank,timeStamp,releaseAsynchronousBoundaryExchangeColor)
       m = re.search( enterCentralElementPattern, line )
       if (m):
         rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        if (lastTimeStamp[rank]==0):
-          lastTimeStamp[rank] = timeStamp
-        rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=beforeInTraversalColor,edgecolor=beforeInTraversalColor,alpha=Alpha)
-        ax.add_patch(rect)
-        lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
+        plotMPIPhasesBar(rank,timeStamp,beforeInTraversalColor)
       m = re.search( leaveCentralElementPattern, line )
       if (m):
         rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        if (lastTimeStamp[rank]==0):
-          lastTimeStamp[rank] = timeStamp
-        rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=inTraversalColor,edgecolor=inTraversalColor,alpha=Alpha)
-        ax.add_patch(rect)
-        lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
+        plotMPIPhasesBar(rank,timeStamp,inTraversalColor)
       m = re.search( endIterationPattern, line )
       if (m):
         rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        if (lastTimeStamp[rank]==0):
-          lastTimeStamp[rank] = timeStamp
-        rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=afterInTraversalColor,edgecolor=afterInTraversalColor,alpha=Alpha)
-        ax.add_patch(rect)
-        lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
+        plotMPIPhasesBar(rank,timeStamp,afterInTraversalColor)
       m = re.search( endDataExchange, line )
       if (m):
         rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        if (lastTimeStamp[rank]==0):
-          lastTimeStamp[rank] = timeStamp
-        rectLength = timeStamp-lastTimeStamp[rank]
-        rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=afterBoundaryExchange,edgecolor=afterBoundaryExchange,alpha=Alpha)
-        ax.add_patch(rect)
-        lastTimeStamp[rank] = timeStamp
+        plotMPIPhasesBar(rank,timeStamp,afterBoundaryExchange)
 
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
-  
-  #if (lastTimeStamp<numberOfRanks):
-  #  pylab.gcf().set_size_inches( (DefaultSize[1], DefaultSize[1]) )
   
   ax.invert_yaxis()
   ax.autoscale_view()
