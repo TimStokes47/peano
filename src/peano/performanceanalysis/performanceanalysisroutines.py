@@ -194,7 +194,7 @@ def plotConcurrency(rank,inputFileName):
   ax = pylab.gca()
   #ax.set_aspect('equal','box')
   
-  timeStampPattern = "([0-9]\.?[0-9]*)"
+  timeStampPattern = "([0-9]+\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
   
   searchPattern              = timeStampPattern + ".*rank:" + str(rank) + " .*peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel" + \
@@ -301,7 +301,7 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   ax = pylab.gca()
   #ax.set_aspect('equal','box')
   
-  timeStampPattern = "([0-9]\.?[0-9]*)"
+  timeStampPattern = "([0-9]+\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
   
   beginIterationPattern      = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::beginIteration"
@@ -409,7 +409,7 @@ def plotForkJoinStatistics(numberOfRanks,inputFileName):
   timelineOfForks.append(0.0)
   timelineOfJoins.append(0.0)
   
-  timeStampPattern  = "([0-9]\.?[0-9]*)"
+  timeStampPattern  = "([0-9]+\.?[0-9]*)"
   
   searchPatternFork    = timeStampPattern + ".*peano::performanceanalysis::DefaultAnalyser::addWorker"
   searchPatternJoin    = timeStampPattern + ".*peano::performanceanalysis::DefaultAnalyser::removeWorker"
