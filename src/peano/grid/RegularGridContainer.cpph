@@ -47,8 +47,8 @@ std::string peano::grid::RegularGridContainer<Vertex,Cell>::toString() const {
   for (int i=0; i<static_cast<int>(_data.size()); i++) {
     result << ",level-" << i
            << ":initialised=" << isLevelInitialised(i)
-           << ",uninitialised-patch-vertices:" << _data[i]->uninitalisedThreeTimeThreePatchesVertices
-           << ",uninitialised-patch-cells:" << _data[i]->uninitalisedThreeTimeThreePatchesCells
+           << ",uninitialised-patch-vertices:" << _data[i]->uninitalisedVertices
+           << ",uninitialised-patch-cells:" << _data[i]->uninitalisedCells
            << ",#used=" << _data[i]->usedPerTraversal
            << ",have-called-all-events:" << _data[i]->haveCalledAllEventsOnThisLevel;
   }
@@ -59,67 +59,54 @@ std::string peano::grid::RegularGridContainer<Vertex,Cell>::toString() const {
 
 
 template < class Vertex, class Cell >
-void peano::grid::RegularGridContainer<Vertex,Cell>::haveReadPatchsVertices( int level ) {
-  tarch::multicore::Lock lock(_semaphore);
-
-  assertion2( level>=0, level, toString() );
-  assertion2( level<static_cast<int>(_data.size()), level, toString() );
-  assertion2( _data[level]->uninitalisedThreeTimeThreePatchesVertices>0, level, toString() );
-
-  _data[level]->uninitalisedThreeTimeThreePatchesVertices--;
-  _data[level]->haveCalledAllEventsOnThisLevel = false;
-}
-
-
-template < class Vertex, class Cell >
-void peano::grid::RegularGridContainer<Vertex,Cell>::haveReadPatchsVertices( const std::vector<int>& readsOfPatchesPerLevel ) {
+void peano::grid::RegularGridContainer<Vertex,Cell>::haveReadVertices( const std::vector<int>& readsOfPatchesPerLevel ) {
   tarch::multicore::Lock lock(_semaphore);
 
   for (int level=0; level<static_cast<int>(readsOfPatchesPerLevel.size()); level++) {
     assertion2( level>=0, level, toString() );
     assertion2( level<static_cast<int>(_data.size()), level, toString() );
 
-    _data[level]->uninitalisedThreeTimeThreePatchesVertices -= readsOfPatchesPerLevel[level];
-    _data[level]->haveCalledAllEventsOnThisLevel             = false;
+    _data[level]->uninitalisedVertices            -= readsOfPatchesPerLevel[level];
+    _data[level]->haveCalledAllEventsOnThisLevel   = false;
 
-    assertion2( _data[level]->uninitalisedThreeTimeThreePatchesVertices>=0, level, toString() );
+    assertion2( _data[level]->uninitalisedVertices>=0, level, toString() );
   }
 }
 
 
 template < class Vertex, class Cell >
-void peano::grid::RegularGridContainer<Vertex,Cell>::haveReadPatchsCells( int level ) {
+void peano::grid::RegularGridContainer<Vertex,Cell>::haveReadAllChildrenCellsOfOneRefinedNode( int level ) {
   tarch::multicore::Lock lock(_semaphore);
 
   assertion1( level>=0, toString() );
   assertion1( level<static_cast<int>(_data.size()), toString() );
 
-  _data[level]->uninitalisedThreeTimeThreePatchesCells--;
-  _data[level]->haveCalledAllEventsOnThisLevel = false;
+  _data[level]->uninitalisedCells              -= THREE_POWER_D;
+  _data[level]->haveCalledAllEventsOnThisLevel  = false;
 }
 
 
 template < class Vertex, class Cell >
-void peano::grid::RegularGridContainer<Vertex,Cell>::haveReadAllPatchsCells( int maxLevel ) {
+void peano::grid::RegularGridContainer<Vertex,Cell>::haveReadAllCells( int maxLevel ) {
   tarch::multicore::Lock lock(_semaphore);
 
-  for (int level=1; level<=maxLevel; level++) {
-    _data[level]->uninitalisedThreeTimeThreePatchesCells = 0;
+  for (int level=0; level<=maxLevel; level++) {
+    _data[level]->uninitalisedCells                      = 0;
     _data[level]->haveCalledAllEventsOnThisLevel         = false;
   }
 }
 
 
 template < class Vertex, class Cell >
-void peano::grid::RegularGridContainer<Vertex,Cell>::haveStoredAllPatchsVertices( int maxLevel ) {
+void peano::grid::RegularGridContainer<Vertex,Cell>::haveStoredAllVertices( int maxLevel ) {
   tarch::multicore::Lock lock(_semaphore);
 
-  for (int level=1; level<=maxLevel; level++) {
+  for (int level=0; level<=maxLevel; level++) {
     assertion( level>=0 );
     assertion( level<static_cast<int>(_data.size()));
-    assertion( _data[level]->uninitalisedThreeTimeThreePatchesVertices>=0 );
+    assertion( _data[level]->uninitalisedVertices>=0 );
 
-    _data[level]->uninitalisedThreeTimeThreePatchesVertices = tarch::la::volume( getNumberOfCells(level) )/THREE_POWER_D;
+    _data[level]->uninitalisedVertices = tarch::la::volume( getNumberOfVertices(level) );
   }
 }
 
@@ -138,15 +125,15 @@ void peano::grid::RegularGridContainer<Vertex,Cell>::haveCalledAllEventsOnThisLe
 
 
 template < class Vertex, class Cell >
-void peano::grid::RegularGridContainer<Vertex,Cell>::haveStoredAllPatchsCells( int maxLevel ) {
+void peano::grid::RegularGridContainer<Vertex,Cell>::haveStoredAllCells( int maxLevel ) {
   tarch::multicore::Lock lock(_semaphore);
 
-  for (int level=1; level<=maxLevel; level++) {
+  for (int level=0; level<=maxLevel; level++) {
     assertion( level>=0 );
     assertion( level<static_cast<int>(_data.size()));
     assertion( _data[level]->uninitalisedThreeTimeThreePatchesCells>=0 );
 
-    _data[level]->uninitalisedThreeTimeThreePatchesCells = tarch::la::volume( getNumberOfCells(level) )/THREE_POWER_D;
+    _data[level]->uninitalisedCells = tarch::la::volume( getNumberOfCells(level) );
   }
 }
 
@@ -157,7 +144,7 @@ bool peano::grid::RegularGridContainer<Vertex,Cell>::areCellsOfLevelLoaded( int 
 
   assertion1( level>=0, level );
 
-  return level<static_cast<int>(_data.size()) && _data[level]->uninitalisedThreeTimeThreePatchesCells==0;
+  return level<static_cast<int>(_data.size()) && _data[level]->uninitalisedCells==0;
 }
 
 
@@ -169,8 +156,8 @@ bool peano::grid::RegularGridContainer<Vertex,Cell>::isLevelInitialised( int lev
 
   return
        (level<static_cast<int>(_data.size()))
-    && (_data[level]->uninitalisedThreeTimeThreePatchesCells==0)
-    && (_data[level]->uninitalisedThreeTimeThreePatchesVertices==0);
+    && (_data[level]->uninitalisedCells==0)
+    && (_data[level]->uninitalisedVertices==0);
 }
 
 
@@ -316,8 +303,6 @@ void peano::grid::RegularGridContainer<Vertex,Cell>::setCell( int level, int cel
 
   validateThatRegularSubtreeIsAvailable( level );
 
-  // @todo Assertions on cellindex
-
   _data[level]->cell[cellIndex] = cell;
 
   logTraceOut( "setCell(int,int,Cell)" );
@@ -329,8 +314,6 @@ Cell& peano::grid::RegularGridContainer<Vertex,Cell>::getCell( int level, int ce
   logTraceInWith2Arguments( "getCell(int,int)", level, cellIndex );
 
   validateThatRegularSubtreeIsAvailable( level );
-
-  // @todo Assertions on cellindex
 
   Cell& result = _data[level]->cell[cellIndex];
 
@@ -554,8 +537,8 @@ bool peano::grid::RegularGridContainer<Vertex,Cell>::LevelData::init(
   const int NumberOfCells    = tarch::la::volume( getNumberOfCells(level) );
   const int NumberOfVertices = tarch::la::volume( getNumberOfVertices(level) );
 
-  uninitalisedThreeTimeThreePatchesVertices = NumberOfCells / THREE_POWER_D;
-  uninitalisedThreeTimeThreePatchesCells    = NumberOfCells / THREE_POWER_D;
+  uninitalisedVertices                      = NumberOfVertices;
+  uninitalisedCells                         = NumberOfCells;
   haveCalledAllEventsOnThisLevel            = true;
 
   logDebug( "LevelData::init(int)", "no-of-vertices=" << NumberOfVertices << ", no-of-cells=" << NumberOfCells );

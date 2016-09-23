@@ -652,7 +652,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     assertionEquals2(_activeStoreTasks,1,_coarsestLevelOfThisTask,_coarsestCellsOffset);
     #endif
 
-    _regularGridContainer.haveStoredAllPatchsVertices(treeDepth);
+    _regularGridContainer.haveStoredAllVertices(treeDepth);
   }
 
   leaveOperatorlock.lock();

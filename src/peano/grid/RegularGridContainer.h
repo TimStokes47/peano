@@ -205,8 +205,8 @@ class peano::grid::RegularGridContainer {
          * Each level has @f$ 3^d @f$ patches inside that are befilled en block
          * by Peano. This counter holds how many of them are not set yet.
          */
-        int      uninitalisedThreeTimeThreePatchesVertices;
-        int      uninitalisedThreeTimeThreePatchesCells;
+        int      uninitalisedVertices;
+        int      uninitalisedCells;
 
         /**
          * Is protected by the vertex semaphore
@@ -309,9 +309,7 @@ class peano::grid::RegularGridContainer {
      */
     bool isRegularSubtreeAvailable( int requestedHeight );
     
-    void haveReadPatchsVertices( int level );
-
-    void haveReadPatchsVertices( const std::vector<int>& readsOfPatchesPerLevel );
+    void haveReadVertices( const std::vector<int>& readsOfPatchesPerLevel );
 
     /**
      * Is used by the load cells task to inform the container level by level
@@ -320,12 +318,12 @@ class peano::grid::RegularGridContainer {
      * the level-by-level setter and sets all the level at once in the very
      * end (see haveReadAllPatchsCells()).
      */
-    void haveReadPatchsCells( int level );
+    void haveReadAllChildrenCellsOfOneRefinedNode( int level );
 
-    void haveReadAllPatchsCells( int maxLevel );
+    void haveReadAllCells( int maxLevel );
 
-    void haveStoredAllPatchsVertices( int maxLevel );
-    void haveStoredAllPatchsCells( int maxLevel );
+    void haveStoredAllVertices( int maxLevel );
+    void haveStoredAllCells( int maxLevel );
 
     /**
      * All events called on this level

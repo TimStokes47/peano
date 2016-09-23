@@ -52,7 +52,7 @@ void peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch<Vertex,Cell,CellS
   // Otherwise, we set read-patchs-cell for all levels at the very end in one
   // bunch and, hence, need to lock the container only once as well.
   if (_runsInParallelToOtherTasks) {
-    _regularGridContainer.haveReadPatchsCells(currentLevel);
+    _regularGridContainer.haveReadAllChildrenCellsOfOneRefinedNode(currentLevel);
   }
 
   if (currentLevel<_treeDepth) {
@@ -76,9 +76,11 @@ void peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch<Vertex,Cell,CellS
 
 template <class Vertex, class Cell, class CellStack>
 void peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch<Vertex,Cell,CellStack>::operator()() {
+  _regularGridContainer.haveReadAllCells(0);
+
   loadCells( _topLevelLoopDirection, 1, 0 );
 
   if (!_runsInParallelToOtherTasks) {
-    _regularGridContainer.haveReadAllPatchsCells(_treeDepth);
+    _regularGridContainer.haveReadAllCells(_treeDepth);
   }
 }

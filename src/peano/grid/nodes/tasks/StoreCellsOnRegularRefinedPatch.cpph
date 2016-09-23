@@ -93,5 +93,5 @@ template <class Vertex, class Cell, class CellStack>
 void peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch<Vertex,Cell,CellStack>::operator()() {
   storeCells( _topLevelLoopDirection, 1, 0 );
 
-  _regularGridContainer.haveStoredAllPatchsCells(_treeDepth);
+  _regularGridContainer.haveStoredAllCells(_treeDepth);
 }

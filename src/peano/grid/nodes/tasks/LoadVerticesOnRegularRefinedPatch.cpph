@@ -138,6 +138,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       _regularGridContainer.getVertex(currentLevel,positionInArray).saveAndClearAdjacentCellsInformation();
       _regularGridContainer.setIsReadFromTemporaryStack(currentLevel,positionInArray,false);
       _regularGridContainer.setIsToBeWrittenToTemporaryStack(currentLevel,positionInArray,false);
+      _trackNumberOfReadsPerLevel[currentLevel]++;
 
       assertionNumericalEquals6(
         _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
@@ -298,6 +299,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       _regularGridContainer.getVertex(currentLevel,positionInArray).clearCounterOfAdjacentRefinedCells();
       _regularGridContainer.getVertex(currentLevel,positionInArray).saveAndClearAdjacentCellsInformation();
       _regularGridContainer.setIsReadFromTemporaryStack(currentLevel,positionInArray,false);
+      _trackNumberOfReadsPerLevel[currentLevel]++;
 
 
       assertionNumericalEquals6(
@@ -315,6 +317,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       assertion1( actionFlag>=0, actionFlag );
       _regularGridContainer.setVertex(currentLevel,positionInArray,_vertexStack.pop(actionFlag));
       _regularGridContainer.setIsReadFromTemporaryStack(currentLevel,positionInArray,true);
+      _trackNumberOfReadsPerLevel[currentLevel]++;
 
       assertionNumericalEquals6(
         _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
@@ -530,13 +533,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     }
   endzfor
 
-  if (_loadProcessRunsInParallelToOtherTasks) {
-    _regularGridContainer.haveReadPatchsVertices(currentFineGridLevel);
-    assertionEquals(_trackNumberOfReadsPerLevel[currentFineGridLevel],0);
-  }
-  else {
-    _trackNumberOfReadsPerLevel[currentFineGridLevel]++;
-  }
   logDebug( "loadVerticesWithOnTheFlyCellReconstruction(...)", "loaded all vertex data of level " << currentFineGridLevel << " within tree of depth " << _regularGridContainer.getVertexEnumerator(0).getCellFlags() );
 
   if (currentFineGridLevel<_regularGridContainer.getVertexEnumerator(0).getCellFlags()) {
@@ -677,15 +673,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     }
   endzfor
 
-  if (_loadProcessRunsInParallelToOtherTasks) {
-    _regularGridContainer.haveReadPatchsVertices(currentFineGridLevel);
-    assertionEquals(_trackNumberOfReadsPerLevel[currentFineGridLevel],0);
-  }
-  else {
-    _trackNumberOfReadsPerLevel[currentFineGridLevel]++;
-  }
-  logDebug( "loadSubVerticesWithCellsFromGridContainer(...)", "loaded all vertex data of level " << currentFineGridLevel << " within tree of depth " << _regularGridContainer.getVertexEnumerator(0).getCellFlags() );
-
   if (currentFineGridLevel<_regularGridContainer.getVertexEnumerator(0).getCellFlags()) {
     zfor3(k,loopDirection2)
       const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k + currentCoarseCellPositionWithinUnrolledPatch*3;
@@ -739,15 +726,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       currentFineGridLevel
     );
   endzfor
-
-  if (_loadProcessRunsInParallelToOtherTasks) {
-    _regularGridContainer.haveReadPatchsVertices(currentFineGridLevel);
-    assertionEquals(_trackNumberOfReadsPerLevel[currentFineGridLevel],0);
-  }
-  else {
-    _trackNumberOfReadsPerLevel[currentFineGridLevel]++;
-  }
-  logDebug( "loadSubVerticesWithCellsOnFirstLevelInSharedMemoryMode(...)", "marked vertices of first level" );
 
   assertion2(
     currentFineGridLevel<_regularGridContainer.getVertexEnumerator(0).getCellFlags(),
@@ -846,9 +824,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     );
   }
 
-  if (!_loadProcessRunsInParallelToOtherTasks) {
-    _regularGridContainer.haveReadPatchsVertices(_trackNumberOfReadsPerLevel);
-  }
+  _regularGridContainer.haveReadVertices(_trackNumberOfReadsPerLevel);
 
   logTraceOutWith2Arguments( "operator()()", _coarsestLevelOfThisTask, _coarsestCellsOffset );
 }
