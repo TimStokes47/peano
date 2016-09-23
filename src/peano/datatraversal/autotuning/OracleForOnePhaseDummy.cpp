@@ -14,7 +14,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
   bool useMultithreading                  ,
   bool measureRuntimes                    ,
   int  grainSizeOfUserDefinedRegions      ,
-  int  splitTheTree                       ,
+  SplitTreeRead  splitTheTree             ,
   bool pipelineDescendProcessing          ,
   bool pipelineAscendProcessing           ,
   int  smallestGrainSizeForAscendDescend  ,
@@ -61,7 +61,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
     ( _methodTrace==AscendOnRegularStationaryGrid        ||
       _methodTrace==DescendOnRegularStationaryGrid
     ) &&
-    _splitTheTree !=2
+    _splitTheTree != SplitTreeRead::SplitButDoNotParalleliseEvents
   ) {
     _grainSize           = grainSizeForAscendDescend;
     _smallestProblemSize = smallestGrainSizeForAscendDescend;
@@ -70,7 +70,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
     ( _methodTrace==CallEnterCellOnRegularStationaryGrid ||
       _methodTrace==CallLeaveCellOnRegularStationaryGrid
     ) &&
-    _splitTheTree !=2
+    _splitTheTree != SplitTreeRead::SplitButDoNotParalleliseEvents
   ) {
     _grainSize           = grainSizeForEnterLeaveCell;
     _smallestProblemSize = smallestGrainSizeForEnterLeaveCell;
@@ -80,13 +80,13 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
       _methodTrace==CallTouchFirstTimeOnRegularStationaryGrid ||
       _methodTrace==CallTouchLastTimeOnRegularStationaryGrid
     ) &&
-    _splitTheTree !=2
+    _splitTheTree != SplitTreeRead::SplitButDoNotParalleliseEvents
   ) {
     _grainSize           = grainSizeForTouchFirstLast;
     _smallestProblemSize = smallestGrainSizeForTouchFirstLast;
   }
   else if (
-    _splitTheTree > 0  &&
+    _splitTheTree != SplitTreeRead::DoNotSplit  &&
     (
       _methodTrace == SplitLoadVerticesTaskOnRegularStationaryGrid  ||
       _methodTrace == SplitStoreVerticesTaskOnRegularStationaryGrid
@@ -179,6 +179,19 @@ void peano::datatraversal::autotuning::OracleForOnePhaseDummy::informAboutElapse
 }
 
 
+std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(SplitTreeRead value) {
+  switch (value) {
+    case SplitTreeRead::DoNotSplit:
+      return "do-not-split";
+    case SplitTreeRead::Split:
+      return "split";
+    case SplitTreeRead::SplitButDoNotParalleliseEvents:
+      return "split-but-do-not-parallelise-events";
+  }
+  return "<undef>";
+}
+
+
 std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString() const {
   std::ostringstream msg;
 
@@ -186,7 +199,7 @@ std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString()
       << ",measure-runtimes="    << _measureRuntimes
       << ",adapter-number="      << _adapterNumber
       << ",method="              << peano::datatraversal::autotuning::toString(_methodTrace)
-      << ",split-tree="          << _splitTheTree
+      << ",split-tree="          << toString(_splitTheTree)
       << ",pipeline-descend="    << _pipelineDescendProcessing
       << ",pipeline-ascend="     << _pipelineAscendProcessing
       << ",grain-size="            << _grainSize
