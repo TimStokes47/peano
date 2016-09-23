@@ -8,6 +8,7 @@
 
 #include <tbb/tbb_machine.h>
 #include <tbb/task.h>
+#include <tbb/tbb_thread.h>
 
 
 /**
@@ -38,21 +39,7 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 
 
 void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
-  static tarch::logging::Log  _log( "tarch::multicore::BooleanSemaphore" );
-  if (_pauseCounter < _pauseBeforeYield) {
-    __TBB_Pause(_pauseCounter);
-    _pauseCounter = _pauseCounter * 2;
-  }
-  else {
-    if (_pauseCounter>_counterThresholdForWarning && _pauseCounter != std::numeric_limits<int>::max()) {
-      _pauseCounter = std::numeric_limits<int>::max();
-      logWarning( "sendCurrentTaskToBack(string)", "probably running into deadlock or inefficient behaviour" );
-    }
-    else {
-      _pauseCounter++;
-    }
-    __TBB_Yield();
-  }
+  tbb::this_tbb_thread::yield();
 }
 
 
