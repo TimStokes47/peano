@@ -179,7 +179,7 @@ void peano::datatraversal::autotuning::OracleForOnePhaseDummy::informAboutElapse
 }
 
 
-std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(SplitTreeRead value) {
+std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(SplitVertexReadsOnRegularSubtree value) {
   switch (value) {
     case SplitVertexReadsOnRegularSubtree::DoNotSplit:
       return "do-not-split";
@@ -195,16 +195,16 @@ std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(S
 std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString() const {
   std::ostringstream msg;
 
-  msg << "(multicore="           << _useMulticore
-      << ",measure-runtimes="    << _measureRuntimes
-      << ",adapter-number="      << _adapterNumber
-      << ",method="              << peano::datatraversal::autotuning::toString(_methodTrace)
-      << ",split-tree="          << toString(_splitTheTree)
-      << ",pipeline-descend="    << _pipelineDescendProcessing
-      << ",pipeline-ascend="     << _pipelineAscendProcessing
+  msg << "(multicore="             << _useMulticore
+      << ",measure-runtimes="      << _measureRuntimes
+      << ",adapter-number="        << _adapterNumber
+      << ",method="                << peano::datatraversal::autotuning::toString(_methodTrace)
+      << ",split-tree="            << toString(_splitTheTree)
+      << ",pipeline-descend="      << _pipelineDescendProcessing
+      << ",pipeline-ascend="       << _pipelineAscendProcessing
       << ",grain-size="            << _grainSize
       << ",smallest-problem-size=" << _smallestProblemSize
-      << ",last-problem-size="   << _lastProblemSize
+      << ",last-problem-size="     << _lastProblemSize
       << ")";
 
   return msg.str();
