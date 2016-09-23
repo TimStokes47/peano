@@ -39,13 +39,13 @@ namespace peano {
  */
 class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::datatraversal::autotuning::OracleForOnePhase {
   public:
-    enum class SplitTreeRead {
+    enum class SplitVertexReadsOnRegularSubtree {
       DoNotSplit,
       Split,
       SplitButDoNotParalleliseEvents
     };
 
-    static std::string toString(SplitTreeRead value);
+    static std::string toString(SplitVertexReadsOnRegularSubtree value);
   private:
     static tarch::logging::Log                 _log;
 
@@ -55,7 +55,7 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
     std::map<int, tarch::timing::Measurement>  _executionTime;
     const int                                  _adapterNumber;
     const MethodTrace                          _methodTrace;
-    const SplitTreeRead                        _splitTheTree;
+    const SplitVertexReadsOnRegularSubtree     _splitTheTree;
     const bool                                 _pipelineDescendProcessing;
     const bool                                 _pipelineAscendProcessing;
 
@@ -86,7 +86,7 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
       bool useMultithreading                  = true,
       bool measureRuntimes                    = false,
       int  grainSizeOfUserDefinedRegions      = 0,
-      SplitTreeRead splitTheTree              = SplitTreeRead::DoNotSplit,
+      SplitVertexReadsOnRegularSubtree splitTheTree = SplitVertexReadsOnRegularSubtree::DoNotSplit,
       bool pipelineDescendProcessing          = false,
       bool pipelineAscendProcessing           = false,
       int  smallestGrainSizeForAscendDescend  = tarch::la::aPowI(DIMENSIONS,3*3*3*3/2),

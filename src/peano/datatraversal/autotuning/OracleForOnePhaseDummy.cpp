@@ -14,7 +14,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
   bool useMultithreading                  ,
   bool measureRuntimes                    ,
   int  grainSizeOfUserDefinedRegions      ,
-  SplitTreeRead  splitTheTree             ,
+  SplitVertexReadsOnRegularSubtree  splitTheTree             ,
   bool pipelineDescendProcessing          ,
   bool pipelineAscendProcessing           ,
   int  smallestGrainSizeForAscendDescend  ,
@@ -61,7 +61,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
     ( _methodTrace==AscendOnRegularStationaryGrid        ||
       _methodTrace==DescendOnRegularStationaryGrid
     ) &&
-    _splitTheTree != SplitTreeRead::SplitButDoNotParalleliseEvents
+    _splitTheTree != SplitVertexReadsOnRegularSubtree::SplitButDoNotParalleliseEvents
   ) {
     _grainSize           = grainSizeForAscendDescend;
     _smallestProblemSize = smallestGrainSizeForAscendDescend;
@@ -70,7 +70,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
     ( _methodTrace==CallEnterCellOnRegularStationaryGrid ||
       _methodTrace==CallLeaveCellOnRegularStationaryGrid
     ) &&
-    _splitTheTree != SplitTreeRead::SplitButDoNotParalleliseEvents
+    _splitTheTree != SplitVertexReadsOnRegularSubtree::SplitButDoNotParalleliseEvents
   ) {
     _grainSize           = grainSizeForEnterLeaveCell;
     _smallestProblemSize = smallestGrainSizeForEnterLeaveCell;
@@ -80,13 +80,13 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
       _methodTrace==CallTouchFirstTimeOnRegularStationaryGrid ||
       _methodTrace==CallTouchLastTimeOnRegularStationaryGrid
     ) &&
-    _splitTheTree != SplitTreeRead::SplitButDoNotParalleliseEvents
+    _splitTheTree != SplitVertexReadsOnRegularSubtree::SplitButDoNotParalleliseEvents
   ) {
     _grainSize           = grainSizeForTouchFirstLast;
     _smallestProblemSize = smallestGrainSizeForTouchFirstLast;
   }
   else if (
-    _splitTheTree != SplitTreeRead::DoNotSplit  &&
+    _splitTheTree != SplitVertexReadsOnRegularSubtree::DoNotSplit  &&
     (
       _methodTrace == SplitLoadVerticesTaskOnRegularStationaryGrid  ||
       _methodTrace == SplitStoreVerticesTaskOnRegularStationaryGrid
@@ -181,11 +181,11 @@ void peano::datatraversal::autotuning::OracleForOnePhaseDummy::informAboutElapse
 
 std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(SplitTreeRead value) {
   switch (value) {
-    case SplitTreeRead::DoNotSplit:
+    case SplitVertexReadsOnRegularSubtree::DoNotSplit:
       return "do-not-split";
-    case SplitTreeRead::Split:
+    case SplitVertexReadsOnRegularSubtree::Split:
       return "split";
-    case SplitTreeRead::SplitButDoNotParalleliseEvents:
+    case SplitVertexReadsOnRegularSubtree::SplitButDoNotParalleliseEvents:
       return "split-but-do-not-parallelise-events";
   }
   return "<undef>";
