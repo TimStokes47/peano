@@ -131,7 +131,7 @@ void peano::grid::RegularGridContainer<Vertex,Cell>::haveStoredAllCells( int max
   for (int level=0; level<=maxLevel; level++) {
     assertion( level>=0 );
     assertion( level<static_cast<int>(_data.size()));
-    assertion( _data[level]->uninitalisedThreeTimeThreePatchesCells>=0 );
+    assertion( _data[level]->uninitalisedCells>=0 );
 
     _data[level]->uninitalisedCells = tarch::la::volume( getNumberOfCells(level) );
   }
@@ -197,8 +197,8 @@ void peano::grid::RegularGridContainer<Vertex,Cell>::endOfIteration() {
 template < class Vertex, class Cell >
 void peano::grid::RegularGridContainer<Vertex,Cell>::validateInitialValuesUpToLevel( int level ) const {
   for(int l=1; l<=level; l++) {
-    assertionEquals4( _data[l]->uninitalisedThreeTimeThreePatchesCells,    tarch::la::volume( getNumberOfCells(l) )/THREE_POWER_D , l, level, getNumberOfCells(l), toString() );
-    assertionEquals4( _data[l]->uninitalisedThreeTimeThreePatchesVertices, tarch::la::volume( getNumberOfCells(l) )/THREE_POWER_D , l, level, getNumberOfCells(l), toString() );
+    assertionEquals4( _data[l]->uninitalisedCells,    tarch::la::volume( getNumberOfCells(l) ), l, level, getNumberOfCells(l), toString() );
+    assertionEquals4( _data[l]->uninitalisedVertices, tarch::la::volume( getNumberOfVertices(l) ), l, level, getNumberOfCells(l), toString() );
     assertion3( _data[l]->haveCalledAllEventsOnThisLevel, l, level, toString() );
     assertion3( !isLevelInitialised(l), l, level, toString() );
   }
