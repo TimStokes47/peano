@@ -199,8 +199,6 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::operator() () {
-  std::cerr << std::endl << "@@@@" << _descendProcessRunsInParallelToOtherTasks << " , " << _gridContainer.toString() << std::endl;
-
   const bool skipCoarseLevelsCompletely =
     (_eventHandle.touchVertexFirstTimeSpecification().manipulates != peano::MappingSpecification::WholeTree) &&
     (_eventHandle.enterCellSpecification().manipulates            != peano::MappingSpecification::WholeTree) &&
@@ -214,7 +212,6 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::operator
   }
   else {
     for (int level=0; level<=_treeDepth; level++) {
-      std::cerr << std::endl << "-- 1 ---" << level << "," << _gridContainer.toString() << std::endl;
       if (level==_treeDepth) {
         enterCells( level );
       }
