@@ -826,5 +826,11 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
   _regularGridContainer.haveReadVertices(_trackNumberOfReadsPerLevel);
 
+  if (_maxLevelToFork==0) {
+    for (int i=0; i<_regularGridContainer.getVertexEnumerator(0).getCellFlags(); i++) {
+      assertion2( _regularGridContainer.isLevelInitialised(i), i, _regularGridContainer.toString() );
+    }
+  }
+
   logTraceOutWith2Arguments( "operator()()", _coarsestLevelOfThisTask, _coarsestCellsOffset );
 }
