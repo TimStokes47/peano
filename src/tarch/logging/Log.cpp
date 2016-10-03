@@ -37,9 +37,9 @@ tarch::logging::Log::Log(const std::string& className):
     _startupTime       = omp_get_wtime();
     _startupTime       = tbb::tick_count::now();
   #elif defined(__APPLE__)
-    mach_timespec_t mts;
-    clock_get_time(cclock, &mts);
-    _startupTime = (double)mts.tv_sec + (double)mts.tv_nsec * 1e-09;
+    static mach_timebase_info_data_t s_timebase_info;
+    if (s_timebase_info.denom == 0) mach_timebase_info(&s_timebase_info);
+    _startupTime= mach_absolute_time();
   #elif defined(CompilerHasTimespec)
     struct timespec ts;
     if( clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
@@ -123,10 +123,9 @@ double tarch::logging::Log::getTimeStampSeconds() const {
     tbb::tick_count currentTS       = tbb::tick_count::now();
     return (currentTS - _startupTime).seconds();
   #elif defined(__APPLE__)
-    mach_timespec_t mts;
-    clock_get_time(cclock, &mts);
-    double currentTS = (double)mts.tv_sec + (double)mts.tv_nsec * 1e-09;
-    return currentTS - _startupTime;
+    static mach_timebase_info_data_t s_timebase_info;
+    if (s_timebase_info.denom == 0) mach_timebase_info(&s_timebase_info);
+    return (double)((mach_absolute_time() - _startupTime) * (s_timebase_info.numer) / s_timebase_info.denom) * 1e-09;
   #elif defined(CompilerHasTimespec)
     struct timespec ts;
     if( clock_gettime(CLOCK_REALTIME, &ts) == 0 ) {
