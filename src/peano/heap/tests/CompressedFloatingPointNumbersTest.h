@@ -42,7 +42,24 @@ class peano::heap::tests::CompressedFloatingPointNumbersTest: public tarch::test
     /**
      * Something taken from the ParCo presentation
      */
-    void testDecompose1();
+    void testDecompose();
+
+    /**
+     * From ExaHyPE:
+     *
+  assertion in file /home/tobias/git/ExaHyPE/Code/./ExaHyPE/exahype/solvers/ADERDGSolver.cpp, line 2983 failed: tarch::la::equals( DataHeap::getInstance().getData(heapIndex)[i], reconstructedValue, CompressionAccuracy )
+  parameter DataHeap::getInstance().getData(heapIndex)[i]: 1.68855695855260723448e+00
+  parameter reconstructedValue: 1.01768855695855017984e+03
+  parameter DataHeap::getInstance().getData(heapIndex)[i] - reconstructedValue: -1.01599999999999761258e+03
+  parameter CompressionAccuracy: 1.00000000000000006228e-09
+  parameter bytesForMantissa: 5
+  ExaHyPE-Euler: /home/tobias/git/ExaHyPE/Code/./ExaHyPE/exahype/solvers/ADERDGSolver.cpp:2983: void exahype::solvers::ADERDGSolver::glueTogether(int, int, int): Assertion `false' failed.
+
+     But I used /4.0 here for the accuracy.
+
+
+     */
+    void testComposeDecompose();
 public:
     CompressedFloatingPointNumbersTest();
     virtual ~CompressedFloatingPointNumbersTest();

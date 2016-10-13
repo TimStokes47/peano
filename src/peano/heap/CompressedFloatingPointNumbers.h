@@ -83,10 +83,6 @@ namespace peano {
      * use this index and reduce it by one, you find the right entry in
      * decomposeIntoFourVariants().
      *
-     * <h2> Realisation </h2>
-     * I have to use the trunc operation here while I have to use round() in
-     * the real decomposition. I don't know why though ...
-     *
      * @return Value between 1 and 7
      */
     int findMostAgressiveCompression(
