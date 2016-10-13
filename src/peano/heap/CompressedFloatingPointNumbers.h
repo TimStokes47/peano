@@ -83,6 +83,10 @@ namespace peano {
      * use this index and reduce it by one, you find the right entry in
      * decomposeIntoFourVariants().
      *
+     * <h2> Realisation </h2>
+     * I have to use the trunc operation here while I have to use round() in
+     * the real decomposition. I don't know why though ...
+     *
      * @return Value between 1 and 7
      */
     int findMostAgressiveCompression(
@@ -123,6 +127,32 @@ namespace peano {
 
     /**
      * Counterpart of decompose( const double&, char& , T& )
+     *
+     * As it is the counterpart, code typically looks similar to
+     *<pre>
+  char exponent  = 0;
+  long int mantissa = 0;
+  char* pMantissa = reinterpret_cast<char*>( &(mantissa) );
+
+  for (int j=bytesForMantissa-1; j>=0; j--) {
+    pMantissa[j] = CompressedDataHeap::getInstance().getData( heapIndex )[compressedDataHeapIndex]._persistentRecords._u;
+    compressedDataHeapIndex--;
+  }
+  exponent = CompressedDataHeap::getInstance().getData( heapIndex )[compressedDataHeapIndex]._persistentRecords._u;
+</pre>
+     *
+     * There are two evergreens of pitfalls:
+     *
+     * - If you use push and pop to add stuff to the char heaps when you
+     *   decompose, you have to invert all the accesses: you push the
+     *   exponent first but you pop it last, and you pop the mantissas
+     *   bytes in inverted order. I personally prefer to use a resize()
+     *   command on the vector to avoid re-allocation and to access the
+     *   vector entries directly (see snippet above). In this case, I
+     *   could do without an inversion of access order.
+     * - Please ensure that you set the long int mantissa above to 0!
+     *   As you overwrite only parts of it (with compressed data), you
+     *   might otherwise end up with garbage in the higher bytes.
      */
     template <class T>
     double compose(

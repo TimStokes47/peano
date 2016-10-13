@@ -276,7 +276,7 @@ void peano::heap::tests::CompressedFloatingPointNumbersTest::testBatchDecomposit
   validateWithParams4( std::abs(peano::heap::compose(exponent[0],mantissa[0])-value)<1e-3,  static_cast<int>(exponent[0]),mantissa[0],error[0],peano::heap::compose(exponent[0],mantissa[0]) );
   validateWithParams4( std::abs(peano::heap::compose(exponent[1],mantissa[1])-value)<1e-3,  static_cast<int>(exponent[1]),mantissa[1],error[1],peano::heap::compose(exponent[1],mantissa[1]) );
   validateWithParams4( std::abs(peano::heap::compose(exponent[2],mantissa[2])-value)<1e-3,  static_cast<int>(exponent[2]),mantissa[2],error[2],peano::heap::compose(exponent[2],mantissa[2]) );
-  validateWithParams4( std::abs(peano::heap::compose(exponent[3],mantissa[3])-value)<1e-12, static_cast<int>(exponent[3]),mantissa[3],error[3],peano::heap::compose(exponent[3],mantissa[3]) );
+  validateWithParams4( std::abs(peano::heap::compose(exponent[3],mantissa[3])-value)<2e-12, static_cast<int>(exponent[3]),mantissa[3],error[3],peano::heap::compose(exponent[3],mantissa[3]) );
   validateWithParams4( std::abs(peano::heap::compose(exponent[4],mantissa[4])-value)<1e-12, static_cast<int>(exponent[4]),mantissa[4],error[4],peano::heap::compose(exponent[4],mantissa[4]) );
   validateWithParams4( std::abs(peano::heap::compose(exponent[5],mantissa[5])-value)<1e-12, static_cast<int>(exponent[5]),mantissa[5],error[5],peano::heap::compose(exponent[5],mantissa[5]) );
 
@@ -330,7 +330,7 @@ void peano::heap::tests::CompressedFloatingPointNumbersTest::testBatchDecomposit
   validateWithParams4( std::abs(peano::heap::compose(exponent[0],mantissa[0])-value)<1e-3,  static_cast<int>(exponent[0]),mantissa[0],error[0],peano::heap::compose(exponent[0],mantissa[0]) );
   validateWithParams4( std::abs(peano::heap::compose(exponent[1],mantissa[1])-value)<1e-3,  static_cast<int>(exponent[1]),mantissa[1],error[1],peano::heap::compose(exponent[1],mantissa[1]) );
   validateWithParams4( std::abs(peano::heap::compose(exponent[2],mantissa[2])-value)<1e-3,  static_cast<int>(exponent[2]),mantissa[2],error[2],peano::heap::compose(exponent[2],mantissa[2]) );
-  validateWithParams4( std::abs(peano::heap::compose(exponent[3],mantissa[3])-value)<1e-12, static_cast<int>(exponent[3]),mantissa[3],error[3],peano::heap::compose(exponent[3],mantissa[3]) );
+  validateWithParams4( std::abs(peano::heap::compose(exponent[3],mantissa[3])-value)<2e-12, static_cast<int>(exponent[3]),mantissa[3],error[3],peano::heap::compose(exponent[3],mantissa[3]) );
 
 }
 
@@ -379,20 +379,20 @@ void peano::heap::tests::CompressedFloatingPointNumbersTest::testDecompose1() {
 
   value = -0.0155759;
   peano::heap::decomposeIntoEightVariants( value, exponent, mantissa, error );
-  validateWithParams6(error[0]<1e-4, static_cast<int>(exponent[0]),mantissa[0],error[0],peano::heap::compose(exponent[0],mantissa[0]),value,peano::heap::compose(exponent[0],mantissa[0])-value);
+  validateWithParams6(error[0]<2e-4, static_cast<int>(exponent[0]),mantissa[0],error[0],peano::heap::compose(exponent[0],mantissa[0]),value,peano::heap::compose(exponent[0],mantissa[0])-value);
   reconstructedMantissa     = 0;
   pReconstructedMantissa[0] = *pMantissa;
   gluedValue    = peano::heap::compose(exponent[0],reconstructedMantissa,1);
-  validateWithParams5(std::abs(gluedValue-value)<1e-4, value, gluedValue, mantissa[0], (int)(exponent[0]), reconstructedMantissa );
+  validateWithParams5(std::abs(gluedValue-value)<2e-4, value, gluedValue, mantissa[0], (int)(exponent[0]), reconstructedMantissa );
 
 
   value = 0.0155759;
   peano::heap::decomposeIntoEightVariants( value, exponent, mantissa, error );
-  validateWithParams6(error[0]<1e-4, static_cast<int>(exponent[0]),mantissa[0],error[0],peano::heap::compose(exponent[0],mantissa[0]),value,peano::heap::compose(exponent[0],mantissa[0])-value);
+  validateWithParams6(error[0]<2e-4, static_cast<int>(exponent[0]),mantissa[0],error[0],peano::heap::compose(exponent[0],mantissa[0]),value,peano::heap::compose(exponent[0],mantissa[0])-value);
   reconstructedMantissa     = 0;
   pReconstructedMantissa[0] = *pMantissa;
   gluedValue    = peano::heap::compose(exponent[0],reconstructedMantissa,1);
-  validateWithParams5(std::abs(gluedValue-value)<1e-4, value, gluedValue, mantissa[0], (int)(exponent[0]), reconstructedMantissa );
+  validateWithParams5(std::abs(gluedValue-value)<2e-4, value, gluedValue, mantissa[0], (int)(exponent[0]), reconstructedMantissa );
 }
 
 

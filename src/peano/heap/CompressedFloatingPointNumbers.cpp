@@ -59,12 +59,15 @@ int __attribute__((optimize("O0"))) peano::heap::findMostAgressiveCompression(
     const double shiftMantissa    = std::pow( 2.0,shiftExponent );
 
     double exponent  = static_cast<char>( integerExponent-shiftExponent );
-    double mantissa  = static_cast<long int>( std::round(significand*shiftMantissa) );
+    long int mantissa  = static_cast<long int>( std::trunc(significand*shiftMantissa) );
 
     error     = std::abs( std::ldexp(mantissa,exponent) - value );
 
     shiftExponent+=8;
   }
+
+  assertion(usedBytes>=1);
+  assertion(usedBytes<=7);
 
   return usedBytes;
 }
@@ -102,7 +105,7 @@ void __attribute__((optimize("O0"))) peano::heap::decomposeIntoEightVariants(
     const double shiftMantissa    = std::pow( 2.0,shiftExponent );
 
     exponent[i]  = static_cast<char>( integerExponent-shiftExponent );
-    mantissa[i]  = static_cast<long int>( std::round(significand*shiftMantissa) );
+    mantissa[i]  = static_cast<long int>( std::trunc(significand*shiftMantissa) );
     error[i]     = std::abs( std::ldexp(mantissa[i],exponent[i]) - value );
 
     assertion5( mantissa[i]>=0, value, mantissa[i], exponent[i], error[i], sign );
