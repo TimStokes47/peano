@@ -93,6 +93,23 @@ class peano::datatraversal::TaskSet {
      * Please note that your code might deadlock if you spawn a task without
      * multicore support and if you hope/rely on the fact that this task cannot
      * complete right at the moment but will later on be able to do so.
+     *
+     * <h2> Mysterious seg faults with C++11/C++14 </h2>
+     *
+     * In the ExaHyPE project we ran into seg faults whenever we tried to use
+     * this operation within a pfor loop. It came down to the fact that the
+     * TBBs crashed if we used enqueue or spawn within a lambda expression.
+     * This is most likely a bug, but I'm not able to fix it right at the
+     * moment. If you want to spawn background tasks, you have to avoid to
+     * use pfor around it.
+     *
+     * <h2> C++14 lambda expressions </h2>
+     *
+     *       auto myFunc = [&] () {
+        std::cout << "(x)";
+      };
+      peano::datatraversal::TaskSet spawnedSet( myFunc );
+     *
      */
     template <class Functor>
     inline TaskSet(
