@@ -32,3 +32,18 @@ peano::datatraversal::TaskSet::TaskSet(
   myTask();
   #endif
 }
+
+
+#ifdef SharedTBB
+template <class Functor>
+peano::datatraversal::TaskSet::GenericTaskWithCopy<Functor>::GenericTaskWithCopy(const Functor&  functor):
+  _functor(functor)  {
+}
+
+
+template <class Functor>
+tbb::task* peano::datatraversal::TaskSet::GenericTaskWithCopy<Functor>::execute() {
+  _functor();
+  return 0;
+}
+#endif
