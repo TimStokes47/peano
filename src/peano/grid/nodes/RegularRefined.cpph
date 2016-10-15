@@ -94,7 +94,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
       2,
       peano::datatraversal::autotuning::CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid
-    )
+    )>0
   );
   peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid );
 

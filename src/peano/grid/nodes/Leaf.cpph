@@ -245,7 +245,7 @@ void peano::grid::nodes::Leaf<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
           2,
           peano::datatraversal::autotuning::CallLeaveCellAndStoreSubCellsWithinTraverse
-        )
+        )>0
       );
       peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallLeaveCellAndStoreSubCellsWithinTraverse);
     }

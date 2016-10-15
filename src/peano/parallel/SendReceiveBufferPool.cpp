@@ -10,6 +10,9 @@
 #include "peano/datatraversal/TaskSet.h"
 
 
+#include <atomic>
+
+
 #include "tarch/services/ServiceFactory.h"
 registerService(peano::parallel::SendReceiveBufferPool)
 
@@ -185,9 +188,13 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
 
   while (!terminate) {
     tarch::multicore::Lock lock(_semaphore);
+
     switch (_state) {
       case ReceiveDataInBackground:
         SendReceiveBufferPool::getInstance().receiveDanglingMessagesFromAllBuffersInPool();
+
+    // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
+    std::atomic_thread_fence(std::memory_order_release);
         break;
       case Suspend:
         break;
@@ -195,11 +202,9 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
         terminate = true;
         break;
     }
-    lock.free();
 
-    tarch::multicore::BooleanSemaphore::sendTaskToBack();
+    lock.free();
   }
-  tarch::multicore::BooleanSemaphore::continuedWithTask();
 }
 
 

@@ -15,14 +15,18 @@ peano::datatraversal::TaskSet::TaskSet(
 ) {
   #ifdef SharedTBB
   if (parallelise) {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(2,2);
     tbb::parallel_invoke(
       function1,
       function2
     );
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-2,-2);
   }
   else {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,2);
     function1();
     function2();
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-2);
   }
   #else
   function1();
@@ -39,16 +43,20 @@ peano::datatraversal::TaskSet::TaskSet(
 ) {
   #ifdef SharedTBB
   if (parallelise) {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(3,3);
     tbb::parallel_invoke(
       function1,
       function2,
       function3
     );
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-3,-3);
   }
   else {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,3);
     function1();
     function2();
     function3();
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-3);
   }
   #else
   function1();
@@ -67,18 +75,22 @@ peano::datatraversal::TaskSet::TaskSet(
 ) {
   #ifdef SharedTBB
   if (parallelise) {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(4,4);
     tbb::parallel_invoke(
       function1,
       function2,
       function3,
       function4
     );
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-4,-4);
   }
   else {
-    function1();
+   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,4);
+   function1();
     function2();
     function3();
     function4();
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-4);
   }
   #else
   function1();
