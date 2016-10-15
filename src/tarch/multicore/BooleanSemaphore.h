@@ -27,7 +27,7 @@ namespace tarch {
  * all other threads that want to enter a section that is protected by the same
  * semaphore have to wait.
  *
- * !!! Usage
+ * <h2> Usage </h2>
  *
  * - Add your class an attribute of BooleanSemaphore.
  * - For each operation with a critical section:
@@ -65,7 +65,7 @@ namespace tarch {
  * In the code above, the critical sections A and B are never executed at the
  * same time.
  *
- * !!! Rationale
+ * <h2> Rationale </h2>
  *
  * - A pure critical section does not work for many applications: A plotter for
  *   example writes both vertices and cells to an output file. The write
@@ -88,6 +88,29 @@ namespace tarch {
  *   model chosen.
  * - The subdirectories of this directory hold the TBB- and OpenMP-specific
  *   implementations of the semaphore.
+ *
+ *
+ *
+ * <h2> Semaphores protecting more than one variable</h2>
+ *
+ * If a semaphore protects more than a single variable, memory reordering, caching
+ * and non-barriering can induce data inconsistencies: Assume one thread writes
+ * three variables A,B,C and then sets a fourth variable D to true. The last
+ * operation if protected by a lock. A second thread waits busily for variable D
+ * to become true and then reads A, B and C. Though D might be set, it can happen
+ * that A, B and C hold invalid data as the writes between the threads have been
+ * reordered. To avoid this, you have to add
+ *
+  std::atomic_thread_fence(std::memory_order_release);
+ *
+ * just before you set the flag in the first thread, and you have to invoke
+ *
+    std::atomic_thread_fence(std::memory_order_acquire);
+ *
+ * just before you have received the go in the second thread. Obviously, this
+ * problem arises only for producer-consumer patterns where the reading thread
+ * has already an instance of a variable but reads multiple variables from the
+ * other guy.
  *
  * @author Tobias Weinzierl
  */
@@ -150,11 +173,6 @@ class tarch::multicore::BooleanSemaphore {
     * lock's destructor. Alternatively, we could unlock manually.
     */
     static void sendTaskToBack();
-
-    /**
-     * Each sendCurrentTaskToBack() should be followed by a continueWithTask().
-     */
-    static void continuedWithTask();
 };
 #endif
 

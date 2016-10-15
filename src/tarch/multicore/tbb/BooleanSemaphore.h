@@ -23,10 +23,6 @@ class tarch::multicore::BooleanSemaphore {
   private:
     friend class tarch::multicore::Lock;
 
-    static tbb::atomic<int>  _pauseCounter;
-    static const int         _pauseBeforeYield;
-    static const int         _counterThresholdForWarning;
-
     tbb::spin_mutex          _mutex;
 
     /**
@@ -70,13 +66,14 @@ class tarch::multicore::BooleanSemaphore {
      *   exist, tasks could starve.
      * - If however the _pauseCounter exceeds, the operation invokes
      *   __TBB_Yield. Furthermore, it writes an error message once.
+     *
+     *
+     * If you use this operation to do busy waiting in a pipeline (you wait for
+     * a variable to signal that you can go ahead) and if you require more than
+     * one piece of data thereafter, please see remarks in the documentation of
+     * BooleanSemaphore for details.
      */
     static void sendTaskToBack();
-
-    /**
-     * @see continueWithTask() of class that is active without TBB/OpenMP/...
-     */
-    static void continuedWithTask();
 
 };
 #endif
