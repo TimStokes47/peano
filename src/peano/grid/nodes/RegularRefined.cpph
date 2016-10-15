@@ -186,7 +186,6 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       ) {
         tarch::multicore::BooleanSemaphore::sendTaskToBack();
       }
-      tarch::multicore::BooleanSemaphore::continuedWithTask();
       #endif
 
       peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::SplitLoadVerticesTaskOnRegularStationaryGrid );
