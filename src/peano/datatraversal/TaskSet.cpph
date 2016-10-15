@@ -12,9 +12,14 @@ peano::datatraversal::TaskSet::TaskSet(
   #if defined(SharedTBB)
   typedef GenericTaskWithCopy<Functor> Task;
 
+  //static tbb::task_group_context ctx;
+
+  //Task* tbbTask = new(tbb::task::allocate_root(ctx)) Task(myTask);
   Task* tbbTask = new(tbb::task::allocate_root()) Task(myTask);
 
   tbb::task::enqueue(*tbbTask);
+  // We we use spawn, we tend to deadlock as they get too high priority
+  //tbb::task::spawn(*tbbTask);
 
   #elif defined(SharedOMP)
     #warning @Vasco OpenMP Implementierung evtl. nicht mehr up-to-date

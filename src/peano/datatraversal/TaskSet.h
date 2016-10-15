@@ -9,6 +9,9 @@
 #endif
 
 
+#include <functional>
+
+
 namespace peano {
   namespace datatraversal {
     class TaskSet;
@@ -103,13 +106,6 @@ class peano::datatraversal::TaskSet {
      * moment. If you want to spawn background tasks, you have to avoid to
      * use pfor around it.
      *
-     * <h2> C++14 lambda expressions </h2>
-     *
-     *       auto myFunc = [&] () {
-        std::cout << "(x)";
-      };
-      peano::datatraversal::TaskSet spawnedSet( myFunc );
-     *
      */
     template <class Functor>
     inline TaskSet(
@@ -144,7 +140,7 @@ class peano::datatraversal::TaskSet {
     );
 
     /**
-     * Execute three tasks in parallel
+     * Execute functions in parallel
      *
      * See other constructor for a detailed description. Is the same thing but
      * handles three parallel tasks.
@@ -163,6 +159,45 @@ class peano::datatraversal::TaskSet {
       Functor1&  task1,
       Functor2&  task2,
       int        parallelise
+    );
+
+
+    /**
+     * Invoke operations in parallel. Works fine with lambda
+     * expressions:
+     *
+  peano::datatraversal::TaskSet runParallelTasks(
+    [&]() -> void {
+
+    ...
+    },
+    [&]() -> void {
+
+    ...
+    },
+    true
+  );
+     *
+     */
+    TaskSet(
+      std::function<void ()> function1,
+      std::function<void ()> function2,
+      bool                   parallelise
+    );
+
+    TaskSet(
+      std::function<void ()> function1,
+      std::function<void ()> function2,
+      std::function<void ()> function3,
+      bool                   parallelise
+    );
+
+    TaskSet(
+      std::function<void ()> function1,
+      std::function<void ()> function2,
+      std::function<void ()> function3,
+      std::function<void ()> function4,
+      bool                   parallelise
     );
 };
 
