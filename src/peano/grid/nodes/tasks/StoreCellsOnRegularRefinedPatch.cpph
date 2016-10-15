@@ -59,7 +59,6 @@ void peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch<Vertex,Cell,Cell
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)) {
     tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
-  tarch::multicore::BooleanSemaphore::continuedWithTask();
   #endif
 
   zfor3(k,loopDirection)

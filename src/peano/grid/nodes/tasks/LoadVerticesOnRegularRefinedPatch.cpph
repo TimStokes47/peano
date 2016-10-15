@@ -645,7 +645,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   ) {
     tarch::multicore::BooleanSemaphore::sendTaskToBack();
   };
-  tarch::multicore::BooleanSemaphore::continuedWithTask();
 
   zfor3(k,loopDirection1)
     const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k + currentCoarseCellPositionWithinUnrolledPatch*3;
@@ -712,7 +711,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   ) {
     tarch::multicore::BooleanSemaphore::sendTaskToBack();
   };
-  tarch::multicore::BooleanSemaphore::continuedWithTask();
 
 
   zfor3(k,loopDirection1)

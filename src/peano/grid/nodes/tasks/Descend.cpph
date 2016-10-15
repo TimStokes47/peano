@@ -46,7 +46,6 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
   while (_descendProcessRunsInParallelToOtherTasks && !_gridContainer.isLevelInitialised(level)) {
     tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
-  tarch::multicore::BooleanSemaphore::continuedWithTask();
   #endif
 
   if (runOperation) {

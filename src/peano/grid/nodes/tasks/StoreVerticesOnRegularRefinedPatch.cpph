@@ -463,7 +463,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel)) {
     tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
-  tarch::multicore::BooleanSemaphore::continuedWithTask();
   #endif
 
   zfor3(k,loopDirection2)
@@ -569,7 +568,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel)) {
     tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
-  tarch::multicore::BooleanSemaphore::continuedWithTask();
 
   // handle the first level, i.e. the level that has not been handled yet. At
   // this point, all stack views have to be closed.
@@ -647,7 +645,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
       allTasksHaveTerminated = _activeStoreTasks == 1;
       leaveOperatorlock.free();
     }
-    tarch::multicore::BooleanSemaphore::continuedWithTask();
     #else
     assertionEquals2(_activeStoreTasks,1,_coarsestLevelOfThisTask,_coarsestCellsOffset);
     #endif
