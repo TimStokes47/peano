@@ -9,9 +9,9 @@
 
 
 peano::datatraversal::TaskSet::TaskSet(
-  std::function<void ()> function1,
-  std::function<void ()> function2,
-  bool                   parallelise
+  std::function<void ()>&& function1,
+  std::function<void ()>&& function2,
+  bool                     parallelise
 ) {
   #ifdef SharedTBB
   if (parallelise) {
@@ -36,10 +36,10 @@ peano::datatraversal::TaskSet::TaskSet(
 
 
 peano::datatraversal::TaskSet::TaskSet(
-  std::function<void ()> function1,
-  std::function<void ()> function2,
-  std::function<void ()> function3,
-  bool                   parallelise
+  std::function<void ()>&& function1,
+  std::function<void ()>&& function2,
+  std::function<void ()>&& function3,
+  bool                     parallelise
 ) {
   #ifdef SharedTBB
   if (parallelise) {
@@ -67,11 +67,11 @@ peano::datatraversal::TaskSet::TaskSet(
 
 
 peano::datatraversal::TaskSet::TaskSet(
-  std::function<void ()> function1,
-  std::function<void ()> function2,
-  std::function<void ()> function3,
-  std::function<void ()> function4,
-  bool                   parallelise
+  std::function<void ()>&& function1,
+  std::function<void ()>&& function2,
+  std::function<void ()>&& function3,
+  std::function<void ()>&& function4,
+  bool                     parallelise
 ) {
   #ifdef SharedTBB
   if (parallelise) {
