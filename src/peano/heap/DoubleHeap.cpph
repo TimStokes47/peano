@@ -16,7 +16,7 @@ tarch::logging::Log peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExcha
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::DoubleHeap()
-  : _heapData(), _freedHeapIndices(), _nextIndex(0)
+  : _heapData(), _deletedHeapIndices(), _recycledHeapIndices(), _nextIndex(0)
   #ifdef Parallel
   , _neighbourDataExchangerMetaDataTag(tarch::parallel::Node::reserveFreeTag("heap[meta-data,neighbour]"))
   , _neighbourDataExchangerDataTag(tarch::parallel::Node::reserveFreeTag("heap[data,neighbour]"))
@@ -77,7 +77,8 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
     logInfo("plotStatistics()", "Statistics for " << _name);
   }
   logInfo("plotStatistics()", "size of heap: " << _heapData.size() << " entries" );
-  logInfo("plotStatistics()", "freed but not reassigned heap indices: " << _freedHeapIndices.size() );
+  logInfo("plotStatistics()", "deleted but not reassigned heap indices: " << _deletedHeapIndices.size() );
+  logInfo("plotStatistics()", "marked to be recycled but not reassigned heap indices: " << _recycledHeapIndices.size() );
 
   logInfo("plotStatistics()", "maximum number of allocated heap entries: " << _maximumNumberOfHeapEntries );
   logInfo("plotStatistics()", "number of heap allocations: " << _numberOfHeapAllocations );
@@ -133,7 +134,8 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
-  _freedHeapIndices.remove(wantedIndex);
+  _deletedHeapIndices.remove(wantedIndex);
+  _recycledHeapIndices.remove(wantedIndex);
 
   if (_nextIndex<=wantedIndex){
     _nextIndex = wantedIndex+1;
@@ -164,20 +166,28 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
-int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::createData(int numberOfEntries, int initialCapacity) {
+int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::createData(int numberOfEntries, int initialCapacity, bool useOnlyRecycledIndex) {
   logTraceInWith2Arguments( "createData()", numberOfEntries, initialCapacity );
 
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
   int index;
-  if (_freedHeapIndices.empty()) {
-    index = _nextIndex;
-    _nextIndex++;
+  if ( _recycledHeapIndices.empty() && useOnlyRecycledIndex ) {
+    logTraceOutWith1Argument( "createData()", "not served" );
+    return -1;
+  }
+  if ( !_recycledHeapIndices.empty() ) {
+    index = _recycledHeapIndices.front();
+    _recycledHeapIndices.pop_front();
+  }
+  else if (!_deletedHeapIndices.empty() ){
+    index = _deletedHeapIndices.front();
+    _deletedHeapIndices.pop_front();
   }
   else {
-    index = _freedHeapIndices.front();
-    _freedHeapIndices.pop_front();
+    index = _nextIndex;
+    _nextIndex++;
   }
 
   assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry does exist already.");
@@ -260,7 +270,7 @@ bool peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
-void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::deleteData(int index) {
+void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::deleteData(int index, bool recycle) {
   logTraceInWith2Arguments("deleteData(int)", _name, index);
 
   #ifdef Asserts
@@ -269,11 +279,18 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   assertion4(_heapData.find(index) != _heapData.end(), _name, message, index, _heapData.size());
   assertionMsg(_heapData[index] != 0, _name << ": Null-pointer was stored in heap data map");
 
-  _heapData[index]->clear();
-  delete _heapData[index];
-  _heapData.erase(index);
+  if (recycle) {
+    _heapData[index]->clear();
+    _recycledHeapIndices.push_back(index);
+  }
+  else {
+    _heapData[index]->clear();
+    delete _heapData[index];
+    _heapData.erase(index);
 
-  _freedHeapIndices.push_back(index);
+    _deletedHeapIndices.push_back(index);
+  }
+
   _numberOfHeapFrees++;
 
   logTraceOut("deleteData(int)");
@@ -454,7 +471,8 @@ std::string peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Ne
 
   msg << "(name=" << _name
       << ",heap-map-size=" << _heapData.size()
-      << ",no-of-freed-heap-indices=" << _freedHeapIndices.size()
+      << ",no-of-delted-heap-indices=" << _deletedHeapIndices.size()
+      << ",no-of-recycled-heap-indices=" << _recycledHeapIndices.size()
       << ",next-index=" << _nextIndex
       << ",maximum-number-of-heap-entries=" << _maximumNumberOfHeapEntries
       << ",number-of-heap-allocations=" << _numberOfHeapAllocations

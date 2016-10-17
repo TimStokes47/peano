@@ -319,7 +319,28 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      */
     HeapContainer _heapData;
 
-    std::list<int>   _freedHeapIndices;
+    /**
+     * Whenever we delete an entry on the heap, we should try to re-used its
+     * index before we use a new one. Otherwise, the indices will quickly
+     * exceed the integer range (not necessarily through AMR, but many codes
+     * use the heap also for MPI communication, i.e. create entries on the
+     * heap temporily along the subdomain boundaries). Therefore, we bookkeep
+     * all deleted entries and reuse those first before we use any new index.
+     *
+     * Furthermore, we do distinguish two types of heap entries that are to be
+     * reused. They correspond directly to two different flavours of the
+     * deleteData() call. See the corresponding documentation.
+     *
+     * @see createData
+     * @see deleteData
+     * @see _recycledHeapIndices
+     */
+    std::list<int>   _deletedHeapIndices;
+
+    /**
+     * @see _deletedHeapIndices
+     */
+    std::list<int>   _recycledHeapIndices;
 
     /**
      * Stores the next available index. By now the indices
@@ -505,8 +526,9 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      *        this is just a tuning parameter to avoid frequent reallocation.
      *
      * @return The index return is always a non-negativ number.
+     * @return -1 if request could not be served.
      */
-    int createData(int numberOfEntries=0, int initialCapacity=0);
+    int createData(int numberOfEntries=0, int initialCapacity=0, bool useOnlyRecycledIndex = false);
 
     /**
      * Creates a heap entry for the index wantedIndex. This is operation
@@ -538,8 +560,28 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      * clear the heap entry. The user however is responsible not to use
      * index anymore. This is important, as the heap might decide to reuse
      * index already for the next createData() call.
+     *
+     * <h2> Shared memory and index recycling </h2>
+     *
+     * We do provide two different realisations of the deletion: By default,
+     * the code really destroys the index and removes it from the heap. It
+     * will be reused later on probably (see _deletedHeapIndex), but for
+     * the time being it is physically dead.
+     *
+     * Alternatively, you can recycle an entry. In this case, the index is
+     * only logically freed, i.e. the corresponding data is cleared though
+     * the data remains physically on the heap. Again, the index will be
+     * reused, but the point is that the underlying index is not removed
+     * (and might be reused though this is then logically a bug).
+     *
+     * The distinction is important for multicore environment. If you
+     * access the heap in one thread through an index but you allow another
+     * thread to change the heap at the same time, accesses might lead to
+     * a seg fault though the accessed heap entries physically are all fine.
+     * In this case, the only workaround is to recycle entries as the
+     * underlying heap then does not change.
      */
-    void deleteData(int index);
+    void deleteData(int index, bool recycle = false);
 
     /**
      * Deletes all data that has been allocated by the application
