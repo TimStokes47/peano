@@ -56,6 +56,11 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 }
 
 
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+bool peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::areRecycleEntriesAvailable() const {
+  return !_recycledHeapIndices.empty();
+}
+
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::deleteAllData() {
@@ -162,6 +167,25 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   }
 
   logTraceOut( "createDataForIndex()" );
+}
+
+
+
+
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::reserveHeapEntriesForRecycling(int numberOfEntries) {
+  for (int i=0; i<numberOfEntries; i++) {
+    _recycledHeapIndices.push_back( _nextIndex );
+
+    VectorContainer* newData = new (std::nothrow) VectorContainer(numberOfEntries);
+    if (newData==nullptr) {
+      logError( "createDataForIndex(int,int,int)", "memory allocation for recycle entry failed. Terminate" );
+      exit(-1);
+    }
+    _heapData.insert( typename HeapContainer::value_type(_nextIndex,newData) );
+
+    _nextIndex++;
+  }
 }
 
 

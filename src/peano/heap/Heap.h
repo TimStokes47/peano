@@ -529,6 +529,10 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      * @return -1 if request could not be served.
      */
     int createData(int numberOfEntries=0, int initialCapacity=0, bool useOnlyRecycledIndex = false);
+    void reserveHeapEntriesForRecycling(int numberOfEntries);
+
+    bool areRecycleEntriesAvailable() const;
+
 
     /**
      * Creates a heap entry for the index wantedIndex. This is operation

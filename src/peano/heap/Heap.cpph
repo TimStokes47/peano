@@ -131,6 +131,29 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::reserveHeapEntriesForRecycling(int numberOfEntries) {
+  for (int i=0; i<numberOfEntries; i++) {
+    _recycledHeapIndices.push_back( _nextIndex );
+
+    std::vector<Data>* newData = new (std::nothrow) std::vector<Data>();
+    if (newData==nullptr) {
+      logError( "createDataForIndex(int,int,int)", "memory allocation for recycle entry failed. Terminate" );
+      exit(-1);
+    }
+    _heapData.insert( typename HeapContainer::value_type(_nextIndex,newData) );
+
+    _nextIndex++;
+  }
+}
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+bool peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::areRecycleEntriesAvailable() const {
+  return !_recycledHeapIndices.empty();
+}
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::createDataForIndex(int wantedIndex, int numberOfEntries, int initialCapacity) {
   logTraceInWith3Arguments( "createDataForIndex()", wantedIndex, numberOfEntries, initialCapacity );
 

@@ -85,61 +85,31 @@ namespace peano {
  * other std::vector<double> instances where no alignment is used. Please consult
  * the HeapAllocator for defails on the alignment.
  *
+ * <h1> Method documentation </h1>
+ *
+ * This is a specialisation of the general-purpose heap. As such, the
+ * documentation for the routines here is empty. Please study peano::heap::Heap
+ * to find out about the intended semantics.
+ *
+ *
  * @author Tobias Weinzierl
  */
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::AbstractHeap {
   private:
-    /**
-     * Logging device.
-     */
     static tarch::logging::Log _log;
 
     typedef std::map<int, VectorContainer*>  HeapContainer;
 
-    /**
-     * Map that holds all data that is stored on the heap
-     * via this class.
-     */
     HeapContainer    _heapData;
 
-    /**
-     * Whenever we delete an entry on the heap, we should try to re-used its
-     * index before we use a new one. Otherwise, the indices will quickly
-     * exceed the integer range (not necessarily through AMR, but many codes
-     * use the heap also for MPI communication, i.e. create entries on the
-     * heap temporily along the subdomain boundaries). Therefore, we bookkeep
-     * all deleted entries and reuse those first before we use any new index.
-     *
-     * Furthermore, we do distinguish two types of heap entries that are to be
-     * reused. They correspond directly to two different flavours of the
-     * deleteData() call. See the corresponding documentation.
-     *
-     * @see createData
-     * @see deleteData
-     * @see _recycledHeapIndices
-     */
     std::list<int>   _deletedHeapIndices;
 
-    /**
-     * @see _deletedHeapIndices
-     */
     std::list<int>   _recycledHeapIndices;
 
-    /**
-     * Stores the next available index. By now the indices
-     * are generated in a linear order, so no attention is
-     * payed by now to fragmentation of the index space by
-     * deleting data.
-     */
     int _nextIndex;
 
     #ifdef Parallel
-    /**
-     * Class has to remember the neighbour tags, as we need them whenever we
-     * create a new exchanger. For the synchronous data exchangers, we may
-     * create tags on-the-fly.
-     */
     int                                    _neighbourDataExchangerMetaDataTag;
     int                                    _neighbourDataExchangerDataTag;
 
@@ -148,282 +118,63 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
     std::map<int, NeighbourDataExchanger>  _neighbourDataExchanger;
     #endif
 
-    /**
-     * Stores the maximum number of heap objects that was stored
-     * in this object at any time.
-     */
     int _maximumNumberOfHeapEntries;
 
-    /**
-     * Stores the number of heap objects that have been allocated within
-     * this object during the program's runtime.
-     */
     int _numberOfHeapAllocations;
 
     int _numberOfHeapFrees;
 
-    /**
-     * Name for this heap object. Used for plotting statistics.
-     */
     std::string _name;
 
-    /**
-     * Private constructor to hide the possibility
-     * to instantiate an object of this class.
-     */
     DoubleHeap();
 
-    /**
-     * Private destructor to free the MPI datatypes.
-     */
     ~DoubleHeap();
 
   public:
     typedef VectorContainer  HeapEntries;
 
-    /**
-     * Start to send data
-     *
-     * This operation is typically called in beginIteration(). However, please
-     * be aware that the data from the master is received and merged before.
-     *
-     * This operation is to be re-called in each traversal and should be
-     * followed by a finish call in the each traversal as well.
-     *
-     * You are not allowed to send heap data from the master to the worker or
-     * back before this operation has been called. This holds also for joins
-     * and merges - if they exchange heap data, this operation has to be called
-     * before. Synchronous means that you receive all sent data in the very
-     * same iteration.
-     */
     virtual void startToSendSynchronousData();
 
-    /**
-     * Counterpart of startToSendSynchronousdouble().
-     *
-     * If you exchange data along the boundaries, you have to call this variant
-     * of start to send together with its finish operation later on. It opens
-     * a kind of communication channel for boundary data exchange. Boundary
-     * data is not received on the addressee side before the next iteration.
-     * You even might decide to wait a couple of iterations before you receive
-     * the boundary records.
-     *
-     * Please hand in the state's traversal bool that informs the heap about
-     * the direction of the Peano space-filling curve.
-     *
-     * Typical usage:
-     * <pre>
-         MyMapping::beginIteration( State& solverState) {
-           MyDataHeap::getInstance().startToSendBoundaryData( solverState.isTraversalInverted() );
-         }
-       </pre>
-     */
     virtual void startToSendBoundaryData(bool isTraversalInverted);
 
-    /**
-     * Stop to send data
-     *
-     * Counterpart of startToSendSynchronousdouble(). Should be called around in each
-     * traversal where you've also called startToSendSynchronousdouble(). When this
-     * operation is called, you are not allowed to send heap data anymore.
-     *
-     * This operation runs through all sent master-worker and join-fork
-     * messages and waits for each sent
-     * message until the corresponding non-blocking MPI request is freed, i.e.
-     * until the message has left the system. As the underlying MPI_Test
-     * modifies the MPI handles, the operation is not const. The method also
-     * has some deadlock detection.
-     *
-     * !!! Frequently Done Bug
-     *
-     * Please note that the event prepareSendToMaster() is invoked by Peano
-     * after endIteration() is called. Many heap users send data to the master
-     * in prepareSendToMaster(). For such codes, you may not call
-     * finishedToSenddouble() in endIteration(). Instead, you have to notify the
-     * heap that you finished to send in prepareSendToMaster().
-     *
-     * This induces an error on the global master where prepareSendToMaster()
-     * is never called if you have invoked startToSendSynchronousdouble() in
-     * beginIteration(). In this case,
-     *
-     * - either call startToSendSynchronousdouble() when you receive data from
-     *   the master or just when you start to send data back, i.e.
-     *   prepareSendToMaster(),
-     * - or call finish in endIteration() as well - but if and only if you are
-     *   on the global master.
-     *
-     * Please note however that all of these operations
-     *
-     * !!! Congestion
-     *
-     * Heaps in Peano often are used to manage large pieces of data. As such,
-     * we observe that congestion happens quite frequently - two pieces of code
-     * send out large data and block each other. The heap is particularly
-     * dangerous here. If you send out big data and call receive afterwards, be
-     * sure that you place the finishedToSendSynchronousdouble() after the receive
-     * command, as finishedToSendSynchronousdouble() waits until data has been
-     * delivered. Now, this can't happen for big messages if the corresponding
-     * receive hasn't been triggered.
-     */
     virtual void finishedToSendSynchronousData();
 
-    /**
-     * Finish boundary data exchange
-     *
-     * Counterpart of start operation. Should be called in endIteration().
-     *
-     * !!! Parallelisation with MPI
-     *
-     * If you parallelise with MPI, this operation has to be called by
-     * endIteration() at the end of the traversal of the whole grid and not
-     * only the local data structure. As a consequence, you may not combine
-     * this operation with the communication specification
-     * SenddoubleAndStateAfterProcessingOfLocalSubtree or
-     * MaskOutWorkerMasterdoubleAndStateExchange as these two guys call
-     * endIteration() too early.
-     */
     virtual void finishedToSendBoundaryData(bool isTraversalInverted);
 
-    /**
-     * The Heapdouble class is a singleton, thus one needs to
-     * use the getInstance() method to retrieve the single
-     * instance of this class.
-     */
     static DoubleHeap& getInstance();
 
-    /**
-     * Retrieves the data that corresponds to the given index.
-     */
     HeapEntries& getData(int index);
 
-    /**
-     * Retrieves the data that corresponds to the given index.
-     */
     const HeapEntries& getData(int index) const;
 
-    /**
-     * Create new heap entry
-     *
-     * Creates new data on the heap and returns the corresponding index. The
-     * counterpart of this operation is deletedouble().
-     *
-     * @param numberOfEntries If you know a priori how many elements you'll
-     *        gonna store for this heap entry, use this constructor. You can
-     *        always add more elements later, but using this parameter should
-     *        be faster and leads to a lower memory fragmentation
-     * @param initialCapacity Has to be bigger/equal than numberOfEntries or
-     *        zero. It tells the heap how much entries you expect to be stored
-     *        for this index. You can always use more elements later on, so
-     *        this is just a tuning parameter to avoid frequent reallocation.
-     *
-     * @return The index return is always a non-negativ number.
-     * @return -1 if request could not be served.
-     */
     int createData(int numberOfEntries=0, int initialCapacity=0, bool useOnlyRecycledIndex = false);
 
-    /**
-     * Creates a heap entry for the index wantedIndex. This is operation
-     * typically is used by codes that manage multiple heaps with one
-     * heap index. They create one one index through createdouble() and then
-     * invoke createdoubleForIndex() with this index on all other heaps.
-     * Typically, such code sequences are found in creational operations.
-     *
-     * !!! Frequent bug
-     *
-     * Whenever you have a createdoubleForIndex for a heap, please check whether
-     * there's a corresponding deletedouble() call. If you work with grids that
-     * refine only (and/or are static) you can omit the delete as long as you
-     * work without MPI. If you use MPI, you always have to implement the
-     * deletion as any partitioning involves a grid destruction on the node
-     * that deploys parts of its grid to another rank.
-     */
     void createDataForIndex(int wantedIndex, int numberOfEntries=0, int initialCapacity=0);
 
-    /**
-     * Returns, if the given index is a known index and, thus,
-     * refers to a valid heap data object.
-     */
+    void reserveHeapEntriesForRecycling(int numberOfEntries);
+
+    bool areRecycleEntriesAvailable() const;
+
     bool isValidIndex(int index) const;
 
-    /**
-     * Deletes the data with the given index and remove index from heap.
-     * First, all data associated to this index is cleared. Afterwards, we
-     * clear the heap entry. The user however is responsible not to use
-     * index anymore. This is important, as the heap might decide to reuse
-     * index already for the next createData() call.
-     *
-     * <h2> Shared memory and index recycling </h2>
-     *
-     * We do provide two different realisations of the deletion: By default,
-     * the code really destroys the index and removes it from the heap. It
-     * will be reused later on probably (see _deletedHeapIndex), but for
-     * the time being it is physically dead.
-     *
-     * Alternatively, you can recycle an entry. In this case, the index is
-     * only logically freed, i.e. the corresponding data is cleared though
-     * the data remains physically on the heap. Again, the index will be
-     * reused, but the point is that the underlying index is not removed
-     * (and might be reused though this is then logically a bug).
-     *
-     * The distinction is important for multicore environment. If you
-     * access the heap in one thread through an index but you allow another
-     * thread to change the heap at the same time, accesses might lead to
-     * a seg fault though the accessed heap entries physically are all fine.
-     * In this case, the only workaround is to recycle entries as the
-     * underlying heap then does not change.
-     */
     void deleteData(int index, bool recycle = false);
 
-    /**
-     * Deletes all data that has been allocated by the application
-     * by means of the createdouble() method.
-     */
     void deleteAllData();
 
-    /**
-     * Returns the number of entries being held by this object.
-     */
     int getNumberOfAllocatedEntries() const;
 
-    /**
-     * Takes data from fromIndex and reassings it to toIndex.
-     *
-     * If toIndex already points to data, the data from fromIndex is appended
-     * to the original data, i.e. no data is erased at toIndex. The operation
-     * does not remove fromIndex though fromIndex will afterwards identify an
-     * empty data container.
-     */
     void moveData( int toIndex, int fromIndex );
 
     void addData( int index, const HeapEntries& entries );
+
     void addData( int index, const double&        entry );
 
-    /**
-     * This method discards all heap data and prepares the Heapdouble
-     * management to handle new data requests. After calling this
-     * method all indices retrieved earlier are invalid.
-     */
     void restart();
 
-    /**
-     * Shuts down the memory management for heap data and frees all allocated
-     * memory.
-     */
     void shutdown();
 
-    /**
-     * Assign the heap a name (identifier) such that messages from the heap can
-     * be assigned to the heap type. In particular important if you handle
-     * multiple heaps, so you can distinguish error messages, e.g.
-     */
     void setName(std::string name);
 
-    /**
-     * Sends heap data associated to one index to one rank.
-     *
-     * Please note that these sends are assynchronous, i.e. if you change the
-     * vertices afterwards, you might run into problems
-     */
     void sendData(
       int                                           index,
       int                                           toRank,
@@ -440,9 +191,6 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
       MessageType                                   messageType
     );
 
-    /**
-     * Send away a double array of length size.
-     */
     void sendData(
       const double*                                 data,
       int                                           size,
@@ -452,25 +200,6 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
       MessageType                                   messageType
     );
 
-    /**
-     * Receive heap data associated to one index from one rank.
-     *
-     * Wrapper forwarding to the other receivedouble() operation with default
-     * values. Operation should be used in release mode, as all additional
-     * attributes of the overloaded receivedouble() operation are used for
-     * validation purposes.
-     *
-     * !!! Rationale
-     *
-     * Though the operation only deploys data that has been received before, it
-     * is not const as it frees data of the local buffers.
-     *
-     * This operation is not const, as local handles might be deleted
-     * afterwards.
-     *
-     * @see Heap
-     * @see receivedouble(int)
-     */
     HeapEntries receiveData(
       int                                           fromRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
@@ -487,12 +216,6 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
       MessageType                                   messageType
     );
 
-    /**
-     * Receive data and append it to local data.
-     *
-     * @see receivedouble()
-     * @return Number of appended entries
-     */
     int receiveData(
       int                                           index,
       int                                           fromRank,
@@ -501,19 +224,10 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
       MessageType                                   messageType
     );
 
-    /**
-     * @see Heap
-     */
     virtual void receiveDanglingMessages();
 
-    /**
-     * @return Brief description of heap incl its identifier (if set)
-     */
     std::string toString() const;
 
-    /**
-     * Plots statistics for this heap data.
-     */
     void plotStatistics() const;
 
     void clearStatistics();
