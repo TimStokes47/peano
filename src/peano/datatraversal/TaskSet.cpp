@@ -5,6 +5,10 @@
 
 #ifdef SharedTBB
 #include <tbb/parallel_invoke.h>
+
+
+
+tbb::task_group_context  peano::datatraversal::TaskSet::_backgroundTaskContext;
 #endif
 
 
