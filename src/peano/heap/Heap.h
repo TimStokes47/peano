@@ -395,6 +395,27 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
     ~Heap();
 
   public:
+    enum class Allocation {
+      /**
+       * Ignore any existing entries in the heap and always create new entries.
+       * This implies the the heap structure is definitely changed.
+       */
+      DoNotUseAnyRecycledEntry,
+      /**
+       * Use only recycled entries, i.e. entries that are still in the map but
+       * not used anymore. As a result, a creational event does not modify the
+       * underlying container (no new entries are created).
+       */
+      UseOnlyRecycledEntries,
+      /**
+       * Reuse recycled entries if there are still allocated entries in the
+       * heap that are not used anymore. If none is available, create a new
+       * entry. As a result, the operation might modify the heap structure.
+       */
+      UseRecycledEntriesIfPossibleCreateNewEntriesIfRequired
+    };
+
+
     typedef std::vector<Data>  HeapEntries;
 
     /**
@@ -528,7 +549,7 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      * @return The index return is always a non-negativ number.
      * @return -1 if request could not be served.
      */
-    int createData(int numberOfEntries=0, int initialCapacity=0, bool useOnlyRecycledIndex = false);
+    int createData(int numberOfEntries=0, int initialCapacity=0, Allocation allocation = Allocation::UseRecycledEntriesIfPossibleCreateNewEntriesIfRequired);
     void reserveHeapEntriesForRecycling(int numberOfEntries);
 
     bool areRecycleEntriesAvailable() const;

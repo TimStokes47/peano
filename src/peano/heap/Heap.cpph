@@ -192,7 +192,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
-int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::createData(int numberOfEntries, int initialCapacity, bool useOnlyRecycledIndex) {
+int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::createData(int numberOfEntries, int initialCapacity, Allocation allocation) {
   logTraceInWith2Arguments( "createData()", numberOfEntries, initialCapacity );
 
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
@@ -200,11 +200,12 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
 
   int index;
   bool allocateNewEntry;
-  if ( _recycledHeapIndices.empty() && useOnlyRecycledIndex ) {
+  if ( _recycledHeapIndices.empty() && allocation==Allocation::UseOnlyRecycledEntries) {
     logTraceOutWith1Argument( "createData()", "not served" );
     return -1;
   }
-  if ( !_recycledHeapIndices.empty() ) {
+
+  if ( !_recycledHeapIndices.empty() && allocation!=Allocation::DoNotUseAnyRecycledEntry ) {
     index = _recycledHeapIndices.front();
     allocateNewEntry = false;
     _recycledHeapIndices.pop_front();
@@ -228,6 +229,9 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
       exit(-1);
     }
     _heapData.insert( typename HeapContainer::value_type(index,newData) );
+  }
+  else {
+    _heapData[index]->resize(numberOfEntries);
   }
   
   if (initialCapacity>0) {

@@ -131,6 +131,12 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
     ~DoubleHeap();
 
   public:
+    enum class Allocation {
+      DoNotUseAnyRecycledEntry,
+      UseOnlyRecycledEntries,
+      AnyEntry
+    };
+
     typedef VectorContainer  HeapEntries;
 
     virtual void startToSendSynchronousData();
@@ -147,7 +153,7 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
 
     const HeapEntries& getData(int index) const;
 
-    int createData(int numberOfEntries=0, int initialCapacity=0, bool useOnlyRecycledIndex = false);
+    int createData(int numberOfEntries=0, int initialCapacity=0, Allocation allocation = Allocation::UseRecycledEntriesIfPossibleCreateNewEntriesIfRequired);
 
     void createDataForIndex(int wantedIndex, int numberOfEntries=0, int initialCapacity=0);
 
