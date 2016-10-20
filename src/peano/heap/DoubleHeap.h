@@ -134,7 +134,7 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
     enum class Allocation {
       DoNotUseAnyRecycledEntry,
       UseOnlyRecycledEntries,
-      AnyEntry
+      UseRecycledEntriesIfPossibleCreateNewEntriesIfRequired
     };
 
     typedef VectorContainer  HeapEntries;
