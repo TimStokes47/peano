@@ -232,6 +232,8 @@ int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     _heapData[index]->resize(numberOfEntries);
   }
 
+  _heapData[index]->shrink_to_fit();
+
   if (initialCapacity>0) {
     _heapData[index]->reserve(initialCapacity);
   }
