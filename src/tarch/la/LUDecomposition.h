@@ -27,6 +27,20 @@ namespace tarch {
     void lu (
       Matrix<Rows,Rows,Scalar>&  A
     );
+
+    /**
+     * Accepts an upper triangular matrix and a rhs. It then returns the
+     * solution x to
+     *
+     * Rx=f
+     *
+     * i.e. x=R^{-1}f
+     */
+    template<int Rows, typename Scalar>
+    Vector<Rows,Scalar> backSubstitution(
+      const Matrix<Rows,Rows,Scalar>&  R,
+      const Vector<Rows,Scalar>&       f
+    );
   }
 }
 

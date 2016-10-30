@@ -1,4 +1,23 @@
 template<int Rows, typename Scalar>
+tarch::la::Vector<Rows,Scalar>  tarch::la::backSubstitution(
+  const Matrix<Rows,Rows,Scalar>&  R,
+  const Vector<Rows,Scalar>&       f
+) {
+  tarch::la::Vector<Rows,Scalar> x;
+
+  for(int k = Rows-1; k >= 0; k--){
+    x(k) = f(k);
+    for(int i = k+1; i < Rows; i++){
+      x(k) -= R(k, i)*x(i);
+    }
+    x(k) = x(k)/R(k, k);
+  }
+
+  return x;
+}
+
+
+template<int Rows, typename Scalar>
 void tarch::la::lu (
   Matrix<Rows,Rows,Scalar>&  A,
   Vector<Rows,Scalar>&       pivots

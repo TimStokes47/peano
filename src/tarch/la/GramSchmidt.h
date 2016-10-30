@@ -30,6 +30,12 @@ namespace tarch {
      * The algorithm is taken from the book Numerical Mathematics, Second Edition,
      * by Alfio Querteroni, Riccardo Sacco, and Fausto Saleri, Springer, 2007,
      * pages 85-87.
+     *
+     * Classic usage:
+     *
+     *   modifiedGramSchmidt(M, Q, R);
+     *   tarch::la::Vector<9, double> p = tarch::la::backSubstitution(R,tarch::la::transpose(Q)*f);
+     *
      */
     template<int Rows, int Cols, typename Scalar>
     void modifiedGramSchmidt (
