@@ -31,9 +31,12 @@ namespace {
 
 
   #ifdef DloopOptimiseAggressive
-  const int MaxIndexOfLinearization = FOUR_POWER_D;
-  int       LookupTableDLinearised[FOUR_POWER_D*3];
-  tarch::la::Vector<DIMENSIONS,int> LookupTableDDeLinearised[FOUR_POWER_D*3];
+  //const int MaxMax                  = 4;
+  //const int MaxIndexOfLinearization = FOUR_POWER_D;
+  const int MaxMax                  = 5;
+  const int MaxIndexOfLinearization = FIVE_POWER_D;
+  int       LookupTableDLinearised[MaxIndexOfLinearization*(MaxMax-1)];
+  tarch::la::Vector<DIMENSIONS,int> LookupTableDDeLinearised[MaxIndexOfLinearization*(MaxMax-1)];
 
   int getKeyForDLinearised(const tarch::la::Vector<DIMENSIONS,int>& counter, int max) {
     int result = 0;
@@ -41,18 +44,20 @@ namespace {
 
     for (int d=0; d<DIMENSIONS; d++) {
       result += key * counter(d);
-      key    *= 4;
+      key    *= MaxMax;
     }
 
-    assertionEquals( key, FOUR_POWER_D );
-    result += (max-2)*FOUR_POWER_D;
+    assertionEquals( key, MaxIndexOfLinearization );
+    // Nothing to be held for max=0 and max=1, so decrement the offset
+    result += (max-2)*MaxIndexOfLinearization;
 
     return result;
   }
 
 
   int getKeyForDDeLinearised(int value, int max) {
-    return value + (max-2)*FOUR_POWER_D;
+    // Nothing to be held for max=0 and max=1, so decrement the offset
+    return value + (max-2)*MaxIndexOfLinearization;
   }
   #endif
 }
@@ -60,14 +65,10 @@ namespace {
 
 void peano::utils::setupLookupTableForDLinearised() {
   #ifdef DloopOptimiseAggressive
-  dfor(k,2) {
-    LookupTableDLinearised[getKeyForDLinearised(k,2)] = dLinearisedNotOptimised(k,2);
-  }
-  dfor(k,3) {
-    LookupTableDLinearised[getKeyForDLinearised(k,3)] = dLinearisedNotOptimised(k,3);
-  }
-  dfor(k,4) {
-    LookupTableDLinearised[getKeyForDLinearised(k,4)] = dLinearisedNotOptimised(k,4);
+  for (int i=2; i<=MaxMax; i++) {
+    dfor(k,i) {
+      LookupTableDLinearised[getKeyForDLinearised(k,i)] = dLinearisedNotOptimised(k,i);
+    }
   }
   #endif
 }
@@ -75,13 +76,14 @@ void peano::utils::setupLookupTableForDLinearised() {
 
 void peano::utils::setupLookupTableForDDelinearised() {
   #ifdef DloopOptimiseAggressive
-  for (int value=0; value<FOUR_POWER_D; value++) {
-    LookupTableDDeLinearised[getKeyForDDeLinearised(value,2)] = dDelinearisedNotOptimised(value,2);
-    LookupTableDDeLinearised[getKeyForDDeLinearised(value,3)] = dDelinearisedNotOptimised(value,3);
-    LookupTableDDeLinearised[getKeyForDDeLinearised(value,4)] = dDelinearisedNotOptimised(value,4);
+  for (int value=0; value<MaxIndexOfLinearization; value++) {
+    for (int i=2; i<=MaxMax; i++) {
+      LookupTableDDeLinearised[getKeyForDDeLinearised(value,i)] = dDelinearisedNotOptimised(value,i);
+    }
   }
   #endif
 }
+
 
 int peano::utils::dLinearisedWithoutLookup( const tarch::la::Vector<DIMENSIONS,int>& counter, int max ) {
 	return dLinearisedNotOptimised(counter,max);
@@ -90,7 +92,7 @@ int peano::utils::dLinearisedWithoutLookup( const tarch::la::Vector<DIMENSIONS,i
 
 int peano::utils::dLinearised( const tarch::la::Vector<DIMENSIONS,int>& counter, int max ) {
   #ifdef DloopOptimiseAggressive
-    assertionEquals2(LookupTableDLinearised[getKeyForDLinearised(counter,max)], dLinearisedNotOptimised(counter,max), counter,max);
+    assertionEquals3(LookupTableDLinearised[getKeyForDLinearised(counter,max)], dLinearisedNotOptimised(counter,max), counter,max,getKeyForDLinearised(counter,max));
     return LookupTableDLinearised[getKeyForDLinearised(counter,max)];
   #else
     return dLinearisedNotOptimised(counter,max);

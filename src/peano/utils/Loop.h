@@ -102,7 +102,7 @@ namespace peano {
      * optimization based on lookup tables. This optimization is switched on if
      * DLOOP_AGGRESSIVE is specified (default in peano project). Two preconditions
      * have to be fulfilled in this case: All parameters have to stay within
-     * certain boundaries (all positive, no vector entry greater 3, max smaller 4)
+     * certain boundaries (all positive, max smaller or equal to 5)
      * and one has to call both setupLookupTableForDLinearised() and
      * setupLookupTableForDDelinearised() before using dLinearised() or
      * dDelinearised().
