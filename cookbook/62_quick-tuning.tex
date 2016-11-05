@@ -167,6 +167,18 @@ If you use a tailored/sophisticated load balancing oracle, this oracle should be
 aware of this level as well.
 \end{remark}
 
+The latter remark leads into code similar to
+\begin{code}
+  const double boundingBoxScaling = static_cast<double>(hRegular) 
+                                  / (static_cast<double>(hRegular)-2.0); 
+  const double boundingBoxShift   = (1.0-boundingBoxScaling)/2.0;
+
+  return exahype::repositories::RepositoryFactory::getInstance().create...(
+      geometry,
+      boundingBoxSize*boundingBoxScaling,
+      boundingBoxOffset+boundingBoxShift*boundingBoxSize
+  );
+\end{code}
 
 
 \subsection{Work with better balanced domains}
