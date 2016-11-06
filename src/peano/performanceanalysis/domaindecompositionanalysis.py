@@ -94,6 +94,7 @@ performanceanalysisroutines.plotWorkloadAndResponsibilityDistribution(numberOfRa
 
 outFile.write( "<h2>Work statistics</h2>" )
 outFile.write( "<a href=\"" + args.file + ".work-distribution.large.png\"><img src=\"" + args.file + ".work-distribution.png\" /></a>" )
+outFile.write( "<a href=\"" + args.file + "-symlog.work-distribution.large.png\"><img src=\"" + args.file + "-symlog.work-distribution.png\" /></a>" )
 outFile.write( "<p>The filled region is the actual local work volume of a rank. It has to be smaller than the region of responsibility that might overlap the actual domain.</p>" )
 
 
@@ -101,7 +102,7 @@ if dim==2:
  outFile.write( "<h2>Domain decomposition (level by level)</h2>" )
  for l in range(1,max(levels)+1):
   performanceanalysisroutines.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
-  outFile.write( "<img src=\"" + args.file + ".level" + str(l) + ".png\" />" )
+  outFile.write( "<a href=\"" + args.file + ".level" + str(l) + ".pdf\"> <img src=\"" + args.file + ".level" + str(l) + ".png\" /> </a> " )
  
  
 outFile.write( "</html>" )

@@ -1109,6 +1109,22 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,wor
  setGeneralPlotSettings()
  pylab.xlabel('rank')  
  pylab.ylabel('$\Omega $')
+ pylab.savefig( outputFileName + "-symlog.work-distribution.png" )
+ pylab.savefig( outputFileName + "-symlog.work-distribution.pdf" )
+ switchToLargePlot()
+ pylab.savefig( outputFileName + "-symlog.work-distribution.large.png" )
+ pylab.savefig( outputFileName + "-symlog.work-distribution.large.pdf" )
+ switchBackToStandardPlot()
+
+ ax.set_yscale('symlog', basey=10)
+
+ #if numberOfRanks>32:
+ # pylab.figure(figsize=(numberOfRanks/10,4))
+
+ ax.set_yscale('linear' )
+ setGeneralPlotSettings()
+ pylab.xlabel('rank')  
+ pylab.ylabel('$\Omega $')
  pylab.savefig( outputFileName + ".work-distribution.png" )
  pylab.savefig( outputFileName + ".work-distribution.pdf" )
  switchToLargePlot()
@@ -1120,20 +1136,25 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,wor
  
  
 def plot2dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,offset,volume,levels,outputFileName):
+  Colors = [ "#ddeedd", "#ccbbcc", "#aabbaa", "#887788" ]
   print "plot domain decomposition on level " + str(l),
   pylab.clf()
   pylab.figure(figsize=(float(domainsize[0]),float(domainsize[1])))
+  colorCounter = 0
   for i in range(0,numberOfRanks):
     if levels[i]==l:
       print ".",
-      pylab.gca().add_patch(pylab.Rectangle(offset[i]+(volume[i][0]*0.01,volume[i][0]*0.01), volume[i][0]*0.98, volume[i][1]*0.98, color="#aabbaa"))
+      
+      pylab.gca().add_patch(pylab.Rectangle(offset[i]+(volume[i][0]*0.01,volume[i][0]*0.01), volume[i][0]*0.98, volume[i][1]*0.98, color=Colors[colorCounter % len(Colors)]))
+      
+      chosenFontSize = int(round(float(domainsize[0])*12.0/(l)))
+      colorCounter   = colorCounter + 1
       
       pylab.text(
         offset[i][0] + volume[i][0]/2,
         offset[i][1] + volume[i][1]/2,
-        str(i)
+        str(i), fontsize=chosenFontSize
       )
-      #print "\noffset=" + str(offset[i]) + ", volume=" + str(volume[i]),
   print ".",
   pylab.xlim( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
   pylab.ylim( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
