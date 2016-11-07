@@ -322,7 +322,7 @@ bool peano::grid::Cell<CellData>::thisSubtreeHoldsWorker() const {
 
 
 template <class CellData>
-void peano::grid::Cell<CellData>::setRemoteCellWorkloadAndSubtreeFlags( const Cell& workerCell ) {
+void peano::grid::Cell<CellData>::setRemoteCellSubtreeFlags( const Cell& workerCell ) {
   _cellData.setSubtreeHoldsWorker( workerCell._cellData.getSubtreeHoldsWorker() );
 }
 

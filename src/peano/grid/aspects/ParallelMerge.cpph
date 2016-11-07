@@ -573,7 +573,7 @@ void peano::grid::aspects::ParallelMerge::mergeWithForkedCellFromMaster(
   localCell.clearInputOutputStackAccessStatistics();
   #endif
 
-  localCell.setRemoteCellWorkloadAndSubtreeFlags( masterCell );
+  localCell.setRemoteCellSubtreeFlags( masterCell );
 
   if (MasterIsRefinedLocalCellIsNot) {
     localCell._cellData.setState( Cell::Records::Leaf );
@@ -632,7 +632,7 @@ bool peano::grid::aspects::ParallelMerge::mergeWithJoinedCellFromWorker(
   localCell.clearInputOutputStackAccessStatistics();
   #endif
 
-  localCell.setRemoteCellWorkloadAndSubtreeFlags( workerCell );
+  localCell.setRemoteCellSubtreeFlags( workerCell );
 
   if (WorkerIsRefinedLocalCellIsNot) {
     localCell._cellData.setState( Cell::Records::Leaf );

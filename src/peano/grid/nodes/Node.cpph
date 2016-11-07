@@ -144,14 +144,14 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
           true,
-          false
+          0
         );
         for (int i=0; i<TWO_POWER_D; i++) {
           receivedWorkerVertices[i].receive(
             currentWorker,
             peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
             true,
-            false
+            0
           );
 
           #ifdef Debug
@@ -172,26 +172,27 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
           false
         );
+
+        state.mergeWithWorkerState(workerState);
+
+        _eventHandle.mergeWithMaster(
+          receivedWorkerCell,
+          receivedWorkerVertices,
+          workerEnumerator,
+          fineGridCell,
+          fineGridVertices,
+          fineGridVerticesEnumerator,
+          coarseGridVertices,
+          coarseGridVerticesEnumerator,
+          coarseGridCell,
+          fineGridPositionOfCell,
+          currentWorker,
+          workerState,
+          state
+        );
       }
-      state.mergeWithWorkerState(workerState);
 
-      _eventHandle.mergeWithMaster(
-        receivedWorkerCell,
-        receivedWorkerVertices,
-        workerEnumerator,
-        fineGridCell,
-        fineGridVertices,
-        fineGridVerticesEnumerator,
-        coarseGridVertices,
-        coarseGridVerticesEnumerator,
-        coarseGridCell,
-        fineGridPositionOfCell,
-        currentWorker,
-        workerState,
-        state
-      );
-
-      fineGridCell.setRemoteCellWorkloadAndSubtreeFlags(receivedWorkerCell);
+      fineGridCell.setRemoteCellSubtreeFlags(receivedWorkerCell);
 
       // Does not hold if heaps are used
       // tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());

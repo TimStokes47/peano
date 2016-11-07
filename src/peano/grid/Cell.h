@@ -233,7 +233,7 @@ class peano::grid::Cell {
     /**
      * Copy mechanism. Works for both worker and master.
      */
-    void setRemoteCellWorkloadAndSubtreeFlags( const Cell& workerCell );
+    void setRemoteCellSubtreeFlags( const Cell& workerCell );
 
     bool thisSubtreeHoldsWorker() const;
     #else
