@@ -771,10 +771,12 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * tarch::parallel::NodePool however.
      *
      *  
-     * @param workerGridCell      Valid object iff data reduction is switched on. See State::reduceDataToMaster().
-     * @param workerGridVertices  Valid object iff data reduction is switched on. See State::reduceDataToMaster().
-     * @param workerEnumerator    Valid object iff data reduction is switched on. See State::reduceDataToMaster().
-     * @param workerState         Valid object iff data reduction is switched on. See State::reduceDataToMaster().
+     * @see   State::reduceDataToMaster()
+     *
+     * @param workerGridCell       
+     * @param workerGridVertices  
+     * @param workerEnumerator    
+     * @param workerState         
      */
     void mergeWithMaster(
       const __NAMESPACE__::Cell&                       workerGridCell,
