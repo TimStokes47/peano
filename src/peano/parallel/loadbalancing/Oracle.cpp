@@ -154,17 +154,8 @@ int peano::parallel::loadbalancing::Oracle::getNumberOfWorkers() const {
 
 
 void peano::parallel::loadbalancing::Oracle::plotStatistics() {
-  int i=0;
-  for (
-    OracleDatabase::iterator p = _oracles.begin();
-    p != _oracles.end();
-    p++
-  ) {
-    i++;
-
-    if (i>peano::datatraversal::autotuning::NumberOfPredefinedAdapters) {
-      (*p)->plotStatistics();
-    }
+  for (auto oracle: _oracles) {
+    oracle->plotStatistics();
   }
 }
 
