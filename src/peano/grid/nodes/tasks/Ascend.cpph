@@ -1,6 +1,5 @@
 #include "peano/datatraversal/dForLoop.h"
 #include "peano/MappingSpecification.h"
-#include "peano/datatraversal/autotuning/KernelGrainSizes.h"
 #include "peano/datatraversal/autotuning/Oracle.h"
 
 
@@ -60,22 +59,33 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::touchVert
         break;
     }
     assertion( colouring>=0 );
-    const int                               sharedMemoryGrainSize =
-      colouring==peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial ? 0 :
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-        problemSize,
-        peano::datatraversal::autotuning::CallTouchLastTimeOnRegularStationaryGrid
+
+    if (
+      colouring==peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial
+      ||
+      problemSize==0
+    ) {
+      peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>(
+        NumberOfVertices,
+        _touchVertexLastTimeLoopBody,
+        0,
+        peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial
+     );
+    }
+    else {
+      auto grainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+          problemSize,
+          peano::datatraversal::autotuning::MethodTrace::CallTouchLastTimeOnRegularStationaryGrid
+        );
+
+      peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>(
+        NumberOfVertices,
+        _touchVertexLastTimeLoopBody,
+        grainSize.getGrainSize(),
+        colouring
       );
 
-    peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>(
-      NumberOfVertices,
-      _touchVertexLastTimeLoopBody,
-      sharedMemoryGrainSize,
-      colouring
-   );
-
-    if (colouring!=peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial) {
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallTouchLastTimeOnRegularStationaryGrid);
+      grainSize.parallelSectionHasTerminated();
     }
   }
 
@@ -114,23 +124,34 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::leaveCell
         break;
     }
     assertion( colouring>=0 );
-    const int sharedMemoryGrainSize   =
-      colouring==peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial ?
-      0 :
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+
+
+    if (
+      colouring==peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial
+      ||
+      problemSize==0
+    ) {
+      peano::datatraversal::dForLoop<LeaveCellLoopBody> loop(
+        NumberOfCells,
+        _leaveCellLoopBody,
+        0,
+        colouring
+      );
+    }
+    else {
+      auto grainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
         problemSize,
-        peano::datatraversal::autotuning::CallLeaveCellOnRegularStationaryGrid
+        peano::datatraversal::autotuning::MethodTrace::CallLeaveCellOnRegularStationaryGrid
       );
 
-    peano::datatraversal::dForLoop<LeaveCellLoopBody> loop(
-      NumberOfCells,
-      _leaveCellLoopBody,
-      sharedMemoryGrainSize,
-      colouring
-    );
+      peano::datatraversal::dForLoop<LeaveCellLoopBody> loop(
+        NumberOfCells,
+        _leaveCellLoopBody,
+        grainSize.getGrainSize(),
+        colouring
+      );
 
-    if ( colouring!=peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial ) {
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallLeaveCellOnRegularStationaryGrid);
+      grainSize.parallelSectionHasTerminated();
     }
   }
 }
@@ -165,23 +186,33 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::ascend(in
         break;
     }
     assertion( colouring>=0 );
-    const int sharedMemoryGrainSize   =
-      colouring==peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial ?
-      0 :
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+
+    if (
+      colouring==peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial
+      ||
+      problemSize==0
+    ) {
+      peano::datatraversal::dForLoop<AscendLoopBody> loop(
+        NumberOfCoarseGridCells,
+        _ascendLoopBody,
+        0,
+        colouring
+      );
+    }
+    else {
+      auto grainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
         problemSize,
-        peano::datatraversal::autotuning::AscendOnRegularStationaryGrid
+        peano::datatraversal::autotuning::MethodTrace::AscendOnRegularStationaryGrid
       );
 
-    peano::datatraversal::dForLoop<AscendLoopBody> loop(
-      NumberOfCoarseGridCells,
-      _ascendLoopBody,
-      sharedMemoryGrainSize,
-      colouring
-    );
+      peano::datatraversal::dForLoop<AscendLoopBody> loop(
+        NumberOfCoarseGridCells,
+        _ascendLoopBody,
+        grainSize.getGrainSize(),
+        colouring
+      );
 
-    if ( colouring!=peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial ) {
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::AscendOnRegularStationaryGrid);
+      grainSize.parallelSectionHasTerminated();
     }
   }
 }
@@ -191,24 +222,14 @@ template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator() () {
   _treeRemainsStatic = true;
 
-  tarch::multicore::BooleanSemaphore  performVertexTransitionSemaphore;
-
   if (_eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop) {
     const int NumberOfVertices = tarch::la::volume(_gridContainer.getNumberOfVertices(_treeDepth));
 
-    pfor(i,0,NumberOfVertices,peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings)
-      tarch::multicore::Lock              lock(performVertexTransitionSemaphore,false);
-      if (!_gridContainer.isToBeWrittenToTemporaryStack(_treeDepth,i) ) {
-        Vertex&   currentVertex  = _gridContainer.getVertex(_treeDepth,i);
-        if (peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings<NumberOfVertices) {
-          lock.lock();
-        }
-        _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,_treeDepth);
-        if (peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings<NumberOfVertices) {
-          lock.free();
-        }
-      }
-    endpfor
+    // Das kann dann raus: ResetVertexRegularityStateInAscendForNopMappings
+    for (int i=0; i<NumberOfVertices; i++) {
+      Vertex&   currentVertex  = _gridContainer.getVertex(_treeDepth,i);
+      _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,_treeDepth);
+    }
   }
 
 
@@ -217,16 +238,14 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
     ||
     _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop
   ) {
-    pfor(level,1,_treeDepth,peano::datatraversal::autotuning::KernelGrainSizes::RunResetVertexRegularityStateInAscendForNopMappingsInParallelForIndividualLevels)
+    for(int level=_treeDepth-1; level>=1; level--) {
       const int NumberOfVertices      = tarch::la::volume(_gridContainer.getNumberOfVertices(level));
-      pfor(i,0,NumberOfVertices,peano::datatraversal::autotuning::KernelGrainSizes::ResetVertexRegularityStateInAscendForNopMappings)
-        if (!_gridContainer.isToBeWrittenToTemporaryStack(level,i) ) {
-          Vertex&   currentVertex  = _gridContainer.getVertex(level,i);
-          tarch::multicore::Lock lock(performVertexTransitionSemaphore);
-          _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,level);
-        }
-      endpfor
-    endpfor
+      for (int i=0; i<NumberOfVertices; i++) {
+        //if (!_gridContainer.isToBeWrittenToTemporaryStack(level,i) ) {
+        Vertex&   currentVertex  = _gridContainer.getVertex(level,i);
+        _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,level);
+      }
+    }
   }
 
 

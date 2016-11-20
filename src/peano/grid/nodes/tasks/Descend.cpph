@@ -1,13 +1,10 @@
 #include "peano/datatraversal/dForLoop.h"
 #include "peano/MappingSpecification.h"
-#include "peano/datatraversal/autotuning/KernelGrainSizes.h"
 #include "peano/datatraversal/autotuning/Oracle.h"
 
 #ifdef SharedMemoryParallisation
 #include "tarch/multicore/BooleanSemaphore.h"
 #endif
-
-#include "peano/datatraversal/autotuning/KernelGrainSizes.h"
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
@@ -72,22 +69,33 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
         break;
     }
     assertion( colouring>=0 );
-    const int                               sharedMemoryGrainSize =
-      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial ? 0 :
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+
+    if (
+      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial
+      ||
+      problemSize==0
+    ) {
+      peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>(
+        NumberOfVertices,
+        _touchVertexFirstTimeLoopBody,
+        0,
+        colouring
+      );
+    }
+    else {
+      auto grainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
         problemSize,
-        peano::datatraversal::autotuning::CallTouchFirstTimeOnRegularStationaryGrid
+        peano::datatraversal::autotuning::MethodTrace::CallTouchFirstTimeOnRegularStationaryGrid
       );
 
-    peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>(
-      NumberOfVertices,
-      _touchVertexFirstTimeLoopBody,
-      sharedMemoryGrainSize,
-      colouring
-    );
+      peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>(
+        NumberOfVertices,
+        _touchVertexFirstTimeLoopBody,
+        grainSize.getGrainSize(),
+        colouring
+      );
 
-    if (colouring!=peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial) {
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallTouchFirstTimeOnRegularStationaryGrid);
+      grainSize.parallelSectionHasTerminated();
     }
   }
 }
@@ -123,23 +131,33 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
         break;
     }
     assertion( colouring>=0 );
-    const int sharedMemoryGrainSize   =
-      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial ?
-      0 :
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+
+    if (
+      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial
+      ||
+      problemSize==0
+    ) {
+      peano::datatraversal::dForLoop<EnterCellLoopBody> loop(
+        NumberOfCells,
+        _enterCellLoopBody,
+        0,
+        colouring
+      );
+    }
+    else {
+      auto grainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
         problemSize,
-        peano::datatraversal::autotuning::CallEnterCellOnRegularStationaryGrid
+        peano::datatraversal::autotuning::MethodTrace::CallEnterCellOnRegularStationaryGrid
       );
 
-    peano::datatraversal::dForLoop<EnterCellLoopBody> loop(
-      NumberOfCells,
-      _enterCellLoopBody,
-      sharedMemoryGrainSize,
-      colouring
-    );
+      peano::datatraversal::dForLoop<EnterCellLoopBody> loop(
+        NumberOfCells,
+        _enterCellLoopBody,
+        grainSize.getGrainSize(),
+        colouring
+      );
 
-    if ( colouring!=peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial ) {
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::CallEnterCellOnRegularStationaryGrid);
+      grainSize.parallelSectionHasTerminated();
     }
   }
 }
@@ -174,23 +192,33 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
         break;
     }
     assertion( colouring>=0 );
-    const int sharedMemoryGrainSize   =
-      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial ?
-      0 :
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-        problemSize,
-        peano::datatraversal::autotuning::DescendOnRegularStationaryGrid
+
+    if (
+      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial
+      ||
+      problemSize==0
+    ) {
+      peano::datatraversal::dForLoop<DescendLoopBody> loop(
+        NumberOfCoarseGridCells,
+        _descendLoopBody,
+        0,
+        colouring
+      );
+    }
+    else {
+      auto sharedMemoryGrainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+          problemSize,
+          peano::datatraversal::autotuning::MethodTrace::DescendOnRegularStationaryGrid
+        );
+
+      peano::datatraversal::dForLoop<DescendLoopBody> loop(
+        NumberOfCoarseGridCells,
+        _descendLoopBody,
+        sharedMemoryGrainSize.getGrainSize(),
+        colouring
       );
 
-    peano::datatraversal::dForLoop<DescendLoopBody> loop(
-      NumberOfCoarseGridCells,
-      _descendLoopBody,
-      sharedMemoryGrainSize,
-      colouring
-    );
-
-    if ( colouring!=peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial ) {
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated(peano::datatraversal::autotuning::DescendOnRegularStationaryGrid);
+      sharedMemoryGrainSize.parallelSectionHasTerminated();
     }
   }
 }

@@ -88,15 +88,17 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   peano::grid::nodes::tasks::InvokeEnterCell<Vertex,Cell,State,EventHandle>
     invokeEnterCellTask( state, fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell, Base::_eventHandle );
 
+  auto grainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+      2,
+      peano::datatraversal::autotuning::MethodTrace::CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid
+    );
+
   peano::datatraversal::TaskSet(
     initialiseVertexEnumeratorsTask,
     invokeEnterCellTask,
-    peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-      2,
-      peano::datatraversal::autotuning::CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid
-    )>0
+    grainSize.getGrainSize()>0
   );
-  peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid );
+  grainSize.parallelSectionHasTerminated();
 
   #if defined(SharedMemoryParallelisation)
     assertion2(
@@ -134,119 +136,118 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   typedef peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>                       DescendTask;
 
   {
-    const bool PipelineTasks = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+    auto PipelineTasks = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
       growStack,
-      peano::datatraversal::autotuning::PipelineDescendTask
-    ) > 0;
+      peano::datatraversal::autotuning::MethodTrace::PipelineDescendTask
+    );
 
-    if (PipelineTasks) {
-      const int SplitLoadVerticesTask =
-      transformOracleResult(
-        peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-          growStack,
-          peano::datatraversal::autotuning::SplitLoadVerticesTaskOnRegularStationaryGrid
-        ),
-        TreeDepth, growStack
+    if (PipelineTasks.getGrainSize()>0) {
+      auto SplitLoadVerticesTask =
+          peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+            growStack,
+            peano::datatraversal::autotuning::MethodTrace::SplitLoadVerticesTaskOnRegularStationaryGrid
+          );
+
+      LoadCellsTask       loadCellsTask(     TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, PipelineTasks.getGrainSize()>0 );
+      LoadVerticesTask    loadVerticesTask(
+        state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks.getGrainSize()>0,
+        transformOracleResult(SplitLoadVerticesTask.getGrainSize(),TreeDepth, growStack)
       );
-
-      LoadCellsTask       loadCellsTask(     TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, PipelineTasks );
-      LoadVerticesTask    loadVerticesTask(  state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks, SplitLoadVerticesTask );
-      DescendTask         descendTask(       TreeDepth, state, Base::_eventHandle, _regularGridContainer, PipelineTasks );
+      DescendTask         descendTask(       TreeDepth, state, Base::_eventHandle, _regularGridContainer, PipelineTasks.getGrainSize()>0 );
 
       peano::datatraversal::TaskSet(
         loadCellsTask,
         loadVerticesTask,
         descendTask,
-        PipelineTasks
+        PipelineTasks.getGrainSize()
       );
 
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::SplitLoadVerticesTaskOnRegularStationaryGrid );
+      SplitLoadVerticesTask.parallelSectionHasTerminated();
     }
     else {
-      LoadCellsTask       loadCellsTask(     TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, PipelineTasks );
+      LoadCellsTask       loadCellsTask(     TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, PipelineTasks.getGrainSize()>0);
       loadCellsTask();
 
-      const int SplitLoadVerticesTask =
-      transformOracleResult(
-        peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-          growStack,
-          peano::datatraversal::autotuning::SplitLoadVerticesTaskOnRegularStationaryGrid
-        ),
-        TreeDepth, growStack
-      );
+      auto SplitLoadVerticesTask =
+          peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+            growStack,
+            peano::datatraversal::autotuning::MethodTrace::SplitLoadVerticesTaskOnRegularStationaryGrid
+          );
 
-      LoadVerticesTask    loadVerticesTask(  state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks, SplitLoadVerticesTask );
-      DescendTask         descendTask(       TreeDepth, state, Base::_eventHandle, _regularGridContainer, PipelineTasks );
+      LoadVerticesTask    loadVerticesTask(
+        state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks.getGrainSize()>0,
+        transformOracleResult(SplitLoadVerticesTask.getGrainSize(),TreeDepth, growStack)
+      );
+      DescendTask         descendTask(       TreeDepth, state, Base::_eventHandle, _regularGridContainer, PipelineTasks.getGrainSize()>0 );
 
       loadVerticesTask();
       #if defined(SharedMemoryParallelisation)
       while (
-        SplitLoadVerticesTask!=0 &&
+        SplitLoadVerticesTask.getGrainSize()!=0 &&
         !_regularGridContainer.isLevelInitialised(TreeDepth)
       ) {
         tarch::multicore::BooleanSemaphore::sendTaskToBack();
       }
       #endif
 
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::SplitLoadVerticesTaskOnRegularStationaryGrid );
+      SplitLoadVerticesTask.parallelSectionHasTerminated();
 
       descendTask();
     }
-    peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::PipelineDescendTask );
+
+    PipelineTasks.parallelSectionHasTerminated();
   }
 
 
   {
-    const bool PipelineTasks = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+    auto PipelineTasks = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
       growStack,
-      peano::datatraversal::autotuning::PipelineAscendTask
-    ) > 0;
+      peano::datatraversal::autotuning::MethodTrace::PipelineAscendTask
+    );
 
-    if (PipelineTasks) {
-      const int SplitStoreVerticesTask =
-        transformOracleResult(
+    if (PipelineTasks.getGrainSize()>0) {
+      auto SplitStoreVerticesTask =
         peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
           growStack,
-          peano::datatraversal::autotuning::SplitStoreVerticesTaskOnRegularStationaryGrid
-        ),
-        TreeDepth, growStack
-      );
+          peano::datatraversal::autotuning::MethodTrace::SplitStoreVerticesTaskOnRegularStationaryGrid
+        );
 
-      StoreCellsTask      storeCellsTask(    TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, PipelineTasks   );
-      StoreVerticesTask   storeVerticesTask( state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks, SplitStoreVerticesTask );
+      StoreCellsTask      storeCellsTask(    TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, true );
+      StoreVerticesTask   storeVerticesTask(
+        state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks.getGrainSize()>0,
+        transformOracleResult( SplitStoreVerticesTask.getGrainSize(), TreeDepth, growStack )
+      );
       AscendTask          ascendTask(        TreeDepth, state, Base::_eventHandle, _regularGridContainer );
+      SplitStoreVerticesTask.parallelSectionHasTerminated();
 
       peano::datatraversal::TaskSet(
         ascendTask,
         storeVerticesTask,
         storeCellsTask,
-        PipelineTasks
+        PipelineTasks.getGrainSize()
       );
-
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::SplitStoreVerticesTaskOnRegularStationaryGrid );
     }
     else {
       AscendTask ascendTask(TreeDepth, state, Base::_eventHandle, _regularGridContainer );
       ascendTask();
 
-      const int SplitStoreVerticesTask =
-        transformOracleResult(
+      auto SplitStoreVerticesTask =
         peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
           growStack,
-          peano::datatraversal::autotuning::SplitStoreVerticesTaskOnRegularStationaryGrid
-        ),
-        TreeDepth, growStack
+          peano::datatraversal::autotuning::MethodTrace::SplitStoreVerticesTaskOnRegularStationaryGrid
+        );
+      StoreVerticesTask   storeVerticesTask(
+        state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks.getGrainSize()>0,
+        transformOracleResult(SplitStoreVerticesTask.getGrainSize(), TreeDepth, growStack )
       );
-
-      StoreVerticesTask   storeVerticesTask( state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks, SplitStoreVerticesTask );
       storeVerticesTask();
-      peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::SplitStoreVerticesTaskOnRegularStationaryGrid );
+      SplitStoreVerticesTask.parallelSectionHasTerminated();
 
-      StoreCellsTask      storeCellsTask(    TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, PipelineTasks   );
+      StoreCellsTask      storeCellsTask(    TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, PipelineTasks.getGrainSize()>0  );
       storeCellsTask();
     }
 
-    peano::datatraversal::autotuning::Oracle::getInstance().parallelSectionHasTerminated( peano::datatraversal::autotuning::PipelineAscendTask );
+    PipelineTasks.parallelSectionHasTerminated();
   }
 
   _regularGridContainer.copyRootNodeDataFromRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
