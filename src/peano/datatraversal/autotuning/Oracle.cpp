@@ -136,13 +136,13 @@ void peano::datatraversal::autotuning::Oracle::deleteOracles() {
 void peano::datatraversal::autotuning::Oracle::switchToOracle(int id) {
   #if defined(SharedMemoryParallelisation)
   assertion( _currentOracle>=0 );
-  assertion( _currentOracle<_oracles.size() );
+  assertion( _currentOracle<static_cast<int>(_oracles.size()));
   _oracles[_currentOracle]->deactivateOracle();
 
   _currentOracle =id;
 
   assertion( _currentOracle>=0 );
-  assertion( _currentOracle<_oracles.size() );
+  assertion( _currentOracle<static_cast<int>(_oracles.size()) );
   _oracles[_currentOracle]->activateOracle();
   #endif
 }
@@ -155,9 +155,9 @@ peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::Or
 
   #if defined(SharedMemoryParallelisation)
   assertion( _currentOracle>=0 );
-  assertion( _currentOracle<_oracles.size() );
+  assertion( _currentOracle<static_cast<int>(_oracles.size()) );
   return std::move( _oracles[_currentOracle]->parallelise(problemSize,askingMethod) );
   #else
-  return GrainSize( 0, false, nullptr);
+  return GrainSize( 0, false, problemSize, askingMethod, nullptr);
   #endif
 }
