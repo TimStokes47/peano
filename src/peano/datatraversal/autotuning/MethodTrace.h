@@ -50,7 +50,8 @@ namespace peano {
 
       std::string toString( const MethodTrace& methodTrace );
       MethodTrace toMethodTrace(int value);
-}
+      MethodTrace toMethodTrace(const std::string&  identifier);
+    }
   }
 }
 

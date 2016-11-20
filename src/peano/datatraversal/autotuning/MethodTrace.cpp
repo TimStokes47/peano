@@ -4,6 +4,15 @@
 #include "tarch/Assertions.h"
 
 
+peano::datatraversal::autotuning::MethodTrace peano::datatraversal::autotuning::toMethodTrace(const std::string&  identifier) {
+  for (int i=0; i<(int)(MethodTrace::NumberOfDifferentMethodsCalling); i++) {
+    if ( toString(toMethodTrace(i)).compare(identifier)==0 ) return toMethodTrace(i);
+  }
+
+  return MethodTrace::NumberOfDifferentMethodsCalling;
+}
+
+
 std::string peano::datatraversal::autotuning::toString( const MethodTrace& methodTrace ) {
   switch (methodTrace) {
     case MethodTrace::LoadVertices:
