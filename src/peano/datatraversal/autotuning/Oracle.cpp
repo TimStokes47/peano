@@ -73,7 +73,7 @@ void peano::datatraversal::autotuning::Oracle::plotStatistics(const std::string&
 
 void peano::datatraversal::autotuning::Oracle::loadStatistics(const std::string& filename) {
   for (int i=0; i<_numberOfOracles;i++) {
-    assertion(_oracles[i]!=nullptr);
+    assertion3(_oracles[i]!=nullptr,i,_numberOfOracles, "please ensure that loadStatistics is called after the repository has been created");
     _oracles[i]->loadStatistics(filename,i);
   }
 }
@@ -111,8 +111,9 @@ void peano::datatraversal::autotuning::Oracle::createOracles() {
   else {
     _oracles.resize(_numberOfOracles);
 
+    logDebug( "createOracles(...)", "create " << _numberOfOracles << " oracles" );
     for (int i=0; i<_numberOfOracles; i++) {
-      _oracles[i] = _oraclePrototype->createNewOracle(i);
+      _oracles[i] = _oraclePrototype->createNewOracle();
     }
   }
 

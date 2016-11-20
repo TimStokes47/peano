@@ -137,7 +137,7 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::~OracleForOnePhaseDumm
 }
 
 
-peano::datatraversal::autotuning::OracleForOnePhase* peano::datatraversal::autotuning::OracleForOnePhaseDummy::createNewOracle(int adapterNumber) const {
+peano::datatraversal::autotuning::OracleForOnePhase* peano::datatraversal::autotuning::OracleForOnePhaseDummy::createNewOracle() const {
   return new OracleForOnePhaseDummy(
     _useMulticore,
     _grainSizeOfUserDefinedRegions,
@@ -151,8 +151,7 @@ peano::datatraversal::autotuning::OracleForOnePhase* peano::datatraversal::autot
     _smallestProblemSizeForTouchFirstLast,
     _grainSizeForTouchFirstLast,
     _smallestProblemSizeForSplitLoadStore,
-    _grainSizeForSplitLoadStore,
-    adapterNumber
+    _grainSizeForSplitLoadStore
   );
 }
 

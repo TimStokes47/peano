@@ -86,7 +86,7 @@ class peano::datatraversal::autotuning::OracleForOnePhase {
      *        there to map this parameter to a string. Sometimes, I use the
      *        term phase as an alias. See NumberOfPredefinedAdapters.
      */
-    virtual OracleForOnePhase* createNewOracle(int adapterNumber) const = 0;
+    virtual OracleForOnePhase* createNewOracle() const = 0;
 };
 
 

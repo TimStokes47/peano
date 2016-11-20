@@ -108,7 +108,7 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
     /**
      * For this oracle type, the adapter number is completely irrelevant.
      */
-    OracleForOnePhase* createNewOracle(int adapterNumber) const override;
+    OracleForOnePhase* createNewOracle() const override;
 
     std::string toString() const;
 };
