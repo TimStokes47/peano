@@ -5,9 +5,9 @@
 
 peano::datatraversal::autotuning::GrainSize::GrainSize(int grainSize, bool useTimer, int problemSize, MethodTrace askingMethod, OracleForOnePhase* hostOracle):
   _grainSize(grainSize),
+  _useTimer(useTimer),
   _problemSize(problemSize),
   _askingMethod(askingMethod),
-  _useTimer(useTimer),
   _hostOracle(hostOracle),
   _watch(nullptr) {
   assertion5(grainSize>=0,grainSize, useTimer, problemSize, toString(askingMethod), (hostOracle==nullptr));
@@ -24,9 +24,9 @@ peano::datatraversal::autotuning::GrainSize::GrainSize(int grainSize, bool useTi
 
 peano::datatraversal::autotuning::GrainSize::GrainSize(GrainSize&& movedObject):
   _grainSize(movedObject._grainSize),
+  _useTimer(movedObject._useTimer),
   _problemSize(movedObject._problemSize),
   _askingMethod(movedObject._askingMethod),
-  _useTimer(movedObject._useTimer),
   _hostOracle(movedObject._hostOracle),
   _watch(movedObject._watch) {
   if (_useTimer) {
