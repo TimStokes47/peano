@@ -4,20 +4,20 @@
 #define _PEANO_DATA_TRAVERSAL_AUTOTUNING_ORACLE_H_
 
 
-#include <map>
+#include <vector>
 
 
 #include "tarch/logging/Log.h"
-#include "tarch/timing/Watch.h"
 #include "tarch/multicore/BooleanSemaphore.h"
+#include "peano/datatraversal/autotuning/GrainSize.h"
 #include "peano/datatraversal/autotuning/OracleForOnePhase.h"
 
 
 namespace peano {
-    namespace datatraversal {
-      namespace autotuning {
-        class Oracle;
-      }
+  namespace datatraversal {
+    namespace autotuning {
+      class Oracle;
+    }
   }
 }
 
@@ -38,11 +38,11 @@ namespace peano {
  * - Measure times needed for the parallelisation and give the concrete oracles
  *   feedback about the time needed.
  *
- * @author Svetlana Nogina, Tobias Weinzierl
+ * @author Tobias Weinzierl
  */
 class peano::datatraversal::autotuning::Oracle {
   private:
-    static const int AdapterStatesReservedForRepositorySteering = 4;
+    //    static const int AdapterStatesReservedForRepositorySteering = 4;
 
     static tarch::logging::Log  _log;
 
@@ -50,47 +50,31 @@ class peano::datatraversal::autotuning::Oracle {
 
     Oracle();
 
-    struct ValuesPerOracleKey {
-      /**
-       * The oracle mechanism does not support recursive usage (anymore). In
-       * the asserts mode, we check that no recursive calls do pop up.
-       */
-      int                    _recursiveCallsForThisOracle;
-      int                    _lastGrainSizeReturned;
-      bool                   _measureTime;
-      tarch::timing::Watch*  _watch;
-      OracleForOnePhase*     _oracle;
-    };
-
-    ValuesPerOracleKey*                        _oracles;
+    /**
+     * Set of oracles.
+     */
+    typedef std::vector<OracleForOnePhase*>  OracleDatabase;
 
     /**
-     * Timer for whole iterations
-     *
-     * This timer keeps track how long one iteration did last. It is restarted
-     * every time one calls switchToOracle(), i.e. at the beginning of each
-     * Peano grid sweep.
+     * Maps ranks to oracles
      */
-    tarch::timing::Watch                       _watchSinceLastSwitchCall;
+    OracleDatabase                           _oracles;
 
     /**
      * Oracle, method and problem size must not change between the
      * parallelise() and loopHasTerminated() calls.
      */
-    int                                        _currentAdapter;
+    int                                        _currentOracle;
 
     OracleForOnePhase*                         _oraclePrototype;
 
-    int                                        _numberOfAdapters;
+    int                                        _numberOfOracles;
 
     void createOracles();
     void deleteOracles();
 
-    int getTotalNumberOfOracles() const;
-    int getKey(const MethodTrace& askingMethod ) const;
-  public:
     ~Oracle();
-
+  public:
     static Oracle& getInstance();
 
     /**
@@ -158,17 +142,7 @@ class peano::datatraversal::autotuning::Oracle {
      * @return grain size describing minimum size how to split up problem or
      *         zero this code piece shall not run in parallel
      */
-    int parallelise( int problemSize, MethodTrace askingMethod );
-
-    /**
-     * The running time for the tested grain size is measured after loop terminating, to estimate
-     * best grain size.
-     *
-     * The grain size for the next iteration is set to the middle
-     * between the former best grain size and the recently tested grain size.
-     * If the difference between both is <= 1, test is finished for this oracle-method-size triple.
-     */
-    void parallelSectionHasTerminated( MethodTrace askingMethod );
+    GrainSize  parallelise( int problemSize, MethodTrace askingMethod );
 };
 
 #endif

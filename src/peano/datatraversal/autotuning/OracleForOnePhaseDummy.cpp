@@ -1,4 +1,5 @@
 #include "peano/datatraversal/autotuning/OracleForOnePhaseDummy.h"
+#include "peano/datatraversal/autotuning/MethodTrace.h"
 #include "tarch/Assertions.h"
 
 #include <cstdlib>
@@ -12,140 +13,123 @@ tarch::logging::Log  peano::datatraversal::autotuning::OracleForOnePhaseDummy::_
 
 peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy(
   bool useMultithreading                  ,
-  bool measureRuntimes                    ,
   int  grainSizeOfUserDefinedRegions      ,
   SplitVertexReadsOnRegularSubtree  splitTheTree             ,
   bool pipelineDescendProcessing          ,
   bool pipelineAscendProcessing           ,
-  int  smallestGrainSizeForAscendDescend  ,
+  int  smallestProblemSizeForAscendDescend  ,
   int  grainSizeForAscendDescend          ,
-  int  smallestGrainSizeForEnterLeaveCell ,
+  int  smallestProblemSizeForEnterLeaveCell ,
   int  grainSizeForEnterLeaveCell         ,
-  int  smallestGrainSizeForTouchFirstLast ,
+  int  smallestProblemSizeForTouchFirstLast ,
   int  grainSizeForTouchFirstLast         ,
-  int  smallestGrainSizeForSplitLoadStore ,
+  int  smallestProblemSizeForSplitLoadStore ,
   int  grainSizeForSplitLoadStore         ,
-  int  adapterNumber                      ,
-  const MethodTrace& methodTrace
+  int  adapterNumber
 ):
   _useMulticore(useMultithreading),
-  _measureRuntimes(measureRuntimes),
   _grainSizeOfUserDefinedRegions(grainSizeOfUserDefinedRegions),
-  _executionTime(),
   _adapterNumber(adapterNumber),
-  _methodTrace(methodTrace),
   _splitTheTree(splitTheTree),
   _pipelineDescendProcessing(pipelineDescendProcessing),
   _pipelineAscendProcessing(pipelineAscendProcessing),
-  _grainSize(std::numeric_limits<int>::max()),
-  _smallestProblemSize(std::numeric_limits<int>::max()),
-  _lastProblemSize(-1),
-  _smallestGrainSizeForAscendDescend(smallestGrainSizeForAscendDescend),
+  _smallestProblemSizeForAscendDescend(smallestProblemSizeForAscendDescend),
   _grainSizeForAscendDescend(grainSizeForAscendDescend),
-  _smallestGrainSizeForEnterLeaveCell(smallestGrainSizeForEnterLeaveCell),
+  _smallestProblemSizeForEnterLeaveCell(smallestProblemSizeForEnterLeaveCell),
   _grainSizeForEnterLeaveCell(grainSizeForEnterLeaveCell),
-  _smallestGrainSizeForTouchFirstLast(smallestGrainSizeForTouchFirstLast),
+  _smallestProblemSizeForTouchFirstLast(smallestProblemSizeForTouchFirstLast),
   _grainSizeForTouchFirstLast(grainSizeForTouchFirstLast),
-  _smallestGrainSizeForSplitLoadStore(smallestGrainSizeForSplitLoadStore),
+  _smallestProblemSizeForSplitLoadStore(smallestProblemSizeForSplitLoadStore),
   _grainSizeForSplitLoadStore(grainSizeForSplitLoadStore) {
+}
 
-  if ( _pipelineAscendProcessing && _methodTrace == PipelineAscendTask ) {
-    _grainSize           = 1;
-    _smallestProblemSize = 0;
+
+
+peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelise(int problemSize, MethodTrace askingMethod) {
+  assertion3(problemSize>0,problemSize,peano::datatraversal::autotuning::toString(askingMethod),toString());
+
+  int grainSize           = 0;
+  int smallestProblemSize = 0;
+
+  if ( _pipelineAscendProcessing && askingMethod == MethodTrace::PipelineAscendTask ) {
+    grainSize           = 1;
+    smallestProblemSize = 0;
   }
-  else if ( _pipelineDescendProcessing && _methodTrace == PipelineDescendTask ) {
-    _grainSize           = 1;
-    _smallestProblemSize = 0;
+  else if ( _pipelineDescendProcessing && askingMethod == MethodTrace::PipelineDescendTask ) {
+    grainSize           = 1;
+    smallestProblemSize = 0;
   }
   else if (
-    ( _methodTrace==AscendOnRegularStationaryGrid        ||
-      _methodTrace==DescendOnRegularStationaryGrid
+    ( askingMethod==MethodTrace::AscendOnRegularStationaryGrid        ||
+      askingMethod==MethodTrace::DescendOnRegularStationaryGrid
     ) &&
     _splitTheTree != SplitVertexReadsOnRegularSubtree::SplitButDoNotParalleliseEvents
   ) {
-    _grainSize           = grainSizeForAscendDescend;
-    _smallestProblemSize = smallestGrainSizeForAscendDescend;
+    grainSize           = _grainSizeForAscendDescend;
+    smallestProblemSize = _smallestProblemSizeForAscendDescend;
   }
   else if (
-    ( _methodTrace==CallEnterCellOnRegularStationaryGrid ||
-      _methodTrace==CallLeaveCellOnRegularStationaryGrid
+    ( askingMethod==MethodTrace::CallEnterCellOnRegularStationaryGrid ||
+      askingMethod==MethodTrace::CallLeaveCellOnRegularStationaryGrid
     ) &&
     _splitTheTree != SplitVertexReadsOnRegularSubtree::SplitButDoNotParalleliseEvents
   ) {
-    _grainSize           = grainSizeForEnterLeaveCell;
-    _smallestProblemSize = smallestGrainSizeForEnterLeaveCell;
+    grainSize           = _grainSizeForEnterLeaveCell;
+    smallestProblemSize = _smallestProblemSizeForEnterLeaveCell;
   }
   else if (
     (
-      _methodTrace==CallTouchFirstTimeOnRegularStationaryGrid ||
-      _methodTrace==CallTouchLastTimeOnRegularStationaryGrid
+      askingMethod==MethodTrace::CallTouchFirstTimeOnRegularStationaryGrid ||
+      askingMethod==MethodTrace::CallTouchLastTimeOnRegularStationaryGrid
     ) &&
     _splitTheTree != SplitVertexReadsOnRegularSubtree::SplitButDoNotParalleliseEvents
   ) {
-    _grainSize           = grainSizeForTouchFirstLast;
-    _smallestProblemSize = smallestGrainSizeForTouchFirstLast;
+    grainSize           = _grainSizeForTouchFirstLast;
+    smallestProblemSize = _smallestProblemSizeForTouchFirstLast;
   }
   else if (
     _splitTheTree != SplitVertexReadsOnRegularSubtree::DoNotSplit  &&
     (
-      _methodTrace == SplitLoadVerticesTaskOnRegularStationaryGrid  ||
-      _methodTrace == SplitStoreVerticesTaskOnRegularStationaryGrid
+      askingMethod == MethodTrace::SplitLoadVerticesTaskOnRegularStationaryGrid  ||
+      askingMethod == MethodTrace::SplitStoreVerticesTaskOnRegularStationaryGrid
     )
   ) {
-    _grainSize           = grainSizeForSplitLoadStore;
-    _smallestProblemSize = smallestGrainSizeForSplitLoadStore;
+    grainSize           = _grainSizeForSplitLoadStore;
+    smallestProblemSize = _smallestProblemSizeForSplitLoadStore;
   }
   else if (
-    _methodTrace>=UserDefined0 && _methodTrace<=UserDefined12
-  )
-  {
-    _grainSize           = grainSizeOfUserDefinedRegions;
-    _smallestProblemSize = grainSizeOfUserDefinedRegions;
+    askingMethod>=MethodTrace::UserDefined0 && askingMethod<=MethodTrace::UserDefined12
+  ) {
+    grainSize           = _grainSizeOfUserDefinedRegions;
+    smallestProblemSize = _grainSizeOfUserDefinedRegions;
   }
-}
 
 
-std::pair<int,bool> peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelise(int problemSize) {
-  assertionEquals1( _lastProblemSize, -1, peano::datatraversal::autotuning::toString(_methodTrace) );
-  if (_useMulticore) {
-    if (problemSize < _smallestProblemSize) {
-      if (_measureRuntimes) _lastProblemSize = problemSize;
-      return std::pair<int,bool>(0,_measureRuntimes);
-    }
-    else {
-      if (_measureRuntimes) _lastProblemSize = problemSize;
-      return std::pair<int,bool>(_grainSize,_measureRuntimes);
-    }
+  if (
+    _useMulticore
+    &&
+    problemSize >= smallestProblemSize
+  ) {
+    assertion4(grainSize<problemSize,grainSize,problemSize,peano::datatraversal::autotuning::toString(askingMethod),toString());
+    return GrainSize(grainSize, false, problemSize, askingMethod, this);
   }
   else {
-    if (_measureRuntimes) _lastProblemSize = problemSize;
-    return std::pair<int,bool>(0,_measureRuntimes);
+    return GrainSize(0, false, problemSize, askingMethod, this);
   }
 }
 
 
-void peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelSectionHasTerminated(double elapsedCalendarTime) {
-  assertion1( _lastProblemSize>0, toString() );
-  _executionTime[_lastProblemSize].setValue( elapsedCalendarTime );
-  _executionTime[_lastProblemSize].setAccuracy(1.0e-5);
-  _lastProblemSize = -1;
+void peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelSectionHasTerminated(int problemSize, MethodTrace askingMethod, double costPerProblemElement) {
 }
 
 
-void peano::datatraversal::autotuning::OracleForOnePhaseDummy::loadStatistics(const std::string& filename) {
+void peano::datatraversal::autotuning::OracleForOnePhaseDummy::loadStatistics(const std::string& filename, int oracleNumber) {
 }
 
 
-void peano::datatraversal::autotuning::OracleForOnePhaseDummy::plotStatistics(std::ostream& out) const {
-  for (std::map<int, tarch::timing::Measurement>::const_iterator p=_executionTime.begin(); p!=_executionTime.end(); p++) {
-    if (p->second.getNumberOfMeasurements()>0) {
-      out <<
-          ",averaged runtime for " << peano::datatraversal::autotuning::toString(_methodTrace)
-          << " in " << _adapterNumber-peano::datatraversal::autotuning::NumberOfPredefinedAdapters+1 << "th adapter "
-          << " for problem size " << p->first << ": " <<
-          p->second.toString();
-    }
-  }
+void peano::datatraversal::autotuning::OracleForOnePhaseDummy::plotStatistics(std::ostream& out, int oracleNumber) const {
+  out << "oracle " << oracleNumber << std::endl
+      << toString() << std::endl;
 }
 
 
@@ -153,29 +137,31 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::~OracleForOnePhaseDumm
 }
 
 
-peano::datatraversal::autotuning::OracleForOnePhase* peano::datatraversal::autotuning::OracleForOnePhaseDummy::createNewOracle(int adapterNumber, const MethodTrace& methodTrace) const {
+peano::datatraversal::autotuning::OracleForOnePhase* peano::datatraversal::autotuning::OracleForOnePhaseDummy::createNewOracle(int adapterNumber) const {
   return new OracleForOnePhaseDummy(
     _useMulticore,
-    _measureRuntimes,
     _grainSizeOfUserDefinedRegions,
     _splitTheTree,
     _pipelineDescendProcessing,
     _pipelineAscendProcessing,
-    _smallestGrainSizeForAscendDescend,
+    _smallestProblemSizeForAscendDescend,
     _grainSizeForAscendDescend,
-    _smallestGrainSizeForEnterLeaveCell,
+    _smallestProblemSizeForEnterLeaveCell,
     _grainSizeForEnterLeaveCell,
-    _smallestGrainSizeForTouchFirstLast,
+    _smallestProblemSizeForTouchFirstLast,
     _grainSizeForTouchFirstLast,
-    _smallestGrainSizeForSplitLoadStore,
+    _smallestProblemSizeForSplitLoadStore,
     _grainSizeForSplitLoadStore,
-    adapterNumber,
-    methodTrace
+    adapterNumber
   );
 }
 
 
-void peano::datatraversal::autotuning::OracleForOnePhaseDummy::informAboutElapsedTimeOfLastTraversal(double elapsedTime) {
+void peano::datatraversal::autotuning::OracleForOnePhaseDummy::deactivateOracle() {
+}
+
+
+void peano::datatraversal::autotuning::OracleForOnePhaseDummy::activateOracle() {
 }
 
 
@@ -195,16 +181,20 @@ std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(S
 std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString() const {
   std::ostringstream msg;
 
-  msg << "(multicore="             << _useMulticore
-      << ",measure-runtimes="      << _measureRuntimes
-      << ",adapter-number="        << _adapterNumber
-      << ",method="                << peano::datatraversal::autotuning::toString(_methodTrace)
+  msg << ",adapter-number="        << _adapterNumber
+      << "(multicore="             << _useMulticore
+      << ",grain-size-of-user-defined-regions=" << _grainSizeOfUserDefinedRegions
       << ",split-tree="            << toString(_splitTheTree)
       << ",pipeline-descend="      << _pipelineDescendProcessing
       << ",pipeline-ascend="       << _pipelineAscendProcessing
-      << ",grain-size="            << _grainSize
-      << ",smallest-problem-size=" << _smallestProblemSize
-      << ",last-problem-size="     << _lastProblemSize
+      << ",smallest-problem-size-for-ascend-descend=" << _smallestProblemSizeForAscendDescend
+      << ",grain-size-for-ascend-descend=" << _grainSizeForAscendDescend
+      << ",smallest-problem-size-for-enter-leave-cell=" << _smallestProblemSizeForEnterLeaveCell
+      << ",grain-size-for-enter-leave-cell=" << _grainSizeForEnterLeaveCell
+      << ",smallest-problem-size-for-touch-first-last=" << _smallestProblemSizeForTouchFirstLast
+      << ",grain-size-for-touch-first-last=" << _grainSizeForTouchFirstLast
+      << ",smallest-problem-size-for-split-load-store=" << _smallestProblemSizeForSplitLoadStore
+      << ",grain-size-for-split-load-store=" << _grainSizeForSplitLoadStore
       << ")";
 
   return msg.str();

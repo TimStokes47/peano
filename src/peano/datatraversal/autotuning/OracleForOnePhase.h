@@ -8,58 +8,13 @@
 #include <string>
 
 
+#include "peano/datatraversal/autotuning/GrainSize.h"
+
+
 namespace peano {
   namespace datatraversal {
     namespace autotuning {
       class OracleForOnePhase;
-
-      enum MethodTrace {
-        LoadVertices                                     = 0,
-        LoadVerticesOnRegularStationaryGrid              = 1, // not unrolled
-        LoadVerticesOnIrregularStationaryGrid            = 2,
-        StoreVertices                                    = 3,
-        StoreVerticesOnRegularStationaryGrid             = 4, // not unrolled
-        StoreVerticesOnIrregularStationaryGrid           = 5,
-        CallEnterCellAndLoadSubCellsWithinTraverse       = 6,
-        CallLeaveCellAndStoreSubCellsWithinTraverse      = 7,
-        CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid = 8,
-        CallTouchFirstTimeOnRegularStationaryGrid        = 9,
-        CallTouchLastTimeOnRegularStationaryGrid         = 10,
-        CallEnterCellOnRegularStationaryGrid             = 11,
-        CallLeaveCellOnRegularStationaryGrid             = 12,
-        PipelineAscendTask                               = 13,
-        PipelineDescendTask                              = 14,
-        SplitLoadVerticesTaskOnRegularStationaryGrid     = 15,
-        SplitStoreVerticesTaskOnRegularStationaryGrid    = 16,
-        AscendOnRegularStationaryGrid                    = 17,
-        DescendOnRegularStationaryGrid                   = 18,
-
-        UserDefined0  = 19,
-        UserDefined1  = 20,
-        UserDefined2  = 21,
-        UserDefined3  = 22,
-        UserDefined4  = 23,
-        UserDefined5  = 24,
-        UserDefined6  = 25,
-        UserDefined7  = 26,
-        UserDefined8  = 27,
-        UserDefined9  = 28,
-        UserDefined10 = 29,
-        UserDefined11 = 30,
-        UserDefined12 = 31,
-
-        NumberOfDifferentMethodsCalling                  = 32
-      };
-
-      /**
-       * The repository management needs a couple of adapters itself. So, if you
-       * speak about adapter no 5 given you by the repository statistics, it is
-       * actually the 8th adapter.
-       */
-      const int NumberOfPredefinedAdapters = 4;
-
-      std::string toString( const MethodTrace& methodTrace );
-      MethodTrace toMethodTrace(int value);
     }
   }
 }
@@ -73,8 +28,9 @@ namespace peano {
  *
  * The oracle singleton never works with the original oracle. Instead, it
  * clones its oracle strategy for each new phase (see createNewOracle()).
+ * There is one oracle per adapter.
  *
- * @author Svetlana Nogina, Tobias Weinzierl
+ * @author Tobias Weinzierl
  */
 class peano::datatraversal::autotuning::OracleForOnePhase {
   public:
@@ -87,33 +43,38 @@ class peano::datatraversal::autotuning::OracleForOnePhase {
      *
      * @return Tuple with grain size plus flag indicating weather you wanna be informed about runtime
      */
-    virtual std::pair<int,bool> parallelise(int problemSize) = 0;
+    virtual GrainSize parallelise(int problemSize, MethodTrace askingMethod) = 0;
 
-    /**
+    /*
+     *
      * Informs oracle that the parallel code fraction has terminated. The last
      * fraction is the one, parallelise() has been called for before. There's
      * never more than one section running in parallel.
      */
-    virtual void parallelSectionHasTerminated(double elapsedCalendarTime) = 0;
+    virtual void parallelSectionHasTerminated(int problemSize, MethodTrace askingMethod, double costPerProblemElement) = 0;
 
     /**
      * Plot statistics.
      *
      * Plot the statistics data into a file. You may also hand in std::cout.
      */
-    virtual void plotStatistics(std::ostream& out) const = 0;
+    virtual void plotStatistics(std::ostream& out, int oracleNumber) const = 0;
 
     /**
      * Load statistics from a file. Not every oracle has to support this
      * operation, i.e. the code might be empty.
+     *
+     * @param filename
+     * @param oracleNumber
      */
-    virtual void loadStatistics(const std::string& filename) = 0;
+    virtual void loadStatistics(const std::string& filename, int oracleNumber) = 0;
 
     /**
-     * This operation is called by the oracle (management) on all oracles. Can
-     * be used to adopt oracle behaviour to global runtime.
+     * This operation is called by the oracle (management) on the active oracle
+     * before it activates another one.
      */
-    virtual void informAboutElapsedTimeOfLastTraversal(double elapsedTime) = 0;
+    virtual void deactivateOracle() = 0;
+    virtual void activateOracle() = 0;
 
     /**
      * Clone this oracle. This operation is used by the singleton whenever a
@@ -125,7 +86,7 @@ class peano::datatraversal::autotuning::OracleForOnePhase {
      *        there to map this parameter to a string. Sometimes, I use the
      *        term phase as an alias. See NumberOfPredefinedAdapters.
      */
-    virtual OracleForOnePhase* createNewOracle(int adapterNumber, const MethodTrace& methodTrace) const = 0;
+    virtual OracleForOnePhase* createNewOracle(int adapterNumber) const = 0;
 };
 
 

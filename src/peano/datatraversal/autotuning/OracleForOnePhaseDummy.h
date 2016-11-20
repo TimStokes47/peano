@@ -50,30 +50,22 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
     static tarch::logging::Log                 _log;
 
     const bool                                 _useMulticore;
-    const bool                                 _measureRuntimes;
     const int                                  _grainSizeOfUserDefinedRegions;
-    std::map<int, tarch::timing::Measurement>  _executionTime;
     const int                                  _adapterNumber;
-    const MethodTrace                          _methodTrace;
     const SplitVertexReadsOnRegularSubtree     _splitTheTree;
     const bool                                 _pipelineDescendProcessing;
     const bool                                 _pipelineAscendProcessing;
 
-    int                                        _grainSize;
-    int                                        _smallestProblemSize;
-
-    int                                        _lastProblemSize;
-
-    const int                                  _smallestGrainSizeForAscendDescend;
+    const int                                  _smallestProblemSizeForAscendDescend;
     const int                                  _grainSizeForAscendDescend;
 
-    const int                                  _smallestGrainSizeForEnterLeaveCell;
+    const int                                  _smallestProblemSizeForEnterLeaveCell;
     const int                                  _grainSizeForEnterLeaveCell;
 
-    const int                                  _smallestGrainSizeForTouchFirstLast;
+    const int                                  _smallestProblemSizeForTouchFirstLast;
     const int                                  _grainSizeForTouchFirstLast;
 
-    const int                                  _smallestGrainSizeForSplitLoadStore;
+    const int                                  _smallestProblemSizeForSplitLoadStore;
     const int                                  _grainSizeForSplitLoadStore;
   public:
 
@@ -84,40 +76,39 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
      */
     OracleForOnePhaseDummy(
       bool useMultithreading                  = true,
-      bool measureRuntimes                    = false,
       int  grainSizeOfUserDefinedRegions      = 0,
       SplitVertexReadsOnRegularSubtree splitTheTree = SplitVertexReadsOnRegularSubtree::DoNotSplit,
       bool pipelineDescendProcessing          = false,
       bool pipelineAscendProcessing           = false,
-      int  smallestGrainSizeForAscendDescend  = tarch::la::aPowI(DIMENSIONS,3*3*3*3/2),
+      int  smallestProblemSizeForAscendDescend  = tarch::la::aPowI(DIMENSIONS,3*3*3*3/2),
       int  grainSizeForAscendDescend          = 3,
-      int  smallestGrainSizeForEnterLeaveCell = tarch::la::aPowI(DIMENSIONS,9/2),
+      int  smallestProblemSizeForEnterLeaveCell = tarch::la::aPowI(DIMENSIONS,9/2),
       int  grainSizeForEnterLeaveCell         = 2,
-      int  smallestGrainSizeForTouchFirstLast = tarch::la::aPowI(DIMENSIONS,3*3*3*3+1),
+      int  smallestProblemSizeForTouchFirstLast = tarch::la::aPowI(DIMENSIONS,3*3*3*3+1),
       int  grainSizeForTouchFirstLast         = 64,
-      int  smallestGrainSizeForSplitLoadStore = tarch::la::aPowI(DIMENSIONS,3*3*3),
+      int  smallestProblemSizeForSplitLoadStore = tarch::la::aPowI(DIMENSIONS,3*3*3),
       int  grainSizeForSplitLoadStore         = 8,
-      int  adapterNumber                      = -1,
-      const MethodTrace& methodTrace          = NumberOfDifferentMethodsCalling
+      int  adapterNumber                      = -1
     );
 
     virtual ~OracleForOnePhaseDummy();
 
-    virtual std::pair<int,bool> parallelise(int problemSize);
-    virtual void parallelSectionHasTerminated(double elapsedCalendarTime);
-    virtual void plotStatistics(std::ostream& out) const;
+    GrainSize parallelise(int problemSize, MethodTrace askingMethod) override;
+    void parallelSectionHasTerminated(int problemSize, MethodTrace askingMethod, double costPerProblemElement) override;
+    void plotStatistics(std::ostream& out, int oracleNumber) const override;
 
     /**
      * Not implemented
      */
-    virtual void loadStatistics(const std::string& filename);
+    void loadStatistics(const std::string& filename, int oracleNumber) override;
 
-    virtual void informAboutElapsedTimeOfLastTraversal(double elapsedTime);
+    void deactivateOracle() override;
+    void activateOracle() override;
 
     /**
      * For this oracle type, the adapter number is completely irrelevant.
      */
-    virtual OracleForOnePhase* createNewOracle(int adapterNumber, const MethodTrace& methodTrace) const;
+    OracleForOnePhase* createNewOracle(int adapterNumber) const override;
 
     std::string toString() const;
 };
