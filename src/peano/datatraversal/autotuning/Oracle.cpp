@@ -149,8 +149,6 @@ void peano::datatraversal::autotuning::Oracle::switchToOracle(int id) {
 
 
 peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::Oracle::parallelise(int problemSize, MethodTrace askingMethod ) {
-  logTraceInWith3Arguments( "parallelise(int,int)", problemSize, askingMethod, toString(askingMethod) );
-
   assertion2( problemSize>=0, problemSize, toString(askingMethod) );
 
   #if defined(SharedMemoryParallelisation)
