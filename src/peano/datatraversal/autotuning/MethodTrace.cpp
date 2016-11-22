@@ -80,6 +80,43 @@ std::string peano::datatraversal::autotuning::toString( const MethodTrace& metho
       return "user-defined-11";
     case MethodTrace::UserDefined12:
       return "user-defined-12";
+    case MethodTrace::UserDefined13:
+      return "user-defined-13";
+    case MethodTrace::UserDefined14:
+      return "user-defined-14";
+    case MethodTrace::UserDefined15:
+      return "user-defined-15";
+    case MethodTrace::UserDefined16:
+      return "user-defined-16";
+    case MethodTrace::UserDefined17:
+      return "user-defined-17";
+    case MethodTrace::UserDefined18:
+      return "user-defined-18";
+    case MethodTrace::UserDefined19:
+      return "user-defined-19";
+
+    case MethodTrace::UserDefined20:
+      return "user-defined-20";
+    case MethodTrace::UserDefined21:
+      return "user-defined-21";
+    case MethodTrace::UserDefined22:
+      return "user-defined-22";
+    case MethodTrace::UserDefined23:
+      return "user-defined-23";
+    case MethodTrace::UserDefined24:
+      return "user-defined-24";
+    case MethodTrace::UserDefined25:
+      return "user-defined-25";
+    case MethodTrace::UserDefined26:
+      return "user-defined-26";
+    case MethodTrace::UserDefined27:
+      return "user-defined-27";
+    case MethodTrace::UserDefined28:
+      return "user-defined-28";
+    case MethodTrace::UserDefined29:
+      return "user-defined-29";
+    case MethodTrace::UserDefined30:
+      return "user-defined-30";
 
     case MethodTrace::NumberOfDifferentMethodsCalling:
       return "<error>";
@@ -152,12 +189,51 @@ peano::datatraversal::autotuning::MethodTrace peano::datatraversal::autotuning::
       return MethodTrace::UserDefined8;
     case static_cast<int>(MethodTrace::UserDefined9):
       return MethodTrace::UserDefined9;
+
     case static_cast<int>(MethodTrace::UserDefined10):
       return MethodTrace::UserDefined10;
     case static_cast<int>(MethodTrace::UserDefined11):
       return MethodTrace::UserDefined11;
     case static_cast<int>(MethodTrace::UserDefined12):
       return MethodTrace::UserDefined12;
+    case static_cast<int>(MethodTrace::UserDefined13):
+      return MethodTrace::UserDefined13;
+    case static_cast<int>(MethodTrace::UserDefined14):
+      return MethodTrace::UserDefined14;
+    case static_cast<int>(MethodTrace::UserDefined15):
+      return MethodTrace::UserDefined15;
+    case static_cast<int>(MethodTrace::UserDefined16):
+      return MethodTrace::UserDefined16;
+    case static_cast<int>(MethodTrace::UserDefined17):
+      return MethodTrace::UserDefined17;
+    case static_cast<int>(MethodTrace::UserDefined18):
+      return MethodTrace::UserDefined18;
+    case static_cast<int>(MethodTrace::UserDefined19):
+      return MethodTrace::UserDefined19;
+
+    case static_cast<int>(MethodTrace::UserDefined20):
+      return MethodTrace::UserDefined20;
+    case static_cast<int>(MethodTrace::UserDefined21):
+      return MethodTrace::UserDefined21;
+    case static_cast<int>(MethodTrace::UserDefined22):
+      return MethodTrace::UserDefined22;
+    case static_cast<int>(MethodTrace::UserDefined23):
+      return MethodTrace::UserDefined23;
+    case static_cast<int>(MethodTrace::UserDefined24):
+      return MethodTrace::UserDefined24;
+    case static_cast<int>(MethodTrace::UserDefined25):
+      return MethodTrace::UserDefined25;
+    case static_cast<int>(MethodTrace::UserDefined26):
+      return MethodTrace::UserDefined26;
+    case static_cast<int>(MethodTrace::UserDefined27):
+      return MethodTrace::UserDefined27;
+    case static_cast<int>(MethodTrace::UserDefined28):
+      return MethodTrace::UserDefined28;
+    case static_cast<int>(MethodTrace::UserDefined29):
+      return MethodTrace::UserDefined29;
+
+    case static_cast<int>(MethodTrace::UserDefined30):
+      return MethodTrace::UserDefined30;
 
     case static_cast<int>(MethodTrace::NumberOfDifferentMethodsCalling):
       return MethodTrace::NumberOfDifferentMethodsCalling;

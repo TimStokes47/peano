@@ -44,8 +44,26 @@ namespace peano {
         UserDefined10 = 29,
         UserDefined11 = 30,
         UserDefined12 = 31,
+        UserDefined13 = 32,
+        UserDefined14 = 33,
+        UserDefined15 = 34,
+        UserDefined16 = 35,
+        UserDefined17 = 36,
+        UserDefined18 = 37,
+        UserDefined19 = 38,
+        UserDefined20 = 39,
+        UserDefined21 = 40,
+        UserDefined22 = 41,
+        UserDefined23 = 42,
+        UserDefined24 = 43,
+        UserDefined25 = 44,
+        UserDefined26 = 45,
+        UserDefined27 = 46,
+        UserDefined28 = 47,
+        UserDefined29 = 48,
+        UserDefined30 = 49,
 
-        NumberOfDifferentMethodsCalling                  = 32
+        NumberOfDifferentMethodsCalling                  = 50
       };
 
       std::string toString( const MethodTrace& methodTrace );
