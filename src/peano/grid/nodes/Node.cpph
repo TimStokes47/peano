@@ -68,6 +68,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   Vertex                                fineGridVertices[FOUR_POWER_D],
   const peano::grid::VertexEnumerator&  fineGridVerticesEnumerator
 ) {
+  #ifdef Asserts
   logTraceIn( "validatePositionOfVertices(...)" );
   dfor2(k)
     assertionEquals3(
@@ -88,6 +89,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     }
   enddforx
   logTraceOut( "validatePositionOfVertices(...)" );
+  #endif
 }
 
 

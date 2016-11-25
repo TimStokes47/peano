@@ -34,6 +34,17 @@ class peano::grid::nodes::Leaf: public peano::grid::nodes::Node<Vertex,Cell,Stat
 
     RefinedNode& _refinedNode;
 
+    /**
+     *
+     *
+     * <h2> Release mode </h2>
+     *
+     * If you compile without assertions (release mode), then the operation
+     * deteriorates to nop. However, we use the dfor macro. Performance
+     * analysis reveals that the (2015) Intel compiler does not recognise
+     * that the stuff inside the pfor loop is empty and does not remove the
+     * routine completely. We therefore have to protect it manually.
+     */
     static void validateRefinementStateOfVertices(
       Vertex const * const          fineGridVertices,
       const SingleLevelEnumerator&  fineGridVerticesEnumerator,

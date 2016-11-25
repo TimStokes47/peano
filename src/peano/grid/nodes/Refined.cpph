@@ -53,8 +53,8 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
   Vertex const * const          fineGridVertices,
   const SingleLevelEnumerator&  fineGridVerticesEnumerator
 ) {
-  logTraceIn( "validateRefinementStateOfVertices(...)" );
   #ifdef Asserts
+  logTraceIn( "validateRefinementStateOfVertices(...)" );
   bool oneVertexIsRefinedOrRefining = false;
   dfor2(k)
     if (!fineGridVertices[ fineGridVerticesEnumerator(k) ].isHangingNode()) {
@@ -68,8 +68,8 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
   enddforx
 
   assertion( oneVertexIsRefinedOrRefining );
-  #endif
   logTraceOut( "validateRefinementStateOfVertices(...)" );
+  #endif
 }
 
 
