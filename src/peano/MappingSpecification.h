@@ -37,9 +37,13 @@ namespace peano {
 ||                || AvoidFineGridRaces        | Peano can try to speed up the application due to multithreading.
 ||                ||                           | However, Peano ensures that events are invoked such that the fine
 ||                ||                           | grid data (of enterCell, e.g.) is not shared with another thread.
-||                ||                           | Introduces @f$ 2^d @f$ colouring.
+||                ||                           | Introduces @f$ 2^d @f$ colouring on the cells.
 ||                ||                           | Variant is undefined (and thus may not be chosen) for inter-level
 ||                ||                           | events such as ascend.
+||                ||                           | Variant seems to be unnecessary for touchVertex...Time events as
+||                ||                           | those are not passed their neighbouring vertices anyway, i.e. there
+||                ||                           | may not be any data races. However, if you work with pointers to
+||                ||                           | adjacent cells, it can make sense to have this colouring.
  *
  * The order is Serial>AvoidCoarseGridRaces>AvoidFineGridRaces>RunConcurrentlyOnFineGrid.
  * If two mappings are combined one holding AvoidCoarseGridRaces and one holding
