@@ -22,7 +22,8 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
   const tarch::la::Vector<DIMENSIONS,int>&  range,
   LoopBody&                                 body,
   int                                       grainSize,
-  int                                       colouring
+  int                                       colouring,
+  bool                                      isStatelessFunctor
 ) {
   logTraceInWith3Arguments( "dForLoop(...)", range, grainSize, colouring );
   assertion( grainSize >= 0 );
@@ -37,10 +38,10 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
     runSequentially(range,body);
   }
   else if (colouring==NoColouring) {
-    runParallelWithoutColouring(range,body,grainSize);
+    runParallelWithoutColouring(range,body,grainSize,isStatelessFunctor);
   }
   else {
-    runParallelWithColouring(range,body,grainSize,colouring);
+    runParallelWithColouring(range,body,grainSize,colouring,isStatelessFunctor);
   }
   #else
   runSequentially(range,body);
@@ -89,15 +90,27 @@ template <class LoopBody>
 void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
   const tarch::la::Vector<DIMENSIONS,int>&  range,
   LoopBody&                                 loopBody,
-  int                                       grainSize
+  int                                       grainSize,
+  bool                                      isStatelessFunctor
 ) {
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(tarch::la::volume(range)/grainSize,tarch::la::volume(range));
   #ifdef SharedTBB
-  dForLoopInstance loopInstance(loopBody,0,1);
-  tbb::parallel_reduce(
-    dForRange( range, grainSize ),
-    loopInstance
-  );
+  if (isStatelessFunctor) {
+    dForLoopInstanceWithoutReduction  loopInstance(loopBody,0,1);
+    tbb::parallel_for(
+      dForRange( range, grainSize ),
+      loopInstance
+    );
+  }
+  else {
+    dForLoopInstance loopInstance(loopBody,0,1);
+    tbb::parallel_reduce(
+      dForRange( range, grainSize ),
+      loopInstance
+    );
+    loopInstance.mergeIntoMasterThread(loopBody);
+  }
+  
   #elif SharedOMP
    #warning @Vasco OpenMP nicht implementiert
   #else
@@ -112,41 +125,75 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
   const tarch::la::Vector<DIMENSIONS,int>&  range,
   LoopBody&                                 loopBody,
   int                                       grainSize,
-  int                                       colouring
+  int                                       colouring,
+  bool                                      isStatelessFunctor
 ) {
   assertion3(colouring>=2,range,grainSize,colouring);
 
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring)/grainSize,tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring));
 
-  dForLoopInstance loopInstance(loopBody,0,colouring);
-  dfor(k,colouring) {
-    tarch::la::Vector<DIMENSIONS,int> localRange = range;
-    for (int d=0; d<DIMENSIONS; d++) {
-      const int rangeModColouring = localRange(d)%colouring;
-      if (rangeModColouring!=0 && k(d)<rangeModColouring) {
-        localRange(d) = localRange(d) / colouring + 1;
+  if (isStatelessFunctor) {
+    dForLoopInstanceWithoutReduction loopInstance(loopBody,0,colouring);
+    dfor(k,colouring) {
+      tarch::la::Vector<DIMENSIONS,int> localRange = range;
+      for (int d=0; d<DIMENSIONS; d++) {
+        const int rangeModColouring = localRange(d)%colouring;
+        if (rangeModColouring!=0 && k(d)<rangeModColouring) {
+          localRange(d) = localRange(d) / colouring + 1;
+        }
+        else {
+          localRange(d) /= colouring;
+        }
+        assertion4( localRange(d)>=1, range, localRange, k, grainSize );
       }
-      else {
-        localRange(d) /= colouring;
-      }
-      assertion4( localRange(d)>=1, range, localRange, k, grainSize );
-    }
-    loopInstance.setOffset(k);
-    #ifdef SharedTBB
-    tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance );
-    #elif SharedOMP
-      #warning @Vasco OpenMP vermutlich gnadenlos veraltet
-    std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
+      loopInstance.setOffset(k);
+      #ifdef SharedTBB
+      tbb::parallel_for( dForRange( localRange, grainSize ), loopInstance );
+      #elif SharedOMP
+        #warning @Vasco OpenMP vermutlich gnadenlos veraltet
+      std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
 
-    #pragma omp parallel for schedule(dynamic, 1) firstprivate(loopInstance)
-    for( int i=0; i < (int)(ranges.size()); i++ ){
-      loopInstance(ranges[i]);
+      #pragma omp parallel for schedule(dynamic, 1) firstprivate(loopInstance)
+      for( int i=0; i < (int)(ranges.size()); i++ ){
+        loopInstance(ranges[i]);
+      }
+      #else
+      assertion(false);
+      #endif
     }
-    #else
-    assertion(false);
-    #endif
   }
+  else {
+    dForLoopInstance loopInstance(loopBody,0,colouring);
+    dfor(k,colouring) {
+      tarch::la::Vector<DIMENSIONS,int> localRange = range;
+      for (int d=0; d<DIMENSIONS; d++) {
+        const int rangeModColouring = localRange(d)%colouring;
+        if (rangeModColouring!=0 && k(d)<rangeModColouring) {
+          localRange(d) = localRange(d) / colouring + 1;
+        }
+        else {
+          localRange(d) /= colouring;
+        }
+        assertion4( localRange(d)>=1, range, localRange, k, grainSize );
+      }
+      loopInstance.setOffset(k);
+      #ifdef SharedTBB
+      tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance );
+      #elif SharedOMP
+        #warning @Vasco OpenMP vermutlich gnadenlos veraltet
+      std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
 
+      #pragma omp parallel for schedule(dynamic, 1) firstprivate(loopInstance)
+      for( int i=0; i < (int)(ranges.size()); i++ ){
+        loopInstance(ranges[i]);
+      }
+      #else
+      assertion(false);
+      #endif
+    }
+    loopInstance.mergeIntoMasterThread(loopBody);
+  }
+  
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring)/grainSize,-tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring));
 }
 
@@ -211,10 +258,58 @@ void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::operator() (con
 
 template <class LoopBody>
 void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::join(const dForLoopInstance&  with) {
+  _loopBody.mergeWithWorkerThread(with._loopBody);
+}
+
+
+template <class LoopBody>
+void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::mergeIntoMasterThread(LoopBody&  originalLoopBody) const {
+  _loopBody.mergeIntoMasterThread(originalLoopBody);
 }
 
 
 template <class LoopBody>
 void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::setOffset(const tarch::la::Vector<DIMENSIONS,int>&  offset) {
+  _offset = offset;
+}
+
+
+template <class LoopBody>
+peano::datatraversal::dForLoop<LoopBody>::dForLoopInstanceWithoutReduction::dForLoopInstanceWithoutReduction(
+  const LoopBody&                    loopBody,
+  tarch::la::Vector<DIMENSIONS,int>  offset,
+  const int                          padding
+):
+  _loopBody(loopBody),
+  _offset(offset),
+  _padding(padding) {
+  assertion2( tarch::la::allGreaterEquals(_offset,0), _offset, _padding );
+  assertion2( tarch::la::allSmaller(_offset,_padding), _offset, _padding );
+}
+
+
+template <class LoopBody>
+peano::datatraversal::dForLoop<LoopBody>::dForLoopInstanceWithoutReduction::dForLoopInstanceWithoutReduction( const dForLoopInstanceWithoutReduction& loopBody, SplitFlag ):
+  _loopBody(loopBody._loopBody),
+  _offset(loopBody._offset),
+  _padding(loopBody._padding) {
+}
+
+
+template <class LoopBody>
+void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstanceWithoutReduction::operator() (const dForRange& range) const {
+  logTraceInWith1Argument( "dForLoopInstance::operator()", range.toString() );
+
+  dfor(i,range.getRange()) {
+    //    _loopBody( (i + range.getOffset())*_padding + _offset );
+    const_cast<LoopBody&>(_loopBody)( (i + range.getOffset())*_padding + _offset );
+  }
+
+  logTraceOutWith1Argument( "dForLoopInstance::operator()", range.toString() );
+}
+
+
+template <class LoopBody>
+void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstanceWithoutReduction::setOffset(const tarch::la::Vector<DIMENSIONS,int>&  offset) {
   _offset = offset;
 }

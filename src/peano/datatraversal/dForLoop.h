@@ -12,21 +12,14 @@
 #include "peano/datatraversal/tests/dForLoopTest.h"
 #include "tarch/multicore/BooleanSemaphore.h"
 
-
-#ifdef SharedCobra
-#include "tarch/multicore/cobra/Core.h"
-#include <cobra/thread.hpp>
-#endif
-
-
 #include <vector>
 
 
 namespace peano {
-    namespace datatraversal {
-      template <class LoopBody>
-      class dForLoop;
-    }
+  namespace datatraversal {
+    template <class LoopBody>
+    class dForLoop;
+  }
 }
 
 
@@ -36,9 +29,11 @@ namespace peano {
  *
  * This class is a simple wrapper for for-loops that has one significant
  * advantage: It is parallelised if TBBs or OpenMP are included. The class
- * needs, besides the range (iteration space), an event handle (loop body) with
- * implements $void operator() (const tarch::la::Vector<DIMENSIONS,int>& i)$.
- * This means you write a simple class with a constructor and this one
+ * needs, besides the range (iteration space), an event handle (loop body). It
+ * has to implement an operator() (const tarch::la::Vector<DIMENSIONS,int>& i)
+ * at least (see remarks below).
+ *
+ * This means you write a simple class with a constructor and this single
  * operation. Then, you move the body of your original for-loop to the
  * implementation of the operator() and replace the original for loop by
  * something similar to
@@ -55,10 +50,26 @@ namespace peano {
  * the very last iteration (and you actually don't know how many iterations
  * there will be due to load stealing), the complete object is thrown away.
  *
- * If you want to merge a thread's local copies into a global variable, you can
- * do this in the destructor. The grid's loops for example all have a
- * destructor that first locks a global semaphore, and then it calls a merge
+ * If you want to merge a thread's local copies into a global variable, you
+ * do this in the operation mergeWithWorkerThread(). The grid's loops for
+ * example all have a merge operation (TBB calls this merge join) that first
+ * locks a global semaphore, and then it calls a merge
  * operation on the mappings.
+ *
+ * Merging the whole loop body back however is not a cheap process. If it is
+ * not required (this holds notably if your loop already does restrict
+ * on-the-fly, i.e. it sets some global values protected by a semaphore), then
+ * you can run the parallel loop without a reduction. mergeWithMaster then is
+ * omitted.
+ *
+ * We finally emphasise that thread merges in this code are done in two steps.
+ * The loop class craetes copies of the loop body and merges those guys back
+ * via mergeWithWorkerThread(). At the very end, i.e. after the very last
+ * thread has terminated, it then merges back this thread into the prototype
+ * (original loop body handed over) via mergeIntoMasterThread(). This allows
+ * you to do different things, notably if several loop types run in parallel
+ * in your code.
+ *
  *
  * <h2> Parallel Implementation (TBB) </h2>
  *
@@ -83,12 +94,17 @@ namespace peano {
  * to be const. Instead, we have to use the parallel_reduce even though we
  * merge the copies ourself in the destructors.
  *
- * <h2> Copy Policies </h2>
+ * <h2> Serial runs </h2>
  *
  * If the code is running serial, the loop body is not copied at all. If the
  * code runs in parallel, each thread creates a copy of the loop body. In
  * particular, also the master thread first creates a copy and then loops,
  * i.e. we also create a copy even if we work only with one thread.
+ *
+ * <h2> Runs without reduction </h2>
+ *
+ * You can run the whole code without a reduction. For this, you may omit the
+ * merge operations, but the important thing is that you make operator() const.
  *
  * @author Tobias Weinzierl
  */
@@ -160,12 +176,51 @@ class peano::datatraversal::dForLoop {
         void operator() (const dForRange& range);
 
         /**
-         * Empty Join
-         *
-         * Instead, we use the destructor. See remarks on TBB realisation for
-         * encapsulating class.
+         * Maps TBB's join onto mergeWithWorkerThread
          */
         void join(const dForLoopInstance&  with);
+
+        void mergeIntoMasterThread( LoopBody&  originalLoopBody ) const;
+    };
+
+    class dForLoopInstanceWithoutReduction {
+      private:
+        const LoopBody&                    _loopBody;
+
+        tarch::la::Vector<DIMENSIONS,int>  _offset;
+        const int                          _padding;
+
+      public:
+        dForLoopInstanceWithoutReduction(
+          const LoopBody&                    loopBody,
+          tarch::la::Vector<DIMENSIONS,int>  offset,
+          const int                          padding
+        );
+
+        void setOffset(const tarch::la::Vector<DIMENSIONS,int>&  offset);
+
+        /**
+         * See documentation of TBB. This flag is just used to
+         * distinguish the split constructor from a standard
+         * copy constructor.
+         */
+        #if defined(SharedTBB)
+        typedef tbb::split   SplitFlag;
+        #else
+        typedef int          SplitFlag;
+        #endif
+
+        /**
+         * Copy Constructor
+         *
+         * TBB requires the copy constructor for loops to accept an additional
+         * argument to be able to distinguish it from the standard copy
+         * constructor. As a consequence, the code does not compile anymore
+         * without tbb. I thus wrap the TBB type with a typedef of my own.
+         */
+        dForLoopInstanceWithoutReduction( const dForLoopInstanceWithoutReduction& loopBody, SplitFlag );
+
+        void operator() (const dForRange& range) const;
     };
 
     void runSequentially(
@@ -176,14 +231,16 @@ class peano::datatraversal::dForLoop {
     void runParallelWithoutColouring(
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       LoopBody&                                 loopBody,
-      int                                       grainSize
+      int                                       grainSize,
+      bool                                      isStatelessFunctor
     );
 
     void runParallelWithColouring(
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       LoopBody&                                 loopBody,
       int                                       grainSize,
-      int                                       colouring
+      int                                       colouring,
+      bool                                      isStatelessFunctor
     );
   public:
     enum ParallelisationStrategy {
@@ -206,7 +263,8 @@ class peano::datatraversal::dForLoop {
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       LoopBody&                                 body,
       int                                       grainSize,
-      int                                       colouring
+      int                                       colouring,
+      bool                                      isStatelessFunctor=false
     );
 };
 
