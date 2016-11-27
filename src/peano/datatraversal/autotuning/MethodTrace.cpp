@@ -2,6 +2,7 @@
 
 
 #include "tarch/Assertions.h"
+#include <sstream>
 
 
 peano::datatraversal::autotuning::MethodTrace peano::datatraversal::autotuning::toMethodTrace(const std::string&  identifier) {
@@ -119,7 +120,9 @@ std::string peano::datatraversal::autotuning::toString( const MethodTrace& metho
       return "user-defined-30";
 
     case MethodTrace::NumberOfDifferentMethodsCalling:
-      return "<error>";
+      std::ostringstream msg;
+      msg << "<error(" << (int)(methodTrace) << ")>";
+      return msg.str();
   }
 
   return "<error>";
