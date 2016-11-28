@@ -134,6 +134,11 @@ Such an instance accepts parameters:
   anything at all.
   \item The second flag specifies whether a particular event may run in
   parallel.
+  \item The third flag specify whether a particular event modifies the mapping's
+  state itself. It basically means whether the event can be considered by Peano
+  as \texttt{const}. If an event does not change the mapping's state, we
+  obviously can parallelise more aggressively and do not have to merge back any
+  changes in the mapping with \texttt{mergeWithWorkerThread}.
   \item Further flags specify whether events support resiliency and other
   experimental features. For most Peano kernel variants, such further flags are
   not supported. We maintain these variants in experimental Peano kernels only.
@@ -391,6 +396,24 @@ Please note that there are other constructors of \texttt{TaskSet} that run
 multiple tasks in parallel and wait until both have terminated. 
 See the class description for details.
 
+
+
+\subsection{Profiling}
+
+Peano provides some tailored, built-in profiling for shared memory codes. 
+See the Section \ref{section:performance-analysis} for some details on this. 
+The idea is that you recompile your code with an additional flag.
+This gives you some output (pipe it into a file), and then there is a Python
+script in the directory \texttt{peano/performanceanalysis} that allows you to
+create a HTML page from this output that comprises lots of performance analysis
+graphs and gives you hints where your CPUh are burnt. Obviously, this approach
+is problematic for large runs producing lots of data, and it also suffers from
+quite an overhead polluting your actual results.
+
+If you want to use Intel's VTune Amplifier, we see many analyses be polluted,
+too, as we use tons of templates, tons of inlinings consequently, and thus mess
+up many profiles. To get more verbose outputs with the correct meta data, please
+recompile your code with \texttt{-debug inline-debug-info}.
 
 
 \subsection*{Further reading}
