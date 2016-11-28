@@ -23,7 +23,7 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
   LoopBody&                                 body,
   int                                       grainSize,
   int                                       colouring,
-  bool                                      isStatelessFunctor
+  bool                                      altersState
 ) {
   logTraceInWith3Arguments( "dForLoop(...)", range, grainSize, colouring );
   assertion( grainSize >= 0 );
@@ -38,10 +38,10 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
     runSequentially(range,body);
   }
   else if (colouring==NoColouring) {
-    runParallelWithoutColouring(range,body,grainSize,isStatelessFunctor);
+    runParallelWithoutColouring(range,body,grainSize,altersState);
   }
   else {
-    runParallelWithColouring(range,body,grainSize,colouring,isStatelessFunctor);
+    runParallelWithColouring(range,body,grainSize,colouring,altersState);
   }
   #else
   runSequentially(range,body);
@@ -91,11 +91,11 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
   const tarch::la::Vector<DIMENSIONS,int>&  range,
   LoopBody&                                 loopBody,
   int                                       grainSize,
-  bool                                      isStatelessFunctor
+  bool                                      altersState
 ) {
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(tarch::la::volume(range)/grainSize,tarch::la::volume(range));
   #ifdef SharedTBB
-  if (isStatelessFunctor) {
+  if (!altersState) {
     dForLoopInstanceWithoutReduction  loopInstance(loopBody,0,1);
     tbb::parallel_for(
       dForRange( range, grainSize ),
@@ -126,13 +126,13 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
   LoopBody&                                 loopBody,
   int                                       grainSize,
   int                                       colouring,
-  bool                                      isStatelessFunctor
+  bool                                      altersState
 ) {
   assertion3(colouring>=2,range,grainSize,colouring);
 
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring)/grainSize,tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring));
 
-  if (isStatelessFunctor) {
+  if (!altersState) {
     dForLoopInstanceWithoutReduction loopInstance(loopBody,0,colouring);
     dfor(k,colouring) {
       tarch::la::Vector<DIMENSIONS,int> localRange = range;

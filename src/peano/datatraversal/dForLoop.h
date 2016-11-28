@@ -232,7 +232,7 @@ class peano::datatraversal::dForLoop {
       const tarch::la::Vector<DIMENSIONS,int>&  range,
       LoopBody&                                 loopBody,
       int                                       grainSize,
-      bool                                      isStatelessFunctor
+      bool                                      altersState
     );
 
     void runParallelWithColouring(
@@ -240,7 +240,7 @@ class peano::datatraversal::dForLoop {
       LoopBody&                                 loopBody,
       int                                       grainSize,
       int                                       colouring,
-      bool                                      isStatelessFunctor
+      bool                                      altersState
     );
   public:
     enum ParallelisationStrategy {
@@ -264,7 +264,7 @@ class peano::datatraversal::dForLoop {
       LoopBody&                                 body,
       int                                       grainSize,
       int                                       colouring,
-      bool                                      isStatelessFunctor=false
+      bool                                      altersState
     );
 };
 
