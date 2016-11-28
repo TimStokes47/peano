@@ -62,6 +62,8 @@ namespace peano
             TestLoopBody();
             TestLoopBody(const TestLoopBody& copy);
             ~TestLoopBody();
+            void mergeWithWorkerThread(const TestLoopBody& worker);
+            void mergeIntoMasterThread(TestLoopBody& master) const;
             void operator() (const tarch::la::Vector<DIMENSIONS,int>& i);
 
             static void resetGlobalCounter();

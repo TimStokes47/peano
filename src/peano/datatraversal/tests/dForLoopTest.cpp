@@ -40,7 +40,7 @@ void peano::datatraversal::tests::dForLoopTest::testCreateRangesVectorGrainSize1
   int grainSize = 1;
 
   TestLoopBody testLoopBody;
-  peano::datatraversal::dForLoop<TestLoopBody> loop(range, testLoopBody, grainSize, false);
+  peano::datatraversal::dForLoop<TestLoopBody> loop(range, testLoopBody, grainSize, 1, true);
 
   std::vector<peano::datatraversal::dForRange> ranges = loop.createRangesVector(range, grainSize);
 
@@ -127,7 +127,7 @@ void peano::datatraversal::tests::dForLoopTest::testParallelReduction() {
 
   TestLoopBody testLoopBody;
   TestLoopBody::resetGlobalCounter();
-  peano::datatraversal::dForLoop<TestLoopBody> loop(range, testLoopBody, grainSize, peano::datatraversal::dForLoop<TestLoopBody>::NoColouring);
+  peano::datatraversal::dForLoop<TestLoopBody> loop(range, testLoopBody, grainSize, peano::datatraversal::dForLoop<TestLoopBody>::NoColouring, true);
 
   // we cannot say for sure whether the rank has been split or not. It depends
   // on the runtime behaviour. But we can check other things.
@@ -162,10 +162,22 @@ peano::datatraversal::tests::TestLoopBody::TestLoopBody(const TestLoopBody& copy
 
 
 peano::datatraversal::tests::TestLoopBody::~TestLoopBody() {
+}
+
+
+void peano::datatraversal::tests::TestLoopBody::mergeWithWorkerThread(const TestLoopBody& worker) {
   tarch::multicore::Lock lock(_semaphore);
 
   _destructorCounter++;
 }
+
+
+void peano::datatraversal::tests::TestLoopBody::mergeIntoMasterThread(TestLoopBody& master) const {
+  tarch::multicore::Lock lock(_semaphore);
+
+  _destructorCounter++;
+}
+
 
 void peano::datatraversal::tests::TestLoopBody::operator()(const tarch::la::Vector<DIMENSIONS,int>& i)
 {
