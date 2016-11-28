@@ -51,36 +51,13 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
     int*                                      _counter;
     VertexStack&                              _vertexStack;
 
-    #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
-    EventHandle                                                 _threadLocalEventHandle;
-    #else
-    EventHandle&                                                _eventHandle;
-    EventHandle&                                                _threadLocalEventHandle;
-    #endif
 
     /**
      * Usually, the geometry should be const. See getters of geometry for a
      * description.
      */
     peano::geometry::Geometry&                _geometry;
-
-    #ifdef TrackGridStatistics
-    double _numberOfInnerVertices;
-    double _numberOfBoundaryVertices;
-    double _numberOfOuterVertices;
-
-    double _numberOfInnerLeafVertices;
-    double _numberOfBoundaryLeafVertices;
-    double _numberOfOuterLeafVertices;
-    #endif
-
-    bool   _hasRefined;
-    bool   _hasErased;
-    bool   _hasFailedToEraseDueToDomainDecomposition;
-    bool   _hasChangedVertexState;
-
-    const bool   _runsInParallel;
 
     void loadVertexFromInputStream(int positionInArray, const tarch::la::Vector<DIMENSIONS,int>& positionInLocalCell);
     void createHangingNode(int positionInArray, const tarch::la::Vector<DIMENSIONS,int>& positionInLocalCell);
@@ -248,14 +225,10 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
       int*                                      counter,
       VertexStack&                              vertexStack,
       EventHandle&                              eventHandle,
-      peano::geometry::Geometry&                geometry,
-      bool                                      runsInParallel
+      peano::geometry::Geometry&                geometry
     );
 
     ~LoadVertexLoopBody() = default;
-
-    void mergeWithWorkerThread( const LoadVertexLoopBody& worker);
-    void mergeIntoMasterThread(LoadVertexLoopBody&  master) const;
 
     /**
      * Load a Vertex

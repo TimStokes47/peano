@@ -63,8 +63,7 @@ void peano::grid::nodes::Leaf<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         counter,
         Base::_vertexStack,
         Base::_eventHandle,
-        Base::_geometry,
-        grainSize.getGrainSize()>0
+        Base::_geometry
     );
     peano::datatraversal::ActionSetTraversalLoop<LoopBody>(
       peano::grid::aspects::CellLocalPeanoCurve::getReadVertexSequence(fineGridCell,state.isTraversalInverted(),true),
@@ -85,8 +84,7 @@ void peano::grid::nodes::Leaf<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         counter,
         Base::_vertexStack,
         Base::_eventHandle,
-        Base::_geometry,
-        false
+        Base::_geometry
     );
     peano::datatraversal::ActionSetTraversalLoop<LoopBody>(
         peano::grid::aspects::CellLocalPeanoCurve::getReadVertexSequence(fineGridCell,state.isTraversalInverted(),true),
@@ -341,8 +339,7 @@ void peano::grid::nodes::Leaf<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     counter,
     Base::_vertexStack,
     Base::_eventHandle,
-    Base::_geometry,
-    false
+    Base::_geometry
   );
 
   if (Base::_eventHandle.touchVertexLastTimeSpecification().multithreading) {

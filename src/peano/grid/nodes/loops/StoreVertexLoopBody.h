@@ -53,28 +53,13 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
     int*                                      _counter;
     VertexStack&                              _vertexStack;
 
-#if defined(SharedMemoryParallelisation)
-    EventHandle&                                                _eventHandle;
-    EventHandle                                                 _threadLocalEventHandle;
-#else
-    EventHandle&                                                _eventHandle;
-    EventHandle&                                                _threadLocalEventHandle;
-#endif
+    EventHandle&                              _eventHandle;
 
     /**
      * Usually, the geometry should be const. See getters of geometry for a
      * description.
      */
     peano::geometry::Geometry&                _geometry;
-
-    /**
-     * Holds if and only if an immediate refine has been triggered.
-     */
-    bool   _hasRefined;
-    bool   _hasTriggeredRefinementForNextIteration;
-    bool   _hasTriggeredEraseForNextIteration;
-
-    const bool   _runsInParallel;
 
     /**
      * Update Refinement Status Before Data is Written to Output Stream
@@ -336,14 +321,10 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
       int*                                      counter,
       VertexStack&                              vertexStack,
       EventHandle&                              eventHandle,
-      peano::geometry::Geometry&                geometry,
-      bool                                      runsInParallel
+      peano::geometry::Geometry&                geometry
     );
 
     ~StoreVertexLoopBody() = default;
-
-    void mergeWithWorkerThread( const StoreVertexLoopBody& worker);
-    void mergeIntoMasterThread(StoreVertexLoopBody&  master) const;
 
     /**
      *

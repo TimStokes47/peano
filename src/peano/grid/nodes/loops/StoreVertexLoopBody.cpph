@@ -27,8 +27,7 @@ peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,Eve
   int*                                      counter,
   VertexStack&                              vertexStack,
   EventHandle&                              eventHandle,
-  peano::geometry::Geometry&                geometry,
-  bool                                      runsInParallel
+  peano::geometry::Geometry&                geometry
 ):
   _state(state),
   _fineGridVertices(fineGridVertices),
@@ -40,43 +39,8 @@ peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,Eve
   _counter(counter),
   _vertexStack(vertexStack),
   _eventHandle(eventHandle),
-  _threadLocalEventHandle(eventHandle),
-  _geometry(geometry),
-  _hasRefined(false),
-  _hasTriggeredRefinementForNextIteration(false),
-  _hasTriggeredEraseForNextIteration(false),
-  _runsInParallel(runsInParallel) {
+  _geometry(geometry) {
 }
-
-
-template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator >
-void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle, CellFlagsFromEnumerator >::mergeIntoMasterThread(
-  StoreVertexLoopBody&  master
-) const {
-  master._state.updateRefinementHistoryAfterLoad( _hasRefined, false, false, false );
-
-  master._state.updateRefinementHistoryBeforeStore(
-    _hasTriggeredRefinementForNextIteration,
-    _hasTriggeredEraseForNextIteration
-  );
-
-  #if defined(SharedMemoryParallelisation)
-  _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
-  #endif
-}
-
-
-template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator >
-void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle, CellFlagsFromEnumerator >::mergeWithWorkerThread( const StoreVertexLoopBody&  worker ) {
-  _hasRefined                             |= worker._hasRefined;
-  _hasTriggeredRefinementForNextIteration |= worker._hasTriggeredRefinementForNextIteration;
-  _hasTriggeredEraseForNextIteration      |= worker._hasTriggeredEraseForNextIteration;
-
-  #if defined(SharedMemoryParallelisation)
-  _threadLocalEventHandle.mergeWithWorkerThread( worker._threadLocalEventHandle );
-  #endif
-}
-
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator >
@@ -179,16 +143,21 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
     positionInVertexArray
   );
 
-  _hasTriggeredRefinementForNextIteration |= _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::RefinementTriggered;
+  bool hasTriggeredRefinementForNextIteration = _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::RefinementTriggered;
   #ifdef Parallel
-  _hasTriggeredRefinementForNextIteration |= _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::EnforceRefinementTriggered;
-  _hasTriggeredEraseForNextIteration      |= (
+  hasTriggeredRefinementForNextIteration |= _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::EnforceRefinementTriggered;
+  const bool hasTriggeredEraseForNextIteration = (
       _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::EraseTriggered &&
       !_fineGridVertices[positionInVertexArray].isRemote(_state,true,false)
     );
   #else
-  _hasTriggeredEraseForNextIteration      |= _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::EraseTriggered;
+  const bool hasTriggeredEraseForNextIteration = _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::EraseTriggered;
   #endif
+
+  _state.updateRefinementHistoryBeforeStore(
+    hasTriggeredRefinementForNextIteration,
+    hasTriggeredEraseForNextIteration
+  );
 
   _fineGridVertices[positionInVertexArray].updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
 
@@ -217,7 +186,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   #endif
 
   if (StudyVertex) {
-    _threadLocalEventHandle.destroyVertex(
+    _eventHandle.destroyVertex(
       _fineGridVertices[positionInArray],
       _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
       _fineGridVerticesEnumerator.getCellSize(),
@@ -244,7 +213,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   const bool InvokeEventAccordingToSpecification = true;
 
   if (InvokeEventForVertex && InvokeEventAccordingToSpecification) {
-    _threadLocalEventHandle.touchVertexLastTime(
+    _eventHandle.touchVertexLastTime(
       _fineGridVertices[positionInArray],
       _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
       _fineGridVerticesEnumerator.getCellSize(),
@@ -264,7 +233,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
 ) {
   assertionNumericalEquals1(_fineGridVertices[positionInVertexArray].getX(), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell), _fineGridVertices[positionInVertexArray] );
 
-  _threadLocalEventHandle.destroyHangingVertex(
+  _eventHandle.destroyHangingVertex(
     _fineGridVertices[positionInVertexArray],
     _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
     _fineGridVerticesEnumerator.getCellSize(),
@@ -285,7 +254,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
     _fineGridVertices[positionInVertexArray].getRefinementControl()          == Vertex::Records::Refining ||
     _fineGridVertices[positionInVertexArray].getCurrentAdjacentCellsHeight() == peano::grid::NotStationaryDueToInvalidation
   ) {
-    _hasRefined = true;
+    _state.updateRefinementHistoryAfterLoad( true, false, false, false );
     dfor2(k)
       const bool takeThisCoarseVertexIntoAccount = peano::grid::SingleLevelEnumerator::doesCoarseGridVertexInfluenceFineGridVertex(k,positionInLocalCell+_fineGridPositionOfCell);
 

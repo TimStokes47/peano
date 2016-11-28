@@ -9,7 +9,7 @@
 #ifdef Asserts
 #include "peano/parallel/loadbalancing/Oracle.h"
 #endif
-
+  
 
 template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator>
 tarch::logging::Log peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::_log( "peano::grid::nodes::loops::LoadVertexLoopBody" );
@@ -35,8 +35,7 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   int*                                      counter,
   VertexStack&                              vertexStack,
   EventHandle&                              eventHandle,
-  peano::geometry::Geometry&                geometry,
-  bool                                      runsInParallel
+  peano::geometry::Geometry&                geometry
 ):
   _state(state),
   _fineGridVertices(fineGridVertices),
@@ -48,68 +47,7 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   _counter(counter),
   _vertexStack(vertexStack),
   _eventHandle(eventHandle),
-  _threadLocalEventHandle(eventHandle),
-  _geometry(geometry),
-  #ifdef TrackGridStatistics
-  _numberOfInnerVertices(0.0),
-  _numberOfBoundaryVertices(0.0),
-  _numberOfOuterVertices(0.0),
-  _numberOfInnerLeafVertices(0.0),
-  _numberOfBoundaryLeafVertices(0.0),
-  _numberOfOuterLeafVertices(0.0),
-  #endif
-  _hasRefined(false),
-  _hasErased(false),
-  _hasFailedToEraseDueToDomainDecomposition(false),
-  _hasChangedVertexState(false),
-  _runsInParallel(runsInParallel) {
-}
-
-
-template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator>
-void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::mergeWithWorkerThread(
-  const LoadVertexLoopBody&  worker
-) {
-  #ifdef TrackGridStatistics
-  _numberOfInnerVertices    += worker._numberOfInnerVertices;
-  _numberOfBoundaryVertices += worker._numberOfBoundaryVertices;
-  _numberOfOuterVertices    += worker._numberOfOuterVertices;
-
-  _numberOfInnerLeafVertices    += worker._numberOfInnerLeafVertices;
-  _numberOfBoundaryLeafVertices += worker._numberOfBoundaryLeafVertices;
-  _numberOfOuterLeafVertices    += worker._numberOfOuterLeafVertices;
-  #endif
-
-  _hasRefined |= worker._hasRefined;
-  _hasErased  |= worker._hasErased;
-  _hasFailedToEraseDueToDomainDecomposition |= worker._hasFailedToEraseDueToDomainDecomposition;
-  _hasChangedVertexState                    |= worker._hasChangedVertexState;
-
-  #if defined(SharedMemoryParallelisation)
-  _threadLocalEventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
-  #endif
-}
-
-
-template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator>
-void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::mergeIntoMasterThread(
-  LoadVertexLoopBody&  master
-) const {
-  #ifdef TrackGridStatistics
-  _state.incNumberOfInnerVertices(_numberOfInnerVertices);
-  _state.incNumberOfBoundaryVertices(_numberOfBoundaryVertices);
-  _state.incNumberOfOuterVertices(_numberOfOuterVertices);
-
-  _state.incNumberOfInnerLeafVertices(_numberOfInnerLeafVertices);
-  _state.incNumberOfBoundaryLeafVertices(_numberOfBoundaryLeafVertices);
-  _state.incNumberOfOuterLeafVertices(_numberOfOuterLeafVertices);
-  #endif
-
-  _state.updateRefinementHistoryAfterLoad( _hasRefined, _hasErased, _hasFailedToEraseDueToDomainDecomposition, _hasChangedVertexState );
-
-  #if defined(SharedMemoryParallelisation)
-  _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
-  #endif
+  _geometry(geometry) {
 }
 
 
@@ -256,12 +194,16 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   #ifdef Parallel
   assertion( peano::parallel::SendReceiveBufferPool::getInstance().deploysValidData() || !_fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank() );
   #endif
+  
+  bool hasErased = false;
+  bool hasRefined = false;
+  bool hasFailedToEraseDueToDomainDecomposition = false;
 
   if (counterIsDelete) {
     _fineGridVertices[positionInVertexArray].rollbackRefinementOrEraseTriggered();
     if ( _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined) {
       _fineGridVertices[positionInVertexArray].erase();
-      _hasErased = true;
+      hasErased = true;
     }
     _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex erasing as parent is erasing: " << _fineGridVertices[positionInVertexArray].toString() );
@@ -269,20 +211,22 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   const bool                                         switchedIntoRefining = _fineGridVertices[positionInVertexArray].switchRefinementTriggeredToRefining();
   const typename Vertex::SwitchEraseTriggeredResult  switchedIntoErasing  = _fineGridVertices[positionInVertexArray].switchEraseTriggeredToErasing();
   if ( switchedIntoRefining ) {
-    _hasRefined = true;
+    hasRefined = true;
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex refining: " << _fineGridVertices[positionInVertexArray].toString() );
   }
   if ( switchedIntoErasing == Vertex::SwitchedIntoErasing ) {
-    _hasErased = true;
+    hasErased = true;
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex erasing: " << _fineGridVertices[positionInVertexArray].toString() );
   }
   if ( switchedIntoErasing == Vertex::WasntAbleToSwitchDueToFork ) {
-    _hasFailedToEraseDueToDomainDecomposition = true;
+    hasFailedToEraseDueToDomainDecomposition = true;
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "tried to make vertex erasing but could not due to fork: " << _fineGridVertices[positionInVertexArray].toString() );
     #if !defined(Parallel)
     assertionMsg( false, "branch is not reachable in serial mode" );
     #endif
   }
+
+  _state.updateRefinementHistoryAfterLoad( hasRefined, hasErased, hasFailedToEraseDueToDomainDecomposition, false );
 
   #ifdef Parallel
   assertion1(
@@ -321,7 +265,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   );
   #endif
 
-  _threadLocalEventHandle.createHangingVertex(
+  _eventHandle.createHangingVertex(
     _fineGridVertices[positionInVertexArray],
     _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
     _fineGridVerticesEnumerator.getCellSize(),
@@ -386,14 +330,14 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
           &&
           _fineGridVerticesEnumerator.getLevel()>CoarsestRegularInnerAndOuterGridLevel
         ) {
-          _hasChangedVertexState = true;
+          _state.updateRefinementHistoryAfterLoad( false, false, false, true );
           _fineGridVertices[positionInVertexArray].erase();
           logDebug( "operator()", "erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity is set to " << peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary() );
         }
         break;
       case peano::geometry::GeometryHelper::CreateInnerVertex:
         logDebug( "updateGeometry(...)", "CreateInnerVertex" );
-        _threadLocalEventHandle.createInnerVertex(
+        _eventHandle.createInnerVertex(
           _fineGridVertices[positionInVertexArray],
           _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
           _fineGridVerticesEnumerator.getCellSize(),
@@ -404,12 +348,12 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         );
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToInside();
-        _hasChangedVertexState = true;
+        _state.updateRefinementHistoryAfterLoad( false, false, false, true );
         logDebug( "load_vertices()", "switch vertex to inside. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
         break;
       case peano::geometry::GeometryHelper::CreateBoundaryVertex:
         logDebug( "updateGeometry(...)", "CreateBoundaryVertex" );
-        _threadLocalEventHandle.createBoundaryVertex(
+        _eventHandle.createBoundaryVertex(
           _fineGridVertices[positionInVertexArray],
           _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
           _fineGridVerticesEnumerator.getCellSize(),
@@ -420,11 +364,11 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         );
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToBoundary();
-        _hasChangedVertexState = true;
+        _state.updateRefinementHistoryAfterLoad( false, false, false, true );
         break;
       case peano::geometry::GeometryHelper::DestroyVertexAndSwitchToOutside:
         logDebug( "updateGeometry(...)", "DestroyVertexAndSwitchToOutside" );
-        _threadLocalEventHandle.destroyVertex(
+        _eventHandle.destroyVertex(
           _fineGridVertices[positionInVertexArray],
           _fineGridVerticesEnumerator.getVertexPosition(),
           _fineGridVerticesEnumerator.getCellSize(),
@@ -435,11 +379,11 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         );
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToOutside();
-        _hasChangedVertexState = true;
+        _state.updateRefinementHistoryAfterLoad( false, false, false, true );
         break;
       case peano::geometry::GeometryHelper::DestroyVertexAndEraseItAndSwitchToOutside:
         logDebug( "updateGeometry(...)", "DestroyVertexAndEraseItAndSwitchToOutside" );
-        _threadLocalEventHandle.destroyVertex(
+        _eventHandle.destroyVertex(
           _fineGridVertices[positionInVertexArray],
           _fineGridVerticesEnumerator.getVertexPosition(),
           _fineGridVerticesEnumerator.getCellSize(),
@@ -457,7 +401,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         ) {
           _fineGridVertices[positionInVertexArray].erase();
         }
-        _hasChangedVertexState = true;
+        _state.updateRefinementHistoryAfterLoad( false, false, false, true );
         break;
     }
   }
@@ -485,7 +429,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   const bool InvokeEventAccordingToSpecification = true;
 
   if (InvokeEventForVertex && InvokeEventAccordingToSpecification) {
-    _threadLocalEventHandle.touchVertexFirstTime(
+    _eventHandle.touchVertexFirstTime(
       _fineGridVertices[positionInVertexArray],
       _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
       _fineGridVerticesEnumerator.getCellSize(),
@@ -496,29 +440,29 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     );
     #ifdef TrackGridStatistics
     if (_fineGridVertices[positionInVertexArray].isBoundary() && _fineGridVertices[positionInVertexArray].getRefinementControl()!=Vertex::Records::Unrefined) {
-      _numberOfBoundaryVertices += 1.0;
+      _state.incNumberOfBoundaryVertices( 1.0 );
     }
     else if (_fineGridVertices[positionInVertexArray].isBoundary()) {
-      _numberOfBoundaryVertices     += 1.0;
-      _numberOfBoundaryLeafVertices += 1.0;
+      _state.incNumberOfBoundaryVertices( 1.0 );
+      _state.incNumberOfBoundaryLeafVertices( 1.0 );
     }
     else if (_fineGridVertices[positionInVertexArray].getRefinementControl()!=Vertex::Records::Unrefined) {
-      _numberOfInnerVertices += 1.0;
+      _state.incNumberOfInnerVertices( 1.0 );
     }
     else {
-      _numberOfInnerVertices     += 1.0;
-      _numberOfInnerLeafVertices += 1.0;
+      _state.incNumberOfInnerVertices( 1.0 );
+      _state.incNumberOfInnerLeafVertices( 1.0 );
     }
     #endif
   }
   else {
     #ifdef TrackGridStatistics
     if (_fineGridVertices[positionInVertexArray].getRefinementControl()!=Vertex::Records::Unrefined) {
-      _numberOfOuterVertices += 1.0;
+      _state.incNumberOfOuterVertices( 1.0 );
     }
     else {
-      _numberOfOuterVertices     += 1.0;
-      _numberOfOuterLeafVertices += 1.0;
+      _state.incNumberOfOuterVertices( 1.0 );
+      _state.incNumberOfOuterLeafVertices( 1.0 );
     }
     #endif
   }
