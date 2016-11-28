@@ -380,6 +380,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
       tarch::la::Vector<DIMENSIONS,int>(4),
       loopBody,
       0,
+      peano::datatraversal::dForLoop<LoopBody>::Serial,
       false
     );
   }
