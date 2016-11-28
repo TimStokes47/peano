@@ -64,14 +64,6 @@ class peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch {
 
     peano::grid::RegularGridContainer<Vertex,Cell>&  _regularGridContainer;
 
-    #ifdef TrackGridStatistics
-    double _numberOfInnerCells;
-    double _numberOfOuterCells;
-
-    double _numberOfInnerLeafCells;
-    double _numberOfOuterLeafCells;
-    #endif
-
     UnrolledLevelEnumerator  _fineGridEnumerator;
     UnrolledLevelEnumerator  _coarseGridEnumerator;
   public:

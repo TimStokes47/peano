@@ -23,12 +23,6 @@ peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cel
   _eventHandle(eventHandle),
   _threadLocalEventHandle(eventHandle),
   _regularGridContainer(regularGridContainer),
-  #ifdef TrackGridStatistics
-  _numberOfInnerCells(0.0),
-  _numberOfOuterCells(0.0),
-  _numberOfInnerLeafCells(0.0),
-  _numberOfOuterLeafCells(0.0),
-  #endif
   _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(1)),
   _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(0)) {
 }
@@ -43,12 +37,6 @@ peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cel
   _eventHandle(copy._eventHandle),
   _threadLocalEventHandle(copy._eventHandle),
   _regularGridContainer(copy._regularGridContainer),
-  #ifdef TrackGridStatistics
-  _numberOfInnerCells(0.0),
-  _numberOfOuterCells(0.0),
-  _numberOfInnerLeafCells(0.0),
-  _numberOfOuterLeafCells(0.0),
-  #endif
   _fineGridEnumerator(copy._fineGridEnumerator),
   _coarseGridEnumerator(copy._coarseGridEnumerator) {
 }
@@ -67,14 +55,6 @@ template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeWithWorkerThread( 
   const CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>&  worker 
 ) {
-  #ifdef TrackGridStatistics
-  _numberOfInnerCells   += worker._numberOfInnerCells;
-  _numberOfOuterCells   += worker._numberOfOuterCells;
-
-  _numberOfInnerLeafCells += _numberOfInnerLeafCells;
-  _numberOfOuterLeafCells += _numberOfOuterLeafCells;
-  #endif
-
   #if defined(SharedMemoryParallelisation)
   _threadLocalEventHandle.mergeWithWorkerThread( worker._threadLocalEventHandle );
   #endif
@@ -84,14 +64,6 @@ void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Verte
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeIntoMasterThread( CallEnterCellLoopBodyOnRegularRefinedPatch&  master ) const {
   tarch::multicore::Lock lock(peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::_semaphore);
-
-  #ifdef TrackGridStatistics
-  master._state.incNumberOfInnerCells(_numberOfInnerCells);
-  master._state.incNumberOfOuterCells(_numberOfOuterCells);
-
-  master._state.incNumberOfInnerLeafCells(_numberOfInnerLeafCells);
-  master._state.incNumberOfOuterLeafCells(_numberOfOuterLeafCells);
-  #endif
 
   #if defined(SharedMemoryParallelisation)
   _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
@@ -117,15 +89,6 @@ void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Verte
   Cell& currentCell = _regularGridContainer.getCell(_level,fineGridCellIndex);
 
   if (currentCell.isInside()) {
-    #ifdef TrackGridStatistics
-    if (currentCell.isRefined()) {
-      _numberOfInnerCells++;
-    }
-    else {
-      _numberOfInnerLeafCells++;
-    }
-    #endif
-
     _threadLocalEventHandle.enterCell(
       currentCell,
       _regularGridContainer.getVertex(_level),
@@ -135,16 +98,6 @@ void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Verte
       _regularGridContainer.getCell(_level-1,coarseGridCellIndex),
       positionWithinNextCoarserCell
     );
-  }
-  else {
-    #ifdef TrackGridStatistics
-    if (currentCell.isRefined()) {
-      _numberOfOuterCells++;
-    }
-    else {
-      _numberOfOuterLeafCells++;
-    }
-    #endif
   }
 }
 
