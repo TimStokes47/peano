@@ -49,6 +49,15 @@ namespace peano {
  * If two mappings are combined one holding AvoidCoarseGridRaces and one holding
  * RunConcurrentlyOnFineGrid, the combination holds AvoidCoarseGridRaces.
  *
+ * The state boolean is actually only required if you run the code with
+ * shared memory parallelisation. On a multicore chip, the kernel may invoke
+ * events in parallel. If a mapping's operation modifies the state, the code
+ * has to copy the mapping to each thread before it starts the parallel
+ * invocation, and it has to reduce the mappings via mergeWithWorker(...)
+ * in the end. If the operations do not alter the state, we can skip the
+ * copying and the reduction. We basically may assume that the event is
+ * const.
+ *
  * @author Tobias Weinzierl
  */
 struct peano::MappingSpecification {
@@ -56,15 +65,15 @@ struct peano::MappingSpecification {
     Nop, OnlyLeaves, WholeTree
   };
 
-  // @todo Noch mehr Varianten rein mit QuickSched
   enum Multithreading {
     Serial, AvoidCoarseGridRaces, AvoidFineGridRaces, RunConcurrentlyOnFineGrid
   };
 
   Manipulates     manipulates;
   Multithreading  multithreading;
+  bool            altersState;
 
-  MappingSpecification(Manipulates manipulates_, Multithreading multithreading_);
+  MappingSpecification(Manipulates manipulates_, Multithreading multithreading_, bool altersState_);
 
   /**
    * Most general specification

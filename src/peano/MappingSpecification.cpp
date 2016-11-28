@@ -6,9 +6,10 @@
 #include <sstream>
 
 
-peano::MappingSpecification::MappingSpecification(peano::MappingSpecification::Manipulates manipulates_, peano::MappingSpecification::Multithreading multithreading_):
+peano::MappingSpecification::MappingSpecification(peano::MappingSpecification::Manipulates manipulates_, peano::MappingSpecification::Multithreading multithreading_, bool altersState_):
   manipulates(manipulates_),
-  multithreading(multithreading_) {
+  multithreading(multithreading_),
+  altersState(altersState_) {
 }
 
 
@@ -42,6 +43,7 @@ std::string peano::MappingSpecification::toString() const {
       msg << "concurrently on fine grid";
       break;
   }
+  msg << ",alters-state=" << altersState;
   msg << ")";
   return msg.str();
 }
@@ -90,12 +92,14 @@ peano::MappingSpecification operator&(const peano::MappingSpecification& lhs, co
     multithreading = peano::MappingSpecification::Serial;
   }
 
-  const peano::MappingSpecification result(manipulates,multithreading);
+  const bool altersState = (rhs.manipulates!=peano::MappingSpecification::Nop && rhs.altersState) | (lhs.manipulates!=peano::MappingSpecification::Nop && lhs.altersState);
+
+  const peano::MappingSpecification result(manipulates,multithreading,altersState);
   logTraceOutWith1Argument("operator&(...)",result.toString());
   return result;
 }
 
 
 peano::MappingSpecification peano::MappingSpecification::getMinimalSpecification() {
-  return MappingSpecification(Nop,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
+  return MappingSpecification(Nop,peano::MappingSpecification::RunConcurrentlyOnFineGrid,false);
 }
