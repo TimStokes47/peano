@@ -15,10 +15,6 @@ template <class Vertex, class Cell, class State, class VertexStack, class EventH
 tarch::logging::Log peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::_log( "peano::grid::nodes::loops::LoadVertexLoopBody" );
 
 
-template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator>
-tarch::multicore::BooleanSemaphore peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::_semaphore;
-
-
 #ifdef Parallel
 #include <set>
 
@@ -71,13 +67,34 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator>
-peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::~LoadVertexLoopBody() {
-  tarch::multicore::Lock lock(_semaphore,false);
+void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::mergeWithWorkerThread(
+  const LoadVertexLoopBody&  worker
+) {
+  #ifdef TrackGridStatistics
+  _numberOfInnerVertices    += worker._numberOfInnerVertices;
+  _numberOfBoundaryVertices += worker._numberOfBoundaryVertices;
+  _numberOfOuterVertices    += worker._numberOfOuterVertices;
 
-  if (_runsInParallel) {
-    lock.lock();
-  }
+  _numberOfInnerLeafVertices    += worker._numberOfInnerLeafVertices;
+  _numberOfBoundaryLeafVertices += worker._numberOfBoundaryLeafVertices;
+  _numberOfOuterLeafVertices    += worker._numberOfOuterLeafVertices;
+  #endif
 
+  _hasRefined |= worker._hasRefined;
+  _hasErased  |= worker._hasErased;
+  _hasFailedToEraseDueToDomainDecomposition |= worker._hasFailedToEraseDueToDomainDecomposition;
+  _hasChangedVertexState                    |= worker._hasChangedVertexState;
+
+  #if defined(SharedMemoryParallelisation)
+  _threadLocalEventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
+  #endif
+}
+
+
+template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator>
+void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,CellFlagsFromEnumerator>::mergeIntoMasterThread(
+  LoadVertexLoopBody&  master
+) const {
   #ifdef TrackGridStatistics
   _state.incNumberOfInnerVertices(_numberOfInnerVertices);
   _state.incNumberOfBoundaryVertices(_numberOfBoundaryVertices);
@@ -94,7 +111,6 @@ peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,Even
   _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
   #endif
 }
-
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator>

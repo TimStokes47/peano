@@ -41,8 +41,6 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
   private:
     static tarch::logging::Log _log;
 
-    static tarch::multicore::BooleanSemaphore  _semaphore;
-
     State&                                    _state;
     Vertex*                                   _fineGridVertices;
     const SingleLevelEnumerator&              _fineGridVerticesEnumerator;
@@ -254,7 +252,10 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
       bool                                      runsInParallel
     );
 
-    ~LoadVertexLoopBody();
+    ~LoadVertexLoopBody() = default;
+
+    void mergeWithWorkerThread( const LoadVertexLoopBody& worker);
+    void mergeIntoMasterThread(LoadVertexLoopBody&  master) const;
 
     /**
      * Load a Vertex

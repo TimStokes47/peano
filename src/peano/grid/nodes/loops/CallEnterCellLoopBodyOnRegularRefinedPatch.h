@@ -103,7 +103,10 @@ class peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch {
      * assign it to one of these classes but decided to move it do the overall
      * task, i.e. to ascend/descend.
      */
-    ~CallEnterCellLoopBodyOnRegularRefinedPatch();
+    void mergeWithWorkerThread( const CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>& worker);
+    void mergeIntoMasterThread(CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>&  master) const;
+
+    ~CallEnterCellLoopBodyOnRegularRefinedPatch() = default;
 
     void setLevel(int value);
     int getLevel() const;

@@ -53,13 +53,13 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
     int                                        _level;
     const int                                  _treeDepth;
 
-#if defined(SharedMemoryParallelisation)
+    #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
     EventHandle                                                 _threadLocalEventHandle;
-#else
+    #else
     EventHandle&                                                _eventHandle;
     EventHandle&                                                _threadLocalEventHandle;
-#endif
+    #endif
 
     peano::grid::RegularGridContainer<Vertex,Cell>&  _regularGridContainer;
 
@@ -90,6 +90,8 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
       bool&                                            treeRemainsStatic
     );
 
+    ~CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch()  = default;
+
     /**
      * Destructor
      *
@@ -105,7 +107,8 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
      * assign it to one of these classes but decided to move it do the overall
      * task, i.e. to ascend/descend.
      */
-    ~CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch();
+    void mergeWithWorkerThread( const CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch& worker);
+    void mergeIntoMasterThread(CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch&  master) const;
 
     void setLevel(int value);
     int getLevel() const;

@@ -17,14 +17,6 @@ peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch
   _eventHandle(eventHandle),
   _threadLocalEventHandle(eventHandle),
   _regularGridContainer(regularGridContainer),
-  #ifdef TrackGridStatistics
-  _numberOfInnerVertices(0.0),
-  _numberOfBoundaryVertices(0.0),
-  _numberOfOuterVertices(0.0),
-  _numberOfInnerLeafVertices(0.0),
-  _numberOfBoundaryLeafVertices(0.0),
-  _numberOfOuterLeafVertices(0.0),
-  #endif
   _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(1)),
   _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(0)) {
 }
@@ -39,14 +31,6 @@ peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch
   _eventHandle(copy._eventHandle),
   _threadLocalEventHandle(copy._eventHandle),
   _regularGridContainer(copy._regularGridContainer),
-  #ifdef TrackGridStatistics
-  _numberOfInnerVertices(0.0),
-  _numberOfBoundaryVertices(0.0),
-  _numberOfOuterVertices(0.0),
-  _numberOfInnerLeafVertices(0.0),
-  _numberOfBoundaryLeafVertices(0.0),
-  _numberOfOuterLeafVertices(0.0),
-  #endif
   _fineGridEnumerator(copy._fineGridEnumerator),
   _coarseGridEnumerator(copy._coarseGridEnumerator) {
 }
@@ -64,21 +48,19 @@ void peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefined
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
-peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::~CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch() {
+void peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeWithWorkerThread( const CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch&  worker) {
+  #if defined(SharedMemoryParallelisation)
+  _threadLocalEventHandle.mergeWithWorkerThread( worker._threadLocalEventHandle );
+  #endif
+}
+
+
+template <class Vertex, class Cell, class State, class EventHandle>
+void peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeIntoMasterThread( CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch& master ) const {
   tarch::multicore::Lock lock(peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::_semaphore);
 
-  #ifdef TrackGridStatistics
-  _state.incNumberOfInnerVertices(_numberOfInnerVertices);
-  _state.incNumberOfBoundaryVertices(_numberOfBoundaryVertices);
-  _state.incNumberOfOuterVertices(_numberOfOuterVertices);
-
-  _state.incNumberOfInnerLeafVertices(_numberOfInnerLeafVertices);
-  _state.incNumberOfBoundaryLeafVertices(_numberOfBoundaryLeafVertices);
-  _state.incNumberOfOuterLeafVertices(_numberOfOuterLeafVertices);
-  #endif
-
   #if defined(SharedMemoryParallelisation)
-  _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
+  master._eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
   #endif
 }
 
@@ -109,34 +91,6 @@ void peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefined
       _regularGridContainer.getCell(_level-1,coarseGridCellIndex),
       positionWithinNextCoarserCell
     );
-
-    #ifdef TrackGridStatistics
-    if (currentVertex.isBoundary() && currentVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
-      _numberOfBoundaryVertices += 1.0;
-    }
-    else if (currentVertex.isBoundary()) {
-      _numberOfBoundaryVertices     += 1.0;
-      _numberOfBoundaryLeafVertices += 1.0;
-    }
-    else if (currentVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
-      _numberOfInnerVertices += 1.0;
-    }
-    else {
-      _numberOfInnerVertices     += 1.0;
-      _numberOfInnerLeafVertices += 1.0;
-    }
-    #endif
-  }
-  else {
-    #ifdef TrackGridStatistics
-    if (currentVertex.getRefinementControl()!=Vertex::Records::Unrefined) {
-      _numberOfOuterVertices += 1.0;
-    }
-    else {
-      _numberOfOuterVertices     += 1.0;
-      _numberOfOuterLeafVertices += 1.0;
-    }
-    #endif
   }
 }
 

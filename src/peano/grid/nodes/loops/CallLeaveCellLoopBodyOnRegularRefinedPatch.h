@@ -73,9 +73,17 @@ class peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch {
       peano::grid::RegularGridContainer<Vertex,Cell>&   regularGridContainer
     );
 
+    ~CallLeaveCellLoopBodyOnRegularRefinedPatch() = default;
+
+    void setLevel(int value);
+    int getLevel() const;
+
     /**
-     * Destructor
-     *
+     * @see RegularRefined::callTouchVertexFirstTime()
+     */
+    void operator() (const tarch::la::Vector<DIMENSIONS, int>& i);
+
+    /**
      * <h2> Multithreading </h2>
      *
      * We may not use a semaphore of our own, as there's always two different
@@ -88,15 +96,8 @@ class peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch {
      * assign it to one of these classes but decided to move it do the overall
      * task, i.e. to ascend/descend.
      */
-    ~CallLeaveCellLoopBodyOnRegularRefinedPatch();
-
-    void setLevel(int value);
-    int getLevel() const;
-
-    /**
-     * @see RegularRefined::callTouchVertexFirstTime()
-     */
-    void operator() (const tarch::la::Vector<DIMENSIONS, int>& i);
+    void mergeWithWorkerThread( const CallLeaveCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>& workerThread );
+    void mergeIntoMasterThread(CallLeaveCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>&  master) const;
 };
 
 

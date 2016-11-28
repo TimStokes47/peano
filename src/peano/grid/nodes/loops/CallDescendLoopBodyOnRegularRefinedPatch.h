@@ -89,7 +89,10 @@ class peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch {
      * assign it to one of these classes but decided to move it do the overall
      * task, i.e. to ascend/descend.
      */
-    ~CallDescendLoopBodyOnRegularRefinedPatch();
+    void mergeWithWorkerThread( const CallDescendLoopBodyOnRegularRefinedPatch&  worker);
+    void mergeIntoMasterThread(CallDescendLoopBodyOnRegularRefinedPatch&  master) const;
+
+    ~CallDescendLoopBodyOnRegularRefinedPatch() = default;
 
     void setCoarseGridLevel(int value);
     int getCoarseGridLevel() const;

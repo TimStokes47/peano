@@ -96,10 +96,15 @@ class peano::grid::nodes::loops::SetCounterLoopBody {
       int * const                                fineGridCounter
     );
 
+    ~SetCounterLoopBody() = default;
+
     /**
      * Set Counter at i
      */
     void operator() (const tarch::la::Vector<DIMENSIONS,int>& i) const;
+
+    void mergeWithWorkerThread( const SetCounterLoopBody& worker);
+    void mergeIntoMasterThread(SetCounterLoopBody&  master) const;
 };
 
 

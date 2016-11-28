@@ -84,7 +84,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::touchVert
         _touchVertexLastTimeLoopBody,
         grainSize.getGrainSize(),
         colouring,
-        _eventHandle.touchVertexLastTimeSpecification().altersState
+        _eventHandle.touchVertexLastTimeSpecification().altersState && true // last time may always alter the state due to vertex transitions
       );
 
       grainSize.parallelSectionHasTerminated();
@@ -92,8 +92,12 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::touchVert
   }
 
   _gridContainer.haveCalledAllEventsOnThisLevel(level);
-}
 
+  #ifdef TrackGridStatistics
+  _state.incNumberOfInnerVertices( tarch::la::volume(_gridContainer.getNumberOfVertices(level)) );
+  _state.incNumberOfInnerCells( tarch::la::volume(_gridContainer.getNumberOfCells(level)) );
+  #endif
+}
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
@@ -275,7 +279,6 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
   // static information.
   _treeRemainsStatic &= _touchVertexLastTimeLoopBody.getLocalTreeRemainsStatic();
 
-
   if (_treeRemainsStatic) {
     dfor2(i)
       _gridContainer.getVertex(0,iScalar).setCurrentAdjacentCellsHeight(static_cast<peano::grid::CellFlags>(_treeDepth));
@@ -287,4 +290,10 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
       _gridContainer.getVertex(0,iScalar).setCurrentAdjacentCellsHeight(peano::grid::NotStationary);
     enddforx
   }
+
+  #ifdef TrackGridStatistics
+  _state.incNumberOfInnerLeafCells( tarch::la::volume(_gridContainer.getNumberOfCells(_treeDepth)) );
+
+  _state.incNumberOfInnerLeafVertices( tarch::la::volume(_gridContainer.getNumberOfVertices(_treeDepth)) );
+  #endif
 }

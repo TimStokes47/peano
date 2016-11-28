@@ -64,15 +64,33 @@ void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Verte
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
-peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::~CallEnterCellLoopBodyOnRegularRefinedPatch() {
+void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeWithWorkerThread( 
+  const CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>&  worker 
+) {
+  #ifdef TrackGridStatistics
+  _numberOfInnerCells   += worker._numberOfInnerCells;
+  _numberOfOuterCells   += worker._numberOfOuterCells;
+
+  _numberOfInnerLeafCells += _numberOfInnerLeafCells;
+  _numberOfOuterLeafCells += _numberOfOuterLeafCells;
+  #endif
+
+  #if defined(SharedMemoryParallelisation)
+  _threadLocalEventHandle.mergeWithWorkerThread( worker._threadLocalEventHandle );
+  #endif
+}
+
+
+template <class Vertex, class Cell, class State, class EventHandle>
+void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeIntoMasterThread( CallEnterCellLoopBodyOnRegularRefinedPatch&  master ) const {
   tarch::multicore::Lock lock(peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::_semaphore);
 
   #ifdef TrackGridStatistics
-  _state.incNumberOfInnerCells(_numberOfInnerCells);
-  _state.incNumberOfOuterCells(_numberOfOuterCells);
+  master._state.incNumberOfInnerCells(_numberOfInnerCells);
+  master._state.incNumberOfOuterCells(_numberOfOuterCells);
 
-  _state.incNumberOfInnerLeafCells(_numberOfInnerLeafCells);
-  _state.incNumberOfOuterLeafCells(_numberOfOuterLeafCells);
+  master._state.incNumberOfInnerLeafCells(_numberOfInnerLeafCells);
+  master._state.incNumberOfOuterLeafCells(_numberOfOuterLeafCells);
   #endif
 
   #if defined(SharedMemoryParallelisation)

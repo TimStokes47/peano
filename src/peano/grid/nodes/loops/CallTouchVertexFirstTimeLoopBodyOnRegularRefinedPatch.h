@@ -64,16 +64,6 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
 
     peano::grid::RegularGridContainer<Vertex,Cell>&  _regularGridContainer;
 
-    #ifdef TrackGridStatistics
-    double _numberOfInnerVertices;
-    double _numberOfBoundaryVertices;
-    double _numberOfOuterVertices;
-
-    double _numberOfInnerLeafVertices;
-    double _numberOfBoundaryLeafVertices;
-    double _numberOfOuterLeafVertices;
-    #endif
-
     UnrolledLevelEnumerator  _fineGridEnumerator;
     UnrolledLevelEnumerator  _coarseGridEnumerator;
 
@@ -113,7 +103,10 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
      * assign it to one of these classes but decided to move it do the overall
      * task, i.e. to ascend/descend.
      */
-    ~CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch();
+    void mergeWithWorkerThread( const CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch& worker);
+    void mergeIntoMasterThread(CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch&  master) const;
+
+    ~CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch() = default;
 
     void setLevel(int value);
     int getLevel() const;

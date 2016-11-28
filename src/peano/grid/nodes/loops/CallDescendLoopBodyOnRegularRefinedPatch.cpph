@@ -36,11 +36,19 @@ void peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch<Vertex,
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
-peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::~CallDescendLoopBodyOnRegularRefinedPatch() {
+void peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeWithWorkerThread( const CallDescendLoopBodyOnRegularRefinedPatch& worker ) {
+  #if defined(SharedMemoryParallelisation)
+  _threadLocalEventHandle.mergeWithWorkerThread( worker._threadLocalEventHandle );
+  #endif
+}
+
+
+template <class Vertex, class Cell, class State, class EventHandle>
+void peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeIntoMasterThread( CallDescendLoopBodyOnRegularRefinedPatch& master ) const {
   #if defined(SharedMemoryParallelisation)
   tarch::multicore::Lock lock(peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::_semaphore);
 
-  _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
+  master._eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
   #endif
 }
 

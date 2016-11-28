@@ -42,13 +42,27 @@ void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedP
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
-peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::~CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch() {
-  tarch::multicore::Lock lock(peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::_semaphore);
-
-  _treeRemainsStatic      &= _localTreeRemainsStatic;
+void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeWithWorkerThread(
+  const  CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch&  worker
+) {
+  _localTreeRemainsStatic      &= worker._localTreeRemainsStatic;
 
   #if defined(SharedMemoryParallelisation)
-  _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
+  _threadLocalEventHandle.mergeWithWorkerThread( worker._threadLocalEventHandle );
+  #endif
+}
+
+
+template <class Vertex, class Cell, class State, class EventHandle>
+void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeIntoMasterThread(
+  CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch&  master
+) const {
+  tarch::multicore::Lock lock(peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::_semaphore);
+
+  master._treeRemainsStatic      &= _localTreeRemainsStatic;
+
+  #if defined(SharedMemoryParallelisation)
+  master._eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
   #endif
 }
 

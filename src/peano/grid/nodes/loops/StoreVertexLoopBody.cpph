@@ -8,10 +8,6 @@ template <class Vertex, class Cell, class State, class VertexStack, class EventH
 tarch::logging::Log peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle, CellFlagsFromEnumerator >::_log( "peano::grid::nodes::loops::StoreVertexLoopBody" );
 
 
-template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator >
-tarch::multicore::BooleanSemaphore peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle, CellFlagsFromEnumerator >::_semaphore;
-
-
 #ifdef Parallel
 #include <set>
 
@@ -54,22 +50,30 @@ peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,Eve
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator >
-peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle, CellFlagsFromEnumerator >::~StoreVertexLoopBody() {
-  tarch::multicore::Lock lock(_semaphore,false);
+void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle, CellFlagsFromEnumerator >::mergeIntoMasterThread(
+  StoreVertexLoopBody&  master
+) const {
+  master._state.updateRefinementHistoryAfterLoad( _hasRefined, false, false, false );
 
-  if (_runsInParallel) {
-    lock.lock();
-  }
-
-  _state.updateRefinementHistoryAfterLoad( _hasRefined, false, false, false );
-
-  _state.updateRefinementHistoryBeforeStore(
+  master._state.updateRefinementHistoryBeforeStore(
     _hasTriggeredRefinementForNextIteration,
     _hasTriggeredEraseForNextIteration
   );
 
   #if defined(SharedMemoryParallelisation)
   _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
+  #endif
+}
+
+
+template <class Vertex, class Cell, class State, class VertexStack, class EventHandle, int CellFlagsFromEnumerator >
+void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle, CellFlagsFromEnumerator >::mergeWithWorkerThread( const StoreVertexLoopBody&  worker ) {
+  _hasRefined                             |= worker._hasRefined;
+  _hasTriggeredRefinementForNextIteration |= worker._hasTriggeredRefinementForNextIteration;
+  _hasTriggeredEraseForNextIteration      |= worker._hasTriggeredEraseForNextIteration;
+
+  #if defined(SharedMemoryParallelisation)
+  _threadLocalEventHandle.mergeWithWorkerThread( worker._threadLocalEventHandle );
   #endif
 }
 
