@@ -79,7 +79,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
         NumberOfVertices,
         _touchVertexFirstTimeLoopBody,
         0,
-        colouring
+        peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial,
+        true
       );
     }
     else {
@@ -92,7 +93,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
         NumberOfVertices,
         _touchVertexFirstTimeLoopBody,
         grainSize.getGrainSize(),
-        colouring
+        colouring,
+        _eventHandle.touchVertexFirstTimeSpecification().altersState
       );
 
       grainSize.parallelSectionHasTerminated();
@@ -133,7 +135,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
     assertion( colouring>=0 );
 
     if (
-      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial
+      colouring==peano::datatraversal::dForLoop<EnterCellLoopBody>::Serial
       ||
       problemSize==0
     ) {
@@ -141,7 +143,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
         NumberOfCells,
         _enterCellLoopBody,
         0,
-        colouring
+        peano::datatraversal::dForLoop<EnterCellLoopBody>::Serial,
+        true
       );
     }
     else {
@@ -154,7 +157,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
         NumberOfCells,
         _enterCellLoopBody,
         grainSize.getGrainSize(),
-        colouring
+        colouring,
+        _eventHandle.enterCellSpecification().altersState
       );
 
       grainSize.parallelSectionHasTerminated();
@@ -194,7 +198,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
     assertion( colouring>=0 );
 
     if (
-      colouring==peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial
+      colouring==peano::datatraversal::dForLoop<DescendLoopBody>::Serial
       ||
       problemSize==0
     ) {
@@ -202,7 +206,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
         NumberOfCoarseGridCells,
         _descendLoopBody,
         0,
-        colouring
+        peano::datatraversal::dForLoop<DescendLoopBody>::Serial,
+        true
       );
     }
     else {
@@ -215,7 +220,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
         NumberOfCoarseGridCells,
         _descendLoopBody,
         sharedMemoryGrainSize.getGrainSize(),
-        colouring
+        colouring,
+        _eventHandle.descendSpecification().altersState
       );
 
       sharedMemoryGrainSize.parallelSectionHasTerminated();
