@@ -63,7 +63,7 @@ namespace peano {
  * omitted.
  *
  * We finally emphasise that thread merges in this code are done in two steps.
- * The loop class craetes copies of the loop body and merges those guys back
+ * The loop class creates copies of the loop body and merges those guys back
  * via mergeWithWorkerThread(). At the very end, i.e. after the very last
  * thread has terminated, it then merges back this thread into the prototype
  * (original loop body handed over) via mergeIntoMasterThread(). This allows

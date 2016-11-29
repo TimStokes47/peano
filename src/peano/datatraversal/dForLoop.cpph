@@ -264,7 +264,7 @@ void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::join(const dFor
 
 template <class LoopBody>
 void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::mergeIntoMasterThread(LoopBody&  originalLoopBody) const {
-  _loopBody.mergeIntoMasterThread(originalLoopBody);
+  originalLoopBody.mergeWithWorkerThread(_loopBody);
 }
 
 
