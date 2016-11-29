@@ -22,8 +22,7 @@ peano::grid::nodes::tasks::InvokeLeaveCell< Vertex, Cell, State, EventHandle >::
   _coarseGridVertices(coarseGridVertices),
   _coarseGridVerticesEnumerator(coarseGridVerticesEnumerator),
   _fineGridPositionOfCell(fineGridPositionOfCell),
-  _eventHandle(eventHandle),
-  _threadLocalEventHandle(eventHandle) {
+  _eventHandle(eventHandle) {
 }
 
 
@@ -39,10 +38,10 @@ void peano::grid::nodes::tasks::InvokeLeaveCell< Vertex, Cell, State, EventHandl
   // vertices are refined are to be excluded. This check is rather expensive,
   // so I do that simple one.
   const bool InvokeEventAccordingToSpecification =
-    _threadLocalEventHandle.leaveCellSpecification().manipulates != peano::MappingSpecification::Nop;
+    _eventHandle.leaveCellSpecification().manipulates != peano::MappingSpecification::Nop;
 
   if (invokeEvent && InvokeEventAccordingToSpecification) {
-    _threadLocalEventHandle.leaveCell(
+    _eventHandle.leaveCell(
       _fineGridCell,
       _fineGridVertices,
       _fineGridVerticesEnumerator,
@@ -52,12 +51,4 @@ void peano::grid::nodes::tasks::InvokeLeaveCell< Vertex, Cell, State, EventHandl
       _fineGridPositionOfCell
     );
   }
-}
-
-
-template < class Vertex, class Cell, class State, class EventHandle>
-peano::grid::nodes::tasks::InvokeLeaveCell< Vertex, Cell, State, EventHandle >::~InvokeLeaveCell() {
-  #if defined(SharedMemoryParallelisation)
-  _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
-  #endif
 }

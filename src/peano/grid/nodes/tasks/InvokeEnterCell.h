@@ -32,8 +32,12 @@ namespace peano {
 
 
 
-template < class Vertex, class Cell, class State, class EventHandle
->
+/**
+ * <h2> Thread safety </h2>
+ *
+ * The routine is not thread-safe w.r.t. the state and the event.
+ */
+template < class Vertex, class Cell, class State, class EventHandle>
 class peano::grid::nodes::tasks::InvokeEnterCell {
   private:
     static tarch::logging::Log _log;
@@ -41,28 +45,13 @@ class peano::grid::nodes::tasks::InvokeEnterCell {
     State&                                                      _state;
     Cell&                                                       _fineGridCell;
     Vertex* const                                               _fineGridVertices;
-    const peano::grid::SingleLevelEnumerator&  _fineGridVerticesEnumerator;
+    const peano::grid::SingleLevelEnumerator&                   _fineGridVerticesEnumerator;
     Cell&                                                       _coarseGridCell;
     Vertex* const                                               _coarseGridVertices;
-    const peano::grid::SingleLevelEnumerator&  _coarseGridVerticesEnumerator;
+    const peano::grid::SingleLevelEnumerator&                   _coarseGridVerticesEnumerator;
     const tarch::la::Vector<DIMENSIONS,int>&                    _fineGridPositionOfCell;
 
-    #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
-    EventHandle                                                 _threadLocalEventHandle;
-    #else
-    EventHandle&                                                _eventHandle;
-    EventHandle&                                                _threadLocalEventHandle;
-    #endif
-
-    #ifdef TrackGridStatistics
-    double  _innerCells;
-    double  _outerCells;
-
-    double  _innerLeafCells;
-    double  _outerLeafCells;
-    #endif
-
   public:
     InvokeEnterCell(
       State&                                     state,
@@ -76,7 +65,7 @@ class peano::grid::nodes::tasks::InvokeEnterCell {
       EventHandle&                               eventHandle
     );
 
-    ~InvokeEnterCell();
+    ~InvokeEnterCell() = default;
 
     void operator() ();
 };

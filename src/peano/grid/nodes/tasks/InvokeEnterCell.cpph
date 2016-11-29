@@ -10,10 +10,10 @@ peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::
   State&                                                      state,
   Cell&                                                       fineGridCell,
   Vertex* const                                               fineGridVertices,
-  const peano::grid::SingleLevelEnumerator&  fineGridVerticesEnumerator,
+  const peano::grid::SingleLevelEnumerator&                   fineGridVerticesEnumerator,
   Cell&                                                       coarseGridCell,
   Vertex*const                                                coarseGridVertices,
-  const peano::grid::SingleLevelEnumerator&  coarseGridVerticesEnumerator,
+  const peano::grid::SingleLevelEnumerator&                   coarseGridVerticesEnumerator,
   const tarch::la::Vector<DIMENSIONS,int>&                    fineGridPositionOfCell,
   EventHandle&                                                eventHandle
 ):
@@ -25,16 +25,7 @@ peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::
   _coarseGridVertices(coarseGridVertices),
   _coarseGridVerticesEnumerator(coarseGridVerticesEnumerator),
   _fineGridPositionOfCell(fineGridPositionOfCell),
-  _eventHandle(eventHandle),
-  _threadLocalEventHandle(eventHandle)
-  #ifdef TrackGridStatistics
-  ,
-  _innerCells(0),
-  _outerCells(0),
-  _innerLeafCells(0),
-  _outerLeafCells(0)
-  #endif
-  {
+  _eventHandle(eventHandle) {
 }
 
 template < class Vertex, class Cell, class State, class EventHandle>
@@ -49,7 +40,7 @@ void peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandl
 //    (_threadLocalEventHandle.enterCellSpecification.manipulates == peano::MappingSpecification::ONLY_LEAVES && !_fineGridCell.isRefined());
 
   const bool InvokeEventAccordingToSpecification =
-    _threadLocalEventHandle.enterCellSpecification().manipulates != peano::MappingSpecification::Nop;
+    _eventHandle.enterCellSpecification().manipulates != peano::MappingSpecification::Nop;
 
   #ifdef Parallel
   const bool invokeEvent = _fineGridCell.isInside() && !_fineGridCell.isRemote(_state,true,true);
@@ -93,7 +84,7 @@ void peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandl
 
 
   if (invokeEvent && InvokeEventAccordingToSpecification) {
-    _threadLocalEventHandle.enterCell(
+    _eventHandle.enterCell(
       _fineGridCell,
       _fineGridVertices,
       _fineGridVerticesEnumerator,
@@ -105,39 +96,23 @@ void peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandl
 
     #ifdef TrackGridStatistics
     if (_fineGridCell.isRefined()) {
-      _innerCells += 1.0;
+      _state.incNumberOfInnerCells( 1.0 );
     }
     else {
-      _innerLeafCells += 1.0;
+      _state.incNumberOfInnerLeafCells( 1.0 );
     }
     #endif
   }
   else {
     #ifdef TrackGridStatistics
     if (_fineGridCell.isRefined()) {
-      _outerCells += 1.0;
+      _state.incNumberOfOuterCells( 1.0 );
     }
     else {
-      _outerLeafCells += 1.0;
+      _state.incNumberOfOuterLeafCells( 1.0 );
     }
     #endif
   }
 
   logTraceOut( "operator()" );
-}
-
-
-template < class Vertex, class Cell, class State, class EventHandle>
-peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::~InvokeEnterCell() {
-  #ifdef TrackGridStatistics
-  _state.incNumberOfOuterCells( _outerCells );
-  _state.incNumberOfInnerCells( _innerCells );
-
-  _state.incNumberOfOuterLeafCells( _outerLeafCells );
-  _state.incNumberOfInnerLeafCells( _innerLeafCells );
-  #endif
-
-  #if defined(SharedMemoryParallelisation)
-  _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
-  #endif
 }
