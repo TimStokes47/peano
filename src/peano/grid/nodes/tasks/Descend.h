@@ -58,10 +58,6 @@ class peano::grid::nodes::tasks::Descend {
     EventHandle&           _eventHandle;
     RegularGridContainer&  _gridContainer;
 
-    TouchVertexFirstTimeLoopBody  _touchVertexFirstTimeLoopBody;
-    EnterCellLoopBody             _enterCellLoopBody;
-    DescendLoopBody               _descendLoopBody;
-
     const bool                   _descendProcessRunsInParallelToOtherTasks;
 
     void touchVerticesFirstTime(int level);
@@ -75,6 +71,14 @@ public:
       RegularGridContainer&  gridContainer,
       bool                   descendProcessRunsInParallelToOtherTasks
     );
+
+    /**
+     * The task creates copy of the event through the three loop bodies. Those
+     * guys have to be merged back into the master's loop body in the very end.
+     * As this is a task, there is no explicit join() or merge() operation
+     * provided. We simply hijack the destructor.
+     */
+    ~Descend() = default;
 
     void operator() ();
 };

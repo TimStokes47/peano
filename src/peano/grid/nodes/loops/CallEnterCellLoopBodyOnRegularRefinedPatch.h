@@ -50,9 +50,7 @@ class peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch {
   private:
     static tarch::logging::Log                 _log;
 
-    int                                        _level;
-
-    State&                                     _state;
+    const int                                        _level;
 
     #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
@@ -68,9 +66,9 @@ class peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch {
     UnrolledLevelEnumerator  _coarseGridEnumerator;
   public:
     CallEnterCellLoopBodyOnRegularRefinedPatch(
-      State&                                           state,
       EventHandle&                                     eventHandle,
-      peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
+      peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
+      int                                              level
     );
 
     /**
@@ -96,12 +94,21 @@ class peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch {
      * task, i.e. to ascend/descend.
      */
     void mergeWithWorkerThread( const CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>& worker);
-    void mergeIntoMasterThread(CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>&  master) const;
+
+
+    /**
+     * The Ascend/Descend tasks do copy around events indirectly
+     * through the loop objects. Each of the loop objects can fork
+     * further through parallel loops. These sets of loops do merge
+     * automatically through mergeWithWorkerThread(). What we have
+     * to do in the end is to call the loop to merge back their local
+     * event handle copy into the global event handle. And this has
+     * to be done explicitly - we are not allowed to use the destructor
+     * as also the copies created by the parallel loops are destroyed.
+     */
+    void mergeIntoMasterThread() const;
 
     ~CallEnterCellLoopBodyOnRegularRefinedPatch() = default;
-
-    void setLevel(int value);
-    int getLevel() const;
 
     /**
      * @see RegularRefined::callTouchVertexFirstTime()

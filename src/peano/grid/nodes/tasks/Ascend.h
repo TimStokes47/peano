@@ -55,10 +55,6 @@ class peano::grid::nodes::tasks::Ascend {
     RegularGridContainer&  _gridContainer;
     bool                   _treeRemainsStatic;
 
-    TouchVertexLastTimeLoopBody  _touchVertexLastTimeLoopBody;
-    LeaveCellLoopBody            _leaveCellLoopBody;
-    AscendLoopBody               _ascendLoopBody;
-
     /**
      * !!! Optimisation
      *
@@ -78,6 +74,15 @@ class peano::grid::nodes::tasks::Ascend {
       EventHandle&           eventHandle,
       RegularGridContainer&  gridContainer
     );
+
+    /**
+     * The task creates copy of the event through the three loop bodies. Those
+     * guys have to be merged back into the master's loop body in the very end.
+     * As this is a task, there is no explicit join() or merge() operation
+     * provided. We simply hijack the destructor.
+     */
+    ~Ascend() = default;
+
 
     /**
      *

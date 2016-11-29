@@ -53,7 +53,7 @@ class peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch {
   private:
     static tarch::logging::Log _log;
 
-    int                                        _coarseLevel;
+    const int                                        _coarseLevel;
 
 #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
@@ -72,7 +72,8 @@ class peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch {
   public:
     CallAscendLoopBodyOnRegularRefinedPatch(
       EventHandle&                                      eventHandle,
-      peano::grid::RegularGridContainer<Vertex,Cell>&   regularGridContainer
+      peano::grid::RegularGridContainer<Vertex,Cell>&   regularGridContainer,
+      int                                               level
     );
 
     ~CallAscendLoopBodyOnRegularRefinedPatch() = default;
@@ -95,14 +96,20 @@ class peano::grid::nodes::loops::CallAscendLoopBodyOnRegularRefinedPatch {
     void mergeWithWorkerThread( const CallAscendLoopBodyOnRegularRefinedPatch& worker);
 
     /**
+     * The Ascend/Descend tasks do copy around events indirectly
+     * through the loop objects. Each of the loop objects can fork
+     * further through parallel loops. These sets of loops do merge
+     * automatically through mergeWithWorkerThread(). What we have
+     * to do in the end is to call the loop to merge back their local
+     * event handle copy into the global event handle. And this has
+     * to be done explicitly - we are not allowed to use the destructor
+     * as also the copies created by the parallel loops are destroyed.
+     *
      * We have to protect the merger into the master event handle with a
      * semaphore. If the code uses pipelining, we otherwise might mess up the
      * result.
      */
-    void mergeIntoMasterThread(CallAscendLoopBodyOnRegularRefinedPatch&  master) const;
-
-    void setCoarseGridLevel(int value);
-    int getCoarseGridLevel() const;
+    void mergeIntoMasterThread() const;
 
     /**
      * @see RegularRefined::callTouchVertexFirstTime()

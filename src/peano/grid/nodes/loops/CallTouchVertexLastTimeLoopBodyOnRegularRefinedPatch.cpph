@@ -12,32 +12,17 @@ peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<
   const int                                        treeDepth,
   EventHandle&                                     eventHandle,
   peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
-  bool&                                            treeRemainsStatic
+  bool&                                            treeRemainsStatic,
+  int                                              level
 ):
-  _level(-1),
+  _level(level),
   _treeDepth(treeDepth),
   _eventHandle(eventHandle),
   _threadLocalEventHandle(eventHandle),
   _regularGridContainer(regularGridContainer),
   _treeRemainsStatic(treeRemainsStatic),
-  _localTreeRemainsStatic(treeRemainsStatic),
-  _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(1)),
-  _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(0)) {
-}
-
-
-template <class Vertex, class Cell, class State, class EventHandle>
-void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::setLevel(int level) {
-  assertion( level>=0 );
-
-  _fineGridEnumerator   = _regularGridContainer.getVertexEnumerator(level);
-  _coarseGridEnumerator = _regularGridContainer.getVertexEnumerator(level-1);
-
-  tarch::multicore::Lock lock(peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::_semaphore);
-
-  _level = level;
-  _treeRemainsStatic      &= _localTreeRemainsStatic;
-  _localTreeRemainsStatic  = _treeRemainsStatic;
+  _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(level)),
+  _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(level-1)) {
 }
 
 
@@ -54,15 +39,13 @@ void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedP
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
-void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeIntoMasterThread(
-  CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch&  master
-) const {
+void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeIntoMasterThread() const {
   tarch::multicore::Lock lock(peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::_semaphore);
 
-  master._treeRemainsStatic      &= _localTreeRemainsStatic;
+  _treeRemainsStatic      &= _localTreeRemainsStatic;
 
   #if defined(SharedMemoryParallelisation)
-  master._eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
+  _eventHandle.mergeWithWorkerThread( _threadLocalEventHandle );
   #endif
 }
 
@@ -96,7 +79,7 @@ void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedP
       );
     }
 
-    performVertexTransition(currentVertex,_level);
+    performVertexTransition(currentVertex,_level,_treeDepth,_localTreeRemainsStatic);
   }
 
   logTraceOutWith1Argument( "operator()(...)", currentVertex.toString() );
@@ -104,28 +87,16 @@ void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedP
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
-int peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::getLevel() const {
-  return _level;
-}
-
-template <class Vertex, class Cell, class State, class EventHandle>
-bool peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::getLocalTreeRemainsStatic() const {
-  return _localTreeRemainsStatic;
-}
-
-
-template <class Vertex, class Cell, class State, class EventHandle>
-void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::performVertexTransition( Vertex& vertex, int level ) {
+void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::performVertexTransition( Vertex& vertex, int level, int treeDepth, bool& treeRemainsStatic ) {
   bool const vertexRemainsStatic = vertex.getRefinementControl()==Vertex::Records::Refined || vertex.getRefinementControl()==Vertex::Records::Unrefined;
 
-  _localTreeRemainsStatic &= vertexRemainsStatic;
+  treeRemainsStatic &= vertexRemainsStatic;
 
-  if (!_localTreeRemainsStatic) {
+  if (!treeRemainsStatic) {
     vertex.updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
     vertex.setCurrentAdjacentCellsHeight(peano::grid::NotStationary);
   }
   else {
-    vertex.setCurrentAdjacentCellsHeight(static_cast<peano::grid::CellFlags>(_treeDepth-level));
+    vertex.setCurrentAdjacentCellsHeight(static_cast<peano::grid::CellFlags>(treeDepth-level));
   }
 }
-

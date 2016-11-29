@@ -52,15 +52,15 @@ class peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch {
   private:
     static tarch::logging::Log _log;
 
-    int                                        _coarseLevel;
+    const int                                        _coarseLevel;
 
-#if defined(SharedMemoryParallelisation)
+    #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
     EventHandle                                                 _threadLocalEventHandle;
-#else
+    #else
     EventHandle&                                                _eventHandle;
     EventHandle&                                                _threadLocalEventHandle;
-#endif
+    #endif
 
     peano::grid::RegularGridContainer<Vertex,Cell>&  _regularGridContainer;
 
@@ -71,7 +71,8 @@ class peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch {
   public:
     CallDescendLoopBodyOnRegularRefinedPatch(
       EventHandle&                                      eventHandle,
-      peano::grid::RegularGridContainer<Vertex,Cell>&   regularGridContainer
+      peano::grid::RegularGridContainer<Vertex,Cell>&   regularGridContainer,
+      int                                               level
     );
 
     /**
@@ -90,12 +91,21 @@ class peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch {
      * task, i.e. to ascend/descend.
      */
     void mergeWithWorkerThread( const CallDescendLoopBodyOnRegularRefinedPatch&  worker);
-    void mergeIntoMasterThread(CallDescendLoopBodyOnRegularRefinedPatch&  master) const;
+
+
+    /**
+     * The Ascend/Descend tasks do copy around events indirectly
+     * through the loop objects. Each of the loop objects can fork
+     * further through parallel loops. These sets of loops do merge
+     * automatically through mergeWithWorkerThread(). What we have
+     * to do in the end is to call the loop to merge back their local
+     * event handle copy into the global event handle. And this has
+     * to be done explicitly - we are not allowed to use the destructor
+     * as also the copies created by the parallel loops are destroyed.
+     */
+    void mergeIntoMasterThread() const;
 
     ~CallDescendLoopBodyOnRegularRefinedPatch() = default;
-
-    void setCoarseGridLevel(int value);
-    int getCoarseGridLevel() const;
 
     /**
      * @see RegularRefined::callTouchVertexFirstTime()

@@ -15,23 +15,15 @@ tarch::logging::Log peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRef
 template <class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::CallLeaveCellLoopBodyOnRegularRefinedPatch(
   EventHandle&  eventHandle,
-  peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
+  peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
+  int                                              level
 ):
-  _level(-1),
+  _level(level),
   _eventHandle(eventHandle),
   _threadLocalEventHandle(eventHandle),
   _regularGridContainer(regularGridContainer),
-  _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(1)),
-  _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(0)) {
-}
-
-
-template <class Vertex, class Cell, class State, class EventHandle>
-void peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::setLevel(int level) {
-  assertion( level>=1 );
-  _level = level;
-  _fineGridEnumerator   = _regularGridContainer.getVertexEnumerator(level);
-  _coarseGridEnumerator = _regularGridContainer.getVertexEnumerator(level-1);
+  _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(level)),
+  _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(level-1)) {
 }
 
 
@@ -46,9 +38,7 @@ void peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch<Verte
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
-void peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeIntoMasterThread( 
-  CallLeaveCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>&  master
-) const {
+void peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeIntoMasterThread() const {
   tarch::multicore::Lock lock(peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::_semaphore);
 
   #if defined(SharedMemoryParallelisation)
@@ -85,10 +75,4 @@ void peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch<Verte
        positionWithinNextCoarserCell
     );
   }
-}
-
-
-template <class Vertex, class Cell, class State, class EventHandle>
-int peano::grid::nodes::loops::CallLeaveCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::getLevel() const {
-  return _level;
 }

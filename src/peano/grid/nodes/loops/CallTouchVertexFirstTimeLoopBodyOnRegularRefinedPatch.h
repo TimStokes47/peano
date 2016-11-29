@@ -50,9 +50,7 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
   private:
     static tarch::logging::Log _log;
 
-    int                                        _level;
-
-    State&                                     _state;
+    const int                                        _level;
 
     #if defined(SharedMemoryParallelisation)
     EventHandle&                                                _eventHandle;
@@ -69,9 +67,9 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
 
   public:
     CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch(
-      State&        state,
-      EventHandle&  eventHandle,
-      peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
+      EventHandle&                                     eventHandle,
+      peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
+      int                                              level
     );
 
     /**
@@ -104,12 +102,20 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
      * task, i.e. to ascend/descend.
      */
     void mergeWithWorkerThread( const CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch& worker);
-    void mergeIntoMasterThread(CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch&  master) const;
+
+    /**
+     * The Ascend/Descend tasks do copy around events indirectly
+     * through the loop objects. Each of the loop objects can fork
+     * further through parallel loops. These sets of loops do merge
+     * automatically through mergeWithWorkerThread(). What we have
+     * to do in the end is to call the loop to merge back their local
+     * event handle copy into the global event handle. And this has
+     * to be done explicitly - we are not allowed to use the destructor
+     * as also the copies created by the parallel loops are destroyed.
+     */
+    void mergeIntoMasterThread() const;
 
     ~CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch() = default;
-
-    void setLevel(int value);
-    int getLevel() const;
 
     /**
      * @see RegularRefined::callTouchVertexFirstTime()

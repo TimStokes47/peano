@@ -22,14 +22,11 @@ peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::Ascend(
   _state(state),
   _eventHandle( eventHandle ),
   _gridContainer( gridContainer ),
-  _treeRemainsStatic( true ),
-  _touchVertexLastTimeLoopBody( _treeDepth, _eventHandle, _gridContainer, _treeRemainsStatic ),
-  _leaveCellLoopBody( _eventHandle, _gridContainer ),
-  _ascendLoopBody(_eventHandle, _gridContainer ) {
+  _treeRemainsStatic( true ) {
   assertion( treeDepth>=1 );
 }
 
-
+    
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::touchVerticesLastTime(int level) {
   bool runOperation =
@@ -38,7 +35,8 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::touchVert
 
   if (runOperation) {
     const tarch::la::Vector<DIMENSIONS,int> NumberOfVertices      = _gridContainer.getNumberOfVertices(level);
-    _touchVertexLastTimeLoopBody.setLevel( level );
+
+    TouchVertexLastTimeLoopBody  touchVertexLastTimeLoopBody( _treeDepth, _eventHandle, _gridContainer, _treeRemainsStatic, level );
 
     int  colouring   = -1;
     int  problemSize = tarch::la::volume(NumberOfVertices);
@@ -67,7 +65,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::touchVert
     ) {
       peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>(
         NumberOfVertices,
-        _touchVertexLastTimeLoopBody,
+        touchVertexLastTimeLoopBody,
         0,
         peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>::Serial,
         true
@@ -81,7 +79,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::touchVert
 
       peano::datatraversal::dForLoop<TouchVertexLastTimeLoopBody>(
         NumberOfVertices,
-        _touchVertexLastTimeLoopBody,
+        touchVertexLastTimeLoopBody,
         grainSize.getGrainSize(),
         colouring,
         _eventHandle.touchVertexLastTimeSpecification().altersState && true // last time may always alter the state due to vertex transitions
@@ -89,6 +87,8 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::touchVert
 
       grainSize.parallelSectionHasTerminated();
     }
+    
+    touchVertexLastTimeLoopBody.mergeIntoMasterThread();
   }
 
   _gridContainer.haveCalledAllEventsOnThisLevel(level);
@@ -109,7 +109,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::leaveCell
   if (runOperation) {
     const tarch::la::Vector<DIMENSIONS,int> NumberOfCells = _gridContainer.getNumberOfCells(level);
 
-    _leaveCellLoopBody.setLevel( level );
+    LeaveCellLoopBody  leaveCellLoopBody( _eventHandle, _gridContainer, level );
 
     int  colouring   = -1;
     int  problemSize = tarch::la::volume(NumberOfCells);
@@ -139,7 +139,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::leaveCell
     ) {
       peano::datatraversal::dForLoop<LeaveCellLoopBody> loop(
         NumberOfCells,
-        _leaveCellLoopBody,
+        leaveCellLoopBody,
         0,
         peano::datatraversal::dForLoop<LeaveCellLoopBody>::Serial,
         true
@@ -153,7 +153,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::leaveCell
 
       peano::datatraversal::dForLoop<LeaveCellLoopBody> loop(
         NumberOfCells,
-        _leaveCellLoopBody,
+        leaveCellLoopBody,
         grainSize.getGrainSize(),
         colouring,
         _eventHandle.leaveCellSpecification().altersState
@@ -161,6 +161,8 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::leaveCell
 
       grainSize.parallelSectionHasTerminated();
     }
+    
+    leaveCellLoopBody.mergeIntoMasterThread();
   }
 }
 
@@ -174,7 +176,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::ascend(in
   if (runOperation) {
     const tarch::la::Vector<DIMENSIONS,int> NumberOfCoarseGridCells = _gridContainer.getNumberOfCells(fineGridLevel-1);
 
-    _ascendLoopBody.setCoarseGridLevel(fineGridLevel-1);
+    AscendLoopBody  ascendLoopBody(_eventHandle, _gridContainer, fineGridLevel-1 );
 
     int  colouring   = -1;
     int  problemSize = tarch::la::volume(NumberOfCoarseGridCells);
@@ -202,7 +204,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::ascend(in
     ) {
       peano::datatraversal::dForLoop<AscendLoopBody> loop(
         NumberOfCoarseGridCells,
-        _ascendLoopBody,
+        ascendLoopBody,
         0,
         peano::datatraversal::dForLoop<AscendLoopBody>::Serial,
         true
@@ -216,7 +218,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::ascend(in
 
       peano::datatraversal::dForLoop<AscendLoopBody> loop(
         NumberOfCoarseGridCells,
-        _ascendLoopBody,
+        ascendLoopBody,
         grainSize.getGrainSize(),
         colouring,
         _eventHandle.ascendSpecification().altersState
@@ -224,6 +226,8 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::ascend(in
 
       grainSize.parallelSectionHasTerminated();
     }
+    
+    ascendLoopBody.mergeIntoMasterThread();
   }
 }
 
@@ -238,7 +242,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
     // Das kann dann raus: ResetVertexRegularityStateInAscendForNopMappings
     for (int i=0; i<NumberOfVertices; i++) {
       Vertex&   currentVertex  = _gridContainer.getVertex(_treeDepth,i);
-      _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,_treeDepth);
+      TouchVertexLastTimeLoopBody::performVertexTransition(currentVertex,_treeDepth,_treeDepth,_treeRemainsStatic);
     }
   }
 
@@ -253,7 +257,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
       for (int i=0; i<NumberOfVertices; i++) {
         //if (!_gridContainer.isToBeWrittenToTemporaryStack(level,i) ) {
         Vertex&   currentVertex  = _gridContainer.getVertex(level,i);
-        _touchVertexLastTimeLoopBody.performVertexTransition(currentVertex,level);
+        TouchVertexLastTimeLoopBody::performVertexTransition(currentVertex,level,_treeDepth,_treeRemainsStatic);
       }
     }
   }
@@ -273,11 +277,6 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
       leaveCells(level-1);
     }
   }
-
-  // The original loop body is not destroyed yet, i.e. has not merged. Furthermore,
-  // if _calledTouchVertexLastTime does not hold, this is the only body that has any
-  // static information.
-  _treeRemainsStatic &= _touchVertexLastTimeLoopBody.getLocalTreeRemainsStatic();
 
   if (_treeRemainsStatic) {
     dfor2(i)

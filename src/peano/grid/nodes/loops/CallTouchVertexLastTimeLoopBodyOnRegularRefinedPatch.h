@@ -50,7 +50,7 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
   private:
     static tarch::logging::Log _log;
 
-    int                                        _level;
+    const int                                  _level;
     const int                                  _treeDepth;
 
     #if defined(SharedMemoryParallelisation)
@@ -73,21 +73,14 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
     UnrolledLevelEnumerator  _coarseGridEnumerator;
 
   public:
-    /**
-     * Study refinement state of vertex. If the vertex does not change, the
-     * operation sets the height of the adjacent
-     *
-     * <h2> Thread safety </h2>
-     *
-     * This operation is not thread-safe.
-     */
-    void performVertexTransition( Vertex& vertex, int level );
+    static void performVertexTransition( Vertex& vertex, int level, int treeDepth, bool& treeRemainsStatic );
 
     CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch(
       const int                                        treeDepth,
       EventHandle&                                     eventHandle,
       peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
-      bool&                                            treeRemainsStatic
+      bool&                                            treeRemainsStatic,
+      int                                              level
     );
 
     ~CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch()  = default;
@@ -108,16 +101,18 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
      * task, i.e. to ascend/descend.
      */
     void mergeWithWorkerThread( const CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch& worker);
-    void mergeIntoMasterThread(CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch&  master) const;
-
-    void setLevel(int value);
-    int getLevel() const;
 
     /**
-     * Getter for the local copy of the tree-remains-static-flag to manually copy
-     * it back to the global tree-remains-static-flag.
+     * The Ascend/Descend tasks do copy around events indirectly
+     * through the loop objects. Each of the loop objects can fork
+     * further through parallel loops. These sets of loops do merge
+     * automatically through mergeWithWorkerThread(). What we have
+     * to do in the end is to call the loop to merge back their local
+     * event handle copy into the global event handle. And this has
+     * to be done explicitly - we are not allowed to use the destructor
+     * as also the copies created by the parallel loops are destroyed.
      */
-    bool getLocalTreeRemainsStatic() const;
+    void mergeIntoMasterThread() const;
 
     /**
      * @see RegularRefined::callTouchVertexFirstTime()
