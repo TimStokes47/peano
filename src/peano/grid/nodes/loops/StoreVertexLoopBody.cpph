@@ -84,7 +84,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
         ) {
           if (!_state.isForkTriggeredForRank(*p) && !_state.isJoiningRank(*p) ) {
             Vertex copy = _fineGridVertices[positionInVertexArray];
-            _threadLocalEventHandle.prepareSendToNeighbour(
+            _eventHandle.prepareSendToNeighbour(
               copy,
               *p,
               _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
@@ -102,7 +102,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
       }
       else {
         if ( !_fineGridVertices[positionInVertexArray].isOutside() ) {
-          _threadLocalEventHandle.destroyVertex(
+          _eventHandle.destroyVertex(
             _fineGridVertices[positionInVertexArray],
             _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
             _fineGridVerticesEnumerator.getCellSize(),

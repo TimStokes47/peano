@@ -161,7 +161,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
             _fineGridVertices[positionInVertexArray].setAdjacentSubtreeForksIntoOtherRankFlag();
           }
 
-          _threadLocalEventHandle.mergeWithNeighbour(
+          _eventHandle.mergeWithNeighbour(
             _fineGridVertices[positionInVertexArray],
             receivedVertex,
             currentNeighbourRank,
@@ -231,8 +231,8 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   #ifdef Parallel
   assertion1(
     peano::parallel::SendReceiveBufferPool::getInstance().deploysValidData() ||
-    !_hasRefined ||
-    !_hasErased,
+    !hasRefined ||
+    !hasErased,
     _fineGridVertices[positionInVertexArray].toString()
   );
   #endif
