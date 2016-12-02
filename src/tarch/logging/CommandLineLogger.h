@@ -124,6 +124,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     bool           _hasWrittenToOuputStream;
     int            _iterationCounter;
     std::string    _outputFileName;
+    bool           _quitOnError;
 
 
     /**
@@ -340,6 +341,8 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     virtual void receiveDanglingMessages();
 
     void printFilterListToWarningDevice() const;
+
+    void setQuitOnError(bool value);
 
     /**
      * The command line logger can pipe debug data into an output file instead

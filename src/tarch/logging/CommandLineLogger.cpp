@@ -102,7 +102,8 @@ bool tarch::logging::CommandLineLogger::FilterListEntry::operator!=(const Filter
 tarch::logging::CommandLineLogger::CommandLineLogger():
   _outputStream(nullptr),
   _hasWrittenToOuputStream(false),
-  _iterationCounter(0) {
+  _iterationCounter(0),
+  _quitOnError(false) {
   configureOutputStreams();
   setLogColumnSeparator();
   setLogTimeStamp();
@@ -298,6 +299,10 @@ void tarch::logging::CommandLineLogger::error(double timestamp, const std::strin
     out().flush();
     std::cerr << outputMessage;
     std::cerr.flush();
+  }
+
+  if (_quitOnError) {
+    exit(-1);
   }
 }
 
@@ -553,3 +558,9 @@ void tarch::logging::CommandLineLogger::printFilterListToWarningDevice() const {
     }
   }
 }
+
+
+void tarch::logging::CommandLineLogger::setQuitOnError(bool value) {
+  _quitOnError = value;
+}
+
