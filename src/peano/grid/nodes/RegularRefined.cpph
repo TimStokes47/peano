@@ -173,14 +173,13 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
             growStack,
             peano::datatraversal::autotuning::MethodTrace::SplitLoadVerticesTaskOnRegularStationaryGrid
           );
-
       LoadVerticesTask    loadVerticesTask(
         state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks.getGrainSize()>0,
         transformOracleResult(SplitLoadVerticesTask.getGrainSize(),TreeDepth, growStack)
       );
-      DescendTask         descendTask(       TreeDepth, state, Base::_eventHandle, _regularGridContainer, PipelineTasks.getGrainSize()>0 );
 
       loadVerticesTask();
+
       #if defined(SharedMemoryParallelisation)
       while (
         SplitLoadVerticesTask.getGrainSize()!=0 &&
@@ -189,9 +188,9 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         tarch::multicore::BooleanSemaphore::sendTaskToBack();
       }
       #endif
-
       SplitLoadVerticesTask.parallelSectionHasTerminated();
 
+      DescendTask         descendTask(       TreeDepth, state, Base::_eventHandle, _regularGridContainer, PipelineTasks.getGrainSize()>0 );
       descendTask();
     }
 
@@ -218,7 +217,6 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         transformOracleResult( SplitStoreVerticesTask.getGrainSize(), TreeDepth, growStack )
       );
       AscendTask          ascendTask(        TreeDepth, state, Base::_eventHandle, _regularGridContainer );
-      SplitStoreVerticesTask.parallelSectionHasTerminated();
 
       peano::datatraversal::TaskSet(
         ascendTask,
@@ -226,6 +224,8 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         storeCellsTask,
         PipelineTasks.getGrainSize()
       );
+
+      SplitStoreVerticesTask.parallelSectionHasTerminated();
     }
     else {
       AscendTask ascendTask(TreeDepth, state, Base::_eventHandle, _regularGridContainer );
