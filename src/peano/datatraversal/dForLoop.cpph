@@ -6,7 +6,29 @@
 
 #ifdef SharedTBB
 #include "tbb/parallel_reduce.h"
+
+/**
+ * Per default, TBB versions greater than TBB 2.2 do use the auto partitioner.
+ * An auto partitioner is similar to OpenMP's guided: It splits up the problem 
+ * such that every thread is busy. Whenever work is stolen, the algorithm tries 
+ * to subdivide is further. 
+ * 
+ * We found that this is inefficient for Peano's applications - notably as we 
+ * deploy the responsibility to find good grain sizes (and thus minimalistic 
+ * overheads with good balancing) to the oracles. 
+ * 
+ * A static_partitioner() divides, if possible, all ranges such that all 
+ * threads are busy. As a consequence, work stealing is indirectly disabled. We 
+ * found this variant to scale better than the auto strategy once we have found
+ * proper grain sizes.
+ * 
+ * The optimal strategy however seems to be the simple_partitioner which splits 
+ * up each range until ranges cannot be divided further. As a result, work is 
+ * stolen, but no further range subdivision is happening.
+ */
+#define TBBPartitioner tbb::simple_partitioner()
 #endif
+
 
 #ifdef SharedOMP
 #include <omp.h>
@@ -99,14 +121,16 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
     dForLoopInstanceWithoutReduction  loopInstance(loopBody,0,1);
     tbb::parallel_for(
       dForRange( range, grainSize ),
-      loopInstance
+      loopInstance,
+      TBBPartitioner
     );
   }
   else {
     dForLoopInstance loopInstance(loopBody,0,1);
     tbb::parallel_reduce(
       dForRange( range, grainSize ),
-      loopInstance
+      loopInstance,
+      TBBPartitioner
     );
     loopInstance.mergeIntoMasterThread(loopBody);
   }
@@ -148,7 +172,11 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
       }
       loopInstance.setOffset(k);
       #ifdef SharedTBB
-      tbb::parallel_for( dForRange( localRange, grainSize ), loopInstance );
+      tbb::parallel_for( 
+        dForRange( localRange, grainSize ), 
+        loopInstance,
+        TBBPartitioner
+      );
       #elif SharedOMP
         #warning @Vasco OpenMP vermutlich gnadenlos veraltet
       std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
@@ -178,7 +206,7 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
       }
       loopInstance.setOffset(k);
       #ifdef SharedTBB
-      tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance );
+      tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance, TBBPartitioner );
       #elif SharedOMP
         #warning @Vasco OpenMP vermutlich gnadenlos veraltet
       std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
