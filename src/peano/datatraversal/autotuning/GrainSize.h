@@ -70,6 +70,7 @@ class peano::datatraversal::autotuning::GrainSize {
      */
     ~GrainSize();
     int getGrainSize() const;
+    bool runsParallel() const;
     void parallelSectionHasTerminated();
 };
 

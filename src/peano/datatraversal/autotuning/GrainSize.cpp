@@ -48,6 +48,11 @@ int peano::datatraversal::autotuning::GrainSize::getGrainSize() const {
 }
 
 
+bool peano::datatraversal::autotuning::GrainSize::runsParallel() const {
+  return _grainSize>0;
+}
+
+
 void peano::datatraversal::autotuning::GrainSize::parallelSectionHasTerminated() {
   if ( _useTimer ) {
     assertion( _watch!=nullptr );
