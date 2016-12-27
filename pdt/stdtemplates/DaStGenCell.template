@@ -4,6 +4,7 @@ Extends: ../__DOF_DASTGEN_DEFINITION_CELL__;
 
 
 #include "peano/utils/Globals.h"
+#include "peano/utils/PeanoOptimisations.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
@@ -89,5 +90,9 @@ class __NAMESPACE__::records::Cell {
   #ifdef SharedMemoryParallelisation
   persistent int     numberOfLoadsFromInputStream;
   persistent int     numberOfStoresToOutputStream;
+  #endif
+  
+  #ifdef PersistentRegularSubtrees
+  persistent int     persistentRegularSubtreeIndex;
   #endif
 };
