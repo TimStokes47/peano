@@ -38,3 +38,13 @@
   Do never ever hold a pointer to the state object handed into
   \texttt{beginIteration} or \texttt{endIteration}.
 \end{itemize}
+
+
+\section{Application tailoring}
+
+\begin{itemize}
+  \item {\bf The code requires too much memory}.
+  You can try to compile your code with \texttt{-DnoPersistentRegularSubtrees}.
+  However, this may lead to a severe performance degradation---notably if you
+  run your code with shared memory parallelisation.
+\end{itemize}
