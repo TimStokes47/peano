@@ -37,7 +37,7 @@ namespace peano {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   28/12/2016 12:50
+    * @date   02/01/2017 09:58
     */
    class peano::grid::tests::records::TestVertex { 
       
@@ -62,7 +62,7 @@ namespace peano {
             int _level;
             tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
             bool _adjacentSubtreeForksIntoOtherRank;
-            bool _isAdjacentOrParentingRegularPersistentSubgrid;
+            bool _isParentingRegularPersistentSubgrid;
             /**
              * Generated
              */
@@ -71,7 +71,7 @@ namespace peano {
             /**
              * Generated
              */
-            PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+            PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
             
             /**
              * Generated
@@ -144,12 +144,12 @@ namespace peano {
             /**
              * Generated
              */
-             bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+             bool getIsParentingRegularPersistentSubgrid() const ;
             
             /**
              * Generated
              */
-             void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+             void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
             
             
          };
@@ -173,12 +173,12 @@ namespace peano {
          /**
           * Generated
           */
-         TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+         TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
          
          /**
           * Generated
           */
-         TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+         TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
          
          /**
           * Generated
@@ -284,12 +284,12 @@ namespace peano {
          /**
           * Generated
           */
-          bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+          bool getIsParentingRegularPersistentSubgrid() const ;
          
          /**
           * Generated
           */
-          void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+          void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
          
          /**
           * Generated
@@ -378,7 +378,7 @@ namespace peano {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   28/12/2016 12:50
+       * @date   02/01/2017 09:58
        */
       class peano::grid::tests::records::TestVertexPacked { 
          
@@ -394,7 +394,7 @@ namespace peano {
                int _level;
                tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
                bool _adjacentSubtreeForksIntoOtherRank;
-               bool _isAdjacentOrParentingRegularPersistentSubgrid;
+               bool _isParentingRegularPersistentSubgrid;
                
                /** mapping of records:
                || Member 	|| startbit 	|| length
@@ -412,7 +412,7 @@ namespace peano {
                /**
                 * Generated
                 */
-               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
                
                /**
                 * Generated
@@ -485,12 +485,12 @@ namespace peano {
                /**
                 * Generated
                 */
-                bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                bool getIsParentingRegularPersistentSubgrid() const ;
                
                /**
                 * Generated
                 */
-                void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                
                
             };
@@ -514,12 +514,12 @@ namespace peano {
             /**
              * Generated
              */
-            TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+            TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
             
             /**
              * Generated
              */
-            TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+            TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
             
             /**
              * Generated
@@ -625,12 +625,12 @@ namespace peano {
             /**
              * Generated
              */
-             bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+             bool getIsParentingRegularPersistentSubgrid() const ;
             
             /**
              * Generated
              */
-             void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+             void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
             
             /**
              * Generated
@@ -721,7 +721,7 @@ namespace peano {
           *
           * 		   build date: 09-02-2014 14:40
           *
-          * @date   28/12/2016 12:50
+          * @date   02/01/2017 09:58
           */
          class peano::grid::tests::records::TestVertex { 
             
@@ -744,7 +744,7 @@ namespace peano {
                   InsideOutsideDomain _insideOutsideDomain;
                   tarch::la::Vector<DIMENSIONS,double> _x;
                   int _level;
-                  bool _isAdjacentOrParentingRegularPersistentSubgrid;
+                  bool _isParentingRegularPersistentSubgrid;
                   /**
                    * Generated
                    */
@@ -753,7 +753,7 @@ namespace peano {
                   /**
                    * Generated
                    */
-                  PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                  PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid);
                   
                   /**
                    * Generated
@@ -812,12 +812,12 @@ namespace peano {
                   /**
                    * Generated
                    */
-                   bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                   bool getIsParentingRegularPersistentSubgrid() const ;
                   
                   /**
                    * Generated
                    */
-                   void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                   void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                   
                   
                };
@@ -841,12 +841,12 @@ namespace peano {
                /**
                 * Generated
                 */
-               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid);
                
                /**
                 * Generated
                 */
-               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid);
                
                /**
                 * Generated
@@ -934,12 +934,12 @@ namespace peano {
                /**
                 * Generated
                 */
-                bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                bool getIsParentingRegularPersistentSubgrid() const ;
                
                /**
                 * Generated
                 */
-                void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                
                /**
                 * Generated
@@ -1028,7 +1028,7 @@ namespace peano {
              *
              * 		   build date: 09-02-2014 14:40
              *
-             * @date   28/12/2016 12:50
+             * @date   02/01/2017 09:58
              */
             class peano::grid::tests::records::TestVertexPacked { 
                
@@ -1042,7 +1042,7 @@ namespace peano {
                      int _adjacentCellsHeight;
                      tarch::la::Vector<DIMENSIONS,double> _x;
                      int _level;
-                     bool _isAdjacentOrParentingRegularPersistentSubgrid;
+                     bool _isParentingRegularPersistentSubgrid;
                      
                      /** mapping of records:
                      || Member 	|| startbit 	|| length
@@ -1060,7 +1060,7 @@ namespace peano {
                      /**
                       * Generated
                       */
-                     PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                     PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid);
                      
                      /**
                       * Generated
@@ -1119,12 +1119,12 @@ namespace peano {
                      /**
                       * Generated
                       */
-                      bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                      bool getIsParentingRegularPersistentSubgrid() const ;
                      
                      /**
                       * Generated
                       */
-                      void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                      void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                      
                      
                   };
@@ -1148,12 +1148,12 @@ namespace peano {
                   /**
                    * Generated
                    */
-                  TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                  TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid);
                   
                   /**
                    * Generated
                    */
-                  TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                  TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid);
                   
                   /**
                    * Generated
@@ -1241,12 +1241,12 @@ namespace peano {
                   /**
                    * Generated
                    */
-                   bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                   bool getIsParentingRegularPersistentSubgrid() const ;
                   
                   /**
                    * Generated
                    */
-                   void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                   void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                   
                   /**
                    * Generated
@@ -1338,7 +1338,7 @@ namespace peano {
              *
              * 		   build date: 09-02-2014 14:40
              *
-             * @date   28/12/2016 12:50
+             * @date   02/01/2017 09:58
              */
             class peano::grid::tests::records::TestVertex { 
                
@@ -1658,7 +1658,7 @@ namespace peano {
                 *
                 * 		   build date: 09-02-2014 14:40
                 *
-                * @date   28/12/2016 12:50
+                * @date   02/01/2017 09:58
                 */
                class peano::grid::tests::records::TestVertexPacked { 
                   
@@ -1981,7 +1981,7 @@ namespace peano {
                 *
                 * 		   build date: 09-02-2014 14:40
                 *
-                * @date   28/12/2016 12:50
+                * @date   02/01/2017 09:58
                 */
                class peano::grid::tests::records::TestVertex { 
                   
@@ -2004,7 +2004,7 @@ namespace peano {
                         InsideOutsideDomain _insideOutsideDomain;
                         tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
                         bool _adjacentSubtreeForksIntoOtherRank;
-                        bool _isAdjacentOrParentingRegularPersistentSubgrid;
+                        bool _isParentingRegularPersistentSubgrid;
                         /**
                          * Generated
                          */
@@ -2013,7 +2013,7 @@ namespace peano {
                         /**
                          * Generated
                          */
-                        PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                        PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
                         
                         /**
                          * Generated
@@ -2072,12 +2072,12 @@ namespace peano {
                         /**
                          * Generated
                          */
-                         bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                         bool getIsParentingRegularPersistentSubgrid() const ;
                         
                         /**
                          * Generated
                          */
-                         void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                         void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                         
                         
                      };
@@ -2101,12 +2101,12 @@ namespace peano {
                      /**
                       * Generated
                       */
-                     TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                     TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
                      
                      /**
                       * Generated
                       */
-                     TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                     TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
                      
                      /**
                       * Generated
@@ -2194,12 +2194,12 @@ namespace peano {
                      /**
                       * Generated
                       */
-                      bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                      bool getIsParentingRegularPersistentSubgrid() const ;
                      
                      /**
                       * Generated
                       */
-                      void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                      void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                      
                      /**
                       * Generated
@@ -2288,7 +2288,7 @@ namespace peano {
                    *
                    * 		   build date: 09-02-2014 14:40
                    *
-                   * @date   28/12/2016 12:50
+                   * @date   02/01/2017 09:58
                    */
                   class peano::grid::tests::records::TestVertexPacked { 
                      
@@ -2302,7 +2302,7 @@ namespace peano {
                            int _adjacentCellsHeight;
                            tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
                            bool _adjacentSubtreeForksIntoOtherRank;
-                           bool _isAdjacentOrParentingRegularPersistentSubgrid;
+                           bool _isParentingRegularPersistentSubgrid;
                            
                            /** mapping of records:
                            || Member 	|| startbit 	|| length
@@ -2320,7 +2320,7 @@ namespace peano {
                            /**
                             * Generated
                             */
-                           PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                           PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
                            
                            /**
                             * Generated
@@ -2379,12 +2379,12 @@ namespace peano {
                            /**
                             * Generated
                             */
-                            bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                            bool getIsParentingRegularPersistentSubgrid() const ;
                            
                            /**
                             * Generated
                             */
-                            void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                            void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                            
                            
                         };
@@ -2408,12 +2408,12 @@ namespace peano {
                         /**
                          * Generated
                          */
-                        TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                        TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
                         
                         /**
                          * Generated
                          */
-                        TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                        TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid);
                         
                         /**
                          * Generated
@@ -2501,12 +2501,12 @@ namespace peano {
                         /**
                          * Generated
                          */
-                         bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                         bool getIsParentingRegularPersistentSubgrid() const ;
                         
                         /**
                          * Generated
                          */
-                         void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                         void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                         
                         /**
                          * Generated
@@ -2598,7 +2598,7 @@ namespace peano {
                    *
                    * 		   build date: 09-02-2014 14:40
                    *
-                   * @date   28/12/2016 12:50
+                   * @date   02/01/2017 09:58
                    */
                   class peano::grid::tests::records::TestVertex { 
                      
@@ -2619,7 +2619,7 @@ namespace peano {
                            RefinementControl _refinementControl;
                            int _adjacentCellsHeight;
                            InsideOutsideDomain _insideOutsideDomain;
-                           bool _isAdjacentOrParentingRegularPersistentSubgrid;
+                           bool _isParentingRegularPersistentSubgrid;
                            /**
                             * Generated
                             */
@@ -2628,7 +2628,7 @@ namespace peano {
                            /**
                             * Generated
                             */
-                           PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                           PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid);
                            
                            /**
                             * Generated
@@ -2673,12 +2673,12 @@ namespace peano {
                            /**
                             * Generated
                             */
-                            bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                            bool getIsParentingRegularPersistentSubgrid() const ;
                            
                            /**
                             * Generated
                             */
-                            void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                            void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                            
                            
                         };
@@ -2702,12 +2702,12 @@ namespace peano {
                         /**
                          * Generated
                          */
-                        TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                        TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid);
                         
                         /**
                          * Generated
                          */
-                        TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                        TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid);
                         
                         /**
                          * Generated
@@ -2777,12 +2777,12 @@ namespace peano {
                         /**
                          * Generated
                          */
-                         bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                         bool getIsParentingRegularPersistentSubgrid() const ;
                         
                         /**
                          * Generated
                          */
-                         void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                         void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                         
                         /**
                          * Generated
@@ -2871,7 +2871,7 @@ namespace peano {
                       *
                       * 		   build date: 09-02-2014 14:40
                       *
-                      * @date   28/12/2016 12:50
+                      * @date   02/01/2017 09:58
                       */
                      class peano::grid::tests::records::TestVertexPacked { 
                         
@@ -2883,7 +2883,7 @@ namespace peano {
                            
                            struct PersistentRecords {
                               int _adjacentCellsHeight;
-                              bool _isAdjacentOrParentingRegularPersistentSubgrid;
+                              bool _isParentingRegularPersistentSubgrid;
                               
                               /** mapping of records:
                               || Member 	|| startbit 	|| length
@@ -2901,7 +2901,7 @@ namespace peano {
                               /**
                                * Generated
                                */
-                              PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                              PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid);
                               
                               /**
                                * Generated
@@ -2946,12 +2946,12 @@ namespace peano {
                               /**
                                * Generated
                                */
-                               bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                               bool getIsParentingRegularPersistentSubgrid() const ;
                               
                               /**
                                * Generated
                                */
-                               void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                               void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                               
                               
                            };
@@ -2975,12 +2975,12 @@ namespace peano {
                            /**
                             * Generated
                             */
-                           TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                           TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid);
                            
                            /**
                             * Generated
                             */
-                           TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& isAdjacentOrParentingRegularPersistentSubgrid);
+                           TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid);
                            
                            /**
                             * Generated
@@ -3050,12 +3050,12 @@ namespace peano {
                            /**
                             * Generated
                             */
-                            bool getIsAdjacentOrParentingRegularPersistentSubgrid() const ;
+                            bool getIsParentingRegularPersistentSubgrid() const ;
                            
                            /**
                             * Generated
                             */
-                            void setIsAdjacentOrParentingRegularPersistentSubgrid(const bool& isAdjacentOrParentingRegularPersistentSubgrid) ;
+                            void setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid) ;
                            
                            /**
                             * Generated
@@ -3147,7 +3147,7 @@ namespace peano {
                       *
                       * 		   build date: 09-02-2014 14:40
                       *
-                      * @date   28/12/2016 12:50
+                      * @date   02/01/2017 09:58
                       */
                      class peano::grid::tests::records::TestVertex { 
                         
@@ -3433,7 +3433,7 @@ namespace peano {
                          *
                          * 		   build date: 09-02-2014 14:40
                          *
-                         * @date   28/12/2016 12:50
+                         * @date   02/01/2017 09:58
                          */
                         class peano::grid::tests::records::TestVertexPacked { 
                            
@@ -3722,7 +3722,7 @@ namespace peano {
                          *
                          * 		   build date: 09-02-2014 14:40
                          *
-                         * @date   28/12/2016 12:50
+                         * @date   02/01/2017 09:58
                          */
                         class peano::grid::tests::records::TestVertex { 
                            
@@ -4008,7 +4008,7 @@ namespace peano {
                             *
                             * 		   build date: 09-02-2014 14:40
                             *
-                            * @date   28/12/2016 12:50
+                            * @date   02/01/2017 09:58
                             */
                            class peano::grid::tests::records::TestVertexPacked { 
                               
@@ -4297,7 +4297,7 @@ namespace peano {
                             *
                             * 		   build date: 09-02-2014 14:40
                             *
-                            * @date   28/12/2016 12:50
+                            * @date   02/01/2017 09:58
                             */
                            class peano::grid::tests::records::TestVertex { 
                               
@@ -4549,7 +4549,7 @@ namespace peano {
                                *
                                * 		   build date: 09-02-2014 14:40
                                *
-                               * @date   28/12/2016 12:50
+                               * @date   02/01/2017 09:58
                                */
                               class peano::grid::tests::records::TestVertexPacked { 
                                  

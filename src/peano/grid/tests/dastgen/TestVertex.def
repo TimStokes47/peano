@@ -84,6 +84,6 @@ class peano::grid::tests::records::TestVertex {
   #endif
 
   #ifdef PersistentRegularSubtrees
-  persistent parallelise bool          isAdjacentOrParentingRegularPersistentSubgrid;
+  persistent parallelise bool          isParentingRegularPersistentSubgrid;
   #endif
 };
