@@ -218,7 +218,9 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
   #ifdef UseRecursionUnrollingOnRegularPatches
   optimisationString << "recursion-unrolling ";
   #endif
-
+  #ifdef PersistentRegularSubtrees
+  optimisationString << "persistent-regular-subtrees";
+  #endif
 
   _log.info("writeHeader()", buildString.str() );
   _log.info("writeHeader()", optimisationString.str() );
