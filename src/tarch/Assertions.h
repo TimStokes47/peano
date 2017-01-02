@@ -849,6 +849,80 @@
       assertionTriggersExit; \
     }
 
+    #define assertionNumericalEquals11(lhs,rhs,a,b,c,d,e,f,g,h,i,j,k) if (!tarch::la::equals( (lhs),(rhs) )) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #lhs << "==" #rhs << std::endl << #lhs << "=" << lhs << "\t == \t" << #rhs << "=" << rhs << std::endl; \
+      std::cerr << "1st argument " << #a << ": " << a << std::endl; \
+      std::cerr << "2nd argument " << #b << ": " << b << std::endl; \
+      std::cerr << "3rd argument " << #c << ": " << c << std::endl; \
+      std::cerr << "4th argument " << #d << ": " << d << std::endl; \
+      std::cerr << "5th argument " << #e << ": " << e << std::endl; \
+      std::cerr << "6th argument " << #f << ": " << f << std::endl; \
+      std::cerr << "7th argument " << #g << ": " << g << std::endl; \
+      std::cerr << "8th argument " << #h << ": " << h << std::endl; \
+      std::cerr << "9th argument " << #i << ": " << i << std::endl; \
+      std::cerr << "10th argument " << #j << ": " << j << std::endl; \
+      std::cerr << "11th argument " << #k << ": " << k << std::endl; \
+      assertionTriggersExit; \
+    }
+
+    #define assertionNumericalEquals12(lhs,rhs,a,b,c,d,e,f,g,h,i,j,k,l) if (!tarch::la::equals( (lhs),(rhs) )) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #lhs << "==" #rhs << std::endl << #lhs << "=" << lhs << "\t == \t" << #rhs << "=" << rhs << std::endl; \
+      std::cerr << "1st argument " << #a << ": " << a << std::endl; \
+      std::cerr << "2nd argument " << #b << ": " << b << std::endl; \
+      std::cerr << "3rd argument " << #c << ": " << c << std::endl; \
+      std::cerr << "4th argument " << #d << ": " << d << std::endl; \
+      std::cerr << "5th argument " << #e << ": " << e << std::endl; \
+      std::cerr << "6th argument " << #f << ": " << f << std::endl; \
+      std::cerr << "7th argument " << #g << ": " << g << std::endl; \
+      std::cerr << "8th argument " << #h << ": " << h << std::endl; \
+      std::cerr << "9th argument " << #i << ": " << i << std::endl; \
+      std::cerr << "10th argument " << #j << ": " << j << std::endl; \
+      std::cerr << "11th argument " << #k << ": " << k << std::endl; \
+      std::cerr << "12th argument " << #l << ": " << l << std::endl; \
+      assertionTriggersExit; \
+    }
+
+    #define assertionNumericalEquals13(lhs,rhs,a,b,c,d,e,f,g,h,i,j,k,l,m) if (!tarch::la::equals( (lhs),(rhs) )) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #lhs << "==" #rhs << std::endl << #lhs << "=" << lhs << "\t == \t" << #rhs << "=" << rhs << std::endl; \
+      std::cerr << "1st argument " << #a << ": " << a << std::endl; \
+      std::cerr << "2nd argument " << #b << ": " << b << std::endl; \
+      std::cerr << "3rd argument " << #c << ": " << c << std::endl; \
+      std::cerr << "4th argument " << #d << ": " << d << std::endl; \
+      std::cerr << "5th argument " << #e << ": " << e << std::endl; \
+      std::cerr << "6th argument " << #f << ": " << f << std::endl; \
+      std::cerr << "7th argument " << #g << ": " << g << std::endl; \
+      std::cerr << "8th argument " << #h << ": " << h << std::endl; \
+      std::cerr << "9th argument " << #i << ": " << i << std::endl; \
+      std::cerr << "10th argument " << #j << ": " << j << std::endl; \
+      std::cerr << "11th argument " << #k << ": " << k << std::endl; \
+      std::cerr << "12th argument " << #l << ": " << l << std::endl; \
+      std::cerr << "13th argument " << #m << ": " << m << std::endl; \
+      assertionTriggersExit; \
+    }
+
+    #define assertionNumericalEquals14(lhs,rhs,a,b,c,d,e,f,g,h,i,j,k,l,m,n) if (!tarch::la::equals( (lhs),(rhs) )) { \
+      setAssertionOutputFormat; \
+      std::cerr << "assertion in file " << __FILE__ << ", line " << __LINE__ << " failed: " << #lhs << "==" #rhs << std::endl << #lhs << "=" << lhs << "\t == \t" << #rhs << "=" << rhs << std::endl; \
+      std::cerr << "1st argument " << #a << ": " << a << std::endl; \
+      std::cerr << "2nd argument " << #b << ": " << b << std::endl; \
+      std::cerr << "3rd argument " << #c << ": " << c << std::endl; \
+      std::cerr << "4th argument " << #d << ": " << d << std::endl; \
+      std::cerr << "5th argument " << #e << ": " << e << std::endl; \
+      std::cerr << "6th argument " << #f << ": " << f << std::endl; \
+      std::cerr << "7th argument " << #g << ": " << g << std::endl; \
+      std::cerr << "8th argument " << #h << ": " << h << std::endl; \
+      std::cerr << "9th argument " << #i << ": " << i << std::endl; \
+      std::cerr << "10th argument " << #j << ": " << j << std::endl; \
+      std::cerr << "11th argument " << #k << ": " << k << std::endl; \
+      std::cerr << "12th argument " << #l << ": " << l << std::endl; \
+      std::cerr << "13th argument " << #m << ": " << m << std::endl; \
+      std::cerr << "14th argument " << #n << ": " << n << std::endl; \
+      assertionTriggersExit; \
+    }
+
     /**
      * @see ASSERTION_EXIT_CODE
      *
@@ -932,6 +1006,10 @@
     #define assertionNumericalEquals8(lhs,rhs,a,b,c,d,e,f,g,h)
     #define assertionNumericalEquals9(lhs,rhs,a,b,c,d,e,f,g,h,i)
     #define assertionNumericalEquals10(lhs,rhs,a,b,c,d,e,f,g,h,i,j)
+    #define assertionNumericalEquals11(lhs,rhs,a,b,c,d,e,f,g,h,i,j)
+    #define assertionNumericalEquals12(lhs,rhs,a,b,c,d,e,f,g,h,i,j)
+    #define assertionNumericalEquals13(lhs,rhs,a,b,c,d,e,f,g,h,i,j)
+    #define assertionNumericalEquals14(lhs,rhs,a,b,c,d,e,f,g,h,i,j)
     #define assertionVectorNumericalEquals(lhs,rhs)
     #define assertionVectorNumericalEquals1(lhs,rhs,param0)
     #define assertionVectorNumericalEquals2(lhs,rhs,param0,param1)
