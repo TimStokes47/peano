@@ -122,6 +122,22 @@ class peano::grid::State {
       Undef
     };
 
+    enum class RegularSubtreeStorageState {
+      IdentifyRegularSubtrees,
+      IdentifyAndStoreRegularSubtreesPersistently,
+      /**
+       * We need two drains, as the first drain might remain busy with
+       * dissolving all the persistent grids. I originally thought it
+       * might be clever to use isGridStationary() and to remain in the
+       * drain mode as long as this guy becomes not true. However, this
+       * is a pretty poor idea as the grid might be huge and always
+       * change somewhere.
+       */
+      DrainPersistentSubtrees,
+      FinishDrain,
+      ErasesOrRefinesDoNotPassBecauseOfPersistentSubtrees
+    };
+
     static std::string toString(LoadBalancingState value);
 
     #ifdef Parallel
@@ -176,6 +192,8 @@ class peano::grid::State {
     #endif
 
     #endif
+
+    RegularSubtreeStorageState   _regularSubtreeStorageState;
   public:
      ~State();
 
@@ -732,6 +750,20 @@ class peano::grid::State {
 
     void restart();
     #endif
+
+    bool storeRegularSubtreesPersistently() const;
+    bool clearIsAdjacentToOrParentingRegularPersistentSubgridFlag() const;
+    void informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees();
+
+    /**
+     * Should be invoked once per traversal just before the latter is kicked
+     * off. The flag tells the state whether there are still persistent
+     * subtrees held by the code. The following transitions are performed:
+     *
+     * - If erases haven't passed through switch to drain.
+     * - Drain is kept as long as there are persistent subtrees in the code.
+     */
+    void holdsPersistentSubtrees( bool value );
 };
 
 

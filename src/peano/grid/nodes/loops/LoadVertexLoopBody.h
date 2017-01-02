@@ -51,7 +51,7 @@ class peano::grid::nodes::loops::LoadVertexLoopBody {
     int*                                      _counter;
     VertexStack&                              _vertexStack;
 
-    EventHandle&                                                _eventHandle;
+    EventHandle&                              _eventHandle;
 
     /**
      * Usually, the geometry should be const. See getters of geometry for a

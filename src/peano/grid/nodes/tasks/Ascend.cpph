@@ -233,6 +233,12 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::ascend(in
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
+bool peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::treeRemainsStatic() const {
+  return _treeRemainsStatic;
+}
+
+
+template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator() () {
   _treeRemainsStatic = true;
 

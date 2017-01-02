@@ -4,6 +4,7 @@
 
 
 #include "tarch/multicore/MulticoreDefinitions.h"
+#include "peano/grid/RegularGridContainer.h"
 
 #include <limits>
 
@@ -27,6 +28,10 @@ peano::grid::Cell<CellData>::Cell():
   _cellData.setResponsibleRank(tarch::parallel::Node::getInstance().getRank());
   _cellData.setSubtreeHoldsWorker(false);
   _cellData.setCellIsAForkCandidate(true);
+  #endif
+  
+  #ifdef PersistentRegularSubtrees
+  _cellData.setPersistentRegularSubtreeIndex(NoPersistentRegularSubtree);
   #endif
 }
 
@@ -89,18 +94,22 @@ template <class CellData>
 void peano::grid::Cell<CellData>::clearInputOutputStackAccessStatistics() {
   // input can be empty if the refined cell just has been created in the
   // iteration before
+  #if !defined(PersistentRegularSubtrees)
   assertion1(
       !isRefined()
+    || rootsPersistentRegularSubtree()
     || _cellData.getNumberOfLoadsFromInputStream()>=TWO_POWER_D // that's the inner vertices and we have at most these inner vertices (trivial lower bound)
     || _cellData.getNumberOfLoadsFromInputStream()==0,
     toString()
   );
   assertion1(
       !isRefined()
+    || rootsPersistentRegularSubtree()
     || _cellData.getNumberOfStoresToOutputStream()>=TWO_POWER_D // that's the inner vertices and we have at most these inner vertices (trivial lower bound)
     || _cellData.getNumberOfStoresToOutputStream()==0,
     toString()
   );
+  #endif
 
   setInputOutputStackAccessStatistics(0,0);
 }
@@ -452,3 +461,34 @@ int peano::grid::Cell<CellData>::getRankOfRemoteNode() const {
   return _cellData.getResponsibleRank();
 }
 #endif
+
+
+template <class CellData>
+void peano::grid::Cell<CellData>::updatePersistentRegularSubtreeIndex(int index) {
+  assertion1( isRefined(), toString() );
+  #ifdef PersistentRegularSubtrees
+  _cellData.setPersistentRegularSubtreeIndex(index);
+  #else
+  assertion2( index==NoPersistentRegularSubtree, index, toString() );
+  #endif
+}
+
+
+template <class CellData>
+int peano::grid::Cell<CellData>::getPersistentRegularSubtreeIndex() const {
+  #ifdef PersistentRegularSubtrees
+  return _cellData.getPersistentRegularSubtreeIndex();
+  #else
+  return NoPersistentRegularSubtree;
+  #endif
+}
+
+
+template <class CellData>
+bool peano::grid::Cell<CellData>::rootsPersistentRegularSubtree() const {
+  #ifdef PersistentRegularSubtrees
+  return _cellData.getPersistentRegularSubtreeIndex() != NoPersistentRegularSubtree;
+  #else
+  return false;
+  #endif
+}

@@ -97,6 +97,14 @@ class peano::grid::nodes::tasks::Ascend {
      * asap - notably before we release the levels.
      */
     void operator() ();
+
+    /**
+     * Can be called after operator() has terminated. It reveals whether the
+     * tree remains static. Most codes do not have to query this flag as the
+     * operator automatically updates the flags of the vertices on the coarsest
+     * level.
+     */
+    bool treeRemainsStatic() const;
 };
 
 

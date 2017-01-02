@@ -91,6 +91,14 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
      * operation. An on-the-fly reconstruction of the cells does not
      * make sense, as the cells are always already available in the
      * regular subtree.
+     *
+     * <h2> Persistent regular subtrees </h2>
+     *
+     * If whole subtrees are held persistently in the regular grid container,
+     * I can terminate the recursion inside this regular region early. There
+     * is no need to go to the finest level inside of the tree. The vertices
+     * are there already anyway.
+     *
      */
     void storeSubVerticesWithCellsFromGridContainer(
       const int                                 currentLevelOfCoarseCell,
@@ -155,6 +163,14 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
    );
 
   public:
+    /**
+     * Can be handed in as max fork level. As the value -1 is already used by
+     * peano::grid::nodes::transformOracleResult() to ensure that absolutely
+     * no fork happens at all, I use the -2 here.
+     */
+    static const int DoNotSplitAndHandleOnlyPatchBoundary = -2;
+    static const int PersistentSubtreeIsDrained           = -3;
+
     /**
      * @param maxLevelToFork Required by peano::grid::mayForkLoadOrStoreVertexTaskOnRegularSubtree().
      */

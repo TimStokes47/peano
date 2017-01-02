@@ -296,6 +296,13 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
     );
   public:
     /**
+     * Can be handed in as max fork level. As the value -1 is already used by
+     * peano::grid::nodes::transformOracleResult() to ensure that absolutely
+     * no fork happens at all, I use the -2 here.
+     */
+    static const int DoNotSplitAndHandleOnlyPatchBoundary = -2;
+
+    /**
      * @param loadProcessRunsInParallelToOtherTasks This flag is true if we may
      *                         run another task in parallel to the load, i.e.
      *                         if we do a pipelining of the code.

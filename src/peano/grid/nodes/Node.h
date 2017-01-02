@@ -557,7 +557,11 @@ class peano::grid::nodes::Node {
      * updating the flags after the load is not an option - it has to happen
      * before the descend.
      *
-     * !!! Parallelisation
+     * <h2> Persistent subtrees </h2>
+     *
+     * If we hold persistent subtrees, we may not allow the code to handle subtrees as regular if
+     *
+     * <h2> Parallelisation </h2>
      *
      * If the oracle of the local node is told to fork, we always invalidate
      * the enumerator's optimisation flags, as this command means that we

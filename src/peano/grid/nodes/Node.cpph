@@ -967,7 +967,9 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 ) const {
   logTraceInWith1Argument( "updateRefinedEnumeratorsCellFlag(...)", verticesEnumerator.toString() );
 
-  peano::grid::CellFlags adjacencyFlag = peano::grid::Undefined;
+  peano::grid::CellFlags adjacencyFlag                                = peano::grid::Undefined;
+  // @todo Falscher Name
+  bool                   allAdjacentVerticesHoldPersistentSubtreeFlag = true;
 
   #ifdef Parallel
   if (
@@ -981,7 +983,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   #endif
 
   dfor2(k)
-    const peano::grid::CellFlags vertexFlag = vertices[verticesEnumerator(k)].getAdjacentCellsHeightOfPreviousIteration();
+    const peano::grid::CellFlags vertexFlag = 
+      vertices[verticesEnumerator(k)].getAdjacentCellsHeightOfPreviousIteration();
 
     if (adjacencyFlag!=vertexFlag) {
       logDebug(
@@ -991,13 +994,20 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       );
     }
 
-    adjacencyFlag = peano::grid::min(adjacencyFlag, vertexFlag);
+    adjacencyFlag                                 = peano::grid::min(adjacencyFlag, vertexFlag);
+    allAdjacentVerticesHoldPersistentSubtreeFlag &= vertices[verticesEnumerator(k)].isParentingRegularPersistentSubgrid();
   enddforx
 
   #ifdef Parallel
   }
   #endif
 
+  if (allAdjacentVerticesHoldPersistentSubtreeFlag && adjacencyFlag != peano::grid::NotStationaryDueToInvalidation) {
+//    adjacencyFlag = peano::grid::StationaryButIrregular;
+    adjacencyFlag = peano::grid::NotStationary;
+//    adjacencyFlag = peano::grid::Undefined;
+  }
+  
   verticesEnumerator.updateAdjacentCellsFlag( adjacencyFlag );
 
   logTraceOutWith1Argument( "updateRefinedEnumeratorsCellFlag(...)", verticesEnumerator.toString() );

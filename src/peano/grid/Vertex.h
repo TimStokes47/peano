@@ -268,6 +268,10 @@ class peano::grid::Vertex {
      */
     void rollbackRefinementOrEraseTriggered();
 
+    enum class SwitchRefinementTriggeredResult {
+      Nop, SwitchedIntoRefining, WasntAbleToSwitchDueToRegularPersistentSubgrids
+    };
+
     /**
      * Switch State's Refinement Triggered into Refining
      *
@@ -281,13 +285,13 @@ class peano::grid::Vertex {
      *
      * @return Has done a transition.
      */
-    bool switchRefinementTriggeredToRefining();
+    SwitchRefinementTriggeredResult switchRefinementTriggeredToRefining();
 
     /**
      * @see switchEraseTriggeredToErasing()
      */
-    enum SwitchEraseTriggeredResult {
-      Nop, SwitchedIntoErasing, WasntAbleToSwitchDueToFork
+    enum class SwitchEraseTriggeredResult {
+      Nop, SwitchedIntoErasing, WasntAbleToSwitchDueToFork, WasntAbleToSwitchDueToRegularPersistentSubgrids
     };
 
     /**
@@ -666,6 +670,40 @@ class peano::grid::Vertex {
      *
      */
     bool  isRefinedOrRefining() const;
+
+    /**
+     * The parenting flag is a flag that is available if and only if you
+     * compile with -DnoPersistentRegularSubtrees. The getter allows you
+     * to identify those vertices that
+     *
+     * - are adjacent to the root of a persistently stored regular subtree or
+     * - are a (recursive) parent or parent of the parent or ...
+     *
+     * If the flag is set, a vertex should not be refined. Furthermore, we
+     * may not handle a node as regular tree if all $2^d$ adjacent vertices
+     * hold the flag.
+     *
+     * @see switchEraseTriggeredToErasing()
+     * @see switchRefinementTriggeredToRefining()
+     * @see updateRefinedEnumeratorsCellFlag()
+     */
+    bool isParentingRegularPersistentSubgrid() const;
+
+    /**
+     * Set the persistency flag.
+     *
+     * @see isParentingRegularPersistentSubgrid()
+     */
+    void setIsParentingRegularPersistentSubgridFlag();
+
+    /**
+     * We may clear this flag if and only if there are no regular subgrids
+     * persistently stored at all. The clear is done by the load process.
+     *
+     * @see  isParentingRegularPersistentSubgrid()
+     * @see  peano::grid::nodes::loops::LoadVertexLoopBody::loadVertexFromInputStream()
+     */
+    void clearIsParentingRegularPersistentSubgridFlag();
 };
 
 

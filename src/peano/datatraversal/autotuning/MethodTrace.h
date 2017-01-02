@@ -31,9 +31,10 @@ namespace peano {
         AscendOnRegularStationaryGrid                    = 17,
         DescendOnRegularStationaryGrid                   = 18,
 
-        UserDefined0  = 19,
-        UserDefined1  = 20,
-        UserDefined2  = 21,
+        HoldPersistentRegularSubgrid                     = 19,
+
+        UserDefined0  = 20,
+        UserDefined1  = 21,
         UserDefined3  = 22,
         UserDefined4  = 23,
         UserDefined5  = 24,
@@ -63,7 +64,9 @@ namespace peano {
         UserDefined29 = 48,
         UserDefined30 = 49,
 
-        NumberOfDifferentMethodsCalling                  = 50
+        UserDefined2  = 50,
+
+        NumberOfDifferentMethodsCalling                  = 51
       };
 
       std::string toString( const MethodTrace& methodTrace );

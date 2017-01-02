@@ -78,6 +78,7 @@ void peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch<Vertex,Cell,Cell
     Cell& pushCell = _regularGridContainer.getCell(currentLevel,cellIndex);
     #endif
 
+    assertion1( !pushCell.rootsPersistentRegularSubtree(), pushCell.toString() );
     _cellStack.push(
       peano::stacks::Constants::InOutStack,
       pushCell

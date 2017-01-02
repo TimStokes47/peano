@@ -97,8 +97,8 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
 
 
   #ifdef DistinguishStationaryAndInstationarySubtrees
-  if ( fineGridVerticesEnumerator.getCellFlags() >= peano::grid::Leaf) {
-    logDebug( "load(...)", "is a stationary regular subtree" );
+  if ( fineGridVerticesEnumerator.getCellFlags() >= peano::grid::Leaf ) {
+    assertionMsg( false, "never entered" );
     typedef loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,peano::grid::Leaf> LoopBody;
     const peano::datatraversal::autotuning::MethodTrace methodTrace = peano::datatraversal::autotuning::MethodTrace::LoadVerticesOnRegularStationaryGrid;
     if (Base::_eventHandle.touchVertexFirstTimeSpecification().multithreading) {
@@ -141,7 +141,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
       grainSize.parallelSectionHasTerminated();
     }
     else {
-      LoopBody loopBody( state, fineGridVertices, fineGridVerticesEnumerator, coarseGridCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell, counter, Base::_vertexStack, Base::_eventHandle, Base::_geometry);
+      LoopBody loopBody( state, fineGridVertices, fineGridVerticesEnumerator, coarseGridCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell, counter, Base::_vertexStack, Base::_eventHandle, Base::_geometry );
       peano::datatraversal::ActionSetTraversalLoop<LoopBody>( readVertexSequence, loopBody, 0);
     }
   }
@@ -671,14 +671,18 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
     currentCell.isRefined() &&
     currentCell.isInside();
   #endif
+  
   if ( currentCell.isLeaf() ) {
     _leafNode.traverse( state, currentCell, fineGridVertices, fineGridVerticesEnumerator, coarseCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell );
   }
+  else if ( currentCell.rootsPersistentRegularSubtree() ) {
+    _regularRefinedNode.traverse( state, currentCell, fineGridVertices, fineGridVerticesEnumerator, coarseCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell );
+  }
   #ifdef UseRecursionUnrollingOnRegularPatches
   else if (
-    mayEvaluateStaticSubtree &&
-    fineGridVerticesEnumerator.getCellFlags()>peano::grid::Leaf &&
-    _regularRefinedNode.isRegularSubtreeAvailable(fineGridVerticesEnumerator.getCellFlags())
+      mayEvaluateStaticSubtree &&
+      fineGridVerticesEnumerator.getCellFlags()>peano::grid::Leaf &&
+      _regularRefinedNode.isRegularSubtreeAvailable(fineGridVerticesEnumerator.getCellFlags())
   ) {
     _regularRefinedNode.traverse( state, currentCell, fineGridVertices, fineGridVerticesEnumerator, coarseCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell );
   }

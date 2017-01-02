@@ -824,8 +824,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   assertion( _cellTraversal.isValid() );
 
-  logInfo( "traverse(State)", "local cells: "    << Base::_cellStack.sizeOfInputStack() );
-  logInfo( "traverse(State)", "local vertices: " << Base::_vertexStack.sizeOfInputStack() );
+  logInfo( "traverse(State)", "local cells on stacks: "    << Base::_cellStack.sizeOfInputStack() );
+  logInfo( "traverse(State)", "local vertices on stacks: " << Base::_vertexStack.sizeOfInputStack() );
 
   logTraceOutWith3Arguments( "traverse(State)", state.toString(), Base::_cellStack.sizeOfInputStack(), Base::_vertexStack.sizeOfInputStack() );
 }

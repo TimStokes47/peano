@@ -22,6 +22,28 @@ peano::grid::Vertex<VertexData>::Vertex():
   _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
   _vertexData.setAdjacentRanks( tarch::parallel::Node::getInstance().getRank() );
   #endif
+  
+  #ifdef PersistentRegularSubtrees
+  _vertexData.setIsParentingRegularPersistentSubgrid(false);
+  #endif
+}
+
+
+template <class VertexData>
+bool peano::grid::Vertex<VertexData>::isParentingRegularPersistentSubgrid() const {
+  #ifdef PersistentRegularSubtrees
+  return _vertexData.getIsParentingRegularPersistentSubgrid();
+  #else
+  return false;
+  #endif
+}
+
+
+template <class VertexData>
+void peano::grid::Vertex<VertexData>::setIsParentingRegularPersistentSubgridFlag() {
+  #ifdef PersistentRegularSubtrees
+  _vertexData.setIsParentingRegularPersistentSubgrid(true);
+  #endif
 }
 
 
@@ -159,18 +181,32 @@ bool peano::grid::Vertex<VertexData>::isInside() const {
 
 
 template <class VertexData>
-bool peano::grid::Vertex<VertexData>::switchRefinementTriggeredToRefining() {
-  const bool doTransition =  _vertexData.getRefinementControl()==VertexData::RefinementTriggered
-                          #ifdef Parallel
-                          || _vertexData.getRefinementControl()==VertexData::EnforceRefinementTriggered
-                          #endif
-                          ;
-  if( doTransition ) {
+typename peano::grid::Vertex<VertexData>::SwitchRefinementTriggeredResult peano::grid::Vertex<VertexData>::switchRefinementTriggeredToRefining() {
+  assertion1( _vertexData.getRefinementControl()!=VertexData::Refining || !isParentingRegularPersistentSubgrid(), toString() );
+  if (
+    _vertexData.getRefinementControl()==VertexData::RefinementTriggered
+    &&
+    isParentingRegularPersistentSubgrid()
+  ) {
+    invalidateAdjacentCellInformation();
+    return SwitchRefinementTriggeredResult::WasntAbleToSwitchDueToRegularPersistentSubgrids;
+  }
+  else if (
+    _vertexData.getRefinementControl()==VertexData::RefinementTriggered
+    #ifdef Parallel
+    | _vertexData.getRefinementControl()==VertexData::EnforceRefinementTriggered
+    #endif
+  ) {
     _vertexData.setRefinementControl( VertexData::Refining );
     assertion1(_vertexData.getAdjacentCellsHeight() <= peano::grid::NotStationary ,toString());
     invalidateAdjacentCellInformation();
+    // @todo Not sure
+//    _vertexData.setIsAdjacentOrParentingRegularPersistentSubgrid(true);
+    return SwitchRefinementTriggeredResult::SwitchedIntoRefining;
   }
-  return doTransition;
+  else {
+    return SwitchRefinementTriggeredResult::Nop;
+  }
 }
 
 
@@ -185,7 +221,7 @@ typename peano::grid::Vertex<VertexData>::SwitchEraseTriggeredResult peano::grid
     !isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() )
   ) {
     _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
-    return Nop;
+    return SwitchEraseTriggeredResult::Nop;
   }
   else
   if (
@@ -193,25 +229,47 @@ typename peano::grid::Vertex<VertexData>::SwitchEraseTriggeredResult peano::grid
     _vertexData.getAdjacentSubtreeForksIntoOtherRank()
   ) {
     _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
-    return WasntAbleToSwitchDueToFork;
+    return SwitchEraseTriggeredResult::WasntAbleToSwitchDueToFork;
   }
   else
   #endif
-  if ( _vertexData.getRefinementControl()==VertexData::EraseTriggered ) {
+  if ( 
+    _vertexData.getRefinementControl()==VertexData::EraseTriggered 
+    &&
+    isParentingRegularPersistentSubgrid()
+  ) {
+    invalidateAdjacentCellInformation();
+    // @todo redundant
+//    setIsAdjacentToOrParentingRegularPersistentSubgrid();
+    return SwitchEraseTriggeredResult::WasntAbleToSwitchDueToRegularPersistentSubgrids;
+  }
+  else if ( _vertexData.getRefinementControl()==VertexData::EraseTriggered ) {
     _vertexData.setRefinementControl( VertexData::Erasing );
     #ifdef Parallel
     _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
     #endif
     assertion1(_vertexData.getAdjacentCellsHeight() <= peano::grid::NotStationary ,toString());
     invalidateAdjacentCellInformation();
-    return SwitchedIntoErasing;
+    // @todo Not sure
+//    _vertexData.setIsAdjacentOrParentingRegularPersistentSubgrid(true);
+    return SwitchEraseTriggeredResult::SwitchedIntoErasing;
   }
   else {
     #ifdef Parallel
     _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
     #endif
-    return Nop;
+    return SwitchEraseTriggeredResult::Nop;
   }
+}
+
+
+template <class VertexData>
+void peano::grid::Vertex<VertexData>::clearIsParentingRegularPersistentSubgridFlag() {
+  #ifdef PersistentRegularSubtrees
+  _vertexData.setIsParentingRegularPersistentSubgrid(false);
+  // @todo Check
+  _vertexData.setAdjacentCellsHeight( peano::grid::NotStationary );
+  #endif
 }
 
 
@@ -240,9 +298,23 @@ void peano::grid::Vertex<VertexData>::switchToInside() {
 template <class VertexData>
 void peano::grid::Vertex<VertexData>::updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack() {
   if (_vertexData.getRefinementControl()==VertexData::Refining) {
+    assertion1(
+      _vertexData.getAdjacentCellsHeight()==peano::grid::NotStationary || _vertexData.getAdjacentCellsHeight()==peano::grid::NotStationaryDueToInvalidation,
+      toString()
+    );
+    
+    // @todo Not sure
+//    _vertexData.setIsAdjacentOrParentingRegularPersistentSubgrid(true);
     _vertexData.setRefinementControl( VertexData::Refined );
   }
   else if (_vertexData.getRefinementControl()==VertexData::Erasing) {
+    assertion1(
+      _vertexData.getAdjacentCellsHeight()==peano::grid::NotStationary || _vertexData.getAdjacentCellsHeight()==peano::grid::NotStationaryDueToInvalidation,
+      toString()
+    );
+
+    // @todo Not sure
+//    _vertexData.setIsAdjacentOrParentingRegularPersistentSubgrid(true);
     _vertexData.setRefinementControl( VertexData::Unrefined );
   }
   #ifdef Parallel
@@ -260,6 +332,8 @@ void peano::grid::Vertex<VertexData>::refine() {
 
   _vertexData.setRefinementControl(VertexData::RefinementTriggered);
   _vertexData.setAdjacentCellsHeight( peano::grid::NotStationary );
+  // @todo Not sure
+//  _vertexData.setIsAdjacentOrParentingRegularPersistentSubgrid(true);
 }
 
 
@@ -270,6 +344,8 @@ void peano::grid::Vertex<VertexData>::erase() {
 
   _vertexData.setRefinementControl(VertexData::EraseTriggered);
   _vertexData.setAdjacentCellsHeight( peano::grid::NotStationary );
+  // @todo Not sure
+//  _vertexData.setIsAdjacentOrParentingRegularPersistentSubgrid(true);
 }
 
 

@@ -96,4 +96,8 @@ class  peano::grid::tests::records::TestCell {
   persistent int     numberOfLoadsFromInputStream;
   persistent int     numberOfStoresToOutputStream;
   #endif
+
+  #ifdef PersistentRegularSubtrees
+  persistent int     persistentRegularSubtreeIndex;
+  #endif
 };

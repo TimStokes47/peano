@@ -254,7 +254,7 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * - Inner and boundary fine grid vertices influence coarser vertices.
      *
      * This is possible as the domain covered by Peano grids (the volume) grows
-     * montonically with each additional grid level, i.e. a grid of level k
+     * monotonically with each additional grid level, i.e. a grid of level k
      * always covers at least the domain covered by a grid of level k-1.
      *
      * <h2> Parallel mode </h2>

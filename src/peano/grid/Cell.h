@@ -303,6 +303,11 @@ class peano::grid::Cell {
     void storedCellOfRegularRefinedGrid();
     #endif
 
+    void updatePersistentRegularSubtreeIndex(int index);
+
+    int  getPersistentRegularSubtreeIndex() const;
+
+    bool rootsPersistentRegularSubtree() const;
 };
 
 

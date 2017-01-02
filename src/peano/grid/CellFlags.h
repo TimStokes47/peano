@@ -27,6 +27,8 @@ namespace peano {
        *   define adaptive grids.
        * - The remaining flags are self-explaining.
        */
+
+      // @todo use new class construct
       enum CellFlags {
         Undefined                       = 65536,
         Leaf                            = 0,

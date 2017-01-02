@@ -160,10 +160,17 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   );
 
   _fineGridVertices[positionInVertexArray].updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
-
+  
   #ifdef SharedMemoryParallelisation
   _coarseGridCell.incrementStoreToOutputStackCounter();
   #endif
+
+  // @todo Hier geht es -> aber dann geht's natuerlich nur eine Iteration
+/*
+  if ( _state.clearIsAdjacentToOrParentingRegularPersistentSubgridFlag() ) {
+    _fineGridVertices[positionInVertexArray].clearIsAdjacentToOrParentingRegularPersistentSubgridFlag();
+  }
+*/
 
   _vertexStack.push(peano::stacks::Constants::InOutStack, _fineGridVertices[positionInVertexArray]);
 
@@ -275,7 +282,8 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
     const bool takeThisCoarseVertexIntoAccount = peano::grid::SingleLevelEnumerator::doesCoarseGridVertexInfluenceFineGridVertex(k,positionInLocalCell+_fineGridPositionOfCell);
 
     if (takeThisCoarseVertexIntoAccount) {
-      peano::grid::CellFlags analysedValue = originalAnalysedValue;
+      peano::grid::CellFlags analysedValue               = originalAnalysedValue;
+      bool                   adjacentToPersistentSubtree = false;
 
       #ifdef Parallel
       if (
@@ -285,7 +293,13 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
         _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setAdjacentSubtreeForksIntoOtherRankFlag();
       }
       #endif
-
+      
+      if (
+        _fineGridVertices[positionInVertexArray].isParentingRegularPersistentSubgrid()
+      ) {
+        _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setIsParentingRegularPersistentSubgridFlag();
+      }
+          
       if (analysedValue>= peano::grid::Leaf) {
         inc(analysedValue);
         if (

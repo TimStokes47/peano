@@ -15,6 +15,7 @@
 #include "peano/utils/PeanoOptimisations.h"
 
 #include <vector>
+#include <map>
 
 #ifdef SharedTBB
 #include <tbb/cache_aligned_allocator.h>
@@ -104,6 +105,8 @@ namespace peano {
       const int   coarsestLevelOfThisTask,
       const int   expectedNumberOfLoadsOrStores
     );
+
+    const int NoPersistentRegularSubtree = -1;
   }
 }
 
@@ -194,14 +197,6 @@ class peano::grid::RegularGridContainer {
         #endif
 
         /**
-         * Holds some statistics how often a level is needed. Besides the
-         * statistics, the container also deletes the finest level data if it
-         * has not been used in the iteration before. This way, I try to reduce
-         * the total memory footprint if possible.
-         */
-        int      usedPerTraversal;
-
-        /**
          * Each level has @f$ 3^d @f$ patches inside that are befilled en block
          * by Peano. This counter holds how many of them are not set yet.
          */
@@ -254,8 +249,23 @@ class peano::grid::RegularGridContainer {
     /**
      * Holds the data of the individual levels. Entry 0, i.e. the first entry,
      * is level 0, i.e. the one-cell-level.
+     *
+     * Map active tree index + level onto level data.
      */
-    std::vector<LevelData*>  _data;
+    std::map<int, std::vector<LevelData*> >   _data;
+    /**
+     * Holds some statistics how often a level is needed. Besides the
+     * statistics, the container also deletes the finest level data if it
+     * has not been used in the iteration before. This way, I try to reduce
+     * the total memory footprint if possible.
+     *
+     * The first entry identifies the non-persistent subtree, the second
+     * one counts all the persistent trees.
+     */
+    std::map<int, std::pair<int,int> >        _usedPerTraversal;
+
+    std::vector<int>                          _freedSubtreeIndices;
+    int                                       _activeRegularSubtree;
 
     double                   _maximumMemoryFootprintForTemporaryRegularGrid;
 
@@ -407,11 +417,32 @@ class peano::grid::RegularGridContainer {
     std::string toString() const;
 
     bool isCellAtPatchBoundaryWithinRegularSubtree(
-      const tarch::la::Vector<DIMENSIONS,int>&  offsetWithinPatch,
+      const tarch::la::Vector<DIMENSIONS,int>&  cellIndex,
       const int                                 level
     ) const;
 
     void setMaximumMemoryFootprintForTemporaryRegularGrids(double value);
+
+    /**
+     * Tells the container to keep the current subtree for the next
+     * traversal.
+     *
+     * We have do not have tto know the depth of the persistent subtree though
+     * this might be a straightforward optimisation later on as it allows us to
+     * save memory as we free stuff.
+     *
+     * Please note that you can recover the real tree depth later on by asking
+     * for the coarsest grid enumerator and then reading its depth flag.
+     *
+     * @return        Index of kept subgrid
+     */
+    int keepCurrentRegularSubgrid();
+    void switchToStoredRegularSubgrid( int index );
+
+    /**
+     * @return Whether any regular subgrid is held persistently
+     */
+    bool holdsRegularSubgridsPersistently() const;
 };
 
 

@@ -179,6 +179,12 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   _fineGridVertices[positionInVertexArray].clearCounterOfAdjacentRefinedCells();
   _fineGridVertices[positionInVertexArray].saveAndClearAdjacentCellsInformation();
+  // @todo Scheint die falsche Position zu sein -> muss in die Doku von Vertex rein
+  //       Kann vermutlich auch hoch in den Load from Stream, wo's eigentlich besser hinpasst.
+  if ( _state.clearIsAdjacentToOrParentingRegularPersistentSubgridFlag() ) {
+    _fineGridVertices[positionInVertexArray].clearIsParentingRegularPersistentSubgridFlag();
+//    logError( "loadVertexFromInputStream(...)", "loaded and cleared: " << _fineGridVertices[positionInVertexArray].toString() );
+  }
 
   logTraceOutWith1Argument( "loadVertexFromInputStream(...)", _fineGridVertices[positionInVertexArray].toString() );
 }
@@ -194,7 +200,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   #ifdef Parallel
   assertion( peano::parallel::SendReceiveBufferPool::getInstance().deploysValidData() || !_fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank() );
   #endif
-  
+    
   bool hasErased = false;
   bool hasRefined = false;
   bool hasFailedToEraseDueToDomainDecomposition = false;
@@ -208,22 +214,52 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
     logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex erasing as parent is erasing: " << _fineGridVertices[positionInVertexArray].toString() );
   }
-  const bool                                         switchedIntoRefining = _fineGridVertices[positionInVertexArray].switchRefinementTriggeredToRefining();
-  const typename Vertex::SwitchEraseTriggeredResult  switchedIntoErasing  = _fineGridVertices[positionInVertexArray].switchEraseTriggeredToErasing();
-  if ( switchedIntoRefining ) {
-    hasRefined = true;
-    logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex refining: " << _fineGridVertices[positionInVertexArray].toString() );
+  
+  const typename Vertex::SwitchRefinementTriggeredResult  switchedIntoRefining = _fineGridVertices[positionInVertexArray].switchRefinementTriggeredToRefining();
+  const typename Vertex::SwitchEraseTriggeredResult       switchedIntoErasing  = _fineGridVertices[positionInVertexArray].switchEraseTriggeredToErasing();
+  switch ( switchedIntoRefining ) {
+    case Vertex::SwitchRefinementTriggeredResult::Nop:
+      break;
+    case Vertex::SwitchRefinementTriggeredResult::SwitchedIntoRefining:
+      hasRefined = true;
+      logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex refining: " << _fineGridVertices[positionInVertexArray].toString() );
+      break;
+    case Vertex::SwitchRefinementTriggeredResult::WasntAbleToSwitchDueToRegularPersistentSubgrids:
+      {
+        logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "can't refine " << _fineGridVertices[positionInVertexArray].toString() );
+        logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "parent=" << _coarseGridVertices[_coarseGridVerticesEnumerator(0)].toString() );
+        logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "parent=" << _coarseGridVertices[_coarseGridVerticesEnumerator(1)].toString() );
+        logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "parent=" << _coarseGridVertices[_coarseGridVerticesEnumerator(2)].toString() );
+        logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "parent=" << _coarseGridVertices[_coarseGridVerticesEnumerator(3)].toString() );
+        logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "state="  << _state.toString() );
+        logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "flag="   << _state.clearIsAdjacentToOrParentingRegularPersistentSubgridFlag() );
+        _state.informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees();
+      }
+      break;
   }
-  if ( switchedIntoErasing == Vertex::SwitchedIntoErasing ) {
-    hasErased = true;
-    logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex erasing: " << _fineGridVertices[positionInVertexArray].toString() );
-  }
-  if ( switchedIntoErasing == Vertex::WasntAbleToSwitchDueToFork ) {
-    hasFailedToEraseDueToDomainDecomposition = true;
-    logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "tried to make vertex erasing but could not due to fork: " << _fineGridVertices[positionInVertexArray].toString() );
-    #if !defined(Parallel)
-    assertionMsg( false, "branch is not reachable in serial mode" );
-    #endif
+  switch (switchedIntoErasing) {
+    case Vertex::SwitchEraseTriggeredResult::Nop:
+      break;
+    case Vertex::SwitchEraseTriggeredResult::SwitchedIntoErasing:
+      {
+        hasErased = true;
+        logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "made vertex erasing: " << _fineGridVertices[positionInVertexArray].toString() );
+      }
+      break;
+    case Vertex::SwitchEraseTriggeredResult::WasntAbleToSwitchDueToFork:
+      {
+        hasFailedToEraseDueToDomainDecomposition = true;
+        logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "tried to make vertex erasing but could not due to fork: " << _fineGridVertices[positionInVertexArray].toString() );
+        #if !defined(Parallel)
+        assertionMsg( false, "branch is not reachable in serial mode" );
+        #endif
+      }
+      break;
+    case Vertex::SwitchEraseTriggeredResult::WasntAbleToSwitchDueToRegularPersistentSubgrids:
+      {
+        _state.informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees();
+      }
+      break;
   }
 
   _state.updateRefinementHistoryAfterLoad( hasRefined, hasErased, hasFailedToEraseDueToDomainDecomposition, false );
@@ -678,6 +714,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
 
   for (int d=0; d<DIMENSIONS; d++) {
+/*
     assertionNumericalEquals8(
       _fineGridVertices[positionInVertexArray].getX()(d), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)(d),
       positionInVertexArray,
@@ -688,6 +725,24 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       _fineGridVerticesEnumerator.toString(),
       _fineGridVertices[positionInVertexArray].toString(),
       stackNumber
+    );
+*/
+    // @todo Wieder zurueck zur 8ter Version oben
+    
+    assertionNumericalEquals12(
+      _fineGridVertices[positionInVertexArray].getX()(d), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)(d),
+      positionInVertexArray,
+      _fineGridVertices[positionInVertexArray].getX(),
+      positionInLocalCell,
+      _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+      d,
+      _fineGridVerticesEnumerator.toString(),
+      _fineGridVertices[positionInVertexArray].toString(),
+      stackNumber,
+      _coarseGridVertices[ _coarseGridVerticesEnumerator(0) ].toString(),
+      _coarseGridVertices[ _coarseGridVerticesEnumerator(1) ].toString(),
+      _coarseGridVertices[ _coarseGridVerticesEnumerator(2) ].toString(),
+      _coarseGridVertices[ _coarseGridVerticesEnumerator(3) ].toString()
     );
   }
 }

@@ -41,7 +41,10 @@ peano::grid::State<StateData>::State():
   _previousLoadRebalancingState = LoadBalancingState::Undef;
   #endif
   #endif
+  
+  _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently;
 }
+
 
 #ifdef PackedRecords
 template <class StateData>
@@ -143,6 +146,26 @@ void peano::grid::State<StateData>::toString(std::ostream& out) const {
   }
   out << "]";
   #endif
+  
+  out << "[";
+  switch (_regularSubtreeStorageState) {
+    case RegularSubtreeStorageState::IdentifyRegularSubtrees:
+      out << "identify-regular-subtrees";
+      break;      
+    case RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently:
+      out << "identify-and-store-regular-subtrees-persistently";
+      break;      
+    case RegularSubtreeStorageState::DrainPersistentSubtrees:
+      out << "drain-persistent-subtrees";
+      break;      
+    case RegularSubtreeStorageState::FinishDrain:
+      out << "finish-drain";
+      break;      
+    case RegularSubtreeStorageState::ErasesOrRefinesDoNotPassBecauseOfPersistentSubtrees:
+      out << "erases-or-refines-do-not-pass-because-of-persistent-subtrees";
+      break;
+  }
+  out << "]";
 }
 
 
@@ -578,6 +601,12 @@ void peano::grid::State<StateData>::mergeWithWorkerState(const peano::grid::Stat
     _stateData.getSubWorkerIsInvolvedInJoinOrFork() ||
     workerState._stateData.getSubWorkerIsInvolvedInJoinOrFork()
   );
+  
+  _regularSubtreeStorageState = 
+    _regularSubtreeStorageState == RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently
+    &&
+    workerState._regularSubtreeStorageState == RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently ?
+    RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently : RegularSubtreeStorageState::DrainPersistentSubtrees;
 
   if (workerState._stateData.getSubWorkerIsInvolvedInJoinOrFork()) {
     _iterationCounter = 0;
@@ -938,3 +967,72 @@ void peano::grid::State<StateData>::sendStateToMaster() const {
 
 #endif
 
+
+template <class StateData>
+bool peano::grid::State<StateData>::storeRegularSubtreesPersistently() const {
+  return _regularSubtreeStorageState==RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently;
+}
+
+
+template <class StateData>
+bool peano::grid::State<StateData>::clearIsAdjacentToOrParentingRegularPersistentSubgridFlag() const {
+// We may not erase throughout drain. We have to wait until all the stuff is drained. 
+// Otherwise it can happen that we run into regular refined subtrees though we are just about 
+// to get rid of things.
+    
+// @todo Remove first state (erase) and only stationary (without persistent storage)
+    
+// @todo Only FinishDrain works
+//   return _regularSubtreeStorageState==RegularSubtreeStorageState::FinishDrain;
+//   return _regularSubtreeStorageState==RegularSubtreeStorageState::DrainPersistentSubtrees
+   return _regularSubtreeStorageState==RegularSubtreeStorageState::FinishDrain;
+}
+
+
+template <class StateData>
+void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
+  if (
+    _regularSubtreeStorageState==RegularSubtreeStorageState::ErasesOrRefinesDoNotPassBecauseOfPersistentSubtrees
+  ) {
+    _regularSubtreeStorageState = RegularSubtreeStorageState::DrainPersistentSubtrees;
+  }
+  else if (
+    !value 
+    && 
+    _regularSubtreeStorageState==RegularSubtreeStorageState::DrainPersistentSubtrees 
+   ) {
+    _regularSubtreeStorageState = RegularSubtreeStorageState::FinishDrain;
+  }
+  else if (
+    _regularSubtreeStorageState==RegularSubtreeStorageState::FinishDrain
+   ) {
+    _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyRegularSubtrees;
+  }
+  else if (
+    _regularSubtreeStorageState==RegularSubtreeStorageState::IdentifyRegularSubtrees 
+   ) {
+    _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently;
+  }
+  
+  #ifdef Parallel
+  if (_loadRebalancingState!=LoadBalancingState::NoRebalancing) {
+    _regularSubtreeStorageState = RegularSubtreeStorageState::DrainPersistentSubtrees;
+  }
+  #endif
+}
+
+
+template <class StateData>
+void peano::grid::State<StateData>::informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees() {
+  if ( _regularSubtreeStorageState == RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently ) {
+/*
+  if (
+    _regularSubtreeStorageState!=RegularSubtreeStorageState::DrainPersistentSubtrees
+    &&
+    _regularSubtreeStorageState!=RegularSubtreeStorageState::FinishDrain
+  ) {
+*/
+//  if (_regularSubtreeStorageState!=RegularSubtreeStorageState::DrainPersistentSubtrees) 
+    _regularSubtreeStorageState = RegularSubtreeStorageState::ErasesOrRefinesDoNotPassBecauseOfPersistentSubtrees;
+  }
+}
