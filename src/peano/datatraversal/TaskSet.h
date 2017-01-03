@@ -127,6 +127,15 @@ class peano::datatraversal::TaskSet {
       std::function<void ()>&& function4,
       bool                     parallelise
     );
+
+    TaskSet(
+      std::function<void ()>&& function1,
+      std::function<void ()>&& function2,
+      std::function<void ()>&& function3,
+      std::function<void ()>&& function4,
+      std::function<void ()>&& function5,
+      bool                     parallelise
+    );
 };
 
 

@@ -103,3 +103,42 @@ peano::datatraversal::TaskSet::TaskSet(
   function4();
   #endif
 }
+
+
+peano::datatraversal::TaskSet::TaskSet(
+  std::function<void ()>&& function1,
+  std::function<void ()>&& function2,
+  std::function<void ()>&& function3,
+  std::function<void ()>&& function4,
+  std::function<void ()>&& function5,
+  bool                     parallelise
+) {
+  #ifdef SharedTBB
+  if (parallelise) {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(4,4);
+    tbb::parallel_invoke(
+      function1,
+      function2,
+      function3,
+      function4,
+      function5
+    );
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-4,-4);
+  }
+  else {
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,4);
+    function1();
+    function2();
+    function3();
+    function4();
+    function5();
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-4);
+  }
+  #else
+  function1();
+  function2();
+  function3();
+  function4();
+  function5();
+  #endif
+}
