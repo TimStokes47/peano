@@ -695,15 +695,6 @@ class peano::grid::Vertex {
      * @see isParentingRegularPersistentSubgrid()
      */
     void setIsParentingRegularPersistentSubgridFlag();
-
-    /**
-     * We may clear this flag if and only if there are no regular subgrids
-     * persistently stored at all. The clear is done by the load process.
-     *
-     * @see  isParentingRegularPersistentSubgrid()
-     * @see  peano::grid::nodes::loops::LoadVertexLoopBody::loadVertexFromInputStream()
-     */
-    void clearIsParentingRegularPersistentSubgridFlag();
 };
 
 
