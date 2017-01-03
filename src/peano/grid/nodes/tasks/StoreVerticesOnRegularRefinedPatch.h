@@ -49,6 +49,17 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
     VertexStack&                                                      _vertexStack;
 
     const bool                                                        _storeProcessRunsInParallelToOtherTasks;
+
+    /**
+     * This flag indicates the finest level that may still coarse. In a
+     * top-down sense, this is the deepest level that may fork. You may
+     * also pass
+     *
+     * DoNotSplitAndHandleOnlyPatchBoundary
+     * PersistentSubtreeIsDrained
+     *
+     * or -1 to indicate that no forking should be done.
+     */
     int                                                               _maxLevelToFork;
 
     typename VertexStack::PushBlockVertexStackView                    _stackView;
@@ -166,13 +177,29 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
     /**
      * Can be handed in as max fork level. As the value -1 is already used by
      * peano::grid::nodes::transformOracleResult() to ensure that absolutely
-     * no fork happens at all, I use the -2 here.
+     * no fork happens at all, I use the -2 here. If this flag is set, we
+     * handle solely the patch boundary and do not split. The mode is important
+     * for trees that are stored persistently.
+     *
+     * Please note that setting this flag also terminates the recursion inside
+     * the tree early: As interior vertices don't have to be loaded or stored,
+     * we don't have to descend here in the tree. Search for the bool recurse
+     * in the code (it is used twice).
      */
     static const int DoNotSplitAndHandleOnlyPatchBoundary = -2;
+
+    /**
+     * Has to be passed as max fork level if you drain a persistent subtree.
+     * It is important that the store process is aware of the drain. As the
+     * vertices of a persistent subtree were taken out from all the streams
+     * for a while, they may carry invalid refinement information.
+     */
     static const int PersistentSubtreeIsDrained           = -3;
 
     /**
-     * @param maxLevelToFork Required by peano::grid::mayForkLoadOrStoreVertexTaskOnRegularSubtree().
+     * @param maxLevelToFork see _maxLevelToFork and
+     *   DoNotSplitAndHandleOnlyPatchBoundary as well as
+     *   PersistentSubtreeIsDrained.
      */
     StoreVerticesOnRegularRefinedPatch(
       const bool                                                        isTraversalInverted,

@@ -159,9 +159,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
       const bool CaseStorePersistentVertex = actionFlag==peano::stacks::Constants::InOutStack;
       if ( CaseStorePersistentVertex ) {
-//        @todo Stimmt das? -> Noe, kann eigentlich net sein
-//        _regularGridContainer.getVertex(currentLevel,positionInArray).updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
-
         assertion5(
           _regularGridContainer.getVertex(currentLevel,positionInArray).getCurrentAdjacentCellsHeight()< peano::grid::Undefined,
           currentLevel,
@@ -170,17 +167,20 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)
         );
-        assertion5(
+        assertion6(
           (
             _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration()< peano::grid::Undefined 
             &&
             _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration()>= peano::grid::Leaf
-          )
+          ) 
           ||
-          ( _maxLevelToFork == PersistentSubtreeIsDrained ),
+          (_maxLevelToFork==DoNotSplitAndHandleOnlyPatchBoundary)
+          ||
+          (_maxLevelToFork==PersistentSubtreeIsDrained),
           currentLevel,
           _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
           positionInArray,
+          _maxLevelToFork,
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)
         );
@@ -193,7 +193,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _coarsestCellsOffset,
           _coarsestLevelOfThisTask
         );
-
         assertionNumericalEquals6(
           _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
           _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
@@ -207,23 +206,16 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
         const bool pushVertex = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                              || cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex);
-        
-/*
+
         if (_maxLevelToFork == DoNotSplitAndHandleOnlyPatchBoundary) {
-//          if (_maxLevelToFork == DoNotSplitAndHandleOnlyPatchBoundary || _maxLevelToFork == PersistentSubtreeIsDrained) {
           assertion1(
             _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::Refined ||
             _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::Unrefined,
             _regularGridContainer.getVertex(currentLevel,positionInArray).toString()
           );
-//          _regularGridContainer.getVertex(currentLevel,positionInArray).setIsAdjacentToOrParentingRegularPersistentSubgrid();
+          _regularGridContainer.getVertex(currentLevel,positionInArray).setIsParentingRegularPersistentSubgridFlag();
         }
-*/
         
-        if (_maxLevelToFork == PersistentSubtreeIsDrained) {
-          _regularGridContainer.getVertex(currentLevel,positionInArray).invalidateAdjacentCellInformation();
-        }
-                
         if (_stackView.isOpen() && pushVertex) {
           _stackView.push(_regularGridContainer.getVertex(currentLevel,positionInArray).getRecords() );
         }
@@ -304,14 +296,17 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
       const bool pushVertex = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                            || cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex);
-      
-      if (_maxLevelToFork == PersistentSubtreeIsDrained) {
-        _regularGridContainer.getVertex(currentLevel,positionInArray).invalidateAdjacentCellInformation();
+
+      if (_maxLevelToFork == DoNotSplitAndHandleOnlyPatchBoundary) {
+        assertion1(
+          _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::Refined ||
+          _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::Unrefined,
+          _regularGridContainer.getVertex(currentLevel,positionInArray).toString()
+        );
+        _regularGridContainer.getVertex(currentLevel,positionInArray).setIsParentingRegularPersistentSubgridFlag();
       }
 
       if ( CaseStorePersistentVertex ) {
-        // _regularGridContainer.getVertex(currentLevel,positionInArray).updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
-
         assertion7(
           _regularGridContainer.getVertex(currentLevel,positionInArray).getCurrentAdjacentCellsHeight()< peano::grid::Undefined,
           currentLevel,
@@ -344,24 +339,17 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _coarsestLevelOfThisTask
         );
   
-        // @todo Wir muessen dieses Flag umbennenen. Es hat jetzt nix mehr mit adjazent zu tun, sondern 
-        //       nur noch mit Parenting
-/*
-        if (_maxLevelToFork == DoNotSplitAndHandleOnlyPatchBoundary) {
-//          if (_maxLevelToFork == DoNotSplitAndHandleOnlyPatchBoundary || _maxLevelToFork == PersistentSubtreeIsDrained ) {
-          assertion1(
-            _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::Refined ||
-            _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::Unrefined,
-            _regularGridContainer.getVertex(currentLevel,positionInArray).toString()
-          );
-          _regularGridContainer.getVertex(currentLevel,positionInArray).setIsAdjacentToOrParentingRegularPersistentSubgrid();
-        }
-*/
+        assertion1(
+          _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::Refined ||
+          _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::EraseTriggered ||
+          _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::RefinementTriggered ||
+          _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::Unrefined,
+          _regularGridContainer.getVertex(currentLevel,positionInArray).toString()
+        );
         
         if (_maxLevelToFork == PersistentSubtreeIsDrained) {
           _regularGridContainer.getVertex(currentLevel,positionInArray).invalidateAdjacentCellInformation();
         }
-
 
         if (_stackView.isOpen() && pushVertex) {
           _stackView.push(_regularGridContainer.getVertex(currentLevel,positionInArray).getRecords() );
@@ -489,9 +477,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     zfor3(k,loopDirection1)
       const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k + currentCoarseCellPositionWithinUnrolledPatch*3;
 
-      // @todo Nicht sicher, ob das passt
-      //       Auf jeden Fall fehlt Docu hier
-      const bool recurse  = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
+    const bool recurse  = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                          || _regularGridContainer.isCellAtPatchBoundaryWithinRegularSubtree(
                                currentFineCellPosition,
                                currentFineGridLevel
@@ -578,7 +564,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     topLevelStackView[currentFineCellIndex] = _vertexStack.pushBlockOnOutputStack(currentFineGridCell.getNumberOfStoresToOutputStack());
     bool bitsetValue = true;
     for (int d=0; d<DIMENSIONS; d++) {
-    // @todo anders als drueben -> Negation entfaellt Das in Doku aufnehmen
       bitsetValue &= (currentFineCellPosition(d)!=0 || peano::grid::aspects::CellLocalPeanoCurve::isFaceTouched(coarseGridCell,d,_isTraversalInverted));
       bitsetValue &= (currentFineCellPosition(d)!=2 || peano::grid::aspects::CellLocalPeanoCurve::isFaceTouched(coarseGridCell,d+DIMENSIONS,_isTraversalInverted));
     }
@@ -611,8 +596,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     if (!_forkedSubtree[currentFineCellIndex]) {
       const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k;
 
-      // @todo Nicht sicher, ob das passt
-      //       Auf jeden Fall fehlt Docu hier
       const bool recurse  = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                          || _regularGridContainer.isCellAtPatchBoundaryWithinRegularSubtree(
                              currentFineCellPosition,
