@@ -2,7 +2,7 @@
 #include "peano/utils/Loop.h"
 #include "peano/grid/nodes/Constants.h"
 #include "tarch/multicore/Lock.h"
-
+ 
 
 #include <limits>
 
@@ -180,7 +180,6 @@ void peano::grid::RegularGridContainer<Vertex,Cell>::endOfIteration() {
   logTraceInWith1Argument( "endOfIteration()", _data.at(_activeRegularSubtree).size() );
 
 /*
- * @todo Dokumentieren, dass wir nix mehr freiwillig freigeben.
   if (!_data.at(_activeRegularSubtree).empty() && _data.at(_activeRegularSubtree).back()->usedPerTraversal==0) {
     delete _data.at(_activeRegularSubtree).back();
     _data.at(_activeRegularSubtree).pop_back();
@@ -448,7 +447,7 @@ void peano::grid::RegularGridContainer<Vertex,Cell>::setIsReadFromTemporaryStack
 
 template < class Vertex, class Cell >
 void peano::grid::RegularGridContainer<Vertex,Cell>::setIsToBeWrittenToTemporaryStack( int level, int vertexIndex, bool value ) {
-    logTraceInWith3Arguments( "setIsToBeWrittenToTemporaryStack(int,int,bool)", level, vertexIndex, value );
+  logTraceInWith3Arguments( "setIsToBeWrittenToTemporaryStack(int,int,bool)", level, vertexIndex, value );
 
   validateThatRegularSubtreeIsAvailable( level );
 

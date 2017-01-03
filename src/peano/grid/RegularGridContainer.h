@@ -289,10 +289,12 @@ class peano::grid::RegularGridContainer {
 
 
     /**
-     * Does some logging statements, resets the usage counters per grid level,
-     * and frees the biggest level if it hasn't been used in this iteration.
-     * This way, I try permanently to decrease the memory footprint of the
-     * application.
+     * Does some logging statements and resets the usage counters per grid
+     * level.
+     *
+     * The code used to release the biggest level for which we did allocate
+     * memory if this level is not used anymore. We do not free anything
+     * dynamically anymore as all this work does not pay off.
      */
     void endOfIteration();
 
