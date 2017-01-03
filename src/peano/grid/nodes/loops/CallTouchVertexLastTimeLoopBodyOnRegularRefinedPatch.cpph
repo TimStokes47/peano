@@ -93,8 +93,6 @@ void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedP
   treeRemainsStatic &= vertexRemainsStatic;
 
   if (!treeRemainsStatic) {
-    // Das ist halt tot gefaehrlich, wenn man mit persistenten Trees arbeitet.
-//    vertex.updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
     vertex.setCurrentAdjacentCellsHeight(peano::grid::NotStationary);
   }
   else {

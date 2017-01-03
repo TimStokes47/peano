@@ -73,6 +73,13 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
     UnrolledLevelEnumerator  _coarseGridEnumerator;
 
   public:
+    /**
+     * The name is slightly misleading: the routine does track the vertex state
+     * and thus can identify situations where a vertex transition will kick in
+     * in the next traversal. However, the routine does not actually change
+     * anything as it is invoked in a regular subtree context, i.e. it may not
+     * change any vertex state without destroying the data consistency.
+     */
     static void performVertexTransition( Vertex& vertex, int level, int treeDepth, bool& treeRemainsStatic );
 
     CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch(
