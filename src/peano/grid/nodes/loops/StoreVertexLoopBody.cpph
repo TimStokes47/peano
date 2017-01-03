@@ -165,13 +165,6 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   _coarseGridCell.incrementStoreToOutputStackCounter();
   #endif
 
-  // @todo Hier geht es -> aber dann geht's natuerlich nur eine Iteration
-/*
-  if ( _state.clearIsAdjacentToOrParentingRegularPersistentSubgridFlag() ) {
-    _fineGridVertices[positionInVertexArray].clearIsAdjacentToOrParentingRegularPersistentSubgridFlag();
-  }
-*/
-
   _vertexStack.push(peano::stacks::Constants::InOutStack, _fineGridVertices[positionInVertexArray]);
 
   logTraceOut( "updateRefinementFlagsAndStoreVertexToOutputStream(...)" );
@@ -311,8 +304,8 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
       }
 
       #ifdef Parallel
-      const bool restrictInformation = true;
-        !_fineGridVertices[positionInVertexArray].isOutside() ||
+      const bool restrictInformation = 
+       !_fineGridVertices[positionInVertexArray].isOutside() ||
         _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].isOutside() ||
         _fineGridVertices[positionInVertexArray].isAdjacentToRemoteRank();
       #else
@@ -346,10 +339,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   assertion( _counter[positionInArray]>=0 );
 
   const bool RegularStaticGrid   = CellFlagsFromEnumerator>=peano::grid::Leaf;
-//  const bool StaticGrid          = CellFlagsFromEnumerator>=peano::grid::StationaryWithParallelBoundary;
   const bool StaticGrid          = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
-
-
 
   // These assertions hold for the load. They do not hold for the store, as a
   // grid part might be static right now whereas some parts of it have been
