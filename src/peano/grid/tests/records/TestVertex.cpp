@@ -6,7 +6,7 @@
    }
    
    
-   peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
+   peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
    _isHangingNode(isHangingNode),
    _refinementControl(refinementControl),
    _adjacentCellsHeight(adjacentCellsHeight),
@@ -15,7 +15,8 @@
    _level(level),
    _adjacentRanks(adjacentRanks),
    _adjacentSubtreeForksIntoOtherRank(adjacentSubtreeForksIntoOtherRank),
-   _isParentingRegularPersistentSubgrid(isParentingRegularPersistentSubgrid) {
+   _parentRegularPersistentSubgrid(parentRegularPersistentSubgrid),
+   _parentRegularPersistentSubgridInPreviousIteration(parentRegularPersistentSubgridInPreviousIteration) {
       
    }
    
@@ -116,14 +117,26 @@
    
    
    
-    bool peano::grid::tests::records::TestVertex::PersistentRecords::getIsParentingRegularPersistentSubgrid() const  {
-      return _isParentingRegularPersistentSubgrid;
+    bool peano::grid::tests::records::TestVertex::PersistentRecords::getParentRegularPersistentSubgrid() const  {
+      return _parentRegularPersistentSubgrid;
    }
    
    
    
-    void peano::grid::tests::records::TestVertex::PersistentRecords::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-      _isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+    void peano::grid::tests::records::TestVertex::PersistentRecords::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+      _parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+   }
+   
+   
+   
+    bool peano::grid::tests::records::TestVertex::PersistentRecords::getParentRegularPersistentSubgridInPreviousIteration() const  {
+      return _parentRegularPersistentSubgridInPreviousIteration;
+   }
+   
+   
+   
+    void peano::grid::tests::records::TestVertex::PersistentRecords::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+      _parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
    }
    
    
@@ -133,19 +146,19 @@
    
    
    peano::grid::tests::records::TestVertex::TestVertex(const PersistentRecords& persistentRecords):
-   _persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._x, persistentRecords._level, persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank, persistentRecords._isParentingRegularPersistentSubgrid) {
+   _persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._x, persistentRecords._level, persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank, persistentRecords._parentRegularPersistentSubgrid, persistentRecords._parentRegularPersistentSubgridInPreviousIteration) {
       
    }
    
    
-   peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
-   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank, isParentingRegularPersistentSubgrid) {
+   peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration) {
       
    }
    
    
-   peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
-   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank, isParentingRegularPersistentSubgrid),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+   peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+   _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
    _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
       
    }
@@ -309,14 +322,26 @@
    
    
    
-    bool peano::grid::tests::records::TestVertex::getIsParentingRegularPersistentSubgrid() const  {
-      return _persistentRecords._isParentingRegularPersistentSubgrid;
+    bool peano::grid::tests::records::TestVertex::getParentRegularPersistentSubgrid() const  {
+      return _persistentRecords._parentRegularPersistentSubgrid;
    }
    
    
    
-    void peano::grid::tests::records::TestVertex::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-      _persistentRecords._isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+    void peano::grid::tests::records::TestVertex::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+      _persistentRecords._parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+   }
+   
+   
+   
+    bool peano::grid::tests::records::TestVertex::getParentRegularPersistentSubgridInPreviousIteration() const  {
+      return _persistentRecords._parentRegularPersistentSubgridInPreviousIteration;
+   }
+   
+   
+   
+    void peano::grid::tests::records::TestVertex::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+      _persistentRecords._parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
    }
    
    
@@ -387,7 +412,9 @@
       out << ",";
       out << "adjacentSubtreeForksIntoOtherRank:" << getAdjacentSubtreeForksIntoOtherRank();
       out << ",";
-      out << "isParentingRegularPersistentSubgrid:" << getIsParentingRegularPersistentSubgrid();
+      out << "parentRegularPersistentSubgrid:" << getParentRegularPersistentSubgrid();
+      out << ",";
+      out << "parentRegularPersistentSubgridInPreviousIteration:" << getParentRegularPersistentSubgridInPreviousIteration();
       out <<  ")";
    }
    
@@ -408,7 +435,8 @@
          getLevel(),
          getAdjacentRanks(),
          getAdjacentSubtreeForksIntoOtherRank(),
-         getIsParentingRegularPersistentSubgrid()
+         getParentRegularPersistentSubgrid(),
+         getParentRegularPersistentSubgridInPreviousIteration()
       );
    }
    
@@ -423,7 +451,7 @@
          {
             TestVertex dummyTestVertex[2];
             
-            const int Attributes = 10;
+            const int Attributes = 11;
             MPI_Datatype subtypes[Attributes] = {
                MPI_CHAR,		 //isHangingNode
                MPI_INT,		 //refinementControl
@@ -432,7 +460,8 @@
                MPI_INT,		 //level
                MPI_INT,		 //adjacentRanks
                MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
-               MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+               MPI_CHAR,		 //parentRegularPersistentSubgrid
+               MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
                MPI_INT,		 //numberOfAdjacentRefinedCells
                MPI_UB		 // end/displacement flag
             };
@@ -445,7 +474,8 @@
                1,		 //level
                TWO_POWER_D,		 //adjacentRanks
                1,		 //adjacentSubtreeForksIntoOtherRank
-               1,		 //isParentingRegularPersistentSubgrid
+               1,		 //parentRegularPersistentSubgrid
+               1,		 //parentRegularPersistentSubgridInPreviousIteration
                1,		 //numberOfAdjacentRefinedCells
                1		 // end/displacement flag
             };
@@ -461,9 +491,10 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._level))), 		&disp[4] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[5] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[6] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[7] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[8] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[9] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[7] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[8] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[9] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[10] );
             
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
@@ -478,7 +509,7 @@
          {
             TestVertex dummyTestVertex[2];
             
-            const int Attributes = 12;
+            const int Attributes = 13;
             MPI_Datatype subtypes[Attributes] = {
                MPI_CHAR,		 //isHangingNode
                MPI_INT,		 //refinementControl
@@ -488,7 +519,8 @@
                MPI_INT,		 //level
                MPI_INT,		 //adjacentRanks
                MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
-               MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+               MPI_CHAR,		 //parentRegularPersistentSubgrid
+               MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
                MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
                MPI_INT,		 //numberOfAdjacentRefinedCells
                MPI_UB		 // end/displacement flag
@@ -503,7 +535,8 @@
                1,		 //level
                TWO_POWER_D,		 //adjacentRanks
                1,		 //adjacentSubtreeForksIntoOtherRank
-               1,		 //isParentingRegularPersistentSubgrid
+               1,		 //parentRegularPersistentSubgrid
+               1,		 //parentRegularPersistentSubgridInPreviousIteration
                1,		 //adjacentCellsHeightOfPreviousIteration
                1,		 //numberOfAdjacentRefinedCells
                1		 // end/displacement flag
@@ -521,10 +554,11 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._level))), 		&disp[5] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[6] );
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[7] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[8] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[9] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[10] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[11] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[8] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[9] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[10] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[11] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[12] );
             
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
@@ -785,13 +819,14 @@ peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentReco
 }
 
 
-peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
+peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
 _adjacentCellsHeight(adjacentCellsHeight),
 _x(x),
 _level(level),
 _adjacentRanks(adjacentRanks),
 _adjacentSubtreeForksIntoOtherRank(adjacentSubtreeForksIntoOtherRank),
-_isParentingRegularPersistentSubgrid(isParentingRegularPersistentSubgrid) {
+_parentRegularPersistentSubgrid(parentRegularPersistentSubgrid),
+_parentRegularPersistentSubgridInPreviousIteration(parentRegularPersistentSubgridInPreviousIteration) {
    setIsHangingNode(isHangingNode);
    setRefinementControl(refinementControl);
    setInsideOutsideDomain(insideOutsideDomain);
@@ -922,14 +957,26 @@ _isParentingRegularPersistentSubgrid(isParentingRegularPersistentSubgrid) {
 
 
 
- bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getIsParentingRegularPersistentSubgrid() const  {
-   return _isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getParentRegularPersistentSubgrid() const  {
+   return _parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-   _isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+   _parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getParentRegularPersistentSubgridInPreviousIteration() const  {
+   return _parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+   _parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -945,7 +992,7 @@ peano::grid::tests::records::TestVertexPacked::TestVertexPacked() {
 
 
 peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._x, persistentRecords._level, persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank, persistentRecords._isParentingRegularPersistentSubgrid) {
+_persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._x, persistentRecords._level, persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank, persistentRecords._parentRegularPersistentSubgrid, persistentRecords._parentRegularPersistentSubgridInPreviousIteration) {
    if ((6 >= (8 * sizeof(int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -956,8 +1003,8 @@ _persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRe
 }
 
 
-peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank, isParentingRegularPersistentSubgrid) {
+peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration) {
    if ((6 >= (8 * sizeof(int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -968,8 +1015,8 @@ _persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, inside
 }
 
 
-peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank, isParentingRegularPersistentSubgrid),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, adjacentRanks, adjacentSubtreeForksIntoOtherRank, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
 _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
    if ((6 >= (8 * sizeof(int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
@@ -1160,14 +1207,26 @@ peano::grid::tests::records::TestVertexPacked::~TestVertexPacked() { }
 
 
 
- bool peano::grid::tests::records::TestVertexPacked::getIsParentingRegularPersistentSubgrid() const  {
-   return _persistentRecords._isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertexPacked::getParentRegularPersistentSubgrid() const  {
+   return _persistentRecords._parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertexPacked::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-   _persistentRecords._isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertexPacked::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+   _persistentRecords._parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertexPacked::getParentRegularPersistentSubgridInPreviousIteration() const  {
+   return _persistentRecords._parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertexPacked::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+   _persistentRecords._parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -1225,7 +1284,9 @@ void peano::grid::tests::records::TestVertexPacked::toString (std::ostream& out)
    out << ",";
    out << "adjacentSubtreeForksIntoOtherRank:" << getAdjacentSubtreeForksIntoOtherRank();
    out << ",";
-   out << "isParentingRegularPersistentSubgrid:" << getIsParentingRegularPersistentSubgrid();
+   out << "parentRegularPersistentSubgrid:" << getParentRegularPersistentSubgrid();
+   out << ",";
+   out << "parentRegularPersistentSubgridInPreviousIteration:" << getParentRegularPersistentSubgridInPreviousIteration();
    out <<  ")";
 }
 
@@ -1246,7 +1307,8 @@ peano::grid::tests::records::TestVertex peano::grid::tests::records::TestVertexP
       getLevel(),
       getAdjacentRanks(),
       getAdjacentSubtreeForksIntoOtherRank(),
-      getIsParentingRegularPersistentSubgrid()
+      getParentRegularPersistentSubgrid(),
+      getParentRegularPersistentSubgridInPreviousIteration()
    );
 }
 
@@ -1261,13 +1323,14 @@ peano::grid::tests::records::TestVertex peano::grid::tests::records::TestVertexP
       {
          TestVertexPacked dummyTestVertexPacked[2];
          
-         const int Attributes = 8;
+         const int Attributes = 9;
          MPI_Datatype subtypes[Attributes] = {
             MPI_DOUBLE,		 //x
             MPI_INT,		 //level
             MPI_INT,		 //adjacentRanks
             MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
-            MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+            MPI_CHAR,		 //parentRegularPersistentSubgrid
+            MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
             MPI_INT,		 //_packedRecords0
             MPI_INT,		 //numberOfAdjacentRefinedCells
             MPI_UB		 // end/displacement flag
@@ -1278,7 +1341,8 @@ peano::grid::tests::records::TestVertex peano::grid::tests::records::TestVertexP
             1,		 //level
             TWO_POWER_D,		 //adjacentRanks
             1,		 //adjacentSubtreeForksIntoOtherRank
-            1,		 //isParentingRegularPersistentSubgrid
+            1,		 //parentRegularPersistentSubgrid
+            1,		 //parentRegularPersistentSubgridInPreviousIteration
             1,		 //_packedRecords0
             1,		 //numberOfAdjacentRefinedCells
             1		 // end/displacement flag
@@ -1292,10 +1356,11 @@ peano::grid::tests::records::TestVertex peano::grid::tests::records::TestVertexP
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._level))), 		&disp[1] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[2] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[3] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[4] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[5] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[6] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestVertexPacked[1]._persistentRecords._x[0])), 		&disp[7] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[4] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[5] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[6] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[7] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestVertexPacked[1]._persistentRecords._x[0])), 		&disp[8] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -1310,14 +1375,15 @@ peano::grid::tests::records::TestVertex peano::grid::tests::records::TestVertexP
       {
          TestVertexPacked dummyTestVertexPacked[2];
          
-         const int Attributes = 10;
+         const int Attributes = 11;
          MPI_Datatype subtypes[Attributes] = {
             MPI_INT,		 //adjacentCellsHeight
             MPI_DOUBLE,		 //x
             MPI_INT,		 //level
             MPI_INT,		 //adjacentRanks
             MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
-            MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+            MPI_CHAR,		 //parentRegularPersistentSubgrid
+            MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
             MPI_INT,		 //_packedRecords0
             MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
             MPI_INT,		 //numberOfAdjacentRefinedCells
@@ -1330,7 +1396,8 @@ peano::grid::tests::records::TestVertex peano::grid::tests::records::TestVertexP
             1,		 //level
             TWO_POWER_D,		 //adjacentRanks
             1,		 //adjacentSubtreeForksIntoOtherRank
-            1,		 //isParentingRegularPersistentSubgrid
+            1,		 //parentRegularPersistentSubgrid
+            1,		 //parentRegularPersistentSubgridInPreviousIteration
             1,		 //_packedRecords0
             1,		 //adjacentCellsHeightOfPreviousIteration
             1,		 //numberOfAdjacentRefinedCells
@@ -1346,11 +1413,12 @@ peano::grid::tests::records::TestVertex peano::grid::tests::records::TestVertexP
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._level))), 		&disp[2] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[3] );
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[4] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[5] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[6] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[7] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[8] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[9] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[5] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[6] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[7] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[8] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[9] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[10] );
          
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
@@ -1607,14 +1675,15 @@ peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords() 
 }
 
 
-peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid):
+peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
 _isHangingNode(isHangingNode),
 _refinementControl(refinementControl),
 _adjacentCellsHeight(adjacentCellsHeight),
 _insideOutsideDomain(insideOutsideDomain),
 _x(x),
 _level(level),
-_isParentingRegularPersistentSubgrid(isParentingRegularPersistentSubgrid) {
+_parentRegularPersistentSubgrid(parentRegularPersistentSubgrid),
+_parentRegularPersistentSubgridInPreviousIteration(parentRegularPersistentSubgridInPreviousIteration) {
 
 }
 
@@ -1691,14 +1760,26 @@ _level = level;
 
 
 
- bool peano::grid::tests::records::TestVertex::PersistentRecords::getIsParentingRegularPersistentSubgrid() const  {
-return _isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertex::PersistentRecords::getParentRegularPersistentSubgrid() const  {
+return _parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertex::PersistentRecords::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertex::PersistentRecords::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertex::PersistentRecords::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertex::PersistentRecords::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -1708,19 +1789,19 @@ peano::grid::tests::records::TestVertex::TestVertex() {
 
 
 peano::grid::tests::records::TestVertex::TestVertex(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._x, persistentRecords._level, persistentRecords._isParentingRegularPersistentSubgrid) {
+_persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._x, persistentRecords._level, persistentRecords._parentRegularPersistentSubgrid, persistentRecords._parentRegularPersistentSubgridInPreviousIteration) {
 
 }
 
 
-peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, isParentingRegularPersistentSubgrid) {
+peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration) {
 
 }
 
 
-peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, isParentingRegularPersistentSubgrid),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
 _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
 
 }
@@ -1842,14 +1923,26 @@ _persistentRecords._level = level;
 
 
 
- bool peano::grid::tests::records::TestVertex::getIsParentingRegularPersistentSubgrid() const  {
-return _persistentRecords._isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertex::getParentRegularPersistentSubgrid() const  {
+return _persistentRecords._parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertex::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_persistentRecords._isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertex::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_persistentRecords._parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertex::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _persistentRecords._parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertex::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_persistentRecords._parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -1912,7 +2005,9 @@ out << "x:[";
 out << ",";
 out << "level:" << getLevel();
 out << ",";
-out << "isParentingRegularPersistentSubgrid:" << getIsParentingRegularPersistentSubgrid();
+out << "parentRegularPersistentSubgrid:" << getParentRegularPersistentSubgrid();
+out << ",";
+out << "parentRegularPersistentSubgridInPreviousIteration:" << getParentRegularPersistentSubgridInPreviousIteration();
 out <<  ")";
 }
 
@@ -1931,7 +2026,8 @@ return TestVertexPacked(
    getInsideOutsideDomain(),
    getX(),
    getLevel(),
-   getIsParentingRegularPersistentSubgrid()
+   getParentRegularPersistentSubgrid(),
+   getParentRegularPersistentSubgridInPreviousIteration()
 );
 }
 
@@ -1946,14 +2042,15 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
    {
       TestVertex dummyTestVertex[2];
       
-      const int Attributes = 8;
+      const int Attributes = 9;
       MPI_Datatype subtypes[Attributes] = {
          MPI_CHAR,		 //isHangingNode
          MPI_INT,		 //refinementControl
          MPI_INT,		 //insideOutsideDomain
          MPI_DOUBLE,		 //x
          MPI_INT,		 //level
-         MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+         MPI_CHAR,		 //parentRegularPersistentSubgrid
+         MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
          MPI_INT,		 //numberOfAdjacentRefinedCells
          MPI_UB		 // end/displacement flag
       };
@@ -1964,7 +2061,8 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
          1,		 //insideOutsideDomain
          DIMENSIONS,		 //x
          1,		 //level
-         1,		 //isParentingRegularPersistentSubgrid
+         1,		 //parentRegularPersistentSubgrid
+         1,		 //parentRegularPersistentSubgridInPreviousIteration
          1,		 //numberOfAdjacentRefinedCells
          1		 // end/displacement flag
       };
@@ -1978,9 +2076,10 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._insideOutsideDomain))), 		&disp[2] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._x[0]))), 		&disp[3] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._level))), 		&disp[4] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[5] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[6] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[7] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[5] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[6] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[7] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[8] );
       
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
@@ -1995,7 +2094,7 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
    {
       TestVertex dummyTestVertex[2];
       
-      const int Attributes = 10;
+      const int Attributes = 11;
       MPI_Datatype subtypes[Attributes] = {
          MPI_CHAR,		 //isHangingNode
          MPI_INT,		 //refinementControl
@@ -2003,7 +2102,8 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
          MPI_INT,		 //insideOutsideDomain
          MPI_DOUBLE,		 //x
          MPI_INT,		 //level
-         MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+         MPI_CHAR,		 //parentRegularPersistentSubgrid
+         MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
          MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
          MPI_INT,		 //numberOfAdjacentRefinedCells
          MPI_UB		 // end/displacement flag
@@ -2016,7 +2116,8 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
          1,		 //insideOutsideDomain
          DIMENSIONS,		 //x
          1,		 //level
-         1,		 //isParentingRegularPersistentSubgrid
+         1,		 //parentRegularPersistentSubgrid
+         1,		 //parentRegularPersistentSubgridInPreviousIteration
          1,		 //adjacentCellsHeightOfPreviousIteration
          1,		 //numberOfAdjacentRefinedCells
          1		 // end/displacement flag
@@ -2032,10 +2133,11 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._insideOutsideDomain))), 		&disp[3] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._x[0]))), 		&disp[4] );
       MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._level))), 		&disp[5] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[6] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[7] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[8] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[9] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[6] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[7] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[8] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[9] );
+      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[10] );
       
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
@@ -2296,11 +2398,12 @@ assertion((6 < (8 * sizeof(int))));
 }
 
 
-peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid):
+peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
 _adjacentCellsHeight(adjacentCellsHeight),
 _x(x),
 _level(level),
-_isParentingRegularPersistentSubgrid(isParentingRegularPersistentSubgrid) {
+_parentRegularPersistentSubgrid(parentRegularPersistentSubgrid),
+_parentRegularPersistentSubgridInPreviousIteration(parentRegularPersistentSubgridInPreviousIteration) {
 setIsHangingNode(isHangingNode);
 setRefinementControl(refinementControl);
 setInsideOutsideDomain(insideOutsideDomain);
@@ -2407,14 +2510,26 @@ _level = level;
 
 
 
- bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getIsParentingRegularPersistentSubgrid() const  {
-return _isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getParentRegularPersistentSubgrid() const  {
+return _parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -2430,7 +2545,7 @@ assertion((6 < (8 * sizeof(int))));
 
 
 peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._x, persistentRecords._level, persistentRecords._isParentingRegularPersistentSubgrid) {
+_persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._x, persistentRecords._level, persistentRecords._parentRegularPersistentSubgrid, persistentRecords._parentRegularPersistentSubgridInPreviousIteration) {
 if ((6 >= (8 * sizeof(int)))) {
 std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
 std::cerr << "  Packed-Type: int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -2441,8 +2556,8 @@ assertion((6 < (8 * sizeof(int))));
 }
 
 
-peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, isParentingRegularPersistentSubgrid) {
+peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration) {
 if ((6 >= (8 * sizeof(int)))) {
 std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
 std::cerr << "  Packed-Type: int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -2453,8 +2568,8 @@ assertion((6 < (8 * sizeof(int))));
 }
 
 
-peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, isParentingRegularPersistentSubgrid),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, x, level, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
 _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
 if ((6 >= (8 * sizeof(int)))) {
 std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
@@ -2603,14 +2718,26 @@ _persistentRecords._level = level;
 
 
 
- bool peano::grid::tests::records::TestVertexPacked::getIsParentingRegularPersistentSubgrid() const  {
-return _persistentRecords._isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertexPacked::getParentRegularPersistentSubgrid() const  {
+return _persistentRecords._parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertexPacked::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_persistentRecords._isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertexPacked::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_persistentRecords._parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertexPacked::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _persistentRecords._parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertexPacked::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_persistentRecords._parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -2660,7 +2787,9 @@ out << "x:[";
 out << ",";
 out << "level:" << getLevel();
 out << ",";
-out << "isParentingRegularPersistentSubgrid:" << getIsParentingRegularPersistentSubgrid();
+out << "parentRegularPersistentSubgrid:" << getParentRegularPersistentSubgrid();
+out << ",";
+out << "parentRegularPersistentSubgridInPreviousIteration:" << getParentRegularPersistentSubgridInPreviousIteration();
 out <<  ")";
 }
 
@@ -2679,7 +2808,8 @@ getNumberOfAdjacentRefinedCells(),
 getInsideOutsideDomain(),
 getX(),
 getLevel(),
-getIsParentingRegularPersistentSubgrid()
+getParentRegularPersistentSubgrid(),
+getParentRegularPersistentSubgridInPreviousIteration()
 );
 }
 
@@ -2694,11 +2824,12 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
 {
    TestVertexPacked dummyTestVertexPacked[2];
    
-   const int Attributes = 6;
+   const int Attributes = 7;
    MPI_Datatype subtypes[Attributes] = {
       MPI_DOUBLE,		 //x
       MPI_INT,		 //level
-      MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+      MPI_CHAR,		 //parentRegularPersistentSubgrid
+      MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
       MPI_INT,		 //_packedRecords0
       MPI_INT,		 //numberOfAdjacentRefinedCells
       MPI_UB		 // end/displacement flag
@@ -2707,7 +2838,8 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
    int blocklen[Attributes] = {
       DIMENSIONS,		 //x
       1,		 //level
-      1,		 //isParentingRegularPersistentSubgrid
+      1,		 //parentRegularPersistentSubgrid
+      1,		 //parentRegularPersistentSubgridInPreviousIteration
       1,		 //_packedRecords0
       1,		 //numberOfAdjacentRefinedCells
       1		 // end/displacement flag
@@ -2719,10 +2851,11 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
    MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]))), &base);
    MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._x[0]))), 		&disp[0] );
    MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._level))), 		&disp[1] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[2] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[3] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[4] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestVertexPacked[1]._persistentRecords._x[0])), 		&disp[5] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[2] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[3] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[4] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[5] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestVertexPacked[1]._persistentRecords._x[0])), 		&disp[6] );
    
    for (int i=1; i<Attributes; i++) {
       assertion1( disp[i] > disp[i-1], i );
@@ -2737,12 +2870,13 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
 {
    TestVertexPacked dummyTestVertexPacked[2];
    
-   const int Attributes = 8;
+   const int Attributes = 9;
    MPI_Datatype subtypes[Attributes] = {
       MPI_INT,		 //adjacentCellsHeight
       MPI_DOUBLE,		 //x
       MPI_INT,		 //level
-      MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+      MPI_CHAR,		 //parentRegularPersistentSubgrid
+      MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
       MPI_INT,		 //_packedRecords0
       MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
       MPI_INT,		 //numberOfAdjacentRefinedCells
@@ -2753,7 +2887,8 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
       1,		 //adjacentCellsHeight
       DIMENSIONS,		 //x
       1,		 //level
-      1,		 //isParentingRegularPersistentSubgrid
+      1,		 //parentRegularPersistentSubgrid
+      1,		 //parentRegularPersistentSubgridInPreviousIteration
       1,		 //_packedRecords0
       1,		 //adjacentCellsHeightOfPreviousIteration
       1,		 //numberOfAdjacentRefinedCells
@@ -2767,11 +2902,12 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
    MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentCellsHeight))), 		&disp[0] );
    MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._x[0]))), 		&disp[1] );
    MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._level))), 		&disp[2] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[3] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[4] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[5] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[6] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[7] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[3] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[4] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[5] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[6] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[7] );
+   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[8] );
    
    for (int i=1; i<Attributes; i++) {
       assertion1( disp[i] > disp[i-1], i );
@@ -4563,14 +4699,15 @@ peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords() 
 }
 
 
-peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
+peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
 _isHangingNode(isHangingNode),
 _refinementControl(refinementControl),
 _adjacentCellsHeight(adjacentCellsHeight),
 _insideOutsideDomain(insideOutsideDomain),
 _adjacentRanks(adjacentRanks),
 _adjacentSubtreeForksIntoOtherRank(adjacentSubtreeForksIntoOtherRank),
-_isParentingRegularPersistentSubgrid(isParentingRegularPersistentSubgrid) {
+_parentRegularPersistentSubgrid(parentRegularPersistentSubgrid),
+_parentRegularPersistentSubgridInPreviousIteration(parentRegularPersistentSubgridInPreviousIteration) {
 
 }
 
@@ -4647,14 +4784,26 @@ _adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksIntoOtherRank;
 
 
 
- bool peano::grid::tests::records::TestVertex::PersistentRecords::getIsParentingRegularPersistentSubgrid() const  {
-return _isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertex::PersistentRecords::getParentRegularPersistentSubgrid() const  {
+return _parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertex::PersistentRecords::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertex::PersistentRecords::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertex::PersistentRecords::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertex::PersistentRecords::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -4664,19 +4813,19 @@ peano::grid::tests::records::TestVertex::TestVertex() {
 
 
 peano::grid::tests::records::TestVertex::TestVertex(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank, persistentRecords._isParentingRegularPersistentSubgrid) {
+_persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank, persistentRecords._parentRegularPersistentSubgrid, persistentRecords._parentRegularPersistentSubgridInPreviousIteration) {
 
 }
 
 
-peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank, isParentingRegularPersistentSubgrid) {
+peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration) {
 
 }
 
 
-peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank, isParentingRegularPersistentSubgrid),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
 _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
 
 }
@@ -4798,14 +4947,26 @@ _persistentRecords._adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksInto
 
 
 
- bool peano::grid::tests::records::TestVertex::getIsParentingRegularPersistentSubgrid() const  {
-return _persistentRecords._isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertex::getParentRegularPersistentSubgrid() const  {
+return _persistentRecords._parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertex::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_persistentRecords._isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertex::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_persistentRecords._parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertex::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _persistentRecords._parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertex::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_persistentRecords._parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -4868,7 +5029,9 @@ out << "adjacentRanks:[";
 out << ",";
 out << "adjacentSubtreeForksIntoOtherRank:" << getAdjacentSubtreeForksIntoOtherRank();
 out << ",";
-out << "isParentingRegularPersistentSubgrid:" << getIsParentingRegularPersistentSubgrid();
+out << "parentRegularPersistentSubgrid:" << getParentRegularPersistentSubgrid();
+out << ",";
+out << "parentRegularPersistentSubgridInPreviousIteration:" << getParentRegularPersistentSubgridInPreviousIteration();
 out <<  ")";
 }
 
@@ -4887,7 +5050,8 @@ getNumberOfAdjacentRefinedCells(),
 getInsideOutsideDomain(),
 getAdjacentRanks(),
 getAdjacentSubtreeForksIntoOtherRank(),
-getIsParentingRegularPersistentSubgrid()
+getParentRegularPersistentSubgrid(),
+getParentRegularPersistentSubgridInPreviousIteration()
 );
 }
 
@@ -4902,13 +5066,14 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
 {
 TestVertex dummyTestVertex[2];
 
-const int Attributes = 7;
+const int Attributes = 8;
 MPI_Datatype subtypes[Attributes] = {
 MPI_CHAR,		 //isHangingNode
 MPI_INT,		 //refinementControl
 MPI_INT,		 //adjacentRanks
 MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
-MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
 MPI_INT,		 //numberOfAdjacentRefinedCells
 MPI_UB		 // end/displacement flag
 };
@@ -4918,7 +5083,8 @@ int blocklen[Attributes] = {
 1,		 //refinementControl
 TWO_POWER_D,		 //adjacentRanks
 1,		 //adjacentSubtreeForksIntoOtherRank
-1,		 //isParentingRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgridInPreviousIteration
 1,		 //numberOfAdjacentRefinedCells
 1		 // end/displacement flag
 };
@@ -4931,9 +5097,10 @@ MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._pe
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._refinementControl))), 		&disp[1] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[2] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[3] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[4] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[5] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[6] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[4] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[5] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[6] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[7] );
 
 for (int i=1; i<Attributes; i++) {
 assertion1( disp[i] > disp[i-1], i );
@@ -4948,7 +5115,7 @@ MPI_Type_commit( &TestVertex::Datatype );
 {
 TestVertex dummyTestVertex[2];
 
-const int Attributes = 10;
+const int Attributes = 11;
 MPI_Datatype subtypes[Attributes] = {
 MPI_CHAR,		 //isHangingNode
 MPI_INT,		 //refinementControl
@@ -4956,7 +5123,8 @@ MPI_INT,		 //adjacentCellsHeight
 MPI_INT,		 //insideOutsideDomain
 MPI_INT,		 //adjacentRanks
 MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
-MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
 MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
 MPI_INT,		 //numberOfAdjacentRefinedCells
 MPI_UB		 // end/displacement flag
@@ -4969,7 +5137,8 @@ int blocklen[Attributes] = {
 1,		 //insideOutsideDomain
 TWO_POWER_D,		 //adjacentRanks
 1,		 //adjacentSubtreeForksIntoOtherRank
-1,		 //isParentingRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgridInPreviousIteration
 1,		 //adjacentCellsHeightOfPreviousIteration
 1,		 //numberOfAdjacentRefinedCells
 1		 // end/displacement flag
@@ -4985,10 +5154,11 @@ MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._pe
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._insideOutsideDomain))), 		&disp[3] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[4] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[5] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[6] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[7] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[8] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[9] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[6] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[7] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[8] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[9] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[10] );
 
 for (int i=1; i<Attributes; i++) {
 assertion1( disp[i] > disp[i-1], i );
@@ -5249,11 +5419,12 @@ assertion((6 < (8 * sizeof(int))));
 }
 
 
-peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
+peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
 _adjacentCellsHeight(adjacentCellsHeight),
 _adjacentRanks(adjacentRanks),
 _adjacentSubtreeForksIntoOtherRank(adjacentSubtreeForksIntoOtherRank),
-_isParentingRegularPersistentSubgrid(isParentingRegularPersistentSubgrid) {
+_parentRegularPersistentSubgrid(parentRegularPersistentSubgrid),
+_parentRegularPersistentSubgridInPreviousIteration(parentRegularPersistentSubgridInPreviousIteration) {
 setIsHangingNode(isHangingNode);
 setRefinementControl(refinementControl);
 setInsideOutsideDomain(insideOutsideDomain);
@@ -5360,14 +5531,26 @@ _adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksIntoOtherRank;
 
 
 
- bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getIsParentingRegularPersistentSubgrid() const  {
-return _isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getParentRegularPersistentSubgrid() const  {
+return _parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -5383,7 +5566,7 @@ assertion((6 < (8 * sizeof(int))));
 
 
 peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank, persistentRecords._isParentingRegularPersistentSubgrid) {
+_persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._adjacentRanks, persistentRecords._adjacentSubtreeForksIntoOtherRank, persistentRecords._parentRegularPersistentSubgrid, persistentRecords._parentRegularPersistentSubgridInPreviousIteration) {
 if ((6 >= (8 * sizeof(int)))) {
 std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
 std::cerr << "  Packed-Type: int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -5394,8 +5577,8 @@ assertion((6 < (8 * sizeof(int))));
 }
 
 
-peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank, isParentingRegularPersistentSubgrid) {
+peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration) {
 if ((6 >= (8 * sizeof(int)))) {
 std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
 std::cerr << "  Packed-Type: int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -5406,8 +5589,8 @@ assertion((6 < (8 * sizeof(int))));
 }
 
 
-peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank, isParentingRegularPersistentSubgrid),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, adjacentRanks, adjacentSubtreeForksIntoOtherRank, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
 _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
 if ((6 >= (8 * sizeof(int)))) {
 std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
@@ -5556,14 +5739,26 @@ _persistentRecords._adjacentSubtreeForksIntoOtherRank = adjacentSubtreeForksInto
 
 
 
- bool peano::grid::tests::records::TestVertexPacked::getIsParentingRegularPersistentSubgrid() const  {
-return _persistentRecords._isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertexPacked::getParentRegularPersistentSubgrid() const  {
+return _persistentRecords._parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertexPacked::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_persistentRecords._isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertexPacked::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_persistentRecords._parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertexPacked::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _persistentRecords._parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertexPacked::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_persistentRecords._parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -5613,7 +5808,9 @@ out << "adjacentRanks:[";
 out << ",";
 out << "adjacentSubtreeForksIntoOtherRank:" << getAdjacentSubtreeForksIntoOtherRank();
 out << ",";
-out << "isParentingRegularPersistentSubgrid:" << getIsParentingRegularPersistentSubgrid();
+out << "parentRegularPersistentSubgrid:" << getParentRegularPersistentSubgrid();
+out << ",";
+out << "parentRegularPersistentSubgridInPreviousIteration:" << getParentRegularPersistentSubgridInPreviousIteration();
 out <<  ")";
 }
 
@@ -5632,7 +5829,8 @@ getNumberOfAdjacentRefinedCells(),
 getInsideOutsideDomain(),
 getAdjacentRanks(),
 getAdjacentSubtreeForksIntoOtherRank(),
-getIsParentingRegularPersistentSubgrid()
+getParentRegularPersistentSubgrid(),
+getParentRegularPersistentSubgridInPreviousIteration()
 );
 }
 
@@ -5647,11 +5845,12 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
 {
 TestVertexPacked dummyTestVertexPacked[2];
 
-const int Attributes = 6;
+const int Attributes = 7;
 MPI_Datatype subtypes[Attributes] = {
 MPI_INT,		 //adjacentRanks
 MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
-MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
 MPI_INT,		 //_packedRecords0
 MPI_INT,		 //numberOfAdjacentRefinedCells
 MPI_UB		 // end/displacement flag
@@ -5660,7 +5859,8 @@ MPI_UB		 // end/displacement flag
 int blocklen[Attributes] = {
 TWO_POWER_D,		 //adjacentRanks
 1,		 //adjacentSubtreeForksIntoOtherRank
-1,		 //isParentingRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgridInPreviousIteration
 1,		 //_packedRecords0
 1,		 //numberOfAdjacentRefinedCells
 1		 // end/displacement flag
@@ -5672,10 +5872,11 @@ MPI_Aint base;
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]))), &base);
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[0] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[1] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[2] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[3] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[4] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestVertexPacked[1]._persistentRecords._adjacentRanks[0])), 		&disp[5] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[2] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[3] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[4] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[5] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestVertexPacked[1]._persistentRecords._adjacentRanks[0])), 		&disp[6] );
 
 for (int i=1; i<Attributes; i++) {
 assertion1( disp[i] > disp[i-1], i );
@@ -5690,12 +5891,13 @@ MPI_Type_commit( &TestVertexPacked::Datatype );
 {
 TestVertexPacked dummyTestVertexPacked[2];
 
-const int Attributes = 8;
+const int Attributes = 9;
 MPI_Datatype subtypes[Attributes] = {
 MPI_INT,		 //adjacentCellsHeight
 MPI_INT,		 //adjacentRanks
 MPI_CHAR,		 //adjacentSubtreeForksIntoOtherRank
-MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
 MPI_INT,		 //_packedRecords0
 MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
 MPI_INT,		 //numberOfAdjacentRefinedCells
@@ -5706,7 +5908,8 @@ int blocklen[Attributes] = {
 1,		 //adjacentCellsHeight
 TWO_POWER_D,		 //adjacentRanks
 1,		 //adjacentSubtreeForksIntoOtherRank
-1,		 //isParentingRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgridInPreviousIteration
 1,		 //_packedRecords0
 1,		 //adjacentCellsHeightOfPreviousIteration
 1,		 //numberOfAdjacentRefinedCells
@@ -5720,11 +5923,12 @@ MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentCellsHeight))), 		&disp[0] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentRanks[0]))), 		&disp[1] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentSubtreeForksIntoOtherRank))), 		&disp[2] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[3] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[4] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[5] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[6] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[7] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[3] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[4] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[5] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[6] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[7] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[8] );
 
 for (int i=1; i<Attributes; i++) {
 assertion1( disp[i] > disp[i-1], i );
@@ -5982,12 +6186,13 @@ peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords() 
 }
 
 
-peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid):
+peano::grid::tests::records::TestVertex::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
 _isHangingNode(isHangingNode),
 _refinementControl(refinementControl),
 _adjacentCellsHeight(adjacentCellsHeight),
 _insideOutsideDomain(insideOutsideDomain),
-_isParentingRegularPersistentSubgrid(isParentingRegularPersistentSubgrid) {
+_parentRegularPersistentSubgrid(parentRegularPersistentSubgrid),
+_parentRegularPersistentSubgridInPreviousIteration(parentRegularPersistentSubgridInPreviousIteration) {
 
 }
 
@@ -6040,14 +6245,26 @@ _insideOutsideDomain = insideOutsideDomain;
 
 
 
- bool peano::grid::tests::records::TestVertex::PersistentRecords::getIsParentingRegularPersistentSubgrid() const  {
-return _isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertex::PersistentRecords::getParentRegularPersistentSubgrid() const  {
+return _parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertex::PersistentRecords::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertex::PersistentRecords::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertex::PersistentRecords::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertex::PersistentRecords::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -6057,19 +6274,19 @@ peano::grid::tests::records::TestVertex::TestVertex() {
 
 
 peano::grid::tests::records::TestVertex::TestVertex(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._isParentingRegularPersistentSubgrid) {
+_persistentRecords(persistentRecords._isHangingNode, persistentRecords._refinementControl, persistentRecords._adjacentCellsHeight, persistentRecords._insideOutsideDomain, persistentRecords._parentRegularPersistentSubgrid, persistentRecords._parentRegularPersistentSubgridInPreviousIteration) {
 
 }
 
 
-peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, isParentingRegularPersistentSubgrid) {
+peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration) {
 
 }
 
 
-peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, isParentingRegularPersistentSubgrid),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+peano::grid::tests::records::TestVertex::TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
 _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
 
 }
@@ -6149,14 +6366,26 @@ _persistentRecords._insideOutsideDomain = insideOutsideDomain;
 
 
 
- bool peano::grid::tests::records::TestVertex::getIsParentingRegularPersistentSubgrid() const  {
-return _persistentRecords._isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertex::getParentRegularPersistentSubgrid() const  {
+return _persistentRecords._parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertex::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_persistentRecords._isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertex::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_persistentRecords._parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertex::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _persistentRecords._parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertex::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_persistentRecords._parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -6211,7 +6440,9 @@ out << "numberOfAdjacentRefinedCells:" << getNumberOfAdjacentRefinedCells();
 out << ",";
 out << "insideOutsideDomain:" << toString(getInsideOutsideDomain());
 out << ",";
-out << "isParentingRegularPersistentSubgrid:" << getIsParentingRegularPersistentSubgrid();
+out << "parentRegularPersistentSubgrid:" << getParentRegularPersistentSubgrid();
+out << ",";
+out << "parentRegularPersistentSubgridInPreviousIteration:" << getParentRegularPersistentSubgridInPreviousIteration();
 out <<  ")";
 }
 
@@ -6228,7 +6459,8 @@ getAdjacentCellsHeight(),
 getAdjacentCellsHeightOfPreviousIteration(),
 getNumberOfAdjacentRefinedCells(),
 getInsideOutsideDomain(),
-getIsParentingRegularPersistentSubgrid()
+getParentRegularPersistentSubgrid(),
+getParentRegularPersistentSubgridInPreviousIteration()
 );
 }
 
@@ -6243,11 +6475,12 @@ void peano::grid::tests::records::TestVertex::initDatatype() {
 {
 TestVertex dummyTestVertex[2];
 
-const int Attributes = 5;
+const int Attributes = 6;
 MPI_Datatype subtypes[Attributes] = {
 MPI_CHAR,		 //isHangingNode
 MPI_INT,		 //refinementControl
-MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
 MPI_INT,		 //numberOfAdjacentRefinedCells
 MPI_UB		 // end/displacement flag
 };
@@ -6255,7 +6488,8 @@ MPI_UB		 // end/displacement flag
 int blocklen[Attributes] = {
 1,		 //isHangingNode
 1,		 //refinementControl
-1,		 //isParentingRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgridInPreviousIteration
 1,		 //numberOfAdjacentRefinedCells
 1		 // end/displacement flag
 };
@@ -6266,9 +6500,10 @@ MPI_Aint base;
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]))), &base);
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._isHangingNode))), 		&disp[0] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._refinementControl))), 		&disp[1] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[2] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[3] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[4] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[2] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[3] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[4] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[5] );
 
 for (int i=1; i<Attributes; i++) {
 assertion1( disp[i] > disp[i-1], i );
@@ -6283,13 +6518,14 @@ MPI_Type_commit( &TestVertex::Datatype );
 {
 TestVertex dummyTestVertex[2];
 
-const int Attributes = 8;
+const int Attributes = 9;
 MPI_Datatype subtypes[Attributes] = {
 MPI_CHAR,		 //isHangingNode
 MPI_INT,		 //refinementControl
 MPI_INT,		 //adjacentCellsHeight
 MPI_INT,		 //insideOutsideDomain
-MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
 MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
 MPI_INT,		 //numberOfAdjacentRefinedCells
 MPI_UB		 // end/displacement flag
@@ -6300,7 +6536,8 @@ int blocklen[Attributes] = {
 1,		 //refinementControl
 1,		 //adjacentCellsHeight
 1,		 //insideOutsideDomain
-1,		 //isParentingRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgridInPreviousIteration
 1,		 //adjacentCellsHeightOfPreviousIteration
 1,		 //numberOfAdjacentRefinedCells
 1		 // end/displacement flag
@@ -6314,10 +6551,11 @@ MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._pe
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._refinementControl))), 		&disp[1] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._adjacentCellsHeight))), 		&disp[2] );
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._insideOutsideDomain))), 		&disp[3] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[4] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[5] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[6] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[7] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[4] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[5] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[6] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[0]._numberOfAdjacentRefinedCells))), 		&disp[7] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertex[1]._persistentRecords._isHangingNode))), 		&disp[8] );
 
 for (int i=1; i<Attributes; i++) {
 assertion1( disp[i] > disp[i-1], i );
@@ -6578,9 +6816,10 @@ assertion((6 < (8 * sizeof(int))));
 }
 
 
-peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid):
+peano::grid::tests::records::TestVertexPacked::PersistentRecords::PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
 _adjacentCellsHeight(adjacentCellsHeight),
-_isParentingRegularPersistentSubgrid(isParentingRegularPersistentSubgrid) {
+_parentRegularPersistentSubgrid(parentRegularPersistentSubgrid),
+_parentRegularPersistentSubgridInPreviousIteration(parentRegularPersistentSubgridInPreviousIteration) {
 setIsHangingNode(isHangingNode);
 setRefinementControl(refinementControl);
 setInsideOutsideDomain(insideOutsideDomain);
@@ -6663,14 +6902,26 @@ assertion((insideOutsideDomain >= 0 && insideOutsideDomain <= 2));
 
 
 
- bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getIsParentingRegularPersistentSubgrid() const  {
-return _isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getParentRegularPersistentSubgrid() const  {
+return _parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertexPacked::PersistentRecords::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertexPacked::PersistentRecords::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -6686,7 +6937,7 @@ assertion((6 < (8 * sizeof(int))));
 
 
 peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._isParentingRegularPersistentSubgrid) {
+_persistentRecords(persistentRecords.getIsHangingNode(), persistentRecords.getRefinementControl(), persistentRecords._adjacentCellsHeight, persistentRecords.getInsideOutsideDomain(), persistentRecords._parentRegularPersistentSubgrid, persistentRecords._parentRegularPersistentSubgridInPreviousIteration) {
 if ((6 >= (8 * sizeof(int)))) {
 std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
 std::cerr << "  Packed-Type: int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -6697,8 +6948,8 @@ assertion((6 < (8 * sizeof(int))));
 }
 
 
-peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, isParentingRegularPersistentSubgrid) {
+peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration) {
 if ((6 >= (8 * sizeof(int)))) {
 std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
 std::cerr << "  Packed-Type: int hint-size no-of-bits;  " << std::endl << std::endl;
@@ -6709,8 +6960,8 @@ assertion((6 < (8 * sizeof(int))));
 }
 
 
-peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& isParentingRegularPersistentSubgrid):
-_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, isParentingRegularPersistentSubgrid),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
+peano::grid::tests::records::TestVertexPacked::TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration):
+_persistentRecords(isHangingNode, refinementControl, adjacentCellsHeight, insideOutsideDomain, parentRegularPersistentSubgrid, parentRegularPersistentSubgridInPreviousIteration),_adjacentCellsHeightOfPreviousIteration(adjacentCellsHeightOfPreviousIteration),
 _numberOfAdjacentRefinedCells(numberOfAdjacentRefinedCells) {
 if ((6 >= (8 * sizeof(int)))) {
 std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
@@ -6817,14 +7068,26 @@ assertion((insideOutsideDomain >= 0 && insideOutsideDomain <= 2));
 
 
 
- bool peano::grid::tests::records::TestVertexPacked::getIsParentingRegularPersistentSubgrid() const  {
-return _persistentRecords._isParentingRegularPersistentSubgrid;
+ bool peano::grid::tests::records::TestVertexPacked::getParentRegularPersistentSubgrid() const  {
+return _persistentRecords._parentRegularPersistentSubgrid;
 }
 
 
 
- void peano::grid::tests::records::TestVertexPacked::setIsParentingRegularPersistentSubgrid(const bool& isParentingRegularPersistentSubgrid)  {
-_persistentRecords._isParentingRegularPersistentSubgrid = isParentingRegularPersistentSubgrid;
+ void peano::grid::tests::records::TestVertexPacked::setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid)  {
+_persistentRecords._parentRegularPersistentSubgrid = parentRegularPersistentSubgrid;
+}
+
+
+
+ bool peano::grid::tests::records::TestVertexPacked::getParentRegularPersistentSubgridInPreviousIteration() const  {
+return _persistentRecords._parentRegularPersistentSubgridInPreviousIteration;
+}
+
+
+
+ void peano::grid::tests::records::TestVertexPacked::setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration)  {
+_persistentRecords._parentRegularPersistentSubgridInPreviousIteration = parentRegularPersistentSubgridInPreviousIteration;
 }
 
 
@@ -6866,7 +7129,9 @@ out << "numberOfAdjacentRefinedCells:" << getNumberOfAdjacentRefinedCells();
 out << ",";
 out << "insideOutsideDomain:" << toString(getInsideOutsideDomain());
 out << ",";
-out << "isParentingRegularPersistentSubgrid:" << getIsParentingRegularPersistentSubgrid();
+out << "parentRegularPersistentSubgrid:" << getParentRegularPersistentSubgrid();
+out << ",";
+out << "parentRegularPersistentSubgridInPreviousIteration:" << getParentRegularPersistentSubgridInPreviousIteration();
 out <<  ")";
 }
 
@@ -6883,7 +7148,8 @@ getAdjacentCellsHeight(),
 getAdjacentCellsHeightOfPreviousIteration(),
 getNumberOfAdjacentRefinedCells(),
 getInsideOutsideDomain(),
-getIsParentingRegularPersistentSubgrid()
+getParentRegularPersistentSubgrid(),
+getParentRegularPersistentSubgridInPreviousIteration()
 );
 }
 
@@ -6898,16 +7164,18 @@ void peano::grid::tests::records::TestVertexPacked::initDatatype() {
 {
 TestVertexPacked dummyTestVertexPacked[2];
 
-const int Attributes = 4;
+const int Attributes = 5;
 MPI_Datatype subtypes[Attributes] = {
-MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
 MPI_INT,		 //_packedRecords0
 MPI_INT,		 //numberOfAdjacentRefinedCells
 MPI_UB		 // end/displacement flag
 };
 
 int blocklen[Attributes] = {
-1,		 //isParentingRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgridInPreviousIteration
 1,		 //_packedRecords0
 1,		 //numberOfAdjacentRefinedCells
 1		 // end/displacement flag
@@ -6917,10 +7185,11 @@ MPI_Aint     disp[Attributes];
 
 MPI_Aint base;
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]))), &base);
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[0] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[1] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[2] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[3] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[0] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[1] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[2] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[3] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[4] );
 
 for (int i=1; i<Attributes; i++) {
 assertion1( disp[i] > disp[i-1], i );
@@ -6935,10 +7204,11 @@ MPI_Type_commit( &TestVertexPacked::Datatype );
 {
 TestVertexPacked dummyTestVertexPacked[2];
 
-const int Attributes = 6;
+const int Attributes = 7;
 MPI_Datatype subtypes[Attributes] = {
 MPI_INT,		 //adjacentCellsHeight
-MPI_CHAR,		 //isParentingRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgrid
+MPI_CHAR,		 //parentRegularPersistentSubgridInPreviousIteration
 MPI_INT,		 //_packedRecords0
 MPI_INT,		 //adjacentCellsHeightOfPreviousIteration
 MPI_INT,		 //numberOfAdjacentRefinedCells
@@ -6947,7 +7217,8 @@ MPI_UB		 // end/displacement flag
 
 int blocklen[Attributes] = {
 1,		 //adjacentCellsHeight
-1,		 //isParentingRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgrid
+1,		 //parentRegularPersistentSubgridInPreviousIteration
 1,		 //_packedRecords0
 1,		 //adjacentCellsHeightOfPreviousIteration
 1,		 //numberOfAdjacentRefinedCells
@@ -6959,11 +7230,12 @@ MPI_Aint     disp[Attributes];
 MPI_Aint base;
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]))), &base);
 MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._adjacentCellsHeight))), 		&disp[0] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._isParentingRegularPersistentSubgrid))), 		&disp[1] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[2] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[3] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[4] );
-MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[5] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgrid))), 		&disp[1] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._parentRegularPersistentSubgridInPreviousIteration))), 		&disp[2] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[3] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._adjacentCellsHeightOfPreviousIteration))), 		&disp[4] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[0]._numberOfAdjacentRefinedCells))), 		&disp[5] );
+MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestVertexPacked[1]._persistentRecords._adjacentCellsHeight))), 		&disp[6] );
 
 for (int i=1; i<Attributes; i++) {
 assertion1( disp[i] > disp[i-1], i );
