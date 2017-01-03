@@ -179,12 +179,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   _fineGridVertices[positionInVertexArray].clearCounterOfAdjacentRefinedCells();
   _fineGridVertices[positionInVertexArray].saveAndClearAdjacentCellsInformation();
-  // @todo Scheint die falsche Position zu sein -> muss in die Doku von Vertex rein
-  //       Kann vermutlich auch hoch in den Load from Stream, wo's eigentlich besser hinpasst.
-  if ( _state.clearIsAdjacentToOrParentingRegularPersistentSubgridFlag() ) {
-    _fineGridVertices[positionInVertexArray].clearIsParentingRegularPersistentSubgridFlag();
-//    logError( "loadVertexFromInputStream(...)", "loaded and cleared: " << _fineGridVertices[positionInVertexArray].toString() );
-  }
 
   logTraceOutWith1Argument( "loadVertexFromInputStream(...)", _fineGridVertices[positionInVertexArray].toString() );
 }
@@ -714,7 +708,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
 
   for (int d=0; d<DIMENSIONS; d++) {
-/*
     assertionNumericalEquals8(
       _fineGridVertices[positionInVertexArray].getX()(d), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)(d),
       positionInVertexArray,
@@ -725,24 +718,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       _fineGridVerticesEnumerator.toString(),
       _fineGridVertices[positionInVertexArray].toString(),
       stackNumber
-    );
-*/
-    // @todo Wieder zurueck zur 8ter Version oben
-    
-    assertionNumericalEquals12(
-      _fineGridVertices[positionInVertexArray].getX()(d), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)(d),
-      positionInVertexArray,
-      _fineGridVertices[positionInVertexArray].getX(),
-      positionInLocalCell,
-      _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
-      d,
-      _fineGridVerticesEnumerator.toString(),
-      _fineGridVertices[positionInVertexArray].toString(),
-      stackNumber,
-      _coarseGridVertices[ _coarseGridVerticesEnumerator(0) ].toString(),
-      _coarseGridVertices[ _coarseGridVerticesEnumerator(1) ].toString(),
-      _coarseGridVertices[ _coarseGridVerticesEnumerator(2) ].toString(),
-      _coarseGridVertices[ _coarseGridVerticesEnumerator(3) ].toString()
     );
   }
 }
