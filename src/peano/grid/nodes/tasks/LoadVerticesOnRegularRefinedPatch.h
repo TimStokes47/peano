@@ -296,9 +296,7 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
     );
   public:
     /**
-     * Can be handed in as max fork level. As the value -1 is already used by
-     * peano::grid::nodes::transformOracleResult() to ensure that absolutely
-     * no fork happens at all, I use the -2 here.
+     * @see StoreVerticesOnRegularRefinedPatch
      */
     static const int DoNotSplitAndHandleOnlyPatchBoundary = -2;
 

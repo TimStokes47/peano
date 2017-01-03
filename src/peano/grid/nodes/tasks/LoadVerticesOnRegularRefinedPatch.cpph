@@ -127,11 +127,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
     const bool CaseLoadPersistentVertex  = actionFlag == peano::stacks::Constants::InOutStack;
 
-    // @todo Early recursion termination not implemented yet
-/*
-    const bool popVertex = !_handleOnlyVerticesAlongBoundary 
-                        || _regularGridContainer.isVertexAtPatchBoundaryWithinRegularSubtree( positionInArray,currentLevel );
-*/
     const bool popVertex = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                          || cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex);
     
@@ -200,20 +195,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         currentLevel,positionInArray,_coarsestLevelOfThisTask
       );
       #endif
-/*
- * 
- * @todo Simmt evtl. nimmer. Mach auch das Script wieder rein und gib den Rest auf.
-      assertionEquals6(
-        _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration(),
-        _regularGridContainer.getVertexEnumerator(0).getCellFlags()-currentLevel,
-        toString(_regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration()),
-        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
-        cellsPositionWithinUnrolledTreeLevel,
-        positionInArray,
-        currentLevel,
-        _regularGridContainer.getVertexEnumerator(0).getCellFlags()
-      );
-*/
+
       if (_regularGridContainer.getVertexEnumerator(0).getCellFlags()-currentLevel==0) {
         #ifdef Parallel
         assertion5(
@@ -303,11 +285,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       #endif
         && _regularGridContainer.getCounter(currentLevel,positionInArray)==CounterPersistentNode;
 
-/*
- * @todo
-    const bool popVertex = !_handleOnlyVerticesAlongBoundary 
-                        || _regularGridContainer.isVertexAtPatchBoundaryWithinRegularSubtree( positionInArray,currentLevel );
-*/
     const bool popVertex = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                          || cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex);
 
@@ -363,7 +340,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       logDebug( "loadVerticesOfOneCellAtBoundaryofSubtree(...)", "got vertex #no=" << positionInArray << ": " <<  _regularGridContainer.getVertex(currentLevel,positionInArray).toString() << " from temporary stack " << actionFlag );
     }
 
-
     const bool IsToBeWrittenToTemporaryStack =
         cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)
      && actionFlagForWrite != peano::stacks::Constants::InOutStack;
@@ -416,30 +392,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         _coarsestCellsOffset,
         _coarsestLevelOfThisTask
       );
-      // Basically, the first condition always is true. If we run into dynamic 
-      // refinement along/overlapping persistent blocks, we have to tear apart
-      // these blocks, i.e. load them once more and then stream the block to 
-      // the stacks. For this we have to load all vertices and some vertices 
-      // then might be invalid already.
-/*
- * 
- * @todo Fix
-      assertion10(
-        (_regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration()==_regularGridContainer.getVertexEnumerator(0).getCellFlags()-currentLevel)
-        ||
-        (_maxLevelToFork == DoNotSplitAndHandleOnlyPatchBoundary),
-        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
-        _regularGridContainer.getVertexEnumerator(0).toString(),
-        currentLevel,
-        positionInArray,
-        _coarsestCellsOffset,
-        _coarsestLevelOfThisTask,
-        CaseLoadPersistentVertex,
-        CaseTakeFromTempStacks,
-        _regularGridContainer.getCell(0,_regularGridContainer.getVertexEnumerator(0).lineariseCellIndex(0)).toString(),
-        toString( _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration() )
-      );
-*/
+
       if (_regularGridContainer.getVertexEnumerator(0).getCellFlags()-currentLevel==0) {
         #ifdef Parallel
         assertion5(
@@ -449,7 +402,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
           currentLevel,
-          currentLevel,positionInArray
+          _maxLevelToFork,positionInArray
         );
         #else
         assertion5(
@@ -458,7 +411,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
           currentLevel,
-          currentLevel,positionInArray
+          _maxLevelToFork,positionInArray
         );
         #endif
       }
@@ -470,7 +423,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
           CaseLoadPersistentVertex, CaseTakeFromTempStacks,
           currentLevel, positionInArray,
           cellsPositionWithinUnrolledTreeLevel,
-          currentLevel
+          _maxLevelToFork
         );
       }
     }
@@ -576,8 +529,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k + currentCoarseCellPositionWithinUnrolledPatch*3;
       Cell&                                    currentFineGridCell     = fineGridCells[ peano::utils::dLinearised(k,3) ];
 
-      // @todo Nicht sicher, ob das passt
-      //       Auf jeden Fall fehlt Docu hier
       const bool recurse  = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                          || _regularGridContainer.isCellAtPatchBoundaryWithinRegularSubtree(
                              currentFineCellPosition,
@@ -724,9 +675,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   if (currentFineGridLevel<_regularGridContainer.getVertexEnumerator(0).getCellFlags()) {
     zfor3(k,loopDirection2)
       const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k + currentCoarseCellPositionWithinUnrolledPatch*3;
-
-      // @todo Nicht sicher, ob das passt
-      //       Auf jeden Fall fehlt Docu hier
 
       const bool recurse  = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                          || _regularGridContainer.isCellAtPatchBoundaryWithinRegularSubtree(
