@@ -83,6 +83,20 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       fineGridVerticesEnumerator.toString(),
       fineGridVertices[ fineGridVerticesEnumerator(k) ].toString()
     );
+    //
+    // Should be refined, but it may happen that another adjacent cell has triggered a refine, i.e. the
+    // vertex is set to erase triggered.
+    //
+    assertion6(
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Refined ||
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::EraseTriggered,
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].toString(),
+      toString(fineGridVerticesEnumerator.getCellFlags()),
+      toString(fineGridVertices[ fineGridVerticesEnumerator(k) ].getAdjacentCellsHeightOfPreviousIteration()),
+      fineGridVerticesEnumerator.getVertexPosition(),
+      fineGridVerticesEnumerator.toString(),
+      fineGridVertices[ fineGridVerticesEnumerator(k) ].toString()
+    );
   enddforx
 
   const peano::utils::LoopDirection  TopLevelLoopDirection = peano::grid::aspects::CellPeanoCurve::getLoopDirection(fineGridCell,state.isTraversalInverted());
@@ -238,41 +252,33 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   }
 
   #ifdef PersistentRegularSubtrees
-  // @todo back to true
-  bool retainRegularSubtreePersistently = true;
-  
-  // readTreeIsStoredPersistently -> was passiert wenn der false wird aber das zuvor true war?
-  // entspricht dem dissolve. Wenn readTreeIsStoredPersistently also ja ist, duerfen wir gar 
-  // nimmer gross nachfragen.
-  
-  // fineGridCell.rootsPersistentRegularSubtree()
-  
-  // @todo Remove upper if and replace with stuff below
-/*
-  auto retainRegularSubtreePersistently = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+  auto TryToRetainRegularSubtreePersistently = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
     TreeDepth,
     peano::datatraversal::autotuning::MethodTrace::HoldPersistentRegularSubgrid
   );
-*/
-  
-  // @todo Wer zerstoert die Trees eigentlich? Oder koennen wir das automatisch machen
+  bool retainRegularSubtreePersistently = false;
   #else
   bool retainRegularSubtreePersistently = false;
   #endif
-  if (retainRegularSubtreePersistently) {
+  if (TryToRetainRegularSubtreePersistently.getGrainSize()>TreeDepth || readTreeIsStoredPersistently)  {
     AscendTask ascendTask(TreeDepth, state, Base::_eventHandle, _regularGridContainer );
     ascendTask();
 
-    // @todo Docu: Das hier war einer der zentralen Fallstricke
-    // @todo Da waer ich mir jetzt grad gar net so sicher
-    dfor2(k)
-      _regularGridContainer.getVertex(0,kScalar).setIsParentingRegularPersistentSubgridFlag();
-    enddforx
-
-    // @todo Siehe oben mit den Argumenten
-    const bool persistentSubtreeRemainsPersistent = ascendTask.treeRemainsStatic() && state.storeRegularSubtreesPersistently();
+    const bool persistentSubtreeRemainsPersistent = 
+      (TryToRetainRegularSubtreePersistently.getGrainSize()>TreeDepth) 
+      && 
+      ascendTask.treeRemainsStatic() 
+      && 
+      state.storeRegularSubtreesPersistently();
     if (persistentSubtreeRemainsPersistent) {
       logDebug( "traverse()", "retain regular subtree of depth " << TreeDepth );
+
+      retainRegularSubtreePersistently = true;
+
+      dfor2(k)
+        _regularGridContainer.getVertex(0,kScalar).setIsParentingRegularPersistentSubgridFlag();
+      enddforx
+
       const bool pipelineTasks = false;
       StoreVerticesTask   storeVerticesTask(
         state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, pipelineTasks,
@@ -293,9 +299,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       const bool pipelineTasks = false;
       StoreVerticesTask   storeVerticesTask(
         state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, pipelineTasks,
-        StoreVerticesTask::PersistentSubtreeIsDrained  // @todo Kann das weg oder ist das Kunst
-        //->  koennte man das Flag wieder rausnehmen
-        //-1
+        StoreVerticesTask::PersistentSubtreeIsDrained
       );
       storeVerticesTask();
 
