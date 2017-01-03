@@ -1,5 +1,5 @@
 #include <limits>
-
+ 
 #include "tarch/parallel/Node.h"
 
 #ifdef Parallel
@@ -149,8 +149,11 @@ void peano::grid::State<StateData>::toString(std::ostream& out) const {
   
   out << "[";
   switch (_regularSubtreeStorageState) {
-    case RegularSubtreeStorageState::IdentifyRegularSubtrees:
-      out << "identify-regular-subtrees";
+    case RegularSubtreeStorageState::IdentifyRegularSubtrees0:
+      out << "identify-regular-subtrees-0";
+      break;      
+    case RegularSubtreeStorageState::IdentifyRegularSubtrees1:
+      out << "identify-regular-subtrees-1";
       break;      
     case RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently:
       out << "identify-and-store-regular-subtrees-persistently";
@@ -975,21 +978,6 @@ bool peano::grid::State<StateData>::storeRegularSubtreesPersistently() const {
 
 
 template <class StateData>
-bool peano::grid::State<StateData>::clearIsAdjacentToOrParentingRegularPersistentSubgridFlag() const {
-// We may not erase throughout drain. We have to wait until all the stuff is drained. 
-// Otherwise it can happen that we run into regular refined subtrees though we are just about 
-// to get rid of things.
-    
-// @todo Remove first state (erase) and only stationary (without persistent storage)
-    
-// @todo Only FinishDrain works
-//   return _regularSubtreeStorageState==RegularSubtreeStorageState::FinishDrain;
-//   return _regularSubtreeStorageState==RegularSubtreeStorageState::DrainPersistentSubtrees
-   return _regularSubtreeStorageState==RegularSubtreeStorageState::FinishDrain;
-}
-
-
-template <class StateData>
 void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
   if (
     _regularSubtreeStorageState==RegularSubtreeStorageState::ErasesOrRefinesDoNotPassBecauseOfPersistentSubtrees
@@ -1006,10 +994,15 @@ void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
   else if (
     _regularSubtreeStorageState==RegularSubtreeStorageState::FinishDrain
    ) {
-    _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyRegularSubtrees;
+    _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyRegularSubtrees0;
   }
   else if (
-    _regularSubtreeStorageState==RegularSubtreeStorageState::IdentifyRegularSubtrees 
+    _regularSubtreeStorageState==RegularSubtreeStorageState::IdentifyRegularSubtrees0
+   ) {
+    _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyRegularSubtrees1;
+  }
+  else if (
+    _regularSubtreeStorageState==RegularSubtreeStorageState::IdentifyRegularSubtrees1
    ) {
     _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently;
   }

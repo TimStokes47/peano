@@ -123,7 +123,8 @@ class peano::grid::State {
     };
 
     enum class RegularSubtreeStorageState {
-      IdentifyRegularSubtrees,
+        IdentifyRegularSubtrees0,
+        IdentifyRegularSubtrees1,
       IdentifyAndStoreRegularSubtreesPersistently,
       /**
        * We need two drains, as the first drain might remain busy with
@@ -135,6 +136,7 @@ class peano::grid::State {
        */
       DrainPersistentSubtrees,
       FinishDrain,
+      // @todo Remove
       ErasesOrRefinesDoNotPassBecauseOfPersistentSubtrees
     };
 
@@ -752,7 +754,6 @@ class peano::grid::State {
     #endif
 
     bool storeRegularSubtreesPersistently() const;
-    bool clearIsAdjacentToOrParentingRegularPersistentSubgridFlag() const;
     void informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees();
 
     /**
