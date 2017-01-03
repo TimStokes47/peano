@@ -509,15 +509,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> receivedAdjacencyBitset( peano::parallel::JoinDataBufferPool::getInstance().getCellMarkerFromStream(*p) );
 
         #if defined(Dim2)
-        // @todo Da wir einen Level stehenlassen, gibt es da u.U. einen Vertex, der
-        // auf -1,-1,-1,-1 gesetzt ist, weil alle vier adjazenten Knoten weggeforked
-        // worden sind. => Erklarung ist irgendwie falsch und muss was mit Worker-Kaskaden
-        // zu tun haben. Auf jeden Fall ist das hier so, dass der Worker mehr weiss als
-        // der Master, weil eben auf irgendeinem Knoten kein new aufgerufen worden ist -
-        // u.a. vielleicht weil da auch noch ein erase auf dem Master boykottiert ist.
-
-        // anscheinend war's das nicht
-
         assertion10(
           receivedAdjacencyBitset.to_ulong()>=localAdjacencyBitset.to_ulong(),
           fineGridVerticesEnumerator.toString(),
@@ -532,7 +523,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           coarseGridVertices[ coarseGridVerticesEnumerator(3) ].toString()
         );
         #else
-        // @todo siehe Kommentar oben
         assertion(receivedAdjacencyBitset.to_ulong()>=localAdjacencyBitset.to_ulong());
         #endif
 
@@ -968,7 +958,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   logTraceInWith1Argument( "updateRefinedEnumeratorsCellFlag(...)", verticesEnumerator.toString() );
 
   peano::grid::CellFlags adjacencyFlag                                = peano::grid::Undefined;
-  // @todo Falscher Name
   bool                   allAdjacentVerticesHoldPersistentSubtreeFlag = true;
 
   #ifdef Parallel
@@ -1002,10 +991,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
   #endif
 
-  if (allAdjacentVerticesHoldPersistentSubtreeFlag && adjacencyFlag != peano::grid::NotStationaryDueToInvalidation) {
-//    adjacencyFlag = peano::grid::StationaryButIrregular;
+  if (allAdjacentVerticesHoldPersistentSubtreeFlag) {
     adjacencyFlag = peano::grid::NotStationary;
-//    adjacencyFlag = peano::grid::Undefined;
   }
   
   verticesEnumerator.updateAdjacentCellsFlag( adjacencyFlag );

@@ -559,7 +559,15 @@ class peano::grid::nodes::Node {
      *
      * <h2> Persistent subtrees </h2>
      *
-     * If we hold persistent subtrees, we may not allow the code to handle subtrees as regular if
+     * If we hold persistent subtrees, we may not allow the code to handle
+     * subtrees as regular if all adjacent vertices hold the flag that
+     * indicates that they parent a persistent tree. This situation can arise
+     * if the majority of a grid region is held persistently and then some
+     * refinement kicks in. Then the whole thing could be held as one
+     * persistent big tree. However, if we set the corresponding tree, the
+     * automaton descends and things everything is persistent, while some
+     * of it is already outsourced to other containers. We overwrite this
+     * information and the code crashes.
      *
      * <h2> Parallelisation </h2>
      *
