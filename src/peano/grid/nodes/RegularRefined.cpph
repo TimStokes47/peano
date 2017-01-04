@@ -256,19 +256,17 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     TreeDepth,
     peano::datatraversal::autotuning::MethodTrace::HoldPersistentRegularSubgrid
   );
-  bool       retainRegularSubtreePersistently            = false;
-  const bool TryToRetainRegularSubtreePersistentlyResult = TryToRetainRegularSubtreePersistently.runsParallel();
+  bool       retainRegularSubtreePersistently            = TryToRetainRegularSubtreePersistently.runsParallel();
   #else
-  bool       retainRegularSubtreePersistently = false;
-  const bool TryToRetainRegularSubtreePersistentlyResult = false;
+  bool       retainRegularSubtreePersistently            = false;
   #endif
 
-  if (TryToRetainRegularSubtreePersistentlyResult || readTreeIsStoredPersistently)  {
+  if (retainRegularSubtreePersistently || readTreeIsStoredPersistently)  {
     AscendTask ascendTask(TreeDepth, state, Base::_eventHandle, _regularGridContainer );
     ascendTask();
 
     const bool persistentSubtreeRemainsPersistent = 
-      TryToRetainRegularSubtreePersistentlyResult
+      retainRegularSubtreePersistently
       && 
       ascendTask.treeRemainsStatic() 
       && 
@@ -361,6 +359,10 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 
     PipelineTasks.parallelSectionHasTerminated();
   }
+
+  #ifdef PersistentRegularSubtrees
+  TryToRetainRegularSubtreePersistently.parallelSectionHasTerminated();
+  #endif
 
   _regularGridContainer.copyRootNodeDataFromRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
   Base::validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
