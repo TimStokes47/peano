@@ -256,16 +256,19 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     TreeDepth,
     peano::datatraversal::autotuning::MethodTrace::HoldPersistentRegularSubgrid
   );
-  bool retainRegularSubtreePersistently = false;
+  bool       retainRegularSubtreePersistently            = false;
+  const bool TryToRetainRegularSubtreePersistentlyResult = TryToRetainRegularSubtreePersistently.runsParallel();
   #else
-  bool retainRegularSubtreePersistently = false;
+  bool       retainRegularSubtreePersistently = false;
+  const bool TryToRetainRegularSubtreePersistentlyResult = false;
   #endif
-  if (TryToRetainRegularSubtreePersistently.getGrainSize()>TreeDepth || readTreeIsStoredPersistently)  {
+
+  if (TryToRetainRegularSubtreePersistentlyResult || readTreeIsStoredPersistently)  {
     AscendTask ascendTask(TreeDepth, state, Base::_eventHandle, _regularGridContainer );
     ascendTask();
 
     const bool persistentSubtreeRemainsPersistent = 
-      (TryToRetainRegularSubtreePersistently.getGrainSize()>TreeDepth) 
+      TryToRetainRegularSubtreePersistentlyResult
       && 
       ascendTask.treeRemainsStatic() 
       && 
@@ -411,7 +414,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   peano::grid::nodes::tasks::InvokeLeaveCell<Vertex,Cell,State,EventHandle>
     invokeLeaveCellTask( state, fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell, Base::_eventHandle );
   invokeLeaveCellTask();
-  
+    
   if (retainRegularSubtreePersistently) {
     fineGridCell.updatePersistentRegularSubtreeIndex( _regularGridContainer.keepCurrentRegularSubgrid() );
     logDebug( "traverse(...)", "tree is stored persistently and index has been set: " << fineGridCell.toString() );

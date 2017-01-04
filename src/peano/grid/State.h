@@ -123,8 +123,9 @@ class peano::grid::State {
     };
 
     enum class RegularSubtreeStorageState {
-        IdentifyRegularSubtrees0,
-        IdentifyRegularSubtrees1,
+      IdentifyRegularSubtrees0,
+      IdentifyRegularSubtrees1,
+//      @ Hier ordetnlcih ausmisten
       IdentifyAndStoreRegularSubtreesPersistently,
       /**
        * We need two drains, as the first drain might remain busy with
