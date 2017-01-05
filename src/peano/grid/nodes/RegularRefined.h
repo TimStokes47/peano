@@ -208,6 +208,14 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
 
     /**
      * Traverse the subcells
+     *
+     * <h2>Drain regular subtrees</h2>
+     *
+     * If we drain a regular subtree in the parallel mode, we have to
+     * invalidate the root vertices manually if we have multiple cores. The
+     * number of stores/loads in this case are not valid anymore, so any
+     * subsequent try of the code to parallelise (parts of) the load and
+     * store process in a multicore environment is doomed to fail.
      */
     void traverse(
       State&                                    state,

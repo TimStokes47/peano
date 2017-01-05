@@ -297,6 +297,12 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       enddforx
       #endif
 
+      #if defined(SharedMemoryParallelisation)
+      dfor2(k)
+        _regularGridContainer.getVertex(0,kScalar).invalidateAdjacentCellInformation();
+      enddforx
+      #endif
+
       retainRegularSubtreePersistently = false;
       
       const bool pipelineTasks = false;
@@ -342,12 +348,12 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     else {
       AscendTask ascendTask(TreeDepth, state, Base::_eventHandle, _regularGridContainer );
       ascendTask();
+
       auto SplitStoreVerticesTask =
         peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
           numberOfVerticesInRegularSubtree,
           peano::datatraversal::autotuning::MethodTrace::SplitStoreVerticesTaskOnRegularStationaryGrid
         );
-      
       StoreVerticesTask   storeVerticesTask(
         state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks.runsParallel(),
         transformOracleResult(SplitStoreVerticesTask.getGrainSize(), TreeDepth, numberOfVerticesInRegularSubtree )
