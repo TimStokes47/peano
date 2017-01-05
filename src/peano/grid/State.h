@@ -122,11 +122,6 @@ class peano::grid::State {
       Undef
     };
 
-    enum class RegularSubtreeStorageState {
-      IdentifyAndStoreRegularSubtreesPersistently,
-      DrainPersistentSubtrees
-    };
-
     static std::string toString(LoadBalancingState value);
 
     #ifdef Parallel
@@ -182,7 +177,10 @@ class peano::grid::State {
 
     #endif
 
-    RegularSubtreeStorageState   _regularSubtreeStorageState;
+    #ifdef PersistentRegularSubtrees
+    int                          _smallestRegularTreeThatIsToBeHeldPersistently;
+    int                          _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration;
+    #endif
   public:
      ~State();
 
@@ -740,7 +738,10 @@ class peano::grid::State {
     void restart();
     #endif
 
-    bool storeRegularSubtreesPersistently() const;
+    /**
+     * Ask state whether a subtree of a given depth shall be held persistently
+     */
+    bool storeRegularSubtreesPersistently(int treeDepth) const;
     void informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees();
 
     /**

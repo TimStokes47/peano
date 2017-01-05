@@ -42,7 +42,10 @@ peano::grid::State<StateData>::State():
   #endif
   #endif
   
-  _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently;
+  #ifdef PersistentRegularSubtrees
+  _smallestRegularTreeThatIsToBeHeldPersistently                    = 0; 
+  _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = 0; 
+  #endif
 }
 
 
@@ -147,16 +150,13 @@ void peano::grid::State<StateData>::toString(std::ostream& out) const {
   out << "]";
   #endif
   
-  out << "[";
-  switch (_regularSubtreeStorageState) {
-    case RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently:
-      out << "identify-and-store-regular-subtrees-persistently";
-      break;      
-    case RegularSubtreeStorageState::DrainPersistentSubtrees:
-      out << "drain-persistent-subtrees";
-      break;      
-  }
-  out << "]";
+  #ifdef PersistentRegularSubtrees
+  out << "[smallest-regular-tree-that-is-held-persistently=" 
+      << _smallestRegularTreeThatIsToBeHeldPersistently 
+      << "/"
+      << _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration
+      << "]";
+  #endif
 }
 
 
@@ -593,11 +593,9 @@ void peano::grid::State<StateData>::mergeWithWorkerState(const peano::grid::Stat
     workerState._stateData.getSubWorkerIsInvolvedInJoinOrFork()
   );
   
-  _regularSubtreeStorageState = 
-    _regularSubtreeStorageState == RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently
-    &&
-    workerState._regularSubtreeStorageState == RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently ?
-    RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently : RegularSubtreeStorageState::DrainPersistentSubtrees;
+  #ifdef PersistentRegularSubtrees
+  _smallestRegularTreeThatIsToBeHeldPersistently = std::max(_smallestRegularTreeThatIsToBeHeldPersistently,workerState._smallestRegularTreeThatIsToBeHeldPersistently);
+  #endif
 
   if (workerState._stateData.getSubWorkerIsInvolvedInJoinOrFork()) {
     _iterationCounter = 0;
@@ -960,30 +958,39 @@ void peano::grid::State<StateData>::sendStateToMaster() const {
 
 
 template <class StateData>
-bool peano::grid::State<StateData>::storeRegularSubtreesPersistently() const {
-  return _regularSubtreeStorageState==RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently;
+bool peano::grid::State<StateData>::storeRegularSubtreesPersistently(int treeDepth) const {
+  #ifdef PersistentRegularSubtrees
+  return treeDepth >= _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration;
+  #else
+  return false;
+  #endif
 }
 
 
 template <class StateData>
 void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
-  if (
-    !value 
-    && 
-    _regularSubtreeStorageState==RegularSubtreeStorageState::DrainPersistentSubtrees 
-   ) {
-    _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently;
+  #ifdef PersistentRegularSubtrees
+  if (!value) {
+    _smallestRegularTreeThatIsToBeHeldPersistently                    = 0;
+    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = 0;
+  }
+  else {
+    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = _smallestRegularTreeThatIsToBeHeldPersistently;
   }
 
   #ifdef Parallel
   if (_loadRebalancingState!=LoadBalancingState::NoRebalancing) {
-    _regularSubtreeStorageState = RegularSubtreeStorageState::DrainPersistentSubtrees;
+    _smallestRegularTreeThatIsToBeHeldPersistently                    += std::numeric_limits<int>::max();
+    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration += std::numeric_limits<int>::max();
   }
+  #endif
   #endif
 }
 
 
 template <class StateData>
 void peano::grid::State<StateData>::informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees() {
-  _regularSubtreeStorageState = RegularSubtreeStorageState::DrainPersistentSubtrees;
+  #ifdef PersistentRegularSubtrees
+  _smallestRegularTreeThatIsToBeHeldPersistently = _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration+1;
+  #endif
 }
