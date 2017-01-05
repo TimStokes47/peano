@@ -276,7 +276,6 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
 
     if (takeThisCoarseVertexIntoAccount) {
       peano::grid::CellFlags analysedValue               = originalAnalysedValue;
-      bool                   adjacentToPersistentSubtree = false;
 
       #ifdef Parallel
       if (
