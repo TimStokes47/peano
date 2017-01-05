@@ -149,24 +149,12 @@ void peano::grid::State<StateData>::toString(std::ostream& out) const {
   
   out << "[";
   switch (_regularSubtreeStorageState) {
-    case RegularSubtreeStorageState::IdentifyRegularSubtrees0:
-      out << "identify-regular-subtrees-0";
-      break;      
-    case RegularSubtreeStorageState::IdentifyRegularSubtrees1:
-      out << "identify-regular-subtrees-1";
-      break;      
     case RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently:
       out << "identify-and-store-regular-subtrees-persistently";
       break;      
     case RegularSubtreeStorageState::DrainPersistentSubtrees:
       out << "drain-persistent-subtrees";
       break;      
-    case RegularSubtreeStorageState::FinishDrain:
-      out << "finish-drain";
-      break;      
-    case RegularSubtreeStorageState::ErasesOrRefinesDoNotPassBecauseOfPersistentSubtrees:
-      out << "erases-or-refines-do-not-pass-because-of-persistent-subtrees";
-      break;
   }
   out << "]";
 }
@@ -980,33 +968,13 @@ bool peano::grid::State<StateData>::storeRegularSubtreesPersistently() const {
 template <class StateData>
 void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
   if (
-    _regularSubtreeStorageState==RegularSubtreeStorageState::ErasesOrRefinesDoNotPassBecauseOfPersistentSubtrees
-  ) {
-    _regularSubtreeStorageState = RegularSubtreeStorageState::DrainPersistentSubtrees;
-  }
-  else if (
     !value 
     && 
     _regularSubtreeStorageState==RegularSubtreeStorageState::DrainPersistentSubtrees 
    ) {
-    _regularSubtreeStorageState = RegularSubtreeStorageState::FinishDrain;
-  }
-  else if (
-    _regularSubtreeStorageState==RegularSubtreeStorageState::FinishDrain
-   ) {
-    _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyRegularSubtrees0;
-  }
-  else if (
-    _regularSubtreeStorageState==RegularSubtreeStorageState::IdentifyRegularSubtrees0
-   ) {
-    _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyRegularSubtrees1;
-  }
-  else if (
-    _regularSubtreeStorageState==RegularSubtreeStorageState::IdentifyRegularSubtrees1
-   ) {
     _regularSubtreeStorageState = RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently;
   }
-  
+
   #ifdef Parallel
   if (_loadRebalancingState!=LoadBalancingState::NoRebalancing) {
     _regularSubtreeStorageState = RegularSubtreeStorageState::DrainPersistentSubtrees;
@@ -1017,15 +985,5 @@ void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
 
 template <class StateData>
 void peano::grid::State<StateData>::informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees() {
-  if ( _regularSubtreeStorageState == RegularSubtreeStorageState::IdentifyAndStoreRegularSubtreesPersistently ) {
-/*
-  if (
-    _regularSubtreeStorageState!=RegularSubtreeStorageState::DrainPersistentSubtrees
-    &&
-    _regularSubtreeStorageState!=RegularSubtreeStorageState::FinishDrain
-  ) {
-*/
-//  if (_regularSubtreeStorageState!=RegularSubtreeStorageState::DrainPersistentSubtrees) 
-    _regularSubtreeStorageState = RegularSubtreeStorageState::ErasesOrRefinesDoNotPassBecauseOfPersistentSubtrees;
-  }
+  _regularSubtreeStorageState = RegularSubtreeStorageState::DrainPersistentSubtrees;
 }

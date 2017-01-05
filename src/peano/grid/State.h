@@ -123,22 +123,8 @@ class peano::grid::State {
     };
 
     enum class RegularSubtreeStorageState {
-      IdentifyRegularSubtrees0,
-      IdentifyRegularSubtrees1,
-//      @ Hier ordetnlcih ausmisten
       IdentifyAndStoreRegularSubtreesPersistently,
-      /**
-       * We need two drains, as the first drain might remain busy with
-       * dissolving all the persistent grids. I originally thought it
-       * might be clever to use isGridStationary() and to remain in the
-       * drain mode as long as this guy becomes not true. However, this
-       * is a pretty poor idea as the grid might be huge and always
-       * change somewhere.
-       */
-      DrainPersistentSubtrees,
-      FinishDrain,
-      // @todo Remove
-      ErasesOrRefinesDoNotPassBecauseOfPersistentSubtrees
+      DrainPersistentSubtrees
     };
 
     static std::string toString(LoadBalancingState value);
