@@ -272,7 +272,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       && 
       ascendTask.treeRemainsStatic() 
       && 
-      state.storeRegularSubtreesPersistently();
+      state.storeRegularSubtreesPersistently(TreeDepth);
     if (persistentSubtreeRemainsPersistent) {
       logDebug( "traverse()", "retain regular subtree of depth " << TreeDepth );
 
