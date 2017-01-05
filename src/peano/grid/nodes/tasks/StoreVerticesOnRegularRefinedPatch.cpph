@@ -167,6 +167,10 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)
         );
+        // Wenn wir einen existierenden Baum rausstreamen, dann ist das previous flag nicht umgesetzt worden
+        // auf den Wert vom Dings davor, weil wir keinen echten Load innen im Baum machen (saveAndClearAdjacentCellsInformation()
+        // wird net aufgerufen).  Somit kann dann das Flag nimmer stimmen. Die Iteration darueber stimmt jedoch stets
+/*
         assertion6(
           (
             _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration()< peano::grid::Undefined 
@@ -174,7 +178,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
             _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration()>= peano::grid::Leaf
           ) 
           ||
-          (_maxLevelToFork==DoNotSplitAndHandleOnlyPatchBoundary)
+          (_maxLevelToFork==DoNotSplitAndHandleOnlyPatchBoundary),
           ||
           (_maxLevelToFork==PersistentSubtreeIsDrained),
           currentLevel,
@@ -184,6 +188,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)
         );
+*/
         assertion6(
           !_regularGridContainer.getVertex(currentLevel,positionInArray).isHangingNode(),
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
@@ -347,9 +352,13 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString()
         );
         
-        if (_maxLevelToFork == PersistentSubtreeIsDrained) {
+        #if defined(SharedMemoryParallelisation)
+        if (
+          _maxLevelToFork == PersistentSubtreeIsDrained
+	) {
           _regularGridContainer.getVertex(currentLevel,positionInArray).invalidateAdjacentCellInformation();
         }
+        #endif
 
         if (_stackView.isOpen() && pushVertex) {
           _stackView.push(_regularGridContainer.getVertex(currentLevel,positionInArray).getRecords() );

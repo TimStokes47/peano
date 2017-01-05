@@ -152,6 +152,16 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
     );
 
 
+    /**
+     * <h2>Persistent subtrees</h2>
+     *
+     * If we drain persistent subtrees, we have to be very careful: As no cells
+     * have been moved from and to the memory, also the stack statistics are
+     * not kept up-to-date. So when we dran a persistent subtree, we have to
+     * invalidate all vertices if we run in shared memory, as we have to ensure
+     * that the code does not try to handle a new (sub-)tree with multiple
+     * parallel loads.
+     */
     void storeVerticesOfOneCellAtBoundaryofSubtree(
       const Cell&                               currentCell,
       const tarch::la::Vector<DIMENSIONS,int>&  cellsPositionWithinUnrolledTreeLevel,
