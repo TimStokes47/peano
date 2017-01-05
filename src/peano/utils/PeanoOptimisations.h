@@ -132,4 +132,12 @@
 //#define RegularGridContainerUsesRawArrays
 //#define RegularGridContainerUsesSTDArrays
 
+
+#ifndef noPersistentRegularSubtrees
+  #ifndef UseRecursionUnrollingOnRegularPatches
+    #error PersistentRegularSubtrees is enabled though UseRecursionUnrollingOnRegularPatches is disabled
+  #endif
+  #define PersistentRegularSubtrees
+#endif
+
 #endif
