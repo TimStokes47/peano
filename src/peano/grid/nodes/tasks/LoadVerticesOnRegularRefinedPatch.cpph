@@ -464,6 +464,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     currentLevelOfCoarseCell,coarseCellIsAtBoundary,_maxLevelToFork, _coarsestLevelOfThisTask, ExpectedNumberOfLoadsFromInputStack
   )) {
     assertion( !_stackView.isEmpty() );
+    assertion( _maxLevelToFork!=DoNotSplitAndHandleOnlyPatchBoundary );
     typedef LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>  ForkedTask;
     ForkedTask forkedTask(
       _isTraversalInverted,

@@ -254,7 +254,9 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   #ifdef PersistentRegularSubtrees
   auto TryToRetainRegularSubtreePersistently = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
     TreeDepth,
-    peano::datatraversal::autotuning::MethodTrace::HoldPersistentRegularSubgrid
+    readTreeIsStoredPersistently ? 
+      peano::datatraversal::autotuning::MethodTrace::TryToKeepPersistentRegularSubgrid :
+      peano::datatraversal::autotuning::MethodTrace::HoldPersistentRegularSubgrid
   );
   bool       retainRegularSubtreePersistently            = TryToRetainRegularSubtreePersistently.runsParallel();
   #else

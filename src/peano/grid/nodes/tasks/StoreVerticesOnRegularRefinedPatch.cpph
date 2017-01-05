@@ -403,6 +403,8 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     currentLevelOfCoarseCell,isCoarseCellAtDomainBoundary,_maxLevelToFork, _coarsestLevelOfThisTask, ExpectedNumberOfStoresToOutputStack
     )
   ) {
+    assertion( _maxLevelToFork!=DoNotSplitAndHandleOnlyPatchBoundary );
+    assertion( _maxLevelToFork!=PersistentSubtreeIsDrained );
     #ifdef Dim2
     assertion4(
       _regularGridContainer.getVertexEnumerator(0).getCellFlags()>2
