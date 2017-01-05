@@ -143,7 +143,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       _regularGridContainer.setIsToBeWrittenToTemporaryStack(currentLevel,positionInArray,false);
       _trackNumberOfReadsPerLevel[currentLevel]++;
 
-      assertionNumericalEquals6(
+      assertionNumericalEquals7(
         _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
         _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
         _regularGridContainer.getVertexEnumerator(currentLevel).toString(),
@@ -151,7 +151,8 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         currentLevel,
         positionInArray,
         _coarsestCellsOffset,
-        _coarsestLevelOfThisTask
+        _coarsestLevelOfThisTask,
+        _maxLevelToFork
       );
     }
 
