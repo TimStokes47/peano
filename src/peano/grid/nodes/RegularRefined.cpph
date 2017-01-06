@@ -205,7 +205,8 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       LoadCellsTask       loadCellsTask(     TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, PipelineTasks.runsParallel() );
       LoadVerticesTask    loadVerticesTask(
         state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks.runsParallel(),
-        transformOracleResult(SplitLoadVerticesTask.getGrainSize(),TreeDepth, numberOfVerticesInRegularSubtree)
+	-1
+//        transformOracleResult(SplitLoadVerticesTask.getGrainSize(),TreeDepth, numberOfVerticesInRegularSubtree)
       );
       DescendTask         descendTask(       TreeDepth, state, Base::_eventHandle, _regularGridContainer, PipelineTasks.runsParallel() );
 
@@ -229,7 +230,8 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
           );
       LoadVerticesTask    loadVerticesTask(
         state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks.runsParallel(),
-        transformOracleResult(SplitLoadVerticesTask.getGrainSize(),TreeDepth, numberOfVerticesInRegularSubtree)
+	-1
+//        transformOracleResult(SplitLoadVerticesTask.getGrainSize(),TreeDepth, numberOfVerticesInRegularSubtree)
       );
 
       loadVerticesTask();
@@ -332,7 +334,13 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       StoreCellsTask      storeCellsTask(    TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, true );
       StoreVerticesTask   storeVerticesTask(
         state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks.runsParallel(),
-        transformOracleResult( SplitStoreVerticesTask.getGrainSize(), TreeDepth, numberOfVerticesInRegularSubtree )
+	-1
+/*
+        transformOracleResult(
+          0, //SplitStoreVerticesTask.getGrainSize(),
+	  TreeDepth, numberOfVerticesInRegularSubtree
+	)
+*/
       );
       AscendTask          ascendTask(        TreeDepth, state, Base::_eventHandle, _regularGridContainer );
 
@@ -356,7 +364,13 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         );
       StoreVerticesTask   storeVerticesTask(
         state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, PipelineTasks.runsParallel(),
-        transformOracleResult(SplitStoreVerticesTask.getGrainSize(), TreeDepth, numberOfVerticesInRegularSubtree )
+	-1
+/*
+        transformOracleResult(
+          0, // SplitStoreVerticesTask.getGrainSize(),
+	  TreeDepth, numberOfVerticesInRegularSubtree
+	)
+*/
       );
       storeVerticesTask();
       SplitStoreVerticesTask.parallelSectionHasTerminated();
