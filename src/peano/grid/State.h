@@ -742,6 +742,7 @@ class peano::grid::State {
      * Ask state whether a subtree of a given depth shall be held persistently
      */
     bool storeRegularSubtreesPersistently(int treeDepth) const;
+
     void informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees();
 
     /**

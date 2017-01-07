@@ -19,7 +19,8 @@ int peano::grid::nodes::transformOracleResult( int oracleResult, int TreeDepth, 
 
   logDebug("transformOracleResult(int,int,int)", "oracleResult=" << oracleResult << ",TreeDepth=" << TreeDepth << ",NumberOfVerticesInSubtree=" << NumberOfVerticesInSubtree << ",result=" << result );
 
-  return result;
+//  return result;
+  return -1;
 }
 
 

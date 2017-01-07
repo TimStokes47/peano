@@ -977,7 +977,7 @@ void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
   else if ( 
     _smallestRegularTreeThatIsToBeHeldPersistently == _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration 
     &&
-    _smallestRegularTreeThatIsToBeHeldPersistently == 0
+    _smallestRegularTreeThatIsToBeHeldPersistently > 0
   ) {
     _smallestRegularTreeThatIsToBeHeldPersistently--;
     _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration--;
