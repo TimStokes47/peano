@@ -57,8 +57,6 @@ std::string peano::datatraversal::autotuning::toString( const MethodTrace& metho
 
     case MethodTrace::HoldPersistentRegularSubgrid:
       return "hold-persistent-regular-subgrid";
-    case MethodTrace::TryToKeepPersistentRegularSubgrid:
-      return "try-to-keep-persistent-regular-subgrid";
 
     case MethodTrace::UserDefined0:
       return "user-defined-0";
@@ -179,8 +177,6 @@ peano::datatraversal::autotuning::MethodTrace peano::datatraversal::autotuning::
 
     case static_cast<int>(MethodTrace::HoldPersistentRegularSubgrid):
       return MethodTrace::HoldPersistentRegularSubgrid;
-    case static_cast<int>(MethodTrace::TryToKeepPersistentRegularSubgrid):
-      return MethodTrace::TryToKeepPersistentRegularSubgrid;
 
     case static_cast<int>(MethodTrace::UserDefined0):
       return MethodTrace::UserDefined0;
