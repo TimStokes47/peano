@@ -209,6 +209,18 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
     /**
      * Traverse the subcells
      *
+     * <h2>Preserve regular subtrees</h2>
+     *
+     * The decision whether to hold a subtree persistently is delegated to the
+     * oracle in the shared memory mode. If we work without, the code always
+     * holds regular subtrees unless the feature is switched off. This is a
+     * 'misuse' of the oracle as the decision to keep stuff is an optimisation
+     * decision not a grain size thing. In this context, please note that we
+     * always hand over a tree depth bigger by one that the actual tree depth.
+     * The reason is that the oracle search for well-suited 'grain sizes' and
+     * return typically 0 if the grain size equals the maximum problem size.
+     *
+     *
      * <h2>Drain regular subtrees</h2>
      *
      * If we drain a regular subtree in the parallel mode, we have to
@@ -216,6 +228,7 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
      * number of stores/loads in this case are not valid anymore, so any
      * subsequent try of the code to parallelise (parts of) the load and
      * store process in a multicore environment is doomed to fail.
+     *
      */
     void traverse(
       State&                                    state,

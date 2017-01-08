@@ -251,14 +251,14 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     PipelineTasks.parallelSectionHasTerminated();
   }
 
-  #ifdef PersistentRegularSubtrees
+  #if defined(PersistentRegularSubtrees) && defined(SharedMemoryParallelisation)
   auto TryToRetainRegularSubtreePersistently = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-    TreeDepth,
-    readTreeIsStoredPersistently ? 
-      peano::datatraversal::autotuning::MethodTrace::TryToKeepPersistentRegularSubgrid :
-      peano::datatraversal::autotuning::MethodTrace::HoldPersistentRegularSubgrid
+    TreeDepth+1,
+    peano::datatraversal::autotuning::MethodTrace::HoldPersistentRegularSubgrid
   );
-  bool       retainRegularSubtreePersistently            = TryToRetainRegularSubtreePersistently.runsParallel();
+  bool       retainRegularSubtreePersistently            = readTreeIsStoredPersistently | TryToRetainRegularSubtreePersistently.runsParallel();
+  #elif defined(SharedMemoryParallelisation)
+  bool       retainRegularSubtreePersistently            = true;
   #else
   bool       retainRegularSubtreePersistently            = false;
   #endif
@@ -362,7 +362,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     PipelineTasks.parallelSectionHasTerminated();
   }
 
-  #ifdef PersistentRegularSubtrees
+  #if defined(PersistentRegularSubtrees) && defined(SharedMemoryParallelisation)
   TryToRetainRegularSubtreePersistently.parallelSectionHasTerminated();
   #endif
 
