@@ -90,10 +90,11 @@ peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,Vertex
   _haveWrittenToOutputStack = false;
   #endif
 
-  assertion5(
+  assertion6(
     _stackView.isOpen(),
     _stackView.size(), _stackView.getTotalViewSize(),
     currentLevel, offsetWithinPatch,
+    forkedSubtree,
     _regularGridContainer.getCell(currentLevel, THREE_POWER_D/2).toString()
   );
   assertion2(
@@ -167,10 +168,8 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)
         );
-        // Wenn wir einen existierenden Baum rausstreamen, dann ist das previous flag nicht umgesetzt worden
-        // auf den Wert vom Dings davor, weil wir keinen echten Load innen im Baum machen (saveAndClearAdjacentCellsInformation()
-        // wird net aufgerufen).  Somit kann dann das Flag nimmer stimmen. Die Iteration darueber stimmt jedoch stets
-/*
+        // If we drain a persistent tree, we know that the previous flag is not valid anymore 
+        // (the reset is not triggered), so we cannot evaluate this assertion.
         assertion6(
           (
             _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration()< peano::grid::Undefined 
@@ -188,7 +187,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
           _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)
         );
-*/
         assertion6(
           !_regularGridContainer.getVertex(currentLevel,positionInArray).isHangingNode(),
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
@@ -221,6 +219,12 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _regularGridContainer.getVertex(currentLevel,positionInArray).setIsParentingRegularPersistentSubgridFlag();
         }
         
+        #if defined(SharedMemoryParallelisation)
+        if (_maxLevelToFork == PersistentSubtreeIsDrained) {
+          _regularGridContainer.getVertex(currentLevel,positionInArray).invalidateAdjacentCellInformation();
+        }
+        #endif
+                
         if (_stackView.isOpen() && pushVertex) {
           _stackView.push(_regularGridContainer.getVertex(currentLevel,positionInArray).getRecords() );
         }
@@ -355,7 +359,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
         #if defined(SharedMemoryParallelisation)
         if (
           _maxLevelToFork == PersistentSubtreeIsDrained
-	) {
+        ) {
           _regularGridContainer.getVertex(currentLevel,positionInArray).invalidateAdjacentCellInformation();
         }
         #endif
@@ -381,6 +385,12 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _coarsestCellsOffset,
           _coarsestLevelOfThisTask
         );
+ 
+        #if defined(SharedMemoryParallelisation)
+        if (_maxLevelToFork == PersistentSubtreeIsDrained) {
+          _regularGridContainer.getVertex(currentLevel,positionInArray).invalidateAdjacentCellInformation();
+        } 
+        #endif
 
         if (pushVertex) {
           _vertexStack.push(actionFlag,_regularGridContainer.getVertex(currentLevel,positionInArray));
@@ -456,6 +466,14 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     );
     #endif
 
+    assertion4(
+      ExpectedNumberOfStoresToOutputStack>=0,
+      ExpectedNumberOfStoresToOutputStack,
+      coarseGridCell.toString(),
+      _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+      currentLevelOfCoarseCell
+    );
+    
     typedef StoreVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>  ForkedTask;
     ForkedTask forkedTask(
       _isTraversalInverted,
@@ -571,6 +589,14 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition(k);
     const int                                currentFineCellIndex    = peano::utils::dLinearisedWithoutLookup(currentFineCellPosition,cellsPerAxisOnFineGrid);
     const Cell&                              currentFineGridCell     = _regularGridContainer.getCell(currentFineGridLevel,currentFineCellIndex);
+
+    assertion6(
+      currentFineGridCell.getNumberOfStoresToOutputStack()>0,
+      k, currentFineCellPosition, currentFineGridCell.toString(),
+      _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+      _regularGridContainer.getCell(0,0).toString(),
+      _maxLevelToFork
+    );
 
     topLevelStackView[currentFineCellIndex] = _vertexStack.pushBlockOnOutputStack(currentFineGridCell.getNumberOfStoresToOutputStack());
     bool bitsetValue = true;

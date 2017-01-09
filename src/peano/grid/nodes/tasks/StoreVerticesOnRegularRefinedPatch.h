@@ -203,6 +203,11 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
      * It is important that the store process is aware of the drain. As the
      * vertices of a persistent subtree were taken out from all the streams
      * for a while, they may carry invalid refinement information.
+     *
+     * Even if they did not change at all, we have set everything invalid. The
+     * cells hold some stack statistics, and we have to assume that they are
+     * wrong as we do not know whether an even or and odd number of traversals
+     * has passed since. So we have to invalidate the whole tree.
      */
     static const int PersistentSubtreeIsDrained           = -3;
 
