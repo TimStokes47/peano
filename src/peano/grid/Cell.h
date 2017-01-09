@@ -258,9 +258,27 @@ class peano::grid::Cell {
      */
     void clearInputOutputStackAccessStatistics();
 
+    /**
+     * Set number of reads from input stack and writes to output stack.
+     *
+     * I usually use this operation only in RegularRefined, where I can grab
+     * the data directly from the stacks. Obviously, I cannot do this if trees
+     * are held persistently. Once a tree is held persistently, I loose the
+     * stack information. This does not matter though as all tree vertices are
+     * invalidated once a tree is drained anyway: If we drain a tree, it will
+     * in the next traversal be processed without any regular subtrees and all
+     * the stack access statistics will be analysed bottom-up again.
+     */
     void setInputOutputStackAccessStatistics(int input, int output);
 
+    /**
+     * Called by LoadVertexLoopBody.
+     */
     void incrementLoadFromInputStackCounter();
+
+    /**
+     * Called by StoreVertexLoopBody.
+     */
     void incrementStoreToOutputStackCounter();
 
     /**
@@ -295,6 +313,8 @@ class peano::grid::Cell {
     int getNumberOfStoresToOutputStack() const;
 
     /**
+     * Swap counters of input and output stream
+     *
      * Usually, we do analyse the number of loads and stores to input and
      * output stacks, respectively, all the time. This information is not
      * analysed, if we encounter a regular subtree. As I do not reanalyse

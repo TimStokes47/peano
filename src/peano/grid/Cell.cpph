@@ -82,8 +82,11 @@ peano::grid::Cell<CellData>::~Cell() {
 #ifdef SharedMemoryParallelisation
 template <class CellData>
 void peano::grid::Cell<CellData>::setInputOutputStackAccessStatistics(int input, int output) {
-  assertion( input>=0 );
-  assertion( output>=0 );
+  assertion1( input  >= 0, toString() );
+  assertion1( output >= 0, toString() );
+
+  assertion1( input>0  || isLeaf(), toString() );
+  assertion1( output>0 || isLeaf(), toString() );
 
   _cellData.setNumberOfLoadsFromInputStream(input);
   _cellData.setNumberOfStoresToOutputStream(output);
@@ -111,18 +114,21 @@ void peano::grid::Cell<CellData>::clearInputOutputStackAccessStatistics() {
   );
   #endif
 
-  setInputOutputStackAccessStatistics(0,0);
+  _cellData.setNumberOfLoadsFromInputStream(0);
+  _cellData.setNumberOfStoresToOutputStream(0);
 }
 
 
 template <class CellData>
 void peano::grid::Cell<CellData>::incrementLoadFromInputStackCounter() {
+  assertion1( _cellData.getNumberOfLoadsFromInputStream()>=0, toString() );
   _cellData.setNumberOfLoadsFromInputStream(_cellData.getNumberOfLoadsFromInputStream()+1);
 }
 
 
 template <class CellData>
 void peano::grid::Cell<CellData>::incrementStoreToOutputStackCounter() {
+  assertion1( _cellData.getNumberOfStoresToOutputStream()>=0, toString() );
   _cellData.setNumberOfStoresToOutputStream(_cellData.getNumberOfStoresToOutputStream()+1);
 }
 
@@ -146,6 +152,12 @@ void peano::grid::Cell<CellData>::storedCellOfRegularRefinedGrid() {
   const int tmp = _cellData.getNumberOfStoresToOutputStream();
   _cellData.setNumberOfStoresToOutputStream(_cellData.getNumberOfLoadsFromInputStream());
   _cellData.setNumberOfLoadsFromInputStream(tmp);
+
+  assertion1( _cellData.getNumberOfLoadsFromInputStream()  >= 0, toString() );
+  assertion1( _cellData.getNumberOfStoresToOutputStream() >= 0, toString() );
+
+  assertion1( _cellData.getNumberOfLoadsFromInputStream()>0  || isLeaf(), toString() );
+  assertion1( _cellData.getNumberOfStoresToOutputStream()>0 || isLeaf(), toString() );
 }
 
 
@@ -159,7 +171,6 @@ template <class CellData>
 int peano::grid::Cell<CellData>::getNumberOfStoresToOutputStack() const {
   return _cellData.getNumberOfLoadsFromInputStream();
 }
-
 #endif
 
 
