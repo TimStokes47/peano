@@ -671,7 +671,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         );
       }
       else {
-        logDebug( "storeSubVerticesWithCellsOnFirstLevelInSharedMemoryMode(...)", "skip recursion" );
+        logDebug( "loadSubVerticesWithCellsFromGridContainer(...)", "skip recursion" );
       }
     endzfor
   }
