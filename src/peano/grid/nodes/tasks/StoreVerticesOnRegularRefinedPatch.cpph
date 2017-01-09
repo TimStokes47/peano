@@ -177,7 +177,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
             _regularGridContainer.getVertex(currentLevel,positionInArray).getAdjacentCellsHeightOfPreviousIteration()>= peano::grid::Leaf
           ) 
           ||
-          (_maxLevelToFork==DoNotSplitAndHandleOnlyPatchBoundary),
+          (_maxLevelToFork==DoNotSplitAndHandleOnlyPatchBoundary)
           ||
           (_maxLevelToFork==PersistentSubtreeIsDrained),
           currentLevel,
