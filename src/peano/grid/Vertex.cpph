@@ -233,6 +233,7 @@ typename peano::grid::Vertex<VertexData>::SwitchEraseTriggeredResult peano::grid
     _vertexData.getRefinementControl()==VertexData::EraseTriggered &&
     _vertexData.getAdjacentSubtreeForksIntoOtherRank()
   ) {
+    invalidateAdjacentCellInformation();
     _vertexData.setAdjacentSubtreeForksIntoOtherRank(false);
     return SwitchEraseTriggeredResult::WasntAbleToSwitchDueToFork;
   }
