@@ -165,10 +165,11 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 
   const bool readTreeIsStoredPersistently = fineGridCell.rootsPersistentRegularSubtree();
   if (readTreeIsStoredPersistently) {
-    logDebug( "traverse(...)", "loaded tree is held persistently=" << fineGridCell.toString() << ", flag=" << fineGridCell.rootsPersistentRegularSubtree() ); 
+    logDebug( "traverse(...)", "loaded tree is held persistently=" << fineGridCell.toString() << ", depth=" << TreeDepth  ); 
     dfor2(k)
       logDebug( "traverse(...)", "- vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() );
     enddforx
+    logDebug( "traverse(...)", "- cell " << fineGridCell.toString() );
 
     _regularGridContainer.copyRootNodeDataIntoRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
 
@@ -183,10 +184,11 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     descendTask();
   }
   else {
-    logDebug( "traverse(...)", "loaded tree is not held persistently=" << fineGridCell.toString() << ", flag=" << fineGridCell.rootsPersistentRegularSubtree() ); 
+    logDebug( "traverse(...)", "loaded tree is not held persistently=" << fineGridCell.toString() << ", depth=" << TreeDepth ); 
     dfor2(k)
       logDebug( "traverse(...)", "- vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() );
     enddforx
+    logDebug( "traverse(...)", "- cell " << fineGridCell.toString() );
     
     _regularGridContainer.copyRootNodeDataIntoRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
 
@@ -274,8 +276,6 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       && 
       state.storeRegularSubtreesPersistently(TreeDepth);
     if (persistentSubtreeRemainsPersistent) {
-      logDebug( "traverse()", "retain regular subtree of depth " << TreeDepth );
-
       retainRegularSubtreePersistently = true;
 
       dfor2(k)
@@ -288,17 +288,19 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         StoreVerticesTask::DoNotSplitAndHandleOnlyPatchBoundary
       );
       storeVerticesTask();
-    }
-    else {
-      #ifdef Debug
-      logDebug( "traverse(...)", "drain existing persistent subtree of index " << fineGridCell.toString() );
+
+      _regularGridContainer.copyRootNodeDataFromRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
+      fineGridCell.updatePersistentRegularSubtreeIndex( _regularGridContainer.keepCurrentRegularSubgrid() );
+
+      logDebug( "traverse(...)", "retained regular subtree=" << fineGridCell.toString() << ", depth=" << TreeDepth ); 
       dfor2(k)
         logDebug( "traverse(...)", "- vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() );
       enddforx
-      #endif
-
+      logDebug( "traverse(...)", "- cell " << fineGridCell.toString() );
+    }
+    else {
       retainRegularSubtreePersistently = false;
-      
+
       const bool pipelineTasks = false;
       StoreVerticesTask   storeVerticesTask(
         state.isTraversalInverted(), _regularGridContainer, Base::_vertexStack, pipelineTasks,
@@ -308,6 +310,19 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 
       StoreCellsTask      storeCellsTask( TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, pipelineTasks );
       storeCellsTask();
+
+      _regularGridContainer.copyRootNodeDataFromRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
+      fineGridCell.updatePersistentRegularSubtreeIndex(NoPersistentRegularSubtree);
+
+      dfor2(k)
+        fineGridVertices[ fineGridVerticesEnumerator(k) ].invalidateAdjacentCellInformation();
+      enddforx
+
+      logDebug( "traverse(...)", "drained existing persistent regular subtree=" << fineGridCell.toString() << ", depth=" << TreeDepth ); 
+      dfor2(k)
+        logDebug( "traverse(...)", "- vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() );
+      enddforx
+      logDebug( "traverse(...)", "- cell " << fineGridCell.toString() );
     }
   }
   else {
@@ -359,80 +374,86 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       storeCellsTask();
     }
 
+/*
+    Am Rand muss auch das Parent-Flag gesetzt sein (was jetzt aber wieder anders heissen sollte).
+    Wenn es da nicht sitzt, koennten wir aus einem persistenten Patch rausgehen, wobei ein Vertex
+    A noch unverfeinert ist. Im adjazenten Gebiet (nicht persistent) wird nun das Refinement-Flag
+    gesetzt. In der Folgeiteration kommen wir ueber die Nachbarregion rein und verfeinern. Duerfen
+    wir aber nicht, weil wir warten muessen, bis der persistente Patch aufgeloest ist. Aber genau
+    das passiert auch schon, d.h. es darf nicht der Fehler sein, weil es nix mit den Stack-Zahlen 
+    zu tun hat.
+        
+    Aber durch das Verschieben von Routinen hab ich jetzt nen Hund reinbekommen.
+*/
+        
+        
     PipelineTasks.parallelSectionHasTerminated();
+
+    _regularGridContainer.copyRootNodeDataFromRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
+    fineGridCell.updatePersistentRegularSubtreeIndex(NoPersistentRegularSubtree);
+
+    #if defined(SharedMemoryParallelisation)
+    const int verticesReadFromInputStack = sizeOfInputStackBeforeDescend          - Base::_vertexStack.sizeOfInputStack();
+    const int verticesStoredToOuputStack = Base::_vertexStack.sizeOfOutputStack() - sizeOfOutputStackBeforeDescend;
+    
+    fineGridCell.setInputOutputStackAccessStatistics(verticesReadFromInputStack,verticesStoredToOuputStack);
+    
+    assertionEquals2( fineGridCell.getNumberOfStoresToOutputStack(), verticesReadFromInputStack, verticesStoredToOuputStack, fineGridCell.toString() );
+    assertionEquals2( fineGridCell.getNumberOfLoadsFromInputStack(), verticesStoredToOuputStack, verticesReadFromInputStack, fineGridCell.toString() );
+    
+    #if defined(Dim2) && !defined(PersistentRegularSubtrees)
+    assertion4(
+         fineGridCell.getNumberOfStoresToOutputStack()==3*3 // have already visited two edges, two edges are free
+      || fineGridCell.getNumberOfStoresToOutputStack()==3*4 // have touched only one edge
+      || fineGridCell.getNumberOfStoresToOutputStack()==3*2 // have touched three edges
+      || fineGridCell.getNumberOfStoresToOutputStack()==3*3+9*9
+      || fineGridCell.getNumberOfStoresToOutputStack()==3*4+9*10
+      || fineGridCell.getNumberOfStoresToOutputStack()==3*2+9*8
+      || fineGridCell.getNumberOfStoresToOutputStack()==3*3+9*9+27*27
+      || fineGridCell.getNumberOfStoresToOutputStack()==3*4+9*10+27*28
+      || fineGridCell.getNumberOfStoresToOutputStack()==3*2+9*8+27*26
+      || fineGridCell.getNumberOfStoresToOutputStack()> 3*4+9*10+27*28,
+      fineGridCell.toString(),
+      TreeDepth,
+      verticesReadFromInputStack,
+      verticesStoredToOuputStack
+    );
+    
+    assertion4(
+         fineGridCell.getNumberOfLoadsFromInputStack()==3*3             // 9   have not yet visited two edges
+      || fineGridCell.getNumberOfLoadsFromInputStack()==3*4             // 12
+      || fineGridCell.getNumberOfLoadsFromInputStack()==3*2             // 6
+      || fineGridCell.getNumberOfLoadsFromInputStack()==3*3+9*9         // 90
+      || fineGridCell.getNumberOfLoadsFromInputStack()==3*4+9*10        // 102
+      || fineGridCell.getNumberOfLoadsFromInputStack()==3*2+9*8         // 78
+      || fineGridCell.getNumberOfLoadsFromInputStack()==3*3+9*9+27*27
+      || fineGridCell.getNumberOfLoadsFromInputStack()==3*4+9*10+27*28  // 3612
+      || fineGridCell.getNumberOfLoadsFromInputStack()==3*2+9*8+27*26
+      || fineGridCell.getNumberOfLoadsFromInputStack()> 3*4+9*10+27*28, // 3612
+      fineGridCell.toString(),
+      TreeDepth,
+      verticesReadFromInputStack,
+      verticesStoredToOuputStack
+    );
+    #endif
+    #endif    
+
+    logDebug( "traverse(...)", "stored non-persistent subtree non-persistently=" << fineGridCell.toString() << ", depth=" << TreeDepth ); 
+    dfor2(k)
+      logDebug( "traverse(...)", "- vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() );
+    enddforx
+    logDebug( "traverse(...)", "- cell " << fineGridCell.toString() );
   }
 
   #if defined(PersistentRegularSubtrees) && defined(SharedMemoryParallelisation)
   TryToRetainRegularSubtreePersistently.parallelSectionHasTerminated();
   #endif
 
-  _regularGridContainer.copyRootNodeDataFromRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
   Base::validatePositionOfVertices(fineGridVertices,fineGridVerticesEnumerator);
-
-  #if defined(SharedMemoryParallelisation)
-  const int verticesReadFromInputStack = sizeOfInputStackBeforeDescend          - Base::_vertexStack.sizeOfInputStack();
-  const int verticesStoredToOuputStack = Base::_vertexStack.sizeOfOutputStack() - sizeOfOutputStackBeforeDescend;
-
-  fineGridCell.setInputOutputStackAccessStatistics(verticesReadFromInputStack,verticesStoredToOuputStack);
-
-  assertionEquals2( fineGridCell.getNumberOfStoresToOutputStack(), verticesReadFromInputStack, verticesStoredToOuputStack, fineGridCell.toString() );
-  assertionEquals2( fineGridCell.getNumberOfLoadsFromInputStack(), verticesStoredToOuputStack, verticesReadFromInputStack, fineGridCell.toString() );
-
-  #if defined(Dim2) && !defined(PersistentRegularSubtrees)
-  assertion4(
-       fineGridCell.getNumberOfStoresToOutputStack()==3*3 // have already visited two edges, two edges are free
-    || fineGridCell.getNumberOfStoresToOutputStack()==3*4 // have touched only one edge
-    || fineGridCell.getNumberOfStoresToOutputStack()==3*2 // have touched three edges
-    || fineGridCell.getNumberOfStoresToOutputStack()==3*3+9*9
-    || fineGridCell.getNumberOfStoresToOutputStack()==3*4+9*10
-    || fineGridCell.getNumberOfStoresToOutputStack()==3*2+9*8
-    || fineGridCell.getNumberOfStoresToOutputStack()==3*3+9*9+27*27
-    || fineGridCell.getNumberOfStoresToOutputStack()==3*4+9*10+27*28
-    || fineGridCell.getNumberOfStoresToOutputStack()==3*2+9*8+27*26
-    || fineGridCell.getNumberOfStoresToOutputStack()> 3*4+9*10+27*28,
-    fineGridCell.toString(),
-    TreeDepth,
-    verticesReadFromInputStack,
-    verticesStoredToOuputStack
-  );
-
-  assertion4(
-       fineGridCell.getNumberOfLoadsFromInputStack()==3*3             // 9   have not yet visited two edges
-    || fineGridCell.getNumberOfLoadsFromInputStack()==3*4             // 12
-    || fineGridCell.getNumberOfLoadsFromInputStack()==3*2             // 6
-    || fineGridCell.getNumberOfLoadsFromInputStack()==3*3+9*9         // 90
-    || fineGridCell.getNumberOfLoadsFromInputStack()==3*4+9*10        // 102
-    || fineGridCell.getNumberOfLoadsFromInputStack()==3*2+9*8         // 78
-    || fineGridCell.getNumberOfLoadsFromInputStack()==3*3+9*9+27*27
-    || fineGridCell.getNumberOfLoadsFromInputStack()==3*4+9*10+27*28  // 3612
-    || fineGridCell.getNumberOfLoadsFromInputStack()==3*2+9*8+27*26
-    || fineGridCell.getNumberOfLoadsFromInputStack()> 3*4+9*10+27*28, // 3612
-    fineGridCell.toString(),
-    TreeDepth,
-    verticesReadFromInputStack,
-    verticesStoredToOuputStack
-  );
-  #endif
-  #endif
 
   peano::grid::nodes::tasks::InvokeLeaveCell<Vertex,Cell,State,EventHandle>
     invokeLeaveCellTask( state, fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell, Base::_eventHandle );
   invokeLeaveCellTask();
     
-  if (retainRegularSubtreePersistently) {
-    fineGridCell.updatePersistentRegularSubtreeIndex( _regularGridContainer.keepCurrentRegularSubgrid() );
-    logDebug( "traverse(...)", "tree is stored persistently and index has been set: " << fineGridCell.toString() );
-    dfor2(k)
-      logDebug( "traverse(...)", "- vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() );
-    enddforx
-  }
-  else {
-    logDebug( "traverse(...)", "tree is not stored persistently: " << fineGridCell.toString() );
-    dfor2(k)
-      logDebug( "traverse(...)", "- vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() );
-    enddforx
-    fineGridCell.updatePersistentRegularSubtreeIndex(NoPersistentRegularSubtree);
-  }
-  
   logTraceOut( "traverse(...)" );
 }
