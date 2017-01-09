@@ -374,19 +374,6 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       storeCellsTask();
     }
 
-/*
-    Am Rand muss auch das Parent-Flag gesetzt sein (was jetzt aber wieder anders heissen sollte).
-    Wenn es da nicht sitzt, koennten wir aus einem persistenten Patch rausgehen, wobei ein Vertex
-    A noch unverfeinert ist. Im adjazenten Gebiet (nicht persistent) wird nun das Refinement-Flag
-    gesetzt. In der Folgeiteration kommen wir ueber die Nachbarregion rein und verfeinern. Duerfen
-    wir aber nicht, weil wir warten muessen, bis der persistente Patch aufgeloest ist. Aber genau
-    das passiert auch schon, d.h. es darf nicht der Fehler sein, weil es nix mit den Stack-Zahlen 
-    zu tun hat.
-        
-    Aber durch das Verschieben von Routinen hab ich jetzt nen Hund reinbekommen.
-*/
-        
-        
     PipelineTasks.parallelSectionHasTerminated();
 
     _regularGridContainer.copyRootNodeDataFromRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);

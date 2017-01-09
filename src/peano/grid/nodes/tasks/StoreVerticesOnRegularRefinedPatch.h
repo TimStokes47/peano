@@ -195,6 +195,17 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
      * the tree early: As interior vertices don't have to be loaded or stored,
      * we don't have to descend here in the tree. Search for the bool recurse
      * in the code (it is used twice).
+     *
+     * It is important that this mode does set the parents-regular-subtree flag
+     * along the whole boundary. This flag vetos refinements and erases. This is
+     * important. Otherwise you might leave a regular subgrid stored
+     * persistently and a neighbour cell might set the refinement. In the next
+     * iteration when the automaton runs through this neighbour region first,
+     * the refinement triggered is switched into refining, we refine, and the
+     * persistently stored subtree becomes invalid. We therefore set the flag
+     * along the whole boundary. Please note that the vertices on the coarsest
+     * level have to be set manually in RegularRefined::traverse() as the store
+     * process does not touch the vertices of the coarsest level.
      */
     static const int DoNotSplitAndHandleOnlyPatchBoundary = -2;
 
