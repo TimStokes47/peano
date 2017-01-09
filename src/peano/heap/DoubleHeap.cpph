@@ -478,7 +478,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   MessageType                                   messageType
 ) {
   VectorContainer receivedData = receiveData( fromRank, position, level, messageType );
-  assertionEquals( static_cast<int>(receivedData.size()), size);
+  assertionEquals4( static_cast<int>(receivedData.size()), size , position.toString(), level, tarch::parallel::Node::getInstance().getRank(), fromRank );
   for (int i=0; i<size; i++) {
     data[i] = receivedData[i];
   }
