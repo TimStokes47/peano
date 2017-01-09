@@ -160,8 +160,7 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      * cell copy (at least not with a const reference). Also, I have to
      * manually reset the cell's state to leaf.
      *
-     * You may/shall use this variant if and only if task parallelism is
-     * switched on an no further decomposition of this task is allowed.
+     * <h2> Shared memory parallelisation </h2>
      *
      * As we are working with on-the-fly generated cells, i.e. we are not
      * working with any originals, we may not use the analysed information
@@ -316,6 +315,25 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
 
     ~LoadVerticesOnRegularRefinedPatch();
 
+    /**
+     * We have two variants of the load process: One uses the cells loaded into
+     * the regular grid container, i.e. it uses cells from the input stream,
+     * while the other variant reconstructs the cells on-the-fly. Reading in
+     * from the container increases the stress on the memory bus, but is allows
+     * the vertex load process to use the number of stores/loads held within the
+     * cell records to fork the load process. If we reconstruct the cells
+     * on-the-fly, we have no information about the number of vertices read from
+     * the input stream available, i.e. we cannot split up this task further.
+     *
+     * As a consequence, we use this reconstruction
+     *
+     * - if we shall fork, i.e. max level to fork is greater or equal to zero, or
+     * - if we haven't the required cells on a particular level in the regular
+     *   grid container yet.
+     *
+     * @see peano::grid::nodes::transformOracleResult() for the semantics of
+     *                                                  _maxLevelToFork.
+     */
     void operator()();
 };
 

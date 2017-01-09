@@ -794,8 +794,9 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   logTraceInWith7Arguments( "operator()()", _isTraversalInverted, _loadProcessRunsInParallelToOtherTasks, _maxLevelToFork, _stackView.isEmpty(), _coarsestLevelOfThisTask, _coarsestCellsOffset, _regularGridContainer.getVertexEnumerator(0).getCellFlags() );
 
   const bool UseOnTheFlyReconstruction =
-    (_loadProcessRunsInParallelToOtherTasks || !_regularGridContainer.areCellsOfLevelLoaded(_coarsestLevelOfThisTask)) &&
-    _maxLevelToFork <= _coarsestLevelOfThisTask;
+    (_loadProcessRunsInParallelToOtherTasks && !_regularGridContainer.areCellsOfLevelLoaded(_coarsestLevelOfThisTask))
+    ||
+    _maxLevelToFork < 0;
 
   if ( UseOnTheFlyReconstruction ) {
     const UnrolledLevelEnumerator& coarseGridEnumerator = _regularGridContainer.getVertexEnumerator(_coarsestLevelOfThisTask);
