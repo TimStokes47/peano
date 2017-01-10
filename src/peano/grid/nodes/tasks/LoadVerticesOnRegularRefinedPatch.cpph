@@ -793,10 +793,14 @@ template <class Vertex, class Cell, class VertexStack>
 void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::operator()() {
   logTraceInWith7Arguments( "operator()()", _isTraversalInverted, _loadProcessRunsInParallelToOtherTasks, _maxLevelToFork, _stackView.isEmpty(), _coarsestLevelOfThisTask, _coarsestCellsOffset, _regularGridContainer.getVertexEnumerator(0).getCellFlags() );
 
+  #ifdef SharedMemoryParallelisation
   const bool UseOnTheFlyReconstruction =
     (_loadProcessRunsInParallelToOtherTasks && !_regularGridContainer.areCellsOfLevelLoaded(_coarsestLevelOfThisTask))
     ||
     _maxLevelToFork < 0;
+  #else
+  const bool UseOnTheFlyReconstruction = false;
+  #endif
 
   if ( UseOnTheFlyReconstruction ) {
     const UnrolledLevelEnumerator& coarseGridEnumerator = _regularGridContainer.getVertexEnumerator(_coarsestLevelOfThisTask);
