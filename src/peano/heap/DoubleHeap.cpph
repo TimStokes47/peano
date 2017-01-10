@@ -7,6 +7,9 @@
 #include "tarch/services/ServiceFactory.h"
 
 
+#include "tarch/parallel/Node.h"
+
+
 #include "peano/performanceanalysis/Analysis.h"
 
 
