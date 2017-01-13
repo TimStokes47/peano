@@ -44,7 +44,8 @@ compile: files.mk $(OBJECTS)
 dist:
 	jar xf ../lib/DaStGen.jar 
 	jar xf ../lib/jargs.jar 
-	jar cmf ../Manifest.txt ../pdt.jar . ../stdtemplates/*
+	ln -s ../stdtemplates
+	jar cmf ../Manifest.txt ../pdt.jar . 
 
 
 all: clean createParser clean compile dist
