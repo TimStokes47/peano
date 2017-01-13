@@ -194,7 +194,7 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
         SendReceiveBufferPool::getInstance().receiveDanglingMessagesFromAllBuffersInPool();
 
     // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
-    std::atomic_thread_fence(std::memory_order_release);
+    //std::atomic_thread_fence(std::memory_order_release);
         break;
       case Suspend:
         break;
