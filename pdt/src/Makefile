@@ -24,15 +24,16 @@ default:
 clean:
 	rm -f $(OBJECTS)
 	rm -f files.mk
-	rm -rf org/peano/pdt/node
-	rm -rf org/peano/pdt/lexer
-	rm -rf org/peano/pdt/parser
 	rm -rf de
 	rm -rf jargs
 	rm -rf META-INF
 
 
 createParser:
+	rm -rf org/peano/pdt/node
+	rm -rf org/peano/pdt/lexer
+	rm -rf org/peano/pdt/parser
+	rm -rf org/peano/pdt/analysis
 	java -jar ../lib/sablecc.jar -d . ../pdt.grammar 
 	rm -f files.mk
 
