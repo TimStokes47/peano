@@ -8,6 +8,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <stdlib.h>
 
 
 #include "tarch/services/ServiceFactory.h"
