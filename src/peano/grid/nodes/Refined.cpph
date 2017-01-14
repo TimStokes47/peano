@@ -98,7 +98,6 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
 
   #ifdef DistinguishStationaryAndInstationarySubtrees
   if ( fineGridVerticesEnumerator.getCellFlags() >= peano::grid::Leaf ) {
-    assertionMsg( false, "never entered" );
     typedef loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack,EventHandle,peano::grid::Leaf> LoopBody;
     const peano::datatraversal::autotuning::MethodTrace methodTrace = peano::datatraversal::autotuning::MethodTrace::LoadVerticesOnRegularStationaryGrid;
     if (Base::_eventHandle.touchVertexFirstTimeSpecification().multithreading) {
