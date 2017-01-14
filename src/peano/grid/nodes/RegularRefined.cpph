@@ -259,7 +259,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     peano::datatraversal::autotuning::MethodTrace::HoldPersistentRegularSubgrid
   );
   bool       retainRegularSubtreePersistently            = readTreeIsStoredPersistently | TryToRetainRegularSubtreePersistently.runsParallel();
-  #elif defined(SharedMemoryParallelisation)
+  #elif defined(PersistentRegularSubtrees)
   bool       retainRegularSubtreePersistently            = true;
   #else
   bool       retainRegularSubtreePersistently            = false;
