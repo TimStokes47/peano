@@ -34,7 +34,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
     (_eventHandle.touchVertexFirstTimeSpecification().manipulates == peano::MappingSpecification::WholeTree) ||
     (_eventHandle.touchVertexFirstTimeSpecification().manipulates == peano::MappingSpecification::OnlyLeaves && level == _treeDepth);
 
-  #if !defined(SharedMemoryParallelisation)
+  #if !defined(SharedMemoryParallelisation) and !defined(PersistentRegularSubtrees)
   assertion2(_gridContainer.isLevelInitialised(level), level, _gridContainer.toString());
   #else
   while (_descendProcessRunsInParallelToOtherTasks && !_gridContainer.isLevelInitialised(level)) {
