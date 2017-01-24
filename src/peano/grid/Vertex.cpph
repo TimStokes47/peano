@@ -201,7 +201,7 @@ typename peano::grid::Vertex<VertexData>::SwitchRefinementTriggeredResult peano:
   else if (
     _vertexData.getRefinementControl()==VertexData::RefinementTriggered
     #ifdef Parallel
-    | _vertexData.getRefinementControl()==VertexData::EnforceRefinementTriggered
+    || _vertexData.getRefinementControl()==VertexData::EnforceRefinementTriggered
     #endif
   ) {
     _vertexData.setRefinementControl( VertexData::Refining );
