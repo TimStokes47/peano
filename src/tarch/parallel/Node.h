@@ -134,6 +134,7 @@ class tarch::parallel::Node {
      * of the log variable of the class. This is an important workaround!.
      */
     static int reserveFreeTag(const std::string& fullQualifiedMessageName);
+    static void releaseTag(int tag);
 
     /**
      * Logs the status of the process onto the log device.

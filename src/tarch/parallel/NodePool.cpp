@@ -572,3 +572,12 @@ void tarch::parallel::NodePool::activateIdleNodes() {
   logTraceOut( "activateIdleNodes(int)" );
   #endif
 }
+
+
+bool tarch::parallel::NodePool::isIdleNode( int rank ) const {
+  #ifdef Parallel
+  return _strategy->isIdleNode(rank);
+  #else
+  return rank>0;
+  #endif
+}

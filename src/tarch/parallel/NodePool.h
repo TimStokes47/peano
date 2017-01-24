@@ -409,6 +409,8 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * afterwards register themselves as idle again.
      */
     void activateIdleNodes();
+
+    bool isIdleNode( int rank ) const;
 };
 
 

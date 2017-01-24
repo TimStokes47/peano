@@ -23,10 +23,20 @@ tarch::logging::Log tarch::parallel::Node::_log("tarch::parallel::Node");
 
 bool tarch::parallel::Node::_initIsCalled = false;
 
+namespace {
+  int tagCounter = 0;
+}
+
+
+void tarch::parallel::Node::releaseTag(int tag) {
+  if (tag==tagCounter-1) {
+    tagCounter--;
+  }
+}
+
 
 int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessageName) {
-  static int            result = 0;
-  result++;
+  tagCounter++;
 
   // I protect the tag manually (not via log filter), as many tags are actually
   // grabbed before most applications initialise their log filters properly.
@@ -38,11 +48,11 @@ int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessag
     logInfo(
       "reserveFreeTag()",
       "assigned message " << fullQualifiedMessageName
-       << " the free tag " << result
+       << " the free tag " << tagCounter-1
     );
   }
 
-  return result;
+  return tagCounter-1;
 }
 
 
