@@ -95,6 +95,15 @@ class peano::grid::nodes::tasks::Ascend {
      * touch last will run in parallel. As touch last relies on valid vertex
      * flags, it is therefore important to set/invalidate all flags before
      * asap - notably before we release the levels.
+     *
+     * We note that the ascend's manual vertex transition can be shortened
+     * significantly in some cases:
+     *
+     * If none of the mappings does work on the whole grid, all the mappings
+     * can only manipulate the finest grid or the next coarser grid (as we
+     * always pass two levels into the events). So there's no need to run
+     * through all levels.
+     *
      */
     void operator() ();
 

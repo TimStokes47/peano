@@ -242,32 +242,52 @@ template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator() () {
   _treeRemainsStatic = true;
 
-  if (_eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop) {
-    const int NumberOfVertices = tarch::la::volume(_gridContainer.getNumberOfVertices(_treeDepth));
+  const bool mappingsMayModifyOnlyFinestGridLevelAndItsParents = 
+    _eventHandle.touchVertexFirstTimeSpecification().manipulates != peano::MappingSpecification::WholeTree
+    &&
+    _eventHandle.enterCellSpecification().manipulates != peano::MappingSpecification::WholeTree
+    &&
+    _eventHandle.descendSpecification().manipulates != peano::MappingSpecification::WholeTree
+    &&
+    _eventHandle.leaveCellSpecification().manipulates != peano::MappingSpecification::WholeTree
+    &&
+    _eventHandle.touchVertexLastTimeSpecification().manipulates != peano::MappingSpecification::WholeTree
+    &&
+    _eventHandle.ascendSpecification().manipulates != peano::MappingSpecification::WholeTree;
+ 
+  int finestPostprocessingGridLevel   = 0;
+  int coarsestPostprocessingGridLevel = 1;
 
-    // Das kann dann raus: ResetVertexRegularityStateInAscendForNopMappings
-    for (int i=0; i<NumberOfVertices; i++) {
-      Vertex&   currentVertex  = _gridContainer.getVertex(_treeDepth,i);
-      TouchVertexLastTimeLoopBody::performVertexTransition(currentVertex,_treeDepth,_treeDepth,_treeRemainsStatic);
-    }
+  if (mappingsMayModifyOnlyFinestGridLevelAndItsParents) {
+    finestPostprocessingGridLevel   = _treeDepth;
+    coarsestPostprocessingGridLevel = _treeDepth-1;
   }
-
-
-  if (
-    _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::OnlyLeaves
-    ||
+  else if (
     _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop
   ) {
-    for(int level=_treeDepth-1; level>=1; level--) {
-      const int NumberOfVertices      = tarch::la::volume(_gridContainer.getNumberOfVertices(level));
-      for (int i=0; i<NumberOfVertices; i++) {
-        //if (!_gridContainer.isToBeWrittenToTemporaryStack(level,i) ) {
-        Vertex&   currentVertex  = _gridContainer.getVertex(level,i);
-        TouchVertexLastTimeLoopBody::performVertexTransition(currentVertex,level,_treeDepth,_treeRemainsStatic);
-      }
-    }
+    finestPostprocessingGridLevel   = _treeDepth;
+    coarsestPostprocessingGridLevel = 1;
+  }
+  else if (
+    _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::OnlyLeaves
+  ) {
+    finestPostprocessingGridLevel   = _treeDepth-1;
+    coarsestPostprocessingGridLevel = 1;
   }
 
+  int manualPostProcessingLevel = finestPostprocessingGridLevel;
+  while (
+    ( manualPostProcessingLevel>=coarsestPostprocessingGridLevel && _treeRemainsStatic )
+    ||
+    ( manualPostProcessingLevel>=1 && !_treeRemainsStatic )
+  ) {
+    const int NumberOfVertices      = tarch::la::volume(_gridContainer.getNumberOfVertices(manualPostProcessingLevel));
+    for (int i=0; i<NumberOfVertices; i++) {
+      Vertex&   currentVertex  = _gridContainer.getVertex(manualPostProcessingLevel,i);
+      TouchVertexLastTimeLoopBody::performVertexTransition(currentVertex,manualPostProcessingLevel,_treeDepth,_treeRemainsStatic);
+    }
+    manualPostProcessingLevel--;
+  }
 
   for (int level=_treeDepth+1; level>=1; level--) {
     if (level==1) {
@@ -283,7 +303,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
       leaveCells(level-1);
     }
   }
-
+  
   if (_treeRemainsStatic) {
     dfor2(i)
       _gridContainer.getVertex(0,iScalar).setCurrentAdjacentCellsHeight(static_cast<peano::grid::CellFlags>(_treeDepth));
