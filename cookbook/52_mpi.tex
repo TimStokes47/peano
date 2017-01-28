@@ -15,10 +15,11 @@ passing.
 
 \subsection{Preparation}
 
-Peano relies on MPI with its SPMD paradigm, i.e.~all ranks run exactly the same
-code.
-Internally, it however creates a logical tree topology on all ranks. 
-There is one rank that is the {\em global master}.
+Peano technically relies on MPI with its SPMD paradigm, i.e.~all ranks run
+exactly the same code.
+Internally, it however creates a logical tree topology on all ranks and
+reserves one rank for non-compute tasks.
+This one is called the {\em global master}.
 By convention, this is rank 0, i.e.~the very first rank launched by MPI.
 All other ranks are {\em workers}.
 Each rank besides the global master has one unique {\em master}.
@@ -27,20 +28,25 @@ be idle.
 At the begin of the simulation, all workers are idle and only the global master
 is working (as it is working always).
 
-The global master runs the actual Peano simulation code, holds the simulation
-state and triggers the grid traversals.
-Whenever it triggers a grid traversal, it tells all non-idle workers which
-adapter is currently used.
+The global master usually has exactly one worker rank to which it delegates all
+compute work and which in turn continues to distribute work recursively.
+The global master thus ``only'' remains in control of the algorithm control,
+load balancing decisions, administrative tasks, \ldots
+Those are typically time critical and it thus seemed to be reasonable to free
+the global master from compute work.
+Whenever the global master triggers a grid traversal, it tells all non-idle
+workers which adapter is currently used.
 It determines which algorithmic phase to run. 
 Then, it starts to run through the grid. 
-If parts of the grid are deployed to other ranks, they are informed to start a
-traversal as well. 
+If parts of the grid are deployed to other ranks---as clarified, the global
+master always deploys the coarsest spacetree cell plus all of its children to a
+worker immediately---they are informed to start a traversal as well.
 The traversal kick-off propagates through the ranks along the master-worker
 topology.
 All of this is done automatically.
 Most codes require the programmer to think only about the global master.
 
-\paragraph{Re-translating the code.}
+\paragraph{Re-translating the code}
 We expect that there is a command \texttt{mpicxx} available in your path.
 This command often also is called \texttt{mpiCC}. Please ensure it calls the
 right compiler backend. 
@@ -53,11 +59,11 @@ Change your compile command to \texttt{mpicxx} and add the two options
 \end{code}
 to your compiler call.
 While Peano is written in C++11, it relies only on C bindings of MPI.
-Some MPI versions (mpich) have issues with this combination (give you tons of
-warnings) unless you pass \texttt{MPICH\_IGNORE\_CXX\_SEEK}. 
+Some MPI versions (mpich, e.g.) have/used to have issues with this combination
+(give you tons of warnings) unless you pass \texttt{MPICH\_IGNORE\_CXX\_SEEK}. 
 
 
-\paragraph{Setting up the code.}
+\paragraph{Setting up the code}
 
 The auto-generated \texttt{main} calls Peano's operation \newline
 \texttt{peano::initParallelEnvironment} which takes care of a proper MPI
@@ -105,18 +111,28 @@ However, we typically realise it within \texttt{run} just before or after the
 operation splits up into the function for the global master and all other ranks.
 
 
-{\bf Choose a load balancing request answering strategy on the global master}.
+\paragraph{Choose a load balancing request answering strategy on the global
+master}
 One for the first steps on the global master is to configure a
 proper load balancing strategy. 
 Peano realises a hybrid centralised-decentralised load balancing by default,
-where load balancing decisions are, whenever possible, made centrally. 
+where load balancing decisions are, whenever possible, made decentrally,
+i.e.~on the individual ranks.
 Once load balancing decisions are made (along the lines `I would like more
 ranks to help me with my work'), a central point is contacted that decides which
 ranks are involved in the rebalancing.
-This central point is called {\em node pool}.
-Peano realises the whole node pool, but allows the user to plug into the
-decisions which ranks are assigned to help which other ranks, e.g.
-We have to configure the node pool on the global master only
+This central point is called {\em node pool}; 
+and it is instantiated on the global master which is typically rank 0.
+We see why it is important to free the global master from work: if a rank wants
+to do some load balancing and needs both permissions to do so and potentially
+involved nodes, it pauses its traversal and asks the node pool.
+So it is essential that the answer arrives as soon as possible.
+
+
+Peano realises the whole node pool itself, no coding is required here, but
+it allows the user to plug into the decisions which ranks are assigned to assist
+other rankOracleForOnePhaseWithGreedyPartitionings, e.g.
+We hence have to configure the node pool on the global master only
 \begin{code}
 if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
   tarch::parallel::NodePool::getInstance().setStrategy(
@@ -132,7 +148,17 @@ might decide to bundle requests to get an overview who asks for resources first
 before any rank assignment is performed) and hands out MPI ranks as long as
 there are still idle workers available.
 
-{\bf Restart the load balancing on all ranks}.
+
+\begin{remark}
+ All classes from the \texttt{tarch::parallel} namespace and the
+ \texttt{peano:parallel} namespace can be included even if you work without
+ distributed memory parallelisation or want your code to be prepared to compile without MPI, too.
+ Notably, the classes \texttt{Node} and \texttt{NodePool} all implement their
+ routines for serial setups as well.
+\end{remark}
+
+
+\paragraph{Restart the load balancing on all ranks}
 Once the node pool
 is initialised, we have to restart it.
 This has to be done on all ranks. 
@@ -157,16 +183,21 @@ instruction here which ensures that all nodes register at the central node pool
 and tell the central node pool strategy that they are idle and free for new
 jobs. 
 Though not mandatory, you might want to add this statement anyway at runtime to
-ensure your whole system is up properly.
+ensure your whole system is up properly before any load balancing kicks in.
 \end{remark}
 
-\noindent
-{\bf Configure the load balancing strategy on all ranks}.
+\paragraph{Configure the load balancing strategy on all ranks}
 In a next step, we configure the
 actual load balancing.
-Again, we rely on a default balancing that simply yields a static partitioning. 
-This partitioning is established by a greedy grid decomposition while the grid
-is built up.
+So far, only the global master is established that can decide which ranks
+collaborate.
+We still need to establish the environment that first decides per rank whether
+to load balance or not.
+Again, we rely on a default balancing that simply yields
+a static partitioning.
+The partitioning, i.e.~the domain splitting, is determined by a greedy grid
+decomposition.
+Following our description, this setup has to run on each and every rank.
 
 \begin{code}
 peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
@@ -192,6 +223,7 @@ The default oracles don't communicate.
 Each rank is autonomous.
  
 \begin{remark}
+We reiterate:
 Peano's MPI routines are written with the idea in mind that \texttt{#ifdef}s
 pollute your code and basically introduce many different branches of your source
 code that are more difficult to maintain than one single strand. The high level
@@ -201,29 +233,43 @@ you always can be sure that everything compiles, is consistent and lots of
 assertions are built in in non-release mode.
 \end{remark}
 
-\noindent
+\begin{remark}
 Please note that the oracles typically should be set {\em after} you have
 created the repository.
 The oracles have to know how many adapters do exist.
 This information is encoded in the repository.
+\end{remark}
+
+
 
 %\noindent 
-{\bf Set buffer sizes on all ranks}.
-MPI code tends to be very sensitive to proper buffer sizes.
+\paragraph{Set buffer sizes on all ranks}
+In most parts of the code, Peano does not send out MPI data immediately even 
+if it could.
+At least, it does so for data which is not ``urgent''.
+It groups such data in buffers of prescribed size and sends them in whole
+chunks.
+This reduces overhead cost.
+MPI code however tends to be very sensitive to proper buffer
+sizes.
 In Peano, you have to ensure that all ranks work with the same buffer sizes
 (otherwise the exchange of buffers will fail) and that you set them before you
-actually exchange data. 
-Please note that it is not recommended to change these buffer sizes throughout
-any computation. 
+actually exchange data on each and every rank. 
 
 \begin{code}
+// bufferSize=64 usually is a good starting point if you don't want to tune this
+// propery manually.
 peano::parallel::SendReceiveBufferPool::getInstance().setBufferSize( bufferSize );
 peano::parallel::JoinDataBufferPool::getInstance().setBufferSize( bufferSize );
 \end{code}
 
-
 \noindent
-{\bf Configure deadlock time outs on all ranks (optional)}.
+Please note that it is not recommended to change these buffer sizes throughout
+any computation. 
+
+%\vspace{0.5cm}
+
+\paragraph{Configure deadlock time outs on all ranks (optional)}
 Peano's MPI communication routines all have some built-in deadlock detection. 
 To enable it, you have to quantify what MPI waiting time is to be considered to
 be a deadlock.
@@ -252,8 +298,8 @@ waiting strategy exactly the other way round.
   #endif
 \end{code}
 
-\noindent
-{\bf Clean up all the ranks}.
+%\noindent
+\paragraph{Clean up all the ranks}
 It is finally good practice to make the node pool terminate just before
 \texttt{run} has terminated.
 You might also want to release all MPI datatypes Peano has created, as some
@@ -265,6 +311,9 @@ myprojectnamespace::repositories::RepositoryFactory::getInstance().
   shutdownAllParallelDatatypes();
 \end{code}
 
+\noindent
+A good place to insert this shutsdown mechanism is just after you have deleted
+your repository.
 
 
 \paragraph{Inside \texttt{runAsMaster}.}
@@ -274,7 +323,7 @@ If Peano tries to decompose/load balance the initial grid, it might be forces to
 postpone some \texttt{refine} calls on the grid. 
 As a result, your grid initialisation should look similar to
 \begin{code}
-repository.switchToInitialGrid();
+repository.switchToCreateGrid(); // your adapter might be called different
 do {
   repository.iterate();
 } while (!repository.getState().isGridBalanced());
@@ -288,15 +337,14 @@ logInfo(
   "runAsMaster()",
   "number of idle ranks=" << tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()
 );
-
 \end{code}
 
 \noindent
 A serial code should continue to quit the \texttt{do} loop after one sweep. 
 A parallel code might run through the grid several times.
 
-\noindent
-{\bf Two first, almost-parallel runs}.
+
+\paragraph{Two first, almost-parallel runs}.
 Before you continue, I recommend to run your code with \texttt{mpirun} and only
 one active process. 
 Just ensure that your code continues to behave as the serial code does even
@@ -321,6 +369,29 @@ two MPI ranks on one CPU and make them share the resources.
 Alternatively, you may want to reduce the number of actual ranks in your
 measurements by one.
 \end{remark}
+
+For all subsequent debugging, it makes sense first to reconfigure your command
+line logger if you use the standard logging of Peano and switched to a different
+format. 
+If is convenient to plot also the machine name and rank for each log statement.
+
+\begin{code}
+#if defined(Parallel)
+tarch::logging::CommandLineLogger::getInstance().setLogFormat(
+  " ",false,false,
+  true, // this true switches the machine information on
+  true,true,"log");
+#elif defined(Asserts)
+// your old configuration
+\end{code}
+
+\noindent
+Finally, it makes sense to let the command line plotter log all messages into a
+file (last argument in \texttt{setLogFormat}).
+Once you switch on the parallelisation, the logger then creates one log file per
+rank.
+
+
 
 \subsection{Exchanging the global state}
 
