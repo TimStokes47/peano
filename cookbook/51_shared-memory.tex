@@ -10,7 +10,7 @@
     A working simulation code and a compiler that supports either OpenMP or
     Intel's Threading Building Blocks (TBB) \footnote{At the moment, Peano's
     OpenMP support is slightly outdated. All examples should work straightforwardly
-    with TBB however}.
+    with TBB however.}.
   }
 
 In this section, we discuss how to parallelise a simulation code on a shared
@@ -74,7 +74,12 @@ However, most of these concurrent fragments are really very short-running.
 As a result, it is not clear whether it pays off to use multithreading or not.
 Therefore Peano uses an oracle---an object that returns per grid
 traversal phase whether multitasking should be used or not.
-This oracle can be found in \texttt{peano/datatraversal/autotuning}. 
+This oracle can be found in
+\texttt{peano/datatraversal/autotuning}\footnote{The namespace choice
+\texttt{autotuning} is wrong. The namespace collects classes that allow you to
+tailor your shared memory parallelisation. Our original design intention has
+always been to work with autotuning to get rid of as many parameters as
+possible. That's where the namespace identifier comes from.}.
 Details on this oracle are discussed later.
 For the time being, insert a commands into your runner.
 
@@ -263,44 +268,67 @@ workflow:
   replicate the mapping as often as required, and start using multiple threads.
 \end{itemize}
 
+\begin{remark}
+ To make Peano as lightweight as possible, it internally works with static
+ partitioning only. Features such as dynamic subpartitioning of problems are
+ switched off. This lightweight approach in turn means that choosing a proper
+ grain size for each and every step  is important. The oracles allow you to make
+ exactly this choice.
+\end{remark}
+
+
 \noindent
 As clarified, each adapter is associated to one oracle, i.e.~you are able to
 use oracles specifying grain and minimal problem sizes on a per-adapter base.
 Furthermore, oracles are not static.
 They have a state and thus can for example `learn' which grain sizes are
-reasonable\footnote{We've written a paper on this a few years ago.}.
-For a quick start, some trial and error with
-\texttt{peano::datatraversal::autotuning::OracleForOnePhaseDummy} are usually
-sufficient.
-Just modify some of the predefined variables and study how the actual CPU usage
+reasonable (cmp.~paper by Nogina et al.).
+For a quick start, trial and error with
+\texttt{peano::datatraversal::autotuning::}
+\texttt{OracleForOnePhaseDummy} is usually sufficient: 
+Here you can hardcode grain sizes via the oracle's constructor.
+Just modify some of the default values and study how the actual CPU usage
 and the time-to-solution change.
 Once you have detailed knowledge about your application's behaviour, it might
 be reasonable to replace the Dummy with a tailored implementation of
 \texttt{peano::datatraversal::autotuning::OracleForOnePhase}.
-Peano's toolbox collection also contains generic, autotuning oracle
-implementations.
 
 
-When you study performance, it might be particular interesting that all oracles
-can fed with real-time data about their performance and provide statistics. To
-obtain the statistics, call
+Peano's homepage offers a few more sophisticated oracles. 
+Notably, there is one oracle that samples all different types of grain sizes and
+one oracle that does real-time measurements to ``learn'' what good grain sizes
+look like. 
+These oracles come along with some Phyton scripts that allows users to analyse
+their insights graphically or as tables.
+See the class documentations.
+
+
+Important for all sophisticated oracles is that they give the user the
+opportunity to plot their statistics within the runner. 
+To obtain these statistics, call
 \begin{code}
   peano::datatraversal::autotuning::Oracle::getInstance().plotStatistics( "" );
 \end{code}
-
-
-\noindent
-If you do not need real-time measurements, please construct the oracle (see
-\texttt{new} call in the snippet before) accordingly and disable the clocking.
-It is expensive.
-
-The routine expects an filename, as most applications that do real-time
-measurements want to have this data in a file. 
-Furthermore, many oracles (the classes that decide when and how to split up
-data into concurrent chunks) provide routines to reload these statistics.
+The routine expects an filename.
+If none is given, i.e.~you pass the empty string, all output is written to the
+terminal.
+Many oracles also provide routines to reload these statistics.
 This way, statistical data is not always created from scratch but incrementally
 updated.
-You may pass an empty string to get the data piped directly to the terminal.
+
+
+\begin{remark}
+ Under the umbrella of the ExaHyPE project, Peano's autotuning oracle named
+ \texttt{OracleForOnePhaseWithShrinkingGrainSize} saw some significant
+ improvement. It uses real-time measurements to identify good grain sizes. 
+ If real-time measurements are supported on your system---we faced some issues
+ on KNL systems where the timers seem to give imprecise answers---then this
+ oracle usually does a good job. While the oracle realises ideas published in
+ the paper by Nogina et al.~it saw some significant improvements since the
+ publication. Please consult the extensive class documentation in the header for
+ details.
+\end{remark}
+
 
 
 \subsection{Working with Peano's tasks, semaphores, locks and loops}
