@@ -35,11 +35,13 @@ peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>
   EventHandle&                eventHandle,
   peano::geometry::Geometry&  geometry,
   LeafNode&                   leafNode,
-  RegularRefinedNode&         regularRefinedNode
+  RegularRefinedNode&         regularRefinedNode,
+  peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
 ):
   Base(vertexStack,cellStack,eventHandle,geometry),
   _leafNode( leafNode ),
-  _regularRefinedNode( regularRefinedNode) {
+  _regularRefinedNode( regularRefinedNode ),
+  _regularGridContainer( regularGridContainer ) {
 }
 
 
@@ -452,11 +454,19 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
         newFineGridVertices
       );
 
-    if (
-      (localInnerCells.count()>1)
-      &&
-      state.mayForkCellsOnLevel(newFineGridVerticesEnumerators[0].getLevel())
-    ) {
+    bool shouldTryToFork = 
+        (localInnerCells.count()>1)
+        &&
+        state.mayForkCellsOnLevel(newFineGridVerticesEnumerators[0].getLevel());
+    
+    #ifdef PersistentRegularSubtrees
+    if (shouldTryToFork && _regularGridContainer.holdsRegularSubgridsPersistently()) {
+      state.informToDrainPersistentSubtreesBecauseOfFork();
+      shouldTryToFork = false;
+    }
+    #endif
+
+    if (shouldTryToFork) {
       logTraceInWith3Arguments( "splitUpGrid(...)", state, fineGridCell, fineGridVerticesEnumerator.toString() );
 
       peano::parallel::Partitioner partitioner( localInnerCells );
@@ -484,7 +494,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
             enddforx
           }
         enddforx
-
+        state.informToDrainPersistentSubtreesBecauseOfFork();
       }
       logTraceOutWith3Arguments( "splitUpGrid(...)", state, fineGridCell, fineGridVerticesEnumerator.toString() );
     }

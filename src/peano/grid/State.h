@@ -745,6 +745,8 @@ class peano::grid::State {
 
     void informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees();
 
+    void informToDrainPersistentSubtreesBecauseOfFork();
+
     /**
      * Should be invoked once per traversal just before the latter is kicked
      * off. The flag tells the state whether there are still persistent

@@ -37,10 +37,13 @@ class peano::grid::nodes::Refined: public peano::grid::nodes::Node<Vertex,Cell,S
     typedef peano::grid::nodes::Leaf<Vertex,Cell,State,VertexStack,CellStack,EventHandle>               LeafNode;
     typedef peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>     RegularRefinedNode;
 
+    typedef peano::grid::RegularGridContainer<Vertex,Cell>                                    RegularGridContainer;
+
     static tarch::logging::Log _log;
 
-    LeafNode&            _leafNode;
-    RegularRefinedNode&  _regularRefinedNode;
+    LeafNode&              _leafNode;
+    RegularRefinedNode&    _regularRefinedNode;
+    RegularGridContainer&  _regularGridContainer;
 
     /**
      * Set Counter, create hanging nodes and new nodes
@@ -130,7 +133,8 @@ class peano::grid::nodes::Refined: public peano::grid::nodes::Node<Vertex,Cell,S
       EventHandle&                eventHandle,
       peano::geometry::Geometry&  geometry,
       LeafNode&                   leafNode,
-      RegularRefinedNode&         regularRefinedNode
+      RegularRefinedNode&         regularRefinedNode,
+      peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
     );
 
     /**

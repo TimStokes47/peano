@@ -988,8 +988,8 @@ void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
 
   #ifdef Parallel
   if (_loadRebalancingState!=LoadBalancingState::NoRebalancing) {
-    _smallestRegularTreeThatIsToBeHeldPersistently                    += std::numeric_limits<int>::max();
-    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration += std::numeric_limits<int>::max();
+    _smallestRegularTreeThatIsToBeHeldPersistently                    = std::numeric_limits<int>::max();
+    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = std::numeric_limits<int>::max();
   }
   #endif
   #endif
@@ -1000,5 +1000,13 @@ template <class StateData>
 void peano::grid::State<StateData>::informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees() {
   #ifdef PersistentRegularSubtrees
   _smallestRegularTreeThatIsToBeHeldPersistently = _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration+1;
+  #endif
+}
+
+
+template <class StateData>
+void peano::grid::State<StateData>::informToDrainPersistentSubtreesBecauseOfFork() {
+  #ifdef PersistentRegularSubtrees
+  _smallestRegularTreeThatIsToBeHeldPersistently = std::numeric_limits<int>::max();
   #endif
 }
