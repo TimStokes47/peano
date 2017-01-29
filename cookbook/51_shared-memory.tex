@@ -46,7 +46,8 @@ embed all shared memory-specific routines into ifdefs.
 Besides the aforementioned \texttt{SharedXXX} defines, Peano also provides a
 flag \texttt{SharedMemoryParallelisation} that is set as soon as OpenMP or TBB
 is selected.
-To make use of it, you have to include \texttt{MulticoreDefinitions.h}.
+To make use of it, you have to include
+\linebreak \texttt{MulticoreDefinitions.h}.
 
 \begin{code}
 #ifdef SharedMemoryParallelisation
@@ -74,7 +75,7 @@ However, most of these concurrent fragments are really very short-running.
 As a result, it is not clear whether it pays off to use multithreading or not.
 Therefore Peano uses an oracle---an object that returns per grid
 traversal phase whether multitasking should be used or not.
-This oracle can be found in
+This oracle can be found in \linebreak
 \texttt{peano/datatraversal/autotuning}\footnote{The namespace choice
 \texttt{autotuning} is wrong. The namespace collects classes that allow you to
 tailor your shared memory parallelisation. Our original design intention has
@@ -126,7 +127,8 @@ PDT.
 Concurrency levels are specified within the events. 
 Per event there is one concurrency specification. 
 \texttt{touchVertexFirstTime}'s concurrency level for example is specified by
-the routine \texttt{touchVertexFirstTimeSpecification}.
+the routine \linebreak
+\texttt{touchVertexFirstTimeSpecification}.
 If you want to run \texttt{touchVertexFirstTime} in parallel, open all mappings
 and edit \texttt{touchVertexFirstTimeSpecification} in each individual one.
 
@@ -416,8 +418,8 @@ until it is set.
 Finally, there are two useful static operations in \texttt{BooleanSemaphore}.
 The operation \linebreak
 \texttt{tarch::multicore::BooleanSemaphore::sendTaskToBack()}
-which is useful to realise low-priority tasks: Other tasks in the system (see
-section below) are activated if you call this operation.
+which is useful to realise \linebreak low-\-priority tasks: Other tasks in the
+system (see section below) are activated if you call this operation.
 
 
 Please note that there are other constructors of \texttt{TaskSet} that run
