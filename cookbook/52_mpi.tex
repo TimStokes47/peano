@@ -316,7 +316,7 @@ A good place to insert this shutsdown mechanism is just after you have deleted
 your repository.
 
 
-\paragraph{Inside \texttt{runAsMaster}.}
+\paragraph{Inside \texttt{runAsMaster}}
 Peano's \texttt{runAsMaster} for many application is MPI-agnostic.
 Some applications run into problems if they use a grid setup in one sweep.
 If Peano tries to decompose/load balance the initial grid, it might be forces to
@@ -344,7 +344,7 @@ A serial code should continue to quit the \texttt{do} loop after one sweep.
 A parallel code might run through the grid several times.
 
 
-\paragraph{Two first, almost-parallel runs}.
+\paragraph{First ``parallel'' runs}
 Before you continue, I recommend to run your code with \texttt{mpirun} and only
 one active process. 
 Just ensure that your code continues to behave as the serial code does even
@@ -425,7 +425,7 @@ However, any state object received from a worker is {\em not} merged into the
 master. 
 If you want to plug into the merge process, i.e.~if you want the global master
 state to hold data from the other states in the end, you have to realise the
-operation \texttt{mergeWithMaster} in any of your mappings.
+operation \texttt{mergeWithMaster} in your mappings.
 
 
 \begin{center}
@@ -462,8 +462,10 @@ void mergeWithWorker(
 \end{code}
 
 \noindent
-in one of your mappings. Multigrid codes, e.g., might transfer residual through
-the individual levels.
+in one of your mappings. 
+Linear algebra codes transfer the residuals or correction values from vertices
+through the individual levels.
+
 
 With all data received, the red node starts to traverse its own tree. 
 It recognises that is in turn is the master to two other ranks (green and blue)
@@ -485,19 +487,28 @@ residual value for example.
 Peano realises a non-overlapping domain decomposition on each individual
 resolution level.
 This means that no cells are held redundantly between two neighbouring ranks on
-the same level (only the coarsest cell of any rank is held redundantly by its
-master).
+the same level.
+Only the coarsest cell of a rank is also held redundantly by its
+master if we compare to \texttt{mergeWithWorker}, e.g.
 Boundary data exchange thus exclusively affects vertices. 
 It is important to note that all vertices on all levels that are adjacent to
-cells of different ranks are exchanged per iteration (unless not explicitly
-switched off).
+cells of different ranks are exchanged per iteration.
+You can switch off the boundary exchange explicitly, but this is subject of
+discussion later on as it is a very specific optimisation that is of relevance
+only for very few applications.
 
-Again, the code does not literally exchange all data. 
+
+Mirroring the state behaviour, the code does not literally exchange all
+attributes of the vertices.
 It exchanges only those attributes of \texttt{Vertex} that are explicitly marked
-with \texttt{parallelise} in the definition file.  
-
-There are plug-in points where you can influence how data is exchanged along the
-boundaries. The first plug-in point is the operation 
+with \texttt{parallelise} in the DaStGen definition file.  
+Yet, exchange means solely that data is sent from one rank to the other and the
+other way round---the term does not comprise how data from two vertices held by
+two ranks are merged into each other.
+Without any merge, copies of vertices along a domain's boundary are sent to all
+other ranks per grid sweep, but nothing happens further, i.e.~the exchanged data
+is dropped.
+To change this, there is the plug-in point
 
 \begin{code}
 void prepareSendToNeighbour(
@@ -568,14 +579,15 @@ This workflow transfers as follows to a distributed memory environment:
   herein.
   \item Prior to the next \texttt{touchVertexFirstTime()} on any other rank, we
   know that this rank will receive our local copy of the vertex in
-  \texttt{mergeWithNeighbour}. We thus make \texttt{mergeWithNeighbour} take any
+  \texttt{mergeWithNeighbour}. We thus make \linebreak
+  \texttt{mergeWithNeighbour} take any
   incoming vertex copy, take the residual from there and merge it into the local
   residual.
   \item If we run into \texttt{touchVertexFirstTime()} for a vertex with
   \texttt{isAdjacentToRemoteRank()}, we know that we didn't update its value yet
   because it had bee incomplete in the previous \texttt{touchVertexLastTime()}
   call. We however know that its residual is accumulated between domain
-  boundaries now. We thus update and continue with the standard
+  boundaries now. We thus update and continue with the standard \linebreak
   \texttt{touchVertexFirstTime()}.
 \end{enumerate}
 
@@ -586,11 +598,14 @@ This workflow transfers as follows to a distributed memory environment:
 Different to the vertex boundaries, heap data is not automatically exchanged by
 Peano's MPI. 
 There are different variants how to manage heaps. 
-The simplest one is to rely on the communication specification. 
-Please ensure that one of your mappings defines a communication specification
+The simplest one is to instruct Peano via the communication specification that
+you use a heap and want the code to exchange heap data along the domain
+boundaries.
+For this, your mappings have to define a communication specification
 that sets the third flag to \texttt{true}.
-This instructs the Peano kernel that you want to use heaps for boundary data
-exchange as well.
+By default, the generated specification uses \texttt{false}. 
+Setting the flag instructs the Peano kernel that you want to use
+heaps for boundary data exchange as well.
 \begin{code}
 peano::CommunicationSpecification  
 myMapping::communicationSpecification() { 
@@ -599,7 +614,23 @@ myMapping::communicationSpecification() {
 \end{code}
 
 \noindent
-Boundary data is also not transferred automatically. 
+The flag tells Peano that heaps are used for communication and that you want the
+kernel to synchronise all communication channels. 
+Notably, the kernel now ensures that all data is received before you start a new
+traversal, and it releases data sent via nonblocking MPI automatically once a
+traversal terminates.
+
+\begin{remark}
+If you fuse multiple mappings onto one adapter and one of the mappings specifies
+\texttt{true} while all other mappings do not set this flag, then Peano will
+administer the heap, i.e.~the single \texttt{true} dominates the behaviour.
+However, you'll receive warnings that the various communication specifications
+are inconsistent with each other. To remove those warnings, ensure that all
+mappings either set the flag or not.
+\end{remark}
+
+
+Yet, no actual bundary data is sent and received yet. 
 If you want to exchange data through a boundary vertex, you have to do so
 explicitly in \texttt{prepareSendToNeighbour}.
 Please note that Peano's heap has specialised operations for this:
@@ -616,7 +647,7 @@ void myMapping::prepareSendToNeighbour(
     toRank,
     x,
     level,
-    peano::heap::NeighbourCommunication
+    peano::heap::MessageType::NeighbourCommunication
   );
 }
 \end{code}
@@ -625,22 +656,207 @@ void myMapping::prepareSendToNeighbour(
 The counterpart has to be realised in \texttt{mergeWithNeighbour}.
 Peano takes care that all data is exchanged in the right order as efficiently as
 possible.
-You are however responsible to ensure that each heap send operation has a
-corresponding receive on the other side for exactly the same vertex.
+
+\begin{remark}
+You are responsible to ensure that each heap send operation has a
+corresponding receive on the other side for exactly the same vertex in the next
+grid sweep.
 As the data exchange is distributed between two iterations, you might decide to
 implement the receive in a different mapping.
 However, you have to ensure that each send is mapped by exactly one receive on
 the vertex counterpart.
+\end{remark}
 
-\subsection{Running global steps on all ranks}
+\noindent
+Instead of relying on the \texttt{true} flag in the specification, you can
+decide to administer all the heaps yourself. 
+If you do this, you have instruct the heap in \texttt{beginIteration} that you
+start to exchange data (via the operation \texttt{startToSendBoundaryData}),
+while you tell Peano in \texttt{endIteration} that this exchange has finished
+through \texttt{finishedToSendBoundaryData}.
 
-\subsection{Specifying the communication pattern}
 
-\subsection{Doing something special on a worker}
+Most codes work fine with an automated heap data exchange administration. 
+However, with a manual instruction, you are allowed to send out data in one
+iteration and receive it a couple of iterations later.
+The manual exchange operations of the heap class ensure that all data is
+exchanged in the right order. 
+You have to ensure that the number of sends and receives as well as the ordering
+which vertex sends and receives match.
+If you allow Peano to squeeze one or more traversals in-between a send and the
+subsequent receive, you release pressure from MPI: 
+Peano deploys all heap data exchange to non-blocking sends and receives.
+It now has more time to transfer the actual data.
+ 
 
 
+\subsection{Exchanging heap data vertically (in-sync)}
 
-\subsection{Other MPI components}
+The previous paragraphs discussed the exchange of heap data between different
+adjacent partitions. 
+We call this horizontal data exchange (within a level).
+If you want to exchange data between masters and workers or the other way round,
+you can still rely on the heap's send and receive operations.
+However, the data transfer semantics change.
+
+
+Exchange between masters and workers is synchronous.
+We do not send out data in one iteration and receive it in the subsequent
+iteration, but we want to send out data when we descend into a worker tree node,
+and this data has to be received just before this worker actually starts its
+traversal.
+To trigger this behaviour, you can still use the heap's send and receive, but
+you have to pass 
+\textttt{peano::heap::MessageType::MasterWorkerCommunication} as last argument.
+This tells Peano that you want synchronous data exchange.
+
+
+The heaps still work with non-blocking data transfers of MPI.
+This helps to avoid blocking buffers and, thus, deadlocks. 
+Therefore, we also have to tell the heap when you start a synchronous data
+exchange and when you finish it.
+For this, there are routines \texttt{startToSendSynchronousData} and
+\texttt{finishedToSendSynchronousData} offered by every heap.
+
+
+\begin{remark}
+While Peano is built to use localised point-to-point messages only, you may want
+to exchange data between any two ranks. The heaps allow you to do so---either
+similar to a boundary data exchange where sent data is to be received in the
+subsequent grid sweep or similar to a master-worker communication where sent
+data is received right away.
+\end{remark}
+
+
+\begin{remark}
+(Dynamic) Load balancing transfers data from one MPI rank to another one
+synchronously: either from a master to a new worker when we split up a partition
+or from a worker to a master if we merge two partitions into one subdomain. If
+you have to transfer heap data here, you can apply the same pattern you've used
+for master-worker data transfer. However, you should use the flag  
+\textttt{peano::heap::MessageType::ForkOrJoinCommunication} rather than 
+\textttt{peano::heap::MessageType::MasterWorkerCommunication} in your send and
+receive calls.
+Peano then uses different MPI tags and thus ensures that master-worker messages and fork-join
+transfer data is not mixed up.
+For the fork/join data, the heap requires no notification that data exchange
+starts or stops; the kernel internally knows this already.
+\end{remark}
+
+
+\subsection{Running global steps on all ranks and manually broadcast
+information from the global master}
+
+Not all algorithms decompose exclusively into a sequence of grid sweeps. 
+Software with explicit matrix assembly, e.g., maps the matrix assembly itself,
+all plotting, postprocessing, time stepping and so forth onto grid traversals.
+The global solve (via PETSc, e.g.) however is a plain function call per MPI
+rank.
+We may introduce an adapter/mapping for this, switch to this adapter on the
+global master and trigger the adapter iterate on the global master.
+The corresponding mapping for such a global step then however is almost trivial:
+it does something in \texttt{beginIteration} or \texttt{endIteration} while the
+actual grid traversal remains empty. 
+Though such a translation of global steps into grid sweeps follows the pure
+Peano philosophy, it is neither convenient to program nor is it efficient.
+It is a waste of resources as the whole grid is piped through
+the traversal once for the global step.
+
+
+As alternative to the sketched variant, Peano's repository offers a
+routine \texttt{runGlobalStep} while each worker implements a
+\texttt{runGlobalStep}, too. 
+To let all non-idle MPI ranks do one thing at a time, you implement the
+following steps:
+
+\begin{enumerate}
+  \item Inside your global master's code, i.e.~somewhere within
+  \texttt{runAsMaster}, you call \texttt{runGlobalStep} on your repository.
+  \item You implement \texttt{runGlobalStep} in your runner. The repository call
+  invokes this routine on all non-idle workers.
+  \item If you want the global master to run through your runner's
+  \texttt{runGlobalStep}, too, you have to call this one manually.
+\end{enumerate}
+
+The term non-idle in the paragraphs above refers to Peano's load balancing.
+MPI's load balancing oracles can decide which and how many ranks at any time are
+participating in the computation.
+The load balancing may decide that some MPI ranks are not used at a certain
+time.
+They remain idle;
+and they are then not affected by the global step.
+
+
+\texttt{runGlobalStep}'s signature is empty.
+We can start one routine simultaneously on all non-idle ranks, but we can not
+natively hand over data.
+However, you are always free to send data via MPI yourself. 
+There are a few remarks on consider however and there are some support routines
+that might be of value:
+
+\begin{itemize}
+  \item You can rely on plain MPI to exchange data. However, you can also model
+  your messages with DaStGen which is convenient as DaStGen equips the modelled
+  data structure with MPI send and receive commands.
+  \item It is simple to receive data from and send data to the global master on
+  the worker rankas, as the master's global rank number is available through the
+  \texttt{Node}.
+  \item The node pool offer a broadcast operation to send any message modelled
+  with DaStGen out to all non-idle ranks.
+  \item Alternatively (if you prefer to work with plain MPI, e.g.), it offers a
+  query to ask for each rank whether it is idle or not.
+  \item The node pool allows you to obtain an MPI tag. It is highly recommended
+  to make your own global communication run through MPI tags of their own. This
+  way, you ensure that your data sends and receives to not interfer with other
+  MPI messages of Peano still pending in the network.
+\end{itemize}
+
+\noindent
+Via the exchange of MPI messages within \texttt{runGlobalStep}, you can
+implement different steps: you can basically send around an integer or enum
+which triggers different behaviour on the ranks.
+Below is an example of a manual global data distribution that relies on plain
+MPI. 
+As highlighted, modelling the messages with DaStGen yields shorter and more
+elegant code:
+
+\begin{code}
+  const int myTag = tarch::parallel::Node::getInstance().reserveFreeTag(...);
+
+  double myValue = 2; // you might want to use a DaStGen class instead of primitive types
+
+  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+     double receivedValue;
+     for (int rank=1; rank<tarch::parallel::Node::getInstance().getNumberOfNodes(); rank++) {
+       if ( !tarch::parallel::NodePool::getInstance().isIdleNode(rank) ) {
+         MPI_Recv( &receivedValue, 1, MPI_DOUBLE, rank, myTag,
+           tarch::parallel::Node::getInstance().getCommunicator(),
+           MPI_STATUS_IGNORE ); // would be a simple method invocation with DaStGen objects 
+         myValue += receivedValue;
+       }
+     }
+  }
+  else {
+    MPI_Send( &myValue, 1, MPI_DOUBLE, tarch::parallel::Node::getGlobalMasterRank(),
+      myMessageTagUseForTheReduction, tarch::parallel::Node::getInstance().getCommunicator() );
+  }
+
+  tarch::parallel::Node::getInstance().releaseTag(myTag);
+\end{code}
+
+
+\subsection{Wrap-up, preparatory work and per-sweep pre- and postprocessing
+on a worker}
+
+In large codes, there's often a need to plug into the creation of a rank
+(everytime it is used by the load balancing to handle a part of the grid) or to
+run some pre- and postprocessing steps per grid traversal. 
+To do so, you may add code to the pregenerated \texttt{RunnerParallelWorker.cpp}
+file that even contains, if created by the development toolkit, some remarks
+where to add source code.
+
+
+\subsection{Further MPI remarks}
 
 \begin{itemize}
   \item If you couple Peano with another component using MPI, and the two codes
@@ -653,7 +869,7 @@ the vertex counterpart.
   components grab a tag from a central data base and then work with this tag,
   i.e.~the tags are hidden from the user. If you want to exchange your own data
   with MPI commands and want to ensure not to interfer with any Peano messages,
-  use the static operation \texttt{reserveFreeTag} from
+  use the static operation \texttt{reserveFreeTag} from \linebreak
   \texttt{tarch::parallel::Node} in the system setup to reserve a tag for your
   own purposes that then exclusive to you.
   \item If you want to exchange data along the master-worker {\bf topology} or
@@ -662,4 +878,38 @@ the vertex counterpart.
   global master. However, Peano can be reconfigured to change this
   behaviour---which is particularly useful if you couple the AMR framework with
   some other codes.
+\end{itemize}
+
+
+
+\subsection*{Further reading}
+
+\begin{itemize}
+  \item T. Weinzierl: 
+  {\em The {P}eano software---parallel,
+   automaton-based, dynamically adaptive grid traversals}.
+  arXiv:1506.04496
+  \item 
+  T. Weinzierl and M. Mehl: {\em Peano---A Traversal and Storage Scheme for
+Octree-Like Adaptive Cartesian Multiscale Grids}.
+In R. Tuminaro, M. Benzi, X.-C. Cai, I. Duff, H. Elman, R. Freund, K. Jordan, T.
+Kelley, D. Keyes, M. Kilmer, S. Leyffer, T. Manteuffel, S. McCormick, D.
+Silvester, H. Walker, C. Woodward and I. Yavneh (ed.), SIAM Journal on
+Scientific Computing, Volume 33{\bf(5)} of Special Section: 2010 Copper Mountain
+Conference, pp.~2732--2760, 2011.
+  \item 
+H.-J. Bungartz, W. Eckhardt, T. Weinzierl and C. Zenger: {\em A Precompiler to
+Reduce the Memory Footprint of Multiscale PDE Solvers in C++}.
+In P.M.A. Sloot (ed.), Future Generation Computer Systems, Volume 26{\bf (1)},
+pp.~175--182. Elsevier, 2010.
+  \item 
+T. Weinzierl: {\em A Framework for Parallel PDE Solvers on Multiscale Adaptive
+Cartesian Grids}.
+Dissertation, Institut f\"ur Informatik, Technische Universit\"at M\"unchen. Verlag Dr. Hut, M\"unchen, 2009.
+    \item 
+H.-J. Bungartz, M. Mehl, T. Weinzierl and W. Eckhardt: {\em DaStGen - A Data
+Structure Generator for Parallel C++ HPC Software}.
+In Bubak, van Albada, Sloot and Dongarra (ed.), ICCS 2008: Advancing Science
+through Computation, Part III, Volume 5103 of Lecture Notes in Computer Science,
+pp.~213--222. Springer-Verlag, Heidelberg, Berlin, June 2008.
 \end{itemize}
