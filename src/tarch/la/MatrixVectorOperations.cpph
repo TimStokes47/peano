@@ -20,3 +20,19 @@ tarch::la::Vector<Rows,Scalar> tarch::la::operator* (
 ) {
   return multiply(matrix,vector);
 }
+
+
+template<int Size, typename Scalar>
+tarch::la::Matrix<Size,Size,Scalar> tarch::la::outerDot (
+  const Vector<Size,Scalar>&  lhs,
+  const Vector<Size,Scalar>&  rhs
+) {
+  tarch::la::Matrix<Size,Size,Scalar> result;
+  for (int i=0; i<Size; i++) {
+    for (int j=0; j<Size; j++) {
+      result(j,i) = lhs(j) * rhs(i);
+    }
+  }
+  return result;
+}
+

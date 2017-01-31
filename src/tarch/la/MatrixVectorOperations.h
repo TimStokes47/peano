@@ -33,6 +33,15 @@ namespace tarch {
       const Matrix<Rows,Cols,Scalar>&  matrix,
       const Vector<Cols,Scalar>&       vector
     );
+
+    /**
+     * Outer dot product.
+     */
+    template<int Size, typename Scalar>
+    Matrix<Size,Size,Scalar> outerDot (
+      const Vector<Size,Scalar>&  lhs,
+      const Vector<Size,Scalar>&  rhs
+    );
   }
 }
 

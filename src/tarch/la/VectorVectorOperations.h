@@ -66,6 +66,8 @@ namespace tarch {
 
     /**
      * Performs the dot (=inner) product of two vectors.
+     *
+     * For the outer dot product consult the file MatrixVectorOperations.h.
      */
     template<int Size, typename Scalar>
     Scalar operator*(
@@ -75,9 +77,22 @@ namespace tarch {
 
     /**
      * Performs the dot (=inner) product of two vectors.
+     *
+     * For the outer dot product consult the file MatrixVectorOperations.h.
      */
     template<int Size, typename Scalar>
     Scalar dot (
+      const Vector<Size,Scalar>&  lhs,
+      const Vector<Size,Scalar>&  rhs
+    );
+
+    /**
+     * Performs the dot (=inner) product of two vectors.
+     *
+     * For the outer dot product consult the file MatrixVectorOperations.h.
+     */
+    template<int Size, typename Scalar>
+    Scalar innerDot (
       const Vector<Size,Scalar>&  lhs,
       const Vector<Size,Scalar>&  rhs
     );

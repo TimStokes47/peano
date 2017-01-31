@@ -108,12 +108,12 @@ Scalar tarch::la::operator* (
   const Vector<Size,Scalar>&  lhs,
   const Vector<Size,Scalar>&  rhs
 ) {
-  return dot(lhs, rhs);
+  return innerDot(lhs, rhs);
 }
 
 
 template<int Size, typename Scalar>
-Scalar tarch::la::dot (
+Scalar tarch::la::innerDot (
   const Vector<Size,Scalar>&  lhs,
   const Vector<Size,Scalar>&  rhs
 ) {
@@ -122,6 +122,15 @@ Scalar tarch::la::dot (
     result += lhs(i) * rhs(i);
   }
   return result;
+}
+
+
+template<int Size, typename Scalar>
+Scalar tarch::la::dot (
+  const Vector<Size,Scalar>&  lhs,
+  const Vector<Size,Scalar>&  rhs
+) {
+  return innerDot(lhs,rhs);
 }
 
 
