@@ -286,7 +286,9 @@ void peano::grid::nodes::Leaf<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     }
   }
   else {
-    state.updateInLeaf(fineGridVerticesEnumerator.getLevel(), fineGridVerticesEnumerator.getCellSize() );
+    if (fineGridCell.isInside()) {
+      state.updateInLeaf(fineGridVerticesEnumerator.getLevel(), fineGridVerticesEnumerator.getCellSize() );
+    }
 
     invokeEnterCell();
     invokeLeaveCell();

@@ -431,7 +431,7 @@ void peano::grid::State<StateData>::resetStateAtBeginOfIteration() {
   #ifdef TrackGridStatistics
   _stateData.setMaxLevel(0);
   _stateData.setMaxMeshWidth(tarch::la::Vector<DIMENSIONS,double>(0.0));
-  _stateData.setMinMeshWidth(tarch::la::Vector<DIMENSIONS,double>(std::numeric_limits<double>::max()));
+  _stateData.setMinMeshWidth(tarch::la::Vector<DIMENSIONS,double>(1.0));
 
   _stateData.setNumberOfInnerVertices(0.0);
   _stateData.setNumberOfBoundaryVertices(0.0);
@@ -462,12 +462,16 @@ void peano::grid::State<StateData>::updateInLeaf( int level, const tarch::la::Ve
     _stateData.getMaxLevel()>level ? _stateData.getMaxLevel() : level
   );
   for (int d=0; d<DIMENSIONS; d++) {
+    assertion3( h(d)<1.0, toString(), level, h );
+    
     _stateData.setMaxMeshWidth(d,
       _stateData.getMaxMeshWidth(d)<h(d) ? h(d) : _stateData.getMaxMeshWidth(d)
     );
     _stateData.setMinMeshWidth(d,
       _stateData.getMinMeshWidth(d)>h(d) ? h(d) : _stateData.getMinMeshWidth(d)
     );
+
+    assertion1( _stateData.getMaxMeshWidth(d)>=_stateData.getMinMeshWidth(d), toString() );
   }
   #endif
 }
@@ -580,6 +584,8 @@ void peano::grid::State<StateData>::mergeWithWorkerState(const peano::grid::Stat
     _stateData.setMinMeshWidth(d,
       workerState._stateData.getMinMeshWidth(d) < _stateData.getMinMeshWidth(d) ? workerState._stateData.getMinMeshWidth(d) : _stateData.getMinMeshWidth(d)
     );
+
+    assertion1( _stateData.getMaxMeshWidth(d)>=_stateData.getMinMeshWidth(d), toString() );
   }
   #endif
 
