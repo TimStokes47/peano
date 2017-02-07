@@ -181,6 +181,18 @@ The latter remark leads into code similar to
 \end{code}
 
 
+\begin{smell}
+Depending on the grid you are working with, this modification along {\bf can
+break your grid setup and, if compiled with \texttt{-DAsserts}, trigger an
+assertion in the state class.} 
+You will then recognise that your grid consists only of $3^d$ cells.
+Please follow the remarks in
+Section \ref{section:mpi:quick-tuning:grid-regularity} how to make your code
+work properly again.
+\end{smell}
+
+
+
 \subsection{Work with better balanced domains}
 
 \noindent
@@ -236,6 +248,8 @@ oracles a cost model.
 
 
 \subsection{Increase the grid regularity}
+\label{section:mpi:quick-tuning:grid-regularity}
+
 
 If grid parts change or are strongly adaptive, Peano does not decompose these
 grid regions through MPI:
@@ -343,8 +357,8 @@ If the oracle detects this situation and the refinement level is smaller than
 the level prescribed to the oracle, then the kernel automatically also refines
 outside of the domain.
 It thus should be safe to set the value even to
-\texttt{std::numeric_limits<double>::min()}---the refinement is induced from
-refinement within the domain, i.e.~your user code.
+\texttt{std::numeric\_limits\textless double\textgreater ::min()}---the
+refinement is induced from refinement within the domain, i.e.~your user code.
 It does not automatically blow up the memory needs.
 \end{remark}
 
