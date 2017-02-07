@@ -57,9 +57,9 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
      */
     std::set<int>               _idleWorkers;
 
-    static int _regularLevelAlongBoundary;
+    const int                   _regularLevelAlongBoundary;
   public:
-    OracleForOnePhaseWithGreedyPartitioning(bool joinsAllowed, bool forkIsAllowed = true);
+    OracleForOnePhaseWithGreedyPartitioning(bool joinsAllowed, bool forkIsAllowed = true, int regularLevelAlongBoundary = 0);
     virtual ~OracleForOnePhaseWithGreedyPartitioning();
 
     void receivedStartCommand(LoadBalancingFlag commandFromMaster ) override;

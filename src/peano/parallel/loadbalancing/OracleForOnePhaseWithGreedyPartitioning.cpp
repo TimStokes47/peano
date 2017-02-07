@@ -8,14 +8,17 @@ tarch::logging::Log peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyP
 
 
 bool peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::_forkHasFailed = false;
-int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::_regularLevelAlongBoundary = 0;
 
 
 
-peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::OracleForOnePhaseWithGreedyPartitioning(bool joinsAllowed, bool forksAllowed):
+peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::OracleForOnePhaseWithGreedyPartitioning(
+  bool joinsAllowed,
+  bool forksAllowed,
+  int regularLevelAlongBoundary):
   _joinsAllowed(joinsAllowed),
   _forksAllowed(forksAllowed),
-  _idleWorkers() {
+  _idleWorkers(),
+  _regularLevelAlongBoundary(regularLevelAlongBoundary) {
 }
 
 
@@ -63,7 +66,7 @@ int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::get
 
 
 peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::OracleForOnePhase* peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::createNewOracle(int adapterNumber) const {
-  return new OracleForOnePhaseWithGreedyPartitioning(_joinsAllowed,_forksAllowed);
+  return new OracleForOnePhaseWithGreedyPartitioning(_joinsAllowed,_forksAllowed,_regularLevelAlongBoundary);
 }
 
 
