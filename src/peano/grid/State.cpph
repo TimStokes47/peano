@@ -462,8 +462,6 @@ void peano::grid::State<StateData>::updateInLeaf( int level, const tarch::la::Ve
     _stateData.getMaxLevel()>level ? _stateData.getMaxLevel() : level
   );
   for (int d=0; d<DIMENSIONS; d++) {
-    assertion3( h(d)<1.0, toString(), level, h );
-    
     _stateData.setMaxMeshWidth(d,
       _stateData.getMaxMeshWidth(d)<h(d) ? h(d) : _stateData.getMaxMeshWidth(d)
     );
