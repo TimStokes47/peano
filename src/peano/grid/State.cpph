@@ -431,7 +431,7 @@ void peano::grid::State<StateData>::resetStateAtBeginOfIteration() {
   #ifdef TrackGridStatistics
   _stateData.setMaxLevel(0);
   _stateData.setMaxMeshWidth(tarch::la::Vector<DIMENSIONS,double>(0.0));
-  _stateData.setMinMeshWidth(tarch::la::Vector<DIMENSIONS,double>(1.0));
+  _stateData.setMinMeshWidth(tarch::la::Vector<DIMENSIONS,double>( std::numeric_limits<double>::max() ));
 
   _stateData.setNumberOfInnerVertices(0.0);
   _stateData.setNumberOfBoundaryVertices(0.0);
@@ -976,21 +976,42 @@ bool peano::grid::State<StateData>::storeRegularSubtreesPersistently(int treeDep
 template <class StateData>
 void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
   #ifdef PersistentRegularSubtrees
-  if (!value) {
-    _smallestRegularTreeThatIsToBeHeldPersistently                    = 0;
-    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = 0;
+  if (
+    !value 
+    && 
+    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration == _smallestRegularTreeThatIsToBeHeldPersistently
+  ) {
+    _smallestRegularTreeThatIsToBeHeldPersistently /= 2;
   }
-  else if ( 
-    _smallestRegularTreeThatIsToBeHeldPersistently == _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration 
+  else if (
+    _smallestRegularTreeThatIsToBeHeldPersistently>0
     &&
-    _smallestRegularTreeThatIsToBeHeldPersistently > 0
+    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration == _smallestRegularTreeThatIsToBeHeldPersistently
   ) {
     _smallestRegularTreeThatIsToBeHeldPersistently--;
-    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration--;
   }
-  else {
-    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = _smallestRegularTreeThatIsToBeHeldPersistently;
-  }
+  
+  _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = _smallestRegularTreeThatIsToBeHeldPersistently;
+
+  
+/*
+  if (!value && _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration>0) {
+  //    _smallestRegularTreeThatIsToBeHeldPersistently = _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration-1;
+      _smallestRegularTreeThatIsToBeHeldPersistently                    = _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration-1;
+  //    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = 0;
+    }
+    else if ( 
+      _smallestRegularTreeThatIsToBeHeldPersistently == _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration 
+      &&
+      _smallestRegularTreeThatIsToBeHeldPersistently > 0
+    ) {
+      _smallestRegularTreeThatIsToBeHeldPersistently--;
+      _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration--;
+    }
+    else {
+      _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = _smallestRegularTreeThatIsToBeHeldPersistently;
+    }
+*/
 
   #ifdef Parallel
   if (_loadRebalancingState!=LoadBalancingState::NoRebalancing) {
@@ -1005,7 +1026,9 @@ void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
 template <class StateData>
 void peano::grid::State<StateData>::informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees() {
   #ifdef PersistentRegularSubtrees
-  _smallestRegularTreeThatIsToBeHeldPersistently = _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration+1;
+//    _smallestRegularTreeThatIsToBeHeldPersistently = _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration+1;
+  _smallestRegularTreeThatIsToBeHeldPersistently = 10;
+  _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = 10;
   #endif
 }
 

@@ -323,6 +323,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   #ifdef Parallel
   const bool AnalyseVertex =  !_fineGridVertices[positionInVertexArray].isRemote(_state, false, true);
   const int  CoarsestRegularInnerAndOuterGridLevel = peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary();
+  assertion( CoarsestRegularInnerAndOuterGridLevel>=0 );
   #else
   const bool AnalyseVertex = true;
   const int  CoarsestRegularInnerAndOuterGridLevel = 0;

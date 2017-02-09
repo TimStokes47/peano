@@ -50,8 +50,6 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
 ) {
   logTraceInWith3Arguments( "exchangeVerticesDueToParallelisation(...)", positionInVertexArray, positionInLocalCell, _fineGridVertices[positionInVertexArray].toString() );
 
-  _fineGridVertices[positionInVertexArray].refineVertexIfItHasOnlyRefinedAdjacentCells();
-
   #ifdef Parallel
   const bool IrregularStaticGrid = CellFlagsFromEnumerator>=peano::grid::StationaryButIrregular;
   if (!IrregularStaticGrid) {
@@ -142,6 +140,8 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
     _fineGridVertices[positionInVertexArray].toString(),
     positionInVertexArray
   );
+
+  _fineGridVertices[positionInVertexArray].refineVertexIfItHasOnlyRefinedAdjacentCells();
 
   bool hasTriggeredRefinementForNextIteration = _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::RefinementTriggered;
   #ifdef Parallel

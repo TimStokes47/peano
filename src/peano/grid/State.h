@@ -754,6 +754,15 @@ class peano::grid::State {
      *
      * - If erases haven't passed through switch to drain.
      * - Drain is kept as long as there are persistent subtrees in the code.
+     *
+     * Please note that an information does only set the _smallestRegularTreeThatIsToBeHeldPersistently
+     * while the backup of this flag called _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration
+     * actually controls which trees are held persistently or not. If we reset
+     * both flags immediately, we'd run into bugs: Also the veto mechanism
+     * per vertex works on a new-flag/old-flag pattern where the old flag
+     * determines whether a refinement passes through. So we have to give
+     * the grid two iterations to pass any refinement through in doubt.
+     * This means we may not clear both flags immediately.
      */
     void holdsPersistentSubtrees( bool value );
 };

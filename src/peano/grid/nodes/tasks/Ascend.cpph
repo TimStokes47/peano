@@ -273,6 +273,8 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
   ) {
     finestPostprocessingGridLevel   = _treeDepth-1;
     coarsestPostprocessingGridLevel = 1;
+    
+    assertionMsg(false, "should not be here for my stupid paper test. Afterwards remove" );
   }
 
   int manualPostProcessingLevel = finestPostprocessingGridLevel;

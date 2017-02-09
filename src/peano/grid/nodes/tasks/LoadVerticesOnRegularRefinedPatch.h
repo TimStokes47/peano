@@ -167,6 +167,12 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      * whether temporary stacks are used, how many load operations have been
      * done, and so forth.
      *
+     * <h2> Actual stack access </h2>
+     *
+     * This is a tree traversal routine that delegates the actual vertex access
+     * to loadVerticesOfOneCellAtBoundaryofSubtree() and
+     * loadVerticesOfOneCellWithinRegularSubtree().
+     *
      * @param coarseGridCell Copy of a coarse cell, i.e. never the original
      *                        one stored in the tree data structure, as the
      *                        operation modifies this record.
@@ -188,6 +194,12 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      *
      * Different to the other load operation, we work with a reference to
      * coarseCell.
+     *
+     * <h2> Actual stack access </h2>
+     *
+     * This is a tree traversal routine that delegates the actual vertex access
+     * to loadVerticesOfOneCellAtBoundaryofSubtree() and
+     * loadVerticesOfOneCellWithinRegularSubtree().
      */
     void loadSubVerticesWithCellsFromGridContainer(
       const int                                 currentLevelOfCoarseCell,
@@ -218,7 +230,11 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
     void loadSubVerticesWithCellsOnFirstLevelInSharedMemoryMode();
 
     /**
-     * !!! Implementation
+     * This is the actual vertex load within one cell, i.e. we find the stack
+     * access here.
+     *
+     *
+     * <h2> Implementation </h2>
      *
      * We explicitly have to copy the vertex enumerator, as we do manipulate
      * its offset. Multiple threads might work on the same level and modify the
@@ -234,7 +250,18 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
 
 
     /**
-     * !!! Counters
+     * Load vertices at boundary of the regular subtree patch
+     *
+     * This routine handles the cells at the boundary of the subtree.
+     * Consequently, this is the only routine that accesses temporary stacks.
+     * Therefore, we may not run this routine in parallel. Please note that
+     * this routine otherwise is not tied to a particular tree traversal
+     * scheme. You may use it by a recursive traversal that relies on read-in
+     * cells or on a reconstruction of the actual cells. We do not care here.
+     * This is also the reason why we accept the cell as argument here.
+     *
+     *
+     * <h2> Counters </h2>
      *
      * The counters are of relevance only at the subpatch boundary.
      *
@@ -264,8 +291,16 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      * is forked. The counter access for this vertex has to be protected by a
      * semaphore anyway.
      *
-     * A comparison of _coarsestLevelOfThisTask with 0 tells teh code whether
+     * A comparison of _coarsestLevelOfThisTask with 0 tells the code whether
      * it is the master thread.
+     *
+     * <h2> Vertex data maintenance </h2>
+     *
+     * - If the vertex is at the patch boundary, we do invoke
+     *   incCounterOfAdjacentRefinedCells(). Otherwise, we obtain hanging
+     *   nodes next to a patch that have 2^d adjacent cells if there is a
+     *   regular (persistent) subtree and then the grid starts to refine around
+     *   this one.
      */
     void loadVerticesOfOneCellAtBoundaryofSubtree(
       const Cell&                               currentCell,

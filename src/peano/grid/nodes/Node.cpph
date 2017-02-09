@@ -920,26 +920,51 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
 
   #ifdef Parallel
-  const bool checkWhetherToRefineOutCell = (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) && !fineGridCell.isRemote(state,false,false) && fineGridCell.isOutside();
+  const bool checkWhetherToRefineOutCell = (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) 
+                                        && !fineGridCell.isRemote(state,false,false) 
+                                        && fineGridCell.isOutside();
   #else
-  const bool checkWhetherToRefineOutCell = fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary && fineGridCell.isOutside();
+  const bool checkWhetherToRefineOutCell = (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) 
+                                        && fineGridCell.isOutside();
   #endif
 
   if (checkWhetherToRefineOutCell) {
-    if (
-      peano::grid::aspects::VertexStateAnalysis::doAllVerticesCarryRefinementFlag(
+    const bool hasToRefineOuterCellBecauseOfGeometry = 
+      _geometry.refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(cellCenter,halfTheCellSize);
+    
+    assertion(!hasToRefineOuterCellBecauseOfGeometry);
+     
+    #ifdef Parallel
+    const bool hasToRefineToPreserveRegularityAlongBoundary = 
+      fineGridVerticesEnumerator.getLevel() < peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary()
+      &&
+      peano::grid::aspects::VertexStateAnalysis::isOneVertexBoundary(
+        fineGridVertices,
+        fineGridVerticesEnumerator
+      )
+      &&
+      peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
         fineGridVertices,
         fineGridVerticesEnumerator,
-        Vertex::Records::Unrefined
-      ) &&
-      !_geometry.isCompletelyOutside(cellCenter,fineGridVerticesEnumerator.getCellSize()) &&
-      _geometry.refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(cellCenter,halfTheCellSize)
-    ) {
+        Vertex::Records::Refined
+      );
+    #else
+    const bool hasToRefineToPreserveRegularityAlongBoundary = false;
+    #endif
+        
+    if (hasToRefineOuterCellBecauseOfGeometry || hasToRefineToPreserveRegularityAlongBoundary) {
       dfor2(k)
         if (
-          !fineGridVertices[ fineGridVerticesEnumerator(k) ].isHangingNode()
+          fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Unrefined
+          &&
+          !fineGridVertices[fineGridVerticesEnumerator(k)].isHangingNode()
+          #ifdef Parallel
+          &&
+          !fineGridVertices[fineGridVerticesEnumerator(k)].isRemote( state, true, false)
+          #endif
         ) {
-          fineGridVertices[ fineGridVerticesEnumerator(k) ].refine();
+          logDebug( "operator()", "refine vertex " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() << " manually as boundary regularity is set to " << peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary() );
+          fineGridVertices[fineGridVerticesEnumerator(k)].refine();
         }
       enddforx
     }

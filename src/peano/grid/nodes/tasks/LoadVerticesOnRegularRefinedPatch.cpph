@@ -289,7 +289,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     const bool popVertex = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                          || cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex);
 
-
+    
     if ( CaseLoadPersistentVertex) {
       if (popVertex) {
         _regularGridContainer.setVertex(
@@ -441,6 +441,10 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         _regularGridContainer.getCounter(currentLevel,positionInArray)++;
         assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)<=TWO_POWER_D,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
       }
+    }
+
+    if (cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)) {
+      _regularGridContainer.getVertex(currentLevel,positionInArray).incCounterOfAdjacentRefinedCells();
     }
   }
 
