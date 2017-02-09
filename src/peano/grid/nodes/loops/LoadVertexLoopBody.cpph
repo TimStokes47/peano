@@ -221,7 +221,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     case Vertex::SwitchRefinementTriggeredResult::WasntAbleToSwitchDueToRegularPersistentSubgrids:
       {
         logDebug( "updateRefinementFlagsOfVertexAfterLoad()", "can't refine " << _fineGridVertices[positionInVertexArray].toString() );
-        _state.informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees();
+        _state.informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees(0);
       }
       break;
   }
@@ -245,7 +245,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       break;
     case Vertex::SwitchEraseTriggeredResult::WasntAbleToSwitchDueToRegularPersistentSubgrids:
       {
-        _state.informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees();
+        _state.informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees(0);
       }
       break;
   }

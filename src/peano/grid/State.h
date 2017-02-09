@@ -743,7 +743,22 @@ class peano::grid::State {
      */
     bool storeRegularSubtreesPersistently(int treeDepth) const;
 
-    void informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees();
+    /**
+     * Inform the state that some refinements/erase couldn't complete as the
+     * tree has been marked as persistent.
+     *
+     * One might think that it is sufficient to call such a function within
+     * RegularRefined only whenever we identify the the grid modification
+     * happens within the regular subtree. Such an approach however falls
+     * short. The whole static thing is analysed bottom up and not only
+     * vetos refinements within the regular subtree. It also vetos refinements
+     * on coarser levels where additional refinements could overlap/overwrite
+     * the fine regular grid regions. So we have to be notified (through the
+     * load processes) of issues there, too.
+     *
+     * @param treeDepth Pass 0 if tree depth is not known
+     */
+    void informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees(int treeDepth);
 
     void informToDrainPersistentSubtreesBecauseOfFork();
 
