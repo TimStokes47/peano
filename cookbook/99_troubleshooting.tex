@@ -32,6 +32,19 @@
   \item {\bf How can I find out the location of a cell}. See the documentation
   of the \texttt{VertexEnumerator}. The object has routines to query cell
   position, size and level in the spacetree.
+  \item {\bf The adaptivity pattern lacks behing my adaptivity instructions}.
+  For most refinement and erase calls, Peano needs at least one iteration to
+  reliase them. It tries to do it faster, but usually needs these two
+  iterations. Whenever Peano encounters regular subtrees, it tries to store 
+  them separately in some arrays and process it way faster than with a classic
+  tree. When a refinement command affects such a regular subregion, we first 
+  have to find this region (at least one sweep), then break it up, in the
+  follow-up iteration remove all veto markers that stopped the regular grid to
+  be refined and then we can realise the refinement. If you have an extremely
+  rapidely changing grid and you can't wait for Peano to keep pace, you should
+  compile with \texttt{-DnoPersistentRegularSubtrees}. This will make the grid
+  react quicker to your refinement requests but might slow down the code
+  significantly.
   \item {\bf I need the state object in my mapping}. Create a copy of the state
   object in \texttt{beginIteration} and to merge this copy back in \texttt{endIteration}. 
   Peano updates the State itself and the state position in memory is not fixed.
