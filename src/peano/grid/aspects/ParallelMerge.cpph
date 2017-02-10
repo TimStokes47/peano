@@ -387,7 +387,7 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
 
   #ifdef PersistentRegularSubtrees
   localVertex._vertexData.setParentRegularPersistentSubgrid( true );
-  localVertex._vertexData.getParentRegularPersistentSubgridInPreviousIteration( true );
+  localVertex._vertexData.setParentRegularPersistentSubgridInPreviousIteration( true );
   #endif
 
   logTraceOutWith2Arguments( "mergeWithJoinedVertexFromWorker(...)", localVertex, result );
@@ -549,7 +549,7 @@ void peano::grid::aspects::ParallelMerge::mergeWithForkedVertexFromMaster(
 
   #ifdef PersistentRegularSubtrees
   localVertex._vertexData.setParentRegularPersistentSubgrid( true );
-  localVertex._vertexData.getParentRegularPersistentSubgridInPreviousIteration( true );
+  localVertex._vertexData.setParentRegularPersistentSubgridInPreviousIteration( true );
   #endif
 
   logTraceOutWith1Argument( "mergeWithForkedVertexFromMaster(...)", localVertex );
