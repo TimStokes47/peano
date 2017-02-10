@@ -66,11 +66,17 @@ void peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
     );
   }
 
-  localVertex._vertexData.setNumberOfAdjacentRefinedCells(      neighbourVertex._vertexData.getNumberOfAdjacentRefinedCells() );
+  localVertex._vertexData.setNumberOfAdjacentRefinedCells( neighbourVertex._vertexData.getNumberOfAdjacentRefinedCells() );
   localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank(
      neighbourVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank() |
      localVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank()
   );
+  #ifdef PersistentRegularSubtrees
+  localVertex._vertexData.setParentRegularPersistentSubgrid(
+     neighbourVertex._vertexData.getParentRegularPersistentSubgrid() |
+     localVertex._vertexData.getParentRegularPersistentSubgrid()
+  );
+  #endif
 
   logTraceOutWith1Argument( "mergeOnDomainBoundary(...)", localVertex );
 }
@@ -379,6 +385,11 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
 
   localVertex.setAdjacentSubtreeForksIntoOtherRankFlag();
 
+  #ifdef PersistentRegularSubtrees
+  localVertex._vertexData.setParentRegularPersistentSubgrid( true );
+  localVertex._vertexData.getParentRegularPersistentSubgridInPreviousIteration( true );
+  #endif
+
   logTraceOutWith2Arguments( "mergeWithJoinedVertexFromWorker(...)", localVertex, result );
   return result;
 }
@@ -535,6 +546,11 @@ void peano::grid::aspects::ParallelMerge::mergeWithForkedVertexFromMaster(
 
   localVertex.invalidateAdjacentCellInformation();
   localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank(true);
+
+  #ifdef PersistentRegularSubtrees
+  localVertex._vertexData.setParentRegularPersistentSubgrid( true );
+  localVertex._vertexData.getParentRegularPersistentSubgridInPreviousIteration( true );
+  #endif
 
   logTraceOutWith1Argument( "mergeWithForkedVertexFromMaster(...)", localVertex );
 }
