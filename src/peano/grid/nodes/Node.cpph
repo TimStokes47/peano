@@ -941,10 +941,10 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         fineGridVerticesEnumerator
       )
       &&
-      peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
+      !peano::grid::aspects::VertexStateAnalysis::doAllVerticesCarryRefinementFlag(
         fineGridVertices,
         fineGridVerticesEnumerator,
-        Vertex::Records::Refined
+        Vertex::Records::Unrefined
       );
     #else
     const bool hasToRefineToPreserveRegularityAlongBoundary = false;
