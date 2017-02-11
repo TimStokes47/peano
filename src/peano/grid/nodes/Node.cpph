@@ -223,7 +223,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     fineGridCell.isRemote(state,false,false) &&
     !coarseGridCell.isRemote(state,false,false)
   ) {
-    logInfo( "updateCellsParallelStateBeforeStore(...)", "go into remote receive because of " << state.toString() );
+    logInfo( "updateCellsParallelStateBeforeStore(...)", "receive data from worker because of " << state.toString() );
     updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(
       state,
       fineGridCell,
@@ -932,8 +932,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     const bool hasToRefineOuterCellBecauseOfGeometry = 
       _geometry.refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(cellCenter,halfTheCellSize);
     
-    assertion(!hasToRefineOuterCellBecauseOfGeometry);
-     
     #ifdef Parallel
     const bool hasToRefineToPreserveRegularityAlongBoundary = 
       fineGridVerticesEnumerator.getLevel() < peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary()
