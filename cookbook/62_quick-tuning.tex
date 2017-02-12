@@ -169,15 +169,17 @@ aware of this level as well.
 
 The latter remark leads into code similar to
 \begin{code}
-  const double boundingBoxScaling = static_cast<double>(hRegular) 
-                                  / (static_cast<double>(hRegular)-2.0); 
-  const double boundingBoxShift   = (1.0-boundingBoxScaling)/2.0;
-
-  return exahype::repositories::RepositoryFactory::getInstance().create...(
+  assertion1( getCoarsestGridLevelOfAllSolvers()>=3, getCoarsestGridLevelOfAllSolvers() ); 
+  const double boundingBoxScaling = 
+    static_cast<double>(getCoarsestGridLevelOfAllSolvers()) /
+    (static_cast<double>(getCoarsestGridLevelOfAllSolvers())-2); 
+  const double boundingBoxShift   = (1.0-boundingBoxScaling)/2.0; 
+  
+  exahype::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
       geometry,
-      boundingBoxSize*boundingBoxScaling,
-      boundingBoxOffset+boundingBoxShift*boundingBoxSize
-  );
+      applicationsBoxSize*boundingBoxScaling,
+      applicationsBoxOffset-boundingBoxShift*applicationsBoxSize
+      );
 \end{code}
 
 
@@ -326,6 +328,7 @@ int exahype::runners::Runner::getCoarsestGridLevel() {
 This information then is used to extend the technical bounding box following  
 \ref{subsection:62:reduce-data-exchange-with-global-master}:
 \begin{code}
+  assertion1( getCoarsestGridLevelOfAllSolvers()>=3, getCoarsestGridLevelOfAllSolvers() ); 
   const double boundingBoxScaling = 
     static_cast<double>(getCoarsestGridLevelOfAllSolvers()) /
     (static_cast<double>(getCoarsestGridLevelOfAllSolvers())-2); 
