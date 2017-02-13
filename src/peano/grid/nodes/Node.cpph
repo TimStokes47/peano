@@ -961,7 +961,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           !fineGridVertices[fineGridVerticesEnumerator(k)].isRemote( state, true, false)
           #endif
         ) {
-          logDebug( "operator()", "refine vertex " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() << " manually as boundary regularity is set to " << peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary() );
           fineGridVertices[fineGridVerticesEnumerator(k)].refine();
         }
       enddforx
