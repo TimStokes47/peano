@@ -63,6 +63,13 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
   assertion( levelOfCentralElement>0 );
 
+  for (int d=0; d<DIMENSIONS; d++) {
+    assertion4( !std::isnan(domainSize(d)), domainSize, domainOffset, levelOfCentralElement, positionOfFineGridCellRelativeToCoarseGridCell );
+    assertion4( !std::isinf(domainSize(d)), domainSize, domainOffset, levelOfCentralElement, positionOfFineGridCellRelativeToCoarseGridCell );
+    assertion4( !std::isnan(domainOffset(d)), domainSize, domainOffset, levelOfCentralElement, positionOfFineGridCellRelativeToCoarseGridCell );
+    assertion4( !std::isinf(domainOffset(d)), domainSize, domainOffset, levelOfCentralElement, positionOfFineGridCellRelativeToCoarseGridCell );
+  }
+  
   _sizeOfEnclosingCoarseCell                       = domainSize * 3.0;
   _offsetOfEnclosingCoarseCell                     = domainOffset - domainSize;
   _levelOfEnclosingCell                            = levelOfCentralElement-1;
@@ -575,6 +582,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         currentCell.replaceAccessNumbersAndEvenFlags( newCell );
       }
       #endif
+
       fineGridEnumerator.setOffset( currentCellTraversal );
       if ( currentCell.isLeaf() ) {
         _leafNode.load( state, currentCell, fineGridVertices, fineGridEnumerator, _coarseGridCell, _coarseGridVertices, coarseGridEnumerator, currentCellTraversal, counter );
