@@ -12,11 +12,6 @@
 #include <tbb/blocked_range.h>
 #endif
 
-#ifdef SharedCobra
-#include <cobra/scheduler.hpp>
-#include <cobra/range.hpp>
-#include "tarch/multicore/cobra/Core.h"
-#endif
 
 namespace peano {
     namespace datatraversal {
@@ -92,18 +87,6 @@ class peano::datatraversal::ActionSetTraversalLoop {
     };
     #endif
 
-
-    #ifdef SharedCobra
-    /**
-     * For Cobra only
-     */
-    void realiseParallelForAsTaskBipartitioning(
-      ::cobra::blocked_range<int>                     range,
-      ::cobra::continuator&                           ctr,
-      const peano::datatraversal::ActionSet&  actionSet,
-      const LoopBody&                                 loopBody
-    );
-    #endif
 
   public:
     /**
