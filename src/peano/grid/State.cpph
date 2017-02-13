@@ -151,7 +151,7 @@ void peano::grid::State<StateData>::toString(std::ostream& out) const {
   #endif
   
   #ifdef PersistentRegularSubtrees
-  out << "[smallest-regular-tree-that-is-held-persistently=" 
+  out << "[smallest-regular-tree-that-is-held-persistently(currently/previous iteration)=" 
       << _smallestRegularTreeThatIsToBeHeldPersistently 
       << "/"
       << _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration
@@ -583,7 +583,7 @@ void peano::grid::State<StateData>::mergeWithWorkerState(const peano::grid::Stat
       workerState._stateData.getMinMeshWidth(d) < _stateData.getMinMeshWidth(d) ? workerState._stateData.getMinMeshWidth(d) : _stateData.getMinMeshWidth(d)
     );
 
-    // This check makes sense but is forced to fail throughout the fork.
+    // This check makes sense but doesn't pass through if we have just forked a domain
     //assertion1( _stateData.getMaxMeshWidth(d)>=_stateData.getMinMeshWidth(d), toString() );
   }
   #endif
@@ -966,7 +966,7 @@ template <class StateData>
 bool peano::grid::State<StateData>::storeRegularSubtreesPersistently(int treeDepth) const {
   #ifdef PersistentRegularSubtrees
   return treeDepth >= _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration
-      && _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration != -1;
+      && _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration >= 0;
   #else
   return false;
   #endif
@@ -1014,19 +1014,11 @@ void peano::grid::State<StateData>::informAboutFailedRefineOrEraseBecauseOfPersi
   ) {
     _smallestRegularTreeThatIsToBeHeldPersistently = _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration+1;
   }
-
-  /*
-  if (
-    treeDepth==0 
+  else if (
+    _smallestRegularTreeThatIsToBeHeldPersistently<treeDepth
     &&
-    _smallestRegularTreeThatIsToBeHeldPersistently == _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration
+    _smallestRegularTreeThatIsToBeHeldPersistently>=0
   ) {
-    _smallestRegularTreeThatIsToBeHeldPersistently = -1;
-    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = -1;
-  }
-*/
-
-  else if (_smallestRegularTreeThatIsToBeHeldPersistently<treeDepth) {
     _smallestRegularTreeThatIsToBeHeldPersistently = treeDepth+1;
   }
   #endif
