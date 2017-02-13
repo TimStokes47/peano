@@ -1,6 +1,9 @@
 #include "peano/grid/SingleLevelEnumerator.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "peano/utils/Loop.h"
+#include "tarch/Assertions.h"
+
+
 
 int peano::grid::SingleLevelEnumerator::lineariseCellIndex( const LocalVertexIntegerIndex& cellPosition ) {
   int base   = 1;
@@ -46,6 +49,17 @@ peano::grid::SingleLevelEnumerator::SingleLevelEnumerator(
   _domainOffset(domainOffset),
   _level(coarseGridLevel+1),
   _adjacentCellsHeight(peano::grid::NotStationary) {
+  #ifdef Asserts
+  for (int d=0; d<DIMENSIONS; d++) {
+    assertion4( !std::isnan( _domainOffset(d) ), toString(), coarseGridCellSize, domainOffset, coarseGridLevel );
+    assertion4( !std::isnan( _fineGridCellSize(d) ), toString(), coarseGridCellSize, domainOffset, coarseGridLevel );
+    assertion4( !std::isinf( _domainOffset(d) ), toString(), coarseGridCellSize, domainOffset, coarseGridLevel );
+    assertion4( !std::isinf( _fineGridCellSize(d) ), toString(), coarseGridCellSize, domainOffset, coarseGridLevel );
+    assertion4( _discreteOffset(d)>=0, toString(), coarseGridCellSize, domainOffset, coarseGridLevel );
+    assertion4( _discreteOffset(d)<=3, toString(), coarseGridCellSize, domainOffset, coarseGridLevel );
+  }
+  assertion4( _level>=0, toString(), coarseGridCellSize, domainOffset, coarseGridLevel );
+  #endif
 }
 
 
@@ -60,6 +74,37 @@ peano::grid::SingleLevelEnumerator::SingleLevelEnumerator(
   _domainOffset(domainOffset),
   _level(level+1),
   _adjacentCellsHeight(adjacentCellsHeight) {
+  #ifdef Asserts
+  for (int d=0; d<DIMENSIONS; d++) {
+    assertion4( !std::isnan( _domainOffset(d) ), toString(), coarseGridCellSize, domainOffset, level );
+    assertion4( !std::isnan( _fineGridCellSize(d) ), toString(), coarseGridCellSize, domainOffset, level );
+    assertion4( !std::isinf( _domainOffset(d) ), toString(), coarseGridCellSize, domainOffset, level );
+    assertion4( !std::isinf( _fineGridCellSize(d) ), toString(), coarseGridCellSize, domainOffset, level );
+    assertion4( _discreteOffset(d)>=0, toString(), coarseGridCellSize, domainOffset, level );
+    assertion4( _discreteOffset(d)<=3, toString(), coarseGridCellSize, domainOffset, level );
+  }
+  assertion4( _level>=0, toString(), coarseGridCellSize, domainOffset, level );
+  #endif
+}
+
+
+peano::grid::SingleLevelEnumerator::SingleLevelEnumerator( const SingleLevelEnumerator& copy ):
+  _discreteOffset( copy._discreteOffset ),
+  _fineGridCellSize( copy._fineGridCellSize ),
+  _domainOffset( copy._domainOffset ),
+  _level( copy._level ),
+  _adjacentCellsHeight( copy._adjacentCellsHeight ) {
+  #ifdef Asserts
+  for (int d=0; d<DIMENSIONS; d++) {
+    assertion2( !std::isnan( _domainOffset(d) ), toString(), copy.toString() );
+    assertion2( !std::isnan( _fineGridCellSize(d) ), toString(), copy.toString() );
+    assertion2( !std::isinf( _domainOffset(d) ), toString(), copy.toString() );
+    assertion2( !std::isinf( _fineGridCellSize(d) ), toString(), copy.toString() );
+    assertion2( _discreteOffset(d)>=0, toString(), copy.toString() );
+    assertion2( _discreteOffset(d)<=3, toString(), copy.toString() );
+  }
+  assertion2( _level>=0, toString(), copy.toString() );
+  #endif
 }
 
 

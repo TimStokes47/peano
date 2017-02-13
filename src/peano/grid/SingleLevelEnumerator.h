@@ -83,6 +83,8 @@ class peano::grid::SingleLevelEnumerator: public peano::grid::VertexEnumerator {
       int                          coarseGridLevel
     );
 
+    SingleLevelEnumerator( const SingleLevelEnumerator& copy );
+
     virtual ~SingleLevelEnumerator();
 
     /**
