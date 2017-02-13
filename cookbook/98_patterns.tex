@@ -1,0 +1,51 @@
+\chapter{Peano coding patterns}
+
+\section{Dynamic coarsening of the grid}
+
+The operation \texttt{coarse} on a vertex may only be invoked on a refined
+vertex.
+Once it is called, all children recursively are removed.
+Most codes realising dynamic adaptivity thus set the specification flag
+\textttt{WholeTree} in some mapping where they check for erase candidates.
+Though such an approach works fine, it often reduces the concurrency and speed
+dramatically---notably if the actual algorithm works only on the finest grid
+level. 
+
+
+To bring both things together---fine grid work and erases---one can exploit the
+fact that also fine grid events have access to the next coarser level. 
+It is thus convenient to do some fine grid checks and then call erase on coarser
+levels.
+This way, you remove at most one level per grid sweep. 
+However, you can work only on the finest grid in the tree.
+
+\begin{code}
+if (fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined) {
+ switch (getRefinementCommand(fineGridX,...,coarseGridVerticesEnumerator.getLevel()+1)) { 
+  case RefinementCommand::Coarse:
+   {
+    dfor2(k)
+     if (
+      coarseGridVertices[coarseGridVerticesEnumerator(k)].getRefinementControl()
+        ==Vertex::Records::Refined
+      &&
+      coarseGridVertices[coarseGridVerticesEnumerator(k)].isInside()
+      &&
+      getRefinementCommand(
+       coarseGridVerticesEnumerator.getVertexPosition(k),fineGridH(0)*3.0,_t,
+         coarseGridVerticesEnumerator.getLevel()
+      ) == RefinementCommand::Coarse
+     ) {
+      coarseGridVertices[coarseGridVerticesEnumerator(k)].erase();
+     }
+    enddforx
+   }
+   break;
+   case RefinementCommand::Refine:
+    fineGridVertex.refine();
+    break;
+ }
+}
+\end{code}
+
+

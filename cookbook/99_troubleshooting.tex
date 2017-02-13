@@ -5,20 +5,13 @@
 \begin{itemize}
   \item {\bf The PDT does not pass as the jar file is built with the wrong Java
   version}. Download the whole Peano project (from sourceforge via subversion),
-  change into the directory \texttt{pdt}, and run
+  change into the directory \texttt{pdt/src}, and run
   \begin{code}
-  ant createParser
-  ant compile
-  ant dist
+  make createParser
+  make compile
+  make dist
   \end{code}
   Use the \texttt{pdt.jar} from the \texttt{pdt} directory now. 
-  \item {\bf I can't use the ant script to recreate the pdt.jar as it complains
-  with ``Error: Could not find or load main class
-  org.apache.tools.ant.launch.Launcher''}. I did run into this problem on a
-  couple of recently new Linux systems (mainly OpenSUSE). All the workarounds
-  from the Internet failed on my system. What works (surprisingly) is to install
-  Eclipse which internally supports ant and right click on the
-  \texttt{build.xml} file and select \texttt{Run As Ant Build \ldots}
 \end{itemize}
 
 
@@ -57,7 +50,8 @@
 
 \begin{itemize}
   \item {\bf The code requires too much memory}.
-  You can try to compile your code with \texttt{-DnoPersistentRegularSubtrees}.
-  However, this may lead to a severe performance degradation---notably if you
-  run your code with shared memory parallelisation.
+  You can try to compile your code with
+  \linebreak \texttt{-DnoPersistentRegularSubtrees}.
+  However, this may lead to a severe performance \linebreak
+  degradation---notably if you run your code with shared memory parallelisation.
 \end{itemize}
