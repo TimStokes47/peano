@@ -442,10 +442,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)<=TWO_POWER_D,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
       }
     }
-
-    if (cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)) {
-      _regularGridContainer.getVertex(currentLevel,positionInArray).incCounterOfAdjacentRefinedCells();
-    }
   }
 
   logTraceOut( "loadVerticesOfOneCellAtBoundaryofSubtree(...)" );
