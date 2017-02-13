@@ -688,6 +688,7 @@ class peano::grid::Vertex {
      * @see updateRefinedEnumeratorsCellFlag()
      */
     bool isParentingRegularPersistentSubgrid() const;
+    bool isParentingRegularPersistentSubgridInNewSweepAlreadySet() const;
 
     /**
      * Set the persistency flag.

@@ -31,10 +31,19 @@ peano::grid::Vertex<VertexData>::Vertex():
 
 
 template <class VertexData>
+bool peano::grid::Vertex<VertexData>::isParentingRegularPersistentSubgridInNewSweepAlreadySet() const {
+  #ifdef PersistentRegularSubtrees
+  return _vertexData.getParentRegularPersistentSubgrid();
+  #else
+  return false;
+  #endif
+}
+
+
+template <class VertexData>
 bool peano::grid::Vertex<VertexData>::isParentingRegularPersistentSubgrid() const {
   #ifdef PersistentRegularSubtrees
-  return _vertexData.getParentRegularPersistentSubgrid()
-       | _vertexData.getParentRegularPersistentSubgridInPreviousIteration();
+  return _vertexData.getParentRegularPersistentSubgridInPreviousIteration();
   #else
   return false;
   #endif
@@ -53,6 +62,7 @@ template <class VertexData>
 peano::grid::Vertex<VertexData>::Vertex(const typename Vertex::DoNotCallStandardConstructor&) {
 }
 
+
 #ifdef PackedRecords
 template <class VertexData>
 peano::grid::Vertex<VertexData>::Vertex( const PersistentVertex& argument ):
@@ -64,6 +74,7 @@ peano::grid::Vertex<VertexData>::Vertex( const PersistentVertex& argument ):
   _vertexData( argument ) {
 }
 #endif
+
 
 template <class VertexData>
 peano::grid::Vertex<VertexData>::~Vertex() {

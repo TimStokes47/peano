@@ -285,13 +285,7 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
         _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setAdjacentSubtreeForksIntoOtherRankFlag();
       }
       #endif
-      
-      if (
-        _fineGridVertices[positionInVertexArray].isParentingRegularPersistentSubgrid()
-      ) {
-        _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setIsParentingRegularPersistentSubgridFlag();
-      }
-          
+                
       if (analysedValue>= peano::grid::Leaf) {
         inc(analysedValue);
         if (
@@ -318,6 +312,14 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
       }
       else {
         logDebug( "updateCoarseGridTreeHeightAttributes(int)", "do not update coarse grid vertex " << k << " with " << analysedValue << " as outer vertices influence exclusively outer vertices" );
+      }
+      
+      if (
+        _fineGridVertices[positionInVertexArray].isParentingRegularPersistentSubgridInNewSweepAlreadySet()
+        &&
+        restrictInformation
+      ) {
+        _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].setIsParentingRegularPersistentSubgridFlag();
       }
     }
   enddforx
