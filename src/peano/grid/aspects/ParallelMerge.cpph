@@ -10,6 +10,13 @@ void peano::grid::aspects::ParallelMerge::mergeWithVertexFromMaster(
   const Vertex&  masterVertex
 ) {
   localVertex.setAdjacentSubtreeForksIntoOtherRankFlag();
+
+  #ifdef PersistentRegularSubtrees
+  localVertex._vertexData.setParentRegularPersistentSubgridInPreviousIteration(
+    masterVertex._vertexData.getParentRegularPersistentSubgridInPreviousIteration()
+  );
+  localVertex._vertexData.setParentRegularPersistentSubgrid(false);
+  #endif
 }
 
 
@@ -71,7 +78,7 @@ void peano::grid::aspects::ParallelMerge::mergeOnDomainBoundary(
      neighbourVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank() |
      localVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank()
   );
-  #ifdef PersistentRegularSubtrees
+  #ifdef PersistentRegularSubtrees  
   localVertex._vertexData.setParentRegularPersistentSubgrid(
      neighbourVertex._vertexData.getParentRegularPersistentSubgrid() |
      localVertex._vertexData.getParentRegularPersistentSubgrid()
@@ -386,8 +393,8 @@ peano::grid::aspects::ParallelMerge::mergeWithJoinedVertexFromWorker(
   localVertex.setAdjacentSubtreeForksIntoOtherRankFlag();
 
   #ifdef PersistentRegularSubtrees
-  localVertex._vertexData.setParentRegularPersistentSubgrid( true );
-  localVertex._vertexData.setParentRegularPersistentSubgridInPreviousIteration( true );
+  localVertex._vertexData.setParentRegularPersistentSubgrid( workerVertex._vertexData.getParentRegularPersistentSubgrid() );
+  localVertex._vertexData.setParentRegularPersistentSubgridInPreviousIteration( workerVertex._vertexData.getParentRegularPersistentSubgridInPreviousIteration() );
   #endif
 
   logTraceOutWith2Arguments( "mergeWithJoinedVertexFromWorker(...)", localVertex, result );
@@ -548,8 +555,8 @@ void peano::grid::aspects::ParallelMerge::mergeWithForkedVertexFromMaster(
   localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank(true);
 
   #ifdef PersistentRegularSubtrees
-  localVertex._vertexData.setParentRegularPersistentSubgrid( true );
-  localVertex._vertexData.setParentRegularPersistentSubgridInPreviousIteration( true );
+  localVertex._vertexData.setParentRegularPersistentSubgrid( masterVertex._vertexData.getParentRegularPersistentSubgrid() );
+  localVertex._vertexData.setParentRegularPersistentSubgridInPreviousIteration( masterVertex._vertexData.getParentRegularPersistentSubgridInPreviousIteration() );
   #endif
 
   logTraceOutWith1Argument( "mergeWithForkedVertexFromMaster(...)", localVertex );

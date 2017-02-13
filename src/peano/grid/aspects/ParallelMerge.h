@@ -55,6 +55,18 @@ class peano::grid::aspects::ParallelMerge {
      * If can happen that the neighbour holds refining and the local node holds erase-triggered:
      *
      * @image html peano/grid/aspects/MergeAtBoundary.png
+     *
+     * <h2> Carry over marker for persistent subgrids </h2>
+     *
+     * The information for persistent subgrids is updated by the grid management
+     * in saveAndClearAdjacentCellsInformation() where the marker is backuped in
+     * an additional field and the current marker is reset to false.
+     * saveAndClearAdjacentCellsInformation() is invoked by LoadVertexLoopBody
+     * right after the load, i.e. as very last operation in
+     * loadVertexFromInputStream(). It therefore happens after the local
+     * vertex instance is merged with the received vertices from other ranks.
+     * This in turn implies that we can merge only the current markers - the
+     * merger then automatically is backed up and the field is cleared.
      */
     template <class Vertex>
     static void mergeOnDomainBoundary(
@@ -62,6 +74,12 @@ class peano::grid::aspects::ParallelMerge {
       const Vertex&  neighbourVertex,
       int            neighbourRank
     );
+
+
+
+//    Der 5er (link) schaltet zwar hoch, aber setzt dann immer wieder auf 0 zurueck, weil er ja keine lokalen persistenten Baeume
+//    haelt. Dadurch geht aber der Refine nie durch dummerweise. Er wird von link immer wieder blockiert.
+
 
     /**
      * Merge vertex on worker with vertex from master
