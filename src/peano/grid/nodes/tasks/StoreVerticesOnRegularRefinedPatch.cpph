@@ -160,8 +160,13 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
       const bool CaseStorePersistentVertex = actionFlag==peano::stacks::Constants::InOutStack;
       if ( CaseStorePersistentVertex ) {
+        const bool pushVertex = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
+                             || cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex);
+
         assertion5(
-          _regularGridContainer.getVertex(currentLevel,positionInArray).getCurrentAdjacentCellsHeight()< peano::grid::Undefined,
+          _regularGridContainer.getVertex(currentLevel,positionInArray).getCurrentAdjacentCellsHeight()< peano::grid::Undefined
+          ||
+          !pushVertex,
           currentLevel,
           _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
           positionInArray,
@@ -206,9 +211,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _coarsestCellsOffset,
           _coarsestLevelOfThisTask
         );
-
-        const bool pushVertex = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
-                             || cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex);
 
         if (_maxLevelToFork == DoNotSplitAndHandleOnlyPatchBoundary) {
           assertion1(

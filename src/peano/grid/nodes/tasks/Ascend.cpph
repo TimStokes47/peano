@@ -254,54 +254,49 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
     _eventHandle.touchVertexLastTimeSpecification().manipulates != peano::MappingSpecification::WholeTree
     &&
     _eventHandle.ascendSpecification().manipulates != peano::MappingSpecification::WholeTree;
- 
-  int finestPostprocessingGridLevel   = 0;
-  int coarsestPostprocessingGridLevel = 1;
-
-  if (mappingsMayModifyOnlyFinestGridLevelAndItsParents) {
-    finestPostprocessingGridLevel   = _treeDepth;
-    coarsestPostprocessingGridLevel = _treeDepth-1;
-  }
-  else if (
-    _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop
-  ) {
-    finestPostprocessingGridLevel   = _treeDepth;
-    coarsestPostprocessingGridLevel = 1;
-  }
-  else if (
-    _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::OnlyLeaves
-  ) {
-    finestPostprocessingGridLevel   = _treeDepth-1;
-    coarsestPostprocessingGridLevel = 1;
-    
-    assertionMsg(false, "should not be here for my stupid paper test. Afterwards remove" );
-  }
-
-  int manualPostProcessingLevel = finestPostprocessingGridLevel;
-  while (
-    ( manualPostProcessingLevel>=coarsestPostprocessingGridLevel && _treeRemainsStatic )
-    ||
-    ( manualPostProcessingLevel>=1 && !_treeRemainsStatic )
-  ) {
-    const int NumberOfVertices      = tarch::la::volume(_gridContainer.getNumberOfVertices(manualPostProcessingLevel));
-    for (int i=0; i<NumberOfVertices; i++) {
-      Vertex&   currentVertex  = _gridContainer.getVertex(manualPostProcessingLevel,i);
-      TouchVertexLastTimeLoopBody::performVertexTransition(currentVertex,manualPostProcessingLevel,_treeDepth,_treeRemainsStatic);
-    }
-    manualPostProcessingLevel--;
-  }
 
   for (int level=_treeDepth+1; level>=1; level--) {
     if (level==1) {
       ascend(level);
       touchVerticesLastTime( level );
+      if (mappingsMayModifyOnlyFinestGridLevelAndItsParents && _treeRemainsStatic) {
+        for (int i=0; i<tarch::la::volume(_gridContainer.getNumberOfVertices(level)); i++) {
+          _gridContainer.getVertex(level,i).setCurrentAdjacentCellsHeight(static_cast<peano::grid::CellFlags>(_treeDepth-level));
+        }
+      }
+      else if ( _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop ) {
+        for (int i=0; i<tarch::la::volume(_gridContainer.getNumberOfVertices(level)); i++) {
+          TouchVertexLastTimeLoopBody::performVertexTransition(_gridContainer.getVertex(level,i),level,_treeDepth,_treeRemainsStatic);
+        }
+      }
     }
     else if (level==_treeDepth+1) {
+      leaveCells(level-1);
+    }
+    else if (level==_treeDepth) {
+      ascend(level);
+      touchVerticesLastTime( level );
+      if ( _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop ) {
+        for (int i=0; i<tarch::la::volume(_gridContainer.getNumberOfVertices(level)); i++) {
+          TouchVertexLastTimeLoopBody::performVertexTransition(_gridContainer.getVertex(level,i),level,_treeDepth,_treeRemainsStatic);
+        }
+      }
       leaveCells(level-1);
     }
     else {
       ascend(level);
       touchVerticesLastTime( level );
+      if (mappingsMayModifyOnlyFinestGridLevelAndItsParents && _treeRemainsStatic) {
+        for (int i=0; i<tarch::la::volume(_gridContainer.getNumberOfVertices(level)); i++) {
+          _gridContainer.getVertex(level,i).setCurrentAdjacentCellsHeight(static_cast<peano::grid::CellFlags>(_treeDepth-level));
+        }
+      }
+      else if ( _eventHandle.touchVertexLastTimeSpecification().manipulates == peano::MappingSpecification::Nop ) {
+        for (int i=0; i<tarch::la::volume(_gridContainer.getNumberOfVertices(level)); i++) {
+          TouchVertexLastTimeLoopBody::performVertexTransition(_gridContainer.getVertex(level,i),level,_treeDepth,_treeRemainsStatic);
+        }
+      }
+      
       leaveCells(level-1);
     }
   }
