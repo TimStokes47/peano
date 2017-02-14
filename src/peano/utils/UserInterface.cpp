@@ -179,7 +179,11 @@ int peano::utils::UserInterface::getMemoryUsageMB() {
 void peano::utils::UserInterface::writeHeader(const std::string& experimentName) {
   _log.info("writeHeader()", experimentName );
   _log.info("writeHeader()", _PeanoHeader );
-  _log.info("writeHeader()", "revision: " + std::to_string(static_cast<long int>(PEANO_VERSION)) );
+  // This cast is work around GCC realisations that are not compliant with the
+  // C++ standard:
+  // http://stackoverflow.com/questions/14617950/ambiguous-call-to-overloaded-function-stdto-string
+  // http://stackoverflow.com/questions/10664699/stdto-string-more-than-instance-of-overloaded-function-matches-the-argument
+  _log.info("writeHeader()", "revision: " + std::to_string(static_cast<long long>(PEANO_VERSION)) );
   #ifdef Parallel
   int numberOfProcesses = tarch::parallel::Node::getInstance().getNumberOfNodes();
   #else
