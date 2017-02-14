@@ -12,15 +12,19 @@
  is <a href="http://www.peano-framework.org" target="_blank">www.peano-framework.org</a>.
  
  
- <h2> Recreate the Peano zip </h2>
+ <h2> Recreate the Peano tarball/prepare a Peano release</h2>
  
  To create a tarball of the code, call
  \code
+  echo -n "#define PEANO_VERSION " > peano/version.h
+  svn info | grep 'Revision' | awk '{ print $2; }' >> peano/version.h
   tar -cvf peano.tar . --exclude=.svn --exclude=*.o
   gzip peano.tar
   mv peano.tar.gz ../tarballs
  \endcode
- within our sources directory.
+ within our sources directory, push the result to sourceforge and upload the tarballs to the webpage.
+
+
 
  <h2> Recreate the webpage </h2>
 

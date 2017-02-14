@@ -1,4 +1,5 @@
 #include "peano/utils/UserInterface.h"
+#include "peano/version.h"
 #include "peano/utils/Globals.h"
 #include "peano/utils/PeanoOptimisations.h"
 
@@ -178,6 +179,7 @@ int peano::utils::UserInterface::getMemoryUsageMB() {
 void peano::utils::UserInterface::writeHeader(const std::string& experimentName) {
   _log.info("writeHeader()", experimentName );
   _log.info("writeHeader()", _PeanoHeader );
+  _log.info("writeHeader()", "Revision: " + std::to_string(PEANO_VERSION) );
   #ifdef Parallel
   int numberOfProcesses = tarch::parallel::Node::getInstance().getNumberOfNodes();
   #else
