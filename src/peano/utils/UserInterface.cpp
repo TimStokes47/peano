@@ -179,7 +179,7 @@ int peano::utils::UserInterface::getMemoryUsageMB() {
 void peano::utils::UserInterface::writeHeader(const std::string& experimentName) {
   _log.info("writeHeader()", experimentName );
   _log.info("writeHeader()", _PeanoHeader );
-  _log.info("writeHeader()", "revision: " + std::to_string(PEANO_VERSION) );
+  _log.info("writeHeader()", "revision: " + std::to_string(static_cast<int>(PEANO_VERSION)) );
   #ifdef Parallel
   int numberOfProcesses = tarch::parallel::Node::getInstance().getNumberOfNodes();
   #else
