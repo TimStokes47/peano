@@ -320,7 +320,10 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
 
   #ifdef TrackGridStatistics
   _state.incNumberOfInnerLeafCells( tarch::la::volume(_gridContainer.getNumberOfCells(_treeDepth)) );
-
   _state.incNumberOfInnerLeafVertices( tarch::la::volume(_gridContainer.getNumberOfVertices(_treeDepth)) );
+  _state.updateInLeaf( 
+    _gridContainer.getVertexEnumerator(_treeDepth).getLevel(),
+    _gridContainer.getVertexEnumerator(_treeDepth).getCellSize()
+  );
   #endif
 }

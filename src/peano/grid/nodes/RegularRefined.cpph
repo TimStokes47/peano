@@ -106,28 +106,49 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     _regularGridContainer.switchToStoredRegularSubgrid( fineGridCell.getPersistentRegularSubtreeIndex() );
     
     TreeDepth = _regularGridContainer.getVertexEnumerator( 0 ).getCellFlags();
+
+    //peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatch<Vertex,Cell>
+    //  initialiseVertexEnumeratorsTask( fineGridVerticesEnumerator, _regularGridContainer );
+    
+    peano::grid::nodes::tasks::InvokeEnterCell<Vertex,Cell,State,EventHandle>
+      invokeEnterCellTask( state, fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell, Base::_eventHandle );
+
+    invokeEnterCellTask();
+    
+    //auto grainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+    //    2,
+    //    peano::datatraversal::autotuning::MethodTrace::CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid
+    //  );
+
+    //peano::datatraversal::TaskSet(
+    // / initialiseVertexEnumeratorsTask,
+    //  invokeEnterCellTask,
+    //  grainSize.getGrainSize()>0
+    //);
+    //grainSize.parallelSectionHasTerminated();
   }
   else {
     TreeDepth = fineGridVerticesEnumerator.getCellFlags();
+    
+    peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatch<Vertex,Cell>
+      initialiseVertexEnumeratorsTask( fineGridVerticesEnumerator, _regularGridContainer );
+
+    peano::grid::nodes::tasks::InvokeEnterCell<Vertex,Cell,State,EventHandle>
+      invokeEnterCellTask( state, fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell, Base::_eventHandle );
+
+    auto grainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+        2,
+        peano::datatraversal::autotuning::MethodTrace::CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid
+      );
+
+    peano::datatraversal::TaskSet(
+      initialiseVertexEnumeratorsTask,
+      invokeEnterCellTask,
+      grainSize.getGrainSize()>0
+    );
+    grainSize.parallelSectionHasTerminated();
   }
 
-  peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatch<Vertex,Cell>
-    initialiseVertexEnumeratorsTask( fineGridVerticesEnumerator, _regularGridContainer );
-
-  peano::grid::nodes::tasks::InvokeEnterCell<Vertex,Cell,State,EventHandle>
-    invokeEnterCellTask( state, fineGridCell, fineGridVertices, fineGridVerticesEnumerator, coarseGridCell, coarseGridVertices, coarseGridVerticesEnumerator, fineGridPositionOfCell, Base::_eventHandle );
-
-  auto grainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
-      2,
-      peano::datatraversal::autotuning::MethodTrace::CallEnterCellAndInitialiseEnumeratorsOnRegularStationaryGrid
-    );
-
-  peano::datatraversal::TaskSet(
-    initialiseVertexEnumeratorsTask,
-    invokeEnterCellTask,
-    grainSize.getGrainSize()>0
-  );
-  grainSize.parallelSectionHasTerminated();
 
   #if defined(SharedMemoryParallelisation)
     assertion2(
