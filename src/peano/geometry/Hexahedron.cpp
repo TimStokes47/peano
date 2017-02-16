@@ -114,7 +114,19 @@ bool peano::geometry::Hexahedron::refineOuterCellWithExclusivelyOuterVerticesAsI
   const tarch::la::Vector<DIMENSIONS,double>&   resolution
 ) const {
   logTraceInWith3Arguments("refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(...)", x, resolution, _width);
-  bool result = tarch::la::oneGreater(resolution, _width / 2.0);
+
+  bool isInsideMinkowskiSum = true;
+  for (int d=0; d<DIMENSIONS; d++) {
+    isInsideMinkowskiSum &= !tarch::la::smallerEquals(x(d),_offset(d)-resolution(d));
+    isInsideMinkowskiSum &= !tarch::la::greaterEquals(x(d),_offset(d)+_width(d)+resolution(d));
+  }
+
+  bool result = isInsideMinkowskiSum && tarch::la::allGreater(resolution,_width/3.0);
+//  bool result = false;
+  if (result) {
+    logInfo("refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(...)",
+      "x=" << x << ",resolution=" << resolution);
+  }
 
   logTraceOutWith1Argument("refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(...)", result);
   return result;
