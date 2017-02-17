@@ -1076,8 +1076,10 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,wor
  pylab.fill_between(ranks, work, color='#0000bb', alpha=0.4)
 
  maxLocalWorkToGetExtraLabel = 0
- ranksWithLabels = len(work)
- while ranksWithLabels > numberOfRanks/10:
+ oldRanksWithLabels  = -1
+ ranksWithLabels     = len(work)
+ while ranksWithLabels > numberOfRanks/10 and oldRanksWithLabels != ranksWithLabels:
+   oldRanksWithLabels = ranksWithLabels
    maxLocalWorkToGetExtraLabel = 0.5 * maxLocalWorkToGetExtraLabel + 0.5 * max(work)
    ranksWithLabels = sum( i>maxLocalWorkToGetExtraLabel for i in work )
  
