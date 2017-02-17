@@ -504,10 +504,10 @@ def plotBoundaryLateSends(numberOfRanks,inputFileName):
   graph              = networkx.DiGraph()
   sparseAverageGraph = networkx.DiGraph()
   sparseMaxGraph     = networkx.DiGraph()
-  for rank in range(0,numberOfRanks):
-    graph.add_node(str(rank))
-    sparseAverageGraph.add_node(str(rank))
-    sparseMaxGraph.add_node(str(rank))
+  #for rank in range(0,numberOfRanks):
+  #  graph.add_node(str(rank))
+  #  sparseAverageGraph.add_node(str(rank))
+  #  sparseMaxGraph.add_node(str(rank))
   for master in range(0,numberOfRanks):
     for worker in range(0,numberOfRanks):
       key = (master, worker)
@@ -599,10 +599,10 @@ def plotMasterWorkerLateSends(numberOfRanks,inputFileName):
   graph              = networkx.DiGraph()
   sparseAverageGraph = networkx.DiGraph()
   sparseMaxGraph     = networkx.DiGraph()
-  for rank in range(0,numberOfRanks):
-    graph.add_node(str(rank))
-    sparseAverageGraph.add_node(str(rank))
-    sparseMaxGraph.add_node(str(rank))
+  #for rank in range(0,numberOfRanks):
+  #  graph.add_node(str(rank))
+  #  sparseAverageGraph.add_node(str(rank))
+  #  sparseMaxGraph.add_node(str(rank))
   for master in range(0,numberOfRanks):
     for worker in range(0,numberOfRanks):
       key = (master, worker)
@@ -674,9 +674,9 @@ def plotLogicalTopology(inputFileName,numberOfRanks,dim):
     offset = [(0.0,0.0,0.0) for x in range(0,numberOfRanks)]
   level = [ 0 for x in range(0,numberOfRanks)]
   
-  topologyGraph = networkx.MultiDiGraph()
-  for rank in range(0,numberOfRanks):
-    topologyGraph.add_node(str(rank))
+  topologyGraph = networkx.DiGraph()
+  #for rank in range(0,numberOfRanks):
+    #topologyGraph.add_node(str(rank))
     #topologyGraph.node[rank]['data']  = True
     #topologyGraph.node[rank]['label']  = str(rank)
   try:
@@ -1087,9 +1087,10 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,wor
      pylab.plot([i,i], [0, volumes[i]], '--', color="#000000") 
 
  ranksWithZeroResponsibility = 0
- while volumes[ranksWithZeroResponsibility]==0.0:
+ while len(volumes)>ranksWithZeroResponsibility and volumes[ranksWithZeroResponsibility]==0.0:
    ranksWithZeroResponsibility = ranksWithZeroResponsibility + 1
- if (ranksWithZeroResponsibility>2):
+
+ if ranksWithZeroResponsibility>2 and len(volumes)>ranksWithZeroResponsibility:
    pylab.text(ranksWithZeroResponsibility,volumes[ranksWithZeroResponsibility]+20,"ranks_per_node")
    pylab.plot([ranksWithZeroResponsibility,ranksWithZeroResponsibility], [0, volumes[ranksWithZeroResponsibility]], '-', color="#000000") 
  
