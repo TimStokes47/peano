@@ -304,6 +304,12 @@ class peano::grid::nodes::loops::StoreVertexLoopBody {
      * is important that not only refining vertices make their coarse grid
      * vertices invalid. Also invalidated vertices have in turn to invalidate
      * their coarse grid vertices.
+     *
+     * <h2> State update </h2>
+     *
+     * Though we invalidate parts of the tree, we do not inform the state about
+     * this. Only refinement information is restricted, i.e. the state already
+     * has to be informed about changes.
      */
     void invalidateCoarseGridTreeHeightAttributesIfRefined(
       int                                       positionInVertexArray,

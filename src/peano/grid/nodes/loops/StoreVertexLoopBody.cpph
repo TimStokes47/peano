@@ -254,11 +254,11 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
     _fineGridVertices[positionInVertexArray].getRefinementControl()          == Vertex::Records::Refining ||
     _fineGridVertices[positionInVertexArray].getCurrentAdjacentCellsHeight() == peano::grid::NotStationaryDueToInvalidation
   ) {
-    _state.updateRefinementHistoryAfterLoad( true, false, false, false );
     dfor2(k)
       const bool takeThisCoarseVertexIntoAccount = peano::grid::SingleLevelEnumerator::doesCoarseGridVertexInfluenceFineGridVertex(k,positionInLocalCell+_fineGridPositionOfCell);
 
       if (takeThisCoarseVertexIntoAccount) {
+        //_state.updateRefinementHistoryAfterLoad( true, false, false, false );
         _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].invalidateAdjacentCellInformation();
       }
     enddforx
