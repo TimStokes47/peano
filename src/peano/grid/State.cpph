@@ -995,7 +995,11 @@ void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
     
 
   #ifdef Parallel
-  if (_loadRebalancingState!=LoadBalancingState::NoRebalancing) {
+  if (
+    _loadRebalancingState!=LoadBalancingState::NoRebalancing
+    || 
+    peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()!=peano::parallel::loadbalancing::LoadBalancingFlag::Continue
+  ) {
     _smallestRegularTreeThatIsToBeHeldPersistently                    = -1;
     _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = -1;
   }
