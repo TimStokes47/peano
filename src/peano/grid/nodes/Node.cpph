@@ -919,16 +919,15 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   }
 
 
-  #ifdef Parallel
-  const bool checkWhetherToRefineOutCell = (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) 
-                                        && !fineGridCell.isRemote(state,false,false) 
-                                        && fineGridCell.isOutside();
-  #else
   const bool checkWhetherToRefineOutCell = (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) 
                                         && fineGridCell.isOutside();
-  #endif
 
-  if (checkWhetherToRefineOutCell) {
+  if (
+    checkWhetherToRefineOutCell
+    #ifdef Parallel
+    && !fineGridCell.isRemote(state,false,false) 
+    #endif
+  ) {
     const bool hasToRefineOuterCellBecauseOfGeometry = 
       _geometry.refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(cellCenter,halfTheCellSize);
     
