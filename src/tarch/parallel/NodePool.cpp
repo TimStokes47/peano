@@ -31,6 +31,7 @@ tarch::parallel::NodePool::NodePool():
   _jobManagementTag(-1),
   _jobServicesTag(-1),
   _isAlive(false),
+  _hasGivenOutRankSizeLastQuery(false),
   _strategy(0) {
   #ifdef Asserts
   _isInitialised = false;
@@ -504,6 +505,8 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
       if ( _isAlive &&  _strategy->hasIdleNode(nextRequestToAnswer.getSenderRank()) ) {
         int activatedNode = _strategy->reserveNode(nextRequestToAnswer.getSenderRank());
 
+        _hasGivenOutRankSizeLastQuery = true;
+
         tarch::parallel::messages::NodePoolAnswerMessage answerMessage( activatedNode );
         answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
 
@@ -580,4 +583,11 @@ bool tarch::parallel::NodePool::isIdleNode( int rank ) const {
   #else
   return rank>0;
   #endif
+}
+
+
+bool tarch::parallel::NodePool::hasGivenOutRankSizeLastQuery() {
+  bool result = _hasGivenOutRankSizeLastQuery;
+  _hasGivenOutRankSizeLastQuery = false;
+  return result;
 }
