@@ -918,33 +918,41 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     }
   }
 
-
-  const bool checkWhetherToRefineOutCell = (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) 
-                                        && fineGridCell.isOutside();
-
   if (
-    checkWhetherToRefineOutCell
+    (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) 
+    && 
+    fineGridCell.isOutside()
     #ifdef Parallel
-    && !fineGridCell.isRemote(state,false,false) 
+    && 
+    !fineGridCell.isRemote(state,true,false) 
     #endif
   ) {
     const bool hasToRefineOuterCellBecauseOfGeometry = 
-      _geometry.refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(cellCenter,halfTheCellSize);
+      _geometry.refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(cellCenter,halfTheCellSize)
+      &&
+      peano::grid::aspects::VertexStateAnalysis::areAllVerticesOutsideDomain(
+        fineGridVertices,
+        fineGridVerticesEnumerator
+      );
     
     #ifdef Parallel
+    bool oneBoundaryVertexIsCritical = false;
+    dfor2(k)
+      oneBoundaryVertexIsCritical |= 
+        (
+          fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Refining
+          &&
+          fineGridVertices[fineGridVerticesEnumerator(k)].isBoundary()
+          &&
+          !fineGridVertices[fineGridVerticesEnumerator(k)].isRemote( state, true, false)
+        );
+    enddforx
+    
     const bool hasToRefineToPreserveRegularityAlongBoundary = 
       fineGridVerticesEnumerator.getLevel() < peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary()
       &&
-      peano::grid::aspects::VertexStateAnalysis::isOneVertexBoundary(
-        fineGridVertices,
-        fineGridVerticesEnumerator
-      )
-      &&
-      !peano::grid::aspects::VertexStateAnalysis::doAllVerticesCarryRefinementFlag(
-        fineGridVertices,
-        fineGridVerticesEnumerator,
-        Vertex::Records::Unrefined
-      );
+      oneBoundaryVertexIsCritical;
+
     #else
     const bool hasToRefineToPreserveRegularityAlongBoundary = false;
     #endif
