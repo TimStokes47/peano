@@ -121,7 +121,7 @@ bool peano::geometry::Hexahedron::refineOuterCellWithExclusivelyOuterVerticesAsI
     isInsideMinkowskiSum &= !tarch::la::greaterEquals(x(d),_offset(d)+_width(d)+resolution(d));
   }
 
-  bool result = isInsideMinkowskiSum && tarch::la::allGreater(resolution,_width/3.0);
+  bool result = isInsideMinkowskiSum && tarch::la::allGreater(resolution,_width/2.0);
   logTraceOutWith1Argument("refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(...)", result);
   return result;
 }
