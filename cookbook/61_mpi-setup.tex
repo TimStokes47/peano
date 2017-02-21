@@ -69,48 +69,54 @@ events into \texttt{touchVertexLastTime()}:
 As a consequence, setting up a (rather regular) grid of depth $k$ requires at
 least $k$ iterations.
 
+This still might be insufficient---it depends strongly on the type of load
+balancing you use; some need several iterations to determine proper rebalancing
+while even your incremental grid construction might already have run into very
+fine grids---so I found it useful to augment the state such that my global
+master can instruct all ranks whether they are allowed to refine or not. 
+Permission is then granted only from time to time.
+
+
 \begin{remark}
- I typically extract the intial grid construction decision into a function of 
- its own. If \texttt{-DParallel} is used, I invoke grid constructions only 
- from \texttt{touchVertexLastTime}. Otherwise, I use it in the creational 
- routines for inner and boundary vertices. For this strategy, we have to ensure
- that touch last is not set to \texttt{Nop} in the specification attributes if
- we compile with MPI.
+ I present a sophisticated yet very simple grid construction pattern not
+ replicating any refinement code throughout Section
+ \ref{subsection:mpi-setup:slow-incremental-setup}.
 \end{remark}
 
-In a second step, you might consider to extend your grid only every second
-traversal.
-Everytime you rebalance your grid, Peano disables dynamic load balancing
-for a couple of iterations (three or four). Throughout these iterations, it
-can recover all adjacency information if the grid itself changes as well.
-Consequently, it does make sense to add a couple of adapter runs after each
-grid modification that to not change the grid structure: When you know that
-you have an adapter that changes the grid, apply afterwards an adapter that
-does not change the grid for a couple of times. This way, you ensure that no
-mpi rank runs out of memory. The grid generation does not overtake the rebalancing.
-I often do not use an additional adapter but ensure that refines are only called
-if the tree traversal direction is not inverted: 
-Peano runs forth and back through the grid, so this effectively switches off
-refinement every second iteration. 
-
-The deluxe version is a code that refines only if the previous grid traversal
-did not change the mesh, if no load balancing is going anymore and, for example,
-\texttt{isTraversalInverted()} does not hold. This postpones any refinement
-further.
-However, such an approach is a bad idea if no idle nodes are available anymore. 
-In this case, it is better not to veto the refinement anymore.
-This situation is discussed in the following bad smell, where we propose a
-sophisticated solution to both smells.
+% In a second step, you might consider to extend your grid only every second
+% traversal.
+% Everytime you rebalance your grid, Peano disables dynamic load balancing
+% for a couple of iterations (three or four). Throughout these iterations, it
+% can recover all adjacency information if the grid itself changes as well.
+% Consequently, it does make sense to add a couple of adapter runs after each
+% grid modification that to not change the grid structure: When you know that
+% you have an adapter that changes the grid, apply afterwards an adapter that
+% does not change the grid for a couple of times. This way, you ensure that no
+% mpi rank runs out of memory. The grid generation does not overtake the rebalancing.
+% I often do not use an additional adapter but ensure that refines are only called
+% if the tree traversal direction is not inverted: 
+% Peano runs forth and back through the grid, so this effectively switches off
+% refinement every second iteration. 
+% 
+% The deluxe version is a code that refines only if the previous grid traversal
+% did not change the mesh, if no load balancing is going anymore and, for example,
+% \texttt{isTraversalInverted()} does not hold. This postpones any refinement
+% further.
+% However, such an approach is a bad idea if no idle nodes are available anymore. 
+% In this case, it is better not to veto the refinement anymore.
+% This situation is discussed in the following bad smell, where we propose a
+% sophisticated solution to both smells.
 
 
 
 \subsection{Incremental, slow grid setup though detailed grid structure is
 known/all nodes are already busy}
+\label{subsection:mpi-setup:slow-incremental-setup}
 
 
 \begin{smell}
-The grid is static, but, nevertheless, Peano needs lots of iterations to finally
-build it up. Even worse, there are no idle nodes left and we know analytically
+The grid is static/known, but, nevertheless, Peano
+needs lots of iterations to finally build it up. Even worse, there are no idle nodes left and we know analytically
 what the grid should look like.
 The grid construction thus should rush through in one iteration.
 \end{smell}
@@ -134,7 +140,7 @@ vertices are replicated not held synchronous.
 
 This behaviour implies that the grid can be built up at most by one level per
 iteration along domain boundaries.
-Therefore, we often see codes running many iterations until a regular grid is
+Therefore, we often see codes running many iterations until a  grid is
 built up completely.
 Often, this is not necessary as all ranks would know without any data
 exchange where to refine (a certain mesh size might be prescribed, e.g.).
@@ -143,197 +149,202 @@ mode that tells the code not to bother about data consistency and to refine
 everywhere. 
 Basically, the user tells the grid that he accepts responsibility to call 
 \texttt{enforceRefine} on all replicants of a vertex.
+We may not use the enforced refinement if we still want Peano to load
+balance/split the grid; if we used the enforce, our strategy would render all
+discussions from the previous section useless.
+
+
+\begin{solution}
+Use \texttt{enforceRefine} once no idle ranks are left anymore for all grid
+refinement where all ranks know a priori that they have to refine.
+\end{solution}
+
 
 We have to be very careful to use the enforced refinement.
 We may use it if and only if there are no more idle nodes available and if all
 previous forks and joins have successfully passed through. 
-This is furthermore information that is available only on the global master. 
+This is information that is available only on the global master. 
 
-We thus propose to augment the \texttt{State.def} by a new flag:
-\begin{code}
-  #ifdef Parallel
-  enum GridConstructionState {
-    Default, Veto, Aggressive
-  };
-  
-  parallelise persistent GridConstructionState  gridConstructionState; 
-  #endif
-\end{code}
+%\begin{remark}
+A working and simple grid setup pattern is described as follows:
+\begin{enumerate}
+  \item We add a field
+    \begin{code}
+      persistent parallelise int maxRefinementLevelAllowed;
+    \end{code}
+    to the \texttt{State.def} it will keep track to which degree any rank is
+    allowed to refine the grid. 
+    The semantics of this field are as follows:
+    \begin{center}
+     \begin{tabular}{lp{12cm}}
+       Value & Semantics \\
+       \hline
+       0 & Initial value \\
+         & No refinement is permitted. 
+       \\
+       \hline
+       $>0$ & Whenever we end a sweep where no rebalancing has been made at all
+       and the grid hasn't changed in this sweep (is stationary), i.e.~no new
+       ranks have entered the game, we increment the counter.
+       Refinements are allowed up to the level of
+       \texttt{maxRefinementLevelAllowed}. Refinement beyond that are vetoed. 
+       \\
+       \hline
+       -1 & Value is set as soon as there are no idle ranks left anymore. \\
+          & Allow standard refinements in both creational and non-creational
+          events. \\
+          & After the next iteration, reduce \texttt{maxRefinementLevelAllowed}
+          to -2.
+       \\
+       \hline
+       -2 & We know that no idle workers are left anymore and that another sweep
+       has already terminated since the last worker has been given out, i.e.,
+       we may assume that all workers now have joined the game and the forks
+       have completed (a fork needs two iterations to finish; one to exchange
+       administrative/meta data and one to transfer the actual data). From
+       hereon, we may safely use the enforced refinement without boundary data
+       exchange if we know the adaptivity pattern on each rank.
+     \end{tabular}
+    \end{center}
 
-\noindent
-Per rank, we now create a copy of the global state that is propagated through
-the tree (the state is used to determine the refinement strategy)
-\begin{code}
-  _localState = solverState;
-\end{code}
+  \item We augment the state: from hereon, the state can co-decide whether and
+    how a mapping refines:
+    \begin{code}
+    // Has to be called after the iteration!
+    void endedLoadBalancingIteration();
 
-\noindent
-and we furthermore plug into the mapping's \texttt{endIteration} on modify this
-global state on the global master. 
-It has to be the global master as only the global master may ask the node pool
-about idle nodes. 
-Furthermore, it knows the (fork/join) state of all other ranks.
-It is important to plug into \texttt{endIteration}, as this is the earliest
-point where we have all information about the grid state at hands. 
-The underlying status variables all are accumulated, i.e.~they might be already
-cleared in the subsequent \texttt{beginIteration}:
-\begin{code}
-  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
-    solverState.updateRegularInitialGridRefinementStrategy();
+    enum RefinementAnswer {
+      DontRefineYet,
+      Refine,
+      EnforceRefinement
+    };
+    RefinementAnswer mayRefine(bool isCreationalEvent, int level) const;
+    \end{code}
+
+
+  \item We update the state after each grid setup run. Code then might
+  look similar to
+    \begin{code}
+  while (...) {
+    repository.iterate();
+    logInfo(
+      "runAsMaster()",
+      "ran setup iteration with " <<
+      tarch::parallel::NodePool::getInstance().getNumberOfWorkingNodes()
+      << " working nodes; state=" << repository.getState().toString()
+    );
+    repository.getState().endedGridConstructionIteration();
   }
-\end{code}
+    \end{code}
 
-\noindent
-The state transitions then are
-\begin{code}
-void exahype::State::updateRegularInitialGridRefinementStrategy() {
-  assertion( tarch::parallel::Node::getInstance().isGlobalMaster() );
-
-  #ifdef Parallel
+  \item We restructure the grid creation mapping. Both
+    \texttt{createInnerVertex}, \texttt{createBoundaryVertex} and
+    \texttt{touchVertexLastTime} now call a routine \texttt{refineIfNecessary}
+    that we make accept a boolean that tells it whether it has been invoked by a
+    creational event.
+    \begin{code}
+void ...::mappings::...::refineIfNecessary(
+  ...::Vertex&  fineGridVertex,
+  ...,
+  int           fineGridLevel,
+  bool          isCreationalRoutine
+) {
   if (
-    tarch::parallel::Node::getInstance().getNumberOfNodes()==1
-    ||
-    _stateData.getGridConstructionState()==exahype::records::State::Aggressive
-  ) {
-    _stateData.setGridConstructionState( exahype::records::State::Aggressive );
-  }
-  else if (
-    tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()==0
+    my code wants to refine
     &&
-    isGridStationary()
+    fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
   ) {
-    _stateData.setGridConstructionState( exahype::records::State::Aggressive );
-  }
-  else if (
-    isInvolvedInJoinOrFork()
-    ||
-    !isGridStationary()
-  ) {
-    _stateData.setGridConstructionState( exahype::records::State::Veto );
-  }
-  else {
-    _stateData.setGridConstructionState( exahype::records::State::Default );
-  }
-  #endif
-}
-
-bool myproject::State::refineInitialGridInCreationalEvents() const {
-  #ifdef Parallel
-  return _stateData.getGridConstructionState() == myproject::records::State::Aggressive;
-  #else
-  return true;
-  #endif
-}
-
-bool myproject::State::refineInitialGridInTouchVertexLastTime() const {
-  #ifdef Parallel
-  return _stateData.getGridConstructionState() != myproject::records::State::Veto;
-  #else
-  return false;
-  #endif
-}
-\end{code}
-
-\noindent
-and we invoke our refinement from the creational vertex events as well as
-\texttt{touchVertexLastTime} if the corresponding state predicates hold.
-Finally, we make the refinement fall back to an enforced refinement if the state
-permits us to do so:
-\begin{code}
-void myproject::mappings::RegularMesh::refineVertexIfNecessary(
-  exahype::Vertex&                              fineGridVertex,
-  const tarch::la::Vector<DIMENSIONS, double>&  fineGridH,
-  bool                                          isCalledByCreationalEvent
-) const {
-  if (
-    fineGridVertex.getRefinementControl() == Vertex::Records::Unrefined
-    &&
-    I want to refine and know this a priori
-  ) {
-    #ifdef Parallel
-    if (isCalledByCreationalEvent) {
-      fineGridVertex.enforceRefine();
+    switch ( _state.mayRefine(isCreationalRoutine,fineGridLevel) ) {
+      case State::RefinementAnswer::DontRefineYet:
+        break;
+      case State::RefinementAnswer::Refine:
+        fineGridVertex.refine();
+        break;
+      case State::RefinementAnswer::EnforceRefinement:
+        fineGridVertex.enforceRefine();
+        break;
     }
-    else {
-      fineGridVertex.refine();
-    }
-    #else
-    fineGridVertex.refine();
-    #endif
   }
 }
-\end{code}
-
-% \begin{remark}
-% If you decide to activate your grid refinement only every second iteration
-% (\texttt{isTraversalInverted}), then it makes sense to do always two iterations
-% in the loop body that runs the grid construction steps until
-% \texttt{isGridBalanced} holds. This way, you never miss a refinement. 
-% \end{remark}
-
-\noindent
-Creating a good runner that does not stop a grid setup too early, i.e.~before
-the grid is built up completely and all load balancing has terminated, often
-looks similar to
-\begin{code}
-int gridSetupIterations      = 0;
-int gridSetupIterationsToRun = 3;
-while (gridSetupIterationsToRun>0) {
-  repository.iterate();
-  gridSetupIterations++;
-   
-  if ( UseStationaryCriterion && repository.getState().isGridStationary() ) {
-    gridSetupIterationsToRun--;
-  }
-  else if ( !repository.getState().isGridBalanced() && 
-    tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()>0 ) {
-    gridSetupIterationsToRun=3;  // we need at least 3 sweeps to recover from ongoing lb 
-  }
-  else if ( !repository.getState().isGridBalanced()  ) {
-    gridSetupIterationsToRun=1;  // one additional step to get adjacency right
-  }
-  else {
-    gridSetupIterationsToRun--;
-  }
-}
-\end{code}
-
-
-\begin{remark}
-Often the pattern above still allows for a too aggressive grid creation if the
-load balancing is very conservative and careful, i.e.~does only remove small
-fragments of the domain at a time. If this is the case, I found it advantageous
-to make the state of the global master memorise the number of idle ranks after
-each decision. If it recognises that some load balancing just has happened, it
-might decide to postpone further grid refinements.
+    \end{code} 
+    The routine basically delegates the real refinement decision to the state. 
+  \item So, finally, the state has to define whether to refine or not. We
+  accomplish this through two routines:
   \begin{code}
-void exahype::State::updateRegularInitialGridRefinementStrategy() {
-  [...]
-  else if ( 
-      isInvolvedInJoinOrFork()
-    ||
-    !isTraversalInverted()
-    ||
-    !isGridStationary()
-  ) {
-    _stateData.setGridConstructionState( exahype::records::State::Veto );
+void storageschemes::State::endedGridConstructionIteration() {
+  const bool idleNodesLeft = 
+    tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes() > 0;
+  const bool nodePoolHasGivenOutRankSizeLastQuery = 
+    tarch::parallel::NodePool::getInstance().hasGivenOutRankSizeLastQuery();
+
+  if (!idleNodesLeft && _stateData.getMaxRefinementLevelAllowed()>=0) {
+    _stateData.setMaxRefinementLevelAllowed(-1);
+  }
+  else if (!idleNodesLeft && _stateData.getMaxRefinementLevelAllowed()==-1) {
+    _stateData.setMaxRefinementLevelAllowed(-2);
   }
   else if (
-    _idleRanksAtLastLookup != tarch::parallel::NodePool::getInstance().
-      getNumberOfIdleNodes()
+      !(nodePoolHasGivenOutRankSizeLastQuery)
+    && isGridStationary()
   ) {
-    _stateData.setGridConstructionState( exahype::records::State::Veto );
-    _idleRanksAtLastLookup = tarch::parallel::NodePool::getInstance().
-      getNumberOfIdleNodes();
+    _stateData.setMaxRefinementLevelAllowed(
+      _stateData.getMaxRefinementLevelAllowed()+1);
+  }
+}
+  \end{code}
+  
+  \noindent
+  Our \texttt{maxRefinementLevelAllowed} acts as a guardian for the refinement.
+  It is updated on the global master after each traversal and then propagates to
+  all children. 
+
+  \begin{code}
+...::State::RefinementAnswer ...::State::mayRefine(
+  bool isCreationalEvent, int level) const 
+{ 
+  #ifdef Parallel
+  if (
+    _stateData.getMaxRefinementLevelAllowed()<=-2
+    &&
+    isCreationalEvent
+  ) {
+    return RefinementAnswer::EnforceRefinement;
+  }
+  else if ( _stateData.getMaxRefinementLevelAllowed()<0 ) {
+    return RefinementAnswer::Refine;
+  }
+  else if (
+    _stateData.getMaxRefinementLevelAllowed()>level
+    &&
+    !isCreationalEvent
+    &&
+    mayForkDueToLoadBalancing()
+  ) {
+    return RefinementAnswer::Refine;
   }
   else {
-    _stateData.setGridConstructionState( exahype::records::State::Default );
+    return RefinementAnswer::DontRefineYet;
   }
-  [...]
+  #else
+  if (isCreationalEvent) {
+    return storageschemes::State::RefinementAnswer::Refine;
+  }
+  else {
+    return storageschemes::State::RefinementAnswer::DontRefineYet;
+  }
+  #endif
 }
-
   \end{code}
-\end{remark}
+  
+  \noindent
+  The serial variant of this routine is straightforward: we refine within the
+  creational events. The parallel version makes distinctions depening on
+  \texttt{maxRefinementLevelAllowed}.
+\end{enumerate}
+%\end{remark}
+
+
+%endedGridConstructionIteration
 
 \subsection{The load balancing kicks in immediately while I build up my grid but it
 yields non-reasonable partitions}
