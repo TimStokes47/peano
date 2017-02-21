@@ -477,8 +477,6 @@ class peano::grid::Vertex {
     void setPosition( const tarch::la::Vector<DIMENSIONS,double>&  x, int level );
     #endif
 
-    #ifdef Parallel
-
     /**
      * Enforce an immediate refine.
      *
@@ -489,9 +487,20 @@ class peano::grid::Vertex {
      * enforceRefine() does not postpone the refinement. Thus, you have to
      * ensure yourself that the grid remains consistent, i.e. all ranks holding
      * a copy of this vertex call enforceRefine() in the same grid sweep.
+     *
+     * <h2> Semantics without MPI </h2>
+     *
+     * I have introduced enforceRefine for MPI codes to allow them to refine
+     * without any communication with neighbour ranks. Without such a routine, a
+     * code can add at most one grid level per grid sweep. In a serial code,
+     * enforceRefine() does not make sense - whenever refine is triggered in
+     * touchVertexFirstTime() or a creational event, the refine is done
+     * immediately. Nevertheless, I do support enforceRefine() in a serial
+     * code. It however just delegates to refine().
      */
     void enforceRefine();
 
+    #ifdef Parallel
     /**
      * Set flag that blocks erases.
      *

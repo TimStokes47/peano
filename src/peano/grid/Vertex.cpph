@@ -484,17 +484,21 @@ tarch::la::Vector<DIMENSIONS,double> peano::grid::Vertex<VertexData>::getX() con
 #endif
 
 
-#ifdef Parallel
 template <class VertexData>
 void peano::grid::Vertex<VertexData>::enforceRefine() {
+  #ifdef Parallel
   assertion2( !_vertexData.getIsHangingNode(), toString(), "may not call enforceRefine on hanging node" );
   assertion2( _vertexData.getRefinementControl()==VertexData::Unrefined, toString(), "tried to call enforceRefine on vertex that was already refined" );
 
   _vertexData.setRefinementControl(VertexData::EnforceRefinementTriggered);
   _vertexData.setAdjacentCellsHeight( peano::grid::NotStationary );
+  #else
+  refine();
+  #endif
 }
 
 
+#ifdef Parallel
 template <class VertexData>
 template <class State>
 bool peano::grid::Vertex<VertexData>::isRemote(
