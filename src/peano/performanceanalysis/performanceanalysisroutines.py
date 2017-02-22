@@ -1044,7 +1044,9 @@ def computeVolumesOverlapsWork(numberOfRanks,volume,offset,dim,domainoffset,doma
             ", volume= " + str(volumes[i]) + ", overlaps=" + str(overlaps[i]) 
   work = [x for x in overlaps]
   for i in range(1,numberOfRanks):
-    if work[ parents[i] ]<overlaps[i]:
+    if work[ parents[i] ]<overlaps[i] and i==1:
+      print "INFO: global root seems to delegate all work to another rank and to focus on load balancing. Decrement rank count when plotting performance graphs accordingly." 
+    elif work[ parents[i] ]<overlaps[i]:
       print "WARNING: work of rank " + str(parents[i]) + " will become negative as overlap of rank " + str(i) + " equals " + str(overlaps[i]) 
     work[ parents[i] ] = work[ parents[i] ] - overlaps[i]
   work[0] = 0.0     # can become negative
