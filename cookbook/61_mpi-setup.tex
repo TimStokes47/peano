@@ -211,7 +211,7 @@ A working and simple grid setup pattern is described as follows:
     how a mapping refines:
     \begin{code}
     // Has to be called after the iteration!
-    void endedLoadBalancingIteration();
+    void endedGridConstructionIteration();
 
     enum RefinementAnswer {
       DontRefineYet,
@@ -272,23 +272,29 @@ void ...::mappings::...::refineIfNecessary(
   accomplish this through two routines:
   \begin{code}
 void storageschemes::State::endedGridConstructionIteration() {
-  const bool idleNodesLeft = 
-    tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes() > 0;
-  const bool nodePoolHasGivenOutRankSizeLastQuery = 
-    tarch::parallel::NodePool::getInstance().hasGivenOutRankSizeLastQuery();
+  const bool idleNodesLeft 
+    = tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()>0;
+  const bool nodePoolHasGivenOutRankSizeLastQuery 
+    = tarch::parallel::NodePool::getInstance().hasGivenOutRankSizeLastQuery();
+  static bool traversalsThatWouldHaveBeenAbleToIncreaseLevelInLastSweepInLastSweep 
+    = false;
 
   if (!idleNodesLeft && _stateData.getMaxRefinementLevelAllowed()>=0) {
     _stateData.setMaxRefinementLevelAllowed(-1);
   }
-  else if (!idleNodesLeft && _stateData.getMaxRefinementLevelAllowed()==-1) {
+  else if (!idleNodesLeft && _stateData.getMaxRefinementLevelAllowed()<=-1) {
     _stateData.setMaxRefinementLevelAllowed(-2);
   }
-  else if (
-      !(nodePoolHasGivenOutRankSizeLastQuery)
-    && isGridStationary()
+  else if ( nodePoolHasGivenOutRankSizeLastQuery && isGridStationary()
+    && !traversalsThatWouldHaveBeenAbleToIncreaseLevelInLastSweepInLastSweep
   ) {
+    traversalsThatWouldHaveBeenAbleToIncreaseLevelInLastSweepInLastSweep = true;
+    changedCellState();
+  }
+  else if ( nodePoolHasGivenOutRankSizeLastQuery && isGridStationary() ) {
     _stateData.setMaxRefinementLevelAllowed(
       _stateData.getMaxRefinementLevelAllowed()+1);
+    traversalsThatWouldHaveBeenAbleToIncreaseLevelInLastSweepInLastSweep = false;
   }
 }
   \end{code}
@@ -340,6 +346,43 @@ void storageschemes::State::endedGridConstructionIteration() {
   The serial variant of this routine is straightforward: we refine within the
   creational events. The parallel version makes distinctions depening on
   \texttt{maxRefinementLevelAllowed}.
+  There are a few subtle issues here that result from lessons learned:
+  Once all nodes are booked, i.e.~no more nodes are idle, we may not immediately
+  switch on the enforced refinement. We have to wait one more sweep to allow the
+  very last MPI rank that started its work to join the computation completely
+  (Peano forks always require two grid sweeps). Therefore, we run the index from
+  -1 to -2 before we enable the enforcement. Once a grid becomes stationary and
+  no more ranks have joined the game in an iteration, we do not immediately
+  increase the maximum refinement level. Instead, we memorise this situation in
+  a static bool and then, if the situation hasn't changed, increase the maximum
+  refinement level. This way, we allow any load balancing to decide that even on
+  the coarser levels there's still some decomposition to be made. Actually, we
+  postpone the increase of the level once more: we memorise that we might
+  increase the level, and then set the grid to invariant. This way, we enforce
+  that the grid does not become balanced which in turn means that the next time
+  we run into the routine no forking branch is entered.
+  
+ \item (Optional) It did pay off in my applications to alter grid
+ construction iterations making them use the more sophisticated state, too: 
+  \begin{code}
+  int sweepsWithBalancedGrid = 0;
+  while ( sweepsWithBalancedGrid<3 ) {
+    repository.iterate();
+    sweepsWithBalancedGrid = repository.getState().isGridBalanced() ? 
+      sweepsWithBalancedGrid+1 : 0;
+    if (repository.getState().mayRefine(true,std::numeric_limits<int>::max())) {
+      sweepsWithBalancedGrid = 3;
+    }
+    repository.getState().endedLoadBalancingIteration();
+  }
+  \end{code}
+  Here, we terminate the construction immediately one we bump into the enforce
+  refinement: We know that now the grid will be built up completely, so we wait
+  one more grid sweep (therefore
+  we have to insert the if statement just before
+  \texttt{endedLoadBalancingIteration}) until all refinements have passed
+  through, end then we terminate the loop. There's no need to wait for the grid
+  to become balanced.
 \end{enumerate}
 %\end{remark}
 
