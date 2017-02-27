@@ -9,6 +9,10 @@
 #include <sstream>
 
 
+#include <cerrno>
+#include <cstring>
+
+
 tarch::logging::Log                 peano::datatraversal::autotuning::Oracle::_log( "peano::datatraversal::autotuning::Oracle" ) ;
 tarch::multicore::BooleanSemaphore  peano::datatraversal::autotuning::Oracle::_semaphore;
 
@@ -58,7 +62,7 @@ void peano::datatraversal::autotuning::Oracle::plotStatistics(const std::string&
       f.close();
     }
     else {
-      logError("plotStatistics", "could not write into " << filename);
+      logError("plotStatistics", "could not write into " << filename << ", error message: " << std::strerror(errno) );
     }
   }
   else {
