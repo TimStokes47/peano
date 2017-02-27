@@ -48,7 +48,10 @@ class tarch::plotter::griddata::Writer {
 
     virtual ~Writer() {}
 
-    virtual void writeToFile( const std::string& filename ) = 0;
+    /**
+     * @return Write has been successful
+     */
+    virtual bool writeToFile( const std::string& filename ) = 0;
 
     /**
      * @return Whether writer is ready to accept data.

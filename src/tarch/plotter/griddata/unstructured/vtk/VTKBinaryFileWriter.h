@@ -103,7 +103,7 @@ class tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter:
 
     virtual bool isOpen();
 
-    virtual void writeToFile( const std::string& filename );
+    virtual bool writeToFile( const std::string& filename );
 
     virtual void clear();
 

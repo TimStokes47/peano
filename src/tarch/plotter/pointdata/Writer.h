@@ -46,7 +46,7 @@ class tarch::plotter::pointdata::Writer {
 
     virtual ~Writer() {}
 
-    virtual void writeToFile( const std::string& filename ) = 0;
+    virtual bool writeToFile( const std::string& filename ) = 0;
 
     /**
      * @return Whether writer is ready to accept data.

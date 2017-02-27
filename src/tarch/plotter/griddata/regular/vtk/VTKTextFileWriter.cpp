@@ -46,7 +46,7 @@ tarch::plotter::griddata::regular::vtk::VTKTextFileWriter::~VTKTextFileWriter() 
 }
 
 
-void tarch::plotter::griddata::regular::vtk::VTKTextFileWriter::writeToFile( const std::string& filename ) {
+bool tarch::plotter::griddata::regular::vtk::VTKTextFileWriter::writeToFile( const std::string& filename ) {
   logTraceInWith5Arguments( "writeToFile(filename)", filename, _writtenToFile, _numberOfGridPoints, _domainSize, _origin );
 
   std::ofstream out;
@@ -119,9 +119,12 @@ void tarch::plotter::griddata::regular::vtk::VTKTextFileWriter::writeToFile( con
     }
 
     _writtenToFile = true;
+    logTraceOut( "writeToFile(filename)" );
+    return true;
   }
   else {
     logError( "writeToFile(filename)", "failed to write to file " << filename );
+    logTraceOut( "writeToFile(filename)" );
+    return false;
   }
-  logTraceOut( "writeToFile(filename)" );
 }

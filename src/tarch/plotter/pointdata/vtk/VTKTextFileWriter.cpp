@@ -21,8 +21,8 @@ tarch::plotter::pointdata::Writer::PointDataWriter*    tarch::plotter::pointdata
 }
 
 
-void tarch::plotter::pointdata::vtk::VTKTextFileWriter::writeToFile( const std::string& filename ) {
-  _vtkWriter.writeToFile(filename);
+bool tarch::plotter::pointdata::vtk::VTKTextFileWriter::writeToFile( const std::string& filename ) {
+  return _vtkWriter.writeToFile(filename);
 }
 
 

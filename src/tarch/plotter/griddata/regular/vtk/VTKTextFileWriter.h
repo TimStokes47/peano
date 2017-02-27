@@ -62,9 +62,8 @@ class tarch::plotter::griddata::regular::vtk::VTKTextFileWriter:
     virtual ~VTKTextFileWriter();
 
     /**
-     * t.b.d.
      */
-    virtual void writeToFile( const std::string& filename );
+    virtual bool writeToFile( const std::string& filename );
 };
 
 #endif

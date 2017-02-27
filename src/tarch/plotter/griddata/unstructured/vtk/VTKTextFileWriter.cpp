@@ -44,7 +44,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::clear() {
 }
 
 
-void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::writeToFile( const std::string& filename ) {
+bool tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::writeToFile( const std::string& filename ) {
   assertion( !_writtenToFile );
 
   if (filename.rfind(".vtk")==std::string::npos) {
@@ -81,12 +81,13 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::writeToFile
     }
 
     _log.debug( "close()", "data written to " + filename );
+    _writtenToFile = true;
+    return true;
   }
   else {
   	_log.error( "close()", "unable to write output file " + filename );
+  	return false;
   }
-
-  _writtenToFile = true;
 }
 
 

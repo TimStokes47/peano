@@ -57,7 +57,7 @@ class tarch::plotter::pointdata::vtk::VTKTextFileWriter: public tarch::plotter::
 
     virtual ~VTKTextFileWriter();
 
-    virtual void writeToFile( const std::string& filename );
+    virtual bool writeToFile( const std::string& filename );
 
     /**
      * @return Whether writer is ready to accept data.

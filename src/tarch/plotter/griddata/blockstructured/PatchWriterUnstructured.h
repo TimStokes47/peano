@@ -101,7 +101,7 @@ class tarch::plotter::griddata::blockstructured::PatchWriterUnstructured:
      * close the SinglePatchWriter, then the data writers and finally send
      * the data to a file.
      */
-    virtual void writeToFile( const std::string& filename );
+    virtual bool writeToFile( const std::string& filename );
 
     /**
      * Delegate

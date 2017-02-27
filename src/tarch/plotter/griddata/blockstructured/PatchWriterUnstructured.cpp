@@ -27,11 +27,11 @@ tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::~PatchWriter
 }
 
 
-void tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::writeToFile( const std::string& filename ) {
+bool tarch::plotter::griddata::blockstructured::PatchWriterUnstructured::writeToFile( const std::string& filename ) {
   assertionMsg( _vertexWriter==nullptr, "call close() on patch writer before" );
   assertionMsg( _cellWriter==nullptr,   "call close() on patch writer before" );
 
-  _writer->writeToFile( filename );
+  return _writer->writeToFile( filename );
 }
 
 
