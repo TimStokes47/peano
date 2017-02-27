@@ -474,7 +474,6 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
 
       if ( partitioner.hasSuccessfullyReservedAdditionalWorkers() )  {
         logDebug( "splitUpGrid(...)", "fork has been successful with " << partitioner.getNumberOfReservedWorkers() << " new workers on local identifier " << localInnerCells );
-        logInfo( "splitUpGrid(...)", "fork has been successful with " << partitioner.getNumberOfReservedWorkers() << " new workers on local identifier " << localInnerCells );
         partitioner.sendForkMessages(
           fineGridVerticesEnumerator.getVertexPosition(),
           newFineGridVerticesEnumerators[0].getCellSize(),
