@@ -1033,5 +1033,8 @@ template <class StateData>
 void peano::grid::State<StateData>::informToDrainPersistentSubtreesBecauseOfFork() {
   #ifdef PersistentRegularSubtrees
   _smallestRegularTreeThatIsToBeHeldPersistently = -1;
+  // we may not do this because if we do this, then the grid never becomes balanced
+  // if any node wants to load balance
+  // changedCellState();
   #endif
 }
