@@ -65,7 +65,7 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
   assertion( _cellListEntries>=0 );
 
   _currentCellNumber ++;
-  _currentCellOffset += 5;
+  _currentCellOffset += 4;
 
   _offsetsOut       << _currentCellOffset << " ";
   _connectivityOut
@@ -85,7 +85,7 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
   assertion( _cellListEntries>=0 );
 
   _currentCellNumber ++;
-  _currentCellOffset += 3;
+  _currentCellOffset += 2;
 
   _offsetsOut       << _currentCellOffset << " ";
   _connectivityOut
@@ -103,7 +103,7 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
   assertion( _cellListEntries>=0 );
 
   _currentCellNumber ++;
-  _currentCellOffset += 4;
+  _currentCellOffset += 3;
 
   _offsetsOut       << _currentCellOffset << " ";
   _connectivityOut
