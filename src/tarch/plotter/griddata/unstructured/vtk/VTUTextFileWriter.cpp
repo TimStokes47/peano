@@ -52,7 +52,7 @@ bool tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeToFile
     _log.debug( "close()", "opened data file " + filename );
 
     out << HEADER << std::endl << std::endl
-        << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\" compressor=\"vtkZLibDataCompressor\">" << std::endl
+        << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl
         << "<UnstructuredGrid>" << std::endl
         << "<Piece NumberOfPoints=\"" << _numberOfVertices << "\" NumberOfCells=\"" << _numberOfCells << "\">" << std::endl
         << _vertexDescription << std::endl

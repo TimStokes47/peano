@@ -1,4 +1,5 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTUBinaryFileWriter.h"
+#include "tarch/plotter/ByteSwap.h"
 
 #include <iomanip>
 
@@ -39,9 +40,31 @@ int tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexWrit
   assertion1( position(2)==position(2), position );
 
   _currentVertexNumber++;
-  _out << position(0) << " "
-       << position(1) << " "
-       << position(2) << std::endl;
+
+  if (_myWriter._dataType.compare( "Float32" ) ==0 ){
+    float tmp;
+    tmp = position(0);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = position(1);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = position(2);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+  } else {
+    double tmp;
+    tmp = position(0);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = position(1);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+    tmp = position(2);
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+  }
+
   return _currentVertexNumber-1;
 }
 
@@ -51,8 +74,8 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexWri
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
 
   _myWriter._numberOfVertices  = _currentVertexNumber;
-  _myWriter._vertexDescription = "<Points><DataArray type=\"" + _dataType + "\" NumberOfComponents=\"3\" format=\"ascii\">"
-                               + _out.str()
-                               + "</DataArray></Points>";
+  _myWriter._vertexDescription << "<Points><DataArray type=\"" + _dataType + "\" NumberOfComponents=\"3\" format=\"binary\">"
+                               << _out.str()
+                               << "</DataArray></Points>";
   _currentVertexNumber         = -1;
 }

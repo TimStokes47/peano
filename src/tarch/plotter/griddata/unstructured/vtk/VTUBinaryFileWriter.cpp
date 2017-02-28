@@ -32,15 +32,17 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::clear() {
   _writtenToFile       = false;
   _numberOfVertices    = 0;
   _numberOfCells       = 0;
-  _vertexDescription      = "";
-  _cellDescription        = "";
-  _vertexDataDescription  = "";
-  _cellDataDescription    = "";
+  _vertexDescription.clear();
+  _cellDescription.clear();
+  _vertexDataDescription.clear();
+  _cellDataDescription.clear();
 }
 
 
 bool tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::writeToFile( const std::string& filename ) {
   assertion( !_writtenToFile );
+
+  logError( "writeToFile(std::string)", "The VTU binary write is under construction. We do not recommend to use it. ");
 
   if (filename.rfind(".vtu")==std::string::npos) {
     logWarning( "writeToFile()", "filename should end with .vtu but is " << filename );
@@ -52,16 +54,16 @@ bool tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::writeToFi
     _log.debug( "close()", "opened data file " + filename );
 
     out << HEADER << std::endl << std::endl
-        << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\" compressor=\"vtkZLibDataCompressor\">" << std::endl
+        << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl
         << "<UnstructuredGrid>" << std::endl
         << "<Piece NumberOfPoints=\"" << _numberOfVertices << "\" NumberOfCells=\"" << _numberOfCells << "\">" << std::endl
-        << _vertexDescription << std::endl
-        << _cellDescription << std::endl
+        << _vertexDescription.rdbuf() << std::endl
+        << _cellDescription.rdbuf() << std::endl
         <<  "<PointData>" << std::endl
-        << _vertexDataDescription << std::endl
+        << _vertexDataDescription.rdbuf() << std::endl
         << "</PointData>" << std::endl
         << "<CellData>" << std::endl
-        << _cellDataDescription << std::endl
+        << _cellDataDescription.rdbuf() << std::endl
         << "</CellData>\n\
         </Piece>\n\
       </UnstructuredGrid>\n\

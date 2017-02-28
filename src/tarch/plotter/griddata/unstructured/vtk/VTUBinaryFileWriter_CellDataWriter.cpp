@@ -1,3 +1,4 @@
+#include "tarch/plotter/ByteSwap.h"
 #include "tarch/plotter/griddata/unstructured/vtk/VTUBinaryFileWriter.h"
 
 #include <limits>
@@ -64,7 +65,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::CellDataW
 
   if (_lastWriteCommandCellNumber>=-1) {
     _out << "</DataArray>" << std::endl;
-    _myWriter._cellDataDescription += _out.str();
+    _myWriter._cellDataDescription << _out.str();
   }
   _lastWriteCommandCellNumber = -2;
 }

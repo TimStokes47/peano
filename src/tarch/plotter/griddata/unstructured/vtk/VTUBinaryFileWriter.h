@@ -72,10 +72,10 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
      */
     int _numberOfCells;
 
-    std::string _vertexDescription;
-    std::string _cellDescription;
-    std::string _vertexDataDescription;
-    std::string _cellDataDescription;
+    std::stringstream _vertexDescription;
+    std::stringstream _cellDescription;
+    std::stringstream _vertexDataDescription;
+    std::stringstream _cellDataDescription;
 
     void validateDataWriterIdentifier( const std::string& identifier ) const;
 

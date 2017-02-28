@@ -1,4 +1,5 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTUBinaryFileWriter.h"
+#include "tarch/plotter/ByteSwap.h"
 
 #include <limits>
 #include <iomanip>
@@ -61,7 +62,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexDat
 
   if (_lastWriteCommandVertexNumber>=-1) {
     _out << "</DataArray>" << std::endl;
-    _myWriter._vertexDataDescription += _out.str();
+    _myWriter._vertexDataDescription << _out.str();
   }
   _lastWriteCommandVertexNumber = -2;
 }

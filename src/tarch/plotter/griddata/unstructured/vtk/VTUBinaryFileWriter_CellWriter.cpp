@@ -1,4 +1,5 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTUBinaryFileWriter.h"
+#include "tarch/plotter/ByteSwap.h"
 
 
 tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::CellWriter::CellWriter(VTUBinaryFileWriter& writer, std::string dataType):
@@ -32,6 +33,8 @@ int tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::CellWriter
   _connectivityOut  << vertexIndex << " ";
   _typesOut         << "1 ";
 
+  assertionMsg(false,"not implemented yet");
+
   return _currentCellNumber-1;
 }
 
@@ -43,18 +46,22 @@ int tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::CellWriter
   _currentCellNumber ++;
   _currentCellOffset += 8;
 
-  _offsetsOut       << _currentCellOffset << " ";
-  _connectivityOut
-    << vertexIndex[0] << " "
-    << vertexIndex[1] << " "
-    << vertexIndex[2] << " "
-    << vertexIndex[3] << " "
-    << vertexIndex[4] << " "
-    << vertexIndex[5] << " "
-    << vertexIndex[6] << " "
-    << vertexIndex[7] << " "
-    << std::endl;
-  _typesOut         << "11 ";
+
+  int tmp;
+  tmp = 8;
+  tmp = byteSwapForParaviewBinaryFiles(tmp);
+  _offsetsOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+
+  for (int i=0; i<8; i++) {
+    for (int j=i+1; j<8; j++) assertion(vertexIndex[i] != vertexIndex[j]);
+    tmp = vertexIndex[i];
+    tmp = byteSwapForParaviewBinaryFiles(tmp);
+    _connectivityOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
+  }
+
+  tmp = 11;
+  tmp = byteSwapForParaviewBinaryFiles(tmp);
+  _typesOut.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
 
   return _currentCellNumber-1;
 }
@@ -76,6 +83,8 @@ int tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::CellWriter
     << std::endl;
   _typesOut         << "8 ";
 
+  assertionMsg(false,"not implemented yet");
+
   return _currentCellNumber-1;
 }
 
@@ -93,6 +102,8 @@ int tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::CellWriter
   << vertexIndex[1] << " "
     << std::endl;
   _typesOut         << "3 ";
+
+  assertionMsg(false,"not implemented yet");
 
   return _currentCellNumber-1;
 }
@@ -113,6 +124,8 @@ int tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::CellWriter
     << std::endl;
   _typesOut         << "5 ";
 
+  assertionMsg(false,"not implemented yet");
+
   return _currentCellNumber-1;
 }
 
@@ -124,16 +137,16 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::CellWrite
 
   _myWriter._numberOfCells       = _currentCellNumber;
 
-  _myWriter._cellDescription =
-      "<Cells><DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">" +
-      _connectivityOut.str() +
-      "</DataArray>" +
-      "<DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">" +
-      _offsetsOut.str() +
-      "</DataArray>" +
-      "<DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">" +
-      _typesOut.str() +
-      "</DataArray></Cells>";
+  _myWriter._cellDescription
+      << "<Cells><DataArray type=\"Int32\" Name=\"connectivity\" format=\"binary\">"
+      << _connectivityOut.str()
+      << "</DataArray>"
+      << "<DataArray type=\"Int32\" Name=\"offsets\" format=\"binary\">"
+      << _offsetsOut.str()
+      << "</DataArray>"
+      << "<DataArray type=\"UInt8\" Name=\"types\" format=\"binary\">"
+      << _typesOut.str()
+      << "</DataArray></Cells>";
 
   _currentCellNumber = -1;
   _currentCellOffset = -1;
