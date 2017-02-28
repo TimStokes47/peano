@@ -1,9 +1,9 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTUBinaryFileWriter.h"
-#include "tarch/plotter/ByteSwap.h"
 
 #include <iomanip>
 
-tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexWriter::VertexWriter(VTUBinaryFileWriter& writer):
+tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexWriter::VertexWriter(VTUBinaryFileWriter& writer, std::string dataType):
+  _dataType(dataType),
   _currentVertexNumber(0),
   _myWriter(writer),
   _out() {
@@ -39,31 +39,9 @@ int tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexWrit
   assertion1( position(2)==position(2), position );
 
   _currentVertexNumber++;
-
-  if (_myWriter._precision < 7){
-    float tmp;
-    tmp = position(0);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = position(1);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = position(2);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-  } else {
-    double tmp;
-    tmp = position(0);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = position(1);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = position(2);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-  }
-
+  _out << position(0) << " "
+       << position(1) << " "
+       << position(2) << std::endl;
   return _currentVertexNumber-1;
 }
 
@@ -72,8 +50,9 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexWri
   assertion( _myWriter._numberOfVertices==0 );
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
 
-
-  _myWriter._numberOfVertices  =  _currentVertexNumber;
-  _myWriter._vertexDescription << _out.str();
-  _currentVertexNumber         =  -1;
+  _myWriter._numberOfVertices  = _currentVertexNumber;
+  _myWriter._vertexDescription = "<Points><DataArray type=\"" + _dataType + "\" NumberOfComponents=\"3\" format=\"ascii\">"
+                               + _out.str()
+                               + "</DataArray></Points>";
+  _currentVertexNumber         = -1;
 }

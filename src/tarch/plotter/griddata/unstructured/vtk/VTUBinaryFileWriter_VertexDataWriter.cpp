@@ -1,12 +1,12 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTUBinaryFileWriter.h"
-#include "tarch/plotter/ByteSwap.h"
 
 #include <limits>
 #include <iomanip>
 
 tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexDataWriter::VertexDataWriter(
-  const std::string& identifier, VTUBinaryFileWriter& writer, int recordsPerVertex
+  const std::string& identifier, VTUBinaryFileWriter& writer, int recordsPerVertex, std::string dataType
 ):
+  _dataType(dataType),
   _lastWriteCommandVertexNumber(-1),
   _myWriter(writer),
   _out(),
@@ -16,13 +16,11 @@ tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexDataWrit
   _identifier(identifier) {
   assertion(_recordsPerVertex>0);
 
-  if (_recordsPerVertex!=3) {
-    _out << "SCALARS " << _identifier << " " << _myWriter._doubleOrFloat << " " << _recordsPerVertex << std::endl
-         << "LOOKUP_TABLE default" << std::endl;
-  }
-  else {
-    _out << "VECTORS " << _identifier << " " << _myWriter._doubleOrFloat << " " << std::endl;
-  }
+  _out << "  <DataArray type=\""
+       << _dataType << "\" Name=\"" << _identifier
+       << "\" format=\"ascii\""
+       << " NumberOfComponents=\"" << _recordsPerVertex << "\" >"
+       << std::endl;
 }
 
 
@@ -48,9 +46,6 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexDat
 
 
 void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexDataWriter::close() {
-  if (_myWriter._numberOfVertices==0) {
-    logWarning( "close()", "writer " << _identifier << " is closed though underlying grid writer does not hold any vertices/cells. Ensure you call close() on the vertex/cell writer before" );
-  }
   assertion2(
     _lastWriteCommandVertexNumber>-2,
     _identifier,
@@ -58,15 +53,15 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexDat
   );
   assertionMsg(
     _lastWriteCommandVertexNumber==_myWriter._numberOfVertices-1,
-    "one record has to be written per cell on writer " << _identifier <<
+    "one record has to be written per vertex on writer " << _identifier <<
     " (vertex entries written=" <<  _lastWriteCommandVertexNumber <<
     ", vertex entries expected=" << _myWriter._numberOfVertices << ")"
   );
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() or assignRemainingVerticesDefaultValues() on a data writer before you destroy your writer for value " << _identifier );
 
   if (_lastWriteCommandVertexNumber>=-1) {
-    _out << std::endl;
-    _myWriter._vertexDataDescription << _out.str();
+    _out << "</DataArray>" << std::endl;
+    _myWriter._vertexDataDescription += _out.str();
   }
   _lastWriteCommandVertexNumber = -2;
 }
@@ -84,28 +79,12 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexDat
   }
 
   _lastWriteCommandVertexNumber = index;
-
-  if (_myWriter._precision < 7){
-    float tmp;
-    tmp = value;
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = 0.0;
-    for (int i=1; i<_recordsPerVertex; i++) {
-      tmp = byteSwapForParaviewBinaryFiles(tmp);
-      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    }
-  } else {
-    double tmp;
-    tmp = value;
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = 0.0;
-    for (int i=1; i<_recordsPerVertex; i++) {
-      tmp = byteSwapForParaviewBinaryFiles(tmp);
-      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    }
+  _out << value << " ";
+  for (int i=1; i<_recordsPerVertex; i++) {
+    _out << 0.0 << " ";
   }
+
+  _out << std::endl;
 
   if (value<_minValue) _minValue = value;
   if (value>_maxValue) _maxValue = value;
@@ -127,34 +106,12 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexDat
   }
 
   _lastWriteCommandVertexNumber = index;
-
-  if (_myWriter._precision < 7){
-    float tmp;
-    tmp = value(0);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = value(1);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = 0.0;
-    for (int i=2; i<_recordsPerVertex; i++) {
-      tmp = byteSwapForParaviewBinaryFiles(tmp);
-      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    }
-  } else {
-    double tmp;
-    tmp = value(0);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = value(1);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = 0.0;
-    for (int i=2; i<_recordsPerVertex; i++) {
-      tmp = byteSwapForParaviewBinaryFiles(tmp);
-      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    }
+  _out << value(0) << " ";
+  _out << value(1) << " ";
+  for (int i=2; i<_recordsPerVertex; i++) {
+    _out << 0.0 << " ";
   }
+  _out << std::endl;
 
   if (value(0)<_minValue) _minValue = value(0);
   if (value(0)>_maxValue) _maxValue = value(0);
@@ -181,40 +138,13 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexDat
   }
 
   _lastWriteCommandVertexNumber = index;
-
-  if (_myWriter._precision < 7){
-    float tmp;
-    tmp = value(0);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = value(1);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = value(2);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = 0.0;
-    for (int i=3; i<_recordsPerVertex; i++) {
-      tmp = byteSwapForParaviewBinaryFiles(tmp);
-      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    }
-  } else {
-    double tmp;
-    tmp = value(0);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = value(1);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = value(2);
-    tmp = byteSwapForParaviewBinaryFiles(tmp);
-    _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    tmp = 0.0;
-    for (int i=3; i<_recordsPerVertex; i++) {
-      tmp = byteSwapForParaviewBinaryFiles(tmp);
-      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    }
+  _out << value(0) << " ";
+  _out << value(1) << " ";
+  _out << value(2) << " ";
+  for (int i=3; i<_recordsPerVertex; i++) {
+    _out << 0.0 << " ";
   }
+  _out << std::endl;
 
   if (value(0)<_minValue) _minValue = value(0);
   if (value(0)>_maxValue) _maxValue = value(0);
@@ -240,30 +170,11 @@ void tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::VertexDat
 
   _lastWriteCommandVertexNumber = index;
 
-  if (_myWriter._precision < 7){
-    float tmp;
-    for( int i=0; i<numberOfValues; i++) {
-      tmp = values[i];
-      tmp = byteSwapForParaviewBinaryFiles(tmp);
-      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    }
-    tmp = 0.0;
-    for (int i=numberOfValues; i<_recordsPerVertex; i++) {
-      tmp = byteSwapForParaviewBinaryFiles(tmp);
-      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    }
-  } else {
-    double tmp;
-    for( int i=0; i<numberOfValues; i++) {
-      tmp = values[i];
-      tmp = byteSwapForParaviewBinaryFiles(tmp);
-      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    }
-    tmp = 0.0;
-    for (int i=numberOfValues; i<_recordsPerVertex; i++) {
-      tmp = byteSwapForParaviewBinaryFiles(tmp);
-      _out.write( reinterpret_cast<char*>(&tmp) , sizeof(tmp));
-    }
+  for( int i=0; i<numberOfValues; i++) {
+    _out << values[i] << " ";
+  }
+  for (int i=numberOfValues; i<_recordsPerVertex; i++) {
+    _out << 0.0 << " ";
   }
 
   for( int i=0; i<numberOfValues; i++) {

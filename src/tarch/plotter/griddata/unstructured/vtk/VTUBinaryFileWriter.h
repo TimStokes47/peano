@@ -24,7 +24,8 @@ namespace tarch {
 /**
  * VTU Writer
  *
- * Output for vtk files (paraview) as text files.
+ * Output for vtk files (paraview) as text files. We write unstructured vtk
+ * (vtu) files here.
  *
  * !! Usage
  *
@@ -57,13 +58,9 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
 
     static const std::string HEADER;
 
+    const std::string _dataType;
+
     bool _writtenToFile;
-
-    /** precision */
-    const int _precision;
-
-    /** either "float" or "double" depending on _precision */
-    const std::string _doubleOrFloat;
 
     /**
      * Total number of vertices
@@ -75,27 +72,12 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
      */
     int _numberOfCells;
 
-    /**
-     * Total number of cell entries. See _cellListEntries.
-     */
-    int _numberOfCellEntries;
-
-    std::stringstream _vertexDescription;
-    std::stringstream _cellDescription;
-    std::stringstream _cellTypeDescription;
-    std::stringstream _vertexDataDescription;
-    std::stringstream _cellDataDescription;
+    std::string _vertexDescription;
+    std::string _cellDescription;
+    std::string _vertexDataDescription;
+    std::string _cellDataDescription;
 
     void validateDataWriterIdentifier( const std::string& identifier ) const;
-
-
-    std::string setDoubleOrFloatString(const int precision){
-      if (precision < 7){
-        return "float";
-      } else {
-        return "double";
-      }
-    }
 
   public:
     VTUBinaryFileWriter(const int precision=6);
@@ -128,6 +110,10 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
          */
         friend class VTUBinaryFileWriter;
 
+
+        /** either "float" or "double" depending on _precision */
+        const std::string _dataType;
+
         /**
          * Counter for the vertices written. Holds the maximum index.
          */
@@ -141,14 +127,15 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
         /**
          * Output stream
          */
-        std::stringstream _out;
+        std::ostringstream _out;
 
-        VertexWriter(VTUBinaryFileWriter& writer);
+        VertexWriter(VTUBinaryFileWriter& writer, std::string datatype);
 
         /**
          * Do not copy a vertex writer.
          */
         VertexWriter(const VertexWriter& writer):
+          _dataType(writer._dataType),
           _currentVertexNumber(writer._currentVertexNumber),
           _myWriter(writer._myWriter),
           _out() {
@@ -174,10 +161,13 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
          */
         friend class VTUBinaryFileWriter;
 
+        const std::string _dataType;
+
         /**
          * Counter for the elements written. Holds the maximum index.
          */
         int _currentCellNumber;
+        int _currentCellOffset;
 
         /**
          * Underlying VTU writer.
@@ -185,34 +175,30 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
         VTUBinaryFileWriter& _myWriter;
 
         /**
-         * The tag CELLS in a vtk file requires the number of total entries in the
-         * following list of cell-interconnection (for a triangle, an entry could
-         * look like this: "3 1 2 4", which states that the triangle has 3 links to
-         * vetrices with indices 1, 2 and 4. this makes up four entries). For an
-         * unstructured mesh, the element type is not fixed and, hence, the total
-         * amount of list entries must be counted by summing up the contributions
-         * of each element, when adding the element.
+         * Output stream
          */
-        int _cellListEntries;
+        std::ostringstream _connectivityOut;
 
         /**
          * Output stream
          */
-        std::stringstream _cellOut;
+        std::ostringstream _offsetsOut;
 
         /**
          * Output stream
          */
-        std::stringstream _cellTypeOut;
+        std::ostringstream _typesOut;
 
-        CellWriter(VTUBinaryFileWriter& writer);
+        CellWriter(VTUBinaryFileWriter& writer, std::string datatype);
 
         CellWriter(const CellWriter& writer):
+          _dataType(writer._dataType),
           _currentCellNumber(writer._currentCellNumber),
+          _currentCellOffset(writer._currentCellOffset),
           _myWriter(writer._myWriter),
-          _cellListEntries(writer._cellListEntries),
-          _cellOut(),
-          _cellTypeOut() {
+          _connectivityOut(),
+          _offsetsOut(),
+          _typesOut() {
           assertion(false);
         }
       public:
@@ -239,6 +225,8 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
            */
           friend class VTUBinaryFileWriter;
 
+          const std::string _dataType;
+
           /**
            * Only required for assertions
            */
@@ -258,22 +246,17 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
           /**
            * Output stream
            */
-          std::stringstream _out;
+          std::ostringstream _out;
 
           int _recordsPerCell;
 
           double _minValue;
           double _maxValue;
-          CellDataWriter(const std::string& dataIdentifier, VTUBinaryFileWriter& writer, int recordsPerCell);
+          CellDataWriter(const std::string& dataIdentifier, VTUBinaryFileWriter& writer, int recordsPerCell, std::string dataType);
 
           CellDataWriter(const CellDataWriter& copy):
-        	_identifier("undef"),
-        	_lastWriteCommandCellNumber(-1),
-            _myWriter(copy._myWriter),
-            _out(),
-            _recordsPerCell(-1),
-            _minValue(0.0),
-            _maxValue(0.0) {
+            _dataType(copy._dataType),
+            _myWriter(copy._myWriter) {
             assertion(false);
           }
       public:
@@ -300,6 +283,8 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
          */
         friend class VTUBinaryFileWriter;
 
+        const std::string _dataType;
+
         /**
          *
          */
@@ -313,7 +298,7 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
         /**
          * Output stream
          */
-        std::stringstream _out;
+        std::ostringstream _out;
 
         int _recordsPerVertex;
 
@@ -322,15 +307,11 @@ class tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter:
 
         std::string  _identifier;
 
-        VertexDataWriter(const std::string& dataIdentifier, VTUBinaryFileWriter& writer, int recordsPerVertex);
+        VertexDataWriter(const std::string& dataIdentifier, VTUBinaryFileWriter& writer, int recordsPerVertex, std::string dataType);
 
         VertexDataWriter(const VertexDataWriter& copy):
-          _lastWriteCommandVertexNumber(-1),
-          _myWriter(copy._myWriter),
-          _out(),
-          _recordsPerVertex(-1),
-          _minValue(0.0),
-          _maxValue(0.0) {
+          _dataType(copy._dataType),
+          _myWriter(copy._myWriter) {
           assertion(false);
         }
       public:
