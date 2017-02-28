@@ -4,8 +4,9 @@
 #include <iomanip>
 
 tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellDataWriter::CellDataWriter(
-  const std::string& dataIdentifier, VTUTextFileWriter& writer, int recordsPerCell
+  const std::string& dataIdentifier, VTUTextFileWriter& writer, int recordsPerCell, std::string dataType
 ):
+  _dataType(dataType),
   _identifier(dataIdentifier),
   _lastWriteCommandCellNumber(-1),
   _myWriter(writer),
@@ -15,14 +16,11 @@ tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellDataWriter::
   _maxValue(std::numeric_limits<double>::min()) {
   assertion(_recordsPerCell>0);
 
-  _out << std::setprecision(_myWriter._precision);
-  if (_recordsPerCell!=3) {
-    _out << "SCALARS " << dataIdentifier << " " << _myWriter._doubleOrFloat << " " << _recordsPerCell << std::endl
-         << "LOOKUP_TABLE default" << std::endl;
-  }
-  else {
-    _out << "VECTORS " << dataIdentifier << " " << _myWriter._doubleOrFloat << " " << std::endl;
-  }
+  _out << "  <DataArray type=\""
+       << _dataType << "\" Name=\"" << _identifier
+       << "\" format=\"ascii\""
+       << " NumberOfComponents=\"" << _recordsPerCell << "\" >"
+       << std::endl;
 }
 
 
@@ -65,7 +63,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellDataWri
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() or assignRemainingCellsDefaultValues() on a data writer before you destroy your writer?" );
 
   if (_lastWriteCommandCellNumber>=-1) {
-    _out << std::endl;
+    _out << "</DataArray>" << std::endl;
     _myWriter._cellDataDescription += _out.str();
   }
   _lastWriteCommandCellNumber = -2;

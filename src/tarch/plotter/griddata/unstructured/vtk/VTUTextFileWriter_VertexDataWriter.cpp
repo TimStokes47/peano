@@ -4,8 +4,9 @@
 #include <iomanip>
 
 tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::VertexDataWriter::VertexDataWriter(
-  const std::string& identifier, VTUTextFileWriter& writer, int recordsPerVertex
+  const std::string& identifier, VTUTextFileWriter& writer, int recordsPerVertex, std::string dataType
 ):
+  _dataType(dataType),
   _lastWriteCommandVertexNumber(-1),
   _myWriter(writer),
   _out(),
@@ -15,14 +16,11 @@ tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::VertexDataWriter
   _identifier(identifier) {
   assertion(_recordsPerVertex>0);
 
-  _out << std::setprecision(_myWriter._precision);
-  if (_recordsPerVertex!=3) {
-    _out << "SCALARS " << _identifier << " " << _myWriter._doubleOrFloat << " " << _recordsPerVertex << std::endl
-         << "LOOKUP_TABLE default" << std::endl;
-  }
-  else {
-    _out << "VECTORS " << _identifier << " " << _myWriter._doubleOrFloat << " " << std::endl;
-  }
+  _out << "  <DataArray type=\""
+       << _dataType << "\" Name=\"" << _identifier
+       << "\" format=\"ascii\""
+       << " NumberOfComponents=\"" << _recordsPerVertex << "\" >"
+       << std::endl;
 }
 
 
@@ -62,7 +60,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::VertexDataW
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() or assignRemainingVerticesDefaultValues() on a data writer before you destroy your writer for value " << _identifier );
 
   if (_lastWriteCommandVertexNumber>=-1) {
-    _out << std::endl;
+    _out << "</DataArray>" << std::endl;
     _myWriter._vertexDataDescription += _out.str();
   }
   _lastWriteCommandVertexNumber = -2;

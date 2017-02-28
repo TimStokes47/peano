@@ -1,12 +1,14 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTUTextFileWriter.h"
 
 
-tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::CellWriter(VTUTextFileWriter& writer):
+tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::CellWriter(VTUTextFileWriter& writer, std::string dataType):
+  _dataType(dataType),
   _currentCellNumber(0),
+  _currentCellOffset(0),
   _myWriter(writer),
-  _cellListEntries(0),
-  _cellOut(),
-  _cellTypeOut() {
+  _connectivityOut(),
+  _offsetsOut(),
+  _typesOut() {
   assertion( _myWriter._numberOfCells==0 );
   assertion( _myWriter._numberOfCellEntries==0 );
 }
@@ -23,14 +25,12 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
   assertion( _currentCellNumber>=0 );
   assertion( _cellListEntries>=0 );
 
-  _currentCellNumber++;
-  _cellListEntries += 2;
+  _currentCellNumber ++;
+  _currentCellOffset += 1;
 
-  _cellOut << "1" << " "
-           << vertexIndex << " "
-           << std::endl;
-
-  _cellTypeOut << "1" << std::endl;
+  _offsetsOut       << _currentCellOffset << " ";
+  _connectivityOut  << vertexIndex << " ";
+  _typesOut         << "1 ";
 
   return _currentCellNumber-1;
 }
@@ -40,21 +40,21 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
   assertion( _currentCellNumber>=0 );
   assertion( _cellListEntries>=0 );
 
-  _currentCellNumber++;
-  _cellListEntries += 9;
+  _currentCellNumber ++;
+  _currentCellOffset += 8;
 
-  _cellOut << "8" << " "
-           << vertexIndex[0] << " "
-           << vertexIndex[1] << " "
-           << vertexIndex[2] << " "
-           << vertexIndex[3] << " "
-           << vertexIndex[4] << " "
-           << vertexIndex[5] << " "
-           << vertexIndex[6] << " "
-           << vertexIndex[7] << " "
-           << std::endl;
-
-  _cellTypeOut << "11" << std::endl;
+  _offsetsOut       << _currentCellOffset << " ";
+  _connectivityOut
+    << vertexIndex[0] << " "
+    << vertexIndex[1] << " "
+    << vertexIndex[2] << " "
+    << vertexIndex[3] << " "
+    << vertexIndex[4] << " "
+    << vertexIndex[5] << " "
+    << vertexIndex[6] << " "
+    << vertexIndex[7] << " "
+    << std::endl;
+  _typesOut         << "11 ";
 
   return _currentCellNumber-1;
 }
@@ -64,17 +64,17 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
   assertion( _currentCellNumber>=0 );
   assertion( _cellListEntries>=0 );
 
-  _currentCellNumber++;
-  _cellListEntries += 5;
+  _currentCellNumber ++;
+  _currentCellOffset += 5;
 
-  _cellOut << "4" << " "
-           << vertexIndex[0] << " "
-           << vertexIndex[1] << " "
-           << vertexIndex[2] << " "
-           << vertexIndex[3] << " "
-           << std::endl;
-
-  _cellTypeOut << "8" << std::endl;
+  _offsetsOut       << _currentCellOffset << " ";
+  _connectivityOut
+  << vertexIndex[0] << " "
+  << vertexIndex[1] << " "
+  << vertexIndex[2] << " "
+  << vertexIndex[3] << " "
+    << std::endl;
+  _typesOut         << "8 ";
 
   return _currentCellNumber-1;
 }
@@ -84,15 +84,15 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
   assertion( _currentCellNumber>=0 );
   assertion( _cellListEntries>=0 );
 
-  _currentCellNumber++;
-  _cellListEntries += 3;
+  _currentCellNumber ++;
+  _currentCellOffset += 3;
 
-  _cellOut << "2" << " "
-           << vertexIndex[0] << " "
-           << vertexIndex[1] << " "
-           << std::endl;
-
-  _cellTypeOut << "3" << std::endl;
+  _offsetsOut       << _currentCellOffset << " ";
+  _connectivityOut
+  << vertexIndex[0] << " "
+  << vertexIndex[1] << " "
+    << std::endl;
+  _typesOut         << "3 ";
 
   return _currentCellNumber-1;
 }
@@ -102,16 +102,16 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
   assertion( _currentCellNumber>=0 );
   assertion( _cellListEntries>=0 );
 
-  _currentCellNumber++;
-  _cellListEntries += 4;
+  _currentCellNumber ++;
+  _currentCellOffset += 4;
 
-  _cellOut << "3" << " "
-           << vertexIndex[0] << " "
-           << vertexIndex[1] << " "
-           << vertexIndex[2] << " "
-           << std::endl;
-
-  _cellTypeOut << "5" << std::endl;
+  _offsetsOut       << _currentCellOffset << " ";
+  _connectivityOut
+  << vertexIndex[0] << " "
+  << vertexIndex[1] << " "
+  << vertexIndex[2] << " "
+    << std::endl;
+  _typesOut         << "5 ";
 
   return _currentCellNumber-1;
 }
@@ -123,11 +123,18 @@ void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter:
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
 
   _myWriter._numberOfCells       = _currentCellNumber;
-  _myWriter._numberOfCellEntries = _cellListEntries;
 
-  _myWriter._cellDescription      = _cellOut.str();
-  _myWriter._cellTypeDescription  = _cellTypeOut.str();
+  _myWriter._cellDescription =
+      "<Cells><DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">" +
+      _connectivityOut.str() +
+      "</DataArray>" +
+      "<DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">" +
+      _offsetsOut.str() +
+      "</DataArray>" +
+      "<DataArray type=\"UInt8\" Name=\"types\" format=\"ascii\">" +
+      _typesOut.str() +
+      "</DataArray></Cells>";
 
   _currentCellNumber = -1;
-  _cellListEntries   = -1;
+  _currentCellOffset = -1;
 }
