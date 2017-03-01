@@ -10,7 +10,6 @@ tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::Cell
   _offsetsOut(),
   _typesOut() {
   assertion( _myWriter._numberOfCells==0 );
-  assertion( _myWriter._numberOfCellEntries==0 );
 }
 
 
@@ -22,8 +21,8 @@ tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::~Cel
 
 
 int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::plotPoint(int vertexIndex) {
+  assertion( _currentCellOffset>=0 );
   assertion( _currentCellNumber>=0 );
-  assertion( _cellListEntries>=0 );
 
   _currentCellNumber ++;
   _currentCellOffset += 1;
@@ -37,8 +36,8 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
 
 
 int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::plotHexahedron(int vertexIndex[8]) {
+  assertion( _currentCellOffset>=0 );
   assertion( _currentCellNumber>=0 );
-  assertion( _cellListEntries>=0 );
 
   _currentCellNumber ++;
   _currentCellOffset += 8;
@@ -61,8 +60,8 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
 
 
 int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::plotQuadrangle(int vertexIndex[4]) {
+  assertion( _currentCellOffset>=0 );
   assertion( _currentCellNumber>=0 );
-  assertion( _cellListEntries>=0 );
 
   _currentCellNumber ++;
   _currentCellOffset += 4;
@@ -81,8 +80,8 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
 
 
 int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::plotLine(int vertexIndex[2]) {
+  assertion( _currentCellOffset>=0 );
   assertion( _currentCellNumber>=0 );
-  assertion( _cellListEntries>=0 );
 
   _currentCellNumber ++;
   _currentCellOffset += 2;
@@ -99,8 +98,8 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
 
 
 int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::plotTriangle(int vertexIndex[3]) {
+  assertion( _currentCellOffset>=0 );
   assertion( _currentCellNumber>=0 );
-  assertion( _cellListEntries>=0 );
 
   _currentCellNumber ++;
   _currentCellOffset += 3;
@@ -119,7 +118,8 @@ int tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::
 
 void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellWriter::close() {
   assertion( _myWriter._numberOfCells==0 );
-  assertion( _myWriter._numberOfCellEntries==0 );
+  assertion( _currentCellOffset>=0 );
+  assertion( _currentCellNumber>=0 );
   assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
 
   _myWriter._numberOfCells       = _currentCellNumber;
