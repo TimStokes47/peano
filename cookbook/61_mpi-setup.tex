@@ -285,7 +285,7 @@ void ...::mappings::...::refineIfNecessary(
   \item So, finally, the state has to define whether to refine or not. We
   accomplish this through two routines:
   \begin{code}
-void storageschemes::State::endedGridConstructionIteration() {
+void ...::State::endedGridConstructionIteration(int finestGridLevelPossible) {
   const bool idleNodesLeft = 
     tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()>0;
   const bool nodePoolHasGivenOutRankSizeLastQuery = 
@@ -359,10 +359,10 @@ void storageschemes::State::endedGridConstructionIteration() {
   }
   #else
   if (isCreationalEvent) {
-    return storageschemes::State::RefinementAnswer::Refine;
+    return RefinementAnswer::Refine;
   }
   else {
-    return storageschemes::State::RefinementAnswer::DontRefineYet;
+    return RefinementAnswer::DontRefineYet;
   }
   #endif
 }
