@@ -1,5 +1,7 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTUBinaryFileWriter.h"
 
+#include "tarch/parallel/NodePool.h"
+
 #include <stdio.h>
 #include <fstream>
 #include <iomanip>
@@ -42,6 +44,8 @@ bool tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::writeToFi
   assertion( !_writtenToFile );
 
   logError( "writeToFile(std::string)", "The VTU binary write is under construction. We do not recommend to use it. ");
+
+  assertion(false);
 
   if (filename.rfind(".vtu")==std::string::npos) {
     logWarning( "writeToFile()", "filename should end with .vtu but is " << filename );

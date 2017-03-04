@@ -17,6 +17,11 @@ namespace tarch {
 }
 
 
+/**
+ * Writes time series in vtk/vtu format. According to the VTK spec, time series
+ * are solely written serially, i.e. you may use this class on any rank, but it
+ * only writes out data on Peano's global master.
+ */
 class tarch::plotter::griddata::VTUTimeSeriesWriter {
   private:
     static tarch::logging::Log _log;

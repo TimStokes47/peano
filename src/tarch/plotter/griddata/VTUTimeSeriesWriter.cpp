@@ -1,4 +1,7 @@
 #include "tarch/plotter/griddata/VTUTimeSeriesWriter.h"
+
+#include "tarch/parallel/NodePool.h"
+
 #include <fstream>
 
 tarch::logging::Log tarch::plotter::griddata::VTUTimeSeriesWriter::_log( "tarch::plotter::griddata::VTUTimeSeriesWriter" );
@@ -14,14 +17,27 @@ tarch::plotter::griddata::VTUTimeSeriesWriter::VTUTimeSeriesWriter() {
 
 
 void tarch::plotter::griddata::VTUTimeSeriesWriter::addSnapshot(const std::string& snapshotFileName, double time) {
-  _out << "<DataSet timestep=\"" << time << "\" group=\"\" part=\"0\" file=\"" << snapshotFileName << "\"/>" << std::endl;
+  _out << "<DataSet timestep=\"" << time << "\" group=\"\" part=\"0\" file=\""
+       << snapshotFileName
+       #ifdef Parallel
+       << ".pvtu"
+       #else
+       << ".vtu"
+       #endif
+       << "\"/>" << std::endl;
 }
 
 
-bool tarch::plotter::griddata::VTUTimeSeriesWriter::writeFile(const std::string& filename) {
-  if (filename.rfind(".pvd")==std::string::npos) {
-    logWarning( "writeToFile()", "filename should end with .pvd but is " << filename );
+bool tarch::plotter::griddata::VTUTimeSeriesWriter::writeFile(const std::string& filenamePrefix) {
+  if (!tarch::parallel::Node::getInstance().isGlobalMaster()) return true;
+
+  if (filenamePrefix.rfind(".pvd")!=std::string::npos) {
+    logWarning( "writeToFile()", "filename should not end with .pvd as routine adds extension automatically. Chosen filename prefix=" << filenamePrefix );
   }
+  std::ostringstream filenameStream;
+  filenameStream << filenamePrefix
+                 << ".pvd";
+  const std::string filename = filenameStream.str();
 
   std::ofstream out;
   out.open( filename.c_str(), std::ios::binary );

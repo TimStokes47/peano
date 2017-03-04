@@ -1,4 +1,7 @@
 #include "tarch/plotter/pointdata/vtk/VTKBinaryFileWriter.h"
+
+#include "tarch/parallel/NodePool.h"
+
 #include <stdio.h>
 #include <fstream>
 #include <iomanip>
@@ -42,12 +45,19 @@ void tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::clear() {
 
 
 
-bool tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::writeToFile( const std::string& filename ) {
+bool tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::writeToFile( const std::string& filenamePrefix ) {
   assertion( !_writtenToFile );
 
-  if (filename.rfind(".vtk")==std::string::npos) {
-    logWarning( "writeToFile()", "filename should end with .vtu but is " << filename );
+  if (filenamePrefix.rfind(".vtk")!=std::string::npos) {
+    logWarning( "writeToFile()", "filename should not end with .vtk as routine adds extension automatically. Chosen filename prefix=" << filenamePrefix );
   }
+  std::ostringstream filenameStream;
+  filenameStream << filenamePrefix
+    #ifdef Parallel
+                 << "-rank-" << tarch::parallel::Node::getInstance().getRank()
+    #endif
+                 << ".vtk";
+  const std::string filename = filenameStream.str();
 
   std::ofstream out;
   out.open( filename.c_str(), std::ios::binary );
