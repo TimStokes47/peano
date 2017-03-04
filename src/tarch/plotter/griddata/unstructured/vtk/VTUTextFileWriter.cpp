@@ -37,6 +37,8 @@ void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::clear() {
   _cellDescription        = "";
   _vertexDataDescription  = "";
   _cellDataDescription    = "";
+  _parallelVertexDataDescription = "";
+  _parallelCellDataDescription   = "";
 }
 
 
@@ -101,11 +103,16 @@ bool tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeToFile
             << "<PPoints>" << std::endl
             << "<PDataArray type=\"" << _dataType << "\" Name=\"coordinates\" NumberOfComponents=\"3\"/>" << std::endl
             << "</PPoints>" << std::endl
+            << "<PCells>" << std::endl
+            << "<PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>" << std::endl
+            << "<PDataArray type=\"Int32\" Name=\"offsets\"      NumberOfComponents=\"1\"/>" << std::endl
+            << "<PDataArray type=\"UInt8\" Name=\"types\"        NumberOfComponents=\"1\"/>" << std::endl
+            << "</PCells>" << std::endl
             << "<PPointData>" << std::endl
-            << _vertexDataDescription << std::endl
+            << _parallelVertexDataDescription << std::endl
             << "</PPointData>" << std::endl
             << "<PCellData>" << std::endl
-            << _cellDataDescription << std::endl
+            << _parallelCellDataDescription << std::endl
             << "</PCellData>" << std::endl
       /*
     <PPointData Scalars="composition">
@@ -122,8 +129,13 @@ NumberOfComponents="1"/>
       for (int i=0; i<tarch::parallel::Node::getInstance().getNumberOfNodes(); i++) {
         if ( !tarch::parallel::NodePool::getInstance().isIdleNode(i) ) {
           std::ostringstream referencedFilename;
-          referencedFilename << filenamePrefix
-                             << "-rank-" << i
+          if (filenamePrefix.find("/")!=std::string::npos) {
+            referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
+          }
+          else {
+            referencedFilename << filenamePrefix;
+          }
+          referencedFilename << "-rank-" << i
                              << ".vtu";
           metaOut << "<Piece Source=\"" << referencedFilename.str() << "\"/>" << std::endl;
         }

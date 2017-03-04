@@ -76,6 +76,8 @@ class tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter:
     std::string _cellDescription;
     std::string _vertexDataDescription;
     std::string _cellDataDescription;
+    std::string _parallelVertexDataDescription;
+    std::string _parallelCellDataDescription;
 
     void validateDataWriterIdentifier( const std::string& identifier ) const;
 

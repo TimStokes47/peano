@@ -62,6 +62,14 @@ void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::VertexDataW
   if (_lastWriteCommandVertexNumber>=-1) {
     _out << "</DataArray>" << std::endl;
     _myWriter._vertexDataDescription += _out.str();
+
+    _myWriter._parallelVertexDataDescription += "<PDataArray type=\""
+                                            + _dataType
+                                            + "\" Name=\""
+                                            + _identifier
+                                            + "\" NumberOfComponents=\""
+                                            + std::to_string(_recordsPerVertex)
+                                             + "\"/>";
   }
   _lastWriteCommandVertexNumber = -2;
 }
