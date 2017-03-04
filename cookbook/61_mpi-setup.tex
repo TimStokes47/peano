@@ -109,20 +109,29 @@ Permission is then granted only from time to time.
 
 
 
-\subsection{Incremental, slow grid setup though detailed grid structure is
-known/all nodes are already busy}
+\subsection{Incremental, slow decomposition with ranks running out
+of memory}
 \label{subsection:mpi-setup:slow-incremental-setup}
 
 
 \begin{smell}
-The grid is static/known, but, nevertheless, Peano
-needs lots of iterations to finally build it up. Even worse, there are no idle nodes left and we know analytically
-what the grid should look like.
-The grid construction thus should rush through in one iteration.
+Peano needs lots of iterations to finally build the grid up and distribute it
+properly.
+Often, some ranks run out of memory if the grid is reasonably fine.
 \end{smell}
 
 
+
 \noindent
+The smell is notably cumbersome if the kernel continues to ``balance'' and
+incremental build up the grid though all ranks are already busy.
+And it is annoying that ranks tend to run out of memory at the same
+time---the load balancing cannot keep pace with the grid construction.
+In the following, we first give an explanation for this behaviour, we then
+sketch the tools offered by Peano to ``cure'' it, and then we sketch an overall
+code design/pattern to overcome the smell.
+
+
 Peano exchanges the vertices along a domain boundary after each traversal.
 At the same time, it tries to refine a vertex with a refinement flag as soon as
 possible: 
@@ -204,6 +213,10 @@ A working and simple grid setup pattern is described as follows:
        administrative/meta data and one to transfer the actual data). From
        hereon, we may safely use the enforced refinement without boundary data
        exchange if we know the adaptivity pattern on each rank.
+       \\
+       \hline
+       -3 & This value indicates that we can stop the grid construction, as we
+       have constructed the whole thing.
      \end{tabular}
     \end{center}
 
@@ -211,7 +224,7 @@ A working and simple grid setup pattern is described as follows:
     how a mapping refines:
     \begin{code}
     // Has to be called after the iteration!
-    void endedGridConstructionIteration();
+    void endedGridConstructionIteration(int finestGridLevelPossible);
 
     enum RefinementAnswer {
       DontRefineYet,
@@ -219,23 +232,24 @@ A working and simple grid setup pattern is described as follows:
       EnforceRefinement
     };
     RefinementAnswer mayRefine(bool isCreationalEvent, int level) const;
+
+    bool continueToConstructGrid() const;
     \end{code}
 
 
-  \item We update the state after each grid setup run. Code then might
-  look similar to
+  \item We update the state after each grid setup sweep and we delegate the
+  decision when to terminate the iterate grid construction to the state.
+  Code then might resemble
     \begin{code}
-  while (...) {
+  while ( repository.getState().continueToConstructGrid() ) {
     repository.iterate();
-    logInfo(
-      "runAsMaster()",
-      "ran setup iteration with " <<
-      tarch::parallel::NodePool::getInstance().getNumberOfWorkingNodes()
-      << " working nodes; state=" << repository.getState().toString()
-    );
-    repository.getState().endedGridConstructionIteration();
+    repository.getState().endedGridConstructionIteration(maxLevel);
   }
     \end{code}
+    Note that it is important for the state to know what the maximum grid level
+    might be in the end. You may want to use an upper bound that is not too
+    inaccurate. This upper bound will kick in if and only if there are more MPI
+    ranks than a grid can actually employ.
 
   \item We restructure the grid creation mapping. Both
     \texttt{createInnerVertex}, \texttt{createBoundaryVertex} and
@@ -272,29 +286,41 @@ void ...::mappings::...::refineIfNecessary(
   accomplish this through two routines:
   \begin{code}
 void storageschemes::State::endedGridConstructionIteration() {
-  const bool idleNodesLeft 
-    = tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()>0;
-  const bool nodePoolHasGivenOutRankSizeLastQuery 
-    = tarch::parallel::NodePool::getInstance().hasGivenOutRankSizeLastQuery();
-  static bool traversalsThatWouldHaveBeenAbleToIncreaseLevelInLastSweepInLastSweep 
-    = false;
+  const bool idleNodesLeft = 
+    tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()>0;
+  const bool nodePoolHasGivenOutRankSizeLastQuery = 
+    tarch::parallel::NodePool::getInstance().hasGivenOutRankSizeLastQuery();
 
+  // No more nodes left. Start to enforce refinement
   if (!idleNodesLeft && _stateData.getMaxRefinementLevelAllowed()>=0) {
     _stateData.setMaxRefinementLevelAllowed(-1);
   }
+  // Refinement is enforced. So we decrease counter. Once we underrun -2, grid
+  // construction can terminate as all enforced refined went through.
   else if (!idleNodesLeft && _stateData.getMaxRefinementLevelAllowed()<=-1) {
-    _stateData.setMaxRefinementLevelAllowed(-2);
+    _stateData.setMaxRefinementLevelAllowed( 
+      _stateData.getMaxRefinementLevelAllowed()-1 );
   }
-  else if ( nodePoolHasGivenOutRankSizeLastQuery && isGridStationary()
-    && !traversalsThatWouldHaveBeenAbleToIncreaseLevelInLastSweepInLastSweep
+  // Seems that max permitted level has exceeded max grid level. We may assume
+  // that there are more MPI ranks than available trees.
+  else if (isGridStationary() && 
+    _stateData.getMaxRefinementLevelAllowed()>finestGridLevelPossible) {
+    _stateData.setMaxRefinementLevelAllowed( -3 );
+  }
+  else if (nodePoolHasGivenOutRankSizeLastQuery && 
+    _stateData.getMaxRefinementLevelAllowed()>=2) {
+    _stateData.setMaxRefinementLevelAllowed(
+      _stateData.getMaxRefinementLevelAllowed()-2);
+  }
+  // Nothing has changed in this grid iteration in the grid and we haven't
+  // given out new workers. So increase the permitted maximum grid level by
+  // one and give another try whether the grid adds more vertices.
+  else if (
+      !(nodePoolHasGivenOutRankSizeLastQuery)
+    && isGridStationary()
   ) {
-    traversalsThatWouldHaveBeenAbleToIncreaseLevelInLastSweepInLastSweep = true;
-    changedCellState();
-  }
-  else if ( nodePoolHasGivenOutRankSizeLastQuery && isGridStationary() ) {
     _stateData.setMaxRefinementLevelAllowed(
       _stateData.getMaxRefinementLevelAllowed()+1);
-    traversalsThatWouldHaveBeenAbleToIncreaseLevelInLastSweepInLastSweep = false;
   }
 }
   \end{code}
@@ -362,27 +388,17 @@ void storageschemes::State::endedGridConstructionIteration() {
   that the grid does not become balanced which in turn means that the next time
   we run into the routine no forking branch is entered.
   
- \item (Optional) It did pay off in my applications to alter grid
- construction iterations making them use the more sophisticated state, too: 
+ \item We finally stop the grid traversal as soon as the new marker is set to
+ -3:
   \begin{code}
-  int sweepsWithBalancedGrid = 0;
-  while ( sweepsWithBalancedGrid<3 ) {
-    repository.iterate();
-    sweepsWithBalancedGrid = repository.getState().isGridBalanced() ? 
-      sweepsWithBalancedGrid+1 : 0;
-    if (repository.getState().mayRefine(true,std::numeric_limits<int>::max())) {
-      sweepsWithBalancedGrid = 3;
-    }
-    repository.getState().endedLoadBalancingIteration();
-  }
+bool ...::State::continueToConstructGrid() const {
+  #ifdef Parallel
+  return _stateData.getMaxRefinementLevelAllowed()>=-3;
+  #else
+  return !isGridBalanced();
+  #endif
+}
   \end{code}
-  Here, we terminate the construction immediately one we bump into the enforce
-  refinement: We know that now the grid will be built up completely, so we wait
-  one more grid sweep (therefore
-  we have to insert the if statement just before
-  \texttt{endedLoadBalancingIteration}) until all refinements have passed
-  through, end then we terminate the loop. There's no need to wait for the grid
-  to become balanced.
 \end{enumerate}
 %\end{remark}
 
