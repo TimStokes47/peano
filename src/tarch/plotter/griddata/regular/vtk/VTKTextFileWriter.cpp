@@ -50,7 +50,7 @@ tarch::plotter::griddata::regular::vtk::VTKTextFileWriter::~VTKTextFileWriter() 
 
 
 bool tarch::plotter::griddata::regular::vtk::VTKTextFileWriter::writeToFile( const std::string& filenamePrefix ) {
-  logTraceInWith5Arguments( "writeToFile(filename)", filename, _writtenToFile, _numberOfGridPoints, _domainSize, _origin );
+  logTraceInWith5Arguments( "writeToFile(filename)", filenamePrefix, _writtenToFile, _numberOfGridPoints, _domainSize, _origin );
 
   if (filenamePrefix.rfind(".vtk")!=std::string::npos) {
     logWarning( "writeToFile()", "filename should not end with .vtk as routine adds extension automatically. Chosen filename prefix=" << filenamePrefix );
