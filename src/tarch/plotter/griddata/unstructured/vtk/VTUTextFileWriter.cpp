@@ -85,10 +85,7 @@ bool tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeToFile
   	return false;
   }
 
-
   #ifdef Parallel
-  #endif
-
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
     std::string parallelMetaFileName = filenamePrefix + ".pvtu";
 
@@ -151,6 +148,7 @@ NumberOfComponents="1"/>
       return false;
     }
   }
+  #endif
 
   return true;
 }
