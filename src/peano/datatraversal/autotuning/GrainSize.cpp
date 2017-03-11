@@ -62,7 +62,7 @@ void peano::datatraversal::autotuning::GrainSize::parallelSectionHasTerminated()
     _watch->stopTimer();
     const double cost = _watch->getCalendarTime() / static_cast<double>(_problemSize);
 
-    _hostOracle->parallelSectionHasTerminated(_problemSize,_askingMethod,cost);
+    _hostOracle->parallelSectionHasTerminated(_problemSize,_grainSize,_askingMethod,cost);
 
     delete _watch;
     _watch = nullptr;

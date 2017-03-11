@@ -119,7 +119,7 @@ peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::Or
 }
 
 
-void peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelSectionHasTerminated(int problemSize, MethodTrace askingMethod, double costPerProblemElement) {
+void peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelSectionHasTerminated(int problemSize, int grainSize, MethodTrace askingMethod, double costPerProblemElement) {
 }
 
 

@@ -94,7 +94,7 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
     virtual ~OracleForOnePhaseDummy();
 
     GrainSize parallelise(int problemSize, MethodTrace askingMethod) override;
-    void parallelSectionHasTerminated(int problemSize, MethodTrace askingMethod, double costPerProblemElement) override;
+    void parallelSectionHasTerminated(int problemSize, int grainSize, MethodTrace askingMethod, double costPerProblemElement) override;
     void plotStatistics(std::ostream& out, int oracleNumber) const override;
 
     /**

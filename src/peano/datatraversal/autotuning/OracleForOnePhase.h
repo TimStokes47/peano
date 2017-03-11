@@ -51,7 +51,7 @@ class peano::datatraversal::autotuning::OracleForOnePhase {
      * fraction is the one, parallelise() has been called for before. There's
      * never more than one section running in parallel.
      */
-    virtual void parallelSectionHasTerminated(int problemSize, MethodTrace askingMethod, double costPerProblemElement) = 0;
+    virtual void parallelSectionHasTerminated(int problemSize, int grainSize, MethodTrace askingMethod, double costPerProblemElement) = 0;
 
     /**
      * Plot statistics.
