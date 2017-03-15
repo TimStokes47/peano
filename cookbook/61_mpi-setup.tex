@@ -318,6 +318,7 @@ void ...::State::endedGridConstructionIteration(int finestGridLevelPossible) {
   else if (
       !(nodePoolHasGivenOutRankSizeLastQuery)
     && isGridStationary()
+    && _stateData.getMaxRefinementLevelAllowed()>=0
   ) {
     _stateData.setMaxRefinementLevelAllowed(
       _stateData.getMaxRefinementLevelAllowed()+1);
@@ -388,7 +389,7 @@ void ...::State::endedGridConstructionIteration(int finestGridLevelPossible) {
   that the grid does not become balanced which in turn means that the next time
   we run into the routine no forking branch is entered.
   
- \item We finally stop the grid traversal as soon as the new marker is set to
+ \item We stop the grid traversal as soon as the new marker is set to
  -3:
   \begin{code}
 bool ...::State::continueToConstructGrid() const {
@@ -397,6 +398,13 @@ bool ...::State::continueToConstructGrid() const {
   #else
   return !isGridBalanced();
   #endif
+}
+  \end{code}
+  
+  \item We finally initialise our state properly:
+  \begin{code}
+myproject::State::State() : Base() {
+  _stateData.setMaxRefinementLevelAllowed(0);
 }
   \end{code}
 \end{enumerate}
