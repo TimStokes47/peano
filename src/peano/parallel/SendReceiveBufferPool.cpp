@@ -98,7 +98,7 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
   #if !defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
   receiveDanglingMessagesFromAllBuffersInPool();
   #else
-  _semaphore.sendTaskToBack();
+  tarch::multicore::BooleanSemaphore::sendTaskToBack();
   #endif
 }
 
@@ -206,7 +206,7 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
     }
 
     lock.free();
-    _semaphore.sendTaskToBack();
+    tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
 }
 
