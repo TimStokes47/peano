@@ -204,6 +204,7 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
     }
 
     lock.free();
+    _semaphore.sendTaskToBack();
   }
 }
 
