@@ -97,6 +97,8 @@ int peano::parallel::SendReceiveBufferPool::getIterationDataTag() const {
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
   #if !defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
   receiveDanglingMessagesFromAllBuffersInPool();
+  #else
+  _semaphore.sendTaskToBack();
   #endif
 }
 
