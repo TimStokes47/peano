@@ -99,6 +99,7 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
   receiveDanglingMessagesFromAllBuffersInPool();
   #else
   if (BackgroundThread::_state==BackgroundThread::State::Suspend) {
+    tarch::multicore::Lock lock(BackgroundThread::_semaphore);
     receiveDanglingMessagesFromAllBuffersInPool();
   }
   else {
