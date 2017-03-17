@@ -98,7 +98,12 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
   #if !defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
   receiveDanglingMessagesFromAllBuffersInPool();
   #else
-  tarch::multicore::BooleanSemaphore::sendTaskToBack();
+  if (BackgroundThread::_state==BackgroundThread::State::Suspend) {
+    receiveDanglingMessagesFromAllBuffersInPool();
+  }
+  else {
+    tarch::multicore::BooleanSemaphore::sendTaskToBack();
+  }
   #endif
 }
 
@@ -178,7 +183,7 @@ void peano::parallel::SendReceiveBufferPool::setBufferSize( int bufferSize ) {
 
 
 tarch::multicore::BooleanSemaphore                               peano::parallel::SendReceiveBufferPool::BackgroundThread::_semaphore;
-peano::parallel::SendReceiveBufferPool::BackgroundThread::State  peano::parallel::SendReceiveBufferPool::BackgroundThread::_state(Suspend);
+peano::parallel::SendReceiveBufferPool::BackgroundThread::State  peano::parallel::SendReceiveBufferPool::BackgroundThread::_state(peano::parallel::SendReceiveBufferPool::BackgroundThread::State::Suspend);
 
 
 void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
@@ -191,19 +196,19 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
   while (!terminate) {
 
     switch (_state) {
-      case ReceiveDataInBackground:
-	{
+      case State::ReceiveDataInBackground:
+       {
           tarch::multicore::Lock lock(_semaphore);
 
           SendReceiveBufferPool::getInstance().receiveDanglingMessagesFromAllBuffersInPool();
 
-    // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
-    //std::atomic_thread_fence(std::memory_order_release);
-	}
+          // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
+          //std::atomic_thread_fence(std::memory_order_release);
+	     }
         break;
-      case Suspend:
+      case State::Suspend:
         break;
-      case Terminate:
+      case State::Terminate:
         terminate = true;
         break;
     }
@@ -214,11 +219,11 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
 
 std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString() const {
   switch (_state) {
-    case ReceiveDataInBackground:
+    case State::ReceiveDataInBackground:
       return "receive-data-in-background";
-    case Suspend:
+    case State::Suspend:
       return "suspend";
-    case Terminate:
+    case State::Terminate:
       return "terminate";
   }
 

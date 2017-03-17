@@ -61,7 +61,7 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
 
     struct BackgroundThread {
       public:
-        enum State {
+        enum class State {
           ReceiveDataInBackground,
           Suspend,
           Terminate
