@@ -63,7 +63,14 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
 
     double                              _lastConcurrencyDataUpdateTimeStamp;
 
+    /**
+     * Given in seconds.
+     */
     static double MinTimeInBetweenTwoConcurrencyLogs;
+
+    /**
+     * Given in seconds.
+     */
     static double MaxTimeInBetweenTwoConcurrencyLogs;
 
 
