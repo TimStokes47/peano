@@ -215,7 +215,7 @@ def plotConcurrency(rank,inputFileName):
   
   try:
     inputFile = open( inputFileName,  "r" )
-    print "parse concurrency level of rank " + str(rank)
+    print "parse concurrency level of rank " + str(rank),
     for line in inputFile:
       m = re.search( searchPattern, line )
       if (m):
@@ -251,6 +251,7 @@ def plotConcurrency(rank,inputFileName):
         lastTimeStamp = timeStamp
         print ".",
     #pylab.plot([0,timeStamp],[1,1], "--", color="#000000")
+    print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
@@ -266,11 +267,11 @@ def plotConcurrency(rank,inputFileName):
   pylab.xlabel('t')
   pylab.ylabel('Concurrency level')
   pylab.grid(True)
-  pylab.savefig( inputFileName + ".html-rank-" + str(rank) + ".concurrency.png" )
-  pylab.savefig( inputFileName + ".html-rank-" + str(rank) + ".concurrency.pdf" )
+  pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.png" )
+  pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.pdf" )
   switchToLargePlot()
-  pylab.savefig( inputFileName + ".html-rank-" + str(rank) + ".concurrency.large.png" )
-  pylab.savefig( inputFileName + ".html-rank-" + str(rank) + ".concurrency.large.pdf" )
+  pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.png" )
+  pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.pdf" )
   switchBackToStandardPlot()  
 
 

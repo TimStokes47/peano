@@ -259,7 +259,6 @@ if (numberOfThreads>1):
   print "plot concurrency levels"
   if (numberOfRanks>1):
     for rank in range(0,numberOfRanks):
-      print "plot concurrency levels for rank " + str(rank)
       performanceanalysisroutines.plotConcurrency(rank,args.file)
   else:
     print "plot concurrency levels"
@@ -446,28 +445,28 @@ if (numberOfThreads>1):
     outFile.write( "<img src=\"" + inputFileName + "-rank-" + str(rank) + ".concurrency.png\" />" )
     outFile.write( "<br /><a href=\"" + inputFileName + "-rank-" + str(rank) + ".concurrency.large.png\">Big version</a>" )
     
-  outFile.write("\
-    <br /><br />\
-    <p>\
-    Legend:\
-    <ul>\
-     <li>Dotted black line: Concurrency level is one</li> \
-     <li>Solid black line: Real concurrency level of current code.</li> \
-     <li>Solid green line: Maximum concurrency that could be used in the code if all grain sizes were set to one. Ignores background tasks.</li> \
-     <li>Dotted dark green line: Maximum algorithmic concurrency level introduced by the code. Takes not into account that background tasks (blue) might be handled in the background, i.e. real concurrency level could be higher.</li> \
-     <li>Light red bar: Average-case algorithmic concurrency level that could be obtained if the code selected grain size one everywhere. Ignores background tasks.</li> \
-     <li>Dark red bar: Average-case algorithmic concurrency observed for selected grain sizes. Takes not into account that background tasks (blue) might be handled in the background, i.e. real concurrency level could be higher.</li> \
-     <li>Blue bar: Additional tasks that are spawned into the background. They might remain there quite long (if the system is busy), but the diagram only tracks when they are first spawned.</li> \
-    </ul>\
-    If your events internally are multithreaded, this multithreading is not tracked by the performance analysis. Use a real performance analysis tool to get statements on your actual core usage. \
-    </p>\
-    <i>Performance hint: </i>\
-    <p>\
-      If your real concurrency falls below one, there has to be some IO or OS swapping that should be removed. \
-      If your real concurrency level falls below the number of cores available, your multicore usage is poor. Try to improve concurrency by reducing grain sizes in the oracle, e.g. \
-    </p>\
-    <a href=\"#table-of-contents\">To table of contents</a>\
-    ")
+    #  <li>Dotted black line: Concurrency level is one</li> \
+    outFile.write("\
+     <br /><br />\
+     <p>\
+     Legend:\
+     <ul>\
+      <li>Solid black line: Real concurrency level of current code.</li> \
+      <li>Solid green line: Maximum concurrency that could be used in the code if all grain sizes were set to one. Ignores background tasks.</li> \
+      <li>Dotted dark green line: Maximum algorithmic concurrency level introduced by the code. Takes not into account that background tasks (blue) might be handled in the background, i.e. real concurrency level could be higher. Is zero if code switches off parallelisation (temporarily).</li> \
+      <li>Light red bar: Average-case algorithmic concurrency level that could be obtained if the code selected grain size one everywhere. Ignores background tasks.</li> \
+      <li>Dark red bar: Average-case algorithmic concurrency observed for selected grain sizes. Takes not into account that background tasks (blue) might be handled in the background, i.e. real concurrency level could be higher.</li> \
+      <li>Blue bar: Additional tasks that are spawned into the background. They might remain there quite long (if the system is busy), but the diagram only tracks when they are first spawned.</li> \
+     </ul>\
+     If your events internally are multithreaded, this multithreading is not tracked by the performance analysis. Use a real performance analysis tool to get statements on your actual core usage. \
+     </p>\
+     <i>Performance hint: </i>\
+     <p>\
+       If your real concurrency falls below one, there has to be some IO or OS swapping that should be removed. \
+       If your real concurrency level falls below the number of cores available, your multicore usage is poor. Try to improve concurrency by reducing grain sizes in the oracle, e.g. \
+     </p>\
+     <a href=\"#table-of-contents\">To table of contents</a>\
+     ")
   if (numberOfRanks>1):      
     pass
     
