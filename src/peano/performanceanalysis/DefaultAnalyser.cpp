@@ -8,7 +8,7 @@
 tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::performanceanalysis::DefaultAnalyser" );
 
 double peano::performanceanalysis::DefaultAnalyser::MinTimeInBetweenTwoConcurrencyLogs( 1.0 );
-double peano::performanceanalysis::DefaultAnalyser::MaxTimeInBetweenTwoConcurrencyLogs( 4.0 );
+double peano::performanceanalysis::DefaultAnalyser::MaxTimeInBetweenTwoConcurrencyLogs( 32.0 );
 
 
 peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
@@ -20,13 +20,13 @@ peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   _synchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
   _concurrencyReportWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _currentConcurrencyLevel(0),
-  _currentMaxPotentialConcurrencyLevel(0),
+  _currentConcurrencyLevel(1),
+  _currentMaxPotentialConcurrencyLevel(1),
   _numberOfSpawnedBackgroundTask(0),
   _concurrentTimeSpent(0),
   _maxPotentialConcurrentTimeSpent(0),
-  _maxConcurrencyLevel(0),
-  _maxPotentialConcurrencyLevel(0),
+  _maxConcurrencyLevel(1),
+  _maxPotentialConcurrencyLevel(1),
   _lastConcurrencyDataUpdateTimeStamp(0) {
   if (!tarch::logging::CommandLineLogger::getInstance().getLogMachineName() && tarch::parallel::Node::getInstance().isGlobalMaster() ) {
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as logging of machine name is disabled. See command line logger" );
@@ -261,47 +261,60 @@ void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int act
     const double currentTimeStamp       = _concurrencyReportWatch.getCalendarTime();
     const double deltaToLastDataUpdate  = currentTimeStamp - _lastConcurrencyDataUpdateTimeStamp;
 
-    _lastConcurrencyDataUpdateTimeStamp = _concurrencyReportWatch.getCalendarTime();
+    if (deltaToLastDataUpdate<=MinTimeInBetweenTwoConcurrencyLogs) {
+      _currentConcurrencyLevel             += actualChange;
+      _currentMaxPotentialConcurrencyLevel += maxPossibleChange;
 
-    _concurrentTimeSpent             += _currentConcurrencyLevel             * deltaToLastDataUpdate;
-    _maxPotentialConcurrentTimeSpent += _currentMaxPotentialConcurrencyLevel * deltaToLastDataUpdate;
+      _maxConcurrencyLevel          = _maxConcurrencyLevel          > _currentConcurrencyLevel             ? _maxConcurrencyLevel : _currentConcurrencyLevel;
+      _maxPotentialConcurrencyLevel = _maxPotentialConcurrencyLevel > _currentMaxPotentialConcurrencyLevel ? _maxPotentialConcurrencyLevel : _currentMaxPotentialConcurrencyLevel;
 
-    _currentConcurrencyLevel             += actualChange;
-    _currentMaxPotentialConcurrencyLevel += maxPossibleChange;
+      assertion4( _currentConcurrencyLevel>=0,             actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel);
+      assertion4( _currentMaxPotentialConcurrencyLevel>=0, actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel);
+    }
+    else {
+      _currentConcurrencyLevel             += actualChange;
+      _currentMaxPotentialConcurrencyLevel += maxPossibleChange;
 
-    _maxConcurrencyLevel          = _maxConcurrencyLevel          > _currentConcurrencyLevel             ? _maxConcurrencyLevel : _currentConcurrencyLevel;
-    _maxPotentialConcurrencyLevel = _maxPotentialConcurrencyLevel > _currentMaxPotentialConcurrencyLevel ? _maxPotentialConcurrencyLevel : _currentMaxPotentialConcurrencyLevel;
+      _maxConcurrencyLevel          = _maxConcurrencyLevel          > _currentConcurrencyLevel             ? _maxConcurrencyLevel : _currentConcurrencyLevel;
+      _maxPotentialConcurrencyLevel = _maxPotentialConcurrencyLevel > _currentMaxPotentialConcurrencyLevel ? _maxPotentialConcurrencyLevel : _currentMaxPotentialConcurrencyLevel;
 
-    assertion4( _currentConcurrencyLevel>=0,             actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel);
-    assertion4( _currentMaxPotentialConcurrencyLevel>=0, actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel);
+      assertion4( _currentConcurrencyLevel>=0,             actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel);
+      assertion4( _currentMaxPotentialConcurrencyLevel>=0, actualChange, maxPossibleChange, _currentConcurrencyLevel, _currentMaxPotentialConcurrencyLevel);
 
-    if (
-      (_concurrencyReportWatch.getCalendarTime() > MaxTimeInBetweenTwoConcurrencyLogs)
-      ||
-      (_currentMaxPotentialConcurrencyLevel==0 && _concurrencyReportWatch.getCalendarTime()> MinTimeInBetweenTwoConcurrencyLogs )
-    ) {
-      logInfo(
-        "changeConcurrencyLevel(int,int)",
-        "dt=" << _concurrencyReportWatch.getCalendarTime() <<
-        ", cpu-time=" << _concurrencyReportWatch.getCPUTime() <<
-        ", concurrent-time=" << _concurrentTimeSpent <<
-        ", potential-concurrent-time=" << _maxPotentialConcurrentTimeSpent <<
-        ", max-concurrency-level=" << _maxConcurrencyLevel <<
-        ", max-potential-concurrency-level=" << _maxPotentialConcurrencyLevel <<
-        ", background-tasks=" << _numberOfSpawnedBackgroundTask
-      );
+      _lastConcurrencyDataUpdateTimeStamp = _concurrencyReportWatch.getCalendarTime();
 
-      _numberOfSpawnedBackgroundTask      = 0;
+      _concurrentTimeSpent             += _currentConcurrencyLevel             * deltaToLastDataUpdate;
+      _maxPotentialConcurrentTimeSpent += _currentMaxPotentialConcurrencyLevel * deltaToLastDataUpdate;
 
-      _concurrentTimeSpent                = 0.0;
-      _maxPotentialConcurrentTimeSpent    = 0.0;
+      // Second line: it is important to get serial timings right
+      if (
+        (_concurrencyReportWatch.getCalendarTime() > MaxTimeInBetweenTwoConcurrencyLogs)
+        ||
+        (_currentMaxPotentialConcurrencyLevel==1)
+      ) {
+        logInfo(
+          "changeConcurrencyLevel(int,int)",
+          "dt=" << _concurrencyReportWatch.getCalendarTime() <<
+          ", cpu-time=" << _concurrencyReportWatch.getCPUTime() <<
+          ", concurrent-time=" << _concurrentTimeSpent <<
+          ", potential-concurrent-time=" << _maxPotentialConcurrentTimeSpent <<
+          ", max-concurrency-level=" << _maxConcurrencyLevel <<
+          ", max-potential-concurrency-level=" << _maxPotentialConcurrencyLevel <<
+          ", background-tasks=" << _numberOfSpawnedBackgroundTask
+        );
 
-      _maxConcurrencyLevel          = 0;
-      _maxPotentialConcurrencyLevel = 0;
+        _numberOfSpawnedBackgroundTask      = 0;
 
-      _lastConcurrencyDataUpdateTimeStamp = 0.0;
+        _concurrentTimeSpent                = 0.0;
+        _maxPotentialConcurrentTimeSpent    = 0.0;
 
-      _concurrencyReportWatch.startTimer();
+        _maxConcurrencyLevel          = 0;
+        _maxPotentialConcurrencyLevel = 0;
+
+        _lastConcurrencyDataUpdateTimeStamp = 0.0;
+
+        _concurrencyReportWatch.startTimer();
+      }
     }
   }
 }
