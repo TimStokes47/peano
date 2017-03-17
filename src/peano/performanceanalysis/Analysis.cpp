@@ -145,4 +145,10 @@ void peano::performanceanalysis::Analysis::fireAndForgetBackgroundTask(int taskC
   _device->fireAndForgetBackgroundTask(taskCount);
 }
 
+
+void peano::performanceanalysis::Analysis::enable(bool value) {
+  assertion( _device!=0 );
+  _device->enable(value);
+}
+
 #endif

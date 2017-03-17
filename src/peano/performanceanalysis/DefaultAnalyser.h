@@ -33,6 +33,7 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
   private:
     static tarch::logging::Log     _log;
 
+    bool _isSwitchedOn;
 
     /**
      * Total watch runs from one endIteration() to the next one.
@@ -121,6 +122,8 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
 
     virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange);
     virtual void fireAndForgetBackgroundTask(int taskCount);
+
+    virtual void enable(bool value);
 };
 
 

@@ -108,6 +108,8 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
 
     virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange);
     virtual void fireAndForgetBackgroundTask(int taskCount);
+
+    virtual void enable(bool value);
 };
 
 
@@ -186,6 +188,8 @@ class peano::performanceanalysis::Analysis {
 
     virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange) {}
     virtual void fireAndForgetBackgroundTask(int taskCount) {}
+
+    virtual void enable(bool value) {}
 };
 
 #endif
