@@ -61,7 +61,12 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     double                              _maxConcurrencyLevel;
     double                              _maxPotentialConcurrencyLevel;
 
+    /**
+     * Is never piped out. It is used to find out whether to stream a snapshot
+     * or not, i.e. to control the data dumps.
+     */
     double                              _lastConcurrencyDataUpdateTimeStamp;
+    double                              _lastConcurrencyDataWriteTimeStamp;
 
     /**
      * Given in seconds.
