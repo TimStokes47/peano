@@ -1169,7 +1169,13 @@ def plot2dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   pylab.ylim( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
   pylab.savefig( outputFileName + ".level" + str(l) + ".png" )
   pylab.savefig( outputFileName + ".level" + str(l) + ".pdf" )
+  
+  switchToLargePlot()
+  
+  pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
+  pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
   print "done"
+  switchBackToStandardPlot()  
 
   
 
@@ -1233,4 +1239,5 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
   pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
   print "done"
+  switchBackToStandardPlot()  
   
