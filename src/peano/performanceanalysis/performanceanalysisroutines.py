@@ -1240,4 +1240,5 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
   print "done"
   switchBackToStandardPlot()  
+  pylab.figure(figsize=(float(domainsize[0]),float(domainsize[1])))
   
