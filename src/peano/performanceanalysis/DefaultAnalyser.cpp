@@ -8,7 +8,7 @@
 tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::performanceanalysis::DefaultAnalyser" );
 
 double peano::performanceanalysis::DefaultAnalyser::MinTimeInBetweenTwoConcurrencyLogs( 1.0e-2 );
-double peano::performanceanalysis::DefaultAnalyser::MaxTimeInBetweenTwoConcurrencyLogs( 2.0 );
+double peano::performanceanalysis::DefaultAnalyser::TimeInBetweenTwoConcurrencyDataDumps( 2.0 );
 
 
 peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
@@ -283,7 +283,7 @@ void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int act
     }
 
     const double deltaToLastDataWrite = _concurrencyReportWatch.getCalendarTime() - _lastConcurrencyDataWriteTimeStamp;
-    if ( deltaToLastDataWrite>maxPossibleChange>MaxTimeInBetweenTwoConcurrencyLogs ) {
+    if ( deltaToLastDataWrite>TimeInBetweenTwoConcurrencyDataDumps ) {
       _lastConcurrencyDataWriteTimeStamp = _concurrencyReportWatch.getCalendarTime();
 
       logInfo(

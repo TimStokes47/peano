@@ -7,6 +7,9 @@ matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 import pylab
 import networkx 
 
+from mpl_toolkits.mplot3d import Axes3D
+
+
 
 def getNumberOfRanks(filename):
   print "parse input file header ",
@@ -1167,3 +1170,67 @@ def plot2dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   pylab.savefig( outputFileName + ".level" + str(l) + ".png" )
   pylab.savefig( outputFileName + ".level" + str(l) + ".pdf" )
   print "done"
+
+  
+
+ 
+ 
+def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,offset,volume,levels,outputFileName):
+  Colors = [ "#ff1122", "#11ff22", "#1122ff", "#ffee11", "#ff11cc", "#11ddff" ]
+  print "plot domain decomposition on level " + str(l),
+  pylab.clf()
+     
+  #fig = pylab.figure()
+  #ax = fig.add_subplot(111, projection='3d')
+  
+  NumberOfPartitionsPerPlot = len(Colors)
+  NumberOfDifferentPlots    = int(round(numberOfRanks/NumberOfPartitionsPerPlot+0.5))
+  numberOfPartitionsPlottedInThisSubfigure = 0
+  currentSubPlot                           = 0
+  
+  pylab.figure(figsize=(float(domainsize[0]),float(domainsize[1])*NumberOfDifferentPlots))
+  
+  
+  colorCounter = 0
+  ax = pylab.subplot2grid((NumberOfDifferentPlots,1), (0,0), projection='3d')
+  ax.set_xlim3d( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
+  ax.set_ylim3d( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
+  ax.set_zlim3d( float(domainoffset[2]), float(domainoffset[2])+float(domainsize[2]) )
+  for i in range(0,numberOfRanks):
+    if (numberOfPartitionsPlottedInThisSubfigure>NumberOfPartitionsPerPlot):
+      numberOfPartitionsPlottedInThisSubfigure = 0
+      ax = pylab.subplot2grid((NumberOfDifferentPlots,1), (currentSubPlot,0), projection='3d')
+      ax.set_xlim3d( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
+      ax.set_ylim3d( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
+      ax.set_zlim3d( float(domainoffset[2]), float(domainoffset[2])+float(domainsize[2]) )
+      currentSubPlot  = currentSubPlot + 1
+   
+    if levels[i]==l:
+      print ".",
+  
+      myColor      = Colors[colorCounter % len(Colors)]
+      
+      NumberOfLines = 20
+      for xCount in range(0,NumberOfLines):
+        x = offset[i][0] + volume[i][0] * xCount / NumberOfLines 
+        ax.plot3D([x,x],[offset[i][1]+volume[i][1], offset[i][1]], [offset[i][2]+volume[i][2]/2,offset[i][2]+volume[i][2]/2],color=myColor)
+      ax.plot3D([offset[i][0],             offset[i][0]],             [offset[i][1], offset[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
+      ax.plot3D([offset[i][0]+volume[i][0],offset[i][0]+volume[i][0]],[offset[i][1], offset[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
+      ax.plot3D([offset[i][0],             offset[i][0]],             [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
+      ax.plot3D([offset[i][0]+volume[i][0],offset[i][0]+volume[i][0]],[offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
+
+      chosenFontSize = 12
+      ax.text(offset[i][0]+volume[i][0]/2, offset[i][1]+volume[i][1]/2, offset[i][2]+volume[i][2]/2, str(i), "y", fontsize=chosenFontSize)      
+
+      numberOfPartitionsPlottedInThisSubfigure = numberOfPartitionsPlottedInThisSubfigure+1      
+      colorCounter = colorCounter + 1
+  
+  pylab.savefig( outputFileName + ".level" + str(l) + ".png" )
+  pylab.savefig( outputFileName + ".level" + str(l) + ".pdf" )
+  
+  switchToLargePlot()
+  
+  pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
+  pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
+  print "done"
+  

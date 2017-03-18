@@ -76,7 +76,7 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     /**
      * Given in seconds.
      */
-    static double MaxTimeInBetweenTwoConcurrencyLogs;
+    static double TimeInBetweenTwoConcurrencyDataDumps;
 
 
   public:

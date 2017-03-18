@@ -242,10 +242,11 @@ print " done "
 
 performanceanalysisroutines.plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,work,args.file);
 
-if dim==2:
- for l in range(1,max(levels)+1):
+for l in range(1,max(levels)+1):
+ if dim==2:
   performanceanalysisroutines.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
-
+ if dim==3:
+  performanceanalysisroutines.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
 
 
 
@@ -451,7 +452,7 @@ if (numberOfThreads>1):
      <p>\
      Legend:\
      <ul>\
-      <li>Solid black line: Real concurrency level of current code.</li> \
+      <li>Solid black line: Real concurrency level of current code. Can be smaller 1 if code spends a lot of time in OS kernel calls.</li> \
       <li>Solid green line: Maximum concurrency that could be used in the code if all grain sizes were set to one. Ignores background tasks.</li> \
       <li>Dotted dark green line: Maximum algorithmic concurrency level introduced by the code. Takes not into account that background tasks (blue) might be handled in the background, i.e. real concurrency level could be higher. Is zero if code switches off parallelisation (temporarily).</li> \
       <li>Light red bar: Average-case algorithmic concurrency level that could be obtained if the code selected grain size one everywhere. Ignores background tasks.</li> \
@@ -515,10 +516,9 @@ if (numberOfRanks>1):
   outFile.write( "<a href=\"" + args.file + ".work-distribution.large.png\"><img src=\"" + args.file + ".work-distribution.png\" /></a>" )
   outFile.write( "<a href=\"" + args.file + "-symlog.work-distribution.large.png\"><img src=\"" + args.file + "-symlog.work-distribution.png\" /></a>" )
   outFile.write( "<p>The filled region is the actual local work volume of a rank. It has to be smaller than the region of responsibility that might overlap the actual domain.</p>" )
-  if dim==2:
-   outFile.write( "<h2>Domain decomposition (level by level)</h2>" )
-   for l in range(1,max(levels)+1):
-    outFile.write( "<a href=\"" + args.file + ".level" + str(l) + ".pdf\"> <img src=\"" + args.file + ".level" + str(l) + ".png\" /> </a> " )
+  outFile.write( "<h2>Domain decomposition (level by level)</h2>" )
+  for l in range(1,max(levels)+1):
+    outFile.write( "<a href=\"" + args.file + ".level" + str(l) + ".large.pdf\"> <img src=\"" + args.file + ".level" + str(l) + ".png\" /> </a> " )
 
 
   #
