@@ -236,7 +236,7 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::switchState(State
   logTraceInWith1Argument( "switchState(State)", toString() );
   tarch::multicore::Lock lock(_semaphore);
 
-  assertion1( _state != BackgroundThread::Terminate, toString() );
+  assertion1( _state != BackgroundThread::State::Terminate, toString() );
 
   _state = newState;
   logTraceOutWith1Argument( "switchState(State)", toString() );
