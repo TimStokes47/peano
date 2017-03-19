@@ -95,8 +95,16 @@ class peano::performanceanalysis::Analyser {
     virtual void endReleaseOfBoundaryData() = 0;
 
     /**
-     * Reports that the concurrency level has been changed by actualChange
-     * while it could even have been changed by maxPossibleChange.
+     * Inform the analysis that code has entered or left a parallel section.
+     *
+     * We have to reduce the parameters by one before we add them to the
+     * internal values as we assume that a parallel region with actualChange
+     * parallel threads is entered by a single thread, i.e. one thread of the
+     * newly entered parallel section has already been there.
+     *
+     * @param actualChange Concurrency level of the just entered parallel
+     *          section or, alternatively, a negative value if it has left a
+     *          parallel region.
      */
     virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange) = 0;
 
