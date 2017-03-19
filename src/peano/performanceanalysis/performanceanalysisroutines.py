@@ -1294,20 +1294,20 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
         x = offset[i][0] + volume[i][0] * xCount / NumberOfLines 
         ax.plot3D([x,x],[offset[i][1]+volume[i][1], offset[i][1]], [offset[i][2]+volume[i][2]/2,offset[i][2]+volume[i][2]/2],color=myColor)
       ## bars along z
-      ax.plot3D([offset[i][0],             offset[i][0]],             [offset[i][1], offset[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
-      ax.plot3D([offset[i][0]+volume[i][0],offset[i][0]+volume[i][0]],[offset[i][1], offset[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
-      ax.plot3D([offset[i][0],             offset[i][0]],             [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
-      ax.plot3D([offset[i][0]+volume[i][0],offset[i][0]+volume[i][0]],[offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
+      ax.plot3D([offset[i][0],             offset[i][0]],             [offset[i][1], offset[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor, linewidth=2.0)
+      ax.plot3D([offset[i][0]+volume[i][0],offset[i][0]+volume[i][0]],[offset[i][1], offset[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor, linewidth=2.0)
+      ax.plot3D([offset[i][0],             offset[i][0]],             [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor, linewidth=2.0)
+      ax.plot3D([offset[i][0]+volume[i][0],offset[i][0]+volume[i][0]],[offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor, linewidth=2.0)
       ## bars along x
-      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1],              offset[i][1]],              [offset[i][2],              offset[i][2]],              color=myColor)
-      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1],              offset[i][1]],              [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor)
-      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],              offset[i][2]],              color=myColor)
-      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor)
+      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1],              offset[i][1]],              [offset[i][2],              offset[i][2]],              color=myColor, linewidth=2.0)
+      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1],              offset[i][1]],              [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor, linewidth=2.0)
+      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],              offset[i][2]],              color=myColor, linewidth=2.0)
+      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor, linewidth=2.0)
       ## bars along y
-      ax.plot3D([offset[i][0],              offset[i][0]],              [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2],              offset[i][2]],              color=myColor)
-      ax.plot3D([offset[i][0],              offset[i][0]],              [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor)
-      ax.plot3D([offset[i][0]+volume[i][0], offset[i][0]+volume[i][0]], [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2],              offset[i][2]],              color=myColor)
-      ax.plot3D([offset[i][0]+volume[i][0], offset[i][0]+volume[i][0]], [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor)
+      ax.plot3D([offset[i][0],              offset[i][0]],              [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2],              offset[i][2]],              color=myColor, linewidth=2.0)
+      ax.plot3D([offset[i][0],              offset[i][0]],              [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor, linewidth=2.0)
+      ax.plot3D([offset[i][0]+volume[i][0], offset[i][0]+volume[i][0]], [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2],              offset[i][2]],              color=myColor, linewidth=2.0)
+      ax.plot3D([offset[i][0]+volume[i][0], offset[i][0]+volume[i][0]], [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor, linewidth=2.0)
 
       chosenFontSize = 12
       ax.text(offset[i][0]+volume[i][0]/2, offset[i][1]+volume[i][1]/2, offset[i][2]+volume[i][2]/2, str(i), "y", fontsize=chosenFontSize)      

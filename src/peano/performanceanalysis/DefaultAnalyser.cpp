@@ -55,10 +55,6 @@ peano::performanceanalysis::DefaultAnalyser::~DefaultAnalyser() {
 }
 
 
-#ifdef UseScoreP
-SCOREP_USER_GLOBAL_REGION_DEFINE( ScoreP_Default_Analyser )
-#endif
-
 
 void peano::performanceanalysis::DefaultAnalyser::enable(bool value) {
   _isSwitchedOn=value;
@@ -66,10 +62,10 @@ void peano::performanceanalysis::DefaultAnalyser::enable(bool value) {
 
   #ifdef UseScoreP
   if (value) {
-    SCOREP_USER_REGION_BEGIN( ScoreP_Default_Analyser, "Default Analyser", SCOREP_USER_REGION_TYPE_PHASE)
+    SCOREP_RECORDING_ON
   }
   else {
-    SCOREP_USER_REGION_END( ScoreP_Default_Analyser )
+    SCOREP_RECORDING_OFF
   }
   #endif
 }
