@@ -1299,7 +1299,15 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
       ax.plot3D([offset[i][0],             offset[i][0]],             [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
       ax.plot3D([offset[i][0]+volume[i][0],offset[i][0]+volume[i][0]],[offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
       ## bars along x
-      ax.plot3D([offset[i][0],             offset[i][0]+volume[i][0]],[offset[i][1], offset[i][1]], [offset[i][2],offset[i][2]],color=myColor)
+      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1],              offset[i][1]],              [offset[i][2],              offset[i][2]],              color=myColor)
+      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1],              offset[i][1]],              [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor)
+      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],              offset[i][2]],              color=myColor)
+      ax.plot3D([offset[i][0],     offset[i][0]+volume[i][0]], [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor)
+      ## bars along y
+      ax.plot3D([offset[i][0],              offset[i][0]],              [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2],              offset[i][2]],              color=myColor)
+      ax.plot3D([offset[i][0],              offset[i][0]],              [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor)
+      ax.plot3D([offset[i][0]+volume[i][0], offset[i][0]+volume[i][0]], [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2],              offset[i][2]],              color=myColor)
+      ax.plot3D([offset[i][0]+volume[i][0], offset[i][0]+volume[i][0]], [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor)
 
       chosenFontSize = 12
       ax.text(offset[i][0]+volume[i][0]/2, offset[i][1]+volume[i][1]/2, offset[i][2]+volume[i][2]/2, str(i), "y", fontsize=chosenFontSize)      

@@ -835,14 +835,13 @@ print "html file written"
 #
 if (numberOfRanks>1):      
   print "continue to write individual rank statistics ... html file however should be readable already"
-  for rank in range(0,numberOfRanks):
-    print "plot statistics for rank " + str(rank)
-    performanceanalysisroutines.plotStatisticsForRank(rank,numberOfRanks,args.file)
-
   for l in range(1,max(levels)+1):
    if dim==2:
     performanceanalysisroutines.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
    if dim==3:
     performanceanalysisroutines.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
+  for rank in range(0,numberOfRanks):
+    print "plot statistics for rank " + str(rank)
+    performanceanalysisroutines.plotStatisticsForRank(rank,numberOfRanks,args.file)
 
     
