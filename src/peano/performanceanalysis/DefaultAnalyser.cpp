@@ -5,6 +5,11 @@
 
 #include "tarch/multicore/Lock.h"
 
+#ifdef UseScoreP
+#include <scorep/SCOREP_User.h>
+#endif
+
+
 tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::performanceanalysis::DefaultAnalyser" );
 
 double peano::performanceanalysis::DefaultAnalyser::MinTimeInBetweenTwoConcurrencyLogs( 1.0e-2 );
@@ -42,7 +47,7 @@ peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
     logWarning( "DefaultAnalyser()", "performance analysis might yield invalid results as log filters for peano::performanceanalysis::DefaultAnalyser are installed" );
   }
 
-  _concurrencyReportWatch.startTimer();
+  enable(true);
 }
 
 
@@ -50,8 +55,23 @@ peano::performanceanalysis::DefaultAnalyser::~DefaultAnalyser() {
 }
 
 
+#ifdef UseScoreP
+SCOREP_USER_GLOBAL_REGION_DEFINE( ScoreP_Default_Analyser )
+#endif
+
+
 void peano::performanceanalysis::DefaultAnalyser::enable(bool value) {
   _isSwitchedOn=value;
+  _concurrencyReportWatch.startTimer();
+
+  #ifdef UseScoreP
+  if (value) {
+    SCOREP_USER_REGION_BEGIN( ScoreP_Default_Analyser, "Default Analyser", SCOREP_USER_REGION_TYPE_PHASE)
+  }
+  else {
+    SCOREP_USER_REGION_END( ScoreP_Default_Analyser )
+  }
+  #endif
 }
 
 
