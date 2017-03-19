@@ -62,10 +62,10 @@ void peano::performanceanalysis::DefaultAnalyser::enable(bool value) {
 
   #ifdef UseScoreP
   if (value) {
-    SCOREP_RECORDING_ON
+    SCOREP_RECORDING_ON()
   }
   else {
-    SCOREP_RECORDING_OFF
+    SCOREP_RECORDING_OFF()
   }
   #endif
 }
