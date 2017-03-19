@@ -242,13 +242,6 @@ print " done "
 
 performanceanalysisroutines.plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,work,args.file);
 
-for l in range(1,max(levels)+1):
- if dim==2:
-  performanceanalysisroutines.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
- if dim==3:
-  performanceanalysisroutines.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
-
-
 
 print "plot walltime overview"
 performanceanalysisroutines.plotWalltimeOverview(numberOfRanks,args.file)
@@ -280,6 +273,7 @@ if (numberOfRanks>1):
 
   print "boundary data exchange"
   performanceanalysisroutines.plotBoundaryLateSends(numberOfRanks,inputFileName)
+
 
 
 #
@@ -844,3 +838,11 @@ if (numberOfRanks>1):
   for rank in range(0,numberOfRanks):
     print "plot statistics for rank " + str(rank)
     performanceanalysisroutines.plotStatisticsForRank(rank,numberOfRanks,args.file)
+
+  for l in range(1,max(levels)+1):
+   if dim==2:
+    performanceanalysisroutines.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
+   if dim==3:
+    performanceanalysisroutines.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
+
+    

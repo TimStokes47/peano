@@ -71,10 +71,17 @@ class Pair:
     self.maxCardinality = 0
 
 
+DefaultSize = [4, 4]
+
 def switchToLargePlot():
   DefaultSize = pylab.gcf().get_size_inches()
   pylab.gcf().set_size_inches( (DefaultSize[0]*10, DefaultSize[1]*10) )
 
+
+def switchBackToStandardPlot():
+  #DefaultSize = pylab.gcf().get_size_inches()
+  #pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
+  pylab.gcf().set_size_inches( DefaultSize[0], DefaultSize[1] )
 
 
 
@@ -95,11 +102,6 @@ def getNumberOfThreads(filename):
     print inst
   return 0
 
-
-
-def switchBackToStandardPlot():
-  DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( (DefaultSize[0]/10, DefaultSize[1]/10) )
 
 
 def drawTreeGraph(myGraph):
@@ -272,10 +274,16 @@ def plotConcurrency(rank,inputFileName):
   pylab.grid(True)
   pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.png" )
   pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.pdf" )
-  switchToLargePlot()
-  pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.png" )
-  pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.pdf" )
-  switchBackToStandardPlot()  
+  try:  
+    switchToLargePlot()
+    pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.png" )
+    pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.pdf" )
+    switchBackToStandardPlot()  
+  except:
+    print "ERROR: failed to generated large-scale plot"
+    switchBackToStandardPlot()  
+    pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.png" )
+    pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.pdf" )
 
 
 
@@ -383,14 +391,20 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   pylab.grid(False)
   pylab.savefig( inputFileName + ".mpi-phases.png" )
   pylab.savefig( inputFileName + ".mpi-phases.pdf" )
-  switchToLargePlot()
-  if numberOfRanks<=16:
-    pylab.yticks([i for i in range(0,numberOfRanks)]) 
-  else:
-    pylab.yticks([i*16 for i in range(0,numberOfRanks/16)]) 
-  pylab.savefig( inputFileName + ".mpi-phases.large.png" )
-  pylab.savefig( inputFileName + ".mpi-phases.large.pdf" )
-  switchBackToStandardPlot()  
+  try:
+    switchToLargePlot()
+    if numberOfRanks<=16:
+      pylab.yticks([i for i in range(0,numberOfRanks)]) 
+    else:
+      pylab.yticks([i*16 for i in range(0,numberOfRanks/16)]) 
+    pylab.savefig( inputFileName + ".mpi-phases.large.png" )
+    pylab.savefig( inputFileName + ".mpi-phases.large.pdf" )
+    switchBackToStandardPlot()  
+  except:
+    print "ERROR: failed to generated large-scale plot"
+    switchBackToStandardPlot()  
+    pylab.savefig( inputFileName + ".mpi-phases.large.png" )
+    pylab.savefig( inputFileName + ".mpi-phases.large.pdf" )
 
 
 
@@ -533,19 +547,32 @@ def plotBoundaryLateSends(numberOfRanks,inputFileName):
   drawTreeGraph(graph)
   pylab.savefig( inputFileName + ".boundary-data-exchange.png" )
   pylab.savefig( inputFileName + ".boundary-data-exchange.pdf" )
-  switchToLargePlot()
-  pylab.savefig( inputFileName + ".boundary-data-exchange.large.png" )
-  pylab.savefig( inputFileName + ".boundary-data-exchange.large.pdf" )
-  switchBackToStandardPlot()
+  try:
+    switchToLargePlot()
+    pylab.savefig( inputFileName + ".boundary-data-exchange.large.png" )
+    pylab.savefig( inputFileName + ".boundary-data-exchange.large.pdf" )
+    switchBackToStandardPlot()
+  except:
+    print "ERROR: failed to generated large-scale plot"
+    switchBackToStandardPlot()
+    pylab.savefig( inputFileName + ".boundary-data-exchange.large.png" )
+    pylab.savefig( inputFileName + ".boundary-data-exchange.large.pdf" )
 
   pylab.clf()
   pylab.title( "Late sends from neighbours (only edges with weight more than average)" )
   drawTreeGraph(sparseAverageGraph)
   pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.png" )
   pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.pdf" )
-  switchToLargePlot()
-  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.png" )
-  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.pdf" )
+  try:
+    switchToLargePlot()
+    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.png" )
+    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.pdf" )
+    switchBackToStandardPlot()
+  except:
+    print "ERROR: failed to generated large-scale plot"
+    switchBackToStandardPlot()
+    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.png" )
+    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.pdf" )
   switchBackToStandardPlot()
 
   pylab.clf()
@@ -553,9 +580,16 @@ def plotBoundaryLateSends(numberOfRanks,inputFileName):
   drawTreeGraph(sparseMaxGraph)
   pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.png" )
   pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.pdf" )
-  switchToLargePlot()
-  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.png" )
-  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.pdf" )
+  try:
+    switchToLargePlot()
+    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.png" )
+    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.pdf" )
+    switchBackToStandardPlot()
+  except:
+    print "ERROR: failed to generated large-scale plot"
+    switchBackToStandardPlot()
+    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.png" )
+    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.pdf" )
   switchBackToStandardPlot()
 
 
@@ -635,30 +669,48 @@ def plotMasterWorkerLateSends(numberOfRanks,inputFileName):
   drawTreeGraph(graph)
   pylab.savefig( inputFileName + ".master-worker-data-exchange.png" )
   pylab.savefig( inputFileName + ".master-worker-data-exchange.pdf" )
-  switchToLargePlot()
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.large.png" )
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.large.pdf" )
-  switchBackToStandardPlot()
+  try:
+    switchToLargePlot()
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.large.png" )
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.large.pdf" )
+    switchBackToStandardPlot()
+  except:
+    print "ERROR: failed to generated large-scale plot"
+    switchBackToStandardPlot()
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.large.png" )
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.large.pdf" )
 
   pylab.clf()
   pylab.title( "Late workers (only edges with weight more than average)" )
   drawTreeGraph(sparseAverageGraph)
   pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.png" )
   pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.pdf" )
-  switchToLargePlot()
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.png" )
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.pdf" )
-  switchBackToStandardPlot()
+  try: 
+    switchToLargePlot()
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.png" )
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.pdf" )
+    switchBackToStandardPlot()
+  except:
+    print "ERROR: failed to generated large-scale plot"
+    switchBackToStandardPlot()
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.png" )
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.pdf" )
 
   pylab.clf()
   pylab.title( "Late workers (only 10% heaviest edges)" )
   drawTreeGraph(sparseMaxGraph)
   pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.png" )
   pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.pdf" )
-  switchToLargePlot()
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.png" )
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.pdf" )
-  switchBackToStandardPlot()
+  try:
+    switchToLargePlot()
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.png" )
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.pdf" )
+    switchBackToStandardPlot()
+  except:
+    print "ERROR: failed to generated large-scale plot"
+    switchBackToStandardPlot()
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.png" )
+    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.pdf" )
 
   return GlobalSynchronisationOnRank0
 
@@ -710,10 +762,16 @@ def plotLogicalTopology(inputFileName,numberOfRanks,dim):
   drawTreeGraph(topologyGraph)
   pylab.savefig( inputFileName + ".topology.png" )
   pylab.savefig( inputFileName + ".topology.pdf" )
-  switchToLargePlot()
-  pylab.savefig( inputFileName + ".topology.large.png" )
-  pylab.savefig( inputFileName + ".topology.large.pdf" )
-  switchBackToStandardPlot()
+  try:
+    switchToLargePlot()
+    pylab.savefig( inputFileName + ".topology.large.png" )
+    pylab.savefig( inputFileName + ".topology.large.pdf" )
+    switchBackToStandardPlot()
+  except:
+    print "ERROR: failed to generated large-scale plot"
+    switchBackToStandardPlot()
+    pylab.savefig( inputFileName + ".topology.large.png" )
+    pylab.savefig( inputFileName + ".topology.large.pdf" )
   return (parents,levels,offset,volume)
 
 
@@ -1120,10 +1178,16 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,wor
  pylab.ylabel('$\Omega $')
  pylab.savefig( outputFileName + "-symlog.work-distribution.png" )
  pylab.savefig( outputFileName + "-symlog.work-distribution.pdf" )
- switchToLargePlot()
- pylab.savefig( outputFileName + "-symlog.work-distribution.large.png" )
- pylab.savefig( outputFileName + "-symlog.work-distribution.large.pdf" )
- switchBackToStandardPlot()
+ try:
+   switchToLargePlot()
+   pylab.savefig( outputFileName + "-symlog.work-distribution.large.png" )
+   pylab.savefig( outputFileName + "-symlog.work-distribution.large.pdf" )
+   switchBackToStandardPlot()
+ except:
+   print "ERROR: failed to generated large-scale plot"
+   switchBackToStandardPlot()
+   pylab.savefig( outputFileName + "-symlog.work-distribution.large.png" )
+   pylab.savefig( outputFileName + "-symlog.work-distribution.large.pdf" )
 
  ax.set_yscale('symlog', basey=10)
 
@@ -1136,10 +1200,16 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,wor
  pylab.ylabel('$\Omega $')
  pylab.savefig( outputFileName + ".work-distribution.png" )
  pylab.savefig( outputFileName + ".work-distribution.pdf" )
- switchToLargePlot()
- pylab.savefig( outputFileName + ".work-distribution.large.png" )
- pylab.savefig( outputFileName + ".work-distribution.large.pdf" )
- switchBackToStandardPlot()
+ try:
+   switchToLargePlot()
+   pylab.savefig( outputFileName + ".work-distribution.large.png" )
+   pylab.savefig( outputFileName + ".work-distribution.large.pdf" )
+   switchBackToStandardPlot()
+ except:
+   print "ERROR: failed to generated large-scale plot"
+   switchBackToStandardPlot()
+   pylab.savefig( outputFileName + ".work-distribution.large.png" )
+   pylab.savefig( outputFileName + ".work-distribution.large.pdf" )
  print "done"
 
  
@@ -1169,13 +1239,16 @@ def plot2dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   pylab.ylim( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
   pylab.savefig( outputFileName + ".level" + str(l) + ".png" )
   pylab.savefig( outputFileName + ".level" + str(l) + ".pdf" )
-  
-  switchToLargePlot()
-  
-  pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
-  pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
-  print "done"
-  switchBackToStandardPlot()  
+  try:
+    switchToLargePlot()
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
+    print "done"
+    switchBackToStandardPlot()  
+  except:
+    print "ERROR: failed to generated large-scale plot"
+    switchBackToStandardPlot()  
+    switchBackToStandardPlot()  
 
   
 
@@ -1220,10 +1293,13 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
       for xCount in range(0,NumberOfLines):
         x = offset[i][0] + volume[i][0] * xCount / NumberOfLines 
         ax.plot3D([x,x],[offset[i][1]+volume[i][1], offset[i][1]], [offset[i][2]+volume[i][2]/2,offset[i][2]+volume[i][2]/2],color=myColor)
+      ## bars along z
       ax.plot3D([offset[i][0],             offset[i][0]],             [offset[i][1], offset[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
       ax.plot3D([offset[i][0]+volume[i][0],offset[i][0]+volume[i][0]],[offset[i][1], offset[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
       ax.plot3D([offset[i][0],             offset[i][0]],             [offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
       ax.plot3D([offset[i][0]+volume[i][0],offset[i][0]+volume[i][0]],[offset[i][1]+volume[i][1], offset[i][1]+volume[i][1]], [offset[i][2],offset[i][2]+volume[i][2]],color=myColor)
+      ## bars along x
+      ax.plot3D([offset[i][0],             offset[i][0]+volume[i][0]],[offset[i][1], offset[i][1]], [offset[i][2],offset[i][2]],color=myColor)
 
       chosenFontSize = 12
       ax.text(offset[i][0]+volume[i][0]/2, offset[i][1]+volume[i][1]/2, offset[i][2]+volume[i][2]/2, str(i), "y", fontsize=chosenFontSize)      
@@ -1233,12 +1309,17 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   
   pylab.savefig( outputFileName + ".level" + str(l) + ".png" )
   pylab.savefig( outputFileName + ".level" + str(l) + ".pdf" )
+
+  try:  
+    switchToLargePlot()
   
-  switchToLargePlot()
-  
-  pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
-  pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
-  print "done"
-  switchBackToStandardPlot()  
-  pylab.figure(figsize=(float(domainsize[0]),float(domainsize[1])))
-  
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
+    switchBackToStandardPlot()  
+    print "done"
+  except:
+    print "could not create large size plots"
+    switchBackToStandardPlot()  
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
+    
