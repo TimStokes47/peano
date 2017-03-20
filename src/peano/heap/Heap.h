@@ -732,6 +732,13 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
     void clearStatistics();
 
     void logContentToWarningDevice();
+
+    /**
+     * This operation ensures that no message is in the join buffer anymore. If
+     * there is a message, it plots its content and returns false. The routine
+     * might also trigger and MPI_Test and thus is not const.
+     */
+    bool validateThatIncomingJoinBuffersAreEmpty();
 };
 
 

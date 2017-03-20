@@ -563,3 +563,9 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
   logTraceOut( "finishedToSendBoundaryData()" );
 }
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+bool peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::validateThatIncomingJoinBuffersAreEmpty() {
+  return _joinForkExchanger.validateThatIncomingJoinBuffersAreEmpty();
+}
