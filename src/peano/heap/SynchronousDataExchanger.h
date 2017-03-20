@@ -128,6 +128,8 @@ class peano::heap::SynchronousDataExchanger {
 
     void plotStatistics() const;
     void clearStatistics();
+
+    bool validateThatIncomingJoinBuffersAreEmpty();
 };
 
 

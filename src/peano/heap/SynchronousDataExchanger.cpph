@@ -345,3 +345,64 @@ std::vector< Data > peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSe
 
   return result;
 }
+
+
+
+template <class Data, bool CreateCopiesOfSentData>
+bool peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData>::validateThatIncomingJoinBuffersAreEmpty() {
+  if ( _receiveTasks.empty() ) {
+    int        flag   = 0;
+    MPI_Status status;
+
+    int        result = MPI_Iprobe(
+      MPI_ANY_SOURCE,
+      _metaDataTag,
+      tarch::parallel::Node::getInstance().getCommunicator(),
+      &flag,
+      &status
+    );
+    if (result!=MPI_SUCCESS) {
+      logError(
+        "validateThatIncomingJoinBuffersAreEmpty()",
+        "probing for messages failed: " << tarch::parallel::MPIReturnValueToString(result)
+      );
+    }
+    if (flag) {
+     logError(
+        "validateThatIncomingJoinBuffersAreEmpty()",
+        "there is still meta data in the MPI queues"
+      );
+     return false;
+    }
+
+    result = MPI_Iprobe(
+      MPI_ANY_SOURCE,
+      _dataTag,
+      tarch::parallel::Node::getInstance().getCommunicator(),
+      &flag,
+      &status
+    );
+    if (result!=MPI_SUCCESS) {
+      logError(
+        "validateThatIncomingJoinBuffersAreEmpty()",
+        "probing for messages failed: " << tarch::parallel::MPIReturnValueToString(result)
+      );
+    }
+    if (flag) {
+     logError(
+        "validateThatIncomingJoinBuffersAreEmpty()",
+        "there is still data in the MPI queues (no meta data though)"
+      );
+     return false;
+    }
+
+    return true;
+  }
+  else {
+    for (typename std::list<SendReceiveTask<Data> >::iterator i = _receiveTasks.begin(); i != _receiveTasks.end(); i++) {
+      logError( "validateThatIncomingJoinBuffersAreEmpty()", "message in queue: " << i->toString() );
+    }
+
+    return false;
+  }
+}
