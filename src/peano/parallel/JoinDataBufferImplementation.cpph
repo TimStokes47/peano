@@ -86,6 +86,7 @@ void peano::parallel::JoinDataBufferImplementation<DataType>::receivePageIfAvail
     logDebug( "receivePageIfAvailable()", "there is/are " << messages << " message(s) from node " << _rank << ", received elements so far=" << _receiveBuffer.size() << ", read elements so far=" << _currentElement );
 
     assertion4( messages <= _bufferSize, messages, _bufferSize, _receiveBuffer.size(), tarch::parallel::Node::getInstance().getRank() );
+    assertion4( _bufferSize>1, messages, _bufferSize, _receiveBuffer.size(), tarch::parallel::Node::getInstance().getRank() );
     DataType* receiveBuffer = new DataType[ _bufferSize ];
 
     const int result = MPI_Recv(
