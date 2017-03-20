@@ -24,16 +24,15 @@ default:
 clean:
 	rm -f $(OBJECTS)
 	rm -f files.mk
-	rm -rf de
-	rm -rf jargs
-	rm -rf META-INF
+	rm -rf ../bin
+	mkdir ../bin
+	rm -rf org/peano/pdt/analysis
+	rm -rf org/peano/pdt/lexer
+	rm -rf org/peano/pdt/node
+	rm -rf org/peano/pdt/parser
 
 
 createParser:
-	rm -rf org/peano/pdt/node
-	rm -rf org/peano/pdt/lexer
-	rm -rf org/peano/pdt/parser
-	rm -rf org/peano/pdt/analysis
 	java -jar ../lib/sablecc.jar -d . ../pdt.grammar 
 	rm -f files.mk
 
@@ -42,23 +41,31 @@ compile: files.mk $(OBJECTS)
 
 
 dist:
-	jar xf ../lib/DaStGen.jar 
-	jar xf ../lib/jargs.jar 
-	ln -s ../stdtemplates
-	jar cmf ../Manifest.txt ../pdt.jar . 
+	tar -czf ../pdt.tar.gz MANIFEST.MF Makefile ../pdt.grammar org
+	jar -xf ../lib/DaStGen.jar
+	jar -xf ../lib/jargs.jar
+	mv -f de ../bin
+	mv -f jargs ../bin
+	mv -f META-INF ../bin
+	mkdir ../bin/stdtemplates
+	cp -r ../stdtemplates/* ../bin/stdtemplates
+	cp org/peano/pdt/parser/parser.dat ../bin/org/peano/pdt/parser
+	cp org/peano/pdt/lexer/lexer.dat ../bin/org/peano/pdt/lexer
+	jar cmf MANIFEST.MF ../pdt.jar -C ../bin .
+	
 
 
-all: clean createParser clean compile dist
+all: clean createParser compile dist
 
 
 files.mk:
-	touch files.mk
-	echo "SOURCES=\\" > files.mk
+	@touch files.mk
+	@echo "SOURCES=\\" > files.mk
 	find . -name '*.java' | tr '\n' ' ' >> files.mk
 
 
 
 $(OBJECTS): %.class : %.java
-	javac -sourcepath . -classpath ../lib/DaStGen.jar $<  
+	javac -classpath ../lib/DaStGen.jar:../lib/jargs.jar -sourcepath . -d ../bin $<  
 
 
