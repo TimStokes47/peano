@@ -87,64 +87,68 @@ tarch::parallel::messages::NodePoolAnswerMessagePacked tarch::parallel::messages
    
    void tarch::parallel::messages::NodePoolAnswerMessage::initDatatype() {
       {
-         NodePoolAnswerMessage dummyNodePoolAnswerMessage[2];
+         NodePoolAnswerMessage dummyNodePoolAnswerMessage;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //newWorker
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //newWorker
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //newWorker
-            1		 // end/displacement flag
+              1		 //newWorker
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessage[0]._persistentRecords._newWorker))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessage[1]._persistentRecords._newWorker))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessage._persistentRecords._newWorker))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &NodePoolAnswerMessage::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &NodePoolAnswerMessage::Datatype );
          MPI_Type_commit( &NodePoolAnswerMessage::Datatype );
          
       }
       {
-         NodePoolAnswerMessage dummyNodePoolAnswerMessage[2];
+         NodePoolAnswerMessage dummyNodePoolAnswerMessage;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //newWorker
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //newWorker
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //newWorker
-            1		 // end/displacement flag
+              1		 //newWorker
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessage[0]._persistentRecords._newWorker))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessage[1]._persistentRecords._newWorker))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessage._persistentRecords._newWorker))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &NodePoolAnswerMessage::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &NodePoolAnswerMessage::FullDatatype );
          MPI_Type_commit( &NodePoolAnswerMessage::FullDatatype );
          
       }
@@ -473,64 +477,68 @@ MPI_Datatype tarch::parallel::messages::NodePoolAnswerMessagePacked::FullDatatyp
 
 void tarch::parallel::messages::NodePoolAnswerMessagePacked::initDatatype() {
    {
-      NodePoolAnswerMessagePacked dummyNodePoolAnswerMessagePacked[2];
+      NodePoolAnswerMessagePacked dummyNodePoolAnswerMessagePacked;
       
-      const int Attributes = 2;
+      const int Attributes = 1;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_INT,		 //newWorker
-         MPI_UB		 // end/displacement flag
+           MPI_INT		 //newWorker
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //newWorker
-         1		 // end/displacement flag
+           1		 //newWorker
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessagePacked[0]._persistentRecords._newWorker))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessagePacked[1]._persistentRecords._newWorker))), 		&disp[1] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessagePacked._persistentRecords._newWorker))), 		&disp[0] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &NodePoolAnswerMessagePacked::Datatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &NodePoolAnswerMessagePacked::Datatype );
       MPI_Type_commit( &NodePoolAnswerMessagePacked::Datatype );
       
    }
    {
-      NodePoolAnswerMessagePacked dummyNodePoolAnswerMessagePacked[2];
+      NodePoolAnswerMessagePacked dummyNodePoolAnswerMessagePacked;
       
-      const int Attributes = 2;
+      const int Attributes = 1;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_INT,		 //newWorker
-         MPI_UB		 // end/displacement flag
+           MPI_INT		 //newWorker
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //newWorker
-         1		 // end/displacement flag
+           1		 //newWorker
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessagePacked[0]._persistentRecords._newWorker))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessagePacked[1]._persistentRecords._newWorker))), 		&disp[1] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyNodePoolAnswerMessagePacked._persistentRecords._newWorker))), 		&disp[0] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &NodePoolAnswerMessagePacked::FullDatatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &NodePoolAnswerMessagePacked::FullDatatype );
       MPI_Type_commit( &NodePoolAnswerMessagePacked::FullDatatype );
       
    }

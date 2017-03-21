@@ -33,7 +33,7 @@ namespace tarch {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/04/2015 12:50
+ * @date   21/03/2017 02:02
  */
 class tarch::parallel::messages::ActivationMessage { 
    
@@ -167,7 +167,7 @@ class tarch::parallel::messages::ActivationMessage {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   15/04/2015 12:50
+    * @date   21/03/2017 02:02
     */
    class tarch::parallel::messages::ActivationMessagePacked { 
       

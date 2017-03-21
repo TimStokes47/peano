@@ -1,7 +1,5 @@
 #include "peano/parallel/messages/LoadBalancingMessage.h"
 
-
-
 peano::parallel::messages::LoadBalancingMessage::PersistentRecords::PersistentRecords() {
    
 }
@@ -89,64 +87,68 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
    
    void peano::parallel::messages::LoadBalancingMessage::initDatatype() {
       {
-         LoadBalancingMessage dummyLoadBalancingMessage[2];
+         LoadBalancingMessage dummyLoadBalancingMessage;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //loadBalancingFlag
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //loadBalancingFlag
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //loadBalancingFlag
-            1		 // end/displacement flag
+              1		 //loadBalancingFlag
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[0]._persistentRecords._loadBalancingFlag))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[1]._persistentRecords._loadBalancingFlag))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage._persistentRecords._loadBalancingFlag))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &LoadBalancingMessage::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &LoadBalancingMessage::Datatype );
          MPI_Type_commit( &LoadBalancingMessage::Datatype );
          
       }
       {
-         LoadBalancingMessage dummyLoadBalancingMessage[2];
+         LoadBalancingMessage dummyLoadBalancingMessage;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //loadBalancingFlag
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //loadBalancingFlag
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //loadBalancingFlag
-            1		 // end/displacement flag
+              1		 //loadBalancingFlag
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[0]._persistentRecords._loadBalancingFlag))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage[1]._persistentRecords._loadBalancingFlag))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessage._persistentRecords._loadBalancingFlag))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &LoadBalancingMessage::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &LoadBalancingMessage::FullDatatype );
          MPI_Type_commit( &LoadBalancingMessage::FullDatatype );
          
       }
@@ -211,7 +213,6 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
          << ": " << tarch::parallel::MPIReturnValueToString(result);
          _log.error( "send(int)",msg.str() );
       }
-      int sleepDelay = communicateSleep;
       result = MPI_Test( sendRequestHandle, &flag, &status );
       while (!flag) {
          if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -248,8 +249,8 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
-         usleep(sleepDelay);
-         sleepDelay += communicateSleep;
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -263,8 +264,8 @@ peano::parallel::messages::LoadBalancingMessagePacked peano::parallel::messages:
 
 
 
-void peano::parallel::messages::LoadBalancingMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateBlocking) {
-   if (communicateBlocking<0) {
+void peano::parallel::messages::LoadBalancingMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+   if (communicateSleep<0) {
    
       MPI_Status  status;
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -309,7 +310,6 @@ void peano::parallel::messages::LoadBalancingMessage::receive(int source, int ta
          _log.error( "receive(int)", msg.str() );
       }
       
-      int sleepDelay = communicateBlocking;
       result = MPI_Test( sendRequestHandle, &flag, &status );
       while (!flag) {
          if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -344,8 +344,8 @@ void peano::parallel::messages::LoadBalancingMessage::receive(int source, int ta
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
-         usleep(sleepDelay);
-         sleepDelay += communicateBlocking;
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -477,64 +477,68 @@ MPI_Datatype peano::parallel::messages::LoadBalancingMessagePacked::FullDatatype
 
 void peano::parallel::messages::LoadBalancingMessagePacked::initDatatype() {
    {
-      LoadBalancingMessagePacked dummyLoadBalancingMessagePacked[2];
+      LoadBalancingMessagePacked dummyLoadBalancingMessagePacked;
       
-      const int Attributes = 2;
+      const int Attributes = 1;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_INT,		 //loadBalancingFlag
-         MPI_UB		 // end/displacement flag
+           MPI_INT		 //loadBalancingFlag
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //loadBalancingFlag
-         1		 // end/displacement flag
+           1		 //loadBalancingFlag
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[0]._persistentRecords._loadBalancingFlag))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[1]._persistentRecords._loadBalancingFlag))), 		&disp[1] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked._persistentRecords._loadBalancingFlag))), 		&disp[0] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &LoadBalancingMessagePacked::Datatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &LoadBalancingMessagePacked::Datatype );
       MPI_Type_commit( &LoadBalancingMessagePacked::Datatype );
       
    }
    {
-      LoadBalancingMessagePacked dummyLoadBalancingMessagePacked[2];
+      LoadBalancingMessagePacked dummyLoadBalancingMessagePacked;
       
-      const int Attributes = 2;
+      const int Attributes = 1;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_INT,		 //loadBalancingFlag
-         MPI_UB		 // end/displacement flag
+           MPI_INT		 //loadBalancingFlag
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //loadBalancingFlag
-         1		 // end/displacement flag
+           1		 //loadBalancingFlag
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[0]._persistentRecords._loadBalancingFlag))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked[1]._persistentRecords._loadBalancingFlag))), 		&disp[1] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyLoadBalancingMessagePacked._persistentRecords._loadBalancingFlag))), 		&disp[0] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &LoadBalancingMessagePacked::FullDatatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &LoadBalancingMessagePacked::FullDatatype );
       MPI_Type_commit( &LoadBalancingMessagePacked::FullDatatype );
       
    }
@@ -599,7 +603,6 @@ void peano::parallel::messages::LoadBalancingMessagePacked::send(int destination
       << ": " << tarch::parallel::MPIReturnValueToString(result);
       _log.error( "send(int)",msg.str() );
    }
-   int sleepDelay = communicateSleep;
    result = MPI_Test( sendRequestHandle, &flag, &status );
    while (!flag) {
       if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -636,8 +639,8 @@ void peano::parallel::messages::LoadBalancingMessagePacked::send(int destination
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
-      usleep(sleepDelay);
-      sleepDelay += communicateSleep;
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;
@@ -651,8 +654,8 @@ void peano::parallel::messages::LoadBalancingMessagePacked::send(int destination
 
 
 
-void peano::parallel::messages::LoadBalancingMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateBlocking) {
-if (communicateBlocking<0) {
+void peano::parallel::messages::LoadBalancingMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
    MPI_Status  status;
    const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -697,7 +700,6 @@ else {
       _log.error( "receive(int)", msg.str() );
    }
    
-   int sleepDelay = communicateBlocking;
    result = MPI_Test( sendRequestHandle, &flag, &status );
    while (!flag) {
       if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -732,8 +734,8 @@ else {
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
-      usleep(sleepDelay);
-      sleepDelay += communicateBlocking;
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;

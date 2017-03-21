@@ -87,64 +87,68 @@ tarch::parallel::messages::ActivationMessagePacked tarch::parallel::messages::Ac
    
    void tarch::parallel::messages::ActivationMessage::initDatatype() {
       {
-         ActivationMessage dummyActivationMessage[2];
+         ActivationMessage dummyActivationMessage;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //newMaster
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //newMaster
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //newMaster
-            1		 // end/displacement flag
+              1		 //newMaster
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessage[0]._persistentRecords._newMaster))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessage[1]._persistentRecords._newMaster))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessage._persistentRecords._newMaster))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ActivationMessage::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &ActivationMessage::Datatype );
          MPI_Type_commit( &ActivationMessage::Datatype );
          
       }
       {
-         ActivationMessage dummyActivationMessage[2];
+         ActivationMessage dummyActivationMessage;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //newMaster
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //newMaster
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //newMaster
-            1		 // end/displacement flag
+              1		 //newMaster
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessage[0]._persistentRecords._newMaster))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessage[1]._persistentRecords._newMaster))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessage._persistentRecords._newMaster))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ActivationMessage::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &ActivationMessage::FullDatatype );
          MPI_Type_commit( &ActivationMessage::FullDatatype );
          
       }
@@ -473,64 +477,68 @@ MPI_Datatype tarch::parallel::messages::ActivationMessagePacked::FullDatatype = 
 
 void tarch::parallel::messages::ActivationMessagePacked::initDatatype() {
    {
-      ActivationMessagePacked dummyActivationMessagePacked[2];
+      ActivationMessagePacked dummyActivationMessagePacked;
       
-      const int Attributes = 2;
+      const int Attributes = 1;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_INT,		 //newMaster
-         MPI_UB		 // end/displacement flag
+           MPI_INT		 //newMaster
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //newMaster
-         1		 // end/displacement flag
+           1		 //newMaster
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessagePacked[0]._persistentRecords._newMaster))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessagePacked[1]._persistentRecords._newMaster))), 		&disp[1] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessagePacked._persistentRecords._newMaster))), 		&disp[0] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ActivationMessagePacked::Datatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &ActivationMessagePacked::Datatype );
       MPI_Type_commit( &ActivationMessagePacked::Datatype );
       
    }
    {
-      ActivationMessagePacked dummyActivationMessagePacked[2];
+      ActivationMessagePacked dummyActivationMessagePacked;
       
-      const int Attributes = 2;
+      const int Attributes = 1;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_INT,		 //newMaster
-         MPI_UB		 // end/displacement flag
+           MPI_INT		 //newMaster
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //newMaster
-         1		 // end/displacement flag
+           1		 //newMaster
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessagePacked[0]._persistentRecords._newMaster))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessagePacked[1]._persistentRecords._newMaster))), 		&disp[1] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyActivationMessagePacked._persistentRecords._newMaster))), 		&disp[0] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ActivationMessagePacked::FullDatatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &ActivationMessagePacked::FullDatatype );
       MPI_Type_commit( &ActivationMessagePacked::FullDatatype );
       
    }

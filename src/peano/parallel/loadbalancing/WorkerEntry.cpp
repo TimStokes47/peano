@@ -215,82 +215,86 @@ peano::parallel::loadbalancing::WorkerEntryPacked peano::parallel::loadbalancing
    
    void peano::parallel::loadbalancing::WorkerEntry::initDatatype() {
       {
-         WorkerEntry dummyWorkerEntry[2];
+         WorkerEntry dummyWorkerEntry;
          
-         const int Attributes = 5;
+         const int Attributes = 4;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //rank
-            MPI_INT,		 //level
-            MPI_DOUBLE,		 //boundingBoxOffset
-            MPI_DOUBLE,		 //boundingBoxSize
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //rank
+            , MPI_INT		 //level
+            , MPI_DOUBLE		 //boundingBoxOffset
+            , MPI_DOUBLE		 //boundingBoxSize
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //rank
-            1,		 //level
-            DIMENSIONS,		 //boundingBoxOffset
-            DIMENSIONS,		 //boundingBoxSize
-            1		 // end/displacement flag
+              1		 //rank
+            , 1		 //level
+            , DIMENSIONS		 //boundingBoxOffset
+            , DIMENSIONS		 //boundingBoxSize
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[0]._persistentRecords._rank))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[0]._persistentRecords._level))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[0]._persistentRecords._boundingBoxOffset[0]))), 		&disp[2] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[0]._persistentRecords._boundingBoxSize[0]))), 		&disp[3] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[1]._persistentRecords._rank))), 		&disp[4] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry._persistentRecords._rank))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry._persistentRecords._level))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry._persistentRecords._boundingBoxOffset[0]))), 		&disp[2] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry._persistentRecords._boundingBoxSize[0]))), 		&disp[3] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerEntry::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerEntry::Datatype );
          MPI_Type_commit( &WorkerEntry::Datatype );
          
       }
       {
-         WorkerEntry dummyWorkerEntry[2];
+         WorkerEntry dummyWorkerEntry;
          
-         const int Attributes = 5;
+         const int Attributes = 4;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //rank
-            MPI_INT,		 //level
-            MPI_DOUBLE,		 //boundingBoxOffset
-            MPI_DOUBLE,		 //boundingBoxSize
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //rank
+            , MPI_INT		 //level
+            , MPI_DOUBLE		 //boundingBoxOffset
+            , MPI_DOUBLE		 //boundingBoxSize
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //rank
-            1,		 //level
-            DIMENSIONS,		 //boundingBoxOffset
-            DIMENSIONS,		 //boundingBoxSize
-            1		 // end/displacement flag
+              1		 //rank
+            , 1		 //level
+            , DIMENSIONS		 //boundingBoxOffset
+            , DIMENSIONS		 //boundingBoxSize
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[0]._persistentRecords._rank))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[0]._persistentRecords._level))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[0]._persistentRecords._boundingBoxOffset[0]))), 		&disp[2] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[0]._persistentRecords._boundingBoxSize[0]))), 		&disp[3] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry[1]._persistentRecords._rank))), 		&disp[4] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry._persistentRecords._rank))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry._persistentRecords._level))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry._persistentRecords._boundingBoxOffset[0]))), 		&disp[2] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntry._persistentRecords._boundingBoxSize[0]))), 		&disp[3] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerEntry::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerEntry::FullDatatype );
          MPI_Type_commit( &WorkerEntry::FullDatatype );
          
       }
@@ -747,82 +751,86 @@ MPI_Datatype peano::parallel::loadbalancing::WorkerEntryPacked::FullDatatype = 0
 
 void peano::parallel::loadbalancing::WorkerEntryPacked::initDatatype() {
    {
-      WorkerEntryPacked dummyWorkerEntryPacked[2];
+      WorkerEntryPacked dummyWorkerEntryPacked;
       
-      const int Attributes = 5;
+      const int Attributes = 4;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_INT,		 //rank
-         MPI_INT,		 //level
-         MPI_DOUBLE,		 //boundingBoxOffset
-         MPI_DOUBLE,		 //boundingBoxSize
-         MPI_UB		 // end/displacement flag
+           MPI_INT		 //rank
+         , MPI_INT		 //level
+         , MPI_DOUBLE		 //boundingBoxOffset
+         , MPI_DOUBLE		 //boundingBoxSize
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //rank
-         1,		 //level
-         DIMENSIONS,		 //boundingBoxOffset
-         DIMENSIONS,		 //boundingBoxSize
-         1		 // end/displacement flag
+           1		 //rank
+         , 1		 //level
+         , DIMENSIONS		 //boundingBoxOffset
+         , DIMENSIONS		 //boundingBoxSize
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[0]._persistentRecords._rank))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[0]._persistentRecords._level))), 		&disp[1] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[0]._persistentRecords._boundingBoxOffset[0]))), 		&disp[2] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[0]._persistentRecords._boundingBoxSize[0]))), 		&disp[3] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[1]._persistentRecords._rank))), 		&disp[4] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked._persistentRecords._rank))), 		&disp[0] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked._persistentRecords._level))), 		&disp[1] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked._persistentRecords._boundingBoxOffset[0]))), 		&disp[2] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked._persistentRecords._boundingBoxSize[0]))), 		&disp[3] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerEntryPacked::Datatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerEntryPacked::Datatype );
       MPI_Type_commit( &WorkerEntryPacked::Datatype );
       
    }
    {
-      WorkerEntryPacked dummyWorkerEntryPacked[2];
+      WorkerEntryPacked dummyWorkerEntryPacked;
       
-      const int Attributes = 5;
+      const int Attributes = 4;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_INT,		 //rank
-         MPI_INT,		 //level
-         MPI_DOUBLE,		 //boundingBoxOffset
-         MPI_DOUBLE,		 //boundingBoxSize
-         MPI_UB		 // end/displacement flag
+           MPI_INT		 //rank
+         , MPI_INT		 //level
+         , MPI_DOUBLE		 //boundingBoxOffset
+         , MPI_DOUBLE		 //boundingBoxSize
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //rank
-         1,		 //level
-         DIMENSIONS,		 //boundingBoxOffset
-         DIMENSIONS,		 //boundingBoxSize
-         1		 // end/displacement flag
+           1		 //rank
+         , 1		 //level
+         , DIMENSIONS		 //boundingBoxOffset
+         , DIMENSIONS		 //boundingBoxSize
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[0]._persistentRecords._rank))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[0]._persistentRecords._level))), 		&disp[1] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[0]._persistentRecords._boundingBoxOffset[0]))), 		&disp[2] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[0]._persistentRecords._boundingBoxSize[0]))), 		&disp[3] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked[1]._persistentRecords._rank))), 		&disp[4] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked._persistentRecords._rank))), 		&disp[0] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked._persistentRecords._level))), 		&disp[1] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked._persistentRecords._boundingBoxOffset[0]))), 		&disp[2] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerEntryPacked._persistentRecords._boundingBoxSize[0]))), 		&disp[3] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerEntryPacked::FullDatatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerEntryPacked::FullDatatype );
       MPI_Type_commit( &WorkerEntryPacked::FullDatatype );
       
    }

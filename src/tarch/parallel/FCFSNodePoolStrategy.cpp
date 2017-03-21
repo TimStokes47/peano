@@ -110,8 +110,8 @@ int tarch::parallel::FCFSNodePoolStrategy::getNumberOfIdleNodes() const {
   int result = 0;
   NodeContainer::const_iterator p = _nodes.begin();
   while (p != _nodes.end()&& p->isIdle() ) {
-	p++;
-	result++;
+	  p++;
+	  result++;
   }
   return result;
 }

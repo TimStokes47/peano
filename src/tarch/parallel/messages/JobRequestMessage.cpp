@@ -87,64 +87,68 @@ tarch::parallel::messages::JobRequestMessagePacked tarch::parallel::messages::Jo
    
    void tarch::parallel::messages::JobRequestMessage::initDatatype() {
       {
-         JobRequestMessage dummyJobRequestMessage[2];
+         JobRequestMessage dummyJobRequestMessage;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_CHAR,		 //dummy
-            MPI_UB		 // end/displacement flag
+              MPI_CHAR		 //dummy
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //dummy
-            1		 // end/displacement flag
+              1		 //dummy
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessage[0]._persistentRecords._dummy))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessage[1]._persistentRecords._dummy))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessage._persistentRecords._dummy))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &JobRequestMessage::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &JobRequestMessage::Datatype );
          MPI_Type_commit( &JobRequestMessage::Datatype );
          
       }
       {
-         JobRequestMessage dummyJobRequestMessage[2];
+         JobRequestMessage dummyJobRequestMessage;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_CHAR,		 //dummy
-            MPI_UB		 // end/displacement flag
+              MPI_CHAR		 //dummy
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //dummy
-            1		 // end/displacement flag
+              1		 //dummy
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessage[0]._persistentRecords._dummy))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessage[1]._persistentRecords._dummy))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessage._persistentRecords._dummy))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &JobRequestMessage::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &JobRequestMessage::FullDatatype );
          MPI_Type_commit( &JobRequestMessage::FullDatatype );
          
       }
@@ -387,6 +391,11 @@ int tarch::parallel::messages::JobRequestMessage::getSenderRank() const {
 
 
 tarch::parallel::messages::JobRequestMessagePacked::PersistentRecords::PersistentRecords() {
+if ((1 >= (8 * sizeof(short int)))) {
+   std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+   std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+   std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+}
 assertion((1 < (8 * sizeof(short int))));
 
 }
@@ -394,6 +403,11 @@ assertion((1 < (8 * sizeof(short int))));
 
 tarch::parallel::messages::JobRequestMessagePacked::PersistentRecords::PersistentRecords(const bool& dummy) {
 setDummy(dummy);
+if ((1 >= (8 * sizeof(short int)))) {
+   std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+   std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+   std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+}
 assertion((1 < (8 * sizeof(short int))));
 
 }
@@ -414,6 +428,11 @@ short int mask = 1 << (0);
 
 
 tarch::parallel::messages::JobRequestMessagePacked::JobRequestMessagePacked() {
+if ((1 >= (8 * sizeof(short int)))) {
+   std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+   std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+   std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+}
 assertion((1 < (8 * sizeof(short int))));
 
 }
@@ -421,6 +440,11 @@ assertion((1 < (8 * sizeof(short int))));
 
 tarch::parallel::messages::JobRequestMessagePacked::JobRequestMessagePacked(const PersistentRecords& persistentRecords):
 _persistentRecords(persistentRecords.getDummy()) {
+if ((1 >= (8 * sizeof(short int)))) {
+   std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+   std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+   std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+}
 assertion((1 < (8 * sizeof(short int))));
 
 }
@@ -428,6 +452,11 @@ assertion((1 < (8 * sizeof(short int))));
 
 tarch::parallel::messages::JobRequestMessagePacked::JobRequestMessagePacked(const bool& dummy):
 _persistentRecords(dummy) {
+if ((1 >= (8 * sizeof(short int)))) {
+   std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+   std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+   std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+}
 assertion((1 < (8 * sizeof(short int))));
 
 }
@@ -484,64 +513,68 @@ MPI_Datatype tarch::parallel::messages::JobRequestMessagePacked::FullDatatype = 
 
 void tarch::parallel::messages::JobRequestMessagePacked::initDatatype() {
    {
-      JobRequestMessagePacked dummyJobRequestMessagePacked[2];
+      JobRequestMessagePacked dummyJobRequestMessagePacked;
       
-      const int Attributes = 2;
+      const int Attributes = 1;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_SHORT,		 //_packedRecords0
-         MPI_UB		 // end/displacement flag
+           MPI_SHORT		 //_packedRecords0
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //_packedRecords0
-         1		 // end/displacement flag
+           1		 //_packedRecords0
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessagePacked[0]._persistentRecords._packedRecords0))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessagePacked[1]._persistentRecords._packedRecords0))), 		&disp[1] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessagePacked._persistentRecords._packedRecords0))), 		&disp[0] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &JobRequestMessagePacked::Datatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &JobRequestMessagePacked::Datatype );
       MPI_Type_commit( &JobRequestMessagePacked::Datatype );
       
    }
    {
-      JobRequestMessagePacked dummyJobRequestMessagePacked[2];
+      JobRequestMessagePacked dummyJobRequestMessagePacked;
       
-      const int Attributes = 2;
+      const int Attributes = 1;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_SHORT,		 //_packedRecords0
-         MPI_UB		 // end/displacement flag
+           MPI_SHORT		 //_packedRecords0
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //_packedRecords0
-         1		 // end/displacement flag
+           1		 //_packedRecords0
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessagePacked[0]._persistentRecords._packedRecords0))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessagePacked[1]._persistentRecords._packedRecords0))), 		&disp[1] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyJobRequestMessagePacked._persistentRecords._packedRecords0))), 		&disp[0] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &JobRequestMessagePacked::FullDatatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &JobRequestMessagePacked::FullDatatype );
       MPI_Type_commit( &JobRequestMessagePacked::FullDatatype );
       
    }

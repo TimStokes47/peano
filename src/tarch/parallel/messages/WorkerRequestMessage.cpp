@@ -87,64 +87,68 @@ tarch::parallel::messages::WorkerRequestMessagePacked tarch::parallel::messages:
    
    void tarch::parallel::messages::WorkerRequestMessage::initDatatype() {
       {
-         WorkerRequestMessage dummyWorkerRequestMessage[2];
+         WorkerRequestMessage dummyWorkerRequestMessage;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //tmp
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //tmp
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //tmp
-            1		 // end/displacement flag
+              1		 //tmp
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[0]._persistentRecords._tmp))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[1]._persistentRecords._tmp))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage._persistentRecords._tmp))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerRequestMessage::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerRequestMessage::Datatype );
          MPI_Type_commit( &WorkerRequestMessage::Datatype );
          
       }
       {
-         WorkerRequestMessage dummyWorkerRequestMessage[2];
+         WorkerRequestMessage dummyWorkerRequestMessage;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //tmp
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //tmp
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //tmp
-            1		 // end/displacement flag
+              1		 //tmp
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[0]._persistentRecords._tmp))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[1]._persistentRecords._tmp))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage._persistentRecords._tmp))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerRequestMessage::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerRequestMessage::FullDatatype );
          MPI_Type_commit( &WorkerRequestMessage::FullDatatype );
          
       }
@@ -473,64 +477,68 @@ MPI_Datatype tarch::parallel::messages::WorkerRequestMessagePacked::FullDatatype
 
 void tarch::parallel::messages::WorkerRequestMessagePacked::initDatatype() {
    {
-      WorkerRequestMessagePacked dummyWorkerRequestMessagePacked[2];
+      WorkerRequestMessagePacked dummyWorkerRequestMessagePacked;
       
-      const int Attributes = 2;
+      const int Attributes = 1;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_INT,		 //tmp
-         MPI_UB		 // end/displacement flag
+           MPI_INT		 //tmp
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //tmp
-         1		 // end/displacement flag
+           1		 //tmp
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[0]._persistentRecords._tmp))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[1]._persistentRecords._tmp))), 		&disp[1] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked._persistentRecords._tmp))), 		&disp[0] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerRequestMessagePacked::Datatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerRequestMessagePacked::Datatype );
       MPI_Type_commit( &WorkerRequestMessagePacked::Datatype );
       
    }
    {
-      WorkerRequestMessagePacked dummyWorkerRequestMessagePacked[2];
+      WorkerRequestMessagePacked dummyWorkerRequestMessagePacked;
       
-      const int Attributes = 2;
+      const int Attributes = 1;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_INT,		 //tmp
-         MPI_UB		 // end/displacement flag
+           MPI_INT		 //tmp
+         
       };
       
       int blocklen[Attributes] = {
-         1,		 //tmp
-         1		 // end/displacement flag
+           1		 //tmp
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[0]._persistentRecords._tmp))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[1]._persistentRecords._tmp))), 		&disp[1] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked._persistentRecords._tmp))), 		&disp[0] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerRequestMessagePacked::FullDatatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerRequestMessagePacked::FullDatatype );
       MPI_Type_commit( &WorkerRequestMessagePacked::FullDatatype );
       
    }

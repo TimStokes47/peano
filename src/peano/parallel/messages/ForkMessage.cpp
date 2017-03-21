@@ -287,88 +287,92 @@ peano::parallel::messages::ForkMessagePacked peano::parallel::messages::ForkMess
    
    void peano::parallel::messages::ForkMessage::initDatatype() {
       {
-         ForkMessage dummyForkMessage[2];
+         ForkMessage dummyForkMessage;
          
-         const int Attributes = 6;
+         const int Attributes = 5;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_DOUBLE,		 //domainOffset
-            MPI_DOUBLE,		 //h
-            MPI_INT,		 //adjacencyData
-            MPI_INT,		 //level
-            MPI_INT,		 //positionOfFineGridCellRelativeToCoarseGridCell
-            MPI_UB		 // end/displacement flag
+              MPI_DOUBLE		 //domainOffset
+            , MPI_DOUBLE		 //h
+            , MPI_INT		 //adjacencyData
+            , MPI_INT		 //level
+            , MPI_INT		 //positionOfFineGridCellRelativeToCoarseGridCell
+            
          };
          
          int blocklen[Attributes] = {
-            DIMENSIONS,		 //domainOffset
-            DIMENSIONS,		 //h
-            TWO_POWER_D_TIMES_TWO_POWER_D,		 //adjacencyData
-            1,		 //level
-            DIMENSIONS,		 //positionOfFineGridCellRelativeToCoarseGridCell
-            1		 // end/displacement flag
+              DIMENSIONS		 //domainOffset
+            , DIMENSIONS		 //h
+            , TWO_POWER_D_TIMES_TWO_POWER_D		 //adjacencyData
+            , 1		 //level
+            , DIMENSIONS		 //positionOfFineGridCellRelativeToCoarseGridCell
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]._persistentRecords._domainOffset[0]))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]._persistentRecords._h[0]))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]._persistentRecords._adjacencyData[0]))), 		&disp[2] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]._persistentRecords._level))), 		&disp[3] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]._persistentRecords._positionOfFineGridCellRelativeToCoarseGridCell[0]))), 		&disp[4] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyForkMessage[1]._persistentRecords._domainOffset[0])), 		&disp[5] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage._persistentRecords._domainOffset[0]))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage._persistentRecords._h[0]))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage._persistentRecords._adjacencyData[0]))), 		&disp[2] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage._persistentRecords._level))), 		&disp[3] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage._persistentRecords._positionOfFineGridCellRelativeToCoarseGridCell[0]))), 		&disp[4] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ForkMessage::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &ForkMessage::Datatype );
          MPI_Type_commit( &ForkMessage::Datatype );
          
       }
       {
-         ForkMessage dummyForkMessage[2];
+         ForkMessage dummyForkMessage;
          
-         const int Attributes = 6;
+         const int Attributes = 5;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_DOUBLE,		 //domainOffset
-            MPI_DOUBLE,		 //h
-            MPI_INT,		 //adjacencyData
-            MPI_INT,		 //level
-            MPI_INT,		 //positionOfFineGridCellRelativeToCoarseGridCell
-            MPI_UB		 // end/displacement flag
+              MPI_DOUBLE		 //domainOffset
+            , MPI_DOUBLE		 //h
+            , MPI_INT		 //adjacencyData
+            , MPI_INT		 //level
+            , MPI_INT		 //positionOfFineGridCellRelativeToCoarseGridCell
+            
          };
          
          int blocklen[Attributes] = {
-            DIMENSIONS,		 //domainOffset
-            DIMENSIONS,		 //h
-            TWO_POWER_D_TIMES_TWO_POWER_D,		 //adjacencyData
-            1,		 //level
-            DIMENSIONS,		 //positionOfFineGridCellRelativeToCoarseGridCell
-            1		 // end/displacement flag
+              DIMENSIONS		 //domainOffset
+            , DIMENSIONS		 //h
+            , TWO_POWER_D_TIMES_TWO_POWER_D		 //adjacencyData
+            , 1		 //level
+            , DIMENSIONS		 //positionOfFineGridCellRelativeToCoarseGridCell
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]._persistentRecords._domainOffset[0]))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]._persistentRecords._h[0]))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]._persistentRecords._adjacencyData[0]))), 		&disp[2] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]._persistentRecords._level))), 		&disp[3] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage[0]._persistentRecords._positionOfFineGridCellRelativeToCoarseGridCell[0]))), 		&disp[4] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyForkMessage[1]._persistentRecords._domainOffset[0])), 		&disp[5] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage._persistentRecords._domainOffset[0]))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage._persistentRecords._h[0]))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage._persistentRecords._adjacencyData[0]))), 		&disp[2] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage._persistentRecords._level))), 		&disp[3] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessage._persistentRecords._positionOfFineGridCellRelativeToCoarseGridCell[0]))), 		&disp[4] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ForkMessage::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &ForkMessage::FullDatatype );
          MPI_Type_commit( &ForkMessage::FullDatatype );
          
       }
@@ -433,7 +437,6 @@ peano::parallel::messages::ForkMessagePacked peano::parallel::messages::ForkMess
          << ": " << tarch::parallel::MPIReturnValueToString(result);
          _log.error( "send(int)",msg.str() );
       }
-      int sleepDelay = communicateSleep;
       result = MPI_Test( sendRequestHandle, &flag, &status );
       while (!flag) {
          if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -470,8 +473,8 @@ peano::parallel::messages::ForkMessagePacked peano::parallel::messages::ForkMess
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
-         usleep(sleepDelay);
-         sleepDelay += communicateSleep;
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -485,8 +488,8 @@ peano::parallel::messages::ForkMessagePacked peano::parallel::messages::ForkMess
 
 
 
-void peano::parallel::messages::ForkMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateBlocking) {
-   if (communicateBlocking<0) {
+void peano::parallel::messages::ForkMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+   if (communicateSleep<0) {
    
       MPI_Status  status;
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -531,7 +534,6 @@ void peano::parallel::messages::ForkMessage::receive(int source, int tag, bool e
          _log.error( "receive(int)", msg.str() );
       }
       
-      int sleepDelay = communicateBlocking;
       result = MPI_Test( sendRequestHandle, &flag, &status );
       while (!flag) {
          if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -566,8 +568,8 @@ void peano::parallel::messages::ForkMessage::receive(int source, int tag, bool e
             );
          }
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
-         usleep(sleepDelay);
-         sleepDelay += communicateBlocking;
+         usleep(communicateSleep);
+         
       }
       
       delete sendRequestHandle;
@@ -899,88 +901,92 @@ MPI_Datatype peano::parallel::messages::ForkMessagePacked::FullDatatype = 0;
 
 void peano::parallel::messages::ForkMessagePacked::initDatatype() {
    {
-      ForkMessagePacked dummyForkMessagePacked[2];
+      ForkMessagePacked dummyForkMessagePacked;
       
-      const int Attributes = 6;
+      const int Attributes = 5;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_DOUBLE,		 //domainOffset
-         MPI_DOUBLE,		 //h
-         MPI_INT,		 //adjacencyData
-         MPI_INT,		 //level
-         MPI_INT,		 //positionOfFineGridCellRelativeToCoarseGridCell
-         MPI_UB		 // end/displacement flag
+           MPI_DOUBLE		 //domainOffset
+         , MPI_DOUBLE		 //h
+         , MPI_INT		 //adjacencyData
+         , MPI_INT		 //level
+         , MPI_INT		 //positionOfFineGridCellRelativeToCoarseGridCell
+         
       };
       
       int blocklen[Attributes] = {
-         DIMENSIONS,		 //domainOffset
-         DIMENSIONS,		 //h
-         TWO_POWER_D_TIMES_TWO_POWER_D,		 //adjacencyData
-         1,		 //level
-         DIMENSIONS,		 //positionOfFineGridCellRelativeToCoarseGridCell
-         1		 // end/displacement flag
+           DIMENSIONS		 //domainOffset
+         , DIMENSIONS		 //h
+         , TWO_POWER_D_TIMES_TWO_POWER_D		 //adjacencyData
+         , 1		 //level
+         , DIMENSIONS		 //positionOfFineGridCellRelativeToCoarseGridCell
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]._persistentRecords._domainOffset[0]))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]._persistentRecords._h[0]))), 		&disp[1] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]._persistentRecords._adjacencyData[0]))), 		&disp[2] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]._persistentRecords._level))), 		&disp[3] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]._persistentRecords._positionOfFineGridCellRelativeToCoarseGridCell[0]))), 		&disp[4] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyForkMessagePacked[1]._persistentRecords._domainOffset[0])), 		&disp[5] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked._persistentRecords._domainOffset[0]))), 		&disp[0] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked._persistentRecords._h[0]))), 		&disp[1] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked._persistentRecords._adjacencyData[0]))), 		&disp[2] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked._persistentRecords._level))), 		&disp[3] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked._persistentRecords._positionOfFineGridCellRelativeToCoarseGridCell[0]))), 		&disp[4] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ForkMessagePacked::Datatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &ForkMessagePacked::Datatype );
       MPI_Type_commit( &ForkMessagePacked::Datatype );
       
    }
    {
-      ForkMessagePacked dummyForkMessagePacked[2];
+      ForkMessagePacked dummyForkMessagePacked;
       
-      const int Attributes = 6;
+      const int Attributes = 5;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_DOUBLE,		 //domainOffset
-         MPI_DOUBLE,		 //h
-         MPI_INT,		 //adjacencyData
-         MPI_INT,		 //level
-         MPI_INT,		 //positionOfFineGridCellRelativeToCoarseGridCell
-         MPI_UB		 // end/displacement flag
+           MPI_DOUBLE		 //domainOffset
+         , MPI_DOUBLE		 //h
+         , MPI_INT		 //adjacencyData
+         , MPI_INT		 //level
+         , MPI_INT		 //positionOfFineGridCellRelativeToCoarseGridCell
+         
       };
       
       int blocklen[Attributes] = {
-         DIMENSIONS,		 //domainOffset
-         DIMENSIONS,		 //h
-         TWO_POWER_D_TIMES_TWO_POWER_D,		 //adjacencyData
-         1,		 //level
-         DIMENSIONS,		 //positionOfFineGridCellRelativeToCoarseGridCell
-         1		 // end/displacement flag
+           DIMENSIONS		 //domainOffset
+         , DIMENSIONS		 //h
+         , TWO_POWER_D_TIMES_TWO_POWER_D		 //adjacencyData
+         , 1		 //level
+         , DIMENSIONS		 //positionOfFineGridCellRelativeToCoarseGridCell
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]._persistentRecords._domainOffset[0]))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]._persistentRecords._h[0]))), 		&disp[1] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]._persistentRecords._adjacencyData[0]))), 		&disp[2] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]._persistentRecords._level))), 		&disp[3] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked[0]._persistentRecords._positionOfFineGridCellRelativeToCoarseGridCell[0]))), 		&disp[4] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyForkMessagePacked[1]._persistentRecords._domainOffset[0])), 		&disp[5] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked._persistentRecords._domainOffset[0]))), 		&disp[0] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked._persistentRecords._h[0]))), 		&disp[1] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked._persistentRecords._adjacencyData[0]))), 		&disp[2] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked._persistentRecords._level))), 		&disp[3] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyForkMessagePacked._persistentRecords._positionOfFineGridCellRelativeToCoarseGridCell[0]))), 		&disp[4] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &ForkMessagePacked::FullDatatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &ForkMessagePacked::FullDatatype );
       MPI_Type_commit( &ForkMessagePacked::FullDatatype );
       
    }
@@ -1045,7 +1051,6 @@ void peano::parallel::messages::ForkMessagePacked::send(int destination, int tag
       << ": " << tarch::parallel::MPIReturnValueToString(result);
       _log.error( "send(int)",msg.str() );
    }
-   int sleepDelay = communicateSleep;
    result = MPI_Test( sendRequestHandle, &flag, &status );
    while (!flag) {
       if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -1082,8 +1087,8 @@ void peano::parallel::messages::ForkMessagePacked::send(int destination, int tag
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
-      usleep(sleepDelay);
-      sleepDelay += communicateSleep;
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;
@@ -1097,8 +1102,8 @@ void peano::parallel::messages::ForkMessagePacked::send(int destination, int tag
 
 
 
-void peano::parallel::messages::ForkMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateBlocking) {
-if (communicateBlocking<0) {
+void peano::parallel::messages::ForkMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+if (communicateSleep<0) {
 
    MPI_Status  status;
    const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
@@ -1143,7 +1148,6 @@ else {
       _log.error( "receive(int)", msg.str() );
    }
    
-   int sleepDelay = communicateBlocking;
    result = MPI_Test( sendRequestHandle, &flag, &status );
    while (!flag) {
       if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -1178,8 +1182,8 @@ else {
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
-      usleep(sleepDelay);
-      sleepDelay += communicateBlocking;
+      usleep(communicateSleep);
+      
    }
    
    delete sendRequestHandle;
