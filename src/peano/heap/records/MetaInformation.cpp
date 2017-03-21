@@ -166,76 +166,80 @@
       
       void peano::heap::records::MetaInformation::initDatatype() {
          {
-            MetaInformation dummyMetaInformation[2];
+            MetaInformation dummyMetaInformation;
             
-            const int Attributes = 4;
+            const int Attributes = 3;
             MPI_Datatype subtypes[Attributes] = {
-               MPI_INT,		 //length
-               MPI_DOUBLE,		 //position
-               MPI_INT,		 //level
-               MPI_UB		 // end/displacement flag
+                 MPI_INT		 //length
+               , MPI_DOUBLE		 //position
+               , MPI_INT		 //level
+               
             };
             
             int blocklen[Attributes] = {
-               1,		 //length
-               DIMENSIONS,		 //position
-               1,		 //level
-               1		 // end/displacement flag
+                 1		 //length
+               , DIMENSIONS		 //position
+               , 1		 //level
+               
             };
             
             MPI_Aint     disp[Attributes];
             
             MPI_Aint base;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]))), &base);
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._position[0]))), 		&disp[1] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._level))), 		&disp[2] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[1]._persistentRecords._length))), 		&disp[3] );
-            
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._length))), 		&disp[0] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._position[0]))), 		&disp[1] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._level))), 		&disp[2] );
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base;
+               disp[i] = MPI_Aint_diff(disp[i], base);
             }
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformation::Datatype );
+            MPI_Datatype tmpType; 
+            MPI_Aint lowerBound, typeExtent; 
+            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformation::Datatype );
             MPI_Type_commit( &MetaInformation::Datatype );
             
          }
          {
-            MetaInformation dummyMetaInformation[2];
+            MetaInformation dummyMetaInformation;
             
-            const int Attributes = 4;
+            const int Attributes = 3;
             MPI_Datatype subtypes[Attributes] = {
-               MPI_INT,		 //length
-               MPI_DOUBLE,		 //position
-               MPI_INT,		 //level
-               MPI_UB		 // end/displacement flag
+                 MPI_INT		 //length
+               , MPI_DOUBLE		 //position
+               , MPI_INT		 //level
+               
             };
             
             int blocklen[Attributes] = {
-               1,		 //length
-               DIMENSIONS,		 //position
-               1,		 //level
-               1		 // end/displacement flag
+                 1		 //length
+               , DIMENSIONS		 //position
+               , 1		 //level
+               
             };
             
             MPI_Aint     disp[Attributes];
             
             MPI_Aint base;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]))), &base);
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._position[0]))), 		&disp[1] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._level))), 		&disp[2] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[1]._persistentRecords._length))), 		&disp[3] );
-            
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._length))), 		&disp[0] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._position[0]))), 		&disp[1] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._level))), 		&disp[2] );
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base;
+               disp[i] = MPI_Aint_diff(disp[i], base);
             }
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformation::FullDatatype );
+            MPI_Datatype tmpType; 
+            MPI_Aint lowerBound, typeExtent; 
+            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformation::FullDatatype );
             MPI_Type_commit( &MetaInformation::FullDatatype );
             
          }
@@ -634,76 +638,80 @@
       
       void peano::heap::records::MetaInformationPacked::initDatatype() {
          {
-            MetaInformationPacked dummyMetaInformationPacked[2];
+            MetaInformationPacked dummyMetaInformationPacked;
             
-            const int Attributes = 4;
+            const int Attributes = 3;
             MPI_Datatype subtypes[Attributes] = {
-               MPI_INT,		 //length
-               MPI_DOUBLE,		 //position
-               MPI_INT,		 //level
-               MPI_UB		 // end/displacement flag
+                 MPI_INT		 //length
+               , MPI_DOUBLE		 //position
+               , MPI_INT		 //level
+               
             };
             
             int blocklen[Attributes] = {
-               1,		 //length
-               DIMENSIONS,		 //position
-               1,		 //level
-               1		 // end/displacement flag
+                 1		 //length
+               , DIMENSIONS		 //position
+               , 1		 //level
+               
             };
             
             MPI_Aint     disp[Attributes];
             
             MPI_Aint base;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]))), &base);
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._position[0]))), 		&disp[1] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._level))), 		&disp[2] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[1]._persistentRecords._length))), 		&disp[3] );
-            
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._length))), 		&disp[0] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._position[0]))), 		&disp[1] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._level))), 		&disp[2] );
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base;
+               disp[i] = MPI_Aint_diff(disp[i], base);
             }
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformationPacked::Datatype );
+            MPI_Datatype tmpType; 
+            MPI_Aint lowerBound, typeExtent; 
+            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformationPacked::Datatype );
             MPI_Type_commit( &MetaInformationPacked::Datatype );
             
          }
          {
-            MetaInformationPacked dummyMetaInformationPacked[2];
+            MetaInformationPacked dummyMetaInformationPacked;
             
-            const int Attributes = 4;
+            const int Attributes = 3;
             MPI_Datatype subtypes[Attributes] = {
-               MPI_INT,		 //length
-               MPI_DOUBLE,		 //position
-               MPI_INT,		 //level
-               MPI_UB		 // end/displacement flag
+                 MPI_INT		 //length
+               , MPI_DOUBLE		 //position
+               , MPI_INT		 //level
+               
             };
             
             int blocklen[Attributes] = {
-               1,		 //length
-               DIMENSIONS,		 //position
-               1,		 //level
-               1		 // end/displacement flag
+                 1		 //length
+               , DIMENSIONS		 //position
+               , 1		 //level
+               
             };
             
             MPI_Aint     disp[Attributes];
             
             MPI_Aint base;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]))), &base);
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._position[0]))), 		&disp[1] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._level))), 		&disp[2] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[1]._persistentRecords._length))), 		&disp[3] );
-            
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._length))), 		&disp[0] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._position[0]))), 		&disp[1] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._level))), 		&disp[2] );
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base;
+               disp[i] = MPI_Aint_diff(disp[i], base);
             }
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformationPacked::FullDatatype );
+            MPI_Datatype tmpType; 
+            MPI_Aint lowerBound, typeExtent; 
+            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformationPacked::FullDatatype );
             MPI_Type_commit( &MetaInformationPacked::FullDatatype );
             
          }
@@ -1026,64 +1034,68 @@
       
       void peano::heap::records::MetaInformation::initDatatype() {
          {
-            MetaInformation dummyMetaInformation[2];
+            MetaInformation dummyMetaInformation;
             
-            const int Attributes = 2;
+            const int Attributes = 1;
             MPI_Datatype subtypes[Attributes] = {
-               MPI_INT,		 //length
-               MPI_UB		 // end/displacement flag
+                 MPI_INT		 //length
+               
             };
             
             int blocklen[Attributes] = {
-               1,		 //length
-               1		 // end/displacement flag
+                 1		 //length
+               
             };
             
             MPI_Aint     disp[Attributes];
             
             MPI_Aint base;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]))), &base);
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[1]._persistentRecords._length))), 		&disp[1] );
-            
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._length))), 		&disp[0] );
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base;
+               disp[i] = MPI_Aint_diff(disp[i], base);
             }
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformation::Datatype );
+            MPI_Datatype tmpType; 
+            MPI_Aint lowerBound, typeExtent; 
+            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformation::Datatype );
             MPI_Type_commit( &MetaInformation::Datatype );
             
          }
          {
-            MetaInformation dummyMetaInformation[2];
+            MetaInformation dummyMetaInformation;
             
-            const int Attributes = 2;
+            const int Attributes = 1;
             MPI_Datatype subtypes[Attributes] = {
-               MPI_INT,		 //length
-               MPI_UB		 // end/displacement flag
+                 MPI_INT		 //length
+               
             };
             
             int blocklen[Attributes] = {
-               1,		 //length
-               1		 // end/displacement flag
+                 1		 //length
+               
             };
             
             MPI_Aint     disp[Attributes];
             
             MPI_Aint base;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]))), &base);
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[1]._persistentRecords._length))), 		&disp[1] );
-            
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._length))), 		&disp[0] );
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base;
+               disp[i] = MPI_Aint_diff(disp[i], base);
             }
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformation::FullDatatype );
+            MPI_Datatype tmpType; 
+            MPI_Aint lowerBound, typeExtent; 
+            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformation::FullDatatype );
             MPI_Type_commit( &MetaInformation::FullDatatype );
             
          }
@@ -1404,64 +1416,68 @@
       
       void peano::heap::records::MetaInformationPacked::initDatatype() {
          {
-            MetaInformationPacked dummyMetaInformationPacked[2];
+            MetaInformationPacked dummyMetaInformationPacked;
             
-            const int Attributes = 2;
+            const int Attributes = 1;
             MPI_Datatype subtypes[Attributes] = {
-               MPI_INT,		 //length
-               MPI_UB		 // end/displacement flag
+                 MPI_INT		 //length
+               
             };
             
             int blocklen[Attributes] = {
-               1,		 //length
-               1		 // end/displacement flag
+                 1		 //length
+               
             };
             
             MPI_Aint     disp[Attributes];
             
             MPI_Aint base;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]))), &base);
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[1]._persistentRecords._length))), 		&disp[1] );
-            
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._length))), 		&disp[0] );
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base;
+               disp[i] = MPI_Aint_diff(disp[i], base);
             }
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformationPacked::Datatype );
+            MPI_Datatype tmpType; 
+            MPI_Aint lowerBound, typeExtent; 
+            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformationPacked::Datatype );
             MPI_Type_commit( &MetaInformationPacked::Datatype );
             
          }
          {
-            MetaInformationPacked dummyMetaInformationPacked[2];
+            MetaInformationPacked dummyMetaInformationPacked;
             
-            const int Attributes = 2;
+            const int Attributes = 1;
             MPI_Datatype subtypes[Attributes] = {
-               MPI_INT,		 //length
-               MPI_UB		 // end/displacement flag
+                 MPI_INT		 //length
+               
             };
             
             int blocklen[Attributes] = {
-               1,		 //length
-               1		 // end/displacement flag
+                 1		 //length
+               
             };
             
             MPI_Aint     disp[Attributes];
             
             MPI_Aint base;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]))), &base);
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[1]._persistentRecords._length))), 		&disp[1] );
-            
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._length))), 		&disp[0] );
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base;
+               disp[i] = MPI_Aint_diff(disp[i], base);
             }
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformationPacked::FullDatatype );
+            MPI_Datatype tmpType; 
+            MPI_Aint lowerBound, typeExtent; 
+            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformationPacked::FullDatatype );
             MPI_Type_commit( &MetaInformationPacked::FullDatatype );
             
          }

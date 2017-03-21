@@ -590,154 +590,158 @@
       
       void peano::grid::tests::records::TestState::initDatatype() {
          {
-            TestState dummyTestState[2];
+            TestState dummyTestState;
             
-            const int Attributes = 16;
+            const int Attributes = 15;
             MPI_Datatype subtypes[Attributes] = {
-               MPI_DOUBLE,		 //minMeshWidth
-               MPI_DOUBLE,		 //maxMeshWidth
-               MPI_DOUBLE,		 //numberOfInnerVertices
-               MPI_DOUBLE,		 //numberOfBoundaryVertices
-               MPI_DOUBLE,		 //numberOfOuterVertices
-               MPI_DOUBLE,		 //numberOfInnerCells
-               MPI_DOUBLE,		 //numberOfOuterCells
-               MPI_INT,		 //maxLevel
-               MPI_CHAR,		 //hasRefined
-               MPI_CHAR,		 //hasTriggeredRefinementForNextIteration
-               MPI_CHAR,		 //hasErased
-               MPI_CHAR,		 //hasTriggeredEraseForNextIteration
-               MPI_CHAR,		 //hasChangedVertexOrCellState
-               MPI_CHAR,		 //isTraversalInverted
-               MPI_CHAR,		 //hasWorkerWithWorker
-               MPI_UB		 // end/displacement flag
+                 MPI_DOUBLE		 //minMeshWidth
+               , MPI_DOUBLE		 //maxMeshWidth
+               , MPI_DOUBLE		 //numberOfInnerVertices
+               , MPI_DOUBLE		 //numberOfBoundaryVertices
+               , MPI_DOUBLE		 //numberOfOuterVertices
+               , MPI_DOUBLE		 //numberOfInnerCells
+               , MPI_DOUBLE		 //numberOfOuterCells
+               , MPI_INT		 //maxLevel
+               , MPI_CHAR		 //hasRefined
+               , MPI_CHAR		 //hasTriggeredRefinementForNextIteration
+               , MPI_CHAR		 //hasErased
+               , MPI_CHAR		 //hasTriggeredEraseForNextIteration
+               , MPI_CHAR		 //hasChangedVertexOrCellState
+               , MPI_CHAR		 //isTraversalInverted
+               , MPI_CHAR		 //hasWorkerWithWorker
+               
             };
             
             int blocklen[Attributes] = {
-               DIMENSIONS,		 //minMeshWidth
-               DIMENSIONS,		 //maxMeshWidth
-               1,		 //numberOfInnerVertices
-               1,		 //numberOfBoundaryVertices
-               1,		 //numberOfOuterVertices
-               1,		 //numberOfInnerCells
-               1,		 //numberOfOuterCells
-               1,		 //maxLevel
-               1,		 //hasRefined
-               1,		 //hasTriggeredRefinementForNextIteration
-               1,		 //hasErased
-               1,		 //hasTriggeredEraseForNextIteration
-               1,		 //hasChangedVertexOrCellState
-               1,		 //isTraversalInverted
-               1,		 //hasWorkerWithWorker
-               1		 // end/displacement flag
+                 DIMENSIONS		 //minMeshWidth
+               , DIMENSIONS		 //maxMeshWidth
+               , 1		 //numberOfInnerVertices
+               , 1		 //numberOfBoundaryVertices
+               , 1		 //numberOfOuterVertices
+               , 1		 //numberOfInnerCells
+               , 1		 //numberOfOuterCells
+               , 1		 //maxLevel
+               , 1		 //hasRefined
+               , 1		 //hasTriggeredRefinementForNextIteration
+               , 1		 //hasErased
+               , 1		 //hasTriggeredEraseForNextIteration
+               , 1		 //hasChangedVertexOrCellState
+               , 1		 //isTraversalInverted
+               , 1		 //hasWorkerWithWorker
+               
             };
             
             MPI_Aint     disp[Attributes];
             
             MPI_Aint base;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]))), &base);
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfInnerCells))), 		&disp[5] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfOuterCells))), 		&disp[6] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._maxLevel))), 		&disp[7] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasRefined))), 		&disp[8] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasTriggeredRefinementForNextIteration))), 		&disp[9] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasErased))), 		&disp[10] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasTriggeredEraseForNextIteration))), 		&disp[11] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasChangedVertexOrCellState))), 		&disp[12] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._isTraversalInverted))), 		&disp[13] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._hasWorkerWithWorker))), 		&disp[14] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestState[1]._persistentRecords._minMeshWidth[0])), 		&disp[15] );
-            
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState))), &base);
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfInnerCells))), 		&disp[5] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfOuterCells))), 		&disp[6] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._maxLevel))), 		&disp[7] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasRefined))), 		&disp[8] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasTriggeredRefinementForNextIteration))), 		&disp[9] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasErased))), 		&disp[10] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasTriggeredEraseForNextIteration))), 		&disp[11] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasChangedVertexOrCellState))), 		&disp[12] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._isTraversalInverted))), 		&disp[13] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._hasWorkerWithWorker))), 		&disp[14] );
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base;
+               disp[i] = MPI_Aint_diff(disp[i], base);
             }
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TestState::Datatype );
+            MPI_Datatype tmpType; 
+            MPI_Aint lowerBound, typeExtent; 
+            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TestState::Datatype );
             MPI_Type_commit( &TestState::Datatype );
             
          }
          {
-            TestState dummyTestState[2];
+            TestState dummyTestState;
             
-            const int Attributes = 18;
+            const int Attributes = 17;
             MPI_Datatype subtypes[Attributes] = {
-               MPI_DOUBLE,		 //minMeshWidth
-               MPI_DOUBLE,		 //maxMeshWidth
-               MPI_DOUBLE,		 //numberOfInnerVertices
-               MPI_DOUBLE,		 //numberOfBoundaryVertices
-               MPI_DOUBLE,		 //numberOfOuterVertices
-               MPI_DOUBLE,		 //numberOfInnerCells
-               MPI_DOUBLE,		 //numberOfOuterCells
-               MPI_INT,		 //maxLevel
-               MPI_CHAR,		 //hasRefined
-               MPI_CHAR,		 //hasTriggeredRefinementForNextIteration
-               MPI_CHAR,		 //hasErased
-               MPI_CHAR,		 //hasTriggeredEraseForNextIteration
-               MPI_CHAR,		 //hasChangedVertexOrCellState
-               MPI_CHAR,		 //isTraversalInverted
-               MPI_INT,		 //loadRebalancingState
-               MPI_CHAR,		 //reduceStateAndCell
-               MPI_CHAR,		 //hasWorkerWithWorker
-               MPI_UB		 // end/displacement flag
+                 MPI_DOUBLE		 //minMeshWidth
+               , MPI_DOUBLE		 //maxMeshWidth
+               , MPI_DOUBLE		 //numberOfInnerVertices
+               , MPI_DOUBLE		 //numberOfBoundaryVertices
+               , MPI_DOUBLE		 //numberOfOuterVertices
+               , MPI_DOUBLE		 //numberOfInnerCells
+               , MPI_DOUBLE		 //numberOfOuterCells
+               , MPI_INT		 //maxLevel
+               , MPI_CHAR		 //hasRefined
+               , MPI_CHAR		 //hasTriggeredRefinementForNextIteration
+               , MPI_CHAR		 //hasErased
+               , MPI_CHAR		 //hasTriggeredEraseForNextIteration
+               , MPI_CHAR		 //hasChangedVertexOrCellState
+               , MPI_CHAR		 //isTraversalInverted
+               , MPI_INT		 //loadRebalancingState
+               , MPI_CHAR		 //reduceStateAndCell
+               , MPI_CHAR		 //hasWorkerWithWorker
+               
             };
             
             int blocklen[Attributes] = {
-               DIMENSIONS,		 //minMeshWidth
-               DIMENSIONS,		 //maxMeshWidth
-               1,		 //numberOfInnerVertices
-               1,		 //numberOfBoundaryVertices
-               1,		 //numberOfOuterVertices
-               1,		 //numberOfInnerCells
-               1,		 //numberOfOuterCells
-               1,		 //maxLevel
-               1,		 //hasRefined
-               1,		 //hasTriggeredRefinementForNextIteration
-               1,		 //hasErased
-               1,		 //hasTriggeredEraseForNextIteration
-               1,		 //hasChangedVertexOrCellState
-               1,		 //isTraversalInverted
-               1,		 //loadRebalancingState
-               1,		 //reduceStateAndCell
-               1,		 //hasWorkerWithWorker
-               1		 // end/displacement flag
+                 DIMENSIONS		 //minMeshWidth
+               , DIMENSIONS		 //maxMeshWidth
+               , 1		 //numberOfInnerVertices
+               , 1		 //numberOfBoundaryVertices
+               , 1		 //numberOfOuterVertices
+               , 1		 //numberOfInnerCells
+               , 1		 //numberOfOuterCells
+               , 1		 //maxLevel
+               , 1		 //hasRefined
+               , 1		 //hasTriggeredRefinementForNextIteration
+               , 1		 //hasErased
+               , 1		 //hasTriggeredEraseForNextIteration
+               , 1		 //hasChangedVertexOrCellState
+               , 1		 //isTraversalInverted
+               , 1		 //loadRebalancingState
+               , 1		 //reduceStateAndCell
+               , 1		 //hasWorkerWithWorker
+               
             };
             
             MPI_Aint     disp[Attributes];
             
             MPI_Aint base;
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]))), &base);
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfInnerCells))), 		&disp[5] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfOuterCells))), 		&disp[6] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._maxLevel))), 		&disp[7] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasRefined))), 		&disp[8] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasTriggeredRefinementForNextIteration))), 		&disp[9] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasErased))), 		&disp[10] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasTriggeredEraseForNextIteration))), 		&disp[11] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasChangedVertexOrCellState))), 		&disp[12] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._isTraversalInverted))), 		&disp[13] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._loadRebalancingState))), 		&disp[14] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._reduceStateAndCell))), 		&disp[15] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._hasWorkerWithWorker))), 		&disp[16] );
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestState[1]._persistentRecords._minMeshWidth[0])), 		&disp[17] );
-            
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState))), &base);
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfInnerCells))), 		&disp[5] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfOuterCells))), 		&disp[6] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._maxLevel))), 		&disp[7] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasRefined))), 		&disp[8] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasTriggeredRefinementForNextIteration))), 		&disp[9] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasErased))), 		&disp[10] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasTriggeredEraseForNextIteration))), 		&disp[11] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasChangedVertexOrCellState))), 		&disp[12] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._isTraversalInverted))), 		&disp[13] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._loadRebalancingState))), 		&disp[14] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._reduceStateAndCell))), 		&disp[15] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._hasWorkerWithWorker))), 		&disp[16] );
             for (int i=1; i<Attributes; i++) {
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base;
+               disp[i] = MPI_Aint_diff(disp[i], base);
             }
-            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TestState::FullDatatype );
+            MPI_Datatype tmpType; 
+            MPI_Aint lowerBound, typeExtent; 
+            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TestState::FullDatatype );
             MPI_Type_commit( &TestState::FullDatatype );
             
          }
@@ -1658,127 +1662,131 @@ peano::grid::tests::records::TestState peano::grid::tests::records::TestStatePac
    
    void peano::grid::tests::records::TestStatePacked::initDatatype() {
       {
-         TestStatePacked dummyTestStatePacked[2];
+         TestStatePacked dummyTestStatePacked;
          
-         const int Attributes = 12;
+         const int Attributes = 11;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_DOUBLE,		 //minMeshWidth
-            MPI_DOUBLE,		 //maxMeshWidth
-            MPI_DOUBLE,		 //numberOfInnerVertices
-            MPI_DOUBLE,		 //numberOfBoundaryVertices
-            MPI_DOUBLE,		 //numberOfOuterVertices
-            MPI_DOUBLE,		 //numberOfInnerCells
-            MPI_DOUBLE,		 //numberOfOuterCells
-            MPI_INT,		 //maxLevel
-            MPI_CHAR,		 //isTraversalInverted
-            MPI_INT,		 //_packedRecords0
-            MPI_INT,		 //_packedRecords0
-            MPI_UB		 // end/displacement flag
+              MPI_DOUBLE		 //minMeshWidth
+            , MPI_DOUBLE		 //maxMeshWidth
+            , MPI_DOUBLE		 //numberOfInnerVertices
+            , MPI_DOUBLE		 //numberOfBoundaryVertices
+            , MPI_DOUBLE		 //numberOfOuterVertices
+            , MPI_DOUBLE		 //numberOfInnerCells
+            , MPI_DOUBLE		 //numberOfOuterCells
+            , MPI_INT		 //maxLevel
+            , MPI_CHAR		 //isTraversalInverted
+            , MPI_INT		 //_packedRecords0
+            , MPI_INT		 //_packedRecords0
+            
          };
          
          int blocklen[Attributes] = {
-            DIMENSIONS,		 //minMeshWidth
-            DIMENSIONS,		 //maxMeshWidth
-            1,		 //numberOfInnerVertices
-            1,		 //numberOfBoundaryVertices
-            1,		 //numberOfOuterVertices
-            1,		 //numberOfInnerCells
-            1,		 //numberOfOuterCells
-            1,		 //maxLevel
-            1,		 //isTraversalInverted
-            1,		 //_packedRecords0
-            1,		 //_packedRecords0
-            1		 // end/displacement flag
+              DIMENSIONS		 //minMeshWidth
+            , DIMENSIONS		 //maxMeshWidth
+            , 1		 //numberOfInnerVertices
+            , 1		 //numberOfBoundaryVertices
+            , 1		 //numberOfOuterVertices
+            , 1		 //numberOfInnerCells
+            , 1		 //numberOfOuterCells
+            , 1		 //maxLevel
+            , 1		 //isTraversalInverted
+            , 1		 //_packedRecords0
+            , 1		 //_packedRecords0
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfInnerCells))), 		&disp[5] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfOuterCells))), 		&disp[6] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._maxLevel))), 		&disp[7] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._isTraversalInverted))), 		&disp[8] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._packedRecords0))), 		&disp[9] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._packedRecords0))), 		&disp[10] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestStatePacked[1]._persistentRecords._minMeshWidth[0])), 		&disp[11] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfInnerCells))), 		&disp[5] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfOuterCells))), 		&disp[6] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._maxLevel))), 		&disp[7] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._isTraversalInverted))), 		&disp[8] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._packedRecords0))), 		&disp[9] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._packedRecords0))), 		&disp[10] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TestStatePacked::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TestStatePacked::Datatype );
          MPI_Type_commit( &TestStatePacked::Datatype );
          
       }
       {
-         TestStatePacked dummyTestStatePacked[2];
+         TestStatePacked dummyTestStatePacked;
          
-         const int Attributes = 13;
+         const int Attributes = 12;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_DOUBLE,		 //minMeshWidth
-            MPI_DOUBLE,		 //maxMeshWidth
-            MPI_DOUBLE,		 //numberOfInnerVertices
-            MPI_DOUBLE,		 //numberOfBoundaryVertices
-            MPI_DOUBLE,		 //numberOfOuterVertices
-            MPI_DOUBLE,		 //numberOfInnerCells
-            MPI_DOUBLE,		 //numberOfOuterCells
-            MPI_INT,		 //maxLevel
-            MPI_CHAR,		 //isTraversalInverted
-            MPI_INT,		 //loadRebalancingState
-            MPI_INT,		 //_packedRecords0
-            MPI_INT,		 //_packedRecords0
-            MPI_UB		 // end/displacement flag
+              MPI_DOUBLE		 //minMeshWidth
+            , MPI_DOUBLE		 //maxMeshWidth
+            , MPI_DOUBLE		 //numberOfInnerVertices
+            , MPI_DOUBLE		 //numberOfBoundaryVertices
+            , MPI_DOUBLE		 //numberOfOuterVertices
+            , MPI_DOUBLE		 //numberOfInnerCells
+            , MPI_DOUBLE		 //numberOfOuterCells
+            , MPI_INT		 //maxLevel
+            , MPI_CHAR		 //isTraversalInverted
+            , MPI_INT		 //loadRebalancingState
+            , MPI_INT		 //_packedRecords0
+            , MPI_INT		 //_packedRecords0
+            
          };
          
          int blocklen[Attributes] = {
-            DIMENSIONS,		 //minMeshWidth
-            DIMENSIONS,		 //maxMeshWidth
-            1,		 //numberOfInnerVertices
-            1,		 //numberOfBoundaryVertices
-            1,		 //numberOfOuterVertices
-            1,		 //numberOfInnerCells
-            1,		 //numberOfOuterCells
-            1,		 //maxLevel
-            1,		 //isTraversalInverted
-            1,		 //loadRebalancingState
-            1,		 //_packedRecords0
-            1,		 //_packedRecords0
-            1		 // end/displacement flag
+              DIMENSIONS		 //minMeshWidth
+            , DIMENSIONS		 //maxMeshWidth
+            , 1		 //numberOfInnerVertices
+            , 1		 //numberOfBoundaryVertices
+            , 1		 //numberOfOuterVertices
+            , 1		 //numberOfInnerCells
+            , 1		 //numberOfOuterCells
+            , 1		 //maxLevel
+            , 1		 //isTraversalInverted
+            , 1		 //loadRebalancingState
+            , 1		 //_packedRecords0
+            , 1		 //_packedRecords0
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfInnerCells))), 		&disp[5] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfOuterCells))), 		&disp[6] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._maxLevel))), 		&disp[7] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._isTraversalInverted))), 		&disp[8] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._loadRebalancingState))), 		&disp[9] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._packedRecords0))), 		&disp[10] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._packedRecords0))), 		&disp[11] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestStatePacked[1]._persistentRecords._minMeshWidth[0])), 		&disp[12] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfInnerCells))), 		&disp[5] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfOuterCells))), 		&disp[6] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._maxLevel))), 		&disp[7] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._isTraversalInverted))), 		&disp[8] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._loadRebalancingState))), 		&disp[9] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._packedRecords0))), 		&disp[10] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._packedRecords0))), 		&disp[11] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TestStatePacked::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TestStatePacked::FullDatatype );
          MPI_Type_commit( &TestStatePacked::FullDatatype );
          
       }
@@ -2517,142 +2525,146 @@ MPI_Datatype peano::grid::tests::records::TestState::FullDatatype = 0;
 
 void peano::grid::tests::records::TestState::initDatatype() {
    {
-      TestState dummyTestState[2];
+      TestState dummyTestState;
       
-      const int Attributes = 15;
+      const int Attributes = 14;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_DOUBLE,		 //minMeshWidth
-         MPI_DOUBLE,		 //maxMeshWidth
-         MPI_DOUBLE,		 //numberOfInnerVertices
-         MPI_DOUBLE,		 //numberOfBoundaryVertices
-         MPI_DOUBLE,		 //numberOfOuterVertices
-         MPI_DOUBLE,		 //numberOfInnerCells
-         MPI_DOUBLE,		 //numberOfOuterCells
-         MPI_INT,		 //maxLevel
-         MPI_CHAR,		 //hasRefined
-         MPI_CHAR,		 //hasTriggeredRefinementForNextIteration
-         MPI_CHAR,		 //hasErased
-         MPI_CHAR,		 //hasTriggeredEraseForNextIteration
-         MPI_CHAR,		 //hasChangedVertexOrCellState
-         MPI_CHAR,		 //isTraversalInverted
-         MPI_UB		 // end/displacement flag
+           MPI_DOUBLE		 //minMeshWidth
+         , MPI_DOUBLE		 //maxMeshWidth
+         , MPI_DOUBLE		 //numberOfInnerVertices
+         , MPI_DOUBLE		 //numberOfBoundaryVertices
+         , MPI_DOUBLE		 //numberOfOuterVertices
+         , MPI_DOUBLE		 //numberOfInnerCells
+         , MPI_DOUBLE		 //numberOfOuterCells
+         , MPI_INT		 //maxLevel
+         , MPI_CHAR		 //hasRefined
+         , MPI_CHAR		 //hasTriggeredRefinementForNextIteration
+         , MPI_CHAR		 //hasErased
+         , MPI_CHAR		 //hasTriggeredEraseForNextIteration
+         , MPI_CHAR		 //hasChangedVertexOrCellState
+         , MPI_CHAR		 //isTraversalInverted
+         
       };
       
       int blocklen[Attributes] = {
-         DIMENSIONS,		 //minMeshWidth
-         DIMENSIONS,		 //maxMeshWidth
-         1,		 //numberOfInnerVertices
-         1,		 //numberOfBoundaryVertices
-         1,		 //numberOfOuterVertices
-         1,		 //numberOfInnerCells
-         1,		 //numberOfOuterCells
-         1,		 //maxLevel
-         1,		 //hasRefined
-         1,		 //hasTriggeredRefinementForNextIteration
-         1,		 //hasErased
-         1,		 //hasTriggeredEraseForNextIteration
-         1,		 //hasChangedVertexOrCellState
-         1,		 //isTraversalInverted
-         1		 // end/displacement flag
+           DIMENSIONS		 //minMeshWidth
+         , DIMENSIONS		 //maxMeshWidth
+         , 1		 //numberOfInnerVertices
+         , 1		 //numberOfBoundaryVertices
+         , 1		 //numberOfOuterVertices
+         , 1		 //numberOfInnerCells
+         , 1		 //numberOfOuterCells
+         , 1		 //maxLevel
+         , 1		 //hasRefined
+         , 1		 //hasTriggeredRefinementForNextIteration
+         , 1		 //hasErased
+         , 1		 //hasTriggeredEraseForNextIteration
+         , 1		 //hasChangedVertexOrCellState
+         , 1		 //isTraversalInverted
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfInnerCells))), 		&disp[5] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfOuterCells))), 		&disp[6] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._maxLevel))), 		&disp[7] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasRefined))), 		&disp[8] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasTriggeredRefinementForNextIteration))), 		&disp[9] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasErased))), 		&disp[10] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasTriggeredEraseForNextIteration))), 		&disp[11] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasChangedVertexOrCellState))), 		&disp[12] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._isTraversalInverted))), 		&disp[13] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestState[1]._persistentRecords._minMeshWidth[0])), 		&disp[14] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfInnerCells))), 		&disp[5] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfOuterCells))), 		&disp[6] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._maxLevel))), 		&disp[7] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasRefined))), 		&disp[8] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasTriggeredRefinementForNextIteration))), 		&disp[9] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasErased))), 		&disp[10] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasTriggeredEraseForNextIteration))), 		&disp[11] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasChangedVertexOrCellState))), 		&disp[12] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._isTraversalInverted))), 		&disp[13] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TestState::Datatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TestState::Datatype );
       MPI_Type_commit( &TestState::Datatype );
       
    }
    {
-      TestState dummyTestState[2];
+      TestState dummyTestState;
       
-      const int Attributes = 15;
+      const int Attributes = 14;
       MPI_Datatype subtypes[Attributes] = {
-         MPI_DOUBLE,		 //minMeshWidth
-         MPI_DOUBLE,		 //maxMeshWidth
-         MPI_DOUBLE,		 //numberOfInnerVertices
-         MPI_DOUBLE,		 //numberOfBoundaryVertices
-         MPI_DOUBLE,		 //numberOfOuterVertices
-         MPI_DOUBLE,		 //numberOfInnerCells
-         MPI_DOUBLE,		 //numberOfOuterCells
-         MPI_INT,		 //maxLevel
-         MPI_CHAR,		 //hasRefined
-         MPI_CHAR,		 //hasTriggeredRefinementForNextIteration
-         MPI_CHAR,		 //hasErased
-         MPI_CHAR,		 //hasTriggeredEraseForNextIteration
-         MPI_CHAR,		 //hasChangedVertexOrCellState
-         MPI_CHAR,		 //isTraversalInverted
-         MPI_UB		 // end/displacement flag
+           MPI_DOUBLE		 //minMeshWidth
+         , MPI_DOUBLE		 //maxMeshWidth
+         , MPI_DOUBLE		 //numberOfInnerVertices
+         , MPI_DOUBLE		 //numberOfBoundaryVertices
+         , MPI_DOUBLE		 //numberOfOuterVertices
+         , MPI_DOUBLE		 //numberOfInnerCells
+         , MPI_DOUBLE		 //numberOfOuterCells
+         , MPI_INT		 //maxLevel
+         , MPI_CHAR		 //hasRefined
+         , MPI_CHAR		 //hasTriggeredRefinementForNextIteration
+         , MPI_CHAR		 //hasErased
+         , MPI_CHAR		 //hasTriggeredEraseForNextIteration
+         , MPI_CHAR		 //hasChangedVertexOrCellState
+         , MPI_CHAR		 //isTraversalInverted
+         
       };
       
       int blocklen[Attributes] = {
-         DIMENSIONS,		 //minMeshWidth
-         DIMENSIONS,		 //maxMeshWidth
-         1,		 //numberOfInnerVertices
-         1,		 //numberOfBoundaryVertices
-         1,		 //numberOfOuterVertices
-         1,		 //numberOfInnerCells
-         1,		 //numberOfOuterCells
-         1,		 //maxLevel
-         1,		 //hasRefined
-         1,		 //hasTriggeredRefinementForNextIteration
-         1,		 //hasErased
-         1,		 //hasTriggeredEraseForNextIteration
-         1,		 //hasChangedVertexOrCellState
-         1,		 //isTraversalInverted
-         1		 // end/displacement flag
+           DIMENSIONS		 //minMeshWidth
+         , DIMENSIONS		 //maxMeshWidth
+         , 1		 //numberOfInnerVertices
+         , 1		 //numberOfBoundaryVertices
+         , 1		 //numberOfOuterVertices
+         , 1		 //numberOfInnerCells
+         , 1		 //numberOfOuterCells
+         , 1		 //maxLevel
+         , 1		 //hasRefined
+         , 1		 //hasTriggeredRefinementForNextIteration
+         , 1		 //hasErased
+         , 1		 //hasTriggeredEraseForNextIteration
+         , 1		 //hasChangedVertexOrCellState
+         , 1		 //isTraversalInverted
+         
       };
       
       MPI_Aint     disp[Attributes];
       
       MPI_Aint base;
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]))), &base);
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfInnerCells))), 		&disp[5] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._numberOfOuterCells))), 		&disp[6] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._maxLevel))), 		&disp[7] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasRefined))), 		&disp[8] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasTriggeredRefinementForNextIteration))), 		&disp[9] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasErased))), 		&disp[10] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasTriggeredEraseForNextIteration))), 		&disp[11] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._hasChangedVertexOrCellState))), 		&disp[12] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestState[0]._persistentRecords._isTraversalInverted))), 		&disp[13] );
-      MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestState[1]._persistentRecords._minMeshWidth[0])), 		&disp[14] );
-      
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState))), &base);
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfInnerCells))), 		&disp[5] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._numberOfOuterCells))), 		&disp[6] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._maxLevel))), 		&disp[7] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasRefined))), 		&disp[8] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasTriggeredRefinementForNextIteration))), 		&disp[9] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasErased))), 		&disp[10] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasTriggeredEraseForNextIteration))), 		&disp[11] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._hasChangedVertexOrCellState))), 		&disp[12] );
+      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestState._persistentRecords._isTraversalInverted))), 		&disp[13] );
       for (int i=1; i<Attributes; i++) {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] -= base;
+         disp[i] = MPI_Aint_diff(disp[i], base);
       }
-      MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TestState::FullDatatype );
+      MPI_Datatype tmpType; 
+      MPI_Aint lowerBound, typeExtent; 
+      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TestState::FullDatatype );
       MPI_Type_commit( &TestState::FullDatatype );
       
    }
@@ -3449,118 +3461,122 @@ MPI_Datatype peano::grid::tests::records::TestStatePacked::FullDatatype = 0;
 
 void peano::grid::tests::records::TestStatePacked::initDatatype() {
 {
-   TestStatePacked dummyTestStatePacked[2];
+   TestStatePacked dummyTestStatePacked;
    
-   const int Attributes = 11;
+   const int Attributes = 10;
    MPI_Datatype subtypes[Attributes] = {
-      MPI_DOUBLE,		 //minMeshWidth
-      MPI_DOUBLE,		 //maxMeshWidth
-      MPI_DOUBLE,		 //numberOfInnerVertices
-      MPI_DOUBLE,		 //numberOfBoundaryVertices
-      MPI_DOUBLE,		 //numberOfOuterVertices
-      MPI_DOUBLE,		 //numberOfInnerCells
-      MPI_DOUBLE,		 //numberOfOuterCells
-      MPI_INT,		 //maxLevel
-      MPI_CHAR,		 //isTraversalInverted
-      MPI_INT,		 //_packedRecords0
-      MPI_UB		 // end/displacement flag
+        MPI_DOUBLE		 //minMeshWidth
+      , MPI_DOUBLE		 //maxMeshWidth
+      , MPI_DOUBLE		 //numberOfInnerVertices
+      , MPI_DOUBLE		 //numberOfBoundaryVertices
+      , MPI_DOUBLE		 //numberOfOuterVertices
+      , MPI_DOUBLE		 //numberOfInnerCells
+      , MPI_DOUBLE		 //numberOfOuterCells
+      , MPI_INT		 //maxLevel
+      , MPI_CHAR		 //isTraversalInverted
+      , MPI_INT		 //_packedRecords0
+      
    };
    
    int blocklen[Attributes] = {
-      DIMENSIONS,		 //minMeshWidth
-      DIMENSIONS,		 //maxMeshWidth
-      1,		 //numberOfInnerVertices
-      1,		 //numberOfBoundaryVertices
-      1,		 //numberOfOuterVertices
-      1,		 //numberOfInnerCells
-      1,		 //numberOfOuterCells
-      1,		 //maxLevel
-      1,		 //isTraversalInverted
-      1,		 //_packedRecords0
-      1		 // end/displacement flag
+        DIMENSIONS		 //minMeshWidth
+      , DIMENSIONS		 //maxMeshWidth
+      , 1		 //numberOfInnerVertices
+      , 1		 //numberOfBoundaryVertices
+      , 1		 //numberOfOuterVertices
+      , 1		 //numberOfInnerCells
+      , 1		 //numberOfOuterCells
+      , 1		 //maxLevel
+      , 1		 //isTraversalInverted
+      , 1		 //_packedRecords0
+      
    };
    
    MPI_Aint     disp[Attributes];
    
    MPI_Aint base;
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]))), &base);
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfInnerCells))), 		&disp[5] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfOuterCells))), 		&disp[6] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._maxLevel))), 		&disp[7] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._isTraversalInverted))), 		&disp[8] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._packedRecords0))), 		&disp[9] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestStatePacked[1]._persistentRecords._minMeshWidth[0])), 		&disp[10] );
-   
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked))), &base);
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfInnerCells))), 		&disp[5] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfOuterCells))), 		&disp[6] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._maxLevel))), 		&disp[7] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._isTraversalInverted))), 		&disp[8] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._packedRecords0))), 		&disp[9] );
    for (int i=1; i<Attributes; i++) {
       assertion1( disp[i] > disp[i-1], i );
    }
    for (int i=0; i<Attributes; i++) {
-      disp[i] -= base;
+      disp[i] = MPI_Aint_diff(disp[i], base);
    }
-   MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TestStatePacked::Datatype );
+   MPI_Datatype tmpType; 
+   MPI_Aint lowerBound, typeExtent; 
+   MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+   MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+   MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TestStatePacked::Datatype );
    MPI_Type_commit( &TestStatePacked::Datatype );
    
 }
 {
-   TestStatePacked dummyTestStatePacked[2];
+   TestStatePacked dummyTestStatePacked;
    
-   const int Attributes = 11;
+   const int Attributes = 10;
    MPI_Datatype subtypes[Attributes] = {
-      MPI_DOUBLE,		 //minMeshWidth
-      MPI_DOUBLE,		 //maxMeshWidth
-      MPI_DOUBLE,		 //numberOfInnerVertices
-      MPI_DOUBLE,		 //numberOfBoundaryVertices
-      MPI_DOUBLE,		 //numberOfOuterVertices
-      MPI_DOUBLE,		 //numberOfInnerCells
-      MPI_DOUBLE,		 //numberOfOuterCells
-      MPI_INT,		 //maxLevel
-      MPI_CHAR,		 //isTraversalInverted
-      MPI_INT,		 //_packedRecords0
-      MPI_UB		 // end/displacement flag
+        MPI_DOUBLE		 //minMeshWidth
+      , MPI_DOUBLE		 //maxMeshWidth
+      , MPI_DOUBLE		 //numberOfInnerVertices
+      , MPI_DOUBLE		 //numberOfBoundaryVertices
+      , MPI_DOUBLE		 //numberOfOuterVertices
+      , MPI_DOUBLE		 //numberOfInnerCells
+      , MPI_DOUBLE		 //numberOfOuterCells
+      , MPI_INT		 //maxLevel
+      , MPI_CHAR		 //isTraversalInverted
+      , MPI_INT		 //_packedRecords0
+      
    };
    
    int blocklen[Attributes] = {
-      DIMENSIONS,		 //minMeshWidth
-      DIMENSIONS,		 //maxMeshWidth
-      1,		 //numberOfInnerVertices
-      1,		 //numberOfBoundaryVertices
-      1,		 //numberOfOuterVertices
-      1,		 //numberOfInnerCells
-      1,		 //numberOfOuterCells
-      1,		 //maxLevel
-      1,		 //isTraversalInverted
-      1,		 //_packedRecords0
-      1		 // end/displacement flag
+        DIMENSIONS		 //minMeshWidth
+      , DIMENSIONS		 //maxMeshWidth
+      , 1		 //numberOfInnerVertices
+      , 1		 //numberOfBoundaryVertices
+      , 1		 //numberOfOuterVertices
+      , 1		 //numberOfInnerCells
+      , 1		 //numberOfOuterCells
+      , 1		 //maxLevel
+      , 1		 //isTraversalInverted
+      , 1		 //_packedRecords0
+      
    };
    
    MPI_Aint     disp[Attributes];
    
    MPI_Aint base;
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]))), &base);
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfInnerCells))), 		&disp[5] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._numberOfOuterCells))), 		&disp[6] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._maxLevel))), 		&disp[7] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._isTraversalInverted))), 		&disp[8] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked[0]._persistentRecords._packedRecords0))), 		&disp[9] );
-   MPI_Address( const_cast<void*>(static_cast<const void*>(&dummyTestStatePacked[1]._persistentRecords._minMeshWidth[0])), 		&disp[10] );
-   
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked))), &base);
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._minMeshWidth[0]))), 		&disp[0] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._maxMeshWidth[0]))), 		&disp[1] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfInnerVertices))), 		&disp[2] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfBoundaryVertices))), 		&disp[3] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfOuterVertices))), 		&disp[4] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfInnerCells))), 		&disp[5] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._numberOfOuterCells))), 		&disp[6] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._maxLevel))), 		&disp[7] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._isTraversalInverted))), 		&disp[8] );
+   MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTestStatePacked._persistentRecords._packedRecords0))), 		&disp[9] );
    for (int i=1; i<Attributes; i++) {
       assertion1( disp[i] > disp[i-1], i );
    }
    for (int i=0; i<Attributes; i++) {
-      disp[i] -= base;
+      disp[i] = MPI_Aint_diff(disp[i], base);
    }
-   MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TestStatePacked::FullDatatype );
+   MPI_Datatype tmpType; 
+   MPI_Aint lowerBound, typeExtent; 
+   MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+   MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+   MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TestStatePacked::FullDatatype );
    MPI_Type_commit( &TestStatePacked::FullDatatype );
    
 }

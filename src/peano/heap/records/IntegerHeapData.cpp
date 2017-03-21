@@ -87,64 +87,68 @@ peano::heap::records::IntegerHeapDataPacked peano::heap::records::IntegerHeapDat
    
    void peano::heap::records::IntegerHeapData::initDatatype() {
       {
-         IntegerHeapData dummyIntegerHeapData[2];
+         IntegerHeapData dummyIntegerHeapData;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //u
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //u
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //u
-            1		 // end/displacement flag
+              1		 //u
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapData[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapData[0]._persistentRecords._u))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapData[1]._persistentRecords._u))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapData))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapData._persistentRecords._u))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerHeapData::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &IntegerHeapData::Datatype );
          MPI_Type_commit( &IntegerHeapData::Datatype );
          
       }
       {
-         IntegerHeapData dummyIntegerHeapData[2];
+         IntegerHeapData dummyIntegerHeapData;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //u
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //u
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //u
-            1		 // end/displacement flag
+              1		 //u
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapData[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapData[0]._persistentRecords._u))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapData[1]._persistentRecords._u))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapData))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapData._persistentRecords._u))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerHeapData::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &IntegerHeapData::FullDatatype );
          MPI_Type_commit( &IntegerHeapData::FullDatatype );
          
       }
@@ -465,64 +469,68 @@ peano::heap::records::IntegerHeapData peano::heap::records::IntegerHeapDataPacke
    
    void peano::heap::records::IntegerHeapDataPacked::initDatatype() {
       {
-         IntegerHeapDataPacked dummyIntegerHeapDataPacked[2];
+         IntegerHeapDataPacked dummyIntegerHeapDataPacked;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //u
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //u
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //u
-            1		 // end/displacement flag
+              1		 //u
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapDataPacked[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapDataPacked[1]._persistentRecords._u))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapDataPacked))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapDataPacked._persistentRecords._u))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerHeapDataPacked::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &IntegerHeapDataPacked::Datatype );
          MPI_Type_commit( &IntegerHeapDataPacked::Datatype );
          
       }
       {
-         IntegerHeapDataPacked dummyIntegerHeapDataPacked[2];
+         IntegerHeapDataPacked dummyIntegerHeapDataPacked;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_INT,		 //u
-            MPI_UB		 // end/displacement flag
+              MPI_INT		 //u
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //u
-            1		 // end/displacement flag
+              1		 //u
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapDataPacked[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapDataPacked[1]._persistentRecords._u))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapDataPacked))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyIntegerHeapDataPacked._persistentRecords._u))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &IntegerHeapDataPacked::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &IntegerHeapDataPacked::FullDatatype );
          MPI_Type_commit( &IntegerHeapDataPacked::FullDatatype );
          
       }

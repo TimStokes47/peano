@@ -34,7 +34,7 @@ namespace peano {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   11/03/2015 11:53
+ * @date   21/03/2017 02:51
  */
 class peano::heap::records::BooleanHeapData { 
    
@@ -168,7 +168,7 @@ class peano::heap::records::BooleanHeapData {
           *
           * 		   build date: 09-02-2014 14:40
           *
-          * @date   11/03/2015 11:53
+          * @date   21/03/2017 02:51
           */
          class peano::heap::records::BooleanHeapDataPacked { 
             

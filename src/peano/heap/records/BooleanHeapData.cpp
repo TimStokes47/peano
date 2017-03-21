@@ -87,64 +87,68 @@ peano::heap::records::BooleanHeapDataPacked peano::heap::records::BooleanHeapDat
    
    void peano::heap::records::BooleanHeapData::initDatatype() {
       {
-         BooleanHeapData dummyBooleanHeapData[2];
+         BooleanHeapData dummyBooleanHeapData;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_CHAR,		 //u
-            MPI_UB		 // end/displacement flag
+              MPI_CHAR		 //u
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //u
-            1		 // end/displacement flag
+              1		 //u
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[0]._persistentRecords._u))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[1]._persistentRecords._u))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData._persistentRecords._u))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &BooleanHeapData::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &BooleanHeapData::Datatype );
          MPI_Type_commit( &BooleanHeapData::Datatype );
          
       }
       {
-         BooleanHeapData dummyBooleanHeapData[2];
+         BooleanHeapData dummyBooleanHeapData;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_CHAR,		 //u
-            MPI_UB		 // end/displacement flag
+              MPI_CHAR		 //u
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //u
-            1		 // end/displacement flag
+              1		 //u
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[0]._persistentRecords._u))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[1]._persistentRecords._u))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData._persistentRecords._u))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &BooleanHeapData::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &BooleanHeapData::FullDatatype );
          MPI_Type_commit( &BooleanHeapData::FullDatatype );
          
       }
@@ -465,64 +469,68 @@ peano::heap::records::BooleanHeapData peano::heap::records::BooleanHeapDataPacke
    
    void peano::heap::records::BooleanHeapDataPacked::initDatatype() {
       {
-         BooleanHeapDataPacked dummyBooleanHeapDataPacked[2];
+         BooleanHeapDataPacked dummyBooleanHeapDataPacked;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_CHAR,		 //u
-            MPI_UB		 // end/displacement flag
+              MPI_CHAR		 //u
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //u
-            1		 // end/displacement flag
+              1		 //u
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[1]._persistentRecords._u))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked._persistentRecords._u))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &BooleanHeapDataPacked::Datatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &BooleanHeapDataPacked::Datatype );
          MPI_Type_commit( &BooleanHeapDataPacked::Datatype );
          
       }
       {
-         BooleanHeapDataPacked dummyBooleanHeapDataPacked[2];
+         BooleanHeapDataPacked dummyBooleanHeapDataPacked;
          
-         const int Attributes = 2;
+         const int Attributes = 1;
          MPI_Datatype subtypes[Attributes] = {
-            MPI_CHAR,		 //u
-            MPI_UB		 // end/displacement flag
+              MPI_CHAR		 //u
+            
          };
          
          int blocklen[Attributes] = {
-            1,		 //u
-            1		 // end/displacement flag
+              1		 //u
+            
          };
          
          MPI_Aint     disp[Attributes];
          
          MPI_Aint base;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[0]))), &base);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[1]._persistentRecords._u))), 		&disp[1] );
-         
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked))), &base);
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked._persistentRecords._u))), 		&disp[0] );
          for (int i=1; i<Attributes; i++) {
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base;
+            disp[i] = MPI_Aint_diff(disp[i], base);
          }
-         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &BooleanHeapDataPacked::FullDatatype );
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &BooleanHeapDataPacked::FullDatatype );
          MPI_Type_commit( &BooleanHeapDataPacked::FullDatatype );
          
       }
