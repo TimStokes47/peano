@@ -58,6 +58,12 @@ We recommend to access the respository directly.
 
 \subsection{Download the archives from the website}
 
+\begin{remark}
+  I do recommend not to work with the predefined files but to access the
+  repository directly as it is discussed in the next section.
+\end{remark}
+
+
 If you don't want to download Peano's whole archive, change to Peano's webpage
 \url{http://www.peano-framework.org} and grab the files
 \begin{itemize}
@@ -78,7 +84,7 @@ It holds all required C++ sources.
 
 
 \noindent
-There's a couple of helper files that we use IN the
+There's a couple of helper files that we use in the
 cookbook. 
 They are not necessarily required for each Peano project, but for our examples
 here they are very useful.
@@ -161,7 +167,58 @@ I'm too lazy to do so and rely on OS links.
 \end{code}
 
 
+\section{Dry run of the development tools}
 
+The Peano Development Tools (PDT) come along as one archive. You can call them
+\begin{code}
+> java -jar mypdtdirectory/pdt.jar
+ 
+ (C) 2010-2015 Tobias Weinzierl
+
+There are two modes to use the toolkit. You can either invoke the toolkit with
+
+    java -jar pdt.jar --create-project project-name output-directory
+
+or you use the toolkit with
+
+    java -jar pdt.jar --generate-gluecode peano-specification-file output-directory 
+      [template-directories]
+
+
+For --create-project, you specify the project name you want to use (may contain :: for nested 
+namespaces) and the directory where to write an empty project to. The directory is created if 
+it had not existed before. No files are overwritten, i.e. ensure you clean up properly before
+you use the tool.
+
+For --generate-gluecode, the arguments have the following semantics:
+  peano-specification-file    Mandatory; specification file describing your project. 
+  component-output-directory  Mandatory; typically the directory holding the spec file as well. 
+                              All paths within the spec file are relative to the output directory.
+  template-directories        Optional; points to the directories holding user-defined templates. 
+                              Multiple directories are separated by colon
+
+Error: got 0 arguments
+\end{code}
+
+\noindent
+On most platforms, we find that Java complains about the version of the toolkit.
+We do not support multiple Java versions, so please build the PDT yourself as
+follows:
+
+
+\begin{code}
+> cd pdt
+> cd src
+> make clean
+> make createParser
+> make compile
+> make dist
+\end{code}
+
+\noindent
+For the build, you need the whole \texttt{pdt} directory. If you access the
+repository, you have this directory. Otherwise, you have to download the
+directory manually.
 
 \section{Create an empty Peano project}
 
