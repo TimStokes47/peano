@@ -214,9 +214,6 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     }
     else {
       counter[ fineGridEnumerator(k) ] = CounterPersistentNode;
-      if (fineGridVertices[fineGridEnumerator(k)].getRefinementControl()==Vertex::Records::Unrefined) {
-        fineGridVertices[fineGridEnumerator(k)].refine();
-      }
     }
   enddforx
 
