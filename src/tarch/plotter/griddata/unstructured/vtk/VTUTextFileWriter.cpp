@@ -124,7 +124,7 @@ NumberOfComponents="1"/>
 //            << "Piece Source="circ_inc-0_0.vtu"/>
 
       for (int i=0; i<tarch::parallel::Node::getInstance().getNumberOfNodes(); i++) {
-        if ( !tarch::parallel::NodePool::getInstance().isIdleNode(i) ) {
+        if ( i==0 || !tarch::parallel::NodePool::getInstance().isIdleNode(i) ) {
           std::ostringstream referencedFilename;
           if (filenamePrefix.find("/")!=std::string::npos) {
             referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
