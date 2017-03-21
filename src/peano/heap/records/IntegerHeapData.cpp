@@ -109,7 +109,7 @@ peano::heap::records::IntegerHeapDataPacked peano::heap::records::IntegerHeapDat
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] = MPI_Aint_diff(disp[i], base);
+            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
          }
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
@@ -142,7 +142,7 @@ peano::heap::records::IntegerHeapDataPacked peano::heap::records::IntegerHeapDat
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] = MPI_Aint_diff(disp[i], base);
+            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
          }
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
@@ -491,7 +491,7 @@ peano::heap::records::IntegerHeapData peano::heap::records::IntegerHeapDataPacke
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] = MPI_Aint_diff(disp[i], base);
+            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
          }
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
@@ -524,7 +524,7 @@ peano::heap::records::IntegerHeapData peano::heap::records::IntegerHeapDataPacke
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] = MPI_Aint_diff(disp[i], base);
+            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
          }
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
