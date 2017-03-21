@@ -654,7 +654,7 @@
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] = MPI_Aint_diff(disp[i], base);
+               disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
             }
             MPI_Datatype tmpType; 
             MPI_Aint lowerBound, typeExtent; 
@@ -735,7 +735,7 @@
                assertion1( disp[i] > disp[i-1], i );
             }
             for (int i=0; i<Attributes; i++) {
-               disp[i] = MPI_Aint_diff(disp[i], base);
+               disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
             }
             MPI_Datatype tmpType; 
             MPI_Aint lowerBound, typeExtent; 
@@ -1714,7 +1714,7 @@ peano::grid::tests::records::TestState peano::grid::tests::records::TestStatePac
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] = MPI_Aint_diff(disp[i], base);
+            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
          }
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
@@ -1780,7 +1780,7 @@ peano::grid::tests::records::TestState peano::grid::tests::records::TestStatePac
             assertion1( disp[i] > disp[i-1], i );
          }
          for (int i=0; i<Attributes; i++) {
-            disp[i] = MPI_Aint_diff(disp[i], base);
+            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
          }
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
@@ -2586,7 +2586,7 @@ void peano::grid::tests::records::TestState::initDatatype() {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] = MPI_Aint_diff(disp[i], base);
+         disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
       }
       MPI_Datatype tmpType; 
       MPI_Aint lowerBound, typeExtent; 
@@ -2658,7 +2658,7 @@ void peano::grid::tests::records::TestState::initDatatype() {
          assertion1( disp[i] > disp[i-1], i );
       }
       for (int i=0; i<Attributes; i++) {
-         disp[i] = MPI_Aint_diff(disp[i], base);
+         disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
       }
       MPI_Datatype tmpType; 
       MPI_Aint lowerBound, typeExtent; 
@@ -3510,7 +3510,7 @@ void peano::grid::tests::records::TestStatePacked::initDatatype() {
       assertion1( disp[i] > disp[i-1], i );
    }
    for (int i=0; i<Attributes; i++) {
-      disp[i] = MPI_Aint_diff(disp[i], base);
+      disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
    }
    MPI_Datatype tmpType; 
    MPI_Aint lowerBound, typeExtent; 
@@ -3570,7 +3570,7 @@ void peano::grid::tests::records::TestStatePacked::initDatatype() {
       assertion1( disp[i] > disp[i-1], i );
    }
    for (int i=0; i<Attributes; i++) {
-      disp[i] = MPI_Aint_diff(disp[i], base);
+      disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
    }
    MPI_Datatype tmpType; 
    MPI_Aint lowerBound, typeExtent; 
