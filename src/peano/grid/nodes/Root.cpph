@@ -214,6 +214,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     }
     else {
       counter[ fineGridEnumerator(k) ] = CounterPersistentNode;
+      if (fineGridVertices[fineGridEnumerator(k)].getRefinementControl()==Vertex::Records::Unrefined) {
+        fineGridVertices[fineGridEnumerator(k)].refine();
+      }
     }
   enddforx
 
@@ -422,11 +425,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         // However, on the very first node, given a certain enforced level of
         // regular refinement, we have vertices at the global boundary (at
         // [2,1], e.g.) that are sent to the master though they are hanging
-        // nodes. Please note that the global master always forks its domain
-        // immediately without waiting for some refinement criteria to kick
-        // in
+        // nodes. 
         assertion2(
-          tarch::parallel::NodePool::getInstance().getMasterRank()==tarch::parallel::Node::getGlobalMasterRank() ||
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isOutside() ||
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Refined ||
           (fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::EraseTriggered && fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet()),
