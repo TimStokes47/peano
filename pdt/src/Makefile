@@ -51,6 +51,9 @@ dist:
 	cp -r ../stdtemplates/* ../bin/stdtemplates
 	cp org/peano/pdt/parser/parser.dat ../bin/org/peano/pdt/parser
 	cp org/peano/pdt/lexer/lexer.dat ../bin/org/peano/pdt/lexer
+	cp de/tum/in/dast/lexer/lexer.dat  ../bin/de/tum/in/dast/lexer
+	cp de/tum/in/dast/parser/parser.dat  ../bin/de/tum/in/dast/parser
+	cp de/tum/in/dast/properties/*.properties  ../bin/de/tum/in/dast/properties
 	jar cmf MANIFEST.MF ../pdt.jar -C ../bin .
 	
 
