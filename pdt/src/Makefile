@@ -69,6 +69,6 @@ files.mk:
 
 
 $(OBJECTS): %.class : %.java
-	javac -classpath ../lib/DaStGen.jar:../lib/jargs.jar -sourcepath . -d ../bin $<  
+	javac -classpath ../lib/jargs.jar -sourcepath . -d ../bin $<  
 
 
