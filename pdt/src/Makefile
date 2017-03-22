@@ -10,8 +10,8 @@ OBJECTS=$(SOURCES:.java=.class)
 
 
 default: 
-	@echo ExaHyPE toolkit makefile
-	@echo ------------------------
+	@echo Peano Development Toolkit \(pdt\)
+	@echo -------------------------------
 	@echo 
 	@echo Supported targets then are
 	@echo   clean
@@ -24,33 +24,36 @@ default:
 clean:
 	rm -f $(OBJECTS)
 	rm -f files.mk
-	rm -rf de/tum/in/dast/node
-	rm -rf de/tum/in/dast/lexer
-	rm -rf de/tum/in/dast/parser
-	rm -rf de/tum/in/dast/analysis
 	rm -rf ../bin
 	mkdir ../bin
+	rm -rf org/peano/pdt/analysis
+	rm -rf org/peano/pdt/lexer
+	rm -rf org/peano/pdt/node
+	rm -rf org/peano/pdt/parser
+	rm -rf de
 
 
 createParser:
-	java -jar ../lib/sablecc.jar -d . dastgen.sablecc-grammar 
+	java -jar ../lib/sablecc.jar -d . ../pdt.grammar 
+	tar -xzvf ../lib/DaStGen.tar.gz de
 	rm -f files.mk
 
 
 compile: files.mk $(OBJECTS) 
 
-jar:
-	jar cmf ./Manifest.txt ExaHyPE.jar .
 
 dist:
-	cp de/tum/in/dast/lexer/lexer.dat  ../bin/de/tum/in/dast/lexer
-	cp de/tum/in/dast/parser/parser.dat  ../bin/de/tum/in/dast/parser
-	cp de/tum/in/dast/properties/*.properties  ../bin/de/tum/in/dast/properties
-	tar -czf ../DaStGen.tar.gz MANIFEST.MF dastgen.sablecc-grammar Makefile de 
+	tar -czf ../pdt.tar.gz MANIFEST.MF Makefile ../pdt.grammar org
 	jar -xf ../lib/jargs.jar
+	mv -f de ../bin
 	mv -f jargs ../bin
 	mv -f META-INF ../bin
-	jar cmf ../src/MANIFEST.MF ../DaStGen.jar -C ../bin .
+	mkdir ../bin/stdtemplates
+	cp -r ../stdtemplates/* ../bin/stdtemplates
+	cp org/peano/pdt/parser/parser.dat ../bin/org/peano/pdt/parser
+	cp org/peano/pdt/lexer/lexer.dat ../bin/org/peano/pdt/lexer
+	jar cmf MANIFEST.MF ../pdt.jar -C ../bin .
+	
 
 
 all: clean createParser compile dist
@@ -64,6 +67,6 @@ files.mk:
 
 
 $(OBJECTS): %.class : %.java
-	javac -classpath ../lib/jargs.jar -sourcepath . -d ../bin $<  
+	javac -classpath ../lib/DaStGen.jar:../lib/jargs.jar -sourcepath . -d ../bin $<  
 
 
