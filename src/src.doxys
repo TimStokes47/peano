@@ -18,7 +18,7 @@
  \code
   echo -n "#define PEANO_VERSION " > peano/version.h
   svn info | grep 'Revision' | awk '{ print $2; }' >> peano/version.h
-  tar -cvf peano.tar . --exclude=.svn --exclude=*.o
+  tar -cvf peano.tar --exclude=.svn --exclude=*.o  --exclude=*.gz --exclude=*.tar .
   gzip peano.tar
   mv peano.tar.gz ../tarballs
  \endcode
