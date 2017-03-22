@@ -567,5 +567,9 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 bool peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::validateThatIncomingJoinBuffersAreEmpty() {
+  #ifdef Parallel
   return _joinForkExchanger.validateThatIncomingJoinBuffersAreEmpty();
+  #else
+  return true;
+  #endif
 }
