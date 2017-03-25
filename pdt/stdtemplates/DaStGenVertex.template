@@ -98,7 +98,7 @@ class __NAMESPACE__::records::Vertex {
    *   property)
    */
   #ifdef PersistentRegularSubtrees
-  persistent parallelise bool          parentRegularPersistentSubgrid;
-  persistent parallelise bool          parentRegularPersistentSubgridInPreviousIteration;
+  persistent parallelise packed bool   parentRegularPersistentSubgrid;
+  persistent parallelise packed bool   parentRegularPersistentSubgridInPreviousIteration;
   #endif
 };
