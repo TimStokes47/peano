@@ -33,10 +33,11 @@ point of view. For this, the framework comes along with a rather useful script.
     MPI ranks you have used and how many threads have been enabled. Skip
     the arguments if you haven't used MPI.
     \begin{code}
-> python <mypath>/peano/performanceanalysis/performanceanalysis.py outputfile.txt
+> python <mypath>/peano/performanceanalysis/performanceanalysis.py 
     \end{code} 
-  \item Open the web browser of your choice and open the file
-  \texttt{outputfile.txt.html}
+    Calling it without any options displays a usage message.
+  \item Open the web browser of your choice and the generated files (typically
+  your Peano output file with an additional \texttt{html} extension).
 \end{itemize}
 
 \begin{remark}
@@ -45,6 +46,8 @@ Besides the output written by Peano through the component
 \texttt{CommandLineLogger} (the default), and you have to make this one write
 out time stamps as well as trace information. If you use your own logger or a
 modified log format, the Python script will fail.
+All default logging options work as long as you don't use a log filter for
+\texttt{performanceanalysis}.
 \end{remark}
 
 \begin{remark}
@@ -69,3 +72,41 @@ the actual postprocessing.
 If you browse through your directory, you will notice that all graphs are
 written both as png and as pdf. 
 You can thus integrate them directly into your \LaTeX\ reports.
+Most generated graphs also are available in an increased resolution. 
+These files have a \texttt{.large.} inserted into their extension.
+
+
+\subsection*{Study phases of your code}
+
+If you run the whole performance analysis over a longer Peano simultion, the
+amount of data produced quickly becomes massive and hard to handle, and the generation of
+these massive data even might pollute your results. 
+In your code, you can always switch all performance analysis off. 
+To do so, invoke
+\begin{c-code}
+  peano::performanceanalysis::Analysis::getInstance().enable(false);
+\end{c-code}
+
+\noindent
+and call the same routine later on again with a \texttt{true} argument.
+
+In a parallel environment, you have to switch the analysis on or off per rank,
+i.e.~the analysis does not coordinate via MPI. 
+
+\subsection*{Score-P/Scalasca}
+
+We use Peano with Score-P\footnote{\url{http://www.vi-hps.org/projects/score-p}}
+which is used by Scalasca\footnote{\url{http://http://www.scalasca.org/}}, e.g.
+Score-P however tends to yield massive amounts of data. 
+Peano can manually turn Score-P data aquisition on/off within the code. 
+To enable this feature,
+\begin{enumerate}
+  \item retranslate your code with \texttt{-DUseScoreP},
+  \item ensure you use the performance analysis as detailed above, and
+  \item switch the performance analysis on and off suiting your demands as it is
+  detailed in the previous paragraphs.
+\end{enumerate}
+
+
+
+
