@@ -243,7 +243,7 @@ int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository&
   repository.switchToCountVerticesAndPlot(); repository.iterate();
   repository.switchToPlot(); repository.iterate();
  
-  repository.logIterationStatistics();
+  repository.logIterationStatistics(true);
   repository.terminate();
   // End of dummy implementation
 
@@ -277,7 +277,7 @@ Lets change the function body as follows:
   for (int i=0; i<10; i++) repository.iterate();
   repository.switchToCountVertices(); repository.iterate();
 
-  repository.logIterationStatistics();
+  repository.logIterationStatistics(true);
   repository.terminate();
 
   return 0;
