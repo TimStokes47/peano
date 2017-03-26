@@ -7,6 +7,7 @@
   version}. Download the whole Peano project (from sourceforge via subversion),
   change into the directory \texttt{pdt/src}, and run
   \begin{code}
+  make clean
   make createParser
   make compile
   make dist
@@ -55,3 +56,30 @@
   However, this may lead to a severe performance \linebreak
   degradation---notably if you run your code with shared memory parallelisation.
 \end{itemize}
+
+\section{MPI troubleshooting}
+
+\begin{itemize}
+  \item {\bf Does Peano support MPI-2?}. Yes, you can switch to MPI-2 if you add
+  \texttt{-DMPI2}. I have experienced some issues with MPI-2 implementations and
+  user-defined datatypes and thus decided to make MPI 1.3 the default. If you
+  switch to MPI-2 and experience problems, you  mgiht want to have a look into
+  any \texttt{records} directory and search for \texttt{initDatatype} to
+  understand where issues arise.
+  \item {\bf I've altered my data types and MPI starts to crash}. There are
+  multiple reasons why user-defined data types start to fail. Here are some
+  ideas to follow-up:
+    \begin{enumerate}
+      \item Compile with \texttt{-DAsserts}. We augment all parts of Peano with
+      lots and lots of assertions, so they might help you to hunt down bugs.
+      \item We have seen some compilers fail if you label some attributes of
+      (vertex) data types with \texttt{expose}. Expose does alter the
+      visibility, and we came to believe that these visibility modifications
+      make some compilers reorder class attributes which in turns means that the
+      MPI data types hold invalid byte offsets.
+    \end{enumerate}
+  \item To be continued \ldots
+%  \item {\bf The adaptivity pattern lacks behing my adaptivity instructions}.
+\end{itemize}
+
+

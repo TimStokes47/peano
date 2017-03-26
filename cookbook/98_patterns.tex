@@ -5,25 +5,47 @@
 The operation \texttt{coarse} on a vertex may only be invoked on a refined
 vertex.
 Once it is called, all children recursively are removed.
-Most codes realising dynamic adaptivity thus set the specification flag
-\textttt{WholeTree} in some mapping where they check for erase candidates.
+Most naive codes realising dynamic adaptivity thus set the specification flag
+\texttt{WholeTree} in some mapping where they check for erase candidates.
 Though such an approach works fine, it often reduces the concurrency and speed
 dramatically---notably if the actual algorithm works only on the finest grid
 level. 
+Also, it often is very dangerous to remove more than one grid level in one rush.
 
 
-To bring both things together---fine grid work and erases---one can exploit the
-fact that also fine grid events have access to the next coarser level. 
+It is thus convenient to add checks which ensure that coarsening removes only
+the finest grid.
+Yet, your adaptivity criterion's mapping might specify that it acts
+on the fine grid only but nevertheless might be invoked on the whole tree:
+the fine grid specification is an optimisation hint to Peano. 
+It is not a formal definition.
+If you merge your refinement's mapping with another mapping or you run it 
+on a very adaptive mesh, Peano might have to decide that it invokes the routines
+on all grid levels.
+It is thus convenient to specify that a refinement criterion is to be ran on the
+finest grid only and, on top of this, check whether it applies to the finest
+grid. 
+In the example below, a refinement criterion would return \texttt{Coarsen} if
+and only if it is invoked on an unrefined vertex.
+We explain this idea further below.
+
+
+To bring both things together---fine grid work and erases---one can, in this
+context, exploit the fact that also fine grid events have access to the next
+coarser level.
 It is thus convenient to do some fine grid checks and then call erase on coarser
 levels.
 This way, you remove at most one level per grid sweep. 
-However, you can work only on the finest grid in the tree.
 
 \begin{code}
 if (fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined) {
- switch (getRefinementCommand(fineGridX,...,coarseGridVerticesEnumerator.getLevel()+1)) { 
-  case RefinementCommand::Coarse:
+ switch (getRefinementCommand(
+   fineGridX,...,coarseGridVerticesEnumerator.getLevel()+1,
+   fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
+ )) { 
+  case RefinementCommand::Coarsen:
    {
+    // should hold if and only if vertex is unrefined
     dfor2(k)
      if (
       coarseGridVertices[coarseGridVerticesEnumerator(k)].getRefinementControl()
@@ -32,8 +54,7 @@ if (fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined) {
       coarseGridVertices[coarseGridVerticesEnumerator(k)].isInside()
       &&
       getRefinementCommand(
-       coarseGridVerticesEnumerator.getVertexPosition(k),fineGridH(0)*3.0,_t,
-         coarseGridVerticesEnumerator.getLevel()
+       coarseGridVerticesEnumerator.getVertexPosition(k),...
       ) == RefinementCommand::Coarse
      ) {
       coarseGridVertices[coarseGridVerticesEnumerator(k)].erase();
@@ -48,4 +69,32 @@ if (fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined) {
 }
 \end{code}
 
+\noindent
+The above snippet assumes that there is a function \texttt{getRefinementCommand} that identifies
+  regions that are to be coarsened via a enumeration
+  \begin{code}
+  enum class RefinementCommand {
+    Nop, Refine, Coarsen
+  };
+  \end{code}
+\noindent
 
+At a first glance, it seems that the routine is overspecified as it checks for
+\linebreak
+\texttt{getRefinementCommand==RefinementCommand::Coarsen} twice. However, this
+is on purpose. 
+We check whether a fine grid vertex is ``too fine'' with the first check.
+If this holds, we check whether a coarsening criterion also would hold for the
+next coarser vertices.
+We also validate that a coarse grid vertex is refined.
+The latter check ensures that we do not call coarse on unrefined vertices in
+adaptive grid regions.
+
+The cascade of coarsen checks has proven of value in many applications: If we
+did coarsen all coarse grid vertices of one vertex that is ``too fine'', many
+refinement criteria induce oscillations.
+The coarsening is very aggressive and then most criteria find that too many
+vertices have been removed and re-add them.
+This can be very cumbersome.
+Our nested checks ensure that no such oscillation an happen (for all refinement
+criteria we have checked).
