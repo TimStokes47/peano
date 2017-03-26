@@ -39,6 +39,27 @@
   compile with \texttt{-DnoPersistentRegularSubtrees}. This will make the grid
   react quicker to your refinement requests but might slow down the code
   significantly.
+  \item {\bf When does a grid coarsen?} If you invoke \texttt{erase}, Peano
+  bookkeeps this coarsening requests but continues to traverse the grid. The
+  actual grid then is actually coarsened in the subsequent grid sweep. If you
+  trigger an erase, grid entities will not be destroyed prior to the next
+  traversal. In some cases, it even can happen that an erase is neglected
+  completely or postponed further:
+  \begin{itemize}
+    \item If your erase grid parts and refine adjacent grid parts, it can happen
+    that the refine overwrites your erase (or the other way round). It depends
+    which instruction can be accomodated by the grid first, i.e.~while Peano
+    ensures that the grid remains valid and all events are always triggered in
+    the right order, the actual grid pattern is non-deterministic from an
+    application's point of view if you refine and coarsen at the same time in
+    close domain regions.
+    \item If you erase a grid region that is completely handled by one rank,
+    then this makes the rank unemployed. If this happens, Peano first has to
+    release the rank before the erase passes. In this case, you have to wait two
+    or three iterations before your erase passes through. While the erase is
+    bookkeeped but not realised yet, the state's \texttt{isGridStationary}
+    attribute does not hold.
+  \end{itemize}
   \item {\bf I need the state object in my mapping}. Create a copy of the state
   object in \texttt{beginIteration} and to merge this copy back in \texttt{endIteration}. 
   Peano updates the State itself and the state position in memory is not fixed.
