@@ -109,8 +109,9 @@ peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::Or
     _useMulticore
     &&
     problemSize > smallestProblemSize
+    &&
+    problemSize > grainSize
   ) {
-    assertion4(grainSize<problemSize,grainSize,problemSize,peano::datatraversal::autotuning::toString(askingMethod),toString());
     return GrainSize(grainSize, false, problemSize, askingMethod, this);
   }
   else {
