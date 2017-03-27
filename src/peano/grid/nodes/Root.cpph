@@ -426,8 +426,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         // if level 1 vertices are not refined further.
         assertion2(
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isOutside() ||
-// @todo Remove
-//          (tarch::parallel::NodePool::getInstance().getMasterRank()==tarch::parallel::Node::getGlobalMasterRank()) ||
+          (tarch::parallel::NodePool::getInstance().getMasterRank()==tarch::parallel::Node::getGlobalMasterRank()) ||
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Refined ||
           (fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::EraseTriggered && fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet()),
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString()
