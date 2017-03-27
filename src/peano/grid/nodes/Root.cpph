@@ -426,7 +426,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         // if level 1 vertices are not refined further.
         assertion2(
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isOutside() ||
-          (tarch::parallel::NodePool::getInstance().getMasterRank()==tarch::parallel::Node::getGlobalMasterRank()) ||
+// @todo Remove
+//          (tarch::parallel::NodePool::getInstance().getMasterRank()==tarch::parallel::Node::getGlobalMasterRank()) ||
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Refined ||
           (fineGridVertices[ centralFineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::EraseTriggered && fineGridVertices[ centralFineGridVerticesEnumerator(k) ].isAdjacentSubtreeForksIntoOtherRankFlagSet()),
           fineGridVertices[ centralFineGridVerticesEnumerator(k) ].toString(), state.toString()
@@ -465,7 +466,12 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     tarch::parallel::Node::getInstance().isGlobalMaster() &&
     !centralFineGridCell.isAssignedToRemoteRank() &&
     !state.isInvolvedInJoinOrFork() &&
-    peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated()
+    peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated() &&
+    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
+       fineGridVertices,
+       centralFineGridVerticesEnumerator,
+       Vertex::Records::Refining
+    )
   ) {
     std::bitset<THREE_POWER_D> localInnerCells;
     localInnerCells.set(THREE_POWER_D/2,true);
