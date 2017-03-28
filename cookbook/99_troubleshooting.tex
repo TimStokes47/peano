@@ -99,8 +99,11 @@
       make some compilers reorder class attributes which in turns means that the
       MPI data types hold invalid byte offsets.
     \end{enumerate}
+  \item {\bf My MPI version complains about a datatype \texttt{MPI\_CXX\_BOOL}}. 
+    We have seen this with some older MPI versions. A quick fix is to translate
+    your code with the additional argument
+    \texttt{-DMPI\_CXX\_BOOL=MPI\_C\_BOOL}.
   \item To be continued \ldots
-%  \item {\bf The adaptivity pattern lacks behing my adaptivity instructions}.
 \end{itemize}
 
 
