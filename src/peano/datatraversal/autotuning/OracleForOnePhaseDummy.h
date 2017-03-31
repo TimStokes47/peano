@@ -95,6 +95,14 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
 
     GrainSize parallelise(int problemSize, MethodTrace askingMethod) override;
     void parallelSectionHasTerminated(int problemSize, int grainSize, MethodTrace askingMethod, double costPerProblemElement) override;
+
+    /**
+     * This routine dumps the used settings into the specified output file. We
+     * actually do dump it twice, i.e. in two formats. There's a comment-like
+     * line first that summarises all arguments of the constructor. Below that,
+     * we create "fake" learning entries in a format that is compatible with
+     * the shrinking oracle postprocessing scripts.
+     */
     void plotStatistics(std::ostream& out, int oracleNumber) const override;
 
     /**
@@ -110,7 +118,7 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
      */
     OracleForOnePhase* createNewOracle() const override;
 
-    std::string toString() const;
+    std::string toString(int oracleNumber=-1) const;
 };
 
 

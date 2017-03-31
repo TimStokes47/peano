@@ -125,12 +125,12 @@ void peano::datatraversal::autotuning::OracleForOnePhaseDummy::parallelSectionHa
 
 
 void peano::datatraversal::autotuning::OracleForOnePhaseDummy::loadStatistics(const std::string& filename, int oracleNumber) {
+  logError( "loadStatistics(string,int)", "the dummy oracle can not load any statistics" );
 }
 
 
 void peano::datatraversal::autotuning::OracleForOnePhaseDummy::plotStatistics(std::ostream& out, int oracleNumber) const {
-  out << "oracle " << oracleNumber << std::endl
-      << toString() << std::endl;
+  out << toString(oracleNumber) << std::endl;
 }
 
 
@@ -178,10 +178,13 @@ std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(S
 }
 
 
-std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString() const {
+std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(int oracleNumber) const {
   std::ostringstream msg;
 
-  msg << ",adapter-number="        << _adapterNumber
+  msg << "# " << std::endl;
+  msg << "# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+  msg << "# dump results from a dummy oracle" << std::endl;
+  msg << "# dummy configuration: adapter-number="        << oracleNumber
       << "(multicore="             << _useMulticore
       << ",grain-size-of-user-defined-regions=" << _grainSizeOfUserDefinedRegions
       << ",split-tree="            << toString(_splitTheTree)
@@ -195,7 +198,41 @@ std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString()
       << ",grain-size-for-touch-first-last=" << _grainSizeForTouchFirstLast
       << ",smallest-problem-size-for-split-load-store=" << _smallestProblemSizeForSplitLoadStore
       << ",grain-size-for-split-load-store=" << _grainSizeForSplitLoadStore
-      << ")";
+      << ")" << std::endl;
+  msg << "# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+  msg << "# dump below presents data in format compatible with shrinking grain size oracle but basically reiterates the data from above" << std::endl;
+  msg << "# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+
+  msg << "begin OracleForOnePhaseWithShrinkingGrainSize" << std::endl;
+  msg << "initial-relative-accuracy=does not apply" << std::endl;
+  msg << "adapter-number=" << _adapterNumber << std::endl;
+
+  int overallMaxProblemSize = 2;
+  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForAscendDescend);
+  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForEnterLeaveCell);
+  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForTouchFirstLast);
+  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForSplitLoadStore);
+
+  for (int i=0; i<static_cast<int>(MethodTrace::NumberOfDifferentMethodsCalling); i++) {
+    for (int problemSize = 1; problemSize<overallMaxProblemSize; problemSize*=2) {
+      auto grainSize = const_cast<OracleForOnePhaseDummy*>(this)->parallelise(problemSize,toMethodTrace(i));
+      msg << peano::datatraversal::autotuning::toString(toMethodTrace(i))
+          << "="
+          << problemSize      //     _biggestProblemSize
+          << "," << grainSize.getGrainSize()
+          << ",0"             // _searchDelta
+          << ",is-accurate"
+          << ",1.0"           // << _accuracy
+          << ",0.0"           // << _accumulatedSerialMeasurement
+          << ",0.0"           // << _accumulatedParallelMeasurement
+          << ",0.0"           // << _numberOfSerialMeasurements
+          << ",0.0"           // << _numberOfParallelMeasurements
+          << ",0.0"           // << _previousSpeedup;
+          << std::endl;
+    }
+  }
+
+  msg << "end OracleForOnePhaseWithShrinkingGrainSize" << std::endl;
 
   return msg.str();
 }
