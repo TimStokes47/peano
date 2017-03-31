@@ -24,12 +24,10 @@ peano::datatraversal::autotuning::OracleForOnePhaseDummy::OracleForOnePhaseDummy
   int  smallestProblemSizeForTouchFirstLast ,
   int  grainSizeForTouchFirstLast         ,
   int  smallestProblemSizeForSplitLoadStore ,
-  int  grainSizeForSplitLoadStore         ,
-  int  adapterNumber
+  int  grainSizeForSplitLoadStore
 ):
   _useMulticore(useMultithreading),
   _grainSizeOfUserDefinedRegions(grainSizeOfUserDefinedRegions),
-  _adapterNumber(adapterNumber),
   _splitTheTree(splitTheTree),
   _pipelineDescendProcessing(pipelineDescendProcessing),
   _pipelineAscendProcessing(pipelineAscendProcessing),
@@ -130,7 +128,44 @@ void peano::datatraversal::autotuning::OracleForOnePhaseDummy::loadStatistics(co
 
 
 void peano::datatraversal::autotuning::OracleForOnePhaseDummy::plotStatistics(std::ostream& out, int oracleNumber) const {
-  out << toString(oracleNumber) << std::endl;
+  out << "# " << std::endl;
+  out << "# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+  out << "# dump results from a dummy oracle" << std::endl;
+  out << "#" << toString() << std::endl;
+  out << "# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+  out << "# dump below presents data in format compatible with shrinking grain size oracle but basically reiterates the data from above" << std::endl;
+  out << "# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+
+  out << "begin OracleForOnePhaseWithShrinkingGrainSize" << std::endl;
+  out << "initial-relative-accuracy=does not apply" << std::endl;
+  out << "adapter-number=" << oracleNumber << std::endl;
+
+  int overallMaxProblemSize = 2;
+  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForAscendDescend);
+  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForEnterLeaveCell);
+  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForTouchFirstLast);
+  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForSplitLoadStore);
+
+  for (int i=0; i<static_cast<int>(MethodTrace::NumberOfDifferentMethodsCalling); i++) {
+    for (int problemSize = 1; problemSize<overallMaxProblemSize; problemSize*=2) {
+      auto grainSize = const_cast<OracleForOnePhaseDummy*>(this)->parallelise(problemSize,toMethodTrace(i));
+      out << peano::datatraversal::autotuning::toString(toMethodTrace(i))
+          << "="
+          << problemSize      //     _biggestProblemSize
+          << "," << grainSize.getGrainSize()
+          << ",0"             // _searchDelta
+          << ",is-accurate"
+          << ",1.0"           // << _accuracy
+          << ",0.0"           // << _accumulatedSerialMeasurement
+          << ",0.0"           // << _accumulatedParallelMeasurement
+          << ",0.0"           // << _numberOfSerialMeasurements
+          << ",0.0"           // << _numberOfParallelMeasurements
+          << ",0.0"           // << _previousSpeedup;
+          << std::endl;
+    }
+  }
+
+  out << "end OracleForOnePhaseWithShrinkingGrainSize" << std::endl;
 }
 
 
@@ -181,11 +216,7 @@ std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(S
 std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(int oracleNumber) const {
   std::ostringstream msg;
 
-  msg << "# " << std::endl;
-  msg << "# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
-  msg << "# dump results from a dummy oracle" << std::endl;
-  msg << "# dummy configuration: adapter-number="        << oracleNumber
-      << "(multicore="             << _useMulticore
+  msg << "(multicore="             << _useMulticore
       << ",grain-size-of-user-defined-regions=" << _grainSizeOfUserDefinedRegions
       << ",split-tree="            << toString(_splitTheTree)
       << ",pipeline-descend="      << _pipelineDescendProcessing
@@ -198,41 +229,7 @@ std::string peano::datatraversal::autotuning::OracleForOnePhaseDummy::toString(i
       << ",grain-size-for-touch-first-last=" << _grainSizeForTouchFirstLast
       << ",smallest-problem-size-for-split-load-store=" << _smallestProblemSizeForSplitLoadStore
       << ",grain-size-for-split-load-store=" << _grainSizeForSplitLoadStore
-      << ")" << std::endl;
-  msg << "# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
-  msg << "# dump below presents data in format compatible with shrinking grain size oracle but basically reiterates the data from above" << std::endl;
-  msg << "# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" << std::endl;
-
-  msg << "begin OracleForOnePhaseWithShrinkingGrainSize" << std::endl;
-  msg << "initial-relative-accuracy=does not apply" << std::endl;
-  msg << "adapter-number=" << _adapterNumber << std::endl;
-
-  int overallMaxProblemSize = 2;
-  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForAscendDescend);
-  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForEnterLeaveCell);
-  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForTouchFirstLast);
-  overallMaxProblemSize = std::max(overallMaxProblemSize,_smallestProblemSizeForSplitLoadStore);
-
-  for (int i=0; i<static_cast<int>(MethodTrace::NumberOfDifferentMethodsCalling); i++) {
-    for (int problemSize = 1; problemSize<overallMaxProblemSize; problemSize*=2) {
-      auto grainSize = const_cast<OracleForOnePhaseDummy*>(this)->parallelise(problemSize,toMethodTrace(i));
-      msg << peano::datatraversal::autotuning::toString(toMethodTrace(i))
-          << "="
-          << problemSize      //     _biggestProblemSize
-          << "," << grainSize.getGrainSize()
-          << ",0"             // _searchDelta
-          << ",is-accurate"
-          << ",1.0"           // << _accuracy
-          << ",0.0"           // << _accumulatedSerialMeasurement
-          << ",0.0"           // << _accumulatedParallelMeasurement
-          << ",0.0"           // << _numberOfSerialMeasurements
-          << ",0.0"           // << _numberOfParallelMeasurements
-          << ",0.0"           // << _previousSpeedup;
-          << std::endl;
-    }
-  }
-
-  msg << "end OracleForOnePhaseWithShrinkingGrainSize" << std::endl;
+      << ")";
 
   return msg.str();
 }

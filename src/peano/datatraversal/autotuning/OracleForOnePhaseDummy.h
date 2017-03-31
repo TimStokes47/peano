@@ -51,7 +51,6 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
 
     const bool                                 _useMulticore;
     const int                                  _grainSizeOfUserDefinedRegions;
-    const int                                  _adapterNumber;
     const SplitVertexReadsOnRegularSubtree     _splitTheTree;
     const bool                                 _pipelineDescendProcessing;
     const bool                                 _pipelineAscendProcessing;
@@ -87,8 +86,7 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
       int  smallestProblemSizeForTouchFirstLast = tarch::la::aPowI(DIMENSIONS,3*3*3*3+1),
       int  grainSizeForTouchFirstLast         = 64,
       int  smallestProblemSizeForSplitLoadStore = tarch::la::aPowI(DIMENSIONS,3*3*3),
-      int  grainSizeForSplitLoadStore         = 8,
-      int  adapterNumber                      = -1
+      int  grainSizeForSplitLoadStore         = 8
     );
 
     virtual ~OracleForOnePhaseDummy();
