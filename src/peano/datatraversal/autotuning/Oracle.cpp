@@ -14,7 +14,6 @@
 
 
 tarch::logging::Log                 peano::datatraversal::autotuning::Oracle::_log( "peano::datatraversal::autotuning::Oracle" ) ;
-tarch::multicore::BooleanSemaphore  peano::datatraversal::autotuning::Oracle::_semaphore;
 
 
 peano::datatraversal::autotuning::Oracle& peano::datatraversal::autotuning::Oracle::getInstance() {
@@ -76,6 +75,7 @@ void peano::datatraversal::autotuning::Oracle::plotStatistics(const std::string&
 
 
 void peano::datatraversal::autotuning::Oracle::loadStatistics(const std::string& filename) {
+  assertion(_numberOfOracles>0);
   for (int i=0; i<_numberOfOracles;i++) {
     assertion3(_oracles[i]!=nullptr,i,_numberOfOracles, "please ensure that loadStatistics is called after the repository has been created");
     _oracles[i]->loadStatistics(filename,i);
@@ -157,7 +157,7 @@ peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::Or
 
   #if defined(SharedMemoryParallelisation)
   assertion( _currentOracle>=0 );
-  assertion( _currentOracle<static_cast<int>(_oracles.size()) );
+  assertion4( _currentOracle<static_cast<int>(_oracles.size()), _currentOracle, _oracles.size(), problemSize, toString(askingMethod) );
   return std::move( _oracles[_currentOracle]->parallelise(problemSize,askingMethod) );
   #else
   return GrainSize( 0, false, problemSize, askingMethod, nullptr);

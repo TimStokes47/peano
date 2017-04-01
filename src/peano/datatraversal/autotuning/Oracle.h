@@ -46,8 +46,6 @@ class peano::datatraversal::autotuning::Oracle {
 
     static tarch::logging::Log  _log;
 
-    static tarch::multicore::BooleanSemaphore  _semaphore;
-
     Oracle();
 
     /**
