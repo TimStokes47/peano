@@ -58,11 +58,16 @@ class peano::datatraversal::autotuning::Oracle {
      */
     OracleDatabase                           _oracles;
 
+    #if defined(SharedMemoryParallelisation)
     /**
      * Oracle, method and problem size must not change between the
      * parallelise() and loopHasTerminated() calls.
+     *
+     * On MacOS X/LLVM, the compiler tends to complain if we omit the
+     * ifdef as the variable then is set but never used.
      */
     int                                        _currentOracle;
+    #endif
 
     OracleForOnePhase*                         _oraclePrototype;
 

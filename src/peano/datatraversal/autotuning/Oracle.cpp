@@ -24,7 +24,9 @@ peano::datatraversal::autotuning::Oracle& peano::datatraversal::autotuning::Orac
 
 peano::datatraversal::autotuning::Oracle::Oracle():
   _oracles(),
+  #if defined(SharedMemoryParallelisation)
   _currentOracle(0),
+  #endif
   _oraclePrototype(nullptr),
   _numberOfOracles(0) {
 }
