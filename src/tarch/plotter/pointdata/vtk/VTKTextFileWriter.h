@@ -103,9 +103,6 @@ class tarch::plotter::pointdata::vtk::VTKTextFileWriter: public tarch::plotter::
         virtual void plot( int index, const tarch::la::Vector<2,double>& value );
         virtual void plot( int index, const tarch::la::Vector<3,double>& value );
 
-        virtual double getMinValue() const;
-        virtual double getMaxValue() const;
-
         /**
          * If you close your writer, each point has to be assigned a
          * value, i.e. you may not add less data than you have points.

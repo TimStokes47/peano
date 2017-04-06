@@ -83,9 +83,6 @@ class tarch::plotter::pointdata::Writer {
         virtual void plot( int index, const tarch::la::Vector<2,double>& value ) = 0;
         virtual void plot( int index, const tarch::la::Vector<3,double>& value ) = 0;
 
-        virtual double getMinValue() const = 0;
-        virtual double getMaxValue() const = 0;
-
         /**
          * If you close your writer, each point has to be assigned a
          * value, i.e. you may not add less data than you have points.

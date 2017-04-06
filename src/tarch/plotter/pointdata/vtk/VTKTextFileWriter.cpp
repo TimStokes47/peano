@@ -88,15 +88,6 @@ void tarch::plotter::pointdata::vtk::VTKTextFileWriter::PointDataWriter::plot( i
 }
 
 
-double tarch::plotter::pointdata::vtk::VTKTextFileWriter::PointDataWriter::getMinValue() const {
-  return _particleDataWriter->getMinValue();
-}
-
-
-double tarch::plotter::pointdata::vtk::VTKTextFileWriter::PointDataWriter::getMaxValue() const {
-  return _particleDataWriter->getMinValue();
-}
-
 void tarch::plotter::pointdata::vtk::VTKTextFileWriter::PointDataWriter::close() {
   _particleDataWriter->close();
 }
