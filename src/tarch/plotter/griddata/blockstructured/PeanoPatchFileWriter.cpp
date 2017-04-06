@@ -105,6 +105,40 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoPatchFileWrit
 }
 
 
+std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter::plotPatch(
+  const tarch::la::Vector<3,double>& offset,
+  const tarch::la::Vector<3,double>& size
+) {
+  assertion( _dimensions==3 );
+
+  if (_haveWrittenAtLeastOnePatch) {
+    _out << "end patch" << std::endl << std::endl;
+  }
+
+  _out << "begin patch" << std::endl
+       << "  offset";
+
+  for (int d=0; d<3; d++) {
+    _out << " " << offset(d);
+  }
+  _out << std::endl;
+
+  _out << "  size";
+
+  for (int d=0; d<3; d++) {
+    _out << " " << size(d);
+  }
+  _out << std::endl;
+
+  _haveWrittenAtLeastOnePatch = true;
+
+  std::pair<int,int> result(_vertexCounter,_cellCounter);
+  _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
+  _cellCounter   += std::pow(_numberOfCellsPerAxis+1,_dimensions);
+  return result;
+}
+
+
 bool tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter::writeToFile( const std::string& filenamePrefix ) {
   assertion( !_writtenToFile );
 

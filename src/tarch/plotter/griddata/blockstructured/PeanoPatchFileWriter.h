@@ -162,6 +162,11 @@ class tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter: public ta
       const tarch::la::Vector<2,double>& size
     );
 
+    std::pair<int,int> plotPatch(
+      const tarch::la::Vector<3,double>& offset,
+      const tarch::la::Vector<3,double>& size
+    );
+
     /**
      * @return Write has been successful
      */
