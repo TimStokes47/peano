@@ -1,6 +1,8 @@
 #include "tarch/plotter/griddata/blockstructured/PeanoPatchFileWriter.h"
 #include <fstream>
 
+#include "tarch/parallel/Node.h"
+
 
 tarch::logging::Log tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter::_log( "tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter" );
 
