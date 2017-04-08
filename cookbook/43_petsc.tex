@@ -1,4 +1,4 @@
-\section{Diffusion-convection with PETSc}
+\section{Poisson equation with PETSc}
   \label{section:applications:petsc}
 
 \chapterDescription
@@ -9,7 +9,7 @@
     Chapter \ref{chapter:quickstart} and a working PETSc installation.
   }
 
-I wrote Peano with matrix-free methods from CFD in mind. 
+I wrote Peano with matrix-free methods for computational fluid dynamics in mind. 
 It turns out that it is not too complicated to use it for other application
 areas or to established linear algebra packages.
 We assume that you have PETSc plus BLAS, Lapack and MPI (if required) ready
@@ -543,7 +543,7 @@ into the runner to see the matrix pattern, e.g.
 
 
 
-\subsection{Some discontinuous Galerkin}
+\subsection{Some remarks on discontinuous Galerkin}
 
 
 \begin{figure}
@@ -579,10 +579,30 @@ class petsc::records::Vertex {
 
 
 
+\subsection{Work in progress \ldots}
 
-\subsection{Serial assembly with a parallel PETSc}
+I am planning to start some programming with PETSc plus Peano plus MPI soon and
+I also plan to dive into PETSc's matrix-free routines. If anybody reads this
+comment and has suggestions, feel free to contact me.
+
+\ldots to be continued
 
 
-\subsection{Using PETSc and MPI}
+
+\subsection*{Further reading}
+
+\begin{itemize}
+  \item Weinzierl, Marion and Weinzierl, Tobias: {\em Quasi-matrix-free hybrid
+  multigrid on dynamically adaptive Cartesian grids}, arXiv:1607.00648
+\end{itemize}
+
+
+% 
+% 
+% 
+% \subsection{Serial assembly with a parallel PETSc}
+% 
+% 
+% \subsection{Using PETSc and MPI}
 % others. So it is a perfect fit to Peano.
 

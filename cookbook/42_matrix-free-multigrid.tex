@@ -171,24 +171,16 @@ Packed-Type: short int;
 
 
 class multigrid::records::Vertex {  
-  /**
-   * Solution
-   */
+  // Solution
   persistent parallelise double  u;
 
-  /**
-   * Rhs
-   */
+  // Rhs
   persistent parallelise double  f;
   
-  /**
-   * Residual
-   */
+  // Residual
   persistent parallelise double   r;
 
-  /**
-   * Diagonal element
-   */
+  // Diagonal element
   persistent parallelise double   d;
   
   enum VertexType {
@@ -302,19 +294,6 @@ void multigrid::Vertex::performJacobiSmoothingStep( double omega ) {
     element method.
     It implies that we have to ensure that $f$ is scaled with $h^d$ ($h$ being the local mesh width), which is something we typically
     do already in the initialisation. 
-    
-    \begin{remark}
-    It is obvious that the Jacobi update scheme may only update inner
-    unrefined vertices as well as Neumann boundary points. Peano does not offer
-    vertex types. It distinguishes only inner and outer vertices. As we need
-    more flags than inside and outside (at least two boundary
-    flags), we have to offer these on our own\footnotemark .
-    \end{remark}
-    \footnotetext{Up to
-    early 2016, Peano had a three-valued logic with inner, outer and boundary vertices. I
-    removed this from the kernel as most applications need way more vertex
-    types anyway.}
-    
     
     In the present implementation, we make the Jacobi update return a flag that
     indicates whether a fine grid update has been done or not. 
@@ -1054,96 +1033,157 @@ the subsequent iteration with fine grid solution data.
 
 
 
-\subsection{Additive Geometric Multigrid}
+\subsection{Additive Geometric Multigrid and BPX}
 
-In additive multigrid, we may not use the same relaxation factor on each and
-every level. 
-Instead, it is important that the coarser the level the smaller the contribution
-to the solution update.
-Otherwise, the solver tends to overshoot and become unstable. 
-We propose to use relaxation factors $\omega ^k$ with $k=1$ on the fine grid
-level and increasing by one for each level up the hierarchy.
-$\omega $ obviously has to be adopted if the grid changes.
-It is thus straightforward to compute it on-the-fly. 
-For this, we add an additional variable to the vertex
-
-\begin{code}
-class multigrid::records::Vertex {  
-  persistent parallelise int  numberOfFinerLevelsAtSamePosition;
-};
-\end{code}
-
-\noindent
-and make the grid traversal determine the correct value of this attribute
-on the fly:
+Additive multigrid is relatively simple to realise as it fits naturally to our
+tree traversals.
+The most important and useful idea hereby is that you might want to shift the
+actual multigrid cycle by half a tree traversal:
+your start with the prolongation of the error terms in the very first grid sweep
+(they are zero at this time) and you then trigger all the fine-to-coarse
+operations in the remainder of the sweep.
+It is not before the second grid sweep that the corrections introduced by the
+fine-to-coarse operators are then added again to the finest grid solution. 
+So for $n$ additive multigrid sweeps, you need $n+1$ grid sweeps.
 
 
 
-void multigrid::Vertex::clearAccumulatedAttributes() {
-  _vertexData.setR(0.0);
-  _vertexData.setD(0.0);
+%  In additive multigrid, we may not use the same relaxation
+% factor on each and every level. 
+% Instead, it is important that the coarser the level the smaller the contribution
+% to the solution update.
+% Otherwise, the solver tends to overshoot and become unstable. 
+% We propose to use relaxation factors $\omega ^k$ with $k=1$ on the fine grid
+% level and increasing by one for each level up the hierarchy.
+% $\omega $ obviously has to be adopted if the grid changes.
+% It is thus straightforward to compute it on-the-fly. 
+% For this, we add an additional variable to the vertex
+% 
+% \begin{code}
+% class multigrid::records::Vertex {  
+%   persistent parallelise int  numberOfFinerLevelsAtSamePosition;
+% };
+% \end{code}
+% 
+% \noindent
+% and make the grid traversal determine the correct value of this attribute
+% on the fly:
+% 
+% 
+% \begin{code}
+% void multigrid::Vertex::clearAccumulatedAttributes() {
+%   _vertexData.setR(0.0);
+%   _vertexData.setD(0.0);
+%   
+%   _vertexData.setNumberOfFinerLevelsAtSamePosition( 1 );
+% }
+% 
+% 
+% void multigrid::mappings::AdditiveMGProlongation::touchVertexFirstTime(
+%   multigrid::Vertex&               fineGridVertex,
+%   const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
+%   const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
+%   multigrid::Vertex * const        coarseGridVertices,
+%   const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
+%   multigrid::Cell&                 coarseGridCell,
+%   const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
+% ) {
+%   logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
+% 
+%   if (fineGridVertex.isInside()) {
+%     const tarch::la::Vector<TWO_POWER_D,double > e_3h  = VertexOperations::readUUpdate(coarseGridVerticesEnumerator,coarseGridVertices);
+%     const double                                 Pe_3h = _multigrid.getDLinearInterpolatedValue(e_3h,fineGridPositionOfVertex);
+% 
+%     fineGridVertex.correctU(
+%       Pe_3h
+%       *
+%       fineGridVertex.getDampingFactorForAdditiveCoarseGridCorrection(multigrid::mappings::JacobiSmoother::omega)
+%     );
+%   }
+% 
+%   logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
+% }
+% \end{code}
+% 
+% 
+% Update doch spezifisch
+% 
+% 
+% 
+% inject ein bischen falsch. Eigentlich besser R. 
+% 
+% @todo Instabil. Relaxation mit aufnehmen
+% 
+% @todo Kleiner Fehler mit der Injektion. Auf Bram verweisen, aber so lassen
+
+
+
+To figure exactly out how information propagates through the grid levels is
+straightforward as long as no adaptivity is involved.
+Some tricks how to handle adaptivity are discussed in 
+
+ \begin{framed} 
+ \noindent
+Reps, Bram and Weinzierl, Tobias: {\em Complex additive geometric
+  multilevel solvers for Helmholtz equations on spacetrees}, ACM Transactions on
+  Mathematical Software (TOMS), 44(1), 2017, 2:1--2:36
+ \end{framed}
   
-  _vertexData.setNumberOfFinerLevelsAtSamePosition( 1 );
-}
-
-
-void multigrid::mappings::AdditiveMGProlongation::touchVertexFirstTime(
-  multigrid::Vertex&               fineGridVertex,
-  const tarch::la::Vector<DIMENSIONS,double>&                          fineGridX,
-  const tarch::la::Vector<DIMENSIONS,double>&                          fineGridH,
-  multigrid::Vertex * const        coarseGridVertices,
-  const peano::grid::VertexEnumerator&                coarseGridVerticesEnumerator,
-  multigrid::Cell&                 coarseGridCell,
-  const tarch::la::Vector<DIMENSIONS,int>&                             fineGridPositionOfVertex
-) {
-  logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
-
-  if (fineGridVertex.isInside()) {
-    const tarch::la::Vector<TWO_POWER_D,double > e_3h  = VertexOperations::readUUpdate(coarseGridVerticesEnumerator,coarseGridVertices);
-    const double                                 Pe_3h = _multigrid.getDLinearInterpolatedValue(e_3h,fineGridPositionOfVertex);
-
-    fineGridVertex.correctU(
-      Pe_3h
-      *
-      fineGridVertex.getDampingFactorForAdditiveCoarseGridCorrection(multigrid::mappings::JacobiSmoother::omega)
-    );
-  }
-
-  // hier muss ich auch noch die Level beruecksichtigen. Das kann aber innerhalb der Vertex erfolgen.
-
-  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
-}
-
-
-Update doch spezifisch
-
-
-
-inject ein bischen falsch. Eigentlich besser R. 
-
-@todo Instabil. Relaxation mit aufnehmen
-
-@todo Kleiner Fehler mit der Injektion. Auf Bram verweisen, aber so lassen
-
-
-
-
-
+\noindent
+A preprint is available as arXiv tech report (arXiv:1508.03954).
+The report also discusses the extension of an additive multigrid solver into 
+BPX.
+All code for this paper is available through the author's University webpage.
 
 
 \subsection{Multiplicative Geometric Multigrid}
 
-V2,2?
+Multiplicative multigrid is perhaps easier to realise than an additive multigrid
+algorithm. I usually run through the following steps:
 
+\begin{itemize}
+  \item I augment the state (\texttt{State.def}) with the current smoother step
+  and an enum whether I'm currently smoothing, ascending or descending.
+  \item The runner triggers one grid sweep per multigrid step and increments and
+  decrements the smoothing levels. It also changes the state's smoothing state.
+  \item I typically merge the restriction with the smoothing step on the next
+  coarser level. Smoothing steps can accumulate the coarse grid residuals and
+  need typically the new right-hand side not before they are about the touch a
+  vertex for the very last time. So we can do both coarse grid residual
+  accumulation and fine grid rhs computation in one mapping.
+  \item I typically merge prolongation with the first smoothing step on the next
+  finer grid. If the prolongation is implemented within
+  \texttt{touchVertexFirstTime}, the actual prolongation is a preamble to the
+  smoother and does not require a grid run-through of its own.
+\end{itemize}
+
+% \begin{remark}
+% There is 
+% \end{remark}
+
+Details on efficient realisations, the extension to algebraic operators,
+as well as better smoothers are subject of dicussion in 
+
+ \begin{framed} 
+ \noindent
+Weinzierl, Marion and Weinzierl, Tobias: {\em Quasi-matrix-free hybrid multigrid
+on dynamically adaptive Cartesian grids}, arXiv:1607.00648
+ \end{framed}
+  
+\noindent
+All important source code fragments required to follow the techniques presented
+therein are available through the matrixfree toolbox in the Peano repository.
 
 
 
 \subsection*{Further reading}
 
 \begin{itemize}
+  \item Weinzierl, Marion and Weinzierl, Tobias: {\em Quasi-matrix-free hybrid
+  multigrid on dynamically adaptive Cartesian grids}, arXiv:1607.00648
   \item  Reps, Bram and Weinzierl, Tobias: {\em Complex additive geometric
-  multilevel solvers for Helmholtz equations on spacetrees}, tech report,  
-  arXiv:1508.03954
+  multilevel solvers for Helmholtz equations on spacetrees}, ACM Transactions on
+  Mathematical Software (TOMS), 44(1), 2017, 2:1--2:36, arXiv:1508.03954
   \item Weinzierl, Marion: {\em Hybrid Geometric-Algebraic Matrix-Free Multigrid on
 Spacetrees}, Dissertation, Technische Universit\"at M\"unchen, 2013
   \item   Muntean, Ioan Lucian, Mehl, Miriam, Neckel, Tobias and Weinzierl,

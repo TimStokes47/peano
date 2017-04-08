@@ -572,6 +572,28 @@ void ...::mappings::Plot::leaveCell(...) {
 
 \subsection{Adaptive grids}
 
+We do not detail the handling of adaptivity with patches here. 
+However, the basic principle is extremely simple: 
+The toolbox's reconstruction algorithm is completely equipped to handle
+resolution changes, i.e.~if a left neighbour resides of a cell resides on a
+coarser level, the correct index is written into the left neighbour.
+
+This implies that
+\begin{enumerate}
+  \item Several neighbour indices might be equal if neighbours reside on coarser
+  levels.
+  \item Fine grid cells always can read and write data from coarser adjacent
+  cells.
+  \item Fine to coarse information however also can be transported within the
+  tree as any cell has at some stages access to its parent.
+\end{enumerate}
+
+\begin{remark}
+Peano does not enforce any 2:1 balancing on the grid. However, such a balancing
+might be desireable from an application point of view. You can either program
+some balancing on your own, or you can merge the predefined mapping
+\texttt{GridBalancer2to1} into your adapters.
+\end{remark}
 
 
 

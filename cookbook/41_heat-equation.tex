@@ -438,17 +438,13 @@ with the prescribed Dirichlet values (code snippet above). Most codes rather add
 an additional if statement checking \texttt{fineGridVertex.isBoundary()}.
 \end{remark}
 
-\marginpar{\footnotesize @todo \\ Update \\ boundary \\ types}
 
     \begin{remark}
     It is obvious that the Jacobi update scheme may only update inner
     unrefined vertices as well as Neumann boundary points. Peano does not offer
-    vertex types. It distinguishes only inner and outer vertices. If you need
-    more flags than inside and outside (usually, you need at least a boundary
-    flag), you have to implement this on your own\footnote{Up to early 2016,
-    Peano had a three-valued logic with inner, outer and boundary vertices. I
-    removed this from the kernel as most applications need way more vertex
-    types anyway.}.
+    (boundary) vertex types. It distinguishes only inner, boundary and outer
+    vertices as those are tied to the internal data flow.
+    If you need more flags than those guys, you have to implement this yourself.
     \end{remark}
 
 
