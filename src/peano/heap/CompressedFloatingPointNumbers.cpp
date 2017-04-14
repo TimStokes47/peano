@@ -22,8 +22,10 @@ int peano::heap::findMostAgressiveCompression(
 }
 
 
-#ifdef CompilerICC
+#if defined(CompilerICC)
 int peano::heap::findMostAgressiveCompression(
+#elif defined(CompilerCLANG)
+int __attribute__((optnone)) peano::heap::findMostAgressiveCompression(
 #else
 int __attribute__((optimize("O0"))) peano::heap::findMostAgressiveCompression(
 #endif
@@ -76,6 +78,8 @@ int __attribute__((optimize("O0"))) peano::heap::findMostAgressiveCompression(
 
 #ifdef CompilerICC
 void peano::heap::decomposeIntoEightVariants(
+#elif defined(CompilerCLANG)
+int __attribute__((optnone)) peano::heap::findMostAgressiveCompression(
 #else
 void __attribute__((optimize("O0"))) peano::heap::decomposeIntoEightVariants(
 #endif
@@ -133,6 +137,8 @@ void __attribute__((optimize("O0"))) peano::heap::decomposeIntoEightVariants(
 
 #ifdef CompilerICC
 void peano::heap::decompose(
+#elif defined(CompilerCLANG)
+int __attribute__((optnone)) peano::heap::findMostAgressiveCompression(
 #else
 void __attribute__((optimize("O0"))) peano::heap::decompose(
 #endif
