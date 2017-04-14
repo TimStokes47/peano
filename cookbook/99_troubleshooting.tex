@@ -20,6 +20,28 @@
 
 
 
+\section{Compilation}
+
+Peano relies on a header \texttt{tarch/compiler/CompilerSpecificSettings.h}
+whenever I find incompatibilities between different compilers. 
+The header reads out some compiler preprocessor directives and then includes the
+one it find most appropriate. 
+You may always include your own file derived from one of the other headers in
+the directory.
+
+
+\begin{itemize}
+  \item {\bf My compiler terminates with `error: unknown
+   attribute 'optimize' ignored*`}. We have seen this issue notably on MAC OS X
+   with CLANG replacing GCC. Unfortunately, CLANG seems to pretend to be GNU on
+   some systems and then the wrong header is included. Ensure that
+   \texttt{CompilerSpecificSettings.h} includes a file such that the compiler
+   \texttt{CompilerCLANG} is defined.
+\end{itemize}
+
+
+
+
 \section{Programming}
 
 \begin{itemize}
