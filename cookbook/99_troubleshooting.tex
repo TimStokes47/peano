@@ -32,7 +32,7 @@ the directory.
 
 \begin{itemize}
   \item {\bf My compiler terminates with `error: unknown
-   attribute 'optimize' ignored*`}. We have seen this issue notably on MAC OS X
+   attribute 'optimize' ignored*`}. We have seen this issue notably on macOS
    with CLANG replacing GCC. Unfortunately, CLANG seems to pretend to be GNU on
    some systems and then the wrong header is included. Ensure that
    \texttt{CompilerSpecificSettings.h} includes a file such that the compiler
