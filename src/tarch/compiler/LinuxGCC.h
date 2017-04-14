@@ -3,7 +3,7 @@
 // consult LinuxIntel.h which is the most elaborate documentation.
 
 //#define UseTestSpecificCompilerSettings
-//#define CompilerCLX
+//#define CompilerCLANG
 //#define CompilerICC
 //#define VectorisationAlignment 16
 #define CompilerHasProcStat

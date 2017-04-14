@@ -52,7 +52,7 @@
  * performance. The Altix, e.g., is faster if this flag is not set, but the
  * bandwidth requirements rise then.
  */
-#if defined(PackedRecords) && !defined(CompilerCLX)
+#if defined(PackedRecords)
   #ifndef noParallelExchangePackedRecordsAtBoundary
     #define ParallelExchangePackedRecordsAtBoundary
   #endif

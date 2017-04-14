@@ -14,8 +14,8 @@
     #include "tarch/compiler/LinuxIntel.h"
   #elif defined(__GNUC__) && defined(__linux)
     #include "tarch/compiler/LinuxGCC.h"
-  #elif defined (__xlC__)
-    #include "tarch/compiler/IBMXLC.h"
+  #elif defined(__clang__) && defined(__APPLE__)
+    #include "tarch/compiler/MacOSGCC.h"
   #elif defined(__GNUC__) && defined(__APPLE__)
     #include "tarch/compiler/MacOSGCC.h"
   #elif defined(__APPLE__)

@@ -15,7 +15,7 @@
  */
 //#define UseTestSpecificCompilerSettings
 
-//#define CompilerCLX
+//#define CompilerCLANG
 //#define CompilerHasProcStat
 //#define CompilerHasUTSName
 //#define CompilerHasTimespec

@@ -114,14 +114,8 @@ void peano::grid::Checkpoint<Vertex,Cell>::createBuiltInValueMapEntries() {
 }
 
 
-#ifdef CompilerCLX
-  template <class Vertex, class Cell>
-  typename peano::grid::Checkpoint<Vertex,Cell>::ValueMap::size_type peano::grid::Checkpoint<Vertex,Cell>::readCheckpointHeader(std::istream& in) {
-#else
-  template <class Vertex, class Cell>
-  peano::grid::Checkpoint<Vertex,Cell>::ValueMap::size_type peano::grid::Checkpoint<Vertex,Cell>::readCheckpointHeader(std::istream& in) {
-#endif
-
+template <class Vertex, class Cell>
+peano::grid::Checkpoint<Vertex,Cell>::ValueMap::size_type peano::grid::Checkpoint<Vertex,Cell>::readCheckpointHeader(std::istream& in) {
   std::string          header;
   ValueMap::size_type  numberOfValueMapEntries;
 
