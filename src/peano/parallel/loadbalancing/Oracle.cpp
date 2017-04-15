@@ -288,7 +288,6 @@ bool peano::parallel::loadbalancing::Oracle::isLoadBalancingActivated() const {
 
 void peano::parallel::loadbalancing::Oracle::createOracles() {
   logTraceIn( "createOracles()");
-  assertionMsg( _numberOfOracles>0, "total number of oracles not set. Invoke setNumberOfOracles() first. This happens if shared memory oracle is initialised before repository is created. Create repository first" );
   assertion( _oracles.size()==0 );
 
   if (_numberOfOracles==0) {
