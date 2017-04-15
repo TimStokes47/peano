@@ -160,7 +160,7 @@ void tarch::parallel::NodePool::waitForAllNodesToBecomeIdle() {
     assertion1( _strategy!=0, Node::getInstance().getRank() );
 
     while ( _strategy->getNumberOfIdleNodes() < Node::getInstance().getNumberOfNodes()-1) {
-      replyToJobRequestMessages();
+      receiveDanglingMessages();
     }
   }
   #endif
