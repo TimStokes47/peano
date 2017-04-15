@@ -177,7 +177,7 @@ void peano::parallel::loadbalancing::Oracle::setNumberOfOracles(int value) {
 
 void peano::parallel::loadbalancing::Oracle::switchToOracle(int id) {
   assertion1( id>=0, id );
-  assertion2( id<static_cast<int>(_oracles.size()), id, _oracles.size() );
+  assertion3( id<static_cast<int>(_oracles.size()), id, _oracles.size(), _numberOfOracles);
 
   _currentOracle=id;
 }
@@ -287,18 +287,20 @@ bool peano::parallel::loadbalancing::Oracle::isLoadBalancingActivated() const {
 
 
 void peano::parallel::loadbalancing::Oracle::createOracles() {
+  logTraceIn( "createOracles()");
+  assertionMsg( _numberOfOracles>0, "total number of oracles not set. Invoke setNumberOfOracles() first. This happens if shared memory oracle is initialised before repository is created. Create repository first" );
   assertion( _oracles.size()==0 );
 
   if (_numberOfOracles==0) {
     logWarning( "createOracles(int)", "no number of oracles set. Have you created repositories before?" );
   }
   else if (_oraclePrototype!=0) {
-    assertion( _oraclePrototype!=0 );
+    _oracles.resize(_numberOfOracles);
     for (int i=0; i<_numberOfOracles; i++) {
-      OracleForOnePhase* newOracle = _oraclePrototype->createNewOracle(i);
-      _oracles.push_back( newOracle );
+      _oracles[i] = _oraclePrototype->createNewOracle(i);
     }
   }
+  logTraceOut( "createOracles()");
 }
 
 

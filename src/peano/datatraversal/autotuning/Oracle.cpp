@@ -109,15 +109,13 @@ void peano::datatraversal::autotuning::Oracle::createOracles() {
   #if defined(SharedMemoryParallelisation)
   logTraceIn( "createOracles()");
   assertionMsg( _numberOfOracles>0, "total number of oracles not set. Invoke setNumberOfOracles() first. This happens if shared memory oracle is initialised before repository is created. Create repository first" );
+  assertion( _oracles.size()==0 );
 
-  if (_oraclePrototype==0) {
-    logWarning( "createOracles(int)", "no oracle type configured. Perhaps forgot to call peano::datatraversal::autotuning::Oracle::setOracle(). Peano uses default oracle" );
-    _oraclePrototype = new OracleForOnePhaseDummy(true);
+  if (_numberOfOracles==0) {
+    logWarning( "createOracles(int)", "no number of oracles set. Have you created repositories before?" );
   }
-  else {
+  else if (_oraclePrototype!=0) {
     _oracles.resize(_numberOfOracles);
-
-    logDebug( "createOracles(...)", "create " << _numberOfOracles << " oracles" );
     for (int i=0; i<_numberOfOracles; i++) {
       _oracles[i] = _oraclePrototype->createNewOracle();
     }
