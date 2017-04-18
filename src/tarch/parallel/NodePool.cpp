@@ -163,8 +163,16 @@ void tarch::parallel::NodePool::waitForAllNodesToBecomeIdle() {
     clock_t      timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
     bool         triggeredTimeoutWarning = false;
 
+    logInfo(
+      "waitForAllNodesToBecomeIdle()",
+      _strategy->getNumberOfIdleNodes() << " out of " <<
+      (Node::getInstance().getNumberOfNodes()-1) << " ranks are already registered as idle"
+    );
+
     while ( _strategy->getNumberOfIdleNodes() < Node::getInstance().getNumberOfNodes()-1) {
       receiveDanglingMessages();
+      //replyToRegistrationMessages();
+      //replyToJobRequestMessages();
 
       // deadlock aspect
       if (
@@ -494,7 +502,8 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
       );
 
       while ( !_strategy->isRegisteredNode(queryMessage.getSenderRank()) ) {
-        replyToRegistrationMessages();
+        //replyToRegistrationMessages();
+        receiveDanglingMessages();
       }
 
       logDebug( "replyToJobRequestMessages()", "registration from " << queryMessage.getSenderRank() << " finally arrived" );
