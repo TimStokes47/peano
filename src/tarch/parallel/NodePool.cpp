@@ -159,8 +159,36 @@ void tarch::parallel::NodePool::waitForAllNodesToBecomeIdle() {
   if (Node::getInstance().isGlobalMaster() ) {
     assertion1( _strategy!=0, Node::getInstance().getRank() );
 
+    clock_t      timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();;
+    clock_t      timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+    bool         triggeredTimeoutWarning = false;
+
     while ( _strategy->getNumberOfIdleNodes() < Node::getInstance().getNumberOfNodes()-1) {
       receiveDanglingMessages();
+
+      // deadlock aspect
+      if (
+         tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+         (clock()>timeOutWarning) &&
+         (!triggeredTimeoutWarning)
+      ) {
+         tarch::parallel::Node::getInstance().writeTimeOutWarning(
+         "tarch::parallel::NodePool",
+         "waitForAllNodesToBecomeIdle()", -1,_registrationTag,1
+         );
+         triggeredTimeoutWarning = true;
+      }
+      if (
+         tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+         (clock()>timeOutShutdown)
+      ) {
+        logError( "waitForAllNodesToBecomeIdle()", "strategy status=" << _strategy->toString() );
+
+         tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+         "tarch::parallel::NodePool",
+         "waitForAllNodesToBecomeIdle()", -1,_registrationTag,1
+         );
+      }
     }
   }
   #endif

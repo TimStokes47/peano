@@ -306,6 +306,8 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      *
      * The operation becomes nop if you call it on another rank than the global
      * master.
+     *
+     * I do recomend to call this operation after a timeout has been set.
      */
     void waitForAllNodesToBecomeIdle();
 
