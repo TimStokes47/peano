@@ -171,8 +171,6 @@ void tarch::parallel::NodePool::waitForAllNodesToBecomeIdle() {
 
     while ( _strategy->getNumberOfIdleNodes() < Node::getInstance().getNumberOfNodes()-1) {
       receiveDanglingMessages();
-      //replyToRegistrationMessages();
-      //replyToJobRequestMessages();
 
       // deadlock aspect
       if (
@@ -502,7 +500,6 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
       );
 
       while ( !_strategy->isRegisteredNode(queryMessage.getSenderRank()) ) {
-        //replyToRegistrationMessages();
         receiveDanglingMessages();
       }
 
