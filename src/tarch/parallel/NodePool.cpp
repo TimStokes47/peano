@@ -499,8 +499,36 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
          << " might have overtaken registration message. Waiting for registration"
       );
 
+      clock_t      timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();;
+      clock_t      timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+      bool         triggeredTimeoutWarning = false;
+
       while ( !_strategy->isRegisteredNode(queryMessage.getSenderRank()) ) {
         receiveDanglingMessages();
+
+        // deadlock aspect
+        if (
+           tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+           (clock()>timeOutWarning) &&
+           (!triggeredTimeoutWarning)
+        ) {
+           tarch::parallel::Node::getInstance().writeTimeOutWarning(
+           "tarch::parallel::NodePool",
+           "replyToJobRequestMessages()", queryMessage.getSenderRank(),_registrationTag,1
+           );
+           triggeredTimeoutWarning = true;
+        }
+        if (
+           tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+           (clock()>timeOutShutdown)
+        ) {
+          logError( "replyToJobRequestMessages()", "deadlocked while waiting for registration message from rank " << queryMessage.getSenderRank() << ". strategy=" << _strategy->toString() );
+
+           tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+           "tarch::parallel::NodePool",
+           "waitForAllNodesToBecomeIdle()", queryMessage.getSenderRank(),_registrationTag,1
+           );
+        }
       }
 
       logDebug( "replyToJobRequestMessages()", "registration from " << queryMessage.getSenderRank() << " finally arrived" );
