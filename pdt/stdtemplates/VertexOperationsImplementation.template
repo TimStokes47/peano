@@ -60,7 +60,7 @@ __x__WRITE_SCALAR_OPERATION_DOUBLE__ void __NAMESPACE__::VertexOperations::write
 
 __x__WRITE_VECTOR_OPERATION_DOUBLE__ void __NAMESPACE__::VertexOperations::write__WRITE_VECTOR_OPERATION_DOUBLE__(Vertex& vertex, const tarch::la::Vector<DIMENSIONS,double>& values) { vertex._vertexData.set__WRITE_VECTOR_OPERATION_DOUBLE__( values ); }
 
-__x__WRITE_VECTOR_OPERATION_DOUBLE__ void __NAMESPACE__::VertexOperations::write__WRITE_VECTOR_OPERATION_DOUBLE__(Vertex& vertex, int index, double value) { vertex._vertexData.set__WRITE_VECTOR_OPERATION_DOUBLE__( index, values ); }
+__x__WRITE_VECTOR_OPERATION_DOUBLE__ void __NAMESPACE__::VertexOperations::write__WRITE_VECTOR_OPERATION_DOUBLE__(Vertex& vertex, int index, double value) { vertex._vertexData.set__WRITE_VECTOR_OPERATION_DOUBLE__( index, value ); }
 
 __x__WRITE_VECTOR_TWO_POW_D_OPERATION_DOUBLE__ void __NAMESPACE__::VertexOperations::write__WRITE_VECTOR_TWO_POW_D_OPERATION_DOUBLE__(Vertex& vertex, const tarch::la::Vector<TWO_POWER_D,double>& values) { vertex._vertexData.set__WRITE_VECTOR_TWO_POW_D_OPERATION_DOUBLE__( values ); }
 
