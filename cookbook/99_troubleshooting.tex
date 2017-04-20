@@ -125,6 +125,28 @@ the directory.
     We have seen this with some older MPI versions. A quick fix is to translate
     your code with the additional argument
     \texttt{-DMPI\_CXX\_BOOL=MPI\_C\_BOOL}.
+  \item {\bf My code deadlocks once I increase the rank count. It seems that
+    the ranks cannot even register at the global node pool anymore.}
+    I've seen this bug with Intel MPI and Omnipath recently. It seems that some
+    MPI implementations struggle to handle many polling non-blocking operations:
+    If multiple ranks are deployed on one node, $k$ of them register at the node
+    pool and then eagerly poll the global master for work. As a result, the
+    $k+1$th rank cannot send out its registration message. The global master in
+    return does not start the actual computation before all ranks have
+    registered if you use the corresponding wait call. There are multiple
+    solutions/things you can try:
+    \begin{enumerate}
+      \item Remove the \texttt{waitForAllNodesToBecomeIdle} calls from your
+      code.
+      \item Deploy only one MPI rank per node/interconnect.
+      \item Change into the directory \texttt{tarch/compiler} and find the right
+      compiler-specific header for your system. Change Peano's load balancing
+      data exchange into a blocking MPI:
+      \begin{c-code}
+      #define SendAndReceiveLoadBalancingMessagesBlocking    -1
+      \end{c-code}
+    \end{enumerate}
+  
   \item To be continued \ldots
 \end{itemize}
 

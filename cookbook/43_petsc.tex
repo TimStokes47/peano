@@ -127,14 +127,19 @@ Compile it, run it, visualise the output.
 
 \subsection{Connecting to PETSc}
 
-As PETSc's philosophy is pretty straightforward and minimalistic (they do, e.g.,
+As PETSc's philosophy is straightforward and modest (they do, e.g.,
 not hijack the main), the initialisation and integration are straightforward.
-Please note that we stick to serial jobs in the first part of this section.
-Nevertheless, we use the MPI compiler wrapper to translate the code as I faced
+Please note that we stick to serial jobs in the first part of this
+section.
+Nevertheless, I typically find it easier to use 
+the MPI compiler wrapper to translate the code as I faced
 issues when I tried to use PETSc without MPI\footnote{Please consult
 \url{http://www.mcs.anl.gov/petsc/petsc-current/docs/installation.html#i-dont-want-to-use-mpi}
 for the usage with OpenMPI as the \texttt{LD\_LIBRARY\_PATH} has to be set
 properly.}.
+Luckily, most MPI implementations even are fine if you translate your code with
+\texttt{mpiCC} but then skip a run through \texttt{mpirun} and instead invoke
+the executable directly.
 
 
 \begin{enumerate}
@@ -142,60 +147,56 @@ properly.}.
   where PETSc is installed. If you use your own build environment, adopt all
   pathes accordingly. If you use the pre-generated makefile, open it and add
   your PETSc include directory to the search path. Also switch to
-  \texttt{mpiCC}.
+  \texttt{mpiCC} as discussed before.
   \begin{code}
-    PROJECT_CFLAGS = -DDebug -DAsserts -DParallel \
-      -DMPICH_IGNORE_CXX_SEEK -I/opt/petsc/include 
+    PROJECT_CFLAGS = -DParallel -I/opt/petsc/include 
     PROJECT_LFLAGS = -L/opt/petsc/lib -lpetsc 
-    PROJECT_LFLAGS = -L/opt/petsc/lib -lpetsc
-
     [...]
-
-    CC=/opt/openmpi/bin/mpiCC
+    CC=mpiCC
   \end{code}
-  Please adopt all pathes accordingly. Depending on your MPI version, you also
-  might run into issues with the compiler's error management. I recommend to
+  Depending on your MPI version, you 
+  might run into issues with the compiler's error management if you stick to
+  the variants set by Peano's PDT.
+  I recommend to
   remove \texttt{-Werror -pedantic-errors} from your makefile in this case.
-  \item As the present PETSc solutions use MPI (through they run serially), we
-  have to make a few modifications in the runner. These modifications are
-  detailed in Chapter \ref{section:parallelisation:mpi}, so we simply show
-  what has to be changed in \texttt{runners/Runner.cpp}. This solution should
-  work out-of-the-box.
-  For a description of its semantics, please see the aforementioned chapter.
-  \begin{code}
-#include "tarch/parallel/FCFSNodePoolStrategy.h"
-#include "peano/parallel/loadbalancing/OracleForOnePhaseWithGreedyPartitioning.h"
-
-[...]
-
-int petsc::runners::Runner::run() {
-
-  [...]
-
-  petsc::repositories::Repository* repository = 
-    petsc::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
-      geometry,
-      tarch::la::Vector<DIMENSIONS,double>(1.0),   // domainSize,
-      tarch::la::Vector<DIMENSIONS,double>(0.0)    // computationalDomainOffset
-    );
-  
-
-  // This is new because of PETSc:
-  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    tarch::parallel::NodePool::getInstance().setStrategy(
-      new tarch::parallel::FCFSNodePoolStrategy()
-    );
-  }
-  tarch::parallel::NodePool::getInstance().restart();
-  tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();
-  peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
-    new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(false)
-  );
-
-  [...]
-}
-  \end{code}
-  \item Finally, we have to initialise and shut down PETSc properly in
+%   \item As the present PETSc solutions use MPI (through they run serially), we
+%   have to make a few modifications in the runner. These modifications are
+%   detailed in Chapter \ref{section:parallelisation:mpi}, so we simply show
+%   what has to be changed in \texttt{runners/Runner.cpp}. This solution should
+%   work out-of-the-box.
+%   For a description of its semantics, please see the aforementioned chapter.
+%   \begin{code}
+% #include "tarch/parallel/FCFSNodePoolStrategy.h"
+% #include "peano/parallel/loadbalancing/OracleForOnePhaseWithGreedyPartitioning.h"
+% 
+% [...]
+% 
+% int petsc::runners::Runner::run() {
+%  [...]
+%  petsc::repositories::Repository* repository = 
+%   petsc::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
+%    geometry,
+%    tarch::la::Vector<DIMENSIONS,double>(1.0),   // domainSize,
+%    tarch::la::Vector<DIMENSIONS,double>(0.0)    // computationalDomainOffset
+%   );
+%   
+% 
+%  // This is new because of PETSc:
+%  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+%   tarch::parallel::NodePool::getInstance().setStrategy(
+%    new tarch::parallel::FCFSNodePoolStrategy()
+%   );
+%  }
+%  tarch::parallel::NodePool::getInstance().restart();
+%  tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();
+%  peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
+%   new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(false)
+%  );
+% 
+%  [...]
+% }
+%   \end{code}
+  \item We have to initialise and shut down PETSc properly in
   \texttt{main.cpp}:
   \begin{code}
 #include "petscsys.h"
@@ -218,68 +219,122 @@ int main(int argc, char** argv) {
   [...]
 }  
   \end{code}
-  According to PETSc's documentation, we could use PETSc's initialisation to set
-  up MPI instead of the Peano initialisation. However, Peano's initialisation
-  does not check whether MPI has been set up before where PETSc does. So it
-  makes sense to initialise Peano first.
+  \item Finally, we should be able to run an empty project once we have
+  augmented the \texttt{LD\_LIBRARY\_PATH} by PETSc.
 \end{enumerate}
+  
+
+\begin{remark}
+   According to PETSc's documentation, we could use PETSc's initialisation to
+   set up MPI instead of the Peano initialisation. However, Peano's
+   initialisation does not check whether MPI has been set up before. 
+   Thus, it makes sense to initialise Peano's MPI through
+   \texttt{peano::initParallelEnvironment(&argc,&argv)} before you initialise
+   PETSc. In return, you should invoke \texttt{PetscFinalize()} before you call
+   \texttt{peano::shutdownParallelEnvironment()}.
+\end{remark}
 
 
 
 
-\subsection{Letting PETSc do the work}
+\subsection{The algorithmic and realisation blueprint}
 
 Once we have created the grid (and perhaps visualised it), we can start to set
 up the PETSc data structures corresponding to the grid, we can call its solver,
 and we can finally free everything afterwards.
 We stick to the regular case for the time being.
+Again, our example solves the problem
+\[
+-\Delta u = f
+\]
+on the unit square with a Finite Element 9-point stencil.
+
 
 Every fine grid vertex in the grid has a right-hand side and a solution entry. 
-Different to previous sections, we do not store this data in the vertex.
-Instead, we will make PETSc hold two vectors $rhs$ and $x$ and
-make each vertex hold the index, i.e.~each vertex knows which entry in the two
-vertices is associated with the vertex.
-So this means that the runner has to create these vectors and destroy them
-afterwards as well:
+Different to previous sections, we do not store the $u$ and $f$ values within
+the vertex.
+Instead, we will make PETSc hold two vectors $u$ and $f$ and
+make each vertex hold an index within these vectors, i.e.~each vertex knows
+which entry in the two vectors is associated with the vertex.
 
-\begin{code}
-  thisIsATest++;
-\end{code}
+
+Here is a high level sketch of what we have to do:
+\begin{enumerate}
+  \item Create the grid.
+  \item Ensure that the global vectors $u$ and $f$ do exist and also ensure that
+  we have a proper matrix data structure for $A$ available.
+  \item Initialise both of them and free them when the program terminates.
+  \item Once $A$ and $f$ contain valid values, solve the equation system $Au=f$
+  (note that we reuse the symbols $u$ and $f$ from the PDE though they
+  represent continuous values there while they are nodal values in the
+  implementation).
+  \item Finally, we have to ensure that $A$ and $f$ hold the right values,
+  i.e.~we have to assemble them.
+\end{enumerate}
+
+\noindent
+We first ensure that the assembly process (and also the plotter, runner, \ldots)
+know the respective data structures.
+For convenience, I recommend to move the three important data variables
+into \texttt{Vertex.h}:
 
 \begin{code}
 #include "petscvec.h"
 #include "petscmat.h"
 
-[...]
 
+namespace petsc { 
+  class Vertex;
+      
+  // Forward declaration
+  class VertexOperations;
+
+  // These are the global vectors that we use to make the adapter communicate
+  // with PETSc:
+  extern Vec  u;
+  extern Vec  f;
+  extern Mat  A;
+}
+\end{code}
+
+\noindent
+We also have to add their definition
+to \texttt{Vertex.cpp}:
+
+\begin{code}
+Vec  petsc::u;
+Vec  petsc::f;
+Mat  petsc::A;
+\end{code}
+
+
+\noindent
+Next, we make the runner create these vectors and destroy them
+afterwards as well:
+
+\begin{code}
 int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& repository) {
   peano::utils::UserInterface::writeHeader();
 
   // Build up the grid. Afterwards, we know how many vertices exist.
   repository.switchToCreateGrid(); repository.iterate();
 
-
-  // These are the global vectors that we use to make the adapter communicate with PETSc:
-  Vec  x;
-  Vec  rhs;
-  Mat  A;
-
   // Create the global vector required for our work with PETSc.
-  PetscErrorCode errorX   = 
-    VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &x);
-  PetscErrorCode errorRhs = 
-    VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &rhs);
+  PetscErrorCode errorU   = 
+    VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &u);
+  PetscErrorCode errorF = 
+    VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &f);
   PetscErrorCode errorA   = 
     MatCreate(tarch::parallel::Node::getInstance().getCommunicator(), &A);
 
-  if (errorX!=0) {
+  if (errorU!=0) {
     PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorX,  PETSC_ERROR_INITIAL,
+      __LINE__,  __FUNCT__,  __FILE__, errorU,  PETSC_ERROR_INITIAL,
       "creating global solution vector failed" );
   }
-  if (errorRhs!=0) {
+  if (errorF!=0) {
     PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorRhs,  PETSC_ERROR_INITIAL,
+      __LINE__,  __FUNCT__,  __FILE__, errorF,  PETSC_ERROR_INITIAL,
       "creating global rhs vector failed" );
   }
   if (errorA!=0) {
@@ -297,24 +352,23 @@ int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& reposit
 
   assertion1( numberOfUnknowns>0, numberOfUnknowns );
 
-  VecSetSizes(x,  PETSC_DECIDE,numberOfUnknowns);
-  VecSetSizes(rhs,PETSC_DECIDE,numberOfUnknowns);
-  VecSetType(x,VECMPI);
-  VecSetType(rhs,VECSEQ);
+  VecSetSizes(u, PETSC_DECIDE,numberOfUnknowns);
+  VecSetSizes(f, PETSC_DECIDE,numberOfUnknowns);
+  VecSetType(u, VECMPI);
+  VecSetType(f, VECSEQ);
   MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,numberOfUnknowns,numberOfUnknowns);
   MatSetType(A,MATSEQAIJ);
   MatSetUp(A);
   
   repository.switchToAssemble(); repository.iterate();
 
-  // @todo Do the real solve here
+  // @todo Do the real solve here as discussed in a minute
 
   repository.switchToPlot(); repository.iterate();
 
-
   // Clean up PETSc data structures
-  VecDestroy(&x);
-  VecDestroy(&rhs);
+  VecDestroy(&u);
+  VecDestroy(&f);
   MatDestroy(&A);
 
   repository.logIterationStatistics( true );
@@ -324,46 +378,14 @@ int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& reposit
 }
 \end{code}
 
-\noindent
-That's basically the structure of our whole solver.
-What is missing is to set up the system matrix and to befill the $rhs$ vector.
-For this, we have to ensure that the assembly process (and also the plot later
-on) know the respective data structures.
-For convenience, I thus recommend to move the three important data variables
-into \texttt{Vertex.h}:
-
-\begin{code}
-#include "petscvec.h"
-#include "petscmat.h"
 
 
-namespace petsc { 
-  class Vertex;
-      
-  // Forward declaration
-  class VertexOperations;
 
-  // These are the global vectors that we use to make the adapter communicate
-  // with PETSc:
-  extern Vec  x;
-  extern Vec  rhs;
-  extern Mat  A;
-}
-\end{code}
+\subsection{Solve the equation system}
 
-\noindent
-Please note that we move these variables, i.e.~their declaration has to be
-removed from \texttt{runAsMaster}. Furthermore, we have to add their definition
-to \texttt{Vertex.cpp}:
-
-\begin{code}
-Vec  petsc::x;
-Vec  petsc::rhs;
-Mat  petsc::A;
-\end{code}
 
 We finally have to solve the actual equation system in the runner. For this, we
-plug into the \texttt{@todo} from the snippet above and furthermore include
+plug into the runner snippet above and furthermore include
 \texttt{\#include "petscksp.h"}. We use a simple Krylov CG solver here with a
 diagonal value preconditioner.
 
@@ -380,15 +402,18 @@ KSPGetPC(krylovSolver,&preconditioner);
 // set Jacobi as preconditioner
 PCSetType(preconditioner,PCBJACOBI);
 
-KSPSolve(krylovSolver,rhs,x);
+KSPSolve(krylovSolver,f,u);
 KSPDestroy(&krylovSolver);
 \end{code}
 
 \noindent
-This is not a particular sophisticated code, but it does the job. 
-No need to rewrite parts of the excellent PETSc documentation.
+This is not a particular sophisticated code, but it does the job for the time
+being.
 
-\subsection{Connecting the vertices to PETSc}
+
+\subsection{Explicit assembly 1/2: Connecting the vertices to PETSc}
+
+\marginpar{@todo Hier weitermachen}
 
 We next have to couple the vertices from our grid to the PETSc unknowns. 
 For this, we add a field     
