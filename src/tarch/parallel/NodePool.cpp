@@ -256,8 +256,15 @@ tarch::parallel::NodePool::JobRequestMessageAnswer tarch::parallel::NodePool::wa
 
   logInfo( "waitForJob()", "sent out job request message" );
 
-  MPI_Status   status;
   tarch::parallel::messages::ActivationMessage answer;
+  answer.receive(
+    Node::getInstance().getGlobalMasterRank(),
+    _jobManagementTag,
+    true,
+    SendAndReceiveLoadBalancingMessagesBlocking
+  );
+
+/*
   int result = MPI_Recv(
     &answer, 1,
     tarch::parallel::messages::ActivationMessage::Datatype,
@@ -272,6 +279,7 @@ tarch::parallel::NodePool::JobRequestMessageAnswer tarch::parallel::NodePool::wa
       << tarch::parallel::MPIReturnValueToString(result)
     );
   }
+*/
 
   if ( answer.getNewMaster() == JobRequestMessageAnswerValues::Terminate ) {
     logDebug("waitForJob()", "node received termination signal");
