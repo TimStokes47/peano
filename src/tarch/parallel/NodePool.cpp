@@ -166,7 +166,7 @@ void tarch::parallel::NodePool::waitForAllNodesToBecomeIdle() {
     logInfo(
       "waitForAllNodesToBecomeIdle()",
       _strategy->getNumberOfIdleNodes() << " out of " <<
-      (Node::getInstance().getNumberOfNodes()-1) << " ranks are already registered as idle"
+      (Node::getInstance().getNumberOfNodes()-1) << " ranks are already registered as idle. Wait for registration of remaining nodes"
     );
 
     while ( _strategy->getNumberOfIdleNodes() < Node::getInstance().getNumberOfNodes()-1) {
@@ -523,6 +523,7 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
            (clock()>timeOutShutdown)
         ) {
           logError( "replyToJobRequestMessages()", "deadlocked while waiting for registration message from rank " << queryMessage.getSenderRank() << ". strategy=" << _strategy->toString() );
+          logError( "replyToJobRequestMessages()", "no of registered nodes=" << _strategy->getNumberOfRegisteredNodes() );
 
            tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
            "tarch::parallel::NodePool",
