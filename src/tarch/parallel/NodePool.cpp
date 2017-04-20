@@ -254,6 +254,8 @@ tarch::parallel::NodePool::JobRequestMessageAnswer tarch::parallel::NodePool::wa
   tarch::parallel::messages::JobRequestMessage message;
   message.send(Node::getInstance().getGlobalMasterRank(),_jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking);
 
+  logInfo( "waitForJob()", "sent out job request message" );
+
   MPI_Status   status;
   tarch::parallel::messages::ActivationMessage answer;
   int result = MPI_Recv(
