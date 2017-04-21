@@ -308,9 +308,116 @@ Mat  petsc::A;
 \end{code}
 
 
+\subsection{Explicit assembly 1/2: Enumerating the vertices}
+
+If we tie the entries of a vector/matrix to a vertex, we have to assign the
+vertices indices.
+We have to couple the vertices from our grid to the PETSc unknowns.
+For this, we add a field     
+
+\begin{code}
+int  _unknownCounter;
+\end{code}
+
 \noindent
-Next, we make the runner create these vectors and destroy them
-afterwards as well:
+to the class \texttt{Assemble} and make each fine grid vertex hold a unique
+index which is basically the corresponding entry in the $u$ and $f$ vector.
+
+\begin{code}
+#include "petsc/VertexOperations.h"
+
+void petsc::mappings::Assemble::beginIteration(
+  petsc::State&  solverState
+) {
+  logTraceInWith1Argument( "beginIteration(State)", solverState );
+
+  _unknownCounter = 0;
+
+  logTraceOutWith1Argument( "beginIteration(State)", solverState);
+}
+
+void petsc::mappings::Assemble::touchVertexFirstTime(
+  ...
+) {
+  logTraceInWith6Arguments( "touchVertexFirstTime(...)", ... );
+
+  if (
+    fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
+    &&
+    fineGridVertex.isInside() // it is not a boundary point
+  ) {
+    VertexOperations::writeIndex(fineGridVertex,_unknownCounter);
+    _unknownCounter++;
+  }
+  else {
+    VertexOperations::writeIndex(fineGridVertex,-1);
+  }
+
+  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
+}
+\end{code}
+
+\noindent
+There are many technical ways to couple the vertex to PETSc and to retrieve
+data from the explicit assembly.
+We do it via the vertices:
+
+\begin{code}
+double petsc::Vertex::getU() const {
+  double result = 0.0;
+  if (isInside()) {
+    PetscInt     indices[] = {_vertexData.getIndex()};
+    PetscScalar  values[]  = {0.0};
+
+    VecGetValues(u,1,indices,values);
+
+    result = values[0];
+  }
+  return result;
+}
+\end{code}
+
+
+\noindent
+Once we know how many unknowns our vertices do carry, we can inform PETSc about
+the number of unkowns:
+
+\begin{code}
+void petsc::mappings::EnumerateUnknowns::endIteration(...) {
+  logTraceInWith1Argument( "endIteration(State)", solverState );
+
+  // Local size (first parameter) and global size are the same for the time
+  // being. Peano uses doubles to count vertices, as the number of vertices
+  // sometimes exceed int. So we have to use an ugly cast here.
+  const PetscInt numberOfUnknowns = _unknownCounter;
+
+  VecSetSizes(u, PETSC_DECIDE,numberOfUnknowns);
+  VecSetSizes(f, PETSC_DECIDE,numberOfUnknowns);
+  VecSetType(u, VECMPI);
+  VecSetType(f, VECSEQ);
+  MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,numberOfUnknowns,numberOfUnknowns);
+  MatSetType(A,MATSEQAIJ);
+  MatSetUp(A);
+
+  logTraceOutWith1Argument( "endIteration(State)", solverState);
+}
+\end{code}
+
+
+\begin{remark}
+ One might be tempted to use the repository's \texttt{getNumberOfInnerVertices}
+ routines or similar routines to initialise PETSc.
+ This might work, but there are pitfalls: In a distributed memory environment
+ these counters might count replicated vertices along domain boundaries twice,
+ and the AMR framework cannot know which boundary vertices are real unknowns
+ (Neumann, e.g.) and which do not carry unknowns.
+\end{remark}
+
+
+\section{Runner environment}
+
+To make the PETSc notification of vector/matrix sizes work, we make the runner
+create these vectors and destroy them afterwards as well:
 
 \begin{code}
 int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& repository) {
@@ -411,223 +518,171 @@ This is not a particular sophisticated code, but it does the job for the time
 being.
 
 
-\subsection{Explicit assembly 1/2: Connecting the vertices to PETSc}
+\subsection{Explicit assembly 2/2: Assembling the rhs and the matrix}
 
-\marginpar{@todo Hier weitermachen}
-
-We next have to couple the vertices from our grid to the PETSc unknowns. 
-For this, we add a field     
-
+We finally assemble our systems. First, we have to tell
+PETSc when we start and when we have finished the assembly.
+This matches Peano's idea of a \texttt{beginIteration} and
+\texttt{endIteration} event:
+ 
 \begin{code}
-int  _unknownCounter;
-\end{code}
-
-\noindent
-to the class \texttt{Assemble} and make each fine grid vertex hold a unique
-index which is basically the corresponding entry in the $x$ and $rhs$ vector.
-If we do so, we can also set $rhs$ already.
-
-\begin{code}
-#include "petsc/VertexOperations.h"
-
-void petsc::mappings::Assemble::beginIteration(
-  petsc::State&  solverState
-) {
-  logTraceInWith1Argument( "beginIteration(State)", solverState );
-
-  _unknownCounter = 0;
-
-  logTraceOutWith1Argument( "beginIteration(State)", solverState);
-}
-
-void petsc::mappings::Assemble::touchVertexFirstTime(
-  ...
-) {
-  logTraceInWith6Arguments( "touchVertexFirstTime(...)", ... );
-
-  if (
-    fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
-    &&
-    fineGridVertex.isInside() // it is not a boundary point
-  ) {
-    VertexOperations::writeIndex(fineGridVertex,_unknownCounter);
-    _unknownCounter++;
-    
-    fineGridVertex.setRhs( 1.0 ); // See routines below
-  }
-
-  logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
-}
-\end{code}
-
-\noindent
-There are many technical ways to couple the vertex to PETSc.
-We do it via the vertices:
-
-\begin{code}
-double petsc::Vertex::getU() const {
-  double result = 0.0;
-  if (isInside()) {
-    PetscInt     indices[] = {_vertexData.getIndex()};
-    PetscScalar  values[]  = {0.0};
-
-    VecGetValues(x,1,indices,values);
-
-    result = values[0];
-  }
-  return result;
-}
-
-
-void petsc::Vertex::setRhs(double value) {
-  PetscInt     indices[] = {_vertexData.getIndex()};
-  PetscScalar  values[]  = {value};
-  VecSetValues(rhs,1,indices,values, INSERT_VALUES);
-}
-\end{code}
-
-
-
-\subsection{Assembling and retrieving data from PETSc}
-
-We finally assemble our systems. The key activity is on the one hand to tell
-PETSc that we have finished the assembly
-
-\begin{code}
-void petsc::mappings::Assemble::endIteration(
-  petsc::State&  solverState
-) {
-  logTraceInWith1Argument( "endIteration(State)", solverState );
-
-  logInfo( "beginIteration(State)", "finalise assembly" );
-
-  VecAssemblyBegin( x );
-  VecAssemblyBegin( rhs );
-  VecAssemblyEnd( x );
-  VecAssemblyEnd( rhs );
-
+void petsc::mappings::Assemble::beginIteration(petsc::State&  solverState) {
+  VecAssemblyBegin( u );
+  VecAssemblyBegin( f );
   MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
+}
+
+void petsc::mappings::Assemble::endIteration(petsc::State&  solverState) {
+  VecAssemblyEnd( u );
+  VecAssemblyEnd( f );
   MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
+}
+\end{code}
 
-  logInfo( "beginIteration(State)", "assembly finished" );
 
-  logTraceOutWith1Argument( "endIteration(State)", solverState);
+\noindent
+While the binning of the right-hand side into the matrix is straightforward
+(note how we grab the index from the vertex object and then use this index to
+write the vector data into the right place)
+\begin{code}
+void petsc::mappings::Assemble::touchVertexFirstTime(...) {
+  if (fineGridVertex.isUnknown()) {
+    fineGridVertex.setRhs(
+      ...
+    );
+  }
+}
+
+bool petsc::Vertex::isUnknown() const {
+  return _vertexData.getIndex()>=0;
+}
+
+void petsc::Vertex::setRhs(double rhs) {
+  PetscInt     indices[] = {_vertexData.getIndex()};
+  PetscScalar  values[]  = {rhs};
+  VecSetValues(f,1,indices,values, INSERT_VALUES);
 }
 \end{code}
 
 \noindent
-and on the other hand to fill entries into the matrix:
+we have to break down the assembly of the matrix element-wisely:
+
 \begin{code}
 #include "tarch/la/Matrix.h"
 
+void petsc::mappings::Assemble::enterCell(...) {
+ tarch::la::Matrix<4,4,double> localA;
+ localA =   0.5,  -0.25, -0.25,  0,
+          -0.25,    0.5,     0, -0.25,
+          -0.25,      0,   0.5, -0.25,
+              0,  -0.25, -0.25,  0.5;
 
-void petsc::mappings::Assemble::enterCell(
-  ...
-) {
- logTraceInWith4Arguments( "enterCell(...)", ... );
-
- if ( not fineGridCell.isRefined() ) {
-  tarch::la::Matrix<4,4,double> localA;
-  localA = 0.5,  -0.25, -0.25, 0,
-           -0.25, 0.5,  0,    -0.25,
-           -0.25, 0,    0.5,  -0.25,
-           0,    -0.25, -0.25, 0.5;
-
-  for(int ii=0; ii<4; ii++)
-  for(int jj=0; jj<4; jj++) {
-   if (
-    fineGridVertices[fineGridVerticesEnumerator(ii)].isInside()
-    &&
-    fineGridVertices[fineGridVerticesEnumerator(jj)].isInside()
-   ) {
-    PetscInt row = VertexOperations::readIndex( fineGridVertices[fineGridVerticesEnumerator(ii)] );
-    PetscInt col = VertexOperations::readIndex( fineGridVertices[fineGridVerticesEnumerator(jj)] );
-    MatSetValue(A,row,col,localA(ii,jj),ADD_VALUES);
-   }
+ for(int ii=0; ii<4; ii++)
+ for(int jj=0; jj<4; jj++) {
+  if (
+   fineGridVertices[fineGridVerticesEnumerator(ii)].isUnknown()
+   and
+   fineGridVertices[fineGridVerticesEnumerator(jj)].isUnknown()
+  ) {
+   PetscInt row = VertexOperations::readIndex( 
+     fineGridVertices[fineGridVerticesEnumerator(ii)] );
+   PetscInt col = VertexOperations::readIndex( 
+     fineGridVertices[fineGridVerticesEnumerator(jj)] );
+   MatSetValue(A,row,col,localA(ii,jj),ADD_VALUES);
   }
  }
-
- logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
 }
 \end{code}
 
 \noindent
-Needless to say, this is a 2d example. 3d requires more indices. You might want
-to have a look into the Peano utilities for dimension-generic routines. And it
-is also obvious that this is not a very elegant and fast solution as we write
-into the matrix entry by entry rather than in batches.
-
-Once the matrix is assembled, it makes sense to add statements alike
+Once you have filled the matrix with entries, you might wanna visualise the
+content in the runner with
 \begin{code}
-  KSPCreate(tarch::parallel::Node::getInstance().getCommunicator(),&krylovSolver);
-  KSPSetOperators(krylovSolver,A,A); // use matrix from Vector.h
+  MatView(A,PETSC_VIEWER_STDOUT_WORLD);
+  MatView(A,PETSC_VIEWER_DRAW_WORLD);
+  std::cin.get();
 \end{code}
 
-\noindent
-into the runner to see the matrix pattern, e.g.
-
-
-
-\subsection{Some remarks on discontinuous Galerkin}
-
-
-\begin{figure}
-  \begin{center}
-    \includegraphics[width=0.6\textwidth]{43_dg/dg-data-layout.pdf}
-  \end{center}
-  \caption{One possible data layout for DG with PETSc. All indices are stored
-  within vertices.}
-  \label{figure:43_petsc:data-layout}
-\end{figure}
-
-There are various ways to implement discontinuous Galerkin in Peano. 
-We sketch a vertex-based variant  at
-hands of bi-quadratic shape functions.
-For such an approach, we have to store nine unknown per cell.
-However, we propose not to store indices within a cell but within vertices.
-This is advantageous as we have, without additional effort, only vertices within
-a cell at hand. 
-We do not know neighbour cells.
-
-So we propose to hold nine integer indices within each individual vertex.
-Basically, every unknown is stored within its closest neighbouring vertex
-(Figure \ref{figure:43_petsc:data-layout}). 
-For those where multiple options do exist, we store it to the left bottom.
-The corresponding vertex data structure reads as follows:
-\begin{code}
-Packed-Type: short int;
-
-class petsc::records::Vertex {  
-  parallelise persistent int index[9];
-};
-\end{code}
-
-
-
-\subsection{Work in progress \ldots}
-
-I am planning to start some programming with PETSc plus Peano plus MPI soon and
-I also plan to dive into PETSc's matrix-free routines. If anybody reads this
-comment and has suggestions, feel free to contact me.
-
-\ldots to be continued
-
-
-
-\subsection*{Further reading}
-
-\begin{itemize}
-  \item Weinzierl, Marion and Weinzierl, Tobias: {\em Quasi-matrix-free hybrid
-  multigrid on dynamically adaptive Cartesian grids}, arXiv:1607.00648
-\end{itemize}
+\begin{center}
+  \includegraphics[width=0.2\textwidth]{43_dg/matrix-pattern.png}
+  \\
+  {
+  \footnotesize
+  It is important to remember that Peano uses a space-filling curve to traverse
+  the grid but can switch to regular subgrids if it deems to be suitable. As a
+  consequence, the sparsity pattern even for regular grids might not equal the
+  expected $k$-diagonal matrix pattern.
+  }
+\end{center}
 
 
 % 
+% \noindent
+% Needless to say, this is a 2d example. 3d requires more indices. You might want
+% to have a look into the Peano utilities for dimension-generic routines. And it
+% is also obvious that this is not a very elegant and fast solution as we write
+% into the matrix entry by entry rather than in batches.
+% 
+% Once the matrix is assembled, it makes sense to add statements alike
+% \begin{code}
+%   KSPCreate(tarch::parallel::Node::getInstance().getCommunicator(),&krylovSolver);
+%   KSPSetOperators(krylovSolver,A,A); // use matrix from Vector.h
+% \end{code}
+% 
+% \noindent
+% into the runner to see the matrix pattern, e.g.
 % 
 % 
-% \subsection{Serial assembly with a parallel PETSc}
+% 
+% \subsection{Some remarks on discontinuous Galerkin}
 % 
 % 
-% \subsection{Using PETSc and MPI}
-% others. So it is a perfect fit to Peano.
-
+% \begin{figure}
+%   \begin{center}
+%     \includegraphics[width=0.6\textwidth]{43_dg/dg-data-layout.pdf}
+%   \end{center}
+%   \caption{One possible data layout for DG with PETSc. All indices are stored
+%   within vertices.}
+%   \label{figure:43_petsc:data-layout}
+% \end{figure}
+% 
+% There are various ways to implement discontinuous Galerkin in Peano. 
+% We sketch a vertex-based variant  at
+% hands of bi-quadratic shape functions.
+% For such an approach, we have to store nine unknown per cell.
+% However, we propose not to store indices within a cell but within vertices.
+% This is advantageous as we have, without additional effort, only vertices within
+% a cell at hand. 
+% We do not know neighbour cells.
+% 
+% So we propose to hold nine integer indices within each individual vertex.
+% Basically, every unknown is stored within its closest neighbouring vertex
+% (Figure \ref{figure:43_petsc:data-layout}). 
+% For those where multiple options do exist, we store it to the left bottom.
+% The corresponding vertex data structure reads as follows:
+% \begin{code}
+% Packed-Type: short int;
+% 
+% class petsc::records::Vertex {  
+%   parallelise persistent int index[9];
+% };
+% \end{code}
+% 
+% 
+% 
+% \subsection{Work in progress \ldots}
+% 
+% I am planning to start some programming with PETSc plus Peano plus MPI soon and
+% I also plan to dive into PETSc's matrix-free routines. If anybody reads this
+% comment and has suggestions, feel free to contact me.
+% 
+% \ldots to be continued
+% 
+% 
+% 
+% \subsection*{Further reading}
+% 
+% \begin{itemize}
+%   \item Weinzierl, Marion and Weinzierl, Tobias: {\em Quasi-matrix-free hybrid
+%   multigrid on dynamically adaptive Cartesian grids}, arXiv:1607.00648
+% \end{itemize}
