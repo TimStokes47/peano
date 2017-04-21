@@ -137,16 +137,22 @@ the directory.
     solutions/things you can try:
     \begin{enumerate}
       \item Remove the \texttt{waitForAllNodesToBecomeIdle} calls from your
-      code.
+      code. Your code might not need it anyway.
       \item Deploy only one MPI rank per node/interconnect.
       \item Change into the directory \texttt{tarch/compiler} and find the right
       compiler-specific header for your system. Change Peano's load balancing
       data exchange into a blocking MPI:
-      \begin{c-code}
+      \begin{code}
       #define SendAndReceiveLoadBalancingMessagesBlocking    -1
-      \end{c-code}
+      \end{code}
     \end{enumerate}
-  
+    However, the best solution is to consult your supercomputer's documentation
+    and to configure the fabric accordingly. On Durham's supercomputer, e.g., an
+    additional
+    \begin{code}
+    export I_MPI_FABRICS="shm:dapl"
+    \end{code}
+    in the SLURM script fixes the issue.
   \item To be continued \ldots
 \end{itemize}
 
