@@ -437,11 +437,7 @@ void __THIS_QUALIFIED_TYPENAME__::endIteration(
   
   std::ostringstream snapshotFileName;
   snapshotFileName << "PARAM0"
-                   #ifdef Parallel
-                   << "-rank-" << tarch::parallel::Node::getInstance().getRank()
-                   #endif
-                   << "-" << _snapshotCounter
-                   << ".vtk";
+                   << "-" << _snapshotCounter;
   _vtkWriter->writeToFile( snapshotFileName.str() );
   
   _snapshotCounter++;                  
