@@ -399,6 +399,9 @@ void petsc::mappings::EnumerateUnknowns::endIteration(...) {
   MatSetType(A,MATSEQAIJ);
   MatSetUp(A);
 
+  PetscObjectSetName((PetscObject)u, "Solution");
+  PetscObjectSetName((PetscObject)f, "Right-hand side");
+
   logTraceOutWith1Argument( "endIteration(State)", solverState);
 }
 \end{code}
@@ -414,7 +417,7 @@ void petsc::mappings::EnumerateUnknowns::endIteration(...) {
 \end{remark}
 
 
-\subssection{Runner environment}
+\subsection{Runner environment}
 
 To make the PETSc notification of vector/matrix sizes work, we make the runner
 create these vectors and destroy them afterwards as well:
@@ -449,27 +452,10 @@ int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& reposit
       __LINE__,  __FUNCT__,  __FILE__, errorA,  PETSC_ERROR_INITIAL,
       "creating system matrix failed" );
   }
-
-
-  // Local size (first parameter) and global size are the same for the time
-  // being. Peano uses doubles to count vertices, as the number of vertices
-  // sometimes exceed int. So we have to use an ugly cast here.
-  const PetscInt numberOfUnknowns = static_cast<int>(
-    repository.getState().getNumberOfInnerLeafVertices());
-
-  assertion1( numberOfUnknowns>0, numberOfUnknowns );
-
-  VecSetSizes(u, PETSC_DECIDE,numberOfUnknowns);
-  VecSetSizes(f, PETSC_DECIDE,numberOfUnknowns);
-  VecSetType(u, VECMPI);
-  VecSetType(f, VECSEQ);
-  MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,numberOfUnknowns,numberOfUnknowns);
-  MatSetType(A,MATSEQAIJ);
-  MatSetUp(A);
   
   repository.switchToAssemble(); repository.iterate();
 
-  // @todo Do the real solve here as discussed in a minute
+  // @todo Do the real solve here as discussed below
 
   repository.switchToPlot(); repository.iterate();
 
@@ -493,8 +479,8 @@ int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& reposit
 
 We finally have to solve the actual equation system in the runner. For this, we
 plug into the runner snippet above and furthermore include
-\texttt{\#include "petscksp.h"}. We use a simple Krylov CG solver here with a
-diagonal value preconditioner.
+\texttt{\#include "petscksp.h"}. We use PETSc's default which is a GMRES
+and add a Jacobi preconditioner.
 
 \begin{code}
 KSP krylovSolver;
@@ -517,8 +503,32 @@ KSPDestroy(&krylovSolver);
 This is not a particular sophisticated code, but it does the job for the time
 being.
 
+\begin{remark}
+If your application requires $k$ command line arguments, it makes sense to check
+that there are at least $k$ arguments and then to let PETSc select a solver
+through the command line:
+ \begin{code}
+KSPCreate(tarch::parallel::Node::getInstance().getCommunicator(),&krylovSolver);
+KSPSetFromOptions(krylovSolver);
+KSPType krylovSolverType;
+KSPGetType(krylovSolver,&krylovSolverType);
+logInfo( "run(...)", "use solver " << std::string(krylovSolverType) );
+KSPSetOperators(krylovSolver,A,A); // use matrix from Vector.h
+ \end{code}
+PETSc Krylov solvers are discussed in the PETSc manual in Chapter 4
+(\url{http://www.mcs.anl.gov/petsc/petsc-current/docs/manual.pdf#chapter.4}).
+I furthermore typically add a 
+\begin{code}
+int iterations;
+KSPGetIterationNumber(krylovSolver, &iterations);
+logInfo( "run(...)", "solver terminated after " << iterations << " iteration(s)" );
+\end{code}
+statements to track the convergence behaviour.
+\end{remark}
 
-\subsection{Explicit assembly 2/2: Assembling the rhs and the matrix}
+
+\subsection{Explicit assembly 2/2: Assembling the right-hand side and the
+matrix}
 
 We finally assemble our systems. First, we have to tell
 PETSc when we start and when we have finished the assembly.
@@ -603,8 +613,11 @@ content in the runner with
   std::cin.get();
 \end{code}
 
+\pagebreak
+
+
 \begin{center}
-  \includegraphics[width=0.2\textwidth]{43_dg/matrix-pattern.png}
+  \includegraphics[width=0.4\textwidth]{43_dg/matrix-pattern.png}
   \\
   {
   \footnotesize
