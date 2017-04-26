@@ -592,12 +592,29 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      *   \endcode
      *   So the the code recognises that it runs out of indices but tries to
      *   continue nevertheless. So we might have race conditions.
-     * - You finally have to call somewhere in your code
+     * - You have to call somewhere in your code
      *   reserveHeapEntriesForRecycling() with a reasonable parameter. This
      *   should create enough slack entries on the heap to avoid that the
      *   error message shows up but it should not create too many entries as
      *   otherwise you'll again have heap fragmentation and severe memory
      *   overheads.
+     * - Please note that the heap implementation still is not thread-safe,
+     *   i.e. you have to protect your (modified) create and delete calls with
+     *   a lock.
+     * - It remains important to check at several points whether the background
+     *   tasks have terminated. There are several ways to do this. One can, for
+     *   example, use another heap of bools/enums where you mark which data
+     *   pieces currently are processed. I prefer usually a simpler variant: I
+     *   hold a global integer where I count the number of compression tasks
+     *   (the compression task's constructor increments the counter while it
+     *   reduces the counter when the task functor has terminated). Whenever I
+     *   want to uncompress data, I first check in a while loop whether all
+     *   compression tasks have terminated. If not, I wait invoking
+     *   tarch::multicore::BooleanSemaphore::sendTaskToBack(). This means there
+     *   are never any uncompression tasks running while there are still
+     *   compression tasks to do.
+     *
+     *   @todo Wie checkt man, ob schon fertig ist
      */
     void reserveHeapEntriesForRecycling(int numberOfEntries);
 
