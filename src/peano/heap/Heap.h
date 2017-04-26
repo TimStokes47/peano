@@ -548,8 +548,57 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      *
      * @return The index return is always a non-negativ number.
      * @return -1 if request could not be served.
+     * @see areRecycleEntriesAvailable()
      */
     int createData(int numberOfEntries=0, int initialCapacity=0, Allocation allocation = Allocation::UseRecycledEntriesIfPossibleCreateNewEntriesIfRequired);
+
+    /**
+     * ## Usage pattern for heap with recycling ##
+     *
+     * Reusing a heap with recycled indices is close to trivial if you do not
+     * use TBBs.
+     *
+     * - Replace the (default) boolean in deleteData() with true to instruct
+     *   the heap not to delete any data but to recycle entries.
+     * - Make createData use the flag
+     *   UseRecycledEntriesIfPossibleCreateNewEntriesIfRequired. This is the
+     *   default, so no need to change anything here usually.
+     * - You might want to add some areRecycleEntriesAvailable() to your code
+     *   just to find out whether recycling had been successful.
+     *
+     * If you work with recycled entries and all heap vectors have roughly the
+     * same size, you might expect a reduction in fragmentation.
+     *
+     *
+     * The story is a different one once you enable shared memory
+     * parallelisation. If your heap is concurrently accessed by multiple
+     * threads, you should not insert new entries or delete entries as Peano's
+     * heap implementation is not thread-safe. You can however use the heap
+     * totally lock-free if you rely on the fact that you reuse heap
+     * entries all the time. To do so:
+     *
+     * - Pass your createData() calls that are invoked concurrently the
+     *   flag Allocation::UseOnlyRecycledEntries.
+     * - Add some security checks on the result:
+     *   \code
+  if (returnedHeapIndex<0) {
+    tarch::logging::Log _log("boxmg::Vertex");
+    logError( "myRoutine()", "recycling entries failed. Try to create new entry on heap though this might not be thread-safe and lead to inconsistent data");
+    returnedHeapIndex = OperatorHeap::getInstance().createData(
+      ..., ...,
+      MyHeap::Allocation::UseRecycledEntriesIfPossibleCreateNewEntriesIfRequired
+    );
+  }
+     *   \endcode
+     *   So the the code recognises that it runs out of indices but tries to
+     *   continue nevertheless. So we might have race conditions.
+     * - You finally have to call somewhere in your code
+     *   reserveHeapEntriesForRecycling() with a reasonable parameter. This
+     *   should create enough slack entries on the heap to avoid that the
+     *   error message shows up but it should not create too many entries as
+     *   otherwise you'll again have heap fragmentation and severe memory
+     *   overheads.
+     */
     void reserveHeapEntriesForRecycling(int numberOfEntries);
 
     bool areRecycleEntriesAvailable() const;
