@@ -261,9 +261,10 @@ which entry in the two vectors is associated with the vertex.
 Here is a high level sketch of what we have to do:
 \begin{enumerate}
   \item Create the grid.
+  \item Assign each vertex/dof a unique number.
   \item Ensure that the global vectors $u$ and $f$ do exist and also ensure that
-  we have a proper matrix data structure for $A$ available.
-  \item Initialise both of them and free them when the program terminates.
+  we have a proper matrix data structure for $A$ available. Initialise both of
+  them and free them when the program terminates.
   \item Once $A$ and $f$ contain valid values, solve the equation system $Au=f$
   (note that we reuse the symbols $u$ and $f$ from the PDE though they
   represent continuous values there while they are nodal values in the
@@ -308,7 +309,7 @@ Mat  petsc::A;
 \end{code}
 
 
-\subsection{Explicit assembly 1/2: Enumerating the vertices}
+\subsection{Enumerating the vertices and initialising vectors and the matrix}
 
 If we tie the entries of a vector/matrix to a vertex, we have to assign the
 vertices indices.
@@ -358,53 +359,59 @@ void petsc::mappings::Assemble::touchVertexFirstTime(
 \end{code}
 
 \noindent
-There are many technical ways to couple the vertex to PETSc and to retrieve
-data from the explicit assembly.
-We do it via the vertices:
+Once we know how many unknowns we are handling, we can create our two required
+vectors and we can initialise our matrix properly:
 
-\begin{code}
-double petsc::Vertex::getU() const {
-  double result = 0.0;
-  if (_vertexData.getIndex()>=0) {
-    PetscInt     indices[] = {_vertexData.getIndex()};
-    PetscScalar  values[]  = {0.0};
-
-    VecGetValues(u,1,indices,values);
-
-    result = values[0];
-  }
-  return result;
-}
-\end{code}
-
-
-\noindent
-Once we know how many unknowns our vertices do carry, we can inform PETSc about
-the number of unkowns:
 
 \begin{code}
 void petsc::mappings::EnumerateUnknowns::endIteration(...) {
   logTraceInWith1Argument( "endIteration(State)", solverState );
 
-  // Local size (first parameter) and global size are the same for the time
-  // being. Peano uses doubles to count vertices, as the number of vertices
-  // sometimes exceed int. So we have to use an ugly cast here.
   const PetscInt numberOfUnknowns = _unknownCounter;
+
+  PetscErrorCode errorU = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &u);
+  PetscErrorCode errorF = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &f);
+
+  if (errorU!=0) {
+    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__, errorU,  PETSC_ERROR_INITIAL,
+      "creating global solution vector failed" );
+  }
+  if (errorF!=0) {
+    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__, errorF,  PETSC_ERROR_INITIAL,
+      "creating global rhs vector failed" );
+  }
 
   VecSetSizes(u, PETSC_DECIDE,numberOfUnknowns);
   VecSetSizes(f, PETSC_DECIDE,numberOfUnknowns);
   VecSetType(u, VECMPI);
-  VecSetType(f, VECSEQ);
-  MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,numberOfUnknowns,numberOfUnknowns);
-  MatSetType(A,MATSEQAIJ);
-  MatSetUp(A);
-
+  VecSetType(f, VECMPI);
   PetscObjectSetName((PetscObject)u, "Solution");
   PetscObjectSetName((PetscObject)f, "Right-hand side");
+
+  PetscErrorCode errorA = MatCreateSeqAIJ(
+    tarch::parallel::Node::getInstance().getCommunicator(),
+    numberOfUnknowns,numberOfUnknowns,
+    THREE_POWER_D, NULL,
+    &A
+  );
+  if (errorA!=0) {
+    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+      __LINE__,  __FUNCT__,  __FILE__, errorA,  PETSC_ERROR_INITIAL,
+      "creating system matrix failed" );
+  }
 
   logTraceOutWith1Argument( "endIteration(State)", solverState);
 }
 \end{code}
+
+
+\begin{remark}
+ The above snippet where we predefine the number of nonzeros to be $3^d$ per
+ row does work only on a regular grid. Adaptive grids might require
+ modifications.
+\end{remark}
 
 
 \begin{remark}
@@ -417,48 +424,16 @@ void petsc::mappings::EnumerateUnknowns::endIteration(...) {
 \end{remark}
 
 
-\subsection{Runner environment}
 
-To make the PETSc notification of vector/matrix sizes work, we make the runner
-create these vectors and destroy them afterwards as well:
+\subsection{Free the data}
+
+Before we continue, we make the runner
+destroy all data structures properly:
 
 \begin{code}
 int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& repository) {
-  peano::utils::UserInterface::writeHeader();
-
-  // Build up the grid. Afterwards, we know how many vertices exist.
-  repository.switchToCreateGrid(); repository.iterate();
-
-  // Create the global vector required for our work with PETSc.
-  PetscErrorCode errorU   = 
-    VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &u);
-  PetscErrorCode errorF = 
-    VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &f);
-  PetscErrorCode errorA   = 
-    MatCreate(tarch::parallel::Node::getInstance().getCommunicator(), &A);
-
-  if (errorU!=0) {
-    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorU,  PETSC_ERROR_INITIAL,
-      "creating global solution vector failed" );
-  }
-  if (errorF!=0) {
-    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorF,  PETSC_ERROR_INITIAL,
-      "creating global rhs vector failed" );
-  }
-  if (errorA!=0) {
-    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorA,  PETSC_ERROR_INITIAL,
-      "creating system matrix failed" );
-  }
+  ...
   
-  repository.switchToAssemble(); repository.iterate();
-
-  // @todo Do the real solve here as discussed below
-
-  repository.switchToPlot(); repository.iterate();
-
   // Clean up PETSc data structures
   VecDestroy(&u);
   VecDestroy(&f);
@@ -470,7 +445,6 @@ int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& reposit
   return 0;
 }
 \end{code}
-
 
 
 
@@ -634,6 +608,30 @@ content in the runner with
   \texttt{matrixfree} toolbox which extracts the element-wise stiffness matrix
   from the stencils.
 \end{remark}
+
+
+\subsection{Retrieve properties from the PETSc data structures}
+
+There are many technical ways to couple the vertex to PETSc and to retrieve
+data from the explicit assembly.
+We do it via the vertices:
+
+\begin{code}
+double petsc::Vertex::getU() const {
+  double result = 0.0;
+  if (_vertexData.getIndex()>=0) {
+    PetscInt     indices[] = {_vertexData.getIndex()};
+    PetscScalar  values[]  = {0.0};
+
+    VecGetValues(u,1,indices,values);
+
+    result = values[0];
+  }
+  return result;
+}
+\end{code}
+
+
 
 % 
 % \noindent
