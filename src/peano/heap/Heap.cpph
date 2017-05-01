@@ -214,15 +214,16 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     index = _deletedHeapIndices.front();
     allocateNewEntry = true;
     _deletedHeapIndices.pop_front();
+    assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry does exist already.");
   }
   else {
     index = _nextIndex;
     allocateNewEntry = true;
     _nextIndex++;
+    assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry does exist already.");
   }
 
   if (allocateNewEntry) {
-    assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry does exist already.");
     std::vector<Data>* newData = new (std::nothrow) std::vector<Data>(numberOfEntries);
     if (newData==nullptr) {
        logError( "createDataForIndex(int,int)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
