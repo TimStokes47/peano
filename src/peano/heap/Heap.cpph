@@ -209,19 +209,19 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     index = _recycledHeapIndices.front();
     allocateNewEntry = false;
     _recycledHeapIndices.pop_front();
-    assertionMsg(_heapData.find(index) != _heapData.end(), "recycled heap entry seems not to exist.");
+    assertionMsg(_heapData.find(index) != _heapData.end(), "recycled heap entry of heap " + _name + " seems not to exist.");
   }
   else if (!_deletedHeapIndices.empty() ){
     index = _deletedHeapIndices.front();
     allocateNewEntry = true;
     _deletedHeapIndices.pop_front();
-    assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry does exist already.");
+    assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry of heap " + _name + " does exist already.");
   }
   else {
     index = _nextIndex;
     allocateNewEntry = true;
     _nextIndex++;
-    assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry does exist already.");
+    assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry of heap " + _name + " does exist already.");
   }
 
   if (allocateNewEntry) {
@@ -242,9 +242,9 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     _heapData[index]->reserve(initialCapacity);
   }
 
-  assertion4(
+  assertion5(
     _heapData.find(index) != _heapData.end(), 
-    allocateNewEntry, numberOfEntries, initialCapacity, allocation
+    allocateNewEntry, numberOfEntries, initialCapacity, allocation, _name
   );
   assertion(index >= 0);
 
