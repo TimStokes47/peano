@@ -193,7 +193,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::createData(int numberOfEntries, int initialCapacity, Allocation allocation) {
-  logTraceInWith2Arguments( "createData()", numberOfEntries, initialCapacity );
+  logTraceInWith2Arguments( "createData(int,int,Allocation)", numberOfEntries, initialCapacity );
 
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
@@ -201,7 +201,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   int index;
   bool allocateNewEntry;
   if ( _recycledHeapIndices.empty() && allocation==Allocation::UseOnlyRecycledEntries) {
-    logTraceOutWith1Argument( "createData()", "not served" );
+    logTraceOutWith1Argument( "createData(int,int,Allocation)", "not served" );
     return -1;
   }
 
@@ -209,7 +209,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     index = _recycledHeapIndices.front();
     allocateNewEntry = false;
     _recycledHeapIndices.pop_front();
-    assertionMsg(_heapData.find(index) != _heapData.end(), "heap entry does exist already.");
+    assertionMsg(_heapData.find(index) != _heapData.end(), "recycled heap entry seems not to exist.");
   }
   else if (!_deletedHeapIndices.empty() ){
     index = _deletedHeapIndices.front();
@@ -227,7 +227,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   if (allocateNewEntry) {
     std::vector<Data>* newData = new (std::nothrow) std::vector<Data>(numberOfEntries);
     if (newData==nullptr) {
-       logError( "createDataForIndex(int,int)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
+      logError( "createData(int,int,Allocation)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
       exit(-1);
     }
     _heapData.insert( typename HeapContainer::value_type(index,newData) );
@@ -254,7 +254,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     _maximumNumberOfHeapEntries = static_cast<int>(_heapData.size());
   }
 
-  logTraceOutWith2Arguments("createData()", index, _numberOfHeapAllocations);
+  logTraceOutWith2Arguments("createData(int,int,Allocation)", index, _numberOfHeapAllocations);
   return index;
 }
 
