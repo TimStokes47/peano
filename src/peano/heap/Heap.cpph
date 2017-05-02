@@ -209,6 +209,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     index = _recycledHeapIndices.front();
     allocateNewEntry = false;
     _recycledHeapIndices.pop_front();
+    assertionMsg(_heapData.find(index) != _heapData.end(), "heap entry does exist already.");
   }
   else if (!_deletedHeapIndices.empty() ){
     index = _deletedHeapIndices.front();
@@ -241,7 +242,10 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     _heapData[index]->reserve(initialCapacity);
   }
 
-  assertionMsg(_heapData.find(index) != _heapData.end(), "insertion of heap data not successful.");
+  assertion4(
+    _heapData.find(index) != _heapData.end(), 
+    allocateNewEntry, numberOfEntries, initialCapacity, allocation
+  );
   assertion(index >= 0);
 
   _numberOfHeapAllocations += 1;

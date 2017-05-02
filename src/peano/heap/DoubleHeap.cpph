@@ -311,7 +311,7 @@ bool peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::deleteData(int index, bool recycle) {
-  logTraceInWith2Arguments("deleteData(int)", _name, index);
+  logTraceInWith2Arguments("deleteData(int,bool)", _name, index);
 
   #ifdef Asserts
   std::string message = "Trying to get heap data for unknown index. Has the index been initialized correctly?";
@@ -333,7 +333,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
   _numberOfHeapFrees++;
 
-  logTraceOut("deleteData(int)");
+  logTraceOut("deleteData(int,bool)");
 }
 
 
