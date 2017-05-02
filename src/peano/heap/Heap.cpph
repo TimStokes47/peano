@@ -244,7 +244,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
 
   assertion5(
     _heapData.find(index) != _heapData.end(), 
-    allocateNewEntry, numberOfEntries, initialCapacity, allocation, _name
+    allocateNewEntry, numberOfEntries, initialCapacity, peano::heap::toString(allocation), _name
   );
   assertion(index >= 0);
 

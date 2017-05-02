@@ -167,6 +167,28 @@ namespace peano {
     };
 
     std::string toString(MessageType type);
+
+    enum class Allocation {
+      /**
+       * Ignore any existing entries in the heap and always create new entries.
+       * This implies the the heap structure is definitely changed.
+       */
+      DoNotUseAnyRecycledEntry,
+      /**
+       * Use only recycled entries, i.e. entries that are still in the map but
+       * not used anymore. As a result, a creational event does not modify the
+       * underlying container (no new entries are created).
+       */
+      UseOnlyRecycledEntries,
+      /**
+       * Reuse recycled entries if there are still allocated entries in the
+       * heap that are not used anymore. If none is available, create a new
+       * entry. As a result, the operation might modify the heap structure.
+       */
+      UseRecycledEntriesIfPossibleCreateNewEntriesIfRequired
+    };
+
+    std::string toString(Allocation type);
   }
 }
 
@@ -395,27 +417,6 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
     ~Heap();
 
   public:
-    enum class Allocation {
-      /**
-       * Ignore any existing entries in the heap and always create new entries.
-       * This implies the the heap structure is definitely changed.
-       */
-      DoNotUseAnyRecycledEntry,
-      /**
-       * Use only recycled entries, i.e. entries that are still in the map but
-       * not used anymore. As a result, a creational event does not modify the
-       * underlying container (no new entries are created).
-       */
-      UseOnlyRecycledEntries,
-      /**
-       * Reuse recycled entries if there are still allocated entries in the
-       * heap that are not used anymore. If none is available, create a new
-       * entry. As a result, the operation might modify the heap structure.
-       */
-      UseRecycledEntriesIfPossibleCreateNewEntriesIfRequired
-    };
-
-
     typedef std::vector<Data>  HeapEntries;
 
     /**
