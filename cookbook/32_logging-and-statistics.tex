@@ -56,16 +56,16 @@ logInfo( "runAsMaster(...)", "time step " << i << ": dt=" << dt );
 
 Peano offers three levels of logging:
 \begin{itemize}
-  \item {\bf Info}. Should be used to inform your user about the application's
+  \item {\textbf Info}. Should be used to inform your user about the application's
   state.
-  \item {\bf Warning}. Should be used to inform your user about bothering
+  \item {\textbf Warning}. Should be used to inform your user about bothering
   behaviour.
   The MPI code uses it, e.g., if many messages arrive in a different order than
   expected. Messages written to the warning level are piped to
   \texttt{cerr}.
-  \item {\bf Error}. Should be used for errors. Is piped to \texttt{cerr} as
+  \item {\textbf Error}. Should be used for errors. Is piped to \texttt{cerr} as
   well.
-  \item {\bf Debug}. Should be used to write debug data. It goes to
+  \item {\textbf Debug}. Should be used to write debug data. It goes to
   \texttt{cout} and all debug data is removed if you do not translate with the compile flag
   \texttt{-DDebug}. Notably, use the \texttt{logDebug} macros when you write to
   the debug level, as all required log operations then are removed by the

@@ -312,7 +312,7 @@ void ...::State::endedGridConstructionIteration(int finestGridLevelPossible) {
     _stateData.setMaxRefinementLevelAllowed(
       _stateData.getMaxRefinementLevelAllowed()-2);
   }
-  // Nothing has changed in this grid iteration in the grid and we haven't
+  // Nothing has changed in this grid iteration in the grid and we have not
   // given out new workers. So increase the permitted maximum grid level by
   // one and give another try whether the grid adds more vertices.
   else if (

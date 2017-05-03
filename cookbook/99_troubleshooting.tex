@@ -3,7 +3,7 @@
 \section{PDT}
 
 \begin{itemize}
-  \item {\bf The PDT does not pass as the jar file is built with the wrong Java
+  \item {\textbf The PDT does not pass as the jar file is built with the wrong Java
   version}. Download the whole Peano project (from sourceforge via subversion),
   change into the directory \texttt{pdt/src}, and run
   \begin{code}
@@ -31,7 +31,7 @@ the directory.
 
 
 \begin{itemize}
-  \item {\bf My compiler terminates with `error: unknown
+  \item {\textbf My compiler terminates with `error: unknown
    attribute 'optimize' ignored*`}. We have seen this issue notably on macOS
    with CLANG replacing GCC. Unfortunately, CLANG seems to pretend to be GNU on
    some systems and then the wrong header is included. Ensure that
@@ -45,10 +45,10 @@ the directory.
 \section{Programming}
 
 \begin{itemize}
-  \item {\bf How can I find out the location of a cell}. See the documentation
+  \item {\textbf How can I find out the location of a cell}. See the documentation
   of the \texttt{VertexEnumerator}. The object has routines to query cell
   position, size and level in the spacetree.
-  \item {\bf The adaptivity pattern lacks behing my adaptivity instructions}.
+  \item {\textbf The adaptivity pattern lacks behing my adaptivity instructions}.
   For most refinement and erase calls, Peano needs at least one iteration to
   reliase them. It tries to do it faster, but usually needs these two
   iterations. Whenever Peano encounters regular subtrees, it tries to store 
@@ -61,7 +61,7 @@ the directory.
   compile with \texttt{-DnoPersistentRegularSubtrees}. This will make the grid
   react quicker to your refinement requests but might slow down the code
   significantly.
-  \item {\bf When does a grid coarsen?} If you invoke \texttt{erase}, Peano
+  \item {\textbf When does a grid coarsen?} If you invoke \texttt{erase}, Peano
   bookkeeps this coarsening requests but continues to traverse the grid. The
   actual grid then is actually coarsened in the subsequent grid sweep. If you
   trigger an erase, grid entities will not be destroyed prior to the next
@@ -82,7 +82,7 @@ the directory.
     bookkeeped but not realised yet, the state's \texttt{isGridStationary}
     attribute does not hold.
   \end{itemize}
-  \item {\bf I need the state object in my mapping}. Create a copy of the state
+  \item {\textbf I need the state object in my mapping}. Create a copy of the state
   object in \texttt{beginIteration} and to merge this copy back in \texttt{endIteration}. 
   Peano updates the State itself and the state position in memory is not fixed.
   Do never ever hold a pointer to the state object handed into
@@ -93,7 +93,7 @@ the directory.
 \section{Application tailoring}
 
 \begin{itemize}
-  \item {\bf The code requires too much memory}.
+  \item {\textbf The code requires too much memory}.
   You can try to compile your code with
   \linebreak \texttt{-DnoPersistentRegularSubtrees}.
   However, this may lead to a severe performance \linebreak
@@ -103,13 +103,13 @@ the directory.
 \section{MPI troubleshooting}
 
 \begin{itemize}
-  \item {\bf Does Peano support MPI-2?}. Yes, you can switch to MPI-2 if you add
+  \item {\textbf Does Peano support MPI-2?}. Yes, you can switch to MPI-2 if you add
   \texttt{-DMPI2}. I have experienced some issues with MPI-2 implementations and
   user-defined datatypes and thus decided to make MPI 1.3 the default. If you
   switch to MPI-2 and experience problems, you  mgiht want to have a look into
   any \texttt{records} directory and search for \texttt{initDatatype} to
   understand where issues arise.
-  \item {\bf I've altered my data types and MPI starts to crash}. There are
+  \item {\textbf I've altered my data types and MPI starts to crash}. There are
   multiple reasons why user-defined data types start to fail. Here are some
   ideas to follow-up:
     \begin{enumerate}
@@ -121,11 +121,11 @@ the directory.
       make some compilers reorder class attributes which in turns means that the
       MPI data types hold invalid byte offsets.
     \end{enumerate}
-  \item {\bf My MPI version complains about a datatype \texttt{MPI\_CXX\_BOOL}}. 
+  \item {\textbf My MPI version complains about a datatype \texttt{MPI\_CXX\_BOOL}}. 
     We have seen this with some older MPI versions. A quick fix is to translate
     your code with the additional argument
     \texttt{-DMPI\_CXX\_BOOL=MPI\_C\_BOOL}.
-  \item {\bf My code deadlocks once I increase the rank count. It seems that
+  \item {\textbf My code deadlocks once I increase the rank count. It seems that
     the ranks cannot even register at the global node pool anymore.}
     I've seen this bug with Intel MPI and Omnipath recently. It seems that some
     MPI implementations struggle to handle many polling non-blocking operations:

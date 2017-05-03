@@ -134,7 +134,7 @@ section.
 Nevertheless, I typically find it easier to use 
 the MPI compiler wrapper to translate the code as I faced
 issues when I tried to use PETSc without MPI\footnote{Please consult
-\url{http://www.mcs.anl.gov/petsc/petsc-current/docs/installation.html#i-dont-want-to-use-mpi}
+\url{http://www.mcs.anl.gov/petsc/petsc-current/docs/installation.html\#i-dont-want-to-use-mpi}
 for the usage with OpenMPI as the \texttt{LD\_LIBRARY\_PATH} has to be set
 properly.}.
 Luckily, most MPI implementations even are fine if you translate your code with
@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
    set up MPI instead of the Peano initialisation. However, Peano's
    initialisation does not check whether MPI has been set up before. 
    Thus, it makes sense to initialise Peano's MPI through
-   \texttt{peano::initParallelEnvironment(&argc,&argv)} before you initialise
+   \texttt{peano::initParallelEnvironment(\&argc,\&argv)} before you initialise
    PETSc. In return, you should invoke \texttt{PetscFinalize()} before you call
    \texttt{peano::shutdownParallelEnvironment()}.
 \end{remark}

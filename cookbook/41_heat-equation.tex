@@ -124,8 +124,8 @@ This code so far does not compile. It complains with
 --- This is Peano 3 ---
 g++ -DDim3 [...] -c myproject/adapters/CreateGridAndPlot2VTKPlotCellValue_0.cpp -o \
 myproject/adapters/CreateGridAndPlot2VTKPlotCellValue_0.o 
-[...]  In member function ‘void [...]::CreateGridAndPlot2VTKPlotCellValue_0::enterCell([...])’:
-[...] error: ‘class myproject::Cell’ has no member named ‘getEpsilon’
+[...]  In member function void [...]::CreateGridAndPlot2VTKPlotCellValue_0::enterCell([...]):
+[...] error: class myproject::Cell has no member named getEpsilon
      _cellValueWriter->plotCell(cellIndex,fineGridCell.getEpsilon() );
                                                        ^
 make: *** [myproject/adapters/CreateGridAndPlot2VTKPlotCellValue_0.o] Error 1
@@ -1127,7 +1127,9 @@ time, which is done in the snippet above right before we call \texttt{iterate}.
 \begin{itemize}
   \item   Muntean, Ioan Lucian, Mehl, Miriam, Neckel, Tobias and Weinzierl,
   Tobias (2008). {\em Concepts for Efficient Flow Solvers Based on Adaptive
-  Cartesian Grids}. In High Performance Computing in Science and Engineering, Garching 2007. Wagner, Siegfried, Steinmetz, Matthias, Bode, Arndt & Brehm, Matthias Berlin Heidelberg New York: Springer.
+  Cartesian Grids}. In High Performance Computing in Science and Engineering,
+  Garching 2007. Wagner, Siegfried, Steinmetz, Matthias, Bode, Arndt and Brehm,
+  Matthias Berlin Heidelberg New York: Springer.
   \item Weinzierl, Tobias and K\"oppl, Tobias (2012). {\em A Geometric
   Space-time Multigrid Algorithm for the Heat Equation}. Numerical Mathematics:
   Theory, Methods and Applications 5(1): 110-130.

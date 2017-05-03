@@ -184,7 +184,7 @@ The latter remark leads into code similar to
 
 
 \begin{smell}
-Depending on the grid you are working with, this modification along {\bf can
+Depending on the grid you are working with, this modification along {\textbf can
 break your grid setup and, if compiled with \texttt{-DAsserts}, trigger an
 assertion in the state class.} 
 You will then recognise that your grid consists only of $3^d$ cells.
@@ -310,7 +310,7 @@ A common pattern in the code is that you analyse manually which grid depth you
 actually need
 \begin{code}
 int exahype::runners::Runner::getCoarsestGridLevel() {
-  double boundingBox =  // bounding box of user's computational domain
+  double boundingBox =  // bounding box of computational domain
   double hMax        =  // from solver
 
   int    result      = 1;
@@ -353,7 +353,7 @@ enable the balancing to load balance also boundaries of the domain.
 
 \begin{remark}
 In the current Peano generation, the grid regularity imposed by the oracles is
-{\bf not} enforced automatically all over the place immediately. 
+{\textbf not} enforced automatically all over the place immediately. 
 It kicks in if and only if an adaptivity criterion refined near or at the
 boundary. 
 If the oracle detects this situation and the refinement level is smaller than
