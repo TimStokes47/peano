@@ -210,7 +210,7 @@ namespace peano {
  * Since a heap is kind of a global thing, this class is a singleton. Please
  * consult init() when you use the heap.
  *
- * <h1>MPI Handling</h1>
+ * <h2>MPI Handling</h2>
  *
  * The elements stored on the heap have to be modeled due to DaStGen. As a
  * result, we can send individual elements as well as sequences of classes
@@ -269,7 +269,7 @@ namespace peano {
  * heap data again after you've sent out heap data before is the grid traversal
  * where you also receive data.
  *
- * <h1> Memory footprint and alignment </h1>
+ * <h2> Memory footprint and alignment </h2>
  *
  * To reduce the memory footprint of the heaps, you may want to apply two
  * different optimisations:
@@ -292,13 +292,13 @@ namespace peano {
  * alignment.
  *
  *
- * <h1> Efficiency notes </h1>
+ * <h2> Efficiency notes </h2>
  *
  * If a lot of heap data is exchanged, the asynchronous exchange of information
  * can block all MPI buffers. In this case, it is useful to call
  * receiveDanglingMessages() from time to time manually within your mappings.
  *
- * <h1> Heap data exchange throughout forks, joins, and master-worker exchange </h1>
+ * <h2> Heap data exchange throughout forks, joins, and master-worker exchange </h2>
  *
  * The arguing above (with the inversed read order in most cases) does not hold
  * for the forks and joins, and it also does not hold if a master sends heap
@@ -307,14 +307,27 @@ namespace peano {
  * deployed to a separate tag to avoid confusion. You switch to this mode due
  * to the synchronous flag of the send and receive operation.
  *
- * <h1> Multithreading </h1>
+ * <h2> Multithreading </h2>
  *
  * The heap class is not thread-safe and does not provide any threading
  * facilities. If you use it within a multithreaded application, you have to
  * ensure all the data consistency - either via semaphores or an a priori
  * exclusion of races.
  *
- * <h1> Troubleshooting </h1>
+ * <h2> Data conversion in the background </h2>
+ *
+ * Many Peano applications deploy some data conversations (hierarchical
+ * transforms, e.g.) to background tasks. This requires a very careful
+ * treatment of the heap. The two key concepts are that heap entries are
+ * recycled, i.e. no entry is ever removed from the data structure, and the
+ * heap is blown up a priori such that there are always a few spare entries
+ * available if it has to grow.
+ *
+ * Details on typical usage patterns can be found in the documentation of
+ * reserveHeapEntriesForRecycling().
+ *
+ *
+ * <h2> Troubleshooting </h2>
  *
  * - Is your receiving mapping also calling startToSendOrReceiveHeapData()?
  * - Does each node send exactly the same number of vertices to the other nodes
@@ -554,7 +567,7 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
     int createData(int numberOfEntries=0, int initialCapacity=0, Allocation allocation = Allocation::UseRecycledEntriesIfPossibleCreateNewEntriesIfRequired);
 
     /**
-     * ## Usage pattern for heap with recycling ##
+     * <h1> Usage pattern for heap with recycling </h1>
      *
      * Reusing a heap with recycled indices is close to trivial if you do not
      * use TBBs.
@@ -601,21 +614,93 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      *   overheads.
      * - Please note that the heap implementation still is not thread-safe,
      *   i.e. you have to protect your (modified) create and delete calls with
-     *   a lock.
+     *   a lock. Often, this has to be done for all creational routines. Many
+     *   codes use background tasks. So while the creation of a hanging vertex
+     *   for example never runs concurrent to another grid event, there might
+     *   be background tasks that do delete and create routines at the same
+     *   time. I typically embed the whole creation and destruction of all
+     *   hanging nodes into semaphores.
      * - It remains important to check at several points whether the background
-     *   tasks have terminated. There are several ways to do this. One can, for
-     *   example, use another heap of bools/enums where you mark which data
-     *   pieces currently are processed. I prefer usually a simpler variant: I
-     *   hold a global integer where I count the number of compression tasks
-     *   (the compression task's constructor increments the counter while it
-     *   reduces the counter when the task functor has terminated). Whenever I
-     *   want to uncompress data, I first check in a while loop whether all
-     *   compression tasks have terminated. If not, I wait invoking
-     *   tarch::multicore::BooleanSemaphore::sendTaskToBack(). This means there
-     *   are never any uncompression tasks running while there are still
-     *   compression tasks to do.
+     *   tasks have terminated. If you convert data forth and back and deploy
+     *   one conversion to a background task for example, you have to check
+     *   whether the conversion in one direction has terminated before you
+     *   trigger a data format conversion the other way round:
      *
-     *   @todo Wie checkt man, ob schon fertig ist
+     *   Let A(B)=id be the data conversions. Operation A is triggered within
+     *   enterCell, e.g. B is triggered in leaveCell. You have decided to spawn
+     *   B as background task within leaveCell, i.e. leaveCell returns immediately.
+    *   Before you trigger A in the next traversal, you have to ensure that B has
+    *   actually terminated.
+    *
+    *   There are several ways to do this.
+    *
+    * <h2>Variant A: Global checks for task termination </h2>
+    *
+    * This is the simplest variant: I hold a global integer where I count the
+    * number of background tasks that might access the heap
+    * (the compression tasks' constructor increments the counter while we
+    * decrement the counter when the task functor has terminated). Whenever I
+    * want to access the heap within my main code, I first check in a while
+    * loop whether all background tasks have terminated. If not, I wait invoking
+    * tarch::multicore::BooleanSemaphore::sendTaskToBack(). This means there
+    * are never any background tasks when I access the heap.
+    *
+    * This is my gold version to get started with tasks running the
+    * background. The variant is slow as it does not really allow too many
+    * tasks to roam in the background and basically drawnes the pipeline
+    * before interesting work is done. The other variants realise a more
+    * localised data access pattern.
+    *
+    * <h2>Variant B.1: Per entry checks for conversion completion</h2>
+    *
+    * If each task's dataset is embedded into a hull data structure, I add a
+    * further enum to this hull with the two states and the two compression
+    * states. The tasks A and B then check whether the right state is already
+    * set and otherwise retreat into the background. The checks themselves
+    * have to be protected with a semaphore.
+    *
+    * <h2>Variant B.2: Per entry checks for conversion completion</h2>
+    *
+    * If no data structure is available that can host a status flag indicating
+    * that a record is subject to a background thread, another straightforward
+    * opportunity is to introduce a global bookkeeping of active background
+    * pieces of work:
+    *
+    * \code
+static std::set<int>                     _isCurrentlyCompressed;
+       \endcode
+    *
+    * From hereon, we make each background task in its constructor leave a
+    * marker that some data is scheduled to be compressed:
+    * \code
+boxmg::HeapEntryCompression::HeapEntryCompression(...):
+  ... {
+  tarch::multicore::Lock lock(...);
+  _isCurrentlyCompressed.insert(heapIndex);
+}
+
+
+void boxmg::HeapEntryCompression::operator()() {
+  ...
+  tarch::multicore::Lock lock(boxmg::HeapEntryCompression::_heapSemaphore);
+  _isCurrentlyCompressed.erase(heapIndex);
+     \endcode
+     *
+     * The task also removes the marker from the set once it has completed.
+     * Finally, we have to check for completed jobs before we try to access
+     * data:
+     * \code
+bool compressionHasFinished = false;
+
+while (!compressionHasFinished) {
+   tarch::multicore::Lock lock(boxmg::HeapEntryCompression::_heapSemaphore);
+   compressionHasFinished = _isCurrentlyCompressed.contains(compressedHeapIndex);
+   lock.free();
+   tarch::multicore::BooleanSemaphore::sendTaskToBack();
+}
+       \endcode
+     *
+     *
      */
     void reserveHeapEntriesForRecycling(int numberOfEntries);
 
