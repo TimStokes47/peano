@@ -202,8 +202,8 @@ def plotConcurrency(rank,inputFileName):
   timeStampPattern = "([0-9]+\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
   
-  searchPattern              = timeStampPattern + ".*rank:" + str(rank) + " .*peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel" + \
-                               ".*dt=" + floatPattern + \
+  searchPattern              = "peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel" + \
+                               ".*time=" + floatPattern + \
                                ".*cpu-time=" + floatPattern + \
                                ".*concurrent-time=" + floatPattern + \
                                ".*potential-concurrent-time=" + floatPattern + \
@@ -211,12 +211,8 @@ def plotConcurrency(rank,inputFileName):
                                ".*max-potential-concurrency-level=" + floatPattern + \
                                ".*background-tasks=" + floatPattern
 
-  lastTimeStamp = 0
-  
-  
-  maxPotentialConcurrencyLevelLastPoint = 0
-  potentialConcurrencyTimeLastPoint     = 0
-  realConcurrencyLastPoint              = 1
+  timeStamps = []
+  obtainedConcurrencyLevel   = []  
   
   try:
     inputFile = open( inputFileName,  "r" )
@@ -224,50 +220,50 @@ def plotConcurrency(rank,inputFileName):
     for line in inputFile:
       m = re.search( searchPattern, line )
       if (m):
-        timeStamp                      = float( m.group(1) )
-        dt                             = float( m.group(2) )
-        cpuTime                        = float( m.group(3) ) 
-        concurrentTime                 = float( m.group(4) )
-        potentialConcurrentTime        = float( m.group(5) ) 
-        maxConcurrencyLevel            = float( m.group(6) )
-        maxPotentialConcurrencyLevel   = float( m.group(7) ) 
-        backgroundTasks                = float( m.group(8) )
+        realTime                       = float( m.group(1) )
+        cpuTime                        = float( m.group(2) ) 
+        concurrentTime                 = float( m.group(3) ) #was ist das?
+        potentialConcurrentTime        = float( m.group(4) ) #ist kleiner als concurrentTIme bei mir
+        maxConcurrencyLevel            = float( m.group(5) ) #relativ gross bei mir
+        maxPotentialConcurrencyLevel   = float( m.group(6) ) #total klein bei mir
+        backgroundTasks                = float( m.group(7) )
         
-        
-        #print "found dt=" + str(dt) + ", cpuTime=" + str(cpuTime)
-         
-  
-        backgroundTasksBar         = pylab.Rectangle([lastTimeStamp,maxConcurrencyLevel],timeStamp-lastTimeStamp,backgroundTasks,facecolor="#0000ff",edgecolor="#0000ff")
-        maxConcurrencyLevelBar     = pylab.Rectangle([lastTimeStamp,0],timeStamp-lastTimeStamp,maxConcurrencyLevel,              facecolor="#ff0000",edgecolor="#ff0000")
-        concurrentTimeBar          = pylab.Rectangle([lastTimeStamp,0],timeStamp-lastTimeStamp,concurrentTime/dt,                facecolor="#aa0000",edgecolor="#bb3344")
+        timeStamps.append( realTime )
+        obtainedConcurrencyLevel.append( cpuTime/realTime )
 
-        maxPotentialConcurrencyLevelSymbol = pylab.plot([lastTimeStamp,timeStamp],[maxPotentialConcurrencyLevelLastPoint, maxPotentialConcurrencyLevel], "-",  color="#00ff00" )
-        potentialConcurrencyTimeSymbol     = pylab.plot([lastTimeStamp,timeStamp],[potentialConcurrencyTimeLastPoint,     potentialConcurrentTime/dt]  , ":",  color="#008800" )
-        realConcurrencyLevelSymbol         = pylab.plot([lastTimeStamp,timeStamp],[realConcurrencyLastPoint,              cpuTime/dt                ]  , "-",  color="#000000")
 
-        maxPotentialConcurrencyLevelLastPoint = maxPotentialConcurrencyLevel
-        potentialConcurrencyTimeLastPoint     = potentialConcurrentTime/dt
-        realConcurrencyLastPoint              = cpuTime/dt
 
-        ax.add_patch(backgroundTasksBar)
-        ax.add_patch(maxConcurrencyLevelBar)
-        ax.add_patch(concurrentTimeBar)
+        #backgroundTasksBar         = pylab.Rectangle([lastTimeStamp,maxConcurrencyLevel],timeStamp-lastTimeStamp,backgroundTasks,facecolor="#0000ff",edgecolor="#0000ff")
+        #maxConcurrencyLevelBar     = pylab.Rectangle([lastTimeStamp,0],timeStamp-lastTimeStamp,maxConcurrencyLevel,              facecolor="#ff0000",edgecolor="#ff0000")
+        #concurrentTimeBar          = pylab.Rectangle([lastTimeStamp,0],timeStamp-lastTimeStamp,concurrentTime/dt,                facecolor="#aa0000",edgecolor="#bb3344")
 
-        lastTimeStamp = timeStamp
+        #maxPotentialConcurrencyLevelSymbol = pylab.plot([lastTimeStamp,timeStamp],[maxPotentialConcurrencyLevelLastPoint, maxPotentialConcurrencyLevel], "-",  color="#00ff00" )
+        #potentialConcurrencyTimeSymbol     = pylab.plot([lastTimeStamp,timeStamp],[potentialConcurrencyTimeLastPoint,     potentialConcurrentTime/dt]  , ":",  color="#008800" )
+        #realConcurrencyLevelSymbol         = pylab.plot([lastTimeStamp,timeStamp],[realConcurrencyLastPoint,              cpuTime/dt                ]  , "-",  color="#000000")
+
+        #maxPotentialConcurrencyLevelLastPoint = maxPotentialConcurrencyLevel
+        #potentialConcurrencyTimeLastPoint     = potentialConcurrentTime/dt
+        #realConcurrencyLastPoint              = cpuTime/dt
+
+        #ax.add_patch(backgroundTasksBar)
+        #ax.add_patch(maxConcurrencyLevelBar)
+        #ax.add_patch(concurrentTimeBar)
         print ".",
     #pylab.plot([0,timeStamp],[1,1], "--", color="#000000")
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
+
+  pylab.plot(timeStamps,obtainedConcurrencyLevel, "-",  color="#ff0000" )
   
   ax.autoscale_view()
   ax.set_yscale('symlog', basey=2)
   
-  pylab.yticks( 
-    [1,2,8,12,16,18,24,60,72,120,180,240,480], 
-    ["1","2","8","12","16","18","24","60","72","120","180","240","480"] 
-  )
+  #pylab.yticks( 
+  #  [1,2,8,12,16,18,24,60,72,120,180,240,480], 
+  #  ["1","2","8","12","16","18","24","60","72","120","180","240","480"] 
+  #)
   
   pylab.xlabel('t')
   pylab.ylabel('Concurrency level')

@@ -260,7 +260,7 @@ if (numberOfThreads>1):
       performanceanalysisroutines.plotConcurrency(rank,args.file)
   else:
     print "plot concurrency levels"
-    performanceanalysisroutines.plotConcurrency(0)
+    performanceanalysisroutines.plotConcurrency(0,args.file)
   
 if (numberOfRanks>1):      
   print "extract fork and join statistics"

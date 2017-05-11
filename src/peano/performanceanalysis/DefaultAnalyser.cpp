@@ -307,7 +307,7 @@ void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int act
 
       logInfo(
         "changeConcurrencyLevel(int,int)",
-        "dt=" << _concurrencyReportWatch.getCalendarTime() <<
+        "time=" << _concurrencyReportWatch.getCalendarTime() <<
         ", cpu-time=" << _concurrencyReportWatch.getCPUTime() <<
         ", concurrent-time=" << _concurrentTimeSpent <<
         ", potential-concurrent-time=" << _maxPotentialConcurrentTimeSpent <<
