@@ -100,11 +100,13 @@ void peano::datatraversal::dForLoop<LoopBody>::runSequentially(
   const tarch::la::Vector<DIMENSIONS,int>&  range,
   LoopBody&                                 loopBody
 ) {
-  peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,tarch::la::volume(range));
+  const int rangeVolume = tarch::la::volume(range);
+  assertion1( tarch::la::volume(range)>0, range ); 
+  peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,rangeVolume);
   dfor(i,range) {
     loopBody(i);
   }
-  peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-tarch::la::volume(range));
+  peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-rangeVolume);
 }
 
 
