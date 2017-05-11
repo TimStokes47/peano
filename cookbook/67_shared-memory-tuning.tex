@@ -1,0 +1,44 @@
+\section{Tuning shared memory code}
+
+
+\chapterDescription
+  {
+    Around 30 minutes.
+  }
+  {
+    A working shared memory code.
+  }
+
+
+In this section, we discuss some aspects of shared memory parallelisation and
+give some hints for proper shared memory parallelisation.
+
+
+\subsection{Profiling}
+
+Like any other optimisation, I do recommend to start with some profiling. This
+should comprise the usage of proper profilers such as VTune Amplifier, but it
+also should comprise at least one run where you
+enable Peano's profiling outputs as discussed in
+Section \ref{section:performance-analysis}.
+
+Once you have obtained a program output with Peano's performance analysis
+enabled, please pass this output to Peano's performance analysis scripts:
+\begin{code}
+python .../src/peano/performanceanalysis/performanceanalysisroutines.py
+\end{code}
+\noindent
+Invoking the script without any argument displays some usage messages.
+
+
+\begin{remark}
+ Profiling Peano's shared memory behaviour induces a significant runtime
+ overhead. Furthermore, it generates lots of code. As a result, Peano does some
+ in-situ data accumulation. In return, it means that you have to run the code
+ for a decent time and on decent problem sizes to get meaningful results.
+ Otherwise, the accumulation does average out too many details.
+\end{remark}
+
+% Profiling: Was sehen wir jetzt. Dann wieder mit diesen Smells arbeiten
+% Use another oracle
+% Make colouring sphase-dpendent
