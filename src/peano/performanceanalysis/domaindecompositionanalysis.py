@@ -2,7 +2,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 
 import matplotlib
-matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
+#matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 
 import pylab
 import networkx

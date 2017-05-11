@@ -1,16 +1,20 @@
-import sys
-import re
-import matplotlib
-import gc
-matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
-import pylab
-import networkx 
-import datetime
 import argparse
+from argparse import RawTextHelpFormatter
+
+import matplotlib
+#matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
+
+#import sys
+#import re
+#import gc
+import pylab
+import networkx
+import datetime
 import performanceanalysisroutines
 
 
-from argparse import RawTextHelpFormatter
+
+#from argparse import RawTextHelpFormatter
 
 
 
