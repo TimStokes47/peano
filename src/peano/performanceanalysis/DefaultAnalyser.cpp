@@ -267,10 +267,19 @@ void peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
 
 void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int actualChange, int maxPossibleChange) {
   if (_isSwitchedOn) {
-/*
-    actualChange      = actualChange>0      ? actualChange-1 : actualChange+1;
-    maxPossibleChange = maxPossibleChange>0 ? maxPossibleChange-1 : maxPossibleChange+1;
-*/
+    if (actualChange>0) {
+      actualChange--;
+    }
+    if (actualChange<0) {
+      actualChange++;
+    }
+    if (maxPossibleChange>0) {
+      maxPossibleChange--;
+    }
+    if (maxPossibleChange<0) {
+      maxPossibleChange++;
+    }
+
     tarch::multicore::Lock lock(_concurrencyReportSemaphore);
 
     assertion4(
