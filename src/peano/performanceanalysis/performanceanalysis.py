@@ -2,11 +2,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 
 import matplotlib
-#matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 
-#import sys
-#import re
-#import gc
 import pylab
 import networkx
 import datetime
@@ -447,22 +443,12 @@ if (numberOfThreads>1):
     #  <li>Dotted black line: Concurrency level is one</li> \
     outFile.write("\
      <br /><br />\
+     <i>Performance hints/remarks: </i>\
      <p>\
-     Legend:\
-     <ul>\
-      <li>Solid black line: Real concurrency level of current code. Can be smaller 1 if code spends a lot of time in OS kernel calls.</li> \
-      <li>Solid green line: Maximum concurrency that could be used in the code if all grain sizes were set to one. Ignores background tasks.</li> \
-      <li>Dotted dark green line: Maximum algorithmic concurrency level introduced by the code. Takes not into account that background tasks (blue) might be handled in the background, i.e. real concurrency level could be higher. Is zero if code switches off parallelisation (temporarily).</li> \
-      <li>Light red bar: Average-case algorithmic concurrency level that could be obtained if the code selected grain size one everywhere. Ignores background tasks.</li> \
-      <li>Dark red bar: Average-case algorithmic concurrency observed for selected grain sizes. Takes not into account that background tasks (blue) might be handled in the background, i.e. real concurrency level could be higher.</li> \
-      <li>Blue bar: Additional tasks that are spawned into the background. They might remain there quite long (if the system is busy), but the diagram only tracks when they are first spawned.</li> \
-     </ul>\
-     If your events internally are multithreaded, this multithreading is not tracked by the performance analysis. Use a real performance analysis tool to get statements on your actual core usage. \
-     </p>\
-     <i>Performance hint: </i>\
-     <p>\
-       If your real concurrency falls below one, there has to be some IO or OS swapping that should be removed. \
-       If your real concurrency level falls below the number of cores available, your multicore usage is poor. Try to improve concurrency by reducing grain sizes in the oracle, e.g. \
+       If your real concurrency, i.e. cpu time divided by real time, falls below the number of cores, there has to be some IO or OS swapping that should be removed. This can also be an effect of exhaustive task stealing. \
+       If your real concurrency level falls below the number of cores available, your multicore usage is poor. Try to improve concurrency by reducing grain sizes, e.g. \
+       If the theoretical concurrency falls below the observed concurrency, you may assume you did run into measurement inaccuracies. \
+       If your time-averaged values fall significantly below the observed concurrency levels, then either lots of tasks run in the background and are processed with high priority, or the actual parallel sections in your code are very small. \
      </p>\
      <a href=\"#table-of-contents\">To table of contents</a>\
      ")

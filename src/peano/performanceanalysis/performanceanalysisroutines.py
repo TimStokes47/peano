@@ -202,63 +202,74 @@ def plotConcurrency(rank,inputFileName):
   timeStampPattern = "([0-9]+\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
   
-  searchPattern              = "peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel" + \
-                               ".*time=" + floatPattern + \
-                               ".*cpu-time=" + floatPattern + \
-                               ".*concurrent-time=" + floatPattern + \
-                               ".*potential-concurrent-time=" + floatPattern + \
+  searchPattern              = timeStampPattern + ".*rank:" + str(rank) + " .*peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel" + \
+                               ".*dt_real=" + floatPattern + \
+                               ".*dt_cpu=" + floatPattern + \
+                               ".*time-averaged-concurrency-level=" + floatPattern + \
+                               ".*time-averaged-potential-concurrency-level=" + floatPattern + \
                                ".*max-concurrency-level=" + floatPattern + \
                                ".*max-potential-concurrency-level=" + floatPattern + \
                                ".*background-tasks=" + floatPattern
 
   timeStamps = []
-  obtainedConcurrencyLevel   = []  
-  
+  measuredConcurrencyLevels     = []  
+  obtainedConcurrencyLevels     = []  
+  maxConcurrencyLevels          = []
+  maxPotentialConcurrencyLevels = []
+  numberOfBackgroundTasks       = []  
+  timeAveragedConcurrencyLevels = []
+  timeAveragedPotentialConcurrencyLevels = []
+
   try:
     inputFile = open( inputFileName,  "r" )
     print "parse concurrency level of rank " + str(rank),
     for line in inputFile:
       m = re.search( searchPattern, line )
       if (m):
-        realTime                       = float( m.group(1) )
-        cpuTime                        = float( m.group(2) ) 
-        concurrentTime                 = float( m.group(3) ) #was ist das?
-        potentialConcurrentTime        = float( m.group(4) ) #ist kleiner als concurrentTIme bei mir
-        maxConcurrencyLevel            = float( m.group(5) ) #relativ gross bei mir
-        maxPotentialConcurrencyLevel   = float( m.group(6) ) #total klein bei mir
-        backgroundTasks                = float( m.group(7) )
+        realTime                          = float( m.group(1) )
+        dtRealTim                         = float( m.group(2) ) 
+        dtCPUTime                         = float( m.group(3) ) 
+
+
+        timeAveragedConcurrency           = float( m.group(4) )
+        timeAveragedPotentialConcurrency  = float( m.group(5) )
+
+        maxConcurrencyLevel               = float( m.group(6) )
+        maxPotentialConcurrencyLevel      = float( m.group(7) )
+        backgroundTasks                   = float( m.group(8) )
         
         timeStamps.append( realTime )
-        obtainedConcurrencyLevel.append( cpuTime/realTime )
+        measuredConcurrencyLevels.append( dtCPUTime/dtRealTim )
 
+        maxConcurrencyLevels.append( maxConcurrencyLevel )
+        maxPotentialConcurrencyLevels.append( maxPotentialConcurrencyLevel )
+        numberOfBackgroundTasks.append( backgroundTasks )
 
+        timeAveragedConcurrencyLevels.append(timeAveragedConcurrency/dtRealTim) 
+        timeAveragedPotentialConcurrencyLevels.append(timeAveragedPotentialConcurrency/dtRealTim)
 
-        #backgroundTasksBar         = pylab.Rectangle([lastTimeStamp,maxConcurrencyLevel],timeStamp-lastTimeStamp,backgroundTasks,facecolor="#0000ff",edgecolor="#0000ff")
-        #maxConcurrencyLevelBar     = pylab.Rectangle([lastTimeStamp,0],timeStamp-lastTimeStamp,maxConcurrencyLevel,              facecolor="#ff0000",edgecolor="#ff0000")
-        #concurrentTimeBar          = pylab.Rectangle([lastTimeStamp,0],timeStamp-lastTimeStamp,concurrentTime/dt,                facecolor="#aa0000",edgecolor="#bb3344")
-
-        #maxPotentialConcurrencyLevelSymbol = pylab.plot([lastTimeStamp,timeStamp],[maxPotentialConcurrencyLevelLastPoint, maxPotentialConcurrencyLevel], "-",  color="#00ff00" )
-        #potentialConcurrencyTimeSymbol     = pylab.plot([lastTimeStamp,timeStamp],[potentialConcurrencyTimeLastPoint,     potentialConcurrentTime/dt]  , ":",  color="#008800" )
-        #realConcurrencyLevelSymbol         = pylab.plot([lastTimeStamp,timeStamp],[realConcurrencyLastPoint,              cpuTime/dt                ]  , "-",  color="#000000")
-
-        #maxPotentialConcurrencyLevelLastPoint = maxPotentialConcurrencyLevel
-        #potentialConcurrencyTimeLastPoint     = potentialConcurrentTime/dt
-        #realConcurrencyLastPoint              = cpuTime/dt
-
-        #ax.add_patch(backgroundTasksBar)
-        #ax.add_patch(maxConcurrencyLevelBar)
-        #ax.add_patch(concurrentTimeBar)
         print ".",
-    #pylab.plot([0,timeStamp],[1,1], "--", color="#000000")
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
 
-  pylab.plot(timeStamps,obtainedConcurrencyLevel, "-",  color="#ff0000" )
+  pylab.plot(timeStamps,measuredConcurrencyLevels,     "-",  label="cpu time/real time",        color="#000000" )
+  pylab.plot(timeStamps,maxConcurrencyLevels,          "-",  label="max concurrency level",     color="#ff0000" )
+  pylab.plot(timeStamps,maxPotentialConcurrencyLevels, "--", label="pot. concurrency level", color="#bb2323" )
+  pylab.plot(timeStamps,numberOfBackgroundTasks,       "-",  label="no of background tasks",    color="#00ff00" )
+  pylab.plot(timeStamps,timeAveragedConcurrencyLevels, "-",  label="time averaged concurrency levels", color="#0000ff" )
+  pylab.plot(timeStamps,timeAveragedPotentialConcurrencyLevels, "--", label="time averaged pot. concurrency levels", color="#2323ff" )
   
   ax.autoscale_view()
   ax.set_yscale('symlog', basey=2)
+
+  try:
+    pylab.legend(fontsize=9, framealpha=0.5)
+  except:
+    # old pylab version
+    l = pylab.legend(prop={'size':9})
+    l.get_frame().set_alpha(0.5)
   
   #pylab.yticks( 
   #  [1,2,8,12,16,18,24,60,72,120,180,240,480], 

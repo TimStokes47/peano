@@ -53,20 +53,23 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     tarch::multicore::BooleanSemaphore  _concurrencyReportSemaphore;
 
     int                                 _currentConcurrencyLevel;
-    int                                 _currentMaxPotentialConcurrencyLevel;
+    int                                 _currentPotentialConcurrencyLevel;
 
-    int                                 _numberOfSpawnedBackgroundTask;
-    double                              _concurrentTimeSpent;
-    double                              _maxPotentialConcurrentTimeSpent;
     double                              _maxConcurrencyLevel;
     double                              _maxPotentialConcurrencyLevel;
+
+    double                              _timeAveragedConcurrencyLevel;
+    double                              _timeAveragedPotentialConcurrencyLevel;
+
+    int                                 _numberOfSpawnedBackgroundTask;
 
     /**
      * Is never piped out. It is used to find out whether to stream a snapshot
      * or not, i.e. to control the data dumps.
      */
-    double                              _lastConcurrencyDataUpdateTimeStamp;
-    double                              _lastConcurrencyDataWriteTimeStamp;
+    double                              _lastConcurrencyDataUpdateRealTimeStamp;
+    double                              _lastConcurrencyDataWriteRealTimeStamp;
+    double                              _lastConcurrencyDataWriteCPUTimeStamp;
 
     /**
      * Given in seconds.
