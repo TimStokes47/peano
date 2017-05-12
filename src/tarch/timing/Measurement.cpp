@@ -101,11 +101,6 @@ void tarch::timing::Measurement::setValue(const double& value) {
     _isAccurateValue = _numberOfMeasurements>0 && differenceDueToNewValue < _accuracy;
   }
 
-  logDebug("setValue", "setting " << static_cast<int>(_numberOfMeasurements) << "th value = " << value
-      << ", current deviation=" << ((_accumulatedValue+value) / (_numberOfMeasurements+1) - _accumulatedValue / _numberOfMeasurements)
-      << ", accumulatedValue=" << _accumulatedValue << ", _numberOfMeasurements" << _numberOfMeasurements
-      << ", isAccurateValue=" << _isAccurateValue << ", _accuracy=" << _accuracy);
-
   if (_min>value) {
     _min = value;
     _minMeasurement = _numberOfMeasurements;
@@ -118,6 +113,11 @@ void tarch::timing::Measurement::setValue(const double& value) {
   _accumulatedValue     += value;
   _accumulatedSquares   += value*value;
   _numberOfMeasurements += 1.0;
+
+  logDebug("setValue", "set " << static_cast<int>(_numberOfMeasurements) << "th value = " << value
+      << ", current deviation=" << ((_accumulatedValue+value) / (_numberOfMeasurements+1) - _accumulatedValue / _numberOfMeasurements)
+      << ", accumulatedValue=" << _accumulatedValue << ", _numberOfMeasurements" << _numberOfMeasurements
+      << ", isAccurateValue=" << _isAccurateValue << ", _accuracy=" << _accuracy);
 }
 
 
