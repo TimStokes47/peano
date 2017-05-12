@@ -368,12 +368,12 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * have been initialised before, i.e. for each adjacent vertex either 
      * touchVertexFirstTime() or createHangingVertex() has been called. 
      *
-     * !!! Vertex and cell lifecycle
+     * <h2> Vertex and cell lifecycle </h2>
      * 
      * Please consult peano/grid/vertex-lifecycle.doxys for details on the 
      * vertex and cell lifecycle.
      *
-     * !!! Hanging nodes outside the computational domain
+     * <h2> Hanging nodes outside the computational domain </h2>
      *
      * For performance reasons, Peano does not check whether a hanging node 
      * is outside of the computational domain or (in the parallel case) does 
@@ -389,8 +389,12 @@ class __THIS_QUALIFIED_TYPENAME__ {
  if ( fineGridVertex.isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() ) ) {
    ...
      \endcode  
-     *  
-     * @see peano::MappingSpecification for information on thread safety.
+     *
+     *     
+     * <h2> Multithreading </h2> 
+     * 
+     * Multiple createHangingVertex() invocations might be triggered at the 
+     * same time.
      */
     void createHangingVertex(
       __NAMESPACE__::Vertex&               fineGridVertex,
@@ -406,16 +410,21 @@ class __THIS_QUALIFIED_TYPENAME__ {
     /**
      * Counterpart of create operation
      *
-     * !!! Thread-safety
+     * <h2> Thread-safety </h2>
      *
      * This operation is not thread safe with respect to the coarse grid 
      * vertices and the coarse grid cell. With respect to the fine grid 
      * vertices, it is thread safe.
      *
-     * !!! Vertex and cell lifecycle
+     * <h2> Vertex and cell lifecycle </h2> 
      * 
      * Please consult peano/grid/vertex-lifecycle.doxys for details on the 
      * vertex and cell lifecycle.
+     *     
+     * <h2> Multithreading </h2> 
+     * 
+     * Multiple destroyHangingVertex() invocations might be triggered at the 
+     * same time.
      */
     void destroyHangingVertex(
       const __NAMESPACE__::Vertex&   fineGridVertex,
