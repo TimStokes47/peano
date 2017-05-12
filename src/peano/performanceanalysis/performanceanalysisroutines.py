@@ -202,7 +202,7 @@ def plotConcurrency(rank,inputFileName):
   timeStampPattern = "([0-9]+\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
   
-  searchPattern              = timeStampPattern + ".*rank:" + str(rank) + " .*peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel" + \
+  searchPatternConcurrencyPattern = timeStampPattern + ".*rank:" + str(rank) + " .*peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel" + \
                                ".*dt_real=" + floatPattern + \
                                ".*dt_cpu=" + floatPattern + \
                                ".*time-averaged-concurrency-level=" + floatPattern + \
@@ -210,6 +210,10 @@ def plotConcurrency(rank,inputFileName):
                                ".*max-concurrency-level=" + floatPattern + \
                                ".*max-potential-concurrency-level=" + floatPattern + \
                                ".*background-tasks=" + floatPattern
+
+  searchPatternBeginIteration = timeStampPattern + ".*rank:" + str(rank) + " .*peano::performanceanalysis::DefaultAnalyser::beginIteration";
+
+  threads = getNumberOfThreads(inputFileName)
 
   timeStamps = []
   measuredConcurrencyLevels     = []  
@@ -224,12 +228,15 @@ def plotConcurrency(rank,inputFileName):
     inputFile = open( inputFileName,  "r" )
     print "parse concurrency level of rank " + str(rank),
     for line in inputFile:
-      m = re.search( searchPattern, line )
+      m = re.search( searchPatternBeginIteration, line )
+      if (m):
+        realTime                          = float( m.group(1) )
+        pylab.plot([realTime,realTime],[0,threads], "--", color="#767676" )
+      m = re.search( searchPatternConcurrencyPattern, line )
       if (m):
         realTime                          = float( m.group(1) )
         dtRealTim                         = float( m.group(2) ) 
         dtCPUTime                         = float( m.group(3) ) 
-
 
         timeAveragedConcurrency           = float( m.group(4) )
         timeAveragedPotentialConcurrency  = float( m.group(5) )
