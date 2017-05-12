@@ -39,6 +39,142 @@ Invoking the script without any argument displays some usage messages.
  Otherwise, the accumulation does average out too many details.
 \end{remark}
 
+
+\begin{center}
+ \includegraphics[width=0.6\textwidth]{67_shared-memory-tuning/trace-concurrency.pdf}
+\end{center}
+
+\noindent
+Peano's shared memory profiling yields four different types of data.
+These data stem from very small time sampling intervals. While the data is
+sampled in small intervals, Peano dumps the aggregated data to the terminal only
+every few seconds. As a result, data is noisy/smoothed out.
+The data sets are coloured and we typically distinguish actual concurrency
+behaviour to behaviour that could have been obtained if we had split up all
+parallel codes into tiny little atomic tasks:
+
+\begin{enumerate}
+  \item The ``measured'' concurrency level is the cpu time burnt divided by the
+  real time. Usually, this should be around the number of cores/threads you use
+  as your system charges you for every physical thread.
+  \item The maximum concurrency is the maximum number of threads that could have
+  been idle over a small time interval. Peano works in terms of tasks. If the
+  number of tasks exceeds the number of threads, the observed concurrency is
+  smaller than the derived maximum concurrency. 
+  \item The time averaged concurrency weights the individual subsamples averaged
+  into one data dump with the underlying time spans, i.e.~it is something alike
+  $\frac{\int _T f dt }{|T|}$.
+  \item The number of background tasks tries to estimate how many background
+  tasks are available at any given time. Peano does not realise a mechanism
+  tracking the real number of background tasks, so this is a lower bound. There
+  might be more tasks still pending in your system.
+\end{enumerate}
+
+
+\subsection{The measured concurrency level equals two}
+
+\begin{smell}
+ The measured concurrency level equals two no matter how many cores we try to
+ use. Peano runs on a machine with more than one core.
+\end{smell}
+
+\noindent
+As all cores today offer hyperthreading, we've ran into this smell when the
+operating system/scheduler did mask/pin our code onto exactly one core. 
+The code then uses the hyperthread, but cannot really scale beyond the core.
+This is for example done by IBM's load balancer if you don't set the OpenMP
+threads correctly---even if you don't use OpenMP but TBBs.
+
+ 
+\subsection{Low concurrency levels}
+
+
+\begin{smell}
+ The (theoretical) concurrency level (black line) is very small. As a result,
+ the obtained concurrency level is small, too.
+\end{smell}
+
+\noindent
+There are multiple ways to tackle such a behaviour. Their ultimate goal is to
+increase the concurrency of the code. However, you have to be careful: A
+brilliant concurrency does not automatically mean that the code runs faster as
+threads might be too small. So any optimisation here deserves a careful tracking
+of total runtimes.
+
+\begin{enumerate}
+  \item Whenever Peano runs into a set of independent events such as
+  \texttt{touchVertexFirstTime}, it does not automatically trigger them in
+  parallel. Instead it first computes the cardinality of this set and then asks
+  an oracle whether to process this set in parallel. The oracle not only says
+  yes/no but also identifies well-suited grain sizes, i.e.~the minimal subset
+  size. If you observe a low concurrency, it is a straightforward strategy to
+  play around with the settings of the dummy oracle (if you use this one;
+  cmp.~Section \ref{section:shared-memory:preparation}) or to use another oracle
+  that is able to learn and to adopt the grain sizes automatically. You might also
+  decide to write your own oracle.
+  \item Whenever Peano runs into a set of (potentially) concurrent events, it
+  evaluates the corresponding mapping specifications which concurrency
+  constraints have to hold. Basically, they define in a colouring language
+  (similar to red-black Gau\ss-Seidel) which events may run in parallel. If an
+  adapter merges multiple events, the most restrictive constraint system
+  dominates. If your overall concurrency level is too small, it is thus worth to
+  study whether these constraint systems can be relaxed.
+  \item Finally, you might decide to parallelise your own code within the
+  mappings.
+\end{enumerate}
+
+
+\begin{remark}
+  The mapping specifications are \textbf{not} static, i.e.~they can evaluate the
+  mapping's state. In several projects, I found that some very restrictive
+  colouring schemes are mandatory (in classic multigrid, I need often for
+  example a $7^d$ colouring to ensure that no two vertices restrict their
+  residual at the same time to a coarse vertex). However, they are not mandatory
+  all the time, i.e.~I can make the specification query return a less
+  restrictive pattern from time to time which speeds up the code significantly.
+\end{remark}
+
+\noindent
+If you program your own code, you might want to use Peano's
+\texttt{peano::grid::datatraversal::} \texttt{TaskSet} to split up your code
+into multiple tasks. It then is independent of TBB/OpenMP. Furthermore, there's a macro
+\texttt{pfor} in the \texttt{tarch/multicore} directory that allows you to write
+parallel for loops that are again independent of the underlying shared memory
+parallelisation scheme. A d-dimensional extension exists, too.
+
+All of these helper functions again require a grain size which determines
+whether and with which cardinality problems are to be split up.
+You can use Peano's oracle mechanism here.
+Whenever you ask the oracle for a grain size, you have to pass it the code
+location.
+Usually such a flag indicates some part of the grid management.
+However, there's also a set of user-defined markers.
+Use those (you have to bookkeep which ones you use where) to integrate into
+Peano's oracle mechanism.
+
+ 
+Here is an example from the ExaHyPE project where we use the tenth user-defined
+marker:
+\begin{code}
+#include "tarch/multicore/Loop.h"
+
+[...]
+
+const int ProblemSize = ...;
+auto grainSize = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
+ ProblemSize,
+ peano::datatraversal::autotuning::MethodTrace::UserDefined9
+); 
+// equals for(int i=0; i<ProblemSize; i++)
+pfor(i, 0, ProblemSize, grainSize.getGrainSize())
+  [...]
+endpfor
+grainSize.parallelSectionHasTerminated();
+\end{code}
+
+
+
 % Profiling: Was sehen wir jetzt. Dann wieder mit diesen Smells arbeiten
-% Use another oracle
-% Make colouring sphase-dpendent
+
+% Die Trheads nehmen hier zuviel weg!!!
+% Wir sollten nur dann spawnen, wenn no welche ueber sind.
