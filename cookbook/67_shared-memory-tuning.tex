@@ -174,7 +174,98 @@ grainSize.parallelSectionHasTerminated();
 
 
 
-% Profiling: Was sehen wir jetzt. Dann wieder mit diesen Smells arbeiten
+\subsection{Low time-averaged concurrency}
 
-% Die Trheads nehmen hier zuviel weg!!!
-% Wir sollten nur dann spawnen, wenn no welche ueber sind.
+To identify/hunt down this issue, I strongly recommend that you switch off all
+of your background tasks, i.e.~tasks you fire and later check for completion.
+Tasks running independently in the background are a powerful tool to exploit
+many cores, but they also tend to make performance data more difficult to
+digest.
+Furthermore, they help to exploit the cores but the core grid stuff usually
+should already scale all alone without them, i.e.~they cannot compensate for a
+poor grid concurrency.
+
+
+\begin{smell}
+  The time averaged concurrency is very small though both the maximum
+  concurrency level and the cpu occupation (cpu time by real time) both exceed
+  the core count. The code is not really fast.
+\end{smell}
+
+\noindent
+The plot we are speaking about here are the blue lines. If they are small but
+the black line approaches the number of cores, we have to assume that the code
+consists of a lot of small tasks that are computationally very cheap.
+While the code exploits the cores to process work concurrently, it spends quite
+some time in administrating these tasks (scheduling) and running through serial
+code parts that are sprinkled in between all the parallel code parts.
+Furthermore, it might do quite some data consistency operations.
+
+
+There is no siler bullet in this case, i.e.~if you can't increase the arithmetic
+intensity significantly, you basically have to run through a series of trial and
+error ideas without any guarantee of success:
+
+\begin{enumerate}
+  \item Peano internally realises a BSP-style data flow: Whenever the grid
+  traversal runs into some section of the code that shall run in parallel, it
+  copies all the mapping objects and triggers the parallel traversal. Once this
+  traversal has terminated, it merges all the mappings again. Obviously, this is
+  unneccessary overhead if the mappings' states do not change. In this case, we
+  could omit the copying and the merging. To tell Peano to skip them, please set
+  the last entry in the corresponding event specifications to \texttt{false}:
+  \begin{code}
+peano::MappingSpecification  
+myprobject::mappings::MyMaping::ascendSpecification() { 
+ return peano::MappingSpecification(
+  peano::MappingSpecification::Nop,
+  peano::MappingSpecification::AvoidCoarseGridRaces,
+  false // This false eliminates all the copying 
+ );
+}
+  \end{code}
+  In most of my own experiments, manipulating this flag howeve has only a very
+  limited impact; often, it even backfires.
+  \item Peano internally linearises the whole spacetree and, when it runs
+  through the tree, reads on one data stream and pipes out the data stream for
+  the subsequent iteration. There is an alternative storage scheme that is
+  applies if a whole region of the grid remains stationary, is regular and the
+  shared memory parallelisation tells the code to do so\footnote{The  design
+  here is slightly flawed---a decision which storage format to choose has
+  basically nothing to do with shared memory parallelisation. We hijack the
+  shared memory decision making nevertheless as this storage decision starts to
+  have its major influence once shared memory parallelisation is switched on.}.
+  If you have a rather regular, starionary grid, you can doublecheck which
+  storage format is chosen by letting \texttt{peano::grid} plot its stuff. You
+  should obtain messages alike
+  \begin{code}
+  regular grid of height 5 used nonpersistently/persistently=0/1 times
+  \end{code}
+  and the index left of the \texttt{/} should be high(er). It depends on the
+  type of shared memory oracle whether you can manually enforce a persistent
+  storage. Please study the constructor's arguments.
+\end{enumerate}
+
+
+\begin{center}
+ \includegraphics[width=0.8\textwidth]{67_shared-memory-tuning/vtune.png}
+ \\
+ {\footnotesize
+  Typically VTune snapshot that uncovers very high spinning timings.  
+ }
+\end{center}
+
+\begin{smell}
+  The time averaged concurrency is very small though the code seems to exploit
+  all cores. VTune complains about a lot of spinning.
+\end{smell}
+
+\noindent
+There are basically two things you can do: 
+
+\begin{enumerate}
+  \item You can increase the grain sizes delivered by the shared memory oracles.
+  If you use autotuning, this should automatically be done.
+  \item If you use background tasks, try to fuse multiple of these tasks into
+  a single one.
+\end{enumerate}
