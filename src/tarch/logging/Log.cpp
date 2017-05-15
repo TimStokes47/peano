@@ -33,8 +33,9 @@ tarch::logging::Log::Log(const std::string& className):
 
   #if !defined(SharedTBB) && !defined(SharedTBBInvade)
   if (_startupTime==0.0) {
-  #ifdef SharedOMP
+  #if defined(SharedOMP)
     _startupTime       = omp_get_wtime();
+  #elif defined(SharedTBB)
     _startupTime       = tbb::tick_count::now();
   #elif defined(__APPLE__)
     static mach_timebase_info_data_t s_timebase_info;
