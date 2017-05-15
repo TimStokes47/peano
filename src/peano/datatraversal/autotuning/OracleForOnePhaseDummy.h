@@ -70,13 +70,11 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
 
     /**
      * Dummy oracle
-     *
-     * @param splitTheTree (0=no, 1=yes and parallelise, 2=yes, but do not parallelise any events on the regular subgrid
      */
     OracleForOnePhaseDummy(
       bool useMultithreading                  = true,
       int  grainSizeOfUserDefinedRegions      = 0,
-      SplitVertexReadsOnRegularSubtree splitTheTree = SplitVertexReadsOnRegularSubtree::DoNotSplit,
+      SplitVertexReadsOnRegularSubtree splitTheTree = SplitVertexReadsOnRegularSubtree::Split,
       bool pipelineDescendProcessing          = false,
       bool pipelineAscendProcessing           = false,
       int  smallestProblemSizeForAscendDescend  = tarch::la::aPowI(DIMENSIONS,3*3*3*3/2),
