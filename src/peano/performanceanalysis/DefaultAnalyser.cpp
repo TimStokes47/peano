@@ -330,7 +330,7 @@ void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int act
         ", background-tasks=" << _numberOfSpawnedBackgroundTask
       );
 
-      _numberOfSpawnedBackgroundTask      = 0;
+      _numberOfSpawnedBackgroundTask      /= 4;
 
       _timeAveragedConcurrencyLevel          = 0;
       _timeAveragedPotentialConcurrencyLevel = 0;
