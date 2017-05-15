@@ -357,7 +357,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         ) {
           _state.updateRefinementHistoryAfterLoad( false, false, false, true );
           _fineGridVertices[positionInVertexArray].erase();
-          logDebug( "operator()", "erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity is set to " << peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary() );
+          logDebug( "updateGeometry(...)", "erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity is set to " << peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary() );
         }
         break;
       case peano::geometry::GeometryHelper::CreateInnerVertex:
@@ -374,7 +374,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToInside();
         _state.updateRefinementHistoryAfterLoad( false, false, false, true );
-        logDebug( "load_vertices()", "switch vertex to inside. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
+        logDebug( "updateGeometry(...)", "switch vertex to inside. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
         break;
       case peano::geometry::GeometryHelper::CreateBoundaryVertex:
         logDebug( "updateGeometry(...)", "CreateBoundaryVertex" );
