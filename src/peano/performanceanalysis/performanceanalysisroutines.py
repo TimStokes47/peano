@@ -194,10 +194,10 @@ def parseInputFile(numberOfRanks,inputFileName):
 
 def plotConcurrency(rank,inputFileName):
   pylab.clf()
-  #pylab.title( "Concurrency levels" )
+  pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
+  pylab.title( "Concurrency levels" )
 
   ax = pylab.gca()
-  #ax.set_aspect('equal','box')
   
   timeStampPattern = "([0-9]+\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
@@ -322,10 +322,9 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   releaseAsynchronousBoundaryExchangeColor = "#abab00"
 
   pylab.clf()
-  #pylab.figure(figsize=(numberOfRanks,numberOfRanks))
+  pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
   pylab.title( "MPI phases overview" )
   ax = pylab.gca()
-  #ax.set_aspect('equal','box')
   
   timeStampPattern = "([0-9]+\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
@@ -478,6 +477,7 @@ def plotForkJoinStatistics(numberOfRanks,inputFileName):
   
   
   pylab.clf()
+  pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
   pylab.title( "Fork and join statistics" )
 
   pylab.plot(timelineOfWorkingNodes, numberOfWorkingNodes, 'o-',  markersize=10, color='#ffaa00', label='working nodes' )
@@ -808,6 +808,7 @@ def setGeneralPlotSettings():
 
 def plotGlobalGridOverview(numberOfRanks,inputFileName):
   pylab.clf()
+  pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
   pylab.title( "Cells on global master" )
 
   pylab.plot(tTotal[0], numberOfInnerLeafCells[0], 'o-',  markersize=10, color='#ff0000', label='#inner leaf cells' )
@@ -883,6 +884,7 @@ def plotGlobalGridOverview(numberOfRanks,inputFileName):
 
 def plotWalltimeOverview(numberOfRanks,inputFileName): 
   pylab.clf()
+  pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
   pylab.title( "Walltime" )
   pylab.ylabel( "time per grid sweep [t]=s" )
   x = pylab.arange(0, len(tTotal[0]), 1.0)
@@ -904,6 +906,7 @@ def plotWalltimeOverview(numberOfRanks,inputFileName):
 
 def plotStatisticsForRank(currentRank,numberOfRanks,inputFileName):
   pylab.clf()
+  pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
   pylab.title( "Walltime" )
   pylab.plot(tTotal[0], tTraversal[0], '-',  markersize=10, color='#000066', label='time per traversal (global master)' )
   if len(tTotal[currentRank])==len(tTraversal[currentRank]):

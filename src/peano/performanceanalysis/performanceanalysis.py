@@ -444,12 +444,13 @@ if (numberOfThreads>1):
     outFile.write("\
      <br /><br />\
      <i>Performance hints/remarks: </i>\
-     <p>\
-       If your real concurrency, i.e. cpu time divided by real time, falls below the number of cores, there has to be some IO or OS swapping that should be removed. This can also be an effect of exhaustive task stealing. \
-       If your real concurrency level falls below the number of cores available, your multicore usage is poor. Try to improve concurrency by reducing grain sizes, e.g. \
-       If the theoretical concurrency falls below the observed concurrency, you may assume you did run into measurement inaccuracies. \
-       If your time-averaged values fall significantly below the observed concurrency levels, then either lots of tasks run in the background and are processed with high priority, or the actual parallel sections in your code are very small. \
-     </p>\
+     <ul>\
+       <li>If your real concurrency, i.e. cpu time divided by real time, falls below the number of cores, there has to be some IO or OS swapping that should be removed. This can also be an effect of exhaustive task stealing. </li>\
+       <li>If your real concurrency level falls below the number of cores available, your multicore usage is poor. Try to improve concurrency by reducing grain sizes, e.g. </li>\
+       <li>If the theoretical concurrency falls below the observed concurrency, you may assume you did run into measurement inaccuracies. </li>\
+       <li>If your time-averaged values fall significantly below the observed concurrency levels, then either lots of tasks run in the background and are processed with high priority, or the actual parallel sections in your code are very small. </li>\
+       <li>The grid management might decide to try to hide the levels' computations behind the actual data load processes. In this case, you have background tasks even though you do not use background tasks yourself. </li>\
+     </ul>\
      <a href=\"#table-of-contents\">To table of contents</a>\
      ")
   if (numberOfRanks>1):      
