@@ -16,7 +16,6 @@ peano::datatraversal::TaskSet::TaskSet(
 
   tbb::task::enqueue(*tbbTask);
   #elif defined(SharedOMP)
-    #warning @Vasco OpenMP Implementierung evtl. nicht mehr up-to-date
     #pragma omp task shared(myTask)
     {
       Functor copyOfMyTask(myTask);

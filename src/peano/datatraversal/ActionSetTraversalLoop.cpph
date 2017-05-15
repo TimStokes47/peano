@@ -71,8 +71,6 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
     if(grainSize < traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()) {
       LoopBody localIterationLoopBody(loopBody);
 
-      #warning @Vasco OpenMP Implementierung evtl. nicht mehr up-to-date
-
       #pragma omp parallel
       {
         #pragma omp for schedule(dynamic, grainSize) firstprivate(localIterationLoopBody)
@@ -92,31 +90,6 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()/grainSize,-traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
   }
 }
-
-
-#ifdef SharedCobra
-template <class LoopBody>
-void peano::datatraversal::ActionSetTraversalLoop< LoopBody >::realiseParallelForAsTaskBipartitioning(
-  ::cobra::blocked_range<int>                     range,
-  ::cobra::continuator&                           ctr,
-  const peano::datatraversal::ActionSet&  actionSet,
-  const LoopBody&                                 loopBody
-) {
-  if (range.is_divisible()) {
-    ::cobra::blocked_range<int>  range1, range2;
-    range.split(range1, range2);
-    ctr.fork<0>([=](::cobra::continuator &ctr){realiseParallelForAsTaskBipartitioning(range1, ctr, actionSet, loopBody);});
-    ctr.fork<1>([=](::cobra::continuator &ctr){realiseParallelForAsTaskBipartitioning(range2, ctr, actionSet, loopBody);});
-    ctr.join([]{});
-  }
-  else {
-    LoopBody localIterationLoopBody(loopBody);
-    for (int i=range.begin(); i!=range.end(); i++) {
-      localIterationLoopBody(actionSet.getAction(i));
-    }
-  }
-}
-#endif
 
 
 #ifdef SharedTBB

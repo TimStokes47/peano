@@ -185,7 +185,8 @@ class peano::datatraversal::dForLoop {
 
     class dForLoopInstanceWithoutReduction {
       private:
-        const LoopBody&                    _loopBody;
+        //const LoopBody&                    _loopBody;
+        LoopBody                           _loopBody;
 
         tarch::la::Vector<DIMENSIONS,int>  _offset;
         const int                          _padding;
