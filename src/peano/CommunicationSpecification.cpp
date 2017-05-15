@@ -69,7 +69,7 @@ peano::CommunicationSpecification operator&(const peano::CommunicationSpecificat
 
 peano::CommunicationSpecification peano::CommunicationSpecification::combine(const peano::CommunicationSpecification& lhs, const peano::CommunicationSpecification& rhs) {
   static tarch::logging::Log _log( "peano::CommunicationSpecification" );
-  logTraceInWith2Arguments("operator&(...)", lhs.toString(), rhs.toString() );
+  logTraceInWith2Arguments("combine(...)", lhs.toString(), rhs.toString() );
 
   peano::CommunicationSpecification::ExchangeMasterWorkerData exchangeMasterWorkerData;
   peano::CommunicationSpecification::ExchangeWorkerMasterData exchangeWorkerMasterData;
@@ -113,13 +113,13 @@ peano::CommunicationSpecification peano::CommunicationSpecification::combine(con
     &&
     (rhs!=getMinimalSpecification())
   ) {
-    logWarning( "operator&(...)", "two communication specifications do not agree on heap control. lhs=" << lhs.toString() << ", rhs=" << rhs.toString() << " (minimial spec=" << getMinimalSpecification().toString() << ")" );
+    logWarning( "combine(...)", "two communication specifications do not agree on heap control. lhs=" << lhs.toString() << ", rhs=" << rhs.toString() << " (minimial spec=" << getMinimalSpecification().toString() << ")" );
   }
   #endif
 
   const peano::CommunicationSpecification result(exchangeMasterWorkerData,exchangeWorkerMasterData, lhs.controlHeapInKernel | rhs.controlHeapInKernel);
 
-  logTraceOutWith1Argument("operator&(...)",result.toString());
+  logTraceOutWith1Argument("combine(...)",result.toString());
   return result;
 }
 
