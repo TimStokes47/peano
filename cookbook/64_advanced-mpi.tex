@@ -175,12 +175,46 @@ send call before the actual data exchange is triggered.
 If lots of sends do not actually transfer data (get passed 0), this means lots of zeros 
 dripple through the network.
 
-Peano also offers RLE variants of the heaps.
+Peano also offers RLE variants of the heaps (runtime lenght encoding).
 Those guys do not send out 0 messages.
 Instead they collect all the zeros. 
 Once real data is sent out, they first inform their communication partners that 
 a number of 0s has been hold back, before the actual data goes out.
 This obviously reduces the network usage.
+
+
+
+\subsection{Avoid heap memory footprint explosions}
+
+This subsection's discussion applies only if you use the heap to exchange data.
+
+\begin{smell}
+  The code works reasonably well for small problem sizes, but starts to consume 
+  an unreasonable amount of memory once I scale up.
+\end{smell}
+
+\noindent
+By default, Peano's heap does copy all data into a local buffer if you call \texttt{send}.
+The framework realises some kind of buffered MPI.
+While this is nice from a programmer's point of view---you don't have to care about
+data consistency and almost all operations can be done in the background---it means
+that the memory footprint can grow dramatically if lots of data is exchanged.
+
+
+If you know that your data does not change its position in memory after you've 
+called send---this is for example typically the situation when you send out data in 
+\texttt{touchVertexLastTime}---you can instantiate the heap with zero copying.
+Heaps are templates
+\begin{code}
+template<class Data, bool CreateCopiesOfSentData>
+class PlainBoundaryDataExchanger;
+\end{code} 
+relying on boundary exchangers. The boundary exchanger types are responsible 
+for the copying. 
+So if you hand in \texttt{false} in the example above, you should get away
+with a smaller memory footprint.
+
+
 
 
 \subsection{Tailor data exchange format}
