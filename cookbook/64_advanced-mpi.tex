@@ -12,7 +12,7 @@
 
 
 
-\subsection{Temporarilty switch off vertex data exchange}
+\subsection{Temporarily switch off vertex data exchange}
 \label{section:64_advanced-mpi:switch-off-vertex-data-exchange}
 
 \begin{smell}
@@ -143,9 +143,67 @@ There is no change of any of your software required typically.
 However, the impact on the runtime has to be evaluated carefully.
 
 
-\subsection{Further tuning}
-This part has yet to be written, but I need documentation on the flags below as
-they alter the runtime behaviour:
+
+
+
+\subsection{Tailor the heap's data exchange}
+
+This subsection's discussion applies only if you use the heap to exchange data.
+
+\begin{smell}
+  The code works reasonably well for small problem sizes, but starts to stall or
+  perform really bad if the problem size increases.
+\end{smell}
+
+
+\noindent
+Often, Peano users report that their code works fine for 2d problems. Once they
+switch to 3d, they however experience massive scaling problems.
+
+One of the issues with the heaps is that heaps split up all data exchange into
+two types of messages. 
+Some tiny meta data is exchanged first. 
+It encodes per send how many real data entries are exchanged.
+If your code triggers lots of sends with zero data (as data is held only on one
+level or not by all vertices, e.g.), this means that lots of meta data is
+roaming through your system while the actual big data messages are still fine.
+
+How the meta data are handled depends on the type of boundary data exchange you
+select in your heap.
+Peano's plain heaps are straightforward and basically send out one integer message per 
+send call before the actual data exchange is triggered.
+If lots of sends do not actually transfer data (get passed 0), this means lots of zeros 
+dripple through the network.
+
+Peano also offers RLE variants of the heaps.
+Those guys do not send out 0 messages.
+Instead they collect all the zeros. 
+Once real data is sent out, they first inform their communication partners that 
+a number of 0s has been hold back, before the actual data goes out.
+This obviously reduces the network usage.
+
+
+\subsection{Tailor data exchange format}
+
+\begin{smell}
+ The code's performance is low though the network bandwidth is definitely not
+ the limiting factor.
+\end{smell}
+
+
+Peano internally offers two data formats for each individual piece of data
+modelled through the \texttt{.def} files:
+One variant works with plain C++ data types. 
+This is the variant all Peano code parts (mappings, e.g.) are exposed to.
+The other variant is a \textem{packed} storage format where Peano squeezes out
+all padding bytes (used to get the alignment right), merges multiple booleans
+into one bit field, eliminates all temporary data, and so forth.
+The latter format is used to store data in-between two grid iterations.
+It also is, by default, used as MPI data exchange format.
+If bandwidth is not an issue, you might profit from using plain C++ data types
+for all data exchange which eliminates all overhead to convert the records forth
+and back.
+This is controlled via the compiler arguments
 
 \begin{itemize}
   \item \texttt{-DnoParallelExchangePackedRecordsAtBoundary}
