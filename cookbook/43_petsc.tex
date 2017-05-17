@@ -321,13 +321,13 @@ int  _unknownCounter;
 \end{code}
 
 \noindent
-to the class \texttt{Assemble} and make each fine grid vertex hold a unique
-index which is basically the corresponding entry in the $u$ and $f$ vector.
+to a class/mapping \texttt{EnumerateUnknowns} and make each fine grid vertex
+hold a unique index which is basically the corresponding entry in the $u$ and $f$ vector.
 
 \begin{code}
 #include "petsc/VertexOperations.h"
 
-void petsc::mappings::Assemble::beginIteration(
+void petsc::mappings::EnumerateUnknowns::beginIteration(
   petsc::State&  solverState
 ) {
   logTraceInWith1Argument( "beginIteration(State)", solverState );
@@ -337,7 +337,7 @@ void petsc::mappings::Assemble::beginIteration(
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
 
-void petsc::mappings::Assemble::touchVertexFirstTime(
+void petsc::mappings::EnumerateUnknowns::touchVertexFirstTime(
   ...
 ) {
   logTraceInWith6Arguments( "touchVertexFirstTime(...)", ... );
