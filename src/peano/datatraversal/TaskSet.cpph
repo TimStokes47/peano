@@ -10,16 +10,17 @@ peano::datatraversal::TaskSet::TaskSet(
   peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
 
   #if defined(SharedTBB)
-  typedef GenericTaskWithCopy<Functor> Task;
+    typedef GenericTaskWithCopy<Functor> Task;
 
-  Task* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) Task(myTask);
+    Task* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) Task(myTask);
 
-  tbb::task::enqueue(*tbbTask);
+    tbb::task::enqueue(*tbbTask);
   #elif defined(SharedOMP)
-    //#pragma omp task shared(myTask)
+    #pragma omp parallel
+    #pragma omp single
     {
-      Functor copyOfMyTask(myTask);
-      copyOfMyTask();
+      #pragma omp task
+      myTask();
     }
   #else
   myTask();

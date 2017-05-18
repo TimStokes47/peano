@@ -39,9 +39,15 @@ class peano::datatraversal::ActionSetTraversalLoop {
 
     void loopParallel(
       const peano::datatraversal::ActionSetTraversal&  traversal,
+      #ifdef SharedOMP
+      LoopBody                                         loopBody,
+      #else
       const LoopBody&                                  loopBody,
+      #endif
       int                                              grainSize
     );
+
+
     void loopSequential(
       const peano::datatraversal::ActionSetTraversal&  traversal,
       LoopBody&                                        loopBody

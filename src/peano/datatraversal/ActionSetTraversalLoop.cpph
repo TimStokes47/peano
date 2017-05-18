@@ -54,7 +54,11 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopSequential(
 template <class LoopBody>
 void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
   const peano::datatraversal::ActionSetTraversal&  traversal,
+  #ifdef SharedOMP
+  LoopBody                                         loopBody,
+  #else
   const LoopBody&                                  loopBody,
+  #endif
   int                                              grainSize
 ) {
   const int maximumPath = traversal.getMaximumPath();
@@ -67,23 +71,10 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
       loopInstance
     );
     #elif SharedOMP 
-    #pragma omp for schedule(dynamic, grainSize) firstprivate(localBody)
+    #pragma omp for schedule(dynamic, grainSize)
     for (int j = 0; j < traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
-      localBody(traversal.getActionSet(currentStepInPath).getAction(j));
+      loopBody(traversal.getActionSet(currentStepInPath).getAction(j));
     }
-
-/*
-    
-    LoopBody localIterationLoopBody(loopBody);
-
-    #pragma omp parallel
-    {
-      #pragma omp for schedule(dynamic, grainSize) firstprivate(localIterationLoopBody)
-      for (int j = 0; j < traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
-        localIterationLoopBody(traversal.getActionSet(currentStepInPath).getAction(j));
-      }
-    }
-*/
     #else
     assertion(false);
     #endif
