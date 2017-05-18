@@ -216,7 +216,7 @@ error ideas without any guarantee of success:
   the last entry in the corresponding event specifications to \texttt{false}:
   \begin{code}
 peano::MappingSpecification  
-myprobject::mappings::MyMaping::ascendSpecification() { 
+myprobject::mappings::MyMaping::ascendSpecification(int level) { 
  return peano::MappingSpecification(
   peano::MappingSpecification::Nop,
   peano::MappingSpecification::AvoidCoarseGridRaces,
@@ -269,3 +269,13 @@ There are basically two things you can do:
   \item If you use background tasks, try to fuse multiple of these tasks into
   a single one.
 \end{enumerate}
+
+
+\begin{center}
+ \includegraphics[width=0.8\textwidth]{67_shared-memory-tuning/concurrency.png}
+ \\
+ {\footnotesize
+  Profile obtained through Peano's built-in profiling on a two-core laptop that
+  shows that many background tasks would be available if there were more cores.
+ }
+\end{center}

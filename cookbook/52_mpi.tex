@@ -602,7 +602,7 @@ Setting the flag instructs the Peano kernel that you want to use
 heaps for boundary data exchange as well.
 \begin{code}
 peano::CommunicationSpecification  
-myMapping::communicationSpecification() { 
+myMapping::communicationSpecification(int) { 
   return peano::CommunicationSpecification( ...,...,true );
 }
 \end{code}
