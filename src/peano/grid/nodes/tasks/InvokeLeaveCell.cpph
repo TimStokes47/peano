@@ -37,8 +37,9 @@ void peano::grid::nodes::tasks::InvokeLeaveCell< Vertex, Cell, State, EventHandl
   // According to the specification, only refined cells where all adjacent
   // vertices are refined are to be excluded. This check is rather expensive,
   // so I do that simple one.
+  const int  level = _fineGridCell.isRefined() ? _fineGridVerticesEnumerator.getLevel() : -_fineGridVerticesEnumerator.getLevel();
   const bool InvokeEventAccordingToSpecification =
-    _eventHandle.leaveCellSpecification().manipulates != peano::MappingSpecification::Nop;
+    _eventHandle.leaveCellSpecification(level).manipulates != peano::MappingSpecification::Nop;
 
   if (invokeEvent && InvokeEventAccordingToSpecification) {
     _eventHandle.leaveCell(

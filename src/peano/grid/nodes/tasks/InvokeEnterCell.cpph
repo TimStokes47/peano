@@ -39,8 +39,10 @@ void peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandl
 //    (_threadLocalEventHandle.enterCellSpecification.manipulates == peano::MappingSpecification::WHOLE_TREE) ||
 //    (_threadLocalEventHandle.enterCellSpecification.manipulates == peano::MappingSpecification::ONLY_LEAVES && !_fineGridCell.isRefined());
 
+  const int  level = _fineGridCell.isRefined() ? _fineGridVerticesEnumerator.getLevel() : -_fineGridVerticesEnumerator.getLevel();
+
   const bool InvokeEventAccordingToSpecification =
-    _eventHandle.enterCellSpecification().manipulates != peano::MappingSpecification::Nop;
+    _eventHandle.enterCellSpecification(level).manipulates != peano::MappingSpecification::Nop;
 
   #ifdef Parallel
   const bool invokeEvent = _fineGridCell.isInside() && !_fineGridCell.isRemote(_state,true,true);

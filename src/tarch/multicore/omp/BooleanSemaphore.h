@@ -53,7 +53,7 @@ class tarch::multicore::BooleanSemaphore {
      *
      * @todo Not implemented yet. See TBB version.
      */
-    static void sendCurrentTaskToBack(const std::string& methodTrace);
+    static void sendTaskToBack();
 };
 #endif
 

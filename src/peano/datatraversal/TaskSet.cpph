@@ -16,7 +16,7 @@ peano::datatraversal::TaskSet::TaskSet(
 
   tbb::task::enqueue(*tbbTask);
   #elif defined(SharedOMP)
-    #pragma omp task shared(myTask)
+    //#pragma omp task shared(myTask)
     {
       Functor copyOfMyTask(myTask);
       copyOfMyTask();

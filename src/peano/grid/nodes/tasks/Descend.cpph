@@ -30,9 +30,10 @@ peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::Descend(
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVerticesFirstTime(int level) {
+  const int  passedLevel  = level == _treeDepth ? -level : level;
   const bool runOperation =
-    (_eventHandle.touchVertexFirstTimeSpecification().manipulates == peano::MappingSpecification::WholeTree) ||
-    (_eventHandle.touchVertexFirstTimeSpecification().manipulates == peano::MappingSpecification::OnlyLeaves && level == _treeDepth);
+    (_eventHandle.touchVertexFirstTimeSpecification(passedLevel).manipulates == peano::MappingSpecification::WholeTree) ||
+    (_eventHandle.touchVertexFirstTimeSpecification(passedLevel).manipulates == peano::MappingSpecification::OnlyLeaves && level == _treeDepth);
 
   #if !defined(SharedMemoryParallelisation) and !defined(PersistentRegularSubtrees)
   assertion2(_gridContainer.isLevelInitialised(level), level, _gridContainer.toString());
@@ -49,7 +50,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
 
     int  colouring = -1;
     int  problemSize = tarch::la::volume(NumberOfVertices);
-    switch (_eventHandle.touchVertexFirstTimeSpecification().multithreading) {
+    switch (_eventHandle.touchVertexFirstTimeSpecification(passedLevel).multithreading) {
       case peano::MappingSpecification::Serial:
         colouring = peano::datatraversal::dForLoop<TouchVertexFirstTimeLoopBody>::Serial;
         break;
@@ -91,7 +92,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
         touchVertexFirstTimeLoopBody,
         grainSize.getGrainSize(),
         colouring,
-        _eventHandle.touchVertexFirstTimeSpecification().altersState
+        _eventHandle.touchVertexFirstTimeSpecification(passedLevel).altersState
       );
 
       grainSize.parallelSectionHasTerminated();
@@ -103,9 +104,10 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCells(int level) {
+  const int  passedLevel  = level == _treeDepth ? -level : level;
   const bool runOperation =
-    (_eventHandle.enterCellSpecification().manipulates == peano::MappingSpecification::WholeTree) ||
-    (_eventHandle.enterCellSpecification().manipulates == peano::MappingSpecification::OnlyLeaves && level == _treeDepth);
+    (_eventHandle.enterCellSpecification(passedLevel).manipulates == peano::MappingSpecification::WholeTree) ||
+    (_eventHandle.enterCellSpecification(passedLevel).manipulates == peano::MappingSpecification::OnlyLeaves && level == _treeDepth);
 
   if (runOperation) {
     const tarch::la::Vector<DIMENSIONS,int> NumberOfCells         = _gridContainer.getNumberOfCells(level);
@@ -114,7 +116,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
 
     int  colouring = -1;
     int  problemSize = tarch::la::volume(NumberOfCells);
-    switch (_eventHandle.enterCellSpecification().multithreading) {
+    switch (_eventHandle.enterCellSpecification(passedLevel).multithreading) {
       case peano::MappingSpecification::Serial:
         colouring = peano::datatraversal::dForLoop<EnterCellLoopBody>::Serial;
         break;
@@ -156,7 +158,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
         enterCellLoopBody,
         grainSize.getGrainSize(),
         colouring,
-        _eventHandle.enterCellSpecification().altersState
+        _eventHandle.enterCellSpecification(passedLevel).altersState
       );
 
       grainSize.parallelSectionHasTerminated();
@@ -168,9 +170,10 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(int fineGridLevel) {
+  const int  passedLevel  = fineGridLevel == _treeDepth ? -fineGridLevel : fineGridLevel;
   const bool runOperation =
-    (_eventHandle.descendSpecification().manipulates == peano::MappingSpecification::WholeTree) ||
-    (_eventHandle.descendSpecification().manipulates == peano::MappingSpecification::OnlyLeaves && fineGridLevel == _treeDepth);
+    (_eventHandle.descendSpecification(passedLevel).manipulates == peano::MappingSpecification::WholeTree) ||
+    (_eventHandle.descendSpecification(passedLevel).manipulates == peano::MappingSpecification::OnlyLeaves && fineGridLevel == _treeDepth);
 
   if (runOperation) {
     const tarch::la::Vector<DIMENSIONS,int> NumberOfCoarseGridCells = _gridContainer.getNumberOfCells(fineGridLevel-1);
@@ -179,7 +182,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
 
     int  colouring   = -1;
     int  problemSize = tarch::la::volume(NumberOfCoarseGridCells);
-    switch (_eventHandle.descendSpecification().multithreading) {
+    switch (_eventHandle.descendSpecification(passedLevel).multithreading) {
       case peano::MappingSpecification::Serial:
         colouring = peano::datatraversal::dForLoop<DescendLoopBody>::Serial;
         break;
@@ -188,7 +191,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
         problemSize /= TWO_POWER_D;
         break;
       case peano::MappingSpecification::AvoidFineGridRaces:
-        assertionMsg( false, "ascend configuration " << _eventHandle.descendSpecification().toString() << " not supported. You cannot avoid fine grid races, you can only avoid coarse grid races" );
+        assertionMsg( false, "ascend configuration peano::MappingSpecification::AvoidFineGridRaces not supported. You cannot avoid fine grid races, you can only avoid coarse grid races" );
         break;
       case peano::MappingSpecification::RunConcurrentlyOnFineGrid:
         colouring = peano::datatraversal::dForLoop<DescendLoopBody>::NoColouring;
@@ -220,7 +223,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
         descendLoopBody,
         sharedMemoryGrainSize.getGrainSize(),
         colouring,
-        _eventHandle.descendSpecification().altersState
+        _eventHandle.descendSpecification(passedLevel).altersState
       );
 
       sharedMemoryGrainSize.parallelSectionHasTerminated();
@@ -232,31 +235,18 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::operator() () {
-  const bool skipCoarseLevelsCompletely =
-    (_eventHandle.touchVertexFirstTimeSpecification().manipulates != peano::MappingSpecification::WholeTree) &&
-    (_eventHandle.enterCellSpecification().manipulates            != peano::MappingSpecification::WholeTree) &&
-    (_eventHandle.descendSpecification().manipulates              != peano::MappingSpecification::WholeTree);
-
-
-  if (skipCoarseLevelsCompletely) {
-    touchVerticesFirstTime(_treeDepth);
-    descend(_treeDepth);
-    enterCells(_treeDepth);
-  }
-  else {
-    for (int level=0; level<=_treeDepth; level++) {
-      if (level==_treeDepth) {
-        enterCells( level );
-      }
-      else if (level==0) {
-        touchVerticesFirstTime( level+1 );
-        descend(level+1);
-      }
-      else {
-        enterCells( level );
-        touchVerticesFirstTime( level+1 );
-        descend(level+1);
-      }
+  for (int level=0; level<=_treeDepth; level++) {
+    if (level==_treeDepth) {
+      enterCells( level );
+    }
+    else if (level==0) {
+      touchVerticesFirstTime( level+1 );
+      descend(level+1);
+    }
+    else {
+      enterCells( level );
+      touchVerticesFirstTime( level+1 );
+      descend(level+1);
     }
   }
 }

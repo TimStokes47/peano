@@ -3,7 +3,7 @@
 #include "tarch/multicore/omp/BooleanSemaphore.h"
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
-#include "tarch/multicore/openMP/Core.h"
+#include "tarch/multicore/omp/Core.h"
 
 tarch::multicore::BooleanSemaphore::BooleanSemaphore() {
   omp_init_lock(&_lock);
@@ -33,11 +33,7 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 
 
 
-void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string& methodTrace) {
-}
-
-
-void tarch::multicore::BooleanSemaphore::continueWithTask() {
+void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
 }
 
 #endif

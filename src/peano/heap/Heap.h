@@ -212,7 +212,7 @@ namespace peano {
  *
  * <h2>MPI Handling</h2>
  *
- * The elements stored on the heap have to be modeled due to DaStGen. As a
+ * The elements stored on the heap have to be modelled due to DaStGen. As a
  * result, we can send individual elements as well as sequences of classes
  * away as MPI data types. This is done whenever the user calls send on a
  * specific heap element, i.e. the user calls send with a heap element index
@@ -224,21 +224,21 @@ namespace peano {
  * If an adapter sends or received data, it has first to inform the heap that
  * is will communicate due to MPI. For this, you have to call
  * startToSend... - typically in beginIteration(). At the end
- * of the iteration, you have to call the corresponing finishedToSend...().
+ * of the iteration, you have to call the corresponding finishedToSend...().
  * Of both operations there are two variants: One for the exchange of boundary
  * data and one for the exchange between masters and workers. Internally, these
  * two communication modes differ significantly and thus have to be handled
  * separately. From the user point of view, it is important to note that
  * boundary data is not available at the neighbour node before the next
  * iteration - it might indeed make sense to wait several iterations before one
- * works with exchanged data again. Master-worker data is availble in exactly
+ * works with exchanged data again. Master-worker data is available in exactly
  * the same traversal. For more information see the general heap information
  * in heap.doxys.
  *
  * A send operation triggered due to sendData() for a given heap element is
  * a process with three steps. First, the data is copied into a temporary array
  * and meta information is assembled. Then, the meta information is sent away
- * due to a blocking send. Meta data is modeled by
+ * due to a blocking send. Meta data is modelled by
  * \code
 \include dastgen/MetaInformation.def
 \endcode (see struct MetaInformation). Then, a non-blocking send for the actual
@@ -807,7 +807,7 @@ while (!compressionHasFinished) {
     /**
      * Sends heap data associated to one index to one rank.
      *
-     * Please note that these sends are assynchronous, i.e. if you change the
+     * Please note that these sends are asynchronous, i.e. if you change the
      * vertices afterwards, you might run into problems
      */
     void sendData(

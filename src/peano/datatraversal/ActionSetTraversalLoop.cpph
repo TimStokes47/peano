@@ -66,24 +66,24 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
       tbb::blocked_range<int>(0,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(),grainSize),
       loopInstance
     );
-    #elif SharedOMP
-    // This check is due to a bug in the OpenMP-Library on Shaheen, which does not handle the case grainSize > problemSize correctly
-    if(grainSize < traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()) {
-      LoopBody localIterationLoopBody(loopBody);
+    #elif SharedOMP 
+    #pragma omp for schedule(dynamic, grainSize) firstprivate(localBody)
+    for (int j = 0; j < traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
+      localBody(traversal.getActionSet(currentStepInPath).getAction(j));
+    }
 
-      #pragma omp parallel
-      {
-        #pragma omp for schedule(dynamic, grainSize) firstprivate(localIterationLoopBody)
-        for (int j = 0; j < traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
-          localIterationLoopBody(traversal.getActionSet(currentStepInPath).getAction(j));
-        }
-      }
-    } else {
-      LoopBody localIterationLoopBody(loopBody);
+/*
+    
+    LoopBody localIterationLoopBody(loopBody);
+
+    #pragma omp parallel
+    {
+      #pragma omp for schedule(dynamic, grainSize) firstprivate(localIterationLoopBody)
       for (int j = 0; j < traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
         localIterationLoopBody(traversal.getActionSet(currentStepInPath).getAction(j));
       }
     }
+*/
     #else
     assertion(false);
     #endif
