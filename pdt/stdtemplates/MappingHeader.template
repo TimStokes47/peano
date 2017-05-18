@@ -52,15 +52,19 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * optimise the code.
      *
      * @see peano::MappingSpecification for information on thread safety.
+     * @param level   Level for which we ask what to do. This value is negative
+     *                if we are on the fine grid level. In this case, the 
+     *                actual level is the absolute value.
      */
-    static peano::MappingSpecification   touchVertexLastTimeSpecification();
-    static peano::MappingSpecification   touchVertexFirstTimeSpecification();
-    static peano::MappingSpecification   enterCellSpecification();
-    static peano::MappingSpecification   leaveCellSpecification();
-    static peano::MappingSpecification   ascendSpecification();
-    static peano::MappingSpecification   descendSpecification();
+    peano::MappingSpecification         touchVertexLastTimeSpecification(int level) const;
+    peano::MappingSpecification         touchVertexFirstTimeSpecification(int level) const;
+    peano::MappingSpecification         enterCellSpecification(int level) const;
+    peano::MappingSpecification         leaveCellSpecification(int level) const;
+    peano::MappingSpecification         ascendSpecification(int level) const;
+    peano::MappingSpecification         descendSpecification(int level) const;
+    peano::CommunicationSpecification   communicationSpecification(int level) const;
 
-    static peano::CommunicationSpecification   communicationSpecification();
+    peano::CommunicationSpecification   communicationSpecification() const;
 
 
     /**

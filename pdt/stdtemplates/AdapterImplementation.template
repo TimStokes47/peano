@@ -1,51 +1,51 @@
 #include "__PROJECT_PATH__/adapters/__THIS_TYPENAME__.h"
 
 
-peano::CommunicationSpecification   __THIS_QUALIFIED_TYPENAME__::communicationSpecification() {
+peano::CommunicationSpecification   __THIS_QUALIFIED_TYPENAME__::communicationSpecification() const {
   return peano::CommunicationSpecification::getMinimalSpecification()
-  __x__FULL_QUALIFIED_MAPPINGS__ & __NAMESPACE__::__FULL_QUALIFIED_MAPPINGS__::communicationSpecification()
+  __x__MAPPINGS__  &  _map2__MAPPINGS__.communicationSpecification()
   ;
 }
 
 
-peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::touchVertexLastTimeSpecification() {
+peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::touchVertexLastTimeSpecification(int level) const {
   return peano::MappingSpecification::getMinimalSpecification()
-  __x__FULL_QUALIFIED_MAPPINGS__ & __NAMESPACE__::__FULL_QUALIFIED_MAPPINGS__::touchVertexLastTimeSpecification()
+  __x__MAPPINGS__  &  _map2__MAPPINGS__.touchVertexLastTimeSpecification(level)
   ;
 }
 
 
-peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::touchVertexFirstTimeSpecification() { 
+peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::touchVertexFirstTimeSpecification(int level) const { 
   return peano::MappingSpecification::getMinimalSpecification()
-  __x__FULL_QUALIFIED_MAPPINGS__ & __NAMESPACE__::__FULL_QUALIFIED_MAPPINGS__::touchVertexFirstTimeSpecification()
+  __x__MAPPINGS__  &  _map2__MAPPINGS__.touchVertexFirstTimeSpecification(level)
   ;
 }
 
 
-peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::enterCellSpecification() {
+peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::enterCellSpecification(int level) const {
   return peano::MappingSpecification::getMinimalSpecification()
-  __x__FULL_QUALIFIED_MAPPINGS__ & __NAMESPACE__::__FULL_QUALIFIED_MAPPINGS__::enterCellSpecification()
+  __x__MAPPINGS__  &  _map2__MAPPINGS__.enterCellSpecification(level)
   ;
 }
 
 
-peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::leaveCellSpecification() {
+peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::leaveCellSpecification(int level) const {
   return peano::MappingSpecification::getMinimalSpecification()
-  __x__FULL_QUALIFIED_MAPPINGS__ & __NAMESPACE__::__FULL_QUALIFIED_MAPPINGS__::leaveCellSpecification()
+  __x__MAPPINGS__  &  _map2__MAPPINGS__.leaveCellSpecification(level)
   ;
 }
 
 
-peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::ascendSpecification() {
+peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::ascendSpecification(int level) const {
   return peano::MappingSpecification::getMinimalSpecification()
-  __x__FULL_QUALIFIED_MAPPINGS__ & __NAMESPACE__::__FULL_QUALIFIED_MAPPINGS__::ascendSpecification()
+  __x__MAPPINGS__  &  _map2__MAPPINGS__.ascendSpecification(level)
   ;
 }
 
 
-peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::descendSpecification() {
+peano::MappingSpecification   __THIS_QUALIFIED_TYPENAME__::descendSpecification(int level) const {
   return peano::MappingSpecification::getMinimalSpecification()
-  __x__FULL_QUALIFIED_MAPPINGS__ & __NAMESPACE__::__FULL_QUALIFIED_MAPPINGS__::descendSpecification()
+  __x__MAPPINGS__  &  _map2__MAPPINGS__.descendSpecification(level)
   ;
 }
 
