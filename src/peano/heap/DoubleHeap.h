@@ -13,7 +13,6 @@ namespace peano {
       class MasterWorkerExchanger,
       class JoinForkExchanger,
       class NeighbourDataExchanger,
-      // @tood Perhaps remove default and always align?
       class VectorContainer = std::vector<double>
     >
     class DoubleHeap;
@@ -81,9 +80,9 @@ namespace peano {
  * <h1> Alignment </h1>
  *
  * A big difference to the standard heap class is that this class can work with
- * aligned data structuures. This makes the class however incompatible with
+ * aligned data structures. This makes the class however incompatible with
  * other std::vector<double> instances where no alignment is used. Please consult
- * the HeapAllocator for defails on the alignment.
+ * the HeapAllocator for details on the alignment.
  *
  * <h1> Method documentation </h1>
  *
