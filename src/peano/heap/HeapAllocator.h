@@ -75,7 +75,7 @@ namespace peano {
         }
         else {
           #ifdef CompilerICC
-          p = _mm_alloc(n*sizeof(T), Alignment);
+          p = _mm_malloc(n*sizeof(T), Alignment);
           #elif defined(__APPLE__)
           posix_memalign(&p, Alignment, n*sizeof(T));
           #else
