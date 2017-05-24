@@ -1,0 +1,168 @@
+#include "tarch/la/VectorCompare.h"
+
+
+template<int Alignment>
+tarch::logging::Log  peano::heap::AlignedDoubleSendReceiveTask<Alignment>::_log( "peano::heap::AlignedDoubleSendReceiveTask<Alignment>" );
+
+
+#ifdef Asserts
+template<int Alignment>
+peano::heap::AlignedDoubleSendReceiveTask<Alignment>::AlignedDoubleSendReceiveTask():
+  _rank(-1),
+  _data(0) {
+}
+#endif
+
+
+template<int Alignment>
+bool peano::heap::AlignedDoubleSendReceiveTask<Alignment>::fits(
+  const tarch::la::Vector<DIMENSIONS, double>&  position,
+  int                                           level
+) const {
+  #ifdef Asserts
+  return
+    (_metaInformation.getLevel() == -1) ||
+    (
+      _metaInformation.getLevel() == level &&
+      tarch::la::equals(_metaInformation.getPosition(), position)
+    );
+  #else
+  return true;
+  #endif
+}
+
+
+template<int Alignment>
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::setInvalid() {
+   #if defined(Asserts)
+  _metaInformation.setLevel(-1);
+  #endif
+  _metaInformation.setLength(0);
+  _data = nullptr;
+}
+
+
+template<int Alignment>
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::freeMemoryOfSendTask() {
+  if (_freeDataPointer && _metaInformation.getLength()>0) {
+    delete[] _data;
+  }
+}
+
+
+
+template<int Alignment>
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::sendDataDirectlyFromBuffer(const std::vector< double, peano::heap::HeapAllocator<double, Alignment > >& data) {
+  assertion( !data.empty() );
+  assertion( _data==0 );
+
+  _freeDataPointer = false;
+  _data            = const_cast< double* >( data.data() );
+}
+
+
+template<int Alignment>
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const std::vector< double, peano::heap::HeapAllocator<double, Alignment > >& data) {
+  assertion( !data.empty() );
+  assertion( _data==0 );
+
+  _freeDataPointer = true;
+
+  #ifdef CompilerICC
+  _data = _mm_malloc(data.size()*sizeof(double), Alignment);
+  #elif defined(__APPLE__)
+  posix_memalign(&_data, Alignment, data.size()*sizeof(double));
+  #else
+  // The arguments here are permuted compared to _mm_alloc
+  _data = aligned_alloc(Alignment, data.size()*sizeof(double));
+  #endif
+
+  for (int i=0; i<static_cast<int>( data.size() ); i++) {
+    _data[i] = data[i];
+  }
+}
+
+
+template<int Alignment>
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::triggerSend(int tag) {
+  assertion( _data!=nullptr );
+  assertion( _metaInformation.getLength()>0 );
+  
+  #ifdef Parallel
+  const int result = MPI_Isend(
+    _data, _metaInformation.getLength(), MPI_DOUBLE, _rank,
+    tag,
+    tarch::parallel::Node::getInstance().getCommunicator(), &_request
+  );
+
+  if ( result != MPI_SUCCESS ) {
+    logError(
+      "triggerSend(int)", "failed to send heap data to node "
+      << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+    );
+  }
+  #endif
+}
+
+
+template<int Alignment>
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::triggerReceive(int tag) {
+  assertion( _rank >= 0 );
+  assertion( _data==0 );
+  
+  #ifdef Parallel
+  logTraceInWith2Arguments( "triggerReceive(int)", tag, _metaInformation.toString() );
+  
+  #ifdef CompilerICC
+  _data = _mm_malloc(_metaInformation.getLength()*sizeof(double), Alignment);
+  #elif defined(__APPLE__)
+  posix_memalign(&_data, Alignment, _metaInformation.getLength()*sizeof(double));
+  #else
+  // The arguments here are permuted compared to _mm_alloc
+  _data = aligned_alloc(Alignment, _metaInformation.getLength()*sizeof(double));
+  #endif
+
+  const int  result = MPI_Irecv(
+    _data, _metaInformation.getLength(), MPI_DOUBLE,
+    _rank, tag, tarch::parallel::Node::getInstance().getCommunicator(),
+    &_request
+  );
+  if ( result != MPI_SUCCESS ) {
+    logError(
+      "triggerReceive()",
+      "failed to receive heap data from node "
+      << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
+    );
+  }
+  logTraceOut( "triggerReceive(int)" );
+  #endif
+}
+
+
+template<int Alignment>
+std::vector< double, peano::heap::HeapAllocator<double, Alignment > > peano::heap::AlignedDoubleSendReceiveTask<Alignment>::unwrapDataAndFreeMemory() {
+  logTraceInWith1Argument( "unwrapDataAndFreeMemory()", _metaInformation.toString() );
+
+  std::vector< double, peano::heap::HeapAllocator<double, Alignment > > result;
+
+  assertion( _metaInformation.getLength()>=0 );
+  if (_metaInformation.getLength()>0) {
+    assertion( _data!=0 );
+    for (int i=0; i<_metaInformation.getLength(); i++) {
+      result.push_back(_data[i]);
+    }
+
+    delete[] _data;
+  }
+
+  logTraceOutWith1Argument( "unwrapDataAndFreeMemory()", result.size() );
+  return result;
+}
+
+
+template<int Alignment>
+std::string peano::heap::AlignedDoubleSendReceiveTask<Alignment>::toString() const {
+  std::ostringstream out;
+  out << "(" << _metaInformation.toString() << ",rank=" << _rank << ",data=" << (_data==nullptr ? "no" : "yes") << ")";
+  return out.str();
+}
