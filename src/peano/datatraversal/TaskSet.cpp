@@ -131,8 +131,8 @@ peano::datatraversal::TaskSet::TaskSet(
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-4,-4);
   }
   else {
-   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,4);
-   function1();
+    peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,4);
+    function1();
     function2();
     function3();
     function4();
