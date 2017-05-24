@@ -163,7 +163,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
         const bool pushVertex = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                              || cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex);
 
-        assertion5(
+        assertion8(
           _regularGridContainer.getVertex(currentLevel,positionInArray).getCurrentAdjacentCellsHeight()< peano::grid::Undefined
           ||
           !pushVertex,
@@ -171,7 +171,10 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
           _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
           positionInArray,
           _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
-          _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)
+          _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel),
+	  pushVertex,
+	  _regularGridContainer.getVertex(currentLevel,positionInArray).getCurrentAdjacentCellsHeight(),
+	  peano::grid::Undefined
         );
         // If we drain a persistent tree, we know that the previous flag is not valid anymore 
         // (the reset is not triggered), so we cannot evaluate this assertion.
