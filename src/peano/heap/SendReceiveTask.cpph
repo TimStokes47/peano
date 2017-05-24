@@ -78,7 +78,8 @@ template <class Data>
 void peano::heap::SendReceiveTask<Data>::triggerSend(int tag) {
   assertion( _data!=nullptr );
   assertion( _metaInformation.getLength()>0 );
-
+  
+  #ifdef Parallel
   const int result = MPI_Isend(
     _data, _metaInformation.getLength(), MPIData::Datatype, _rank,
     tag,
@@ -91,6 +92,7 @@ void peano::heap::SendReceiveTask<Data>::triggerSend(int tag) {
       << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }
+  #endif
 }
 
 
@@ -98,7 +100,8 @@ template <class Data>
 void peano::heap::SendReceiveTask<Data>::triggerReceive(int tag) {
   assertion( _rank >= 0 );
   assertion( _data==0 );
-
+  
+  #ifdef Parallel
   logTraceInWith2Arguments( "triggerReceive(int)", tag, _metaInformation.toString() );
   _data = new typename SendReceiveTask<Data>::MPIData[ _metaInformation.getLength() ];
 
@@ -115,6 +118,7 @@ void peano::heap::SendReceiveTask<Data>::triggerReceive(int tag) {
     );
   }
   logTraceOut( "triggerReceive(int)" );
+  #endif
 }
 
 

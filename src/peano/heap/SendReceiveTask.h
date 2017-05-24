@@ -246,9 +246,7 @@ struct peano::heap::SendReceiveTask<double> {
 #endif
 
 
-#ifdef Parallel
 #include "peano/heap/SendReceiveTask.cpph"
-#endif
 
 
 #endif
