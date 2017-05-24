@@ -8,7 +8,6 @@
 
 #ifdef CompilerICC
 #include <malloc.h>
-//#include <mm_malloc.h>
 #else
 #include <stdio.h>
 #include <stdlib.h>
