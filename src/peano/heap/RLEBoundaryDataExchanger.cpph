@@ -87,7 +87,7 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
   }
   else {
     for (int i=0; i<-receivedTask._metaInformation.getLength(); i++) {
-      SendReceiveTask<Data> zeroLengthReceiveTask;
+      SendReceiveTaskType zeroLengthReceiveTask;
 
       zeroLengthReceiveTask.setInvalid();
 
