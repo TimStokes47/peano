@@ -48,7 +48,7 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
   _isCurrentlySending = false;
   #endif
 
-  for(typename std::list<SendReceiveTask<Data> >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
+  for(typename std::list<SendReceiveTaskType >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
     MPI_Status status;
 
     const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -117,7 +117,7 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
   if (flag) {
     logTraceInWith1Argument( "receiveDanglingMessages(...)", _metaDataTag );
 
-    SendReceiveTask<Data> receiveTask;
+    SendReceiveTaskType receiveTask;
 
     // @todo Has to be -1 (we may not call receiveDangling in-between as this would mess up the order of the real data). Documentation!
     receiveTask._metaInformation.receive(status.MPI_SOURCE, _metaDataTag, true, -1);
@@ -150,7 +150,7 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
 ) {
   assertion( _isCurrentlySending );
 
-  SendReceiveTask<Data> sendTask;
+  SendReceiveTaskType sendTask;
   sendTask._rank = toRank;
   #ifdef Asserts
   //Set debug information
@@ -192,7 +192,7 @@ peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendReceiveTa
 
   std::vector< Data >  result;
 
-  typename std::list< SendReceiveTask<Data> >::iterator resultTask = findMessageFromRankInReceiveBuffer(fromRank);
+  typename std::list< SendReceiveTaskType >::iterator resultTask = findMessageFromRankInReceiveBuffer(fromRank);
 
   if (resultTask == _receiveTasks.end()) {
     logDebug( "receiveData", "data either not found or records not available yet" );
@@ -400,7 +400,7 @@ bool peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
     return true;
   }
   else {
-    for (typename std::list<SendReceiveTask<Data> >::iterator i = _receiveTasks.begin(); i != _receiveTasks.end(); i++) {
+    for (typename std::list<SendReceiveTaskType >::iterator i = _receiveTasks.begin(); i != _receiveTasks.end(); i++) {
       logError( "validateThatIncomingJoinBuffersAreEmpty()", "message in queue: " << i->toString() );
     }
 
