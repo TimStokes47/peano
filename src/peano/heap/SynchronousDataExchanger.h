@@ -67,7 +67,7 @@ class peano::heap::SynchronousDataExchanger {
      */
     typename std::list< SendReceiveTaskType >::iterator findMessageFromRankInReceiveBuffer(int ofRank);
 
-    std::vector< Data > extractMessageFromReceiveBuffer(
+    typename SendReceiveTaskType::DataVectorType extractMessageFromReceiveBuffer(
       typename std::list< SendReceiveTaskType >::iterator   messageTask,
       const tarch::la::Vector<DIMENSIONS, double>&          position,
       int                                                   level

@@ -21,18 +21,6 @@ namespace peano {
   namespace heap {
     template<int Alignment>
     struct AlignedDoubleSendReceiveTask;
-
-    /**
-     * Specialisation
-     */
-    template<>
-    struct AlignedDoubleSendReceiveTask<16>;
-
-    template<>
-    struct AlignedDoubleSendReceiveTask<32>;
-
-    template<>
-    struct AlignedDoubleSendReceiveTask<64>;
   }
 }
 

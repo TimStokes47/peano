@@ -73,7 +73,7 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
 
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
-void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType>::handleAndQueueReceivedTask( const SendReceiveTask<Data>&  receivedTask ) {
+void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType>::handleAndQueueReceivedTask( const SendReceiveTaskType&  receivedTask ) {
   assertion(receivedTask._metaInformation.getLength() != 0);
   if(receivedTask._metaInformation.getLength() > 0) {
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
@@ -105,7 +105,7 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
 void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType>::handleAndQueueSendTask( 
-  const SendReceiveTask<Data>&                         sendTask, 
+  const SendReceiveTaskType&                           sendTask,
   const typename SendReceiveTaskType::DataVectorType&  data 
 ) {
   logTraceIn( "handleAndQueueSendTask(...)" );

@@ -74,7 +74,7 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const DataVe
   posix_memalign(&_data, Alignment, data.size()*sizeof(double));
   #else
   // The arguments here are permuted compared to _mm_alloc
-  _data = aligned_alloc(Alignment, data.size()*sizeof(double));
+  _data = static_cast<double *>(aligned_alloc(Alignment, data.size()*sizeof(double)));
   #endif
 
   for (int i=0; i<static_cast<int>( data.size() ); i++) {
@@ -119,7 +119,7 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::triggerReceive(int ta
   posix_memalign(&_data, Alignment, _metaInformation.getLength()*sizeof(double));
   #else
   // The arguments here are permuted compared to _mm_alloc
-  _data = aligned_alloc(Alignment, _metaInformation.getLength()*sizeof(double));
+  _data = static_cast<double *>(aligned_alloc(Alignment, _metaInformation.getLength()*sizeof(double)));
   #endif
 
   const int  result = MPI_Irecv(
