@@ -6,7 +6,7 @@
 
 namespace peano {
   namespace heap {
-    template<class Data>
+    template<class Data, class SendReceiveTaskType>
     class BoundaryDataExchanger;
   }
 }
@@ -27,7 +27,7 @@ namespace peano {
  *
  * @author Tobias Weinzierl
  */
-template<class Data>
+template<class Data, class SendReceiveTaskType>
 class peano::heap::BoundaryDataExchanger {
   private:
     /**
@@ -41,8 +41,8 @@ class peano::heap::BoundaryDataExchanger {
     const int            _dataTag;
     const int            _rank;
 
-    std::list<SendReceiveTask<Data> >   _sendTasks;
-    std::list<SendReceiveTask<Data> >   _receiveTasks[2];
+    std::list<SendReceiveTaskType >   _sendTasks;
+    std::list<SendReceiveTaskType >   _receiveTasks[2];
 
     int  _numberOfSentMessages;
     int  _numberOfSentRecords;
@@ -198,7 +198,7 @@ class peano::heap::BoundaryDataExchanger {
      * there is any), and to insert the resulting data structures into the
      * queue _receiveTasks[Base::_currentReceiveBuffer].
      */
-    virtual void handleAndQueueReceivedTask( const SendReceiveTask<Data>& receivedTask ) = 0;
+    virtual void handleAndQueueReceivedTask( const SendReceiveTaskType& receivedTask ) = 0;
 
     /**
      * No mpi operation done yet. Ensure that data is wrapped and sent out (if
@@ -206,7 +206,10 @@ class peano::heap::BoundaryDataExchanger {
      * the buffer shall later check for completition. Each call increases the
      * result of getNumberOfSentMessages().
      */
-    virtual void handleAndQueueSendTask( const SendReceiveTask<Data>& sendTask, const std::vector<Data>& data ) = 0;
+    virtual void handleAndQueueSendTask(
+      const SendReceiveTaskType& sendTask,
+      const typename SendReceiveTaskType::DataVectorType& data
+    ) = 0;
 
     /**
      * Just identifies whether there are background receives possible. If not, the
@@ -247,9 +250,9 @@ class peano::heap::BoundaryDataExchanger {
     void receiveDanglingMessages();
 
     void sendData(
-      const std::vector<Data>&                      data,
-      const tarch::la::Vector<DIMENSIONS, double>&  position,
-      int                                           level
+      const typename SendReceiveTaskType::DataVectorType&  data,
+      const tarch::la::Vector<DIMENSIONS, double>&         position,
+      int                                                  level
     );
 
     /**
@@ -280,7 +283,7 @@ class peano::heap::BoundaryDataExchanger {
      * @param level    Used for validation, i.e. to ensure that the right
      *                 record is sent back
      */
-    std::vector< Data > receiveData(
+    typename SendReceiveTaskType::DataVectorType receiveData(
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level
     );

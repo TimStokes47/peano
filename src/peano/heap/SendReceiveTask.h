@@ -46,8 +46,9 @@ namespace peano {
  */
 template<class Data>
 struct peano::heap::SendReceiveTask {
-  static tarch::logging::Log _log;
+  typedef std::vector<Data>  DataVectorType;
 
+  static tarch::logging::Log _log;
 
   /**
    * We always use the plain meta information as record, i.e. we do not pack
@@ -88,13 +89,13 @@ struct peano::heap::SendReceiveTask {
    * Please note that you have to call delete[] on _data afterwards through
    * operation freeMemoryOfSendTask().
    */
-  void wrapData(const std::vector<Data>& data);
+  void wrapData(const DataVectorType& data);
 
   /**
    * Counterpart of wrapData(). The task sends away the data directly from the
    * specified buffer. Please call unwrapDataAndFreeMemory() nevertheless.
    */
-  void sendDataDirectlyFromBuffer(const std::vector<Data>& data);
+  void sendDataDirectlyFromBuffer(const DataVectorType& data);
 
   /**
    * @see triggerReceive() for implementation remarks.
@@ -109,7 +110,7 @@ struct peano::heap::SendReceiveTask {
    */
   void triggerReceive(int tag);
 
-  std::vector<Data> unwrapDataAndFreeMemory();
+  DataVectorType unwrapDataAndFreeMemory();
 
   void freeMemoryOfSendTask();
 
@@ -146,6 +147,8 @@ struct peano::heap::SendReceiveTask {
 
 template<>
 struct peano::heap::SendReceiveTask<double> {
+  typedef std::vector<double>  DataVectorType;
+
   static tarch::logging::Log _log;
 
 

@@ -52,7 +52,7 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::freeMemoryOfSendTask(
 
 
 template<int Alignment>
-void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::sendDataDirectlyFromBuffer(const std::vector< double, peano::heap::HeapAllocator<double, Alignment > >& data) {
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::sendDataDirectlyFromBuffer(const DataVectorType& data) {
   assertion( !data.empty() );
   assertion( _data==0 );
 
@@ -62,7 +62,7 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::sendDataDirectlyFromB
 
 
 template<int Alignment>
-void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const std::vector< double, peano::heap::HeapAllocator<double, Alignment > >& data) {
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const DataVectorType& data) {
   assertion( !data.empty() );
   assertion( _data==0 );
 

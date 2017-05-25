@@ -48,6 +48,9 @@ namespace peano {
  */
 template<int Alignment>
 struct peano::heap::AlignedDoubleSendReceiveTask {
+  typedef std::vector< double, HeapAllocator<double, Alignment > >  DataVectorType;
+
+
   static tarch::logging::Log _log;
 
 
@@ -88,13 +91,13 @@ struct peano::heap::AlignedDoubleSendReceiveTask {
    * Please note that you have to call delete[] on _data afterwards through
    * operation freeMemoryOfSendTask().
    */
-  void wrapData(const std::vector< double, HeapAllocator<double, Alignment > >& data);
+  void wrapData(const DataVectorType& data);
 
   /**
    * Counterpart of wrapData(). The task sends away the data directly from the
    * specified buffer. Please call unwrapDataAndFreeMemory() nevertheless.
    */
-  void sendDataDirectlyFromBuffer(const std::vector< double, HeapAllocator<double, Alignment > >& data);
+  void sendDataDirectlyFromBuffer(const DataVectorType& data);
 
   /**
    * @see triggerReceive() for implementation remarks.
@@ -109,7 +112,7 @@ struct peano::heap::AlignedDoubleSendReceiveTask {
    */
   void triggerReceive(int tag);
 
-  std::vector< double, HeapAllocator<double, Alignment > > unwrapDataAndFreeMemory();
+  DataVectorType unwrapDataAndFreeMemory();
 
   void freeMemoryOfSendTask();
 

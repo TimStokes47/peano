@@ -44,9 +44,9 @@ namespace peano {
     template<class Data>
     class PlainHeap: public Heap<
       Data,
-      SynchronousDataExchanger< Data, true >,
-      SynchronousDataExchanger< Data, true >,
-      PlainBoundaryDataExchanger< Data, true >
+      SynchronousDataExchanger< Data, true, SendReceiveTask<Data> >,
+      SynchronousDataExchanger< Data, true, SendReceiveTask<Data> >,
+      PlainBoundaryDataExchanger< Data, true, SendReceiveTask<Data> >
     > {
       public:
         virtual ~PlainHeap() {}
@@ -55,9 +55,9 @@ namespace peano {
     template<class Data>
     class RLEHeap: public Heap<
       Data,
-      SynchronousDataExchanger< Data, true >,
-      SynchronousDataExchanger< Data, true >,
-      RLEBoundaryDataExchanger< Data, true >
+      SynchronousDataExchanger< Data, true, SendReceiveTask<Data> >,
+      SynchronousDataExchanger< Data, true, SendReceiveTask<Data> >,
+      RLEBoundaryDataExchanger< Data, true, SendReceiveTask<Data> >
     > {
       public:
         virtual ~RLEHeap() {}
@@ -66,9 +66,9 @@ namespace peano {
     template<class Data>
     class PlainHeapWithoutDataCopyingForBoundarySends: public Heap<
       Data,
-      SynchronousDataExchanger< Data, true >,
-      SynchronousDataExchanger< Data, true >,
-      PlainBoundaryDataExchanger< Data, false >
+      SynchronousDataExchanger< Data, true, SendReceiveTask<Data> >,
+      SynchronousDataExchanger< Data, true, SendReceiveTask<Data> >,
+      PlainBoundaryDataExchanger< Data, false, SendReceiveTask<Data> >
     > {
       public:
         virtual ~PlainHeapWithoutDataCopyingForBoundarySends() {}
@@ -77,9 +77,9 @@ namespace peano {
     template<class Data>
     class RLEHeapWithoutDataCopyingForBoundarySends: public Heap<
       Data,
-      SynchronousDataExchanger< Data, true >,
-      SynchronousDataExchanger< Data, true >,
-      RLEBoundaryDataExchanger< Data, false >
+      SynchronousDataExchanger< Data, true, SendReceiveTask<Data> >,
+      SynchronousDataExchanger< Data, true, SendReceiveTask<Data> >,
+      RLEBoundaryDataExchanger< Data, false, SendReceiveTask<Data> >
     > {
       public:
         virtual ~RLEHeapWithoutDataCopyingForBoundarySends() {}

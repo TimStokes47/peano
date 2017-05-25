@@ -6,7 +6,7 @@
 
 namespace peano {
   namespace heap {
-    template<class Data, bool CreateCopiesOfSentData>
+    template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType >
     class SynchronousDataExchanger;
   }
 }
@@ -20,7 +20,7 @@ namespace peano {
  * Or we can send away data directly from the heap and rely on the user that
  * this data remains persistent.
  */
-template<class Data, bool CreateCopiesOfSentData>
+template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType >
 class peano::heap::SynchronousDataExchanger {
   private:
     /**
@@ -32,8 +32,8 @@ class peano::heap::SynchronousDataExchanger {
     const int            _metaDataTag;
     const int            _dataTag;
 
-    std::list<SendReceiveTask<Data> >   _sendTasks;
-    std::list<SendReceiveTask<Data> >   _receiveTasks;
+    std::list<SendReceiveTaskType >   _sendTasks;
+    std::list<SendReceiveTaskType >   _receiveTasks;
 
     int  _numberOfSentMessages;
     int  _numberOfSentRecords;
@@ -65,10 +65,10 @@ class peano::heap::SynchronousDataExchanger {
      *
      * @return -1 if no message found
      */
-    typename std::list< SendReceiveTask<Data> >::iterator findMessageFromRankInReceiveBuffer(int ofRank);
+    typename std::list< SendReceiveTaskType >::iterator findMessageFromRankInReceiveBuffer(int ofRank);
 
     std::vector< Data > extractMessageFromReceiveBuffer(
-      typename std::list< SendReceiveTask<Data> >::iterator messageTask,
+      typename std::list< SendReceiveTaskType >::iterator   messageTask,
       const tarch::la::Vector<DIMENSIONS, double>&          position,
       int                                                   level
     );
@@ -114,13 +114,13 @@ class peano::heap::SynchronousDataExchanger {
      * messes up the memory.
      */
     void sendData(
-      const std::vector<Data>&                      data,
+      const typename SendReceiveTaskType::DataVectorType&    data,
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level
     );
 
-    std::vector< Data > receiveData(
+    typename SendReceiveTaskType::DataVectorType  receiveData(
       int                                           fromRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level

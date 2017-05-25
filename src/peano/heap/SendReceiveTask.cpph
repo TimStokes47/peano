@@ -51,7 +51,7 @@ void peano::heap::SendReceiveTask<Data>::freeMemoryOfSendTask() {
 
 
 template <class Data>
-void peano::heap::SendReceiveTask<Data>::sendDataDirectlyFromBuffer(const std::vector<Data>& data) {
+void peano::heap::SendReceiveTask<Data>::sendDataDirectlyFromBuffer(const DataVectorType& data) {
   assertion( !data.empty() );
   assertion( _data==0 );
 
@@ -61,7 +61,7 @@ void peano::heap::SendReceiveTask<Data>::sendDataDirectlyFromBuffer(const std::v
 
 
 template <class Data>
-void peano::heap::SendReceiveTask<Data>::wrapData(const std::vector<Data>& data) {
+void peano::heap::SendReceiveTask<Data>::wrapData(const DataVectorType& data) {
   assertion( !data.empty() );
   assertion( _data==0 );
 
@@ -123,10 +123,10 @@ void peano::heap::SendReceiveTask<Data>::triggerReceive(int tag) {
 
 
 template <class Data>
-std::vector<Data> peano::heap::SendReceiveTask<Data>::unwrapDataAndFreeMemory() {
+typename peano::heap::SendReceiveTask<Data>::DataVectorType peano::heap::SendReceiveTask<Data>::unwrapDataAndFreeMemory() {
   logTraceInWith1Argument( "unwrapDataAndFreeMemory()", _metaInformation.toString() );
 
-  std::vector<Data> result;
+  DataVectorType result;
 
   assertion( _metaInformation.getLength()>=0 );
   if (_metaInformation.getLength()>0) {

@@ -2,13 +2,13 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
-template<class Data>
-tarch::logging::Log  peano::heap::BoundaryDataExchanger<Data>::_log( "peano::heap::BoundaryDataExchanger" );
+template<class Data, class SendReceiveTaskType>
+tarch::logging::Log  peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::_log( "peano::heap::BoundaryDataExchanger" );
 
 
 
-template<class Data>
-peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger():
+template<class Data, class SendReceiveTaskType>
+peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::BoundaryDataExchanger():
   _identifier( "created-by-standard-constructor"),
   _metaDataTag(-1),
   _dataTag(-1),
@@ -27,8 +27,8 @@ peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger():
 }
 
 
-template<class Data>
-peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger(
+template<class Data, class SendReceiveTaskType>
+peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::BoundaryDataExchanger(
   const std::string& identifier,
   int metaDataTag,
   int dataTag,
@@ -52,13 +52,13 @@ peano::heap::BoundaryDataExchanger<Data>::BoundaryDataExchanger(
 }
 
 
-template<class Data>
-peano::heap::BoundaryDataExchanger<Data>::~BoundaryDataExchanger() {
+template<class Data, class SendReceiveTaskType>
+peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::~BoundaryDataExchanger() {
 }
 
 
-template<class Data>
-void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalInverted) {
+template<class Data, class SendReceiveTaskType>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::startToSendData(bool isTraversalInverted) {
   logTraceInWith1Argument( "startToSendData(bool)", isTraversalInverted );
 
   assertion(_currentReceiveBuffer>=0);
@@ -96,8 +96,8 @@ void peano::heap::BoundaryDataExchanger<Data>::startToSendData(bool isTraversalI
 
 
 
-template <class Data>
-void peano::heap::BoundaryDataExchanger<Data>::waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages(
+template <class Data, class SendReceiveTaskType>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages(
   int numberOfMessagesSentThisIteration
 ) {
   logTraceInWith2Arguments( "waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()", _rank, numberOfMessagesSentThisIteration );
@@ -138,8 +138,8 @@ void peano::heap::BoundaryDataExchanger<Data>::waitUntilNumberOfReceivedNeighbou
 }
 
 
-template<class Data>
-void peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
+template<class Data, class SendReceiveTaskType>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::releaseSentMessages() {
   logTraceInWith1Argument( "releaseSentMessages()", _sendTasks.size() );
   for(typename std::list<SendReceiveTask<Data> >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
     MPI_Status status;
@@ -190,8 +190,8 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseSentMessages() {
 }
 
 
-template<class Data>
-void peano::heap::BoundaryDataExchanger<Data>::finishedToSendData(bool isTraversalInverted) {
+template<class Data, class SendReceiveTaskType>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::finishedToSendData(bool isTraversalInverted) {
   logTraceInWith1Argument( "finishedToSendData(bool)", isTraversalInverted );
 
   assertion3(_isCurrentlySending, _identifier, _rank, "call once per traversal" );
@@ -206,8 +206,8 @@ void peano::heap::BoundaryDataExchanger<Data>::finishedToSendData(bool isTravers
 }
 
 
-template<class Data>
-void peano::heap::BoundaryDataExchanger<Data>::receiveDanglingMessages() {
+template<class Data, class SendReceiveTaskType>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::receiveDanglingMessages() {
   int        flag   = 0;
   MPI_Status status;
   int        result = MPI_Iprobe(
@@ -242,11 +242,11 @@ void peano::heap::BoundaryDataExchanger<Data>::receiveDanglingMessages() {
 }
 
 
-template<class Data>
-void peano::heap::BoundaryDataExchanger<Data>::sendData(
-  const std::vector<Data>&                      data,
-  const tarch::la::Vector<DIMENSIONS, double>&  position,
-  int                                           level
+template<class Data, class SendReceiveTaskType>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::sendData(
+  const typename SendReceiveTaskType::DataVectorType&  data,
+  const tarch::la::Vector<DIMENSIONS, double>&         position,
+  int                                                  level
 ) {
   assertion5( _isCurrentlySending, _identifier, data.size(), position, level, "forgot to call startToSendBoundaryData on heap?" );
 
@@ -269,8 +269,8 @@ void peano::heap::BoundaryDataExchanger<Data>::sendData(
 }
 
 
-template<class Data>
-std::vector< Data > peano::heap::BoundaryDataExchanger<Data>::receiveData(
+template<class Data, class SendReceiveTaskType>
+typename SendReceiveTaskType::DataVectorType  peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::receiveData(
   const tarch::la::Vector<DIMENSIONS, double>&  position,
   int                                           level
 ) {
@@ -310,8 +310,8 @@ std::vector< Data > peano::heap::BoundaryDataExchanger<Data>::receiveData(
 }
 
 
-template<class Data>
-void peano::heap::BoundaryDataExchanger<Data>::plotStatistics() const {
+template<class Data, class SendReceiveTaskType>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::plotStatistics() const {
   logInfo(
     "plotStatistics()",
     "records sent by " << _identifier << " to " << _rank << " on tag " << _metaDataTag << ": " << _numberOfSentRecords
@@ -349,8 +349,8 @@ void peano::heap::BoundaryDataExchanger<Data>::plotStatistics() const {
 }
 
 
-template<class Data>
-void peano::heap::BoundaryDataExchanger<Data>::clearStatistics() {
+template<class Data, class SendReceiveTaskType>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::clearStatistics() {
   _numberOfSentMessages     = 0;
   _numberOfSentRecords      = 0;
   _numberOfReceivedMessages = 0;
@@ -358,8 +358,8 @@ void peano::heap::BoundaryDataExchanger<Data>::clearStatistics() {
 }
 
 
-template <class Data>
-void peano::heap::BoundaryDataExchanger<Data>::releaseReceivedNeighbourMessagesRequests() {
+template <class Data, class SendReceiveTaskType>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::releaseReceivedNeighbourMessagesRequests() {
   logTraceIn( "releaseReceivedNeighbourMessagesRequests()" );
   bool allMessageCommunicationsAreFinished = !dataExchangerCommunicatesInBackground();
 
@@ -419,8 +419,8 @@ void peano::heap::BoundaryDataExchanger<Data>::releaseReceivedNeighbourMessagesR
 }
 
 
-template <class Data>
-void peano::heap::BoundaryDataExchanger<Data>::switchReceiveAndDeployBuffer(int numberOfMessagesSentThisIteration) {
+template <class Data, class SendReceiveTaskType>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::switchReceiveAndDeployBuffer(int numberOfMessagesSentThisIteration) {
   assertion(_receiveTasks[1-_currentReceiveBuffer].empty());
 
   _currentReceiveBuffer = 1-_currentReceiveBuffer;

@@ -8,7 +8,7 @@
 
 namespace peano {
   namespace heap {
-    template<class Data, bool CreateCopiesOfSentData>
+    template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
     class PlainBoundaryDataExchanger;
   }
 }
@@ -22,15 +22,15 @@ namespace peano {
  * Or we can send away data directly from the heap and rely on the user that
  * this data remains persistent.
  */
-template<class Data, bool CreateCopiesOfSentData>
-class peano::heap::PlainBoundaryDataExchanger: public peano::heap::BoundaryDataExchanger<Data> {
+template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
+class peano::heap::PlainBoundaryDataExchanger: public peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType> {
   private:
     /**
      * Logging device.
      */
     static tarch::logging::Log _log;
 
-    typedef BoundaryDataExchanger<Data> Base;
+    typedef BoundaryDataExchanger<Data, SendReceiveTaskType> Base;
   protected:
     /**
      * As each message immediately is sent, the internal field
@@ -59,7 +59,7 @@ class peano::heap::PlainBoundaryDataExchanger: public peano::heap::BoundaryDataE
      * Insert send task into local data structure and wrap and send out data
      * if necessary.
      */
-    virtual void handleAndQueueSendTask( const SendReceiveTask<Data>& sendTask, const std::vector<Data>& data );
+    virtual void handleAndQueueSendTask( const SendReceiveTask<Data>& sendTask, const typename SendReceiveTaskType::DataVectorType& data );
 
     virtual bool dataExchangerCommunicatesInBackground() const;
   public:
