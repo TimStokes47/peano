@@ -1,4 +1,4 @@
-\section{Alignment and vectorisation}
+\section{Alignment, vectorisation, \ldots}
 
 \chapterDescription
   {
@@ -9,13 +9,56 @@
   }
 
 
-In this section, we discuss some aspects of shared memory parallelisation and
-give some hints for proper shared memory parallelisation.
+In this section, we discuss various aspects tied to alignment and vectorisation. 
 
 
+\subsection{Vectorisation of basic linear algebra}
 
-- alignment
+Peano does come along with its own small technical architecture (\texttt{tarch})
+that holds some basic linear algebra routines. These routines currently are
+vectorised via Intel's SIMD pragmas. The pragmas are active if and only if the
+define \texttt{CompilerICC} is set. 
 
+All linear algebra routines (and various other parts of the code) include the
+file \linebreak
+\texttt{tarch/compiler/CompilerSpecificSettings.h}.
+This header evaluates various compiler predefines and tries to identify on which
+machine you compile.
+It then includes a compiler-specific include file which sets flags alike 
+\texttt{CompilerICC} if an Intel compiler is found.
+
+For cross-compilation or tuning of your settings, it might be reasonable to
+either adopt the spec file or to write your own header file which
+defines/undefines certain compiler settings.
+
+
+\subsection{Alignment of heap data}
+
+Most codes managing larger double arrays within Peano use Peano's heap to do so. 
+By default, the heap relies on the \texttt{std::vector} class and its embedded 
+plain C++ array. 
+By default, heap data is not aligned.
+
+
+For the heaps hosting doubles, Peano however offers aligned variants. See the
+file \linebreak
+\texttt{peano/heap/DoubleHeap.h} for examples. 
+There are a few predefined (typedefs) heaps, but you might want to define your
+own.
+
+
+Once you use the aligned heaps for your \texttt{double} data, its interface
+provides you access to standard C++ \texttt{std::vector<double>} objects.
+These objects have a \texttt{data()} operation through which you can get a 
+pointer to an aligned double array.
+
+\begin{code}
+typedef peano::heap::RLEDoubleHeapAlignment64  MyDoubleHeap;
+
+double* x = MyDoubleHeap::getInstance().getData(myIndex).data();
+
+// x is now aligned to 64 bytes.
+\end{code}
 
 
 % Alle Optionen von PeanoOptimisations.h durchgehen
