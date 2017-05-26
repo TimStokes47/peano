@@ -71,11 +71,18 @@ event-mapping:
   name: CreateGrid
 
 event-mapping:
+  name: Enumerate
+
+event-mapping:
   name: Assemble
 
 adapter:
   name: CreateGrid
   merge-with-user-defined-mapping: CreateGrid
+
+adapter:
+  name: Enumerate
+  merge-with-user-defined-mapping: Enumerate
 
 adapter:
   name: Assemble
@@ -122,7 +129,7 @@ void petsc::mappings::CreateGrid::createBoundaryVertex(...) {
 \end{code}
 
 \noindent
-Compile it, run it, visualise the output.
+Compile it with \texttt{make -f petsc/makefile}, run it, visualise the output.
 
 
 \subsection{Connecting to PETSc}
@@ -364,45 +371,49 @@ vectors and we can initialise our matrix properly:
 
 
 \begin{code}
+#include "petsc/VertexOperations.h"
+
+[...]
+
 void petsc::mappings::EnumerateUnknowns::endIteration(...) {
-  logTraceInWith1Argument( "endIteration(State)", solverState );
+ logTraceInWith1Argument( "endIteration(State)", solverState );
 
-  const PetscInt numberOfUnknowns = _unknownCounter;
+ const PetscInt numberOfUnknowns = _unknownCounter;
 
-  PetscErrorCode errorU = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &u);
-  PetscErrorCode errorF = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &f);
+ PetscErrorCode errorU = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &u);
+ PetscErrorCode errorF = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &f);
 
-  if (errorU!=0) {
-    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorU,  PETSC_ERROR_INITIAL,
-      "creating global solution vector failed" );
-  }
-  if (errorF!=0) {
-    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorF,  PETSC_ERROR_INITIAL,
-      "creating global rhs vector failed" );
-  }
+ if (errorU!=0) {
+   PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+     __LINE__,  __FUNCT__,  __FILE__, errorU,  PETSC_ERROR_INITIAL,
+     "creating global solution vector failed" );
+ }
+ if (errorF!=0) {
+   PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+     __LINE__,  __FUNCT__,  __FILE__, errorF,  PETSC_ERROR_INITIAL,
+     "creating global rhs vector failed" );
+ }
 
-  VecSetSizes(u, PETSC_DECIDE,numberOfUnknowns);
-  VecSetSizes(f, PETSC_DECIDE,numberOfUnknowns);
-  VecSetType(u, VECMPI);
-  VecSetType(f, VECMPI);
-  PetscObjectSetName((PetscObject)u, "Solution");
-  PetscObjectSetName((PetscObject)f, "Right-hand side");
+ VecSetSizes(u, PETSC_DECIDE,numberOfUnknowns);
+ VecSetSizes(f, PETSC_DECIDE,numberOfUnknowns);
+ VecSetType(u, VECMPI);
+ VecSetType(f, VECMPI);
+ PetscObjectSetName((PetscObject)u, "Solution");
+ PetscObjectSetName((PetscObject)f, "Right-hand side");
 
-  PetscErrorCode errorA = MatCreateSeqAIJ(
-    tarch::parallel::Node::getInstance().getCommunicator(),
-    numberOfUnknowns,numberOfUnknowns,
-    THREE_POWER_D, NULL,
-    &A
-  );
-  if (errorA!=0) {
-    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorA,  PETSC_ERROR_INITIAL,
-      "creating system matrix failed" );
-  }
+ PetscErrorCode errorA = MatCreateSeqAIJ(
+   tarch::parallel::Node::getInstance().getCommunicator(),
+   numberOfUnknowns,numberOfUnknowns,
+   THREE_POWER_D, NULL,
+   &A
+ );
+ if (errorA!=0) {
+   PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
+     __LINE__,  __FUNCT__,  __FILE__, errorA,  PETSC_ERROR_INITIAL,
+     "creating system matrix failed" );
+ }
 
-  logTraceOutWith1Argument( "endIteration(State)", solverState);
+ logTraceOutWith1Argument( "endIteration(State)", solverState);
 }
 \end{code}
 
@@ -457,6 +468,10 @@ plug into the runner snippet above and furthermore include
 and add a Jacobi preconditioner.
 
 \begin{code}
+repository.switchToCreateGrid(); repository.iterate();
+repository.switchToEnumerate(); repository.iterate();
+repository.switchToAssemble(); repository.iterate();
+
 KSP krylovSolver;
 PC  preconditioner;
 
@@ -471,6 +486,8 @@ PCSetType(preconditioner,PCBJACOBI);
 
 KSPSolve(krylovSolver,f,u);
 KSPDestroy(&krylovSolver);
+
+repository.switchToPlot(); repository.iterate();
 \end{code}
 
 \noindent

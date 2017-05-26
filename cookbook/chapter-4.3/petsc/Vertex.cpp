@@ -22,15 +22,15 @@ namespace petsc {
 }
 */
 
-Vec  petsc::x;
-Vec  petsc::rhs;
+Vec  petsc::u;
+Vec  petsc::f;
 Mat  petsc::A;
 
 
 
 petsc::Vertex::Vertex():
   Base() { 
-  // @todo Insert your code here
+//  _vertexData.setIndex(-1);
 }
 
 
@@ -48,11 +48,11 @@ petsc::Vertex::Vertex(const Base::PersistentVertex& argument):
 
 double petsc::Vertex::getU() const {
   double result = 0.0;
-  if (isInside()) {
+  if (_vertexData.getIndex()>=0) {
     PetscInt     indices[] = {_vertexData.getIndex()};
     PetscScalar  values[]  = {0.0};
 
-    VecGetValues(x,1,indices,values);
+    VecGetValues(u,1,indices,values);
 
     result = values[0];
   }
@@ -60,8 +60,12 @@ double petsc::Vertex::getU() const {
 }
 
 
-void petsc::Vertex::setRhs(double value) {
+bool petsc::Vertex::isUnknown() const {
+  return _vertexData.getIndex()>=0;
+}
+
+void petsc::Vertex::setRhs(double rhs) {
   PetscInt     indices[] = {_vertexData.getIndex()};
-  PetscScalar  values[]  = {value};
-  VecSetValues(rhs,1,indices,values, INSERT_VALUES);
+  PetscScalar  values[]  = {rhs};
+  VecSetValues(f,1,indices,values, INSERT_VALUES);
 }

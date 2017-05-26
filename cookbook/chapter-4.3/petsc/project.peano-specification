@@ -17,11 +17,18 @@ event-mapping:
   name: CreateGrid
 
 event-mapping:
+  name: Enumerate
+
+event-mapping:
   name: Assemble
 
 adapter:
   name: CreateGrid
   merge-with-user-defined-mapping: CreateGrid
+
+adapter:
+  name: Enumerate
+  merge-with-user-defined-mapping: Enumerate
 
 adapter:
   name: Assemble

@@ -99,48 +99,27 @@ int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& reposit
    * Build up the grid. Afterwards, we know how many vertices exist.
    */
   repository.switchToCreateGrid(); repository.iterate();
+  repository.switchToEnumerate(); repository.iterate();
+  repository.switchToAssemble(); repository.iterate();
 
-  /**
-   * Create the global vector required for our work with PETSc.
-   */
-  PetscErrorCode errorX   = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &petsc::x);
-  PetscErrorCode errorRhs = VecCreate(tarch::parallel::Node::getInstance().getCommunicator(), &rhs);
-  PetscErrorCode errorA   = MatCreate(tarch::parallel::Node::getInstance().getCommunicator(), &A);
+  KSP krylovSolver;
+  PC  preconditioner;
 
-  if (errorX!=0) {
-    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorX,  PETSC_ERROR_INITIAL, // first time we detect this error
-      "creating global solution vector failed" );
-  }
-  if (errorRhs!=0) {
-    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorRhs,  PETSC_ERROR_INITIAL, // first time we detect this error
-      "creating global rhs vector failed" );
-  }
-  if (errorA!=0) {
-    PetscError( tarch::parallel::Node::getInstance().getCommunicator(),
-      __LINE__,  __FUNCT__,  __FILE__, errorA,  PETSC_ERROR_INITIAL, // first time we detect this error
-      "creating system matrix failed" );
-  }
+  KSPCreate(tarch::parallel::Node::getInstance().getCommunicator(),&krylovSolver);
+  KSPSetOperators(krylovSolver,A,A); // use matrix from Vector.h
 
+  // connect/get preconditioner
+  KSPGetPC(krylovSolver,&preconditioner);
 
-  /**
-   * Local size (first parameter) and global size are the same for the time
-   * being. Peano uses doubles to count vertices, as the number of vertices
-   * sometimes exceed int. So we have to use an ugly cast here.
-   */
-  const PetscInt numberOfUnknowns = static_cast<int>(repository.getState().getNumberOfInnerLeafVertices());
+  // set Jacobi as preconditioner
+  PCSetType(preconditioner,PCBJACOBI);
 
-  assertion1( numberOfUnknowns>0, numberOfUnknowns );
+  KSPSolve(krylovSolver,f,u);
+  KSPDestroy(&krylovSolver);
 
-  VecSetSizes(x,  PETSC_DECIDE,numberOfUnknowns);
-  VecSetSizes(rhs,PETSC_DECIDE,numberOfUnknowns);
-  VecSetType(x,VECMPI);
-  VecSetType(rhs,VECSEQ);
-  MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,numberOfUnknowns,numberOfUnknowns);
-  MatSetType(A,MATSEQAIJ);
-  MatSetUp(A);
-  
+  repository.switchToPlot(); repository.iterate();
+
+/*
   repository.switchToAssemble(); repository.iterate();
   MatView(A,PETSC_VIEWER_DRAW_WORLD);
   std::cin.get();
@@ -166,12 +145,12 @@ int petsc::runners::Runner::runAsMaster(petsc::repositories::Repository& reposit
 
   repository.switchToPlot(); repository.iterate();
 
+*/
 
-  /**
-   * Clean up PETSc data structures
-   */
-  VecDestroy(&x);
-  VecDestroy(&rhs);
+  // Clean up PETSc data structures
+
+  VecDestroy(&u);
+  VecDestroy(&f);
   MatDestroy(&A);
 
   repository.logIterationStatistics( true );

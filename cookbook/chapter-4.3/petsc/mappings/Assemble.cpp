@@ -6,7 +6,7 @@
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::CommunicationSpecification   petsc::mappings::Assemble::communicationSpecification() {
+peano::CommunicationSpecification   petsc::mappings::Assemble::communicationSpecification() const {
   return peano::CommunicationSpecification(
       peano::CommunicationSpecification::ExchangeMasterWorkerData::SendDataAndStateBeforeFirstTouchVertexFirstTime,
       peano::CommunicationSpecification::ExchangeWorkerMasterData::SendDataAndStateAfterLastTouchVertexLastTime,
@@ -18,48 +18,48 @@ peano::CommunicationSpecification   petsc::mappings::Assemble::communicationSpec
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::Assemble::touchVertexLastTimeSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
+peano::MappingSpecification   petsc::mappings::Assemble::touchVertexLastTimeSpecification(int level) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid,true);
 }
 
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::Assemble::touchVertexFirstTimeSpecification() { 
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
+peano::MappingSpecification   petsc::mappings::Assemble::touchVertexFirstTimeSpecification(int level) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid,true);
 }
 
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::Assemble::enterCellSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
+peano::MappingSpecification   petsc::mappings::Assemble::enterCellSpecification(int level) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces,true);
 }
 
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::Assemble::leaveCellSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
+peano::MappingSpecification   petsc::mappings::Assemble::leaveCellSpecification(int level) const  {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces,true);
 }
 
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::Assemble::ascendSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
+peano::MappingSpecification   petsc::mappings::Assemble::ascendSpecification(int level) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces,true);
 }
 
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::Assemble::descendSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
+peano::MappingSpecification   petsc::mappings::Assemble::descendSpecification(int level) const  {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces,true);
 }
 
 
@@ -383,15 +383,10 @@ void petsc::mappings::Assemble::touchVertexFirstTime(
 ) {
   logTraceInWith6Arguments( "touchVertexFirstTime(...)", fineGridVertex, fineGridX, fineGridH, coarseGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfVertex );
 
-  if (
-    fineGridVertex.getRefinementControl()==Vertex::Records::Unrefined
-    &&
-    fineGridVertex.isInside() // it is not a boundary point
-  ) {
-    VertexOperations::writeIndex(fineGridVertex,_unknownCounter);
-    _unknownCounter++;
-
-    fineGridVertex.setRhs( 1.0 );
+  if (fineGridVertex.isUnknown()) {
+    fineGridVertex.setRhs(
+      1.0 * tarch::la::volume(fineGridH)
+    );
   }
 
   logTraceOutWith1Argument( "touchVertexFirstTime(...)", fineGridVertex );
@@ -424,26 +419,25 @@ void petsc::mappings::Assemble::enterCell(
 ) {
   logTraceInWith4Arguments( "enterCell(...)", fineGridCell, fineGridVerticesEnumerator.toString(), coarseGridCell, fineGridPositionOfCell );
 
-  if ( not fineGridCell.isRefined() ) {
-    tarch::la::Matrix<4,4,double> localA;
-    localA = 0.5,  -0.25, -0.25, 0,
-             -0.25, 0.5,  0,    -0.25,
-             -0.25, 0,    0.5,  -0.25,
-             0,    -0.25, -0.25, 0.5;
+  tarch::la::Matrix<4,4,double> localA;
+  localA =  1.0,  -0.5, -0.5,  0.0,
+           -0.5,   1.0,  0.0, -0.5,
+           -0.5,   0.0,  1.0, -0.5,
+            0.0,  -0.5, -0.5,  1.0;
 
-    for(int ii=0; ii<4; ii++)
-    for(int jj=0; jj<4; jj++) {
-      if (
-        fineGridVertices[fineGridVerticesEnumerator(ii)].isInside()
-        &&
-        fineGridVertices[fineGridVerticesEnumerator(jj)].isInside()
-      ) {
-        PetscInt row = VertexOperations::readIndex( fineGridVertices[fineGridVerticesEnumerator(ii)] );
-        PetscInt col = VertexOperations::readIndex( fineGridVertices[fineGridVerticesEnumerator(jj)] );
-
-        MatSetValue(A,row,col,localA(ii,jj),ADD_VALUES);
-      }
-    }
+  for(int ii=0; ii<4; ii++)
+  for(int jj=0; jj<4; jj++) {
+   if (
+    fineGridVertices[fineGridVerticesEnumerator(ii)].isUnknown()
+    and
+    fineGridVertices[fineGridVerticesEnumerator(jj)].isUnknown()
+   ) {
+    PetscInt row = VertexOperations::readIndex(
+      fineGridVertices[fineGridVerticesEnumerator(ii)] );
+    PetscInt col = VertexOperations::readIndex(
+      fineGridVertices[fineGridVerticesEnumerator(jj)] );
+    MatSetValue(A,row,col,localA(ii,jj),ADD_VALUES);
+   }
   }
 
   logTraceOutWith1Argument( "enterCell(...)", fineGridCell );
@@ -470,8 +464,9 @@ void petsc::mappings::Assemble::beginIteration(
 ) {
   logTraceInWith1Argument( "beginIteration(State)", solverState );
 
-  logInfo( "beginIteration(State)", "start assembly" );
-  _unknownCounter = 0;
+  VecAssemblyBegin( u );
+  VecAssemblyBegin( f );
+  MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
 
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
@@ -482,17 +477,9 @@ void petsc::mappings::Assemble::endIteration(
 ) {
   logTraceInWith1Argument( "endIteration(State)", solverState );
 
-  logInfo( "beginIteration(State)", "finalise assembly" );
-
-  VecAssemblyBegin( x );
-  VecAssemblyBegin( rhs );
-  VecAssemblyEnd( x );
-  VecAssemblyEnd( rhs );
-
-  MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY);
+  VecAssemblyEnd( u );
+  VecAssemblyEnd( f );
   MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY);
-
-  logInfo( "beginIteration(State)", "assembly finished" );
 
   logTraceOutWith1Argument( "endIteration(State)", solverState);
 }

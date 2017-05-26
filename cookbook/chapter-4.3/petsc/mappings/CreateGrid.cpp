@@ -5,7 +5,7 @@
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::CommunicationSpecification   petsc::mappings::CreateGrid::communicationSpecification() {
+peano::CommunicationSpecification   petsc::mappings::CreateGrid::communicationSpecification() const {
   return peano::CommunicationSpecification(
       peano::CommunicationSpecification::ExchangeMasterWorkerData::SendDataAndStateBeforeFirstTouchVertexFirstTime,
       peano::CommunicationSpecification::ExchangeWorkerMasterData::SendDataAndStateAfterLastTouchVertexLastTime,
@@ -17,48 +17,48 @@ peano::CommunicationSpecification   petsc::mappings::CreateGrid::communicationSp
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::CreateGrid::touchVertexLastTimeSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
+peano::MappingSpecification   petsc::mappings::CreateGrid::touchVertexLastTimeSpecification(int level) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid,true);
 }
 
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::CreateGrid::touchVertexFirstTimeSpecification() { 
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
+peano::MappingSpecification   petsc::mappings::CreateGrid::touchVertexFirstTimeSpecification(int level) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid,true);
 }
 
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::CreateGrid::enterCellSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
+peano::MappingSpecification   petsc::mappings::CreateGrid::enterCellSpecification(int level) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces,true);
 }
 
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::CreateGrid::leaveCellSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
+peano::MappingSpecification   petsc::mappings::CreateGrid::leaveCellSpecification(int level) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces,true);
 }
 
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::CreateGrid::ascendSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
+peano::MappingSpecification   petsc::mappings::CreateGrid::ascendSpecification(int level) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces,true);
 }
 
 
 /**
  * @todo Please tailor the parameters to your mapping's properties.
  */
-peano::MappingSpecification   petsc::mappings::CreateGrid::descendSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
+peano::MappingSpecification   petsc::mappings::CreateGrid::descendSpecification(int level) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces,true);
 }
 
 
@@ -443,7 +443,7 @@ void petsc::mappings::CreateGrid::beginIteration(
   petsc::State&  solverState
 ) {
   logTraceInWith1Argument( "beginIteration(State)", solverState );
-  // @todo Insert your code here
+
   logTraceOutWith1Argument( "beginIteration(State)", solverState);
 }
 

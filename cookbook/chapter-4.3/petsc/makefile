@@ -58,7 +58,8 @@ SYSTEM_LFLAGS = $(LINK_TBB)    $(LINK_MPI)
 # Settings for the GNU Compiler (Debug Mode)
 # ------------------------------------------
 #CC=g++
-CC=/opt/openmpi/bin/mpiCC
+#CC=/opt/openmpi/bin/mpiCC
+CC=mpiCC
 COMPILER_CFLAGS=-O0 -pedantic -Wall -Wstrict-aliasing -fstrict-aliasing -ggdb -std=c++0x
 
 

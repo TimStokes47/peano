@@ -5,8 +5,8 @@
 // this file and your project to your needs as long as the license is in 
 // agreement with the original Peano user constraints. A reference to/citation  
 // of  Peano and its author is highly appreciated.
-#ifndef PETSC_MAPPINGS_Assemble_H_
-#define PETSC_MAPPINGS_Assemble_H_
+#ifndef PETSC_MAPPINGS_Enumerate_H_
+#define PETSC_MAPPINGS_Enumerate_H_
 
 
 #include "tarch/logging/Log.h"
@@ -24,9 +24,9 @@
 
 
 namespace petsc {
-      namespace mappings {
-        class Assemble;
-      } 
+  namespace mappings {
+    class Enumerate;
+  }
 }
 
 
@@ -37,14 +37,15 @@ namespace petsc {
  * @author Peano Development Toolkit (PDT) by  Tobias Weinzierl
  * @version $Revision: 1.10 $
  */
-class petsc::mappings::Assemble {
+class petsc::mappings::Enumerate {
   private:
     /**
      * Logging device for the trace macros.
      */
     static tarch::logging::Log  _log;
 
-    int  _unknownCounter;
+    int _unknownCounter;
+
   public:
     /**
      * These flags are used to inform Peano about your operation. It tells the 
@@ -54,15 +55,19 @@ class petsc::mappings::Assemble {
      * optimise the code.
      *
      * @see peano::MappingSpecification for information on thread safety.
+     * @param level   Level for which we ask what to do. This value is negative
+     *                if we are on the fine grid level. In this case, the 
+     *                actual level is the absolute value.
      */
-    static peano::MappingSpecification   touchVertexLastTimeSpecification();
-    static peano::MappingSpecification   touchVertexFirstTimeSpecification();
-    static peano::MappingSpecification   enterCellSpecification();
-    static peano::MappingSpecification   leaveCellSpecification();
-    static peano::MappingSpecification   ascendSpecification();
-    static peano::MappingSpecification   descendSpecification();
+    peano::MappingSpecification         touchVertexLastTimeSpecification(int level) const;
+    peano::MappingSpecification         touchVertexFirstTimeSpecification(int level) const;
+    peano::MappingSpecification         enterCellSpecification(int level) const;
+    peano::MappingSpecification         leaveCellSpecification(int level) const;
+    peano::MappingSpecification         ascendSpecification(int level) const;
+    peano::MappingSpecification         descendSpecification(int level) const;
+    peano::CommunicationSpecification   communicationSpecification(int level) const;
 
-    static peano::CommunicationSpecification   communicationSpecification();
+    peano::CommunicationSpecification   communicationSpecification() const;
 
 
     /**
@@ -94,8 +99,9 @@ class petsc::mappings::Assemble {
      * call. With this sometimes confusing persistency concept, we can ensure 
      * that your code works on a parallel machine and for any mapping/algorithm 
      * modification.
+     *
      */
-    Assemble();
+    Enumerate();
 
     #if defined(SharedMemoryParallelisation)
     /**
@@ -108,13 +114,13 @@ class petsc::mappings::Assemble {
      *
      * @see mergeWithWorkerThread()
      */
-    Assemble(const Assemble& masterThread);
+    Enumerate(const Enumerate& masterThread);
     #endif
 
     /**
      * Destructor. Typically does not implement any operation.
      */
-    virtual ~Assemble();
+    virtual ~Enumerate();
   
     #if defined(SharedMemoryParallelisation)
     /**
@@ -145,7 +151,7 @@ class petsc::mappings::Assemble {
      * on the heap. However, you should protect this object by a BooleanSemaphore 
      * and a lock to serialise all accesses to the plotter.    
      */   
-    void mergeWithWorkerThread(const Assemble& workerThread);
+    void mergeWithWorkerThread(const Enumerate& workerThread);
     #endif
 
     /**
@@ -369,12 +375,12 @@ class petsc::mappings::Assemble {
      * have been initialised before, i.e. for each adjacent vertex either 
      * touchVertexFirstTime() or createHangingVertex() has been called. 
      *
-     * !!! Vertex and cell lifecycle
+     * <h2> Vertex and cell lifecycle </h2>
      * 
      * Please consult peano/grid/vertex-lifecycle.doxys for details on the 
      * vertex and cell lifecycle.
      *
-     * !!! Hanging nodes outside the computational domain
+     * <h2> Hanging nodes outside the computational domain </h2>
      *
      * For performance reasons, Peano does not check whether a hanging node 
      * is outside of the computational domain or (in the parallel case) does 
@@ -390,8 +396,12 @@ class petsc::mappings::Assemble {
  if ( fineGridVertex.isAdjacentToDomainOf( tarch::parallel::Node::getInstance().getRank() ) ) {
    ...
      \endcode  
-     *  
-     * @see peano::MappingSpecification for information on thread safety.
+     *
+     *     
+     * <h2> Multithreading </h2> 
+     * 
+     * Multiple createHangingVertex() invocations might be triggered at the 
+     * same time.
      */
     void createHangingVertex(
       petsc::Vertex&               fineGridVertex,
@@ -407,16 +417,21 @@ class petsc::mappings::Assemble {
     /**
      * Counterpart of create operation
      *
-     * !!! Thread-safety
+     * <h2> Thread-safety </h2>
      *
      * This operation is not thread safe with respect to the coarse grid 
      * vertices and the coarse grid cell. With respect to the fine grid 
      * vertices, it is thread safe.
      *
-     * !!! Vertex and cell lifecycle
+     * <h2> Vertex and cell lifecycle </h2> 
      * 
      * Please consult peano/grid/vertex-lifecycle.doxys for details on the 
      * vertex and cell lifecycle.
+     *     
+     * <h2> Multithreading </h2> 
+     * 
+     * Multiple destroyHangingVertex() invocations might be triggered at the 
+     * same time.
      */
     void destroyHangingVertex(
       const petsc::Vertex&   fineGridVertex,
@@ -610,6 +625,11 @@ class petsc::mappings::Assemble {
      * has been called, the current vertex can be prepared for being sent to
      * the neighbouring computation node in this method. 
      *
+     * To keep vertices consistent, Peano also does exchange outside vertices.
+     * This allows you to make regions out of the domain refine, e.g., which 
+     * can be advantageous for load balancing and concave domains. Anyway, 
+     * please note that vertex.isOutside() might hold.
+     *
      * @param vertex        Local vertex.
      * @param toRank        Rank of the neighbour if isForkOrJoin is unset.  
      *                      Otherwise, it is the rank of the master.
@@ -749,7 +769,7 @@ class petsc::mappings::Assemble {
      * the worker. It is invoked only if reduction along the spacetree is 
      * switched on.
      *
-     * !!! Heap data
+     * <h2> Heap data </h2>
      *
      * If you are working with a heap data structure, your vertices or cells, 
      * respectively, hold pointers to the heap. The received records hold 
@@ -758,10 +778,21 @@ class petsc::mappings::Assemble {
      * Receive heap data instead separately without taking the pointers in 
      * the arguments into account.      
      *
-     * @param workerGridCell      Valid object iff data reduction is switched on. See State::reduceDataToMaster().
-     * @param workerGridVertices  Valid object iff data reduction is switched on. See State::reduceDataToMaster().
-     * @param workerEnumerator    Valid object iff data reduction is switched on. See State::reduceDataToMaster().
-     * @param workerState         Valid object iff data reduction is switched on. See State::reduceDataToMaster().
+     *
+     * <h2> Remarks </h2>
+     *
+     * You can, at any point of your code, obtain information about your MPI 
+     * ranks from tarch::parallel::Node. If you require topological information 
+     * such as the rank of the rank's master, you have to ask the singleton 
+     * tarch::parallel::NodePool however.
+     *
+     *  
+     * @see   State::reduceDataToMaster()
+     *
+     * @param workerGridCell       
+     * @param workerGridVertices  
+     * @param workerEnumerator    
+     * @param workerState         
      */
     void mergeWithMaster(
       const petsc::Cell&                       workerGridCell,
@@ -848,7 +879,7 @@ class petsc::mappings::Assemble {
      * available. The modified arguments then are forwarded by Peano to 
      * mergeWithWorker().
      *
-     * !!! Rationale
+     * <h2> Rationale </h2>
      * 
      * The split of the receive process into two stages seems to be artificial 
      * and not very much straightforward. However, two constraints make it 
@@ -860,7 +891,7 @@ class petsc::mappings::Assemble {
      *   element but an outer part of the tree, i.e. some vertices have to be 
      *   merged before we can also merge the cell and all other vertices.
      *
-     * !!! Heap data
+     * <h2> Heap data </h2>
      *
      * If you are working with a heap data structure, your vertices or cells, 
      * respectively, hold pointers to the heap. The received records hold 
@@ -877,6 +908,15 @@ class petsc::mappings::Assemble {
      * - Merge the heap data within mergeWithWorker().
      *
      * - Remove the heap entries created in this operation within mergeWithWorker().
+     *
+     * <h2> Remarks </h2>
+     *
+     * You can, at any point of your code, obtain information about your MPI 
+     * ranks from tarch::parallel::Node. If you require topological information 
+     * such as the rank of the rank's master, you have to ask the singleton 
+     * tarch::parallel::NodePool however.  
+     *
+     *
      *
      * @param coarseGridVertices  Copy of the coarse vertices of the master 
      *                            node as well worker's records. As you receive 
@@ -1120,10 +1160,10 @@ class petsc::mappings::Assemble {
      * mapping operation or touchVertexFirstTime() or handleCell() is called.
      * The operation receives a solver state that has to 
      * encode the solver's state. Take this attribute to set the mapping's 
-     * attributes. This class' attributes will remain valid until endIteration()
+     * attributes. This mapping's attributes will remain valid until endIteration()
      * is called. Afterwards they might contain garbage.
      *
-     * !!! Parallelisation
+     * <h2> Parallelisation </h2>
      *
      * If you run your code in parallel, beginIteration() and endIteration() 
      * realise the following lifecycle together with the state object:
@@ -1140,7 +1180,17 @@ class petsc::mappings::Assemble {
      * beginIteration() might not be called prior to any other event. See the 
      * documentation of CommunicationSpecification for details.
      *
-     * @see Assemble()
+     * <h2> State persistency </h2>
+     *
+     * The state object handed into beginIteration() is not required to persist. 
+     * Do never store a pointer to solverState as the object might move around 
+     * in memory. If you require the state, copy it. There are some state attributes
+     * that do change over time. The most important example is the set of forked
+     * ranks. All those attributes that do change and that you may access within a 
+     * mapping besides in beginIteration() and endIteration() are static, so no 
+     * pointers to the state object are required.
+     *
+     * @see Enumerate()
      */
     void beginIteration(
       petsc::State&  solverState
@@ -1173,7 +1223,7 @@ class petsc::mappings::Assemble {
      * might not be called after all other events. See the documentation 
      * of CommunicationSpecification for details.
      *
-     * @see Assemble()
+     * @see Enumerate()
      */
     void endIteration(
       petsc::State&  solverState

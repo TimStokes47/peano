@@ -34,8 +34,8 @@ namespace petsc {
    * These are the global vectors that we use to make the adapter communicate
    * with PETSc:
    */
-  extern Vec  x;
-  extern Vec  rhs;
+  extern Vec  u;
+  extern Vec  f;
   extern Mat  A;
 }
 
@@ -81,6 +81,8 @@ class petsc::Vertex: public peano::grid::Vertex< petsc::records::Vertex > {
 
     void setRhs(double value);
     double getU() const;
+
+    bool isUnknown() const;
 };
 
 
