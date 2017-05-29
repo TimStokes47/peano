@@ -50,11 +50,6 @@ class tarch::parallel::NodePoolStrategy {
      * It is up to the strategy to decide which element of the queue to answer
      * first. The result is to be removed from the input parameter.
      *
-     * This operation takes an element from the request queue. It does actually
-     * not return the first elements but takes into account the request
-     * history: If two nodes have a request, the request of node A has higher
-     * priority if node B has requested something before A last time.
-     *
      * @return Request message from queue. Element also is removed from queue.
      */
     virtual tarch::parallel::messages::WorkerRequestMessage extractElementFromRequestQueue(RequestQueue& queue) = 0;
@@ -65,7 +60,7 @@ class tarch::parallel::NodePoolStrategy {
      * It is up to the strategy to decide how to fill the queue. One might think
      * that such a behaviour is just a poll on the MPI queues. However, there
      * are strategies that, just an example, wait for a certain time for
-     * messages.
+     * messages to give all ranks the opportunity to place their worker request.
      */
     virtual void fillWorkerRequestQueue(RequestQueue& queue) = 0;
 
