@@ -69,7 +69,7 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const DataVe
   _freeDataPointer = true;
 
   #ifdef CompilerICC
-  _data = _mm_malloc(data.size()*sizeof(double), Alignment);
+  _data = static_cast<double *>(_mm_malloc(data.size()*sizeof(double), Alignment));
   #elif defined(__APPLE__)
   posix_memalign(&_data, Alignment, data.size()*sizeof(double));
   #else
@@ -114,7 +114,7 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::triggerReceive(int ta
   logTraceInWith2Arguments( "triggerReceive(int)", tag, _metaInformation.toString() );
   
   #ifdef CompilerICC
-  _data = _mm_malloc(_metaInformation.getLength()*sizeof(double), Alignment);
+  _data = static_cast<double *>(_mm_malloc(_metaInformation.getLength()*sizeof(double), Alignment));
   #elif defined(__APPLE__)
   posix_memalign(&_data, Alignment, _metaInformation.getLength()*sizeof(double));
   #else
