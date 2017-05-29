@@ -18,7 +18,7 @@ peano::parallel::loadbalancing::Oracle::Oracle():
   _currentOracle(-1),
   _oraclePrototype(0),
   _workers(),
-  _startCommand(peano::parallel::loadbalancing::LoadBalancingFlag::Continue),
+  _startCommand(peano::parallel::loadbalancing::LoadBalancingFlag::ForkAllChildrenAndBecomeAdministrativeRank),
   _loadBalancingActivated(true),
   _numberOfOracles(0) {
 }

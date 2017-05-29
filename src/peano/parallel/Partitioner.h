@@ -26,6 +26,23 @@ namespace peano {
 }
 
 
+/**
+ * Partitioner for the grid
+ *
+ * This class is used to split up the grid/spacetree into disjoint parts. It is
+ * used by the root node and can be used by any refined node, too. The class is
+ * given the set of nodes that can in theory be forked into a new tree, i.e. the
+ * predicate isCellAForkCandidate() has to hold for those guys and they may not
+ * be remote already.
+ *
+ * Once the partitioner is constructed (you may think about `wrapped around the
+ * cells'), the code can call reserveNodes(). Once this operation returns and
+ * hasSuccessfullyReservedAdditionalWorkers() holds we know that there are forks
+ * now to be realised. To realise them, the code has to use sendForkMessages()
+ * which is befilled with geometric information about the involved cells.
+ * getRankOfWorkerReponsibleForCell() then identifies per child cell which rank
+ * has to become responsible for this cell.
+ */
 class peano::parallel::Partitioner {
   protected:
     static tarch::logging::Log _log;
@@ -35,7 +52,7 @@ class peano::parallel::Partitioner {
      *
      * Is filled by reserveNodes().
      */
-    std::vector<int>                   _ranks;
+    std::vector<int>                  _ranks;
 
     const std::bitset<THREE_POWER_D>  _localCellsOfPatch;
 
@@ -74,8 +91,7 @@ class peano::parallel::Partitioner {
     virtual ~Partitioner();
 
     /**
-     * Only to be called after reserveNodesForRegularGrid() or
-     * reserveNodesForSpacetreeGrid() have termined successfully.
+     * Only to be called after reserveNodes() has terminated successfully.
      */
     bool hasSuccessfullyReservedAdditionalWorkers() const;
 

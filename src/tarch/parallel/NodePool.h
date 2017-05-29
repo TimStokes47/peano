@@ -36,7 +36,7 @@ namespace tarch {
  *
  * || Feature        || Operations       || For which rank || Semantics
  * |  Job management | waitForJob()      |  rank>0         |  The operation terminates as soon as the local node is assigned a job or the whole program terminates.
- * |                 | reserveFreeNode() |  all ranks      |  Get a new worker for my rank.
+ * |                 | reserveFreeNodes() |  all ranks      |  Get a new worker for my rank.
  * |  Hierarchy management | getMasterNodeNumber() | rank>0 | Returns the rank of the master node, i.e. of the node who has requested me as a worker.
  * |  Management     | setStrategy()     |  rank=0         |  Define which load balancing strategy to choose.
  * |                 | terminate()       |  rank=0         |  Shut down application, i.e. tell all nodes to terminate.
@@ -65,7 +65,7 @@ namespace tarch {
 class tarch::parallel::NodePool: public tarch::services::Service {
   public:
     /**
-     * Alternative return value by reserveFreeNode().
+     * Alternative return value by reserveFreeNodes().
      */
     static const int NoFreeNodesMessage;
 
@@ -138,13 +138,13 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * of the new node is returned.
      *
      * At the first glance this operation is easier compared to
-     * reserveFreeNodeForClient(). Nevertheless, one has to consider a
+     * reserveFreeNodesForClient(). Nevertheless, one has to consider a
      * sophisticated side effect: The client to be actived might have sent a
      * job request already. Thus, if the replyToMessages() operation receives
      * a job request from a node set active, it has to cancel this message
      * without handling it.
      */
-    int reserveFreeNodeForServer();
+    std::vector<int> reserveFreeNodesForServer(int numberOfRanksWanted);
 
     /**
      * Reserve Worker for any Process not Being Node Pool Server
@@ -161,18 +161,9 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * could sleep and allow other tasks to work. This is especially important
      * if a node is overloaded. Yet, if no worker is available, the node pool
      * server answers immediately and there's no reason to sleep for the asking
-     * worker. Thus, I introduced the _hasReceivedNoWorkerAvailable flag passed
-     * the operation. The following table gives the transitions.
-     *
-|| _hasReceivedNoWorkerAvailable (in) || received message    || sleep || _hasReceivedNoWorkerAvailable (out)
-|  false                              |  new (sub-)worker    |  yes   |  false
-|  false                              |  no worker available |  yes   |  true
-|  true                               |  new (sub-)worker    |  no    |  false
-|  true                               |  no worker available |  no    |  true
-     *
-     * To make the startup fast, the initial value of this flag should be true.
+     * worker.
      */
-    int reserveFreeNodeForClient();
+    std::vector<int> reserveFreeNodesForClient(int numberOfRanksWanted);
 
     /**
      * Empty the receive buffer of the process. Is called by the constructor
@@ -290,8 +281,11 @@ class tarch::parallel::NodePool: public tarch::services::Service {
      * a remote reservation is taken into account. This is because remote
      * queries are usually only answered if the node pool is waiting for any
      * message.
+     *
+     * @return Set of integers. Though the result is a set, we return a vector
+     *               as the order makes a difference, too.
      */
-    int reserveFreeNode();
+    std::vector<int> reserveFreeNodes(int numberOfRanksWanted);
 
     /**
      * Wait for nodes in the cluster.

@@ -358,8 +358,8 @@ void tarch::parallel::NodePool::terminate() {
 
 
 int tarch::parallel::NodePool::getFreeNode(int forMaster) {
-  assertion1( _isAlive, Node::getInstance().getRank() );
-  assertion1( _strategy!=0, Node::getInstance().getRank() );
+  assertion2( _isAlive, Node::getInstance().getRank(), forMaster );
+  assertion2( _strategy!=0, Node::getInstance().getRank(), forMaster );
 
   logTraceInWith1Argument( "getFreeNode(int)", forMaster );
 
@@ -376,59 +376,83 @@ int tarch::parallel::NodePool::getFreeNode(int forMaster) {
 }
 
 
-int tarch::parallel::NodePool::reserveFreeNodeForServer() {
+std::vector<int>  tarch::parallel::NodePool::reserveFreeNodesForServer(int numberOfRanksWanted) {
   assertion1( _isAlive, Node::getInstance().getRank() );
+  assertion(numberOfRanksWanted>0);
 
   logTraceIn( "reserveFreeNodeForServer()");
 
-  int activatedNode = getFreeNode( Node::getInstance().getGlobalMasterRank());
+  std::vector<int> result;
+  int activatedNode = NoFreeNodesMessage;
+  do {
+    #ifdef Parallel
+    activatedNode = getFreeNode( Node::getInstance().getGlobalMasterRank());
+    if (activatedNode!=NoFreeNodesMessage) {
+      tarch::parallel::messages::ActivationMessage message( Node::getInstance().getGlobalMasterRank() );
+      message.send( activatedNode, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+      result.push_back(activatedNode);
+    }
+    #endif
+  } while (
+    activatedNode!=NoFreeNodesMessage
+    &&
+    static_cast<int>(result.size())<numberOfRanksWanted
+  );
 
-  #ifdef Parallel
-  if (activatedNode!=NoFreeNodesMessage) {
-    tarch::parallel::messages::ActivationMessage message( Node::getInstance().getGlobalMasterRank() );
-    message.send( activatedNode, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
-  }
-  #endif
+  logWarning( "reserveFreeNodeForServer()", "tried to reserve " << numberOfRanksWanted << " but got only " << result.size() << " rank(s) on global master" );
 
-  logTraceOutWith1Argument( "reserveFreeNodeForServer()", activatedNode);
+  logTraceOutWith1Argument( "reserveFreeNodeForServer()", result.size());
 
-  return activatedNode;
+  return result;
 }
 
 
-int tarch::parallel::NodePool::reserveFreeNode() {
+std::vector<int> tarch::parallel::NodePool::reserveFreeNodes(int numberOfRanksWanted) {
+  assertion(numberOfRanksWanted>0);
+
   if ( Node::getInstance().isGlobalMaster() ) {
     assertion2( _masterNode == -1, _masterNode, Node::getInstance().getRank() );
   	assertion1( _isAlive, Node::getInstance().getRank() );
   	receiveDanglingMessages();
-  	return reserveFreeNodeForServer();
+  	return reserveFreeNodesForServer(numberOfRanksWanted);
   }
   else {
     assertion1( _isAlive, Node::getInstance().getRank() );
-    return reserveFreeNodeForClient();
+    return reserveFreeNodesForClient(numberOfRanksWanted);
   }
 }
 
 
-int tarch::parallel::NodePool::reserveFreeNodeForClient() {
+std::vector<int>  tarch::parallel::NodePool::reserveFreeNodesForClient(int numberOfRanksWanted) {
   assertion1( _isAlive, Node::getInstance().getRank() );
   assertion1( !Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
+  assertion(numberOfRanksWanted>0);
 
   logTraceIn( "reserveFreeNodeForClient()" );
 
-  #ifdef Parallel
-  tarch::parallel::messages::WorkerRequestMessage queryMessage;
+  std::vector<int> result;
+  int activatedNode = NoFreeNodesMessage;
+
+  tarch::parallel::messages::WorkerRequestMessage queryMessage(numberOfRanksWanted);
   queryMessage.send(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking);
 
-  tarch::parallel::messages::NodePoolAnswerMessage answer;
-  answer.receive(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+  do {
+  #ifdef Parallel
+    tarch::parallel::messages::NodePoolAnswerMessage answer;
+    answer.receive(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
 
-  const int result = answer.getNewWorker();
-  #else
-  const int result = -1;
+    activatedNode = answer.getNewWorker();
+    if (activatedNode!=NoFreeNodesMessage) {
+      result.push_back( activatedNode );
+    }
   #endif
+  } while (
+    activatedNode!=NoFreeNodesMessage
+    &&
+    static_cast<int>(result.size())<numberOfRanksWanted
+  );
 
-  logTraceOutWith1Argument( "reserveFreeNodeForClient()", result );
+  logTraceOutWith1Argument( "reserveFreeNodeForClient()", result.size() );
 
   return result;
 }
@@ -575,22 +599,24 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
 
     while ( !queue.empty() ) {
       tarch::parallel::messages::WorkerRequestMessage nextRequestToAnswer = _strategy->extractElementFromRequestQueue(queue);
-      if ( _isAlive &&  _strategy->hasIdleNode(nextRequestToAnswer.getSenderRank()) ) {
-        int activatedNode = _strategy->reserveNode(nextRequestToAnswer.getSenderRank());
+      for (int i=0; i<nextRequestToAnswer.getNumberOfRequestedWorkers(); i++) {
+        if ( _isAlive && _strategy->hasIdleNode(nextRequestToAnswer.getSenderRank()) ) {
+          int activatedNode = _strategy->reserveNode(nextRequestToAnswer.getSenderRank());
 
-        _hasGivenOutRankSizeLastQuery = true;
+          _hasGivenOutRankSizeLastQuery = true;
 
-        tarch::parallel::messages::NodePoolAnswerMessage answerMessage( activatedNode );
-        answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+          tarch::parallel::messages::NodePoolAnswerMessage answerMessage( activatedNode );
+          answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
 
-        tarch::parallel::messages::ActivationMessage activationMessage( nextRequestToAnswer.getSenderRank() );
-        activationMessage.send( activatedNode, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+          tarch::parallel::messages::ActivationMessage activationMessage( nextRequestToAnswer.getSenderRank() );
+          activationMessage.send( activatedNode, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+        }
+        else {
+          tarch::parallel::messages::NodePoolAnswerMessage answerMessage( NoFreeNodesMessage );
+          answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+        }
+        _strategy->fillWorkerRequestQueue(queue);
       }
-      else {
-        tarch::parallel::messages::NodePoolAnswerMessage answerMessage( NoFreeNodesMessage );
-        answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
-      }
-      _strategy->fillWorkerRequestQueue(queue);
     }
   }
 

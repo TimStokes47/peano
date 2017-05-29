@@ -5,20 +5,20 @@ tarch::parallel::messages::WorkerRequestMessage::PersistentRecords::PersistentRe
 }
 
 
-tarch::parallel::messages::WorkerRequestMessage::PersistentRecords::PersistentRecords(const int& tmp):
-_tmp(tmp) {
+tarch::parallel::messages::WorkerRequestMessage::PersistentRecords::PersistentRecords(const int& numberOfRequestedWorkers):
+_numberOfRequestedWorkers(numberOfRequestedWorkers) {
    
 }
 
 
- int tarch::parallel::messages::WorkerRequestMessage::PersistentRecords::getTmp() const  {
-   return _tmp;
+ int tarch::parallel::messages::WorkerRequestMessage::PersistentRecords::getNumberOfRequestedWorkers() const  {
+   return _numberOfRequestedWorkers;
 }
 
 
 
- void tarch::parallel::messages::WorkerRequestMessage::PersistentRecords::setTmp(const int& tmp)  {
-   _tmp = tmp;
+ void tarch::parallel::messages::WorkerRequestMessage::PersistentRecords::setNumberOfRequestedWorkers(const int& numberOfRequestedWorkers)  {
+   _numberOfRequestedWorkers = numberOfRequestedWorkers;
 }
 
 
@@ -28,13 +28,13 @@ tarch::parallel::messages::WorkerRequestMessage::WorkerRequestMessage() {
 
 
 tarch::parallel::messages::WorkerRequestMessage::WorkerRequestMessage(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._tmp) {
+_persistentRecords(persistentRecords._numberOfRequestedWorkers) {
    
 }
 
 
-tarch::parallel::messages::WorkerRequestMessage::WorkerRequestMessage(const int& tmp):
-_persistentRecords(tmp) {
+tarch::parallel::messages::WorkerRequestMessage::WorkerRequestMessage(const int& numberOfRequestedWorkers):
+_persistentRecords(numberOfRequestedWorkers) {
    
 }
 
@@ -42,14 +42,14 @@ _persistentRecords(tmp) {
 tarch::parallel::messages::WorkerRequestMessage::~WorkerRequestMessage() { }
 
 
- int tarch::parallel::messages::WorkerRequestMessage::getTmp() const  {
-   return _persistentRecords._tmp;
+ int tarch::parallel::messages::WorkerRequestMessage::getNumberOfRequestedWorkers() const  {
+   return _persistentRecords._numberOfRequestedWorkers;
 }
 
 
 
- void tarch::parallel::messages::WorkerRequestMessage::setTmp(const int& tmp)  {
-   _persistentRecords._tmp = tmp;
+ void tarch::parallel::messages::WorkerRequestMessage::setNumberOfRequestedWorkers(const int& numberOfRequestedWorkers)  {
+   _persistentRecords._numberOfRequestedWorkers = numberOfRequestedWorkers;
 }
 
 
@@ -63,7 +63,7 @@ std::string tarch::parallel::messages::WorkerRequestMessage::toString() const {
 
 void tarch::parallel::messages::WorkerRequestMessage::toString (std::ostream& out) const {
    out << "("; 
-   out << "tmp:" << getTmp();
+   out << "numberOfRequestedWorkers:" << getNumberOfRequestedWorkers();
    out <<  ")";
 }
 
@@ -74,7 +74,7 @@ tarch::parallel::messages::WorkerRequestMessage::PersistentRecords tarch::parall
 
 tarch::parallel::messages::WorkerRequestMessagePacked tarch::parallel::messages::WorkerRequestMessage::convert() const{
    return WorkerRequestMessagePacked(
-      getTmp()
+      getNumberOfRequestedWorkers()
    );
 }
 
@@ -87,69 +87,141 @@ tarch::parallel::messages::WorkerRequestMessagePacked tarch::parallel::messages:
    
    void tarch::parallel::messages::WorkerRequestMessage::initDatatype() {
       {
-         WorkerRequestMessage dummyWorkerRequestMessage;
+         WorkerRequestMessage dummyWorkerRequestMessage[2];
          
+         #ifdef MPI2
          const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
          MPI_Datatype subtypes[Attributes] = {
-              MPI_INT		 //tmp
+              MPI_INT		 //numberOfRequestedWorkers
+            #ifndef MPI2
+            , MPI_UB
+            #endif
             
          };
          
          int blocklen[Attributes] = {
-              1		 //tmp
+              1		 //numberOfRequestedWorkers
+            #ifndef MPI2
+            , 1
+            #endif
             
          };
          
-         MPI_Aint     disp[Attributes];
-         
-         MPI_Aint base;
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage))), &base);
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage._persistentRecords._tmp))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[0]._persistentRecords._numberOfRequestedWorkers))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[0]._persistentRecords._numberOfRequestedWorkers))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
+         #ifdef MPI2
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(WorkerRequestMessage)), i, disp[i], Attributes, sizeof(WorkerRequestMessage));
          }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
          MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerRequestMessage::Datatype );
          MPI_Type_commit( &WorkerRequestMessage::Datatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerRequestMessage::Datatype);
+         MPI_Type_commit( &WorkerRequestMessage::Datatype );
+         #endif
          
       }
       {
-         WorkerRequestMessage dummyWorkerRequestMessage;
+         WorkerRequestMessage dummyWorkerRequestMessage[2];
          
+         #ifdef MPI2
          const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
          MPI_Datatype subtypes[Attributes] = {
-              MPI_INT		 //tmp
+              MPI_INT		 //numberOfRequestedWorkers
+            #ifndef MPI2
+            , MPI_UB
+            #endif
             
          };
          
          int blocklen[Attributes] = {
-              1		 //tmp
+              1		 //numberOfRequestedWorkers
+            #ifndef MPI2
+            , 1
+            #endif
             
          };
          
-         MPI_Aint     disp[Attributes];
-         
-         MPI_Aint base;
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage))), &base);
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage._persistentRecords._tmp))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[0]._persistentRecords._numberOfRequestedWorkers))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[0]._persistentRecords._numberOfRequestedWorkers))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
+         #ifdef MPI2
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(WorkerRequestMessage)), i, disp[i], Attributes, sizeof(WorkerRequestMessage));
          }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessage[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
          MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerRequestMessage::FullDatatype );
          MPI_Type_commit( &WorkerRequestMessage::FullDatatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerRequestMessage::FullDatatype);
+         MPI_Type_commit( &WorkerRequestMessage::FullDatatype );
+         #endif
          
       }
       
@@ -180,603 +252,675 @@ tarch::parallel::messages::WorkerRequestMessagePacked tarch::parallel::messages:
       }
       else {
       
-      MPI_Request* sendRequestHandle = new MPI_Request();
-      MPI_Status   status;
-      int          flag = 0;
-      int          result;
-      
-      clock_t      timeOutWarning   = -1;
-      clock_t      timeOutShutdown  = -1;
-      bool         triggeredTimeoutWarning = false;
-      
-      if (exchangeOnlyAttributesMarkedWithParallelise) {
-         result = MPI_Isend(
-            this, 1, Datatype, destination,
-            tag, tarch::parallel::Node::getInstance().getCommunicator(),
-            sendRequestHandle
-         );
+         MPI_Request* sendRequestHandle = new MPI_Request();
+         MPI_Status   status;
+         int          flag = 0;
+         int          result;
          
-      }
-      else {
-         result = MPI_Isend(
-            this, 1, FullDatatype, destination,
-            tag, tarch::parallel::Node::getInstance().getCommunicator(),
-            sendRequestHandle
-         );
+         clock_t      timeOutWarning   = -1;
+         clock_t      timeOutShutdown  = -1;
+         bool         triggeredTimeoutWarning = false;
          
-      }
-      if  (result!=MPI_SUCCESS) {
-         std::ostringstream msg;
-         msg << "was not able to send message tarch::parallel::messages::WorkerRequestMessage "
-         << toString()
-         << " to node " << destination
-         << ": " << tarch::parallel::MPIReturnValueToString(result);
-         _log.error( "send(int)",msg.str() );
-      }
-      result = MPI_Test( sendRequestHandle, &flag, &status );
-      while (!flag) {
-         if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-         if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-         result = MPI_Test( sendRequestHandle, &flag, &status );
-         if (result!=MPI_SUCCESS) {
+         if (exchangeOnlyAttributesMarkedWithParallelise) {
+            result = MPI_Isend(
+               this, 1, Datatype, destination,
+               tag, tarch::parallel::Node::getInstance().getCommunicator(),
+               sendRequestHandle
+            );
+            
+         }
+         else {
+            result = MPI_Isend(
+               this, 1, FullDatatype, destination,
+               tag, tarch::parallel::Node::getInstance().getCommunicator(),
+               sendRequestHandle
+            );
+            
+         }
+         if  (result!=MPI_SUCCESS) {
             std::ostringstream msg;
-            msg << "testing for finished send task for tarch::parallel::messages::WorkerRequestMessage "
+            msg << "was not able to send message tarch::parallel::messages::WorkerRequestMessage "
             << toString()
-            << " sent to node " << destination
-            << " failed: " << tarch::parallel::MPIReturnValueToString(result);
-            _log.error("send(int)", msg.str() );
+            << " to node " << destination
+            << ": " << tarch::parallel::MPIReturnValueToString(result);
+            _log.error( "send(int)",msg.str() );
          }
-         
-         // deadlock aspect
-         if (
-            tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
-            (clock()>timeOutWarning) &&
-            (!triggeredTimeoutWarning)
-         ) {
-            tarch::parallel::Node::getInstance().writeTimeOutWarning(
-            "tarch::parallel::messages::WorkerRequestMessage",
-            "send(int)", destination,tag,1
-            );
-            triggeredTimeoutWarning = true;
-         }
-         if (
-            tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
-            (clock()>timeOutShutdown)
-         ) {
-            tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-            "tarch::parallel::messages::WorkerRequestMessage",
-            "send(int)", destination,tag,1
-            );
-         }
-         tarch::parallel::Node::getInstance().receiveDanglingMessages();
-         usleep(communicateSleep);
-         
-      }
-      
-      delete sendRequestHandle;
-      #ifdef Debug
-      _log.debug("send(int,int)", "sent " + toString() );
-      #endif
-      
-   }
-   
-}
-
-
-
-void tarch::parallel::messages::WorkerRequestMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
-   if (communicateSleep<0) {
-   
-      MPI_Status  status;
-      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
-      _senderDestinationRank = status.MPI_SOURCE;
-      if ( result != MPI_SUCCESS ) {
-         std::ostringstream msg;
-         msg << "failed to start to receive tarch::parallel::messages::WorkerRequestMessage from node "
-         << source << ": " << tarch::parallel::MPIReturnValueToString(result);
-         _log.error( "receive(int)", msg.str() );
-      }
-      
-   }
-   else {
-   
-      MPI_Request* sendRequestHandle = new MPI_Request();
-      MPI_Status   status;
-      int          flag = 0;
-      int          result;
-      
-      clock_t      timeOutWarning   = -1;
-      clock_t      timeOutShutdown  = -1;
-      bool         triggeredTimeoutWarning = false;
-      
-      if (exchangeOnlyAttributesMarkedWithParallelise) {
-         result = MPI_Irecv(
-            this, 1, Datatype, source, tag,
-            tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
-         );
-         
-      }
-      else {
-         result = MPI_Irecv(
-            this, 1, FullDatatype, source, tag,
-            tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
-         );
-         
-      }
-      if ( result != MPI_SUCCESS ) {
-         std::ostringstream msg;
-         msg << "failed to start to receive tarch::parallel::messages::WorkerRequestMessage from node "
-         << source << ": " << tarch::parallel::MPIReturnValueToString(result);
-         _log.error( "receive(int)", msg.str() );
-      }
-      
-      result = MPI_Test( sendRequestHandle, &flag, &status );
-      while (!flag) {
-         if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-         if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
          result = MPI_Test( sendRequestHandle, &flag, &status );
-         if (result!=MPI_SUCCESS) {
-            std::ostringstream msg;
-            msg << "testing for finished receive task for tarch::parallel::messages::WorkerRequestMessage failed: "
-            << tarch::parallel::MPIReturnValueToString(result);
-            _log.error("receive(int)", msg.str() );
-         }
-         
-         // deadlock aspect
-         if (
-            tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
-            (clock()>timeOutWarning) &&
-            (!triggeredTimeoutWarning)
-         ) {
-            tarch::parallel::Node::getInstance().writeTimeOutWarning(
-            "tarch::parallel::messages::WorkerRequestMessage",
-            "receive(int)", source,tag,1
-            );
-            triggeredTimeoutWarning = true;
-         }
-         if (
-            tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
-            (clock()>timeOutShutdown)
-         ) {
-            tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-            "tarch::parallel::messages::WorkerRequestMessage",
-            "receive(int)", source,tag,1
-            );
-         }
+         while (!flag) {
+            if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+            if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+            result = MPI_Test( sendRequestHandle, &flag, &status );
+            if (result!=MPI_SUCCESS) {
+               std::ostringstream msg;
+               msg << "testing for finished send task for tarch::parallel::messages::WorkerRequestMessage "
+               << toString()
+               << " sent to node " << destination
+               << " failed: " << tarch::parallel::MPIReturnValueToString(result);
+               _log.error("send(int)", msg.str() );
+            }
+            
+            // deadlock aspect
+            if (
+               tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+               (clock()>timeOutWarning) &&
+               (!triggeredTimeoutWarning)
+            ) {
+               tarch::parallel::Node::getInstance().writeTimeOutWarning(
+               "tarch::parallel::messages::WorkerRequestMessage",
+               "send(int)", destination,tag,1
+               );
+               triggeredTimeoutWarning = true;
+            }
+            if (
+               tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+               (clock()>timeOutShutdown)
+            ) {
+               tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+               "tarch::parallel::messages::WorkerRequestMessage",
+               "send(int)", destination,tag,1
+               );
+            }
+            
          tarch::parallel::Node::getInstance().receiveDanglingMessages();
          usleep(communicateSleep);
+         }
+         
+         delete sendRequestHandle;
+         #ifdef Debug
+         _log.debug("send(int,int)", "sent " + toString() );
+         #endif
          
       }
       
-      delete sendRequestHandle;
-      
-      _senderDestinationRank = status.MPI_SOURCE;
-      #ifdef Debug
-      _log.debug("receive(int,int)", "received " + toString() ); 
-      #endif
-      
    }
    
-}
-
-
-
-bool tarch::parallel::messages::WorkerRequestMessage::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
-   MPI_Status status;
-   int  flag        = 0;
-   MPI_Iprobe(
-      MPI_ANY_SOURCE, tag,
-      tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
-   );
-   if (flag) {
-      int  messageCounter;
-      if (exchangeOnlyAttributesMarkedWithParallelise) {
-         MPI_Get_count(&status, Datatype, &messageCounter);
+   
+   
+   void tarch::parallel::messages::WorkerRequestMessage::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
+      
+         MPI_Status  status;
+         const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+         _senderDestinationRank = status.MPI_SOURCE;
+         if ( result != MPI_SUCCESS ) {
+            std::ostringstream msg;
+            msg << "failed to start to receive tarch::parallel::messages::WorkerRequestMessage from node "
+            << source << ": " << tarch::parallel::MPIReturnValueToString(result);
+            _log.error( "receive(int)", msg.str() );
+         }
+         
       }
       else {
-         MPI_Get_count(&status, FullDatatype, &messageCounter);
+      
+         MPI_Request* sendRequestHandle = new MPI_Request();
+         MPI_Status   status;
+         int          flag = 0;
+         int          result;
+         
+         clock_t      timeOutWarning   = -1;
+         clock_t      timeOutShutdown  = -1;
+         bool         triggeredTimeoutWarning = false;
+         
+         if (exchangeOnlyAttributesMarkedWithParallelise) {
+            result = MPI_Irecv(
+               this, 1, Datatype, source, tag,
+               tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
+            );
+            
+         }
+         else {
+            result = MPI_Irecv(
+               this, 1, FullDatatype, source, tag,
+               tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
+            );
+            
+         }
+         if ( result != MPI_SUCCESS ) {
+            std::ostringstream msg;
+            msg << "failed to start to receive tarch::parallel::messages::WorkerRequestMessage from node "
+            << source << ": " << tarch::parallel::MPIReturnValueToString(result);
+            _log.error( "receive(int)", msg.str() );
+         }
+         
+         result = MPI_Test( sendRequestHandle, &flag, &status );
+         while (!flag) {
+            if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+            if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+            result = MPI_Test( sendRequestHandle, &flag, &status );
+            if (result!=MPI_SUCCESS) {
+               std::ostringstream msg;
+               msg << "testing for finished receive task for tarch::parallel::messages::WorkerRequestMessage failed: "
+               << tarch::parallel::MPIReturnValueToString(result);
+               _log.error("receive(int)", msg.str() );
+            }
+            
+            // deadlock aspect
+            if (
+               tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+               (clock()>timeOutWarning) &&
+               (!triggeredTimeoutWarning)
+            ) {
+               tarch::parallel::Node::getInstance().writeTimeOutWarning(
+               "tarch::parallel::messages::WorkerRequestMessage",
+               "receive(int)", source,tag,1
+               );
+               triggeredTimeoutWarning = true;
+            }
+            if (
+               tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+               (clock()>timeOutShutdown)
+            ) {
+               tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+               "tarch::parallel::messages::WorkerRequestMessage",
+               "receive(int)", source,tag,1
+               );
+            }
+            tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
+         }
+         
+         delete sendRequestHandle;
+         
+         _senderDestinationRank = status.MPI_SOURCE;
+         #ifdef Debug
+         _log.debug("receive(int,int)", "received " + toString() ); 
+         #endif
+         
       }
-      return messageCounter > 0;
+      
    }
-   else return false;
    
-}
-
-int tarch::parallel::messages::WorkerRequestMessage::getSenderRank() const {
-   assertion( _senderDestinationRank!=-1 );
-   return _senderDestinationRank;
    
-}
+   
+   bool tarch::parallel::messages::WorkerRequestMessage::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
+      MPI_Status status;
+      int  flag        = 0;
+      MPI_Iprobe(
+         MPI_ANY_SOURCE, tag,
+         tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
+      );
+      if (flag) {
+         int  messageCounter;
+         if (exchangeOnlyAttributesMarkedWithParallelise) {
+            MPI_Get_count(&status, Datatype, &messageCounter);
+         }
+         else {
+            MPI_Get_count(&status, FullDatatype, &messageCounter);
+         }
+         return messageCounter > 0;
+      }
+      else return false;
+      
+   }
+   
+   int tarch::parallel::messages::WorkerRequestMessage::getSenderRank() const {
+      assertion( _senderDestinationRank!=-1 );
+      return _senderDestinationRank;
+      
+   }
 #endif
 
 
 tarch::parallel::messages::WorkerRequestMessagePacked::PersistentRecords::PersistentRecords() {
-
+   
 }
 
 
-tarch::parallel::messages::WorkerRequestMessagePacked::PersistentRecords::PersistentRecords(const int& tmp):
-_tmp(tmp) {
-
+tarch::parallel::messages::WorkerRequestMessagePacked::PersistentRecords::PersistentRecords(const int& numberOfRequestedWorkers):
+_numberOfRequestedWorkers(numberOfRequestedWorkers) {
+   
 }
 
 
- int tarch::parallel::messages::WorkerRequestMessagePacked::PersistentRecords::getTmp() const  {
-return _tmp;
+ int tarch::parallel::messages::WorkerRequestMessagePacked::PersistentRecords::getNumberOfRequestedWorkers() const  {
+   return _numberOfRequestedWorkers;
 }
 
 
 
- void tarch::parallel::messages::WorkerRequestMessagePacked::PersistentRecords::setTmp(const int& tmp)  {
-_tmp = tmp;
+ void tarch::parallel::messages::WorkerRequestMessagePacked::PersistentRecords::setNumberOfRequestedWorkers(const int& numberOfRequestedWorkers)  {
+   _numberOfRequestedWorkers = numberOfRequestedWorkers;
 }
 
 
 tarch::parallel::messages::WorkerRequestMessagePacked::WorkerRequestMessagePacked() {
-
+   
 }
 
 
 tarch::parallel::messages::WorkerRequestMessagePacked::WorkerRequestMessagePacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._tmp) {
-
+_persistentRecords(persistentRecords._numberOfRequestedWorkers) {
+   
 }
 
 
-tarch::parallel::messages::WorkerRequestMessagePacked::WorkerRequestMessagePacked(const int& tmp):
-_persistentRecords(tmp) {
-
+tarch::parallel::messages::WorkerRequestMessagePacked::WorkerRequestMessagePacked(const int& numberOfRequestedWorkers):
+_persistentRecords(numberOfRequestedWorkers) {
+   
 }
 
 
 tarch::parallel::messages::WorkerRequestMessagePacked::~WorkerRequestMessagePacked() { }
 
 
- int tarch::parallel::messages::WorkerRequestMessagePacked::getTmp() const  {
-return _persistentRecords._tmp;
+ int tarch::parallel::messages::WorkerRequestMessagePacked::getNumberOfRequestedWorkers() const  {
+   return _persistentRecords._numberOfRequestedWorkers;
 }
 
 
 
- void tarch::parallel::messages::WorkerRequestMessagePacked::setTmp(const int& tmp)  {
-_persistentRecords._tmp = tmp;
+ void tarch::parallel::messages::WorkerRequestMessagePacked::setNumberOfRequestedWorkers(const int& numberOfRequestedWorkers)  {
+   _persistentRecords._numberOfRequestedWorkers = numberOfRequestedWorkers;
 }
 
 
 
 
 std::string tarch::parallel::messages::WorkerRequestMessagePacked::toString() const {
-std::ostringstream stringstr;
-toString(stringstr);
-return stringstr.str();
+   std::ostringstream stringstr;
+   toString(stringstr);
+   return stringstr.str();
 }
 
 void tarch::parallel::messages::WorkerRequestMessagePacked::toString (std::ostream& out) const {
-out << "("; 
-out << "tmp:" << getTmp();
-out <<  ")";
+   out << "("; 
+   out << "numberOfRequestedWorkers:" << getNumberOfRequestedWorkers();
+   out <<  ")";
 }
 
 
 tarch::parallel::messages::WorkerRequestMessagePacked::PersistentRecords tarch::parallel::messages::WorkerRequestMessagePacked::getPersistentRecords() const {
-return _persistentRecords;
+   return _persistentRecords;
 }
 
 tarch::parallel::messages::WorkerRequestMessage tarch::parallel::messages::WorkerRequestMessagePacked::convert() const{
-return WorkerRequestMessage(
-   getTmp()
-);
+   return WorkerRequestMessage(
+      getNumberOfRequestedWorkers()
+   );
 }
 
 #ifdef Parallel
-tarch::logging::Log tarch::parallel::messages::WorkerRequestMessagePacked::_log( "tarch::parallel::messages::WorkerRequestMessagePacked" );
-
-MPI_Datatype tarch::parallel::messages::WorkerRequestMessagePacked::Datatype = 0;
-MPI_Datatype tarch::parallel::messages::WorkerRequestMessagePacked::FullDatatype = 0;
-
-
-void tarch::parallel::messages::WorkerRequestMessagePacked::initDatatype() {
-   {
-      WorkerRequestMessagePacked dummyWorkerRequestMessagePacked;
-      
-      const int Attributes = 1;
-      MPI_Datatype subtypes[Attributes] = {
-           MPI_INT		 //tmp
+   tarch::logging::Log tarch::parallel::messages::WorkerRequestMessagePacked::_log( "tarch::parallel::messages::WorkerRequestMessagePacked" );
+   
+   MPI_Datatype tarch::parallel::messages::WorkerRequestMessagePacked::Datatype = 0;
+   MPI_Datatype tarch::parallel::messages::WorkerRequestMessagePacked::FullDatatype = 0;
+   
+   
+   void tarch::parallel::messages::WorkerRequestMessagePacked::initDatatype() {
+      {
+         WorkerRequestMessagePacked dummyWorkerRequestMessagePacked[2];
          
-      };
-      
-      int blocklen[Attributes] = {
-           1		 //tmp
+         #ifdef MPI2
+         const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
+         MPI_Datatype subtypes[Attributes] = {
+              MPI_INT		 //numberOfRequestedWorkers
+            #ifndef MPI2
+            , MPI_UB
+            #endif
+            
+         };
          
-      };
-      
-      MPI_Aint     disp[Attributes];
-      
-      MPI_Aint base;
-      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked))), &base);
-      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked._persistentRecords._tmp))), 		&disp[0] );
-      for (int i=1; i<Attributes; i++) {
-         assertion1( disp[i] > disp[i-1], i );
-      }
-      for (int i=0; i<Attributes; i++) {
-         disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
-      }
-      MPI_Datatype tmpType; 
-      MPI_Aint lowerBound, typeExtent; 
-      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerRequestMessagePacked::Datatype );
-      MPI_Type_commit( &WorkerRequestMessagePacked::Datatype );
-      
-   }
-   {
-      WorkerRequestMessagePacked dummyWorkerRequestMessagePacked;
-      
-      const int Attributes = 1;
-      MPI_Datatype subtypes[Attributes] = {
-           MPI_INT		 //tmp
+         int blocklen[Attributes] = {
+              1		 //numberOfRequestedWorkers
+            #ifndef MPI2
+            , 1
+            #endif
+            
+         };
          
-      };
-      
-      int blocklen[Attributes] = {
-           1		 //tmp
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked))), &base);
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[0]._persistentRecords._numberOfRequestedWorkers))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[0]._persistentRecords._numberOfRequestedWorkers))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
+         for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
+            assertion1( disp[i] > disp[i-1], i );
+         }
+         #ifdef MPI2
+         for (int i=0; i<Attributes; i++) {
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(WorkerRequestMessagePacked)), i, disp[i], Attributes, sizeof(WorkerRequestMessagePacked));
+         }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerRequestMessagePacked::Datatype );
+         MPI_Type_commit( &WorkerRequestMessagePacked::Datatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerRequestMessagePacked::Datatype);
+         MPI_Type_commit( &WorkerRequestMessagePacked::Datatype );
+         #endif
          
-      };
-      
-      MPI_Aint     disp[Attributes];
-      
-      MPI_Aint base;
-      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked))), &base);
-      MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked._persistentRecords._tmp))), 		&disp[0] );
-      for (int i=1; i<Attributes; i++) {
-         assertion1( disp[i] > disp[i-1], i );
       }
-      for (int i=0; i<Attributes; i++) {
-         disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+      {
+         WorkerRequestMessagePacked dummyWorkerRequestMessagePacked[2];
+         
+         #ifdef MPI2
+         const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
+         MPI_Datatype subtypes[Attributes] = {
+              MPI_INT		 //numberOfRequestedWorkers
+            #ifndef MPI2
+            , MPI_UB
+            #endif
+            
+         };
+         
+         int blocklen[Attributes] = {
+              1		 //numberOfRequestedWorkers
+            #ifndef MPI2
+            , 1
+            #endif
+            
+         };
+         
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked))), &base);
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[0]._persistentRecords._numberOfRequestedWorkers))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[0]._persistentRecords._numberOfRequestedWorkers))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
+         for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
+            assertion1( disp[i] > disp[i-1], i );
+         }
+         #ifdef MPI2
+         for (int i=0; i<Attributes; i++) {
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(WorkerRequestMessagePacked)), i, disp[i], Attributes, sizeof(WorkerRequestMessagePacked));
+         }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyWorkerRequestMessagePacked[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
+         MPI_Datatype tmpType; 
+         MPI_Aint lowerBound, typeExtent; 
+         MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerRequestMessagePacked::FullDatatype );
+         MPI_Type_commit( &WorkerRequestMessagePacked::FullDatatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &WorkerRequestMessagePacked::FullDatatype);
+         MPI_Type_commit( &WorkerRequestMessagePacked::FullDatatype );
+         #endif
+         
       }
-      MPI_Datatype tmpType; 
-      MPI_Aint lowerBound, typeExtent; 
-      MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-      MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-      MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &WorkerRequestMessagePacked::FullDatatype );
-      MPI_Type_commit( &WorkerRequestMessagePacked::FullDatatype );
       
    }
    
-}
-
-
-void tarch::parallel::messages::WorkerRequestMessagePacked::shutdownDatatype() {
-   MPI_Type_free( &WorkerRequestMessagePacked::Datatype );
-   MPI_Type_free( &WorkerRequestMessagePacked::FullDatatype );
    
-}
-
-void tarch::parallel::messages::WorkerRequestMessagePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
-   _senderDestinationRank = destination;
+   void tarch::parallel::messages::WorkerRequestMessagePacked::shutdownDatatype() {
+      MPI_Type_free( &WorkerRequestMessagePacked::Datatype );
+      MPI_Type_free( &WorkerRequestMessagePacked::FullDatatype );
+      
+   }
    
-   if (communicateSleep<0) {
-   
-      const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
-      if  (result!=MPI_SUCCESS) {
-         std::ostringstream msg;
-         msg << "was not able to send message tarch::parallel::messages::WorkerRequestMessagePacked "
-         << toString()
-         << " to node " << destination
-         << ": " << tarch::parallel::MPIReturnValueToString(result);
-         _log.error( "send(int)",msg.str() );
+   void tarch::parallel::messages::WorkerRequestMessagePacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      _senderDestinationRank = destination;
+      
+      if (communicateSleep<0) {
+      
+         const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
+         if  (result!=MPI_SUCCESS) {
+            std::ostringstream msg;
+            msg << "was not able to send message tarch::parallel::messages::WorkerRequestMessagePacked "
+            << toString()
+            << " to node " << destination
+            << ": " << tarch::parallel::MPIReturnValueToString(result);
+            _log.error( "send(int)",msg.str() );
+         }
+         
+      }
+      else {
+      
+         MPI_Request* sendRequestHandle = new MPI_Request();
+         MPI_Status   status;
+         int          flag = 0;
+         int          result;
+         
+         clock_t      timeOutWarning   = -1;
+         clock_t      timeOutShutdown  = -1;
+         bool         triggeredTimeoutWarning = false;
+         
+         if (exchangeOnlyAttributesMarkedWithParallelise) {
+            result = MPI_Isend(
+               this, 1, Datatype, destination,
+               tag, tarch::parallel::Node::getInstance().getCommunicator(),
+               sendRequestHandle
+            );
+            
+         }
+         else {
+            result = MPI_Isend(
+               this, 1, FullDatatype, destination,
+               tag, tarch::parallel::Node::getInstance().getCommunicator(),
+               sendRequestHandle
+            );
+            
+         }
+         if  (result!=MPI_SUCCESS) {
+            std::ostringstream msg;
+            msg << "was not able to send message tarch::parallel::messages::WorkerRequestMessagePacked "
+            << toString()
+            << " to node " << destination
+            << ": " << tarch::parallel::MPIReturnValueToString(result);
+            _log.error( "send(int)",msg.str() );
+         }
+         result = MPI_Test( sendRequestHandle, &flag, &status );
+         while (!flag) {
+            if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+            if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+            result = MPI_Test( sendRequestHandle, &flag, &status );
+            if (result!=MPI_SUCCESS) {
+               std::ostringstream msg;
+               msg << "testing for finished send task for tarch::parallel::messages::WorkerRequestMessagePacked "
+               << toString()
+               << " sent to node " << destination
+               << " failed: " << tarch::parallel::MPIReturnValueToString(result);
+               _log.error("send(int)", msg.str() );
+            }
+            
+            // deadlock aspect
+            if (
+               tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+               (clock()>timeOutWarning) &&
+               (!triggeredTimeoutWarning)
+            ) {
+               tarch::parallel::Node::getInstance().writeTimeOutWarning(
+               "tarch::parallel::messages::WorkerRequestMessagePacked",
+               "send(int)", destination,tag,1
+               );
+               triggeredTimeoutWarning = true;
+            }
+            if (
+               tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+               (clock()>timeOutShutdown)
+            ) {
+               tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+               "tarch::parallel::messages::WorkerRequestMessagePacked",
+               "send(int)", destination,tag,1
+               );
+            }
+            
+         tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
+         }
+         
+         delete sendRequestHandle;
+         #ifdef Debug
+         _log.debug("send(int,int)", "sent " + toString() );
+         #endif
+         
       }
       
    }
-   else {
    
-   MPI_Request* sendRequestHandle = new MPI_Request();
-   MPI_Status   status;
-   int          flag = 0;
-   int          result;
    
-   clock_t      timeOutWarning   = -1;
-   clock_t      timeOutShutdown  = -1;
-   bool         triggeredTimeoutWarning = false;
    
-   if (exchangeOnlyAttributesMarkedWithParallelise) {
-      result = MPI_Isend(
-         this, 1, Datatype, destination,
-         tag, tarch::parallel::Node::getInstance().getCommunicator(),
-         sendRequestHandle
+   void tarch::parallel::messages::WorkerRequestMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+      if (communicateSleep<0) {
+      
+         MPI_Status  status;
+         const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+         _senderDestinationRank = status.MPI_SOURCE;
+         if ( result != MPI_SUCCESS ) {
+            std::ostringstream msg;
+            msg << "failed to start to receive tarch::parallel::messages::WorkerRequestMessagePacked from node "
+            << source << ": " << tarch::parallel::MPIReturnValueToString(result);
+            _log.error( "receive(int)", msg.str() );
+         }
+         
+      }
+      else {
+      
+         MPI_Request* sendRequestHandle = new MPI_Request();
+         MPI_Status   status;
+         int          flag = 0;
+         int          result;
+         
+         clock_t      timeOutWarning   = -1;
+         clock_t      timeOutShutdown  = -1;
+         bool         triggeredTimeoutWarning = false;
+         
+         if (exchangeOnlyAttributesMarkedWithParallelise) {
+            result = MPI_Irecv(
+               this, 1, Datatype, source, tag,
+               tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
+            );
+            
+         }
+         else {
+            result = MPI_Irecv(
+               this, 1, FullDatatype, source, tag,
+               tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
+            );
+            
+         }
+         if ( result != MPI_SUCCESS ) {
+            std::ostringstream msg;
+            msg << "failed to start to receive tarch::parallel::messages::WorkerRequestMessagePacked from node "
+            << source << ": " << tarch::parallel::MPIReturnValueToString(result);
+            _log.error( "receive(int)", msg.str() );
+         }
+         
+         result = MPI_Test( sendRequestHandle, &flag, &status );
+         while (!flag) {
+            if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+            if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+            result = MPI_Test( sendRequestHandle, &flag, &status );
+            if (result!=MPI_SUCCESS) {
+               std::ostringstream msg;
+               msg << "testing for finished receive task for tarch::parallel::messages::WorkerRequestMessagePacked failed: "
+               << tarch::parallel::MPIReturnValueToString(result);
+               _log.error("receive(int)", msg.str() );
+            }
+            
+            // deadlock aspect
+            if (
+               tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+               (clock()>timeOutWarning) &&
+               (!triggeredTimeoutWarning)
+            ) {
+               tarch::parallel::Node::getInstance().writeTimeOutWarning(
+               "tarch::parallel::messages::WorkerRequestMessagePacked",
+               "receive(int)", source,tag,1
+               );
+               triggeredTimeoutWarning = true;
+            }
+            if (
+               tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+               (clock()>timeOutShutdown)
+            ) {
+               tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+               "tarch::parallel::messages::WorkerRequestMessagePacked",
+               "receive(int)", source,tag,1
+               );
+            }
+            tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
+            
+         }
+         
+         delete sendRequestHandle;
+         
+         _senderDestinationRank = status.MPI_SOURCE;
+         #ifdef Debug
+         _log.debug("receive(int,int)", "received " + toString() ); 
+         #endif
+         
+      }
+      
+   }
+   
+   
+   
+   bool tarch::parallel::messages::WorkerRequestMessagePacked::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
+      MPI_Status status;
+      int  flag        = 0;
+      MPI_Iprobe(
+         MPI_ANY_SOURCE, tag,
+         tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
       );
-      
-   }
-   else {
-      result = MPI_Isend(
-         this, 1, FullDatatype, destination,
-         tag, tarch::parallel::Node::getInstance().getCommunicator(),
-         sendRequestHandle
-      );
-      
-   }
-   if  (result!=MPI_SUCCESS) {
-      std::ostringstream msg;
-      msg << "was not able to send message tarch::parallel::messages::WorkerRequestMessagePacked "
-      << toString()
-      << " to node " << destination
-      << ": " << tarch::parallel::MPIReturnValueToString(result);
-      _log.error( "send(int)",msg.str() );
-   }
-   result = MPI_Test( sendRequestHandle, &flag, &status );
-   while (!flag) {
-      if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-      if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-      result = MPI_Test( sendRequestHandle, &flag, &status );
-      if (result!=MPI_SUCCESS) {
-         std::ostringstream msg;
-         msg << "testing for finished send task for tarch::parallel::messages::WorkerRequestMessagePacked "
-         << toString()
-         << " sent to node " << destination
-         << " failed: " << tarch::parallel::MPIReturnValueToString(result);
-         _log.error("send(int)", msg.str() );
+      if (flag) {
+         int  messageCounter;
+         if (exchangeOnlyAttributesMarkedWithParallelise) {
+            MPI_Get_count(&status, Datatype, &messageCounter);
+         }
+         else {
+            MPI_Get_count(&status, FullDatatype, &messageCounter);
+         }
+         return messageCounter > 0;
       }
-      
-      // deadlock aspect
-      if (
-         tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
-         (clock()>timeOutWarning) &&
-         (!triggeredTimeoutWarning)
-      ) {
-         tarch::parallel::Node::getInstance().writeTimeOutWarning(
-         "tarch::parallel::messages::WorkerRequestMessagePacked",
-         "send(int)", destination,tag,1
-         );
-         triggeredTimeoutWarning = true;
-      }
-      if (
-         tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
-         (clock()>timeOutShutdown)
-      ) {
-         tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-         "tarch::parallel::messages::WorkerRequestMessagePacked",
-         "send(int)", destination,tag,1
-         );
-      }
-      tarch::parallel::Node::getInstance().receiveDanglingMessages();
-      usleep(communicateSleep);
+      else return false;
       
    }
    
-   delete sendRequestHandle;
-   #ifdef Debug
-   _log.debug("send(int,int)", "sent " + toString() );
-   #endif
-   
-}
-
-}
-
-
-
-void tarch::parallel::messages::WorkerRequestMessagePacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
-if (communicateSleep<0) {
-
-   MPI_Status  status;
-   const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
-   _senderDestinationRank = status.MPI_SOURCE;
-   if ( result != MPI_SUCCESS ) {
-      std::ostringstream msg;
-      msg << "failed to start to receive tarch::parallel::messages::WorkerRequestMessagePacked from node "
-      << source << ": " << tarch::parallel::MPIReturnValueToString(result);
-      _log.error( "receive(int)", msg.str() );
-   }
-   
-}
-else {
-
-   MPI_Request* sendRequestHandle = new MPI_Request();
-   MPI_Status   status;
-   int          flag = 0;
-   int          result;
-   
-   clock_t      timeOutWarning   = -1;
-   clock_t      timeOutShutdown  = -1;
-   bool         triggeredTimeoutWarning = false;
-   
-   if (exchangeOnlyAttributesMarkedWithParallelise) {
-      result = MPI_Irecv(
-         this, 1, Datatype, source, tag,
-         tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
-      );
+   int tarch::parallel::messages::WorkerRequestMessagePacked::getSenderRank() const {
+      assertion( _senderDestinationRank!=-1 );
+      return _senderDestinationRank;
       
    }
-   else {
-      result = MPI_Irecv(
-         this, 1, FullDatatype, source, tag,
-         tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
-      );
-      
-   }
-   if ( result != MPI_SUCCESS ) {
-      std::ostringstream msg;
-      msg << "failed to start to receive tarch::parallel::messages::WorkerRequestMessagePacked from node "
-      << source << ": " << tarch::parallel::MPIReturnValueToString(result);
-      _log.error( "receive(int)", msg.str() );
-   }
-   
-   result = MPI_Test( sendRequestHandle, &flag, &status );
-   while (!flag) {
-      if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-      if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-      result = MPI_Test( sendRequestHandle, &flag, &status );
-      if (result!=MPI_SUCCESS) {
-         std::ostringstream msg;
-         msg << "testing for finished receive task for tarch::parallel::messages::WorkerRequestMessagePacked failed: "
-         << tarch::parallel::MPIReturnValueToString(result);
-         _log.error("receive(int)", msg.str() );
-      }
-      
-      // deadlock aspect
-      if (
-         tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
-         (clock()>timeOutWarning) &&
-         (!triggeredTimeoutWarning)
-      ) {
-         tarch::parallel::Node::getInstance().writeTimeOutWarning(
-         "tarch::parallel::messages::WorkerRequestMessagePacked",
-         "receive(int)", source,tag,1
-         );
-         triggeredTimeoutWarning = true;
-      }
-      if (
-         tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
-         (clock()>timeOutShutdown)
-      ) {
-         tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-         "tarch::parallel::messages::WorkerRequestMessagePacked",
-         "receive(int)", source,tag,1
-         );
-      }
-      tarch::parallel::Node::getInstance().receiveDanglingMessages();
-      usleep(communicateSleep);
-      
-   }
-   
-   delete sendRequestHandle;
-   
-   _senderDestinationRank = status.MPI_SOURCE;
-   #ifdef Debug
-   _log.debug("receive(int,int)", "received " + toString() ); 
-   #endif
-   
-}
-
-}
-
-
-
-bool tarch::parallel::messages::WorkerRequestMessagePacked::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
-MPI_Status status;
-int  flag        = 0;
-MPI_Iprobe(
-   MPI_ANY_SOURCE, tag,
-   tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
-);
-if (flag) {
-   int  messageCounter;
-   if (exchangeOnlyAttributesMarkedWithParallelise) {
-      MPI_Get_count(&status, Datatype, &messageCounter);
-   }
-   else {
-      MPI_Get_count(&status, FullDatatype, &messageCounter);
-   }
-   return messageCounter > 0;
-}
-else return false;
-
-}
-
-int tarch::parallel::messages::WorkerRequestMessagePacked::getSenderRank() const {
-assertion( _senderDestinationRank!=-1 );
-return _senderDestinationRank;
-
-}
 #endif
 
 

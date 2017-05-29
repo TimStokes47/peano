@@ -74,22 +74,14 @@ void peano::parallel::Partitioner::reserveNodes() {
     LocalCells--;
   }
 
-  const int MaxRemoteRanksToBook =
-    std::min( LocalCells, NodesToBook );
+  const int MaxRemoteRanksToBook = std::min( LocalCells, NodesToBook );
 
-  int newWorker = tarch::parallel::NodePool::NoFreeNodesMessage;
-  do {
-    newWorker = tarch::parallel::NodePool::getInstance().reserveFreeNode();
-    if (newWorker!=tarch::parallel::NodePool::NoFreeNodesMessage) {
-      _ranks.push_back(newWorker);
+  if (MaxRemoteRanksToBook>0) {
+    _ranks = tarch::parallel::NodePool::getInstance().reserveFreeNodes(MaxRemoteRanksToBook);
+
+    if ( static_cast<int>(_ranks.size())!=MaxRemoteRanksToBook ) {
+      peano::parallel::loadbalancing::Oracle::getInstance().forkFailed();
     }
-  } while (
-    (newWorker!=tarch::parallel::NodePool::NoFreeNodesMessage) &&
-    static_cast<int>(_ranks.size()) < MaxRemoteRanksToBook
-  );
-
-  if (newWorker==tarch::parallel::NodePool::NoFreeNodesMessage) {
-    peano::parallel::loadbalancing::Oracle::getInstance().forkFailed();
   }
 
   _ranks.push_back( tarch::parallel::Node::getInstance().getRank() );

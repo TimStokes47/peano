@@ -33,7 +33,7 @@ namespace tarch {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   21/03/2017 02:02
+ * @date   29/05/2017 17:00
  */
 class tarch::parallel::messages::WorkerRequestMessage { 
    
@@ -42,7 +42,7 @@ class tarch::parallel::messages::WorkerRequestMessage {
       typedef tarch::parallel::messages::WorkerRequestMessagePacked Packed;
       
       struct PersistentRecords {
-         int _tmp;
+         int _numberOfRequestedWorkers;
          /**
           * Generated
           */
@@ -51,153 +51,150 @@ class tarch::parallel::messages::WorkerRequestMessage {
          /**
           * Generated
           */
-         PersistentRecords(const int& tmp);
+         PersistentRecords(const int& numberOfRequestedWorkers);
          
          /**
           * Generated
           */
-          int getTmp() const ;
+          int getNumberOfRequestedWorkers() const ;
          
          /**
           * Generated
           */
-          void setTmp(const int& tmp) ;
+          void setNumberOfRequestedWorkers(const int& numberOfRequestedWorkers) ;
          
          
       };
-      
-   private: 
-      PersistentRecords _persistentRecords;
-      
-   public:
-      /**
-       * Generated
-       */
-      WorkerRequestMessage();
-      
-      /**
-       * Generated
-       */
-      WorkerRequestMessage(const PersistentRecords& persistentRecords);
-      
-      /**
-       * Generated
-       */
-      WorkerRequestMessage(const int& tmp);
-      
-      /**
-       * Generated
-       */
-      virtual ~WorkerRequestMessage();
-      
-      /**
-       * Generated
-       */
-       int getTmp() const ;
-      
-      /**
-       * Generated
-       */
-       void setTmp(const int& tmp) ;
-      
-      /**
-       * Generated
-       */
-      std::string toString() const;
-      
-      /**
-       * Generated
-       */
-      void toString(std::ostream& out) const;
-      
-      
-      PersistentRecords getPersistentRecords() const;
-      /**
-       * Generated
-       */
-      WorkerRequestMessagePacked convert() const;
-      
-      
-   #ifdef Parallel
-      protected:
-         static tarch::logging::Log _log;
-         
-         int _senderDestinationRank;
+      private: 
+         PersistentRecords _persistentRecords;
          
       public:
+         /**
+          * Generated
+          */
+         WorkerRequestMessage();
          
          /**
-          * Global that represents the mpi datatype.
-          * There are two variants: Datatype identifies only those attributes marked with
-          * parallelise. FullDatatype instead identifies the whole record with all fields.
+          * Generated
           */
-         static MPI_Datatype Datatype;
-         static MPI_Datatype FullDatatype;
+         WorkerRequestMessage(const PersistentRecords& persistentRecords);
          
          /**
-          * Initializes the data type for the mpi operations. Has to be called
-          * before the very first send or receive operation is called.
+          * Generated
           */
-         static void initDatatype();
-         
-         static void shutdownDatatype();
+         WorkerRequestMessage(const int& numberOfRequestedWorkers);
          
          /**
-          * @param communicateSleep -1 Data exchange through blocking mpi
-          * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-          * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+          * Generated
           */
-         void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+         virtual ~WorkerRequestMessage();
          
-         void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+         /**
+          * Generated
+          */
+          int getNumberOfRequestedWorkers() const ;
          
-         static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+         /**
+          * Generated
+          */
+          void setNumberOfRequestedWorkers(const int& numberOfRequestedWorkers) ;
          
-         int getSenderRank() const;
+         /**
+          * Generated
+          */
+         std::string toString() const;
          
-   #endif
-      
-   };
+         /**
+          * Generated
+          */
+         void toString(std::ostream& out) const;
+         
+         
+         PersistentRecords getPersistentRecords() const;
+         /**
+          * Generated
+          */
+         WorkerRequestMessagePacked convert() const;
+         
+         
+      #ifdef Parallel
+         protected:
+            static tarch::logging::Log _log;
+            
+            int _senderDestinationRank;
+            
+         public:
+            
+            /**
+             * Global that represents the mpi datatype.
+             * There are two variants: Datatype identifies only those attributes marked with
+             * parallelise. FullDatatype instead identifies the whole record with all fields.
+             */
+            static MPI_Datatype Datatype;
+            static MPI_Datatype FullDatatype;
+            
+            /**
+             * Initializes the data type for the mpi operations. Has to be called
+             * before the very first send or receive operation is called.
+             */
+            static void initDatatype();
+            
+            static void shutdownDatatype();
+            
+            /**
+             * @param communicateSleep -1 Data exchange through blocking mpi
+             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+             */
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            
+            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            
+            int getSenderRank() const;
+            #endif
    
-   /**
-    * @author This class is generated by DaStGen
-    * 		   DataStructureGenerator (DaStGen)
-    * 		   2007-2009 Wolfgang Eckhardt
-    * 		   2012      Tobias Weinzierl
-    *
-    * 		   build date: 09-02-2014 14:40
-    *
-    * @date   21/03/2017 02:02
-    */
-   class tarch::parallel::messages::WorkerRequestMessagePacked { 
+};
+
+/**
+ * @author This class is generated by DaStGen
+ * 		   DataStructureGenerator (DaStGen)
+ * 		   2007-2009 Wolfgang Eckhardt
+ * 		   2012      Tobias Weinzierl
+ *
+ * 		   build date: 09-02-2014 14:40
+ *
+ * @date   29/05/2017 17:00
+ */
+class tarch::parallel::messages::WorkerRequestMessagePacked { 
+   
+   public:
       
-      public:
+      struct PersistentRecords {
+         int _numberOfRequestedWorkers;
+         /**
+          * Generated
+          */
+         PersistentRecords();
          
-         struct PersistentRecords {
-            int _tmp;
-            /**
-             * Generated
-             */
-            PersistentRecords();
-            
-            /**
-             * Generated
-             */
-            PersistentRecords(const int& tmp);
-            
-            /**
-             * Generated
-             */
-             int getTmp() const ;
-            
-            /**
-             * Generated
-             */
-             void setTmp(const int& tmp) ;
-            
-            
-         };
+         /**
+          * Generated
+          */
+         PersistentRecords(const int& numberOfRequestedWorkers);
          
+         /**
+          * Generated
+          */
+          int getNumberOfRequestedWorkers() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfRequestedWorkers(const int& numberOfRequestedWorkers) ;
+         
+         
+      };
       private: 
          PersistentRecords _persistentRecords;
          
@@ -215,7 +212,7 @@ class tarch::parallel::messages::WorkerRequestMessage {
          /**
           * Generated
           */
-         WorkerRequestMessagePacked(const int& tmp);
+         WorkerRequestMessagePacked(const int& numberOfRequestedWorkers);
          
          /**
           * Generated
@@ -225,12 +222,12 @@ class tarch::parallel::messages::WorkerRequestMessage {
          /**
           * Generated
           */
-          int getTmp() const ;
+          int getNumberOfRequestedWorkers() const ;
          
          /**
           * Generated
           */
-          void setTmp(const int& tmp) ;
+          void setNumberOfRequestedWorkers(const int& numberOfRequestedWorkers) ;
          
          /**
           * Generated
@@ -286,10 +283,9 @@ class tarch::parallel::messages::WorkerRequestMessage {
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             
             int getSenderRank() const;
-            
-      #endif
-         
-      };
-      
-      #endif
-      
+            #endif
+   
+};
+
+#endif
+
