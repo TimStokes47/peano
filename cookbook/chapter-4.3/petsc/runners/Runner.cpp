@@ -12,9 +12,6 @@
 
 #include "tarch/parallel/Node.h"
 #include "tarch/parallel/NodePool.h"
-
-
-
 #include "tarch/parallel/FCFSNodePoolStrategy.h"
 #include "peano/parallel/loadbalancing/OracleForOnePhaseWithGreedyPartitioning.h"
 

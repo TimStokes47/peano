@@ -42,7 +42,8 @@ export LD_LIBRARY_PATH=/opt/petsc/lib
 
 ## Cleanup ##
 
-rm petsc/State.* petsc/Cell.* petsc/VertexOperations.h
+rm petsc/State.* petsc/Cell.* petsc/VertexOperations.*
+rm *.vtk peano-*
 rm -rf petsc/adapters
 rm -rf petsc/dastgen
 rm -rf petsc/records

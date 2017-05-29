@@ -242,6 +242,42 @@ int main(int argc, char** argv) {
 \end{remark}
 
 
+\subsubsection*{Some reiteration/remarks on the MPI side}
+
+Even if you don't invoke your code through \texttt{mpirun}, you have to
+configure MPI properly if you translate your code with \texttt{-DParallel}.
+How to do so is subject of the whole Chapter \ref{section:parallelisation:mpi},
+so I give only snippets here that allow users to quick-n-dirty get something
+with PETSc up and running:
+
+\begin{enumerate}
+  \item Include four more headers in your \texttt{Runner.cpp}:
+  \begin{code}
+#include "tarch/parallel/Node.h"
+#include "tarch/parallel/NodePool.h"
+#include "tarch/parallel/FCFSNodePoolStrategy.h"
+#include "peano/parallel/loadbalancing/OracleForOnePhaseWithGreedyPartitioning.h"
+  \end{code}
+  \item Add a few lines just after you have created your repository:
+\begin{code}
+  ...::repositories::Repository* repository = 
+    ...::repositories::RepositoryFactory::getInstance().create...
+
+  // This is new because of PETSc:
+  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    tarch::parallel::NodePool::getInstance().setStrategy(
+      new tarch::parallel::FCFSNodePoolStrategy()
+    );
+  }
+  tarch::parallel::NodePool::getInstance().restart();
+  tarch::parallel::NodePool::getInstance().waitForAllNodesToBecomeIdle();
+  peano::parallel::loadbalancing::Oracle::getInstance().setOracle(
+    new peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning(false)
+  );
+\end{code}
+\end{enumerate}
+
+
 
 
 \subsection{The algorithmic and realisation blueprint}
