@@ -433,8 +433,10 @@ std::vector<int>  tarch::parallel::NodePool::reserveFreeNodesForClient(int numbe
   std::vector<int> result;
   int activatedNode = NoFreeNodesMessage;
 
+  #ifdef Parallel
   tarch::parallel::messages::WorkerRequestMessage queryMessage(numberOfRanksWanted);
   queryMessage.send(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking);
+  #endif
 
   do {
   #ifdef Parallel
