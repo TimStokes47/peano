@@ -106,6 +106,14 @@ for l in range(1,max(levels)+1):
   performanceanalysisroutines.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
  outFile.write( "<a href=\"" + args.file + ".level" + str(l) + ".large.pdf\"> <img src=\"" + args.file + ".level" + str(l) + ".png\" /> </a> " )
  
+
+outFile.write( "<h2>Mapping of ranks to nodes</h2>" )
+performanceanalysisroutines.fillNodeTable(args.file)
+performanceanalysisroutines.printNodeTable(outFile)
+if dim==2:
+  performanceanalysisroutines.plotDomainDecomposition2d( args.file, numberOfRanks, args.domainoffset, args.domainsize, offset, volume )
+  outFile.write( "<a href=\"" + args.file + ".dd.large.pdf\"> <img src=\"" + args.file + ".dd.png\" /> </a> " )
+
  
 outFile.write( "</html>" )
 

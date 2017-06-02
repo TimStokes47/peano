@@ -1107,8 +1107,13 @@ def computeVolumesOverlapsWork(numberOfRanks,volume,offset,dim,domainoffset,doma
     print ".",
     overlaps[i] = 1.0
     for d in range(0,dim):
-      left  = max(offset[i][d],float(domainoffset[d]))
-      right = min(offset[i][d]+volume[i][d],float(domainoffset[d])+float(domainsize[d]))
+      left  = 0
+      right = 0
+      try:
+       left  = max(offset[i][d],float(domainoffset[d]))
+       right = min(offset[i][d]+volume[i][d],float(domainoffset[d])+float(domainsize[d]))
+      except:
+       pass
       delta = right-left
       if delta<0:
         print "ERROR for rank " + str(i) +  \
@@ -1128,8 +1133,11 @@ def computeVolumesOverlapsWork(numberOfRanks,volume,offset,dim,domainoffset,doma
     elif work[ parents[i] ]<overlaps[i]:
       print "WARNING: work of rank " + str(parents[i]) + " will become negative as overlap of rank " + str(i) + " equals " + str(overlaps[i]) 
     work[ parents[i] ] = work[ parents[i] ] - overlaps[i]
-  work[0] = 0.0     # can become negative
-
+  #work[0] = 0.0     # can become negative
+  for i in range(0,numberOfRanks):
+    if work[i] <0:
+      work[i]=0
+      
   print " done "
   return (volumes,overlaps,work)
   
@@ -1265,12 +1273,100 @@ def plot2dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   except:
     print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()  
+  
+
+RankNodeTable   = {}
+NodeNumberTable = {}
+ 
+
+def fillNodeTable(inputFileName):
+ try:
+  inputFile = open( inputFileName,  "r" )
+  for line in inputFile:
+   if re.search( "start node for subdomain", line ):
+    rank = int(line.split( ",rank:")[1].split(" ")[0])
+    node = line.split( ",rank:")[0].split(" ")[-1]
+    
+    if node not in NodeNumberTable:
+      NodeNumberTable[node] = len(NodeNumberTable)    
+    RankNodeTable[ rank ] = node 
+ except:
+  pass
+
+ 
+NodeColors = [ 
+  "#ff0000", "#00ff00", "#0000ff", 
+  "#ffff00", "#ff00ff", "#00ffff",
+  "#ababab", 
+  "#ab55ab", "#abab55", 
+  "#5555ab", "#55ab55", "#ab5555",
+  "#121212",
+  "#cc9966", "#99cc66", "#66cc99",  
+  "#cc6699", "#9966cc", "#6699cc" 
+]
+
+
+def printNodeTable(outputFile):
+ outputFile.write( "<table border=\"1\">" )
+
+ outputFile.write( "<tr>" )
+ outputFile.write( "<td><b>Node number</b></td>" )
+ outputFile.write( "<td><b>Node name</b></td>" )
+ outputFile.write( "<td><b>Ranks</b></td>" )
+ outputFile.write( "</tr>" )
+
+ NodeNumberTableInverted = {v: k for k, v in NodeNumberTable.items()}
+
+ colorCounter = 0
+ for nodeNumber in NodeNumberTable.itervalues():
+  outputFile.write( "<tr>" )
+  outputFile.write( "<td bgcolor=\"" + NodeColors[colorCounter%len(NodeColors)] + "\">" + str(nodeNumber) + "</td>" )
+  outputFile.write( "<td>" + NodeNumberTableInverted[nodeNumber] + "</td>" )
+  for rank in RankNodeTable:
+    if RankNodeTable[ rank ]==NodeNumberTableInverted[nodeNumber]:
+      outputFile.write( "<td>" + str(rank) + "</td>" )
+  outputFile.write( "</tr>" )
+  colorCounter = colorCounter+1
+ outputFile.write( "</table>" )
+
+
+def plotDomainDecomposition2d(outputFileName,numberOfRanks,domainoffset,domainsize,offset,volume):
+  NodeNumberTableInverted = {v: k for k, v in NodeNumberTable.items()}
+
+  print "plot domain decomposition over nodes",
+  pylab.clf()
+  pylab.figure(figsize=(float(domainsize[0]),float(domainsize[1])))
+  colorCounter = 0
+  for nodeNumber in NodeNumberTable.itervalues():
+    for rank in RankNodeTable:
+      if RankNodeTable[ rank ]==NodeNumberTableInverted[nodeNumber]:
+        print ".",
+        #lvTmp = np.linspace(0.1,1.0,len(levels)-1)
+    
+        myAlpha = 1.0-(volume[rank][0]*volume[rank][1]) / (float(domainsize[0])*float(domainsize[1])) 
+        pylab.gca().add_patch(pylab.Rectangle(
+          offset[rank]+(volume[rank][0]*0.01,volume[rank][0]*0.01), 
+          volume[rank][0]*0.98, volume[rank][1]*0.98,
+          color=NodeColors[colorCounter%len(NodeColors)],
+          alpha=myAlpha
+        ))
+        colorCounter = colorCounter + 1
+  pylab.xlim( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
+  pylab.ylim( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
+  pylab.savefig( outputFileName + ".dd.png" )
+  pylab.savefig( outputFileName + ".dd.pdf" )
+  try:
+    switchToLargePlot()
+    pylab.savefig( outputFileName + ".dd.large.png" )
+    pylab.savefig( outputFileName + ".dd.large.pdf" )
+    print "done"
+    switchBackToStandardPlot()  
+  except:
+    print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()  
 
   
 
- 
- 
 def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,offset,volume,levels,outputFileName):
   Colors = [ "#ff1122", "#11ff22", "#1122ff", "#ffee11", "#ff11cc", "#11ddff" ]
   print "plot domain decomposition on level " + str(l),
@@ -1288,17 +1384,23 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   
   
   colorCounter = 0
-  ax = pylab.subplot2grid((NumberOfDifferentPlots,1), (0,0), projection='3d')
-  ax.set_xlim3d( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
-  ax.set_ylim3d( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
-  ax.set_zlim3d( float(domainoffset[2]), float(domainoffset[2])+float(domainsize[2]) )
+  try:
+   ax = pylab.subplot2grid((NumberOfDifferentPlots,1), (0,0), projection='3d')
+   ax.set_xlim3d( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
+   ax.set_ylim3d( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
+   ax.set_zlim3d( float(domainoffset[2]), float(domainoffset[2])+float(domainsize[2]) )
+  except:
+   pass
   for i in range(0,numberOfRanks):
     if (numberOfPartitionsPlottedInThisSubfigure>NumberOfPartitionsPerPlot):
       numberOfPartitionsPlottedInThisSubfigure = 0
-      ax = pylab.subplot2grid((NumberOfDifferentPlots,1), (currentSubPlot,0), projection='3d')
-      ax.set_xlim3d( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
-      ax.set_ylim3d( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
-      ax.set_zlim3d( float(domainoffset[2]), float(domainoffset[2])+float(domainsize[2]) )
+      try:
+       ax = pylab.subplot2grid((NumberOfDifferentPlots,1), (currentSubPlot,0), projection='3d')
+       ax.set_xlim3d( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
+       ax.set_ylim3d( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
+       ax.set_zlim3d( float(domainoffset[2]), float(domainoffset[2])+float(domainsize[2]) )
+      except:
+       pass
       currentSubPlot  = currentSubPlot + 1
    
     if levels[i]==l:

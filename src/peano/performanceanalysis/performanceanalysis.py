@@ -459,9 +459,6 @@ if (numberOfThreads>1):
     
 
 if (numberOfRanks>1):      
-
-
-
   #
   # Logical topology  
   #
@@ -497,6 +494,13 @@ if (numberOfRanks>1):
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
+  outFile.write( "<h2>Mapping of ranks to nodes</h2>" )
+  performanceanalysisroutines.fillNodeTable(args.file)
+  performanceanalysisroutines.printNodeTable(outFile)
+  if dim==2:
+    performanceanalysisroutines.plotDomainDecomposition2d( args.file, numberOfRanks, args.domainoffset, args.domainsize, offset, volume )
+    outFile.write( "<a href=\"" + args.file + ".dd.large.pdf\"> <img src=\"" + args.file + ".dd.png\" /> </a> " )
+  
   outFile.write( "<h2 id=\"work-distribution\">Work distribution</h2>" )
   outFile.write( "<a href=\"" + args.file + ".work-distribution.large.png\"><img src=\"" + args.file + ".work-distribution.png\" /></a>" )
   outFile.write( "<a href=\"" + args.file + "-symlog.work-distribution.large.png\"><img src=\"" + args.file + "-symlog.work-distribution.png\" /></a>" )
