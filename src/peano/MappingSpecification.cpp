@@ -42,6 +42,15 @@ std::string peano::MappingSpecification::toString() const {
     case RunConcurrentlyOnFineGrid:
       msg << "concurrently on fine grid";
       break;
+    case AvoidFineGridRacesWithoutInterGridDependencies:
+      msg << "avoid-fine-grid-races without inter-grid dependencies";
+      break;
+    case AvoidCoarseGridRacesWithoutInterGridDependencies:
+      msg << "avoid-coarse-grid-races without inter-grid dependencies";
+      break;
+    case RunConcurrentlyOnFineGridWithoutInterGridDependencies:
+      msg << "concurrently on fine grid without inter-grid dependencies";
+      break;
   }
   msg << ",alters-state=" << altersState;
   msg << ")";
