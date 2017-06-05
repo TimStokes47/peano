@@ -66,7 +66,18 @@ struct peano::MappingSpecification {
   };
 
   enum Multithreading {
-    Serial, AvoidCoarseGridRaces, AvoidFineGridRaces, RunConcurrentlyOnFineGrid
+    Serial,
+    AvoidCoarseGridRaces,
+    AvoidFineGridRaces,
+    RunConcurrentlyOnFineGrid,
+    /**
+     * This variant is only applicable for touchVertex ... but remains
+     * without effect compared to the shorter one if ascend or descend,
+     * respectively, are not nop.
+     */
+    AvoidCoarseGridRacesWithoutInterGridDependencies,
+    AvoidFineGridRacesWithoutInterGridDependencies,
+    RunConcurrentlyOnFineGridWithoutInterGridDependencies
   };
 
   Manipulates     manipulates;
