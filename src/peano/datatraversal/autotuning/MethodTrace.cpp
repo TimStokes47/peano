@@ -58,6 +58,12 @@ std::string peano::datatraversal::autotuning::toString( const MethodTrace& metho
     case MethodTrace::HoldPersistentRegularSubgrid:
       return "hold-persistent-regular-subgrid";
 
+    case MethodTrace::DecomposeAscendIntoMultilevelTasks:
+      return "decompose-ascend-into-multilevel-task";
+    case MethodTrace::DecomposeDescendIntoMultilevelTasks:
+      return "decompose-descend-into-multilevel-task";
+
+
     case MethodTrace::UserDefined0:
       return "user-defined-0";
     case MethodTrace::UserDefined1:
@@ -177,6 +183,11 @@ peano::datatraversal::autotuning::MethodTrace peano::datatraversal::autotuning::
 
     case static_cast<int>(MethodTrace::HoldPersistentRegularSubgrid):
       return MethodTrace::HoldPersistentRegularSubgrid;
+
+    case static_cast<int>(MethodTrace::DecomposeAscendIntoMultilevelTasks):
+      return MethodTrace::DecomposeAscendIntoMultilevelTasks;
+    case static_cast<int>(MethodTrace::DecomposeDescendIntoMultilevelTasks):
+      return MethodTrace::DecomposeDescendIntoMultilevelTasks;
 
     case static_cast<int>(MethodTrace::UserDefined0):
       return MethodTrace::UserDefined0;
