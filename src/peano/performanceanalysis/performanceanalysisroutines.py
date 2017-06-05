@@ -1350,7 +1350,7 @@ def plotDomainDecomposition2d(outputFileName,numberOfRanks,domainoffset,domainsi
           color=NodeColors[colorCounter%len(NodeColors)],
           alpha=myAlpha
         ))
-        colorCounter = colorCounter + 1
+    colorCounter = colorCounter + 1
   pylab.xlim( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
   pylab.ylim( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
   pylab.savefig( outputFileName + ".dd.png" )
