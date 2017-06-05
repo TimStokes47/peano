@@ -294,7 +294,7 @@ To make this work three things have to hold:
   \item The two events have to be independent of each other. This is something
   you have to check. Peano cannot know this. The events are independent, if 
   \texttt{touchVertexFirstTime} does not access the coarse grid level data
-  handed in. There are no constraints on \texttt{enterCell},
+  handed in. There are no constraints on \texttt{enterCell}, \linebreak
   i.e.~\texttt{enterCell} may access coarser data.
   \item The event \texttt{descend} has to be set to \texttt{Nop}, i.e.~it has to
   be empty.
