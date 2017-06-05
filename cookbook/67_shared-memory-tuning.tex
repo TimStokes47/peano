@@ -279,3 +279,29 @@ There are basically two things you can do:
   shows that many background tasks would be available if there were more cores.
  }
 \end{center}
+
+
+\subsection{Multiscale algorithms}
+
+Peano tries to identify regular subregions in your grid automatically and
+optimises those regions particularly aggressive.
+If you run a multiscale solver, it can, in theory, run the \texttt{enterCell}
+events on a level $\ell $ in parallel to the \texttt{touchVertexFirstTime}
+events on level $\ell +1$.
+To make this work three things have to hold:
+
+\begin{enumerate}
+  \item The two events have to be independent of each other. This is something
+  you have to check. Peano cannot know this. The events are independent, if 
+  \texttt{touchVertexFirstTime} does not access the coarse grid level data
+  handed in. There are no constraints on \texttt{enterCell},
+  i.e.~\texttt{enterCell} may access coarser data.
+  \item The event \texttt{descend} has to be set to \texttt{Nop}, i.e.~it has to
+  be empty.
+  \item The event specification for \texttt{touchVertexFirstTime} has to inform
+  Peano that there are no inter-grid dependencies.
+\end{enumerate}
+
+\noindent
+A similar arguing holds the other way round for \texttt{Ascend},
+\texttt{touchVertexLastTime} and \texttt{leaveCell}.
