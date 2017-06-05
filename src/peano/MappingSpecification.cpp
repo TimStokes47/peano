@@ -96,6 +96,24 @@ peano::MappingSpecification operator&(const peano::MappingSpecification& lhs, co
   ) {
     multithreading = peano::MappingSpecification::RunConcurrentlyOnFineGrid;
   }
+
+  else if (
+    rhs.multithreading==peano::MappingSpecification::AvoidCoarseGridRacesWithoutInterGridDependencies || lhs.multithreading==peano::MappingSpecification::AvoidCoarseGridRacesWithoutInterGridDependencies
+  ) {
+    multithreading = peano::MappingSpecification::AvoidCoarseGridRacesWithoutInterGridDependencies;
+  }
+  else if (
+    rhs.multithreading==peano::MappingSpecification::AvoidFineGridRacesWithoutInterGridDependencies || lhs.multithreading==peano::MappingSpecification::AvoidFineGridRacesWithoutInterGridDependencies
+  ) {
+    multithreading = peano::MappingSpecification::AvoidFineGridRacesWithoutInterGridDependencies;
+  }
+  else if (
+    rhs.multithreading==peano::MappingSpecification::RunConcurrentlyOnFineGridWithoutInterGridDependencies || lhs.multithreading==peano::MappingSpecification::RunConcurrentlyOnFineGridWithoutInterGridDependencies
+  ) {
+    multithreading = peano::MappingSpecification::RunConcurrentlyOnFineGridWithoutInterGridDependencies;
+  }
+
+
   else {
     logError( "operator&(...)", "trying to combine " << rhs.toString() << " with " << lhs.toString() << ". Fall back to serial code" );
     multithreading = peano::MappingSpecification::Serial;
