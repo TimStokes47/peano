@@ -112,15 +112,6 @@ class tarch::parallel::NodePoolStrategy {
     virtual void reserveParticularNode(int rank) = 0;
 
     /**
-     * Remove Next Idle Node
-     *
-     * Takes one idle node, removes it from the strategy, and returns the rank
-     * of this node. This operation is used by the node pool if it is already
-     * shut down. It is not used throughout the simulation run.
-     */
-    virtual int removeNextIdleNode() = 0;
-
-    /**
      * Return whether node rank is registered via addNode().
      */
     virtual bool isRegisteredNode(int rank) const = 0;

@@ -173,7 +173,6 @@ class tarch::parallel::FCFSNodePoolStrategy: public tarch::parallel::NodePoolStr
     virtual tarch::parallel::messages::WorkerRequestMessage extractElementFromRequestQueue(RequestQueue& queue);
     virtual void fillWorkerRequestQueue(RequestQueue& queue);
     virtual void addNode(const tarch::parallel::messages::RegisterAtNodePoolMessage& node );
-    virtual void removeNode( int rank );
     virtual int getNumberOfIdleNodes() const;
     virtual void setNodeIdle( int rank );
     virtual int reserveNode(int forMaster);
@@ -183,7 +182,8 @@ class tarch::parallel::FCFSNodePoolStrategy: public tarch::parallel::NodePoolStr
     virtual int getNumberOfRegisteredNodes() const;
     virtual std::string toString() const;
     virtual bool hasIdleNode(int forMaster) const;
-    virtual int removeNextIdleNode();
+    void removeNode( int rank ) override;
+
 };
 
 #endif

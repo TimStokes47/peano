@@ -319,10 +319,12 @@ void tarch::parallel::NodePool::terminate() {
     _isAlive = false;
 
     #ifdef Parallel
-    while ( _strategy->hasIdleNode(NodePoolStrategy::AnyMaster) ) {
-      int rank = _strategy->removeNextIdleNode();
-      tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
-      answerMessage.send( rank, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+    for (int i=0; i<tarch::parallel::Node::getInstance().getNumberOfNodes(); i++) {
+      if ( _strategy->isIdleNode(i) ) {
+        tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
+        answerMessage.send( i, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+        _strategy->removeNode(i);
+      }
     }
 
     if (_strategy->getNumberOfRegisteredNodes()>0) {
@@ -398,8 +400,6 @@ std::vector<int>  tarch::parallel::NodePool::reserveFreeNodesForServer(int numbe
     &&
     static_cast<int>(result.size())<numberOfRanksWanted
   );
-
-  logWarning( "reserveFreeNodeForServer()", "tried to reserve " << numberOfRanksWanted << " but got only " << result.size() << " rank(s) on global master" );
 
   logTraceOutWith1Argument( "reserveFreeNodeForServer()", result.size());
 
@@ -573,10 +573,9 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
 
     if ( !_isAlive ) {
       _strategy->setNodeIdle( queryMessage.getSenderRank() );
-      int rank = _strategy->removeNextIdleNode();
-      assertionEquals1( rank, queryMessage.getSenderRank(), Node::getInstance().getRank() );
+      _strategy->removeNode(queryMessage.getSenderRank());
       tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
-      answerMessage.send( rank, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+      answerMessage.send( queryMessage.getSenderRank(), _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
     }
     else {
       _strategy->setNodeIdle( queryMessage.getSenderRank() );
@@ -617,7 +616,6 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
           tarch::parallel::messages::NodePoolAnswerMessage answerMessage( NoFreeNodesMessage );
           answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
         }
-        _strategy->fillWorkerRequestQueue(queue);
       }
     }
   }

@@ -56,6 +56,16 @@ tarch::parallel::messages::WorkerRequestMessage tarch::parallel::FCFSNodePoolStr
 }
 
 
+void tarch::parallel::FCFSNodePoolStrategy::removeNode(int rank) {
+  for (auto& p: _nodes) {
+    if (p.getRank()==rank) {
+      _nodes.remove(p);
+      return;
+    }
+  }
+}
+
+
 void tarch::parallel::FCFSNodePoolStrategy::addNode(const tarch::parallel::messages::RegisterAtNodePoolMessage& node) {
   #ifdef Parallel
   assertion( !isRegisteredNode(node.getSenderRank()) );
@@ -72,37 +82,9 @@ void tarch::parallel::FCFSNodePoolStrategy::addNode(const tarch::parallel::messa
 }
 
 
-void tarch::parallel::FCFSNodePoolStrategy::removeNode( int rank ) {
-  assertion( isRegisteredNode(rank) );
-
-  for (
-    NodeContainer::iterator p = _nodes.begin();
-    p != _nodes.end();
-    p++
-  ) {
-    if ( p->getRank() == rank ) {
-      logDebug( "removeNode(int)", "remove entry " + p->toString() );
-      _nodes.erase(p);
-      _nodes.sort();
-      return;
-    }
-  }
-}
-
-
 bool tarch::parallel::FCFSNodePoolStrategy::hasIdleNode(int forMaster) const {
   return !_nodes.empty() &&
          _nodes.front().isIdle();
-}
-
-
-int tarch::parallel::FCFSNodePoolStrategy::removeNextIdleNode() {
-  assertion1( !_nodes.empty(), _nodes.size() );
-  assertion3( FCFSNodePoolStrategy::hasIdleNode(NodePoolStrategy::AnyMaster), _nodes.size(), _nodes.front().toString(), _nodes.begin()->isIdle() );
-
-  int result = _nodes.front().getRank();
-  _nodes.pop_front();
-  return result;
 }
 
 
