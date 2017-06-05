@@ -63,7 +63,9 @@ class peano::grid::nodes::tasks::Descend {
     void touchVerticesFirstTime(int level);
     void descend(int fineGridLevel);
     void enterCells(int level);
-public:
+
+    bool mayRunEventsOnMultipleLevelsInParallel(int levelOfTouchFirstTime) const;
+  public:
     Descend(
       const int              treeDepth,
       State&                 state,

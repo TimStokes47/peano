@@ -67,6 +67,8 @@ class peano::grid::nodes::tasks::Ascend {
     void touchVerticesLastTime(int level);
     void ascend(int fineGridLevel);
     void leaveCells(int level);
+
+    bool mayRunEventsOnMultipleLevelsInParallel(int levelOfTouchLastTime) const;
   public:
     Ascend(
       const int              treeDepth,
