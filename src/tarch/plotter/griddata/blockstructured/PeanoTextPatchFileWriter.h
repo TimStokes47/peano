@@ -9,6 +9,9 @@
 #include "PeanoPatchFileWriter.h"
 
 
+#include <fstream>
+
+
 namespace tarch {
   namespace plotter {
     namespace griddata {
@@ -31,12 +34,11 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
 
     int  _numberOfCellsPerAxis;
 
-    int  _totalNumberOfUnknowns;
-
     int _vertexCounter;
     int _cellCounter;
 
-    std::stringstream _out;
+    std::ofstream     _metaFileOut;
+    std::stringstream _snapshotFileOut;
 
     bool _haveWrittenAtLeastOnePatch;
 
@@ -50,8 +52,6 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
 
         const std::string _identifier;
         const int         _numberOfUnknowns;
-        const int         _offsetOfFirstUnknown;
-
         int               _patchCounter;
         std::stringstream _out;
 
@@ -60,7 +60,6 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
         CellDataWriter(
           const std::string& identifier,
           int                numberOfUnknowns,
-          int                offsetOfFirstUnknown,
           const std::string& metaData,
           double*            mapping,
           tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter& writer
@@ -91,8 +90,10 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
 
          const std::string _identifier;
          const int         _numberOfUnknowns;
-         const int         _offsetOfFirstUnknown;
 
+         /**
+          * Number of entries written within a patch.
+          */
          int               _patchCounter;
          std::stringstream _out;
 
@@ -101,7 +102,6 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
          VertexDataWriter(
            const std::string& identifier,
            int                numberOfUnknowns,
-           int                offsetOfFirstUnknown,
            const std::string& metaData,
            double*            mapping,
            tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter& writer
@@ -129,7 +129,12 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
          void assignRemainingVerticesDefaultValues() override;
      };
 
-    PeanoTextPatchFileWriter(int dimension, int numberOfCellsPerAxis);
+    /**
+     * @param filename Is the filename of the meta/root file, i.e. the file
+     *                 including the snapshots from the various MPI ranks.
+     */
+    PeanoTextPatchFileWriter(int dimension, int numberOfCellsPerAxis, const std::string& filename, bool append);
+    virtual ~PeanoTextPatchFileWriter();
 
     /**
      * Caller has to destroy this instance manually.
@@ -161,6 +166,12 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     ) override;
 
     /**
+     * @param filename The filename is the filename. The code does append a
+     *                 rank identifier itself, but if you have multiple
+     *                 snapshots (time sequence, e.g.) then please ensure that
+     *                 each writeToFile has its unique parameter per time step.
+     *                 Notably, please ensure that the argument is not the same
+     *                 as the one passed to the constructor.
      * @return Write has been successful
      */
     bool writeToFile( const std::string& filename ) override;

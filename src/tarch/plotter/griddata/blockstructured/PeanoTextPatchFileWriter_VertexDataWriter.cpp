@@ -5,7 +5,6 @@
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::VertexDataWriter(
   const std::string& identifier,
   int                numberOfUnknowns,
-  int                offsetOfFirstUnknown,
   const std::string& metaData,
   double*            mapping,
   tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter& writer
@@ -13,26 +12,25 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataW
   _writer(writer),
   _identifier(identifier),
   _numberOfUnknowns(numberOfUnknowns),
-  _offsetOfFirstUnknown(offsetOfFirstUnknown),
   _patchCounter(0) {
-  _writer._out << "begin vertex-values \"" << identifier << "\"" << std::endl
-               << "  number-of-unknowns " << _numberOfUnknowns << std::endl;
+  _writer._snapshotFileOut << "begin vertex-values \"" << identifier << "\"" << std::endl
+                           << "  number-of-unknowns " << _numberOfUnknowns << std::endl;
 
   if (!metaData.empty()) {
-    _writer._out << "  begin meta-data" << std::endl
-                 << "    " << metaData << std::endl
-                 << "  end meta-data" << std::endl;
+    _writer._snapshotFileOut << "  begin meta-data" << std::endl
+                             << "    " << metaData << std::endl
+                             << "  end meta-data" << std::endl;
   }
 
   if (mapping!=nullptr) {
-    _writer._out << "  begin mapping" << std::endl;
+    _writer._snapshotFileOut << "  begin mapping" << std::endl;
     for (int i=0; i<_writer.getVerticesPerPatch(); i++) {
-      _writer._out << " " << mapping[i];
+      _writer._snapshotFileOut << " " << mapping[i];
     }
-    _writer._out << "  end mapping" << std::endl;
+    _writer._snapshotFileOut << "  end mapping" << std::endl;
   }
 
-  _writer._out << "end vertex-values" << std::endl << std::endl;
+  _writer._snapshotFileOut << "end vertex-values" << std::endl << std::endl;
 }
 
 
@@ -89,7 +87,7 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::assignRemainingVerticesDefaultValues() {
   if (_patchCounter>=_writer.getVerticesPerPatch()) {
     _out << std::flush;
-    _writer._out << "  begin vertex-values \"" << _identifier << "\"" << std::endl
+    _writer._snapshotFileOut << "  begin vertex-values \"" << _identifier << "\"" << std::endl
                  << "    " << _out.rdbuf() << std::endl
                  << "  end vertex-values" << std::endl;
     _out.clear();
@@ -101,7 +99,7 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::flushIfPatchIsComplete() {
   if (_patchCounter>=_writer.getVerticesPerPatch()) {
     _out << std::flush;
-    _writer._out << "  begin vertex-values \"" << _identifier << "\"" << std::endl
+    _writer._snapshotFileOut << "  begin vertex-values \"" << _identifier << "\"" << std::endl
                  << "    " << _out.rdbuf() << std::endl
                  << "  end vertex-values" << std::endl;
     _out.clear();

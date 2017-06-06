@@ -5,7 +5,6 @@
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::CellDataWriter(
   const std::string& identifier,
   int                numberOfUnknowns,
-  int                offsetOfFirstUnknown,
   const std::string& metaData,
   double*            mapping,
   tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter& writer
@@ -13,26 +12,25 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWri
   _writer(writer),
   _identifier(identifier),
   _numberOfUnknowns(numberOfUnknowns),
-  _offsetOfFirstUnknown(offsetOfFirstUnknown),
   _patchCounter(0) {
-  _writer._out << "begin cell-values \"" << identifier << "\"" << std::endl
+  _writer._snapshotFileOut << "begin cell-values \"" << identifier << "\"" << std::endl
                << "  number-of-unknowns " << _numberOfUnknowns << std::endl;
 
   if (!metaData.empty()) {
-    _writer._out << "  begin meta-data" << std::endl
+    _writer._snapshotFileOut << "  begin meta-data" << std::endl
                  << "    " << metaData << std::endl
                  << "  end meta-data" << std::endl;
   }
 
   if (mapping!=nullptr) {
-    _writer._out << "  begin mapping" << std::endl;
+    _writer._snapshotFileOut << "  begin mapping" << std::endl;
     for (int i=0; i<_writer.getVerticesPerPatch(); i++) {
-      _writer._out << " " << mapping[i];
+      _writer._snapshotFileOut << " " << mapping[i];
     }
-    _writer._out << "  end mapping" << std::endl;
+    _writer._snapshotFileOut << "  end mapping" << std::endl;
   }
 
-  _writer._out << "end cell-values" << std::endl << std::endl;
+  _writer._snapshotFileOut << "end cell-values" << std::endl << std::endl;
 }
 
 
@@ -89,7 +87,7 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::flushIfPatchIsComplete() {
   if (_patchCounter>=_writer.getCellsPerPatch()) {
     _out << std::flush;
-    _writer._out << "  begin cell-values \"" << _identifier << "\"" << std::endl
+    _writer._snapshotFileOut << "  begin cell-values \"" << _identifier << "\"" << std::endl
                  << "    " << _out.rdbuf() << std::endl
                  << "  end cell-values" << std::endl;
     _out.clear();

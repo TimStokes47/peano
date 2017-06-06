@@ -5,7 +5,6 @@
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::CellDataWriter(
   const std::string& identifier,
   int                numberOfUnknowns,
-  int                offsetOfFirstUnknown,
   const std::string& metaData,
   double*            mapping,
   tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter& writer
@@ -13,8 +12,8 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
   _writer(writer),
   _identifier(identifier),
   _numberOfUnknowns(numberOfUnknowns),
-  _offsetOfFirstUnknown(offsetOfFirstUnknown),
   _patchCounter(0) {
+/*
   _writer._out << "begin cell-values \"" << identifier << "\"" << std::endl
                << "  number-of-unknowns " << _numberOfUnknowns << std::endl;
 
@@ -33,6 +32,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
   }
 
   _writer._out << "end cell-values" << std::endl << std::endl;
+*/
 }
 
 
@@ -87,6 +87,7 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDa
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::flushIfPatchIsComplete() {
+/*
   if (_patchCounter>=_writer.getCellsPerPatch()) {
     _out << std::flush;
     _writer._out << "  begin cell-values \"" << _identifier << "\"" << std::endl
@@ -95,6 +96,7 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDa
     _out.clear();
     _patchCounter = 0;
   }
+*/
 }
 
 

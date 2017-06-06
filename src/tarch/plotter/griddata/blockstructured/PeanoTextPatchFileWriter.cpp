@@ -2,7 +2,7 @@
 
 #include "PeanoTextPatchFileWriter.h"
 #include "tarch/parallel/Node.h"
-
+#include "tarch/parallel/NodePool.h"
 
 tarch::logging::Log tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::_log( "tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter" );
 
@@ -15,7 +15,12 @@ const std::string tarch::plotter::griddata::blockstructured::PeanoTextPatchFileW
 
 
 
-tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPatchFileWriter(int dimension, int numberOfCellsPerAxis):
+tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPatchFileWriter(
+  int                 dimension,
+  int                 numberOfCellsPerAxis,
+  const std::string&  filename,
+  bool                append
+):
   _writtenToFile(false),
   _dimensions(dimension),
   _numberOfCellsPerAxis(numberOfCellsPerAxis) {
@@ -24,48 +29,67 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
   assertion( numberOfCellsPerAxis>1 );
 
   clear();
+
+  if (filename.rfind(".peano-patch-file")!=std::string::npos) {
+    logWarning( "PeanoTextPatchFileWriter()", "filename should not end with .peano-patch-file as routine adds extension automatically. Chosen filename=" << filename );
+  }
+
+  if (append) {
+    _metaFileOut.open( (filename+".peano-patch-file").c_str(), std::ios::app );
+  }
+  else {
+    _metaFileOut.open( (filename+".peano-patch-file").c_str(), std::ios::out );
+
+    if ( (!_metaFileOut.fail()) && _metaFileOut.is_open() ) {
+      _metaFileOut << HEADER
+                   << "format ASCII" << std::endl;
+    }
+  }
+
+  if ( !_metaFileOut.is_open() ) {
+    logError("PeanoTextPatchFileWriter()", "have not been able to open file " << filename << ".peano-patch-file");
+  }
+}
+
+
+tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::~PeanoTextPatchFileWriter() {
+  _metaFileOut.close();
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter*
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::createCellDataWriter( const std::string& identifier, int recordsPerCell ) {
-  _totalNumberOfUnknowns += recordsPerCell;
-  return new CellDataWriter(identifier, recordsPerCell, _totalNumberOfUnknowns-recordsPerCell, "", nullptr, *this);
+  return new CellDataWriter(identifier, recordsPerCell, "", nullptr, *this);
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter*
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData ) {
-  _totalNumberOfUnknowns += recordsPerCell;
-  return new CellDataWriter(identifier, recordsPerCell, _totalNumberOfUnknowns-recordsPerCell, metaData, nullptr, *this);
+  return new CellDataWriter(identifier, recordsPerCell, metaData, nullptr, *this);
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter*
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData, double* mapping ) {
-  _totalNumberOfUnknowns += recordsPerCell;
-  return new CellDataWriter(identifier, recordsPerCell, _totalNumberOfUnknowns-recordsPerCell, metaData, mapping, *this);
+  return new CellDataWriter(identifier, recordsPerCell, metaData, mapping, *this);
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter*
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::createVertexDataWriter( const std::string& identifier, int recordsPerVertex ) {
-  _totalNumberOfUnknowns += recordsPerVertex;
-  return new VertexDataWriter(identifier, recordsPerVertex , _totalNumberOfUnknowns-recordsPerVertex, "", nullptr, *this);
+  return new VertexDataWriter(identifier, recordsPerVertex , "", nullptr, *this);
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter*
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData ) {
-  _totalNumberOfUnknowns += recordsPerVertex;
-  return new VertexDataWriter(identifier, recordsPerVertex , _totalNumberOfUnknowns-recordsPerVertex, metaData, nullptr, *this);
+  return new VertexDataWriter(identifier, recordsPerVertex , metaData, nullptr, *this);
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter*
 tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData, double* mapping ) {
-  _totalNumberOfUnknowns += recordsPerVertex;
-  return new VertexDataWriter(identifier, recordsPerVertex , _totalNumberOfUnknowns-recordsPerVertex, metaData, mapping, *this);
+  return new VertexDataWriter(identifier, recordsPerVertex , metaData, mapping, *this);
 }
 
 
@@ -74,29 +98,29 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoTextPatchFile
   const tarch::la::Vector<2,double>& size
 ) {
   if (_haveWrittenAtLeastOnePatch) {
-    _out << "end patch" << std::endl << std::endl;
+    _snapshotFileOut << "end patch" << std::endl << std::endl;
   }
 
-  _out << "begin patch" << std::endl
+  _snapshotFileOut << "begin patch" << std::endl
        << "  offset";
 
   for (int d=0; d<2; d++) {
-    _out << " " << offset(d);
+    _snapshotFileOut << " " << offset(d);
   }
   if (_dimensions==3) {
-    _out << " 0";
+    _snapshotFileOut << " 0";
   }
-  _out << std::endl;
+  _snapshotFileOut << std::endl;
 
-  _out << "  size";
+  _snapshotFileOut << "  size";
 
   for (int d=0; d<2; d++) {
-    _out << " " << size(d);
+    _snapshotFileOut << " " << size(d);
   }
   if (_dimensions==3) {
-    _out << " 0";
+    _snapshotFileOut << " 0";
   }
-  _out << std::endl;
+  _snapshotFileOut << std::endl;
 
   _haveWrittenAtLeastOnePatch = true;
 
@@ -114,23 +138,23 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoTextPatchFile
   assertion( _dimensions==3 );
 
   if (_haveWrittenAtLeastOnePatch) {
-    _out << "end patch" << std::endl << std::endl;
+    _snapshotFileOut << "end patch" << std::endl << std::endl;
   }
 
-  _out << "begin patch" << std::endl
+  _snapshotFileOut << "begin patch" << std::endl
        << "  offset";
 
   for (int d=0; d<3; d++) {
-    _out << " " << offset(d);
+    _snapshotFileOut << " " << offset(d);
   }
-  _out << std::endl;
+  _snapshotFileOut << std::endl;
 
-  _out << "  size";
+  _snapshotFileOut << "  size";
 
   for (int d=0; d<3; d++) {
-    _out << " " << size(d);
+    _snapshotFileOut << " " << size(d);
   }
-  _out << std::endl;
+  _snapshotFileOut << std::endl;
 
   _haveWrittenAtLeastOnePatch = true;
 
@@ -144,27 +168,48 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoTextPatchFile
 bool tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::writeToFile( const std::string& filenamePrefix ) {
   assertion( !_writtenToFile );
 
-  if (filenamePrefix.rfind(".ppf")!=std::string::npos) {
-    logWarning( "writeToFile()", "filename should not end with .ppf as routine adds extension automatically. Chosen filename prefix=" << filenamePrefix );
+  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    _metaFileOut << std::endl << "begin dataset" << std::endl;
+
+    for (int i=0; i<tarch::parallel::Node::getInstance().getNumberOfNodes(); i++) {
+      if ( i==0 || !tarch::parallel::NodePool::getInstance().isIdleNode(i) ) {
+        std::ostringstream referencedFilename;
+        if (filenamePrefix.find("/")!=std::string::npos) {
+          referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
+        }
+        else {
+          referencedFilename << filenamePrefix;
+        }
+        referencedFilename << "-rank-" << i
+                           << ".peano-patch-file";
+        _metaFileOut << "  include\"" << referencedFilename.str() << "\"" << std::endl;
+      }
+    }
+
+    _metaFileOut << "end dataset" << std::endl;
+  }
+
+  if (filenamePrefix.rfind(".peano-patch-file")!=std::string::npos) {
+    logWarning( "writeToFile()", "filename should not end with .peano-patch-file as routine adds extension automatically. Chosen filename prefix=" << filenamePrefix );
   }
   std::ostringstream filenameStream;
   filenameStream << filenamePrefix
     #ifdef Parallel
                  << "-rank-" << tarch::parallel::Node::getInstance().getRank()
     #endif
-                 << ".ppf";
+                 << ".peano-patch-file";
   const std::string filename = filenameStream.str();
 
   std::ofstream out;
   out.open( filename.c_str(), std::ios::binary );
   if ( (!out.fail()) && out.is_open() ) {
-    _log.debug( "close()", "opened data file " + filename );
+    _log.debug( "writeToFile()", "opened data file " + filename );
 
     if (_haveWrittenAtLeastOnePatch) {
-      _out << "end patch" << std::endl << std::endl;
+      _snapshotFileOut << "end patch" << std::endl << std::endl;
     }
 
-    out << _out.rdbuf();
+    out << _snapshotFileOut.rdbuf();
 
     _writtenToFile = true;
     return true;
@@ -184,26 +229,26 @@ bool tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::isOpen
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::clear() {
   _writtenToFile       = false;
 
-  _out.clear();
+  _snapshotFileOut.clear();
 
   _vertexCounter = 0;
   _cellCounter   = 0;
   _haveWrittenAtLeastOnePatch = false;
 
 
-  _out << HEADER
+  _snapshotFileOut << HEADER
       << "format ASCII" << std::endl
       << "dimensions " << _dimensions  << std::endl
       << "patch-size" ;
   for (int d=0; d<_dimensions; d++) {
-    _out << " " << _numberOfCellsPerAxis;
+    _snapshotFileOut << " " << _numberOfCellsPerAxis;
   }
-  _out << std::endl << std::endl;
+  _snapshotFileOut << std::endl << std::endl;
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::addMetaData(const std::string& metaData) {
-  _out << "begin meta-data" << std::endl
+  _snapshotFileOut << "begin meta-data" << std::endl
        << metaData << std::endl
        << "end meta-data" << std::endl << std::endl;
 }

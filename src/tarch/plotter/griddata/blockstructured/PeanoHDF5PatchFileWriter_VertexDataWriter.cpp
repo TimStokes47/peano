@@ -5,7 +5,6 @@
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter::VertexDataWriter(
   const std::string& identifier,
   int                numberOfUnknowns,
-  int                offsetOfFirstUnknown,
   const std::string& metaData,
   double*            mapping,
   tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter& writer
@@ -13,8 +12,8 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataW
   _writer(writer),
   _identifier(identifier),
   _numberOfUnknowns(numberOfUnknowns),
-  _offsetOfFirstUnknown(offsetOfFirstUnknown),
   _patchCounter(0) {
+/*
   _writer._out << "begin vertex-values \"" << identifier << "\"" << std::endl
                << "  number-of-unknowns " << _numberOfUnknowns << std::endl;
 
@@ -33,6 +32,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataW
   }
 
   _writer._out << "end vertex-values" << std::endl << std::endl;
+*/
 }
 
 
@@ -88,17 +88,20 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::Vertex
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter::assignRemainingVerticesDefaultValues() {
   if (_patchCounter>=_writer.getVerticesPerPatch()) {
+/*
     _out << std::flush;
     _writer._out << "  begin vertex-values \"" << _identifier << "\"" << std::endl
                  << "    " << _out.rdbuf() << std::endl
                  << "  end vertex-values" << std::endl;
     _out.clear();
+*/
     _patchCounter = 0;
   }
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter::flushIfPatchIsComplete() {
+/*
   if (_patchCounter>=_writer.getVerticesPerPatch()) {
     _out << std::flush;
     _writer._out << "  begin vertex-values \"" << _identifier << "\"" << std::endl
@@ -107,4 +110,5 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::Vertex
     _out.clear();
     _patchCounter = 0;
   }
+*/
 }

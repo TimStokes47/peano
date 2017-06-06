@@ -7,6 +7,11 @@
 #include "PeanoPatchFileWriter.h"
 
 
+#ifdef HDF5
+#include "hdf5.h"
+#endif
+
+
 namespace tarch {
   namespace plotter {
     namespace griddata {
@@ -23,20 +28,18 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
     static tarch::logging::Log _log;
     static const std::string HEADER;
 
-    bool _writtenToFile;
-
     int  _dimensions;
 
     int  _numberOfCellsPerAxis;
 
-    int  _totalNumberOfUnknowns;
-
     int _vertexCounter;
     int _cellCounter;
 
-    std::stringstream _out;
+    #ifdef HDF5
+    hid_t       _file;
+    #endif
 
-    bool _haveWrittenAtLeastOnePatch;
+    bool        _isOpen;
 
     int getCellsPerPatch() const;
     int getVerticesPerPatch() const;
@@ -48,8 +51,6 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
 
         const std::string _identifier;
         const int         _numberOfUnknowns;
-        const int         _offsetOfFirstUnknown;
-
         int               _patchCounter;
         std::stringstream _out;
 
@@ -58,7 +59,6 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
         CellDataWriter(
           const std::string& identifier,
           int                numberOfUnknowns,
-          int                offsetOfFirstUnknown,
           const std::string& metaData,
           double*            mapping,
           tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter& writer
@@ -89,8 +89,6 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
 
          const std::string _identifier;
          const int         _numberOfUnknowns;
-         const int         _offsetOfFirstUnknown;
-
          int               _patchCounter;
          std::stringstream _out;
 
@@ -99,7 +97,6 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
          VertexDataWriter(
            const std::string& identifier,
            int                numberOfUnknowns,
-           int                offsetOfFirstUnknown,
            const std::string& metaData,
            double*            mapping,
            tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter& writer
@@ -127,7 +124,9 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
          void assignRemainingVerticesDefaultValues() override;
      };
 
-    PeanoHDF5PatchFileWriter(int dimension, int numberOfCellsPerAxis);
+    PeanoHDF5PatchFileWriter(int dimension, int numberOfCellsPerAxis, const std::string& filename, bool append );
+    virtual ~PeanoHDF5PatchFileWriter();
+
 
     /**
      * Caller has to destroy this instance manually.
