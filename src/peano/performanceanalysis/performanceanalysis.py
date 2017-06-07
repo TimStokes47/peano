@@ -8,6 +8,8 @@ import networkx
 import datetime
 import performanceanalysisroutines
 
+import gc
+import re
 
 
 #from argparse import RawTextHelpFormatter
@@ -679,6 +681,11 @@ if (numberOfRanks>1):
     </p>\
     <p>\
     If rank 0 continues to synchronises all other ranks and your MPI phases exhibit lots of dark red areas, your rank 0 might participate in too many boundary exchanges. Consult guide book how to adopt the domain boundaries accordingly. \
+    </p>\
+    <p>\
+    The worker-master analysis tracks exclusively mesh synchronisation, i.e. the exchange of mesh data \
+    and properties tied to mesh entities. If you exchange worker-master data via stacks, late answers by \
+    any worker will not be identified here. Those can be find in the individual per-rank analysis below. \
     </p>\
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")

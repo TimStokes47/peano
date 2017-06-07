@@ -9,6 +9,9 @@ import networkx
 import datetime
 import performanceanalysisroutines
 
+import gc
+import re
+
 
 ########################################################################
 # START OF THE PROGRAM
