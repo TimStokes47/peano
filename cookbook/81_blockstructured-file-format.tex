@@ -1,4 +1,4 @@
-\chapter{Peano's block-structured output format}
+\section{Peano's block-structured output format}
 
 
 Peano has introduced its own block-structured output format.
@@ -12,7 +12,7 @@ In this case, the block format obviously can yield a significant overhead.
 
 
 
-\section{A minimal ASCII example file}
+\subsection{A minimal ASCII example file}
 \begin{code}
 #
 # Peano output file
@@ -84,7 +84,7 @@ This meta file contains links to the actual data files.
 Its syntax is self-explaining and you can open it with a plain text editor.
 
 
-\section{More sophiciated dumps}
+\subsection{More sophiciated dumps}
 
 \begin{itemize}
   \item The file format supports \texttt{cell-values}.
@@ -134,8 +134,16 @@ end dataset
 \end{itemize}
 
 
-\section{Peano's HDF5 format}
+\subsection{Peano's HDF5 format}
 
 The lack of connectivity data renders the streaming into HDF5 tables
 straightforward despite the fact that we have to be able to handle dynamically
 adaptive meshes.
+The HDF5 files are described by a hierarchy (Figure \ref{xxxx}):
+
+\begin{itemize}
+  \item The root entry of the file holds an attribute \texttt{Number of
+  datasets} which is sole integer value.
+  \item For a given number of datasets, there are groups \texttt{dataset-x} with
+  \texttt{x} starting from 0.
+\end{itemize}
