@@ -37,6 +37,7 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
 
     #ifdef HDF5
     hid_t       _file;
+    hid_t       _geometryTableDataset;
     #endif
 
     bool        _isOpen;
@@ -137,7 +138,13 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
          void assignRemainingVerticesDefaultValues() override;
      };
 
-    PeanoHDF5PatchFileWriter(int dimension, int numberOfCellsPerAxis, const std::string& filename, bool append );
+    PeanoHDF5PatchFileWriter(
+      int                  dimension,
+      int                  numberOfCellsPerAxis,
+      const std::string&   filename,
+      bool                 append,
+      int                  chunkSizeForExtendableDataset = 64
+    );
     virtual ~PeanoHDF5PatchFileWriter();
 
 
