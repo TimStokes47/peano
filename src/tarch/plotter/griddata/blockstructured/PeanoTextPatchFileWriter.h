@@ -140,20 +140,15 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
      * Caller has to destroy this instance manually.
      */
     CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell ) override;
-    CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData );
-    /**
-     * The mapping is an additional field that has d * (n+1)^d doubles that
-     * describe how the vertices within a unit cube are distributed. d is the
-     * dimension of the plotter, n is the number of cells per axis.
-     */
-    CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData, double* mapping );
+    CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData ) override;
+    CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData, double* mapping ) override;
 
     /**
      * Caller has to destroy this instance manually.
      */
     VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex ) override;
-    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData  );
-    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData, double* mapping );
+    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData  ) override;
+    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData, double* mapping ) override;
 
     std::pair<int,int> plotPatch(
       const tarch::la::Vector<2,double>& offset,

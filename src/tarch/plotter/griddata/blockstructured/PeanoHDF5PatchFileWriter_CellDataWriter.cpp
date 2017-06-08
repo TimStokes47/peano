@@ -11,28 +11,68 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
 ):
   _writer(writer),
   _identifier(identifier),
-  _numberOfUnknowns(numberOfUnknowns),
-  _patchCounter(0) {
-/*
-  _writer._out << "begin cell-values \"" << identifier << "\"" << std::endl
-               << "  number-of-unknowns " << _numberOfUnknowns << std::endl;
-
+  _numberOfUnknowns(numberOfUnknowns) {
   if (!metaData.empty()) {
-    _writer._out << "  begin meta-data" << std::endl
-                 << "    " << metaData << std::endl
-                 << "  end meta-data" << std::endl;
+    #ifdef HDF5
+    hid_t metaDataAttribute = H5Screate(H5S_SCALAR);
+    hid_t metaDataType      = H5Tcopy(H5T_C_S1);
+
+    H5Tset_size(metaDataType, 5);
+    H5Tset_strpad(metaDataType,H5T_STR_NULLTERM);
+    hid_t attribute = H5Acreate2(
+      _writer._file,
+      (_writer.getNameOfCurrentDataset()+"/metadata/"+_identifier).c_str(),
+      metaDataType, metaDataAttribute, H5P_DEFAULT, H5P_DEFAULT);
+
+    /*
+     * Write string attribute.
+     */
+    H5Awrite(attribute, metaDataType, metaData.c_str());
+
+    /*
+     * Close attribute and file dataspaces, and datatype.
+     */
+    H5Aclose(attribute);
+    H5Sclose(metaDataAttribute);
+    #endif
   }
 
   if (mapping!=nullptr) {
-    _writer._out << "  begin mapping" << std::endl;
-    for (int i=0; i<_writer.getVerticesPerPatch(); i++) {
-      _writer._out << " " << mapping[i];
-    }
-    _writer._out << "  end mapping" << std::endl;
-  }
+    #ifdef HDF5
+    //
+    // Create the data space with unlimited dimensions.
+    //
+    hsize_t tableDimensions[] = {
+      _writer._dimensions,
+      std::pow(_writer._numberOfCellsPerAxis,_writer._dimensions)
+    };
 
-  _writer._out << "end cell-values" << std::endl << std::endl;
-*/
+    //
+    // Set up handles/tables
+    //
+    hid_t dataTable = H5Screate_simple(2, tableDimensions, NULL);
+    hid_t dataset   = H5Dcreate(
+      _writer._file,
+      (_writer.getNameOfCurrentDataset()+"/mapping/"+_identifier).c_str(),
+      H5T_NATIVE_DOUBLE,
+      dataTable, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT
+    );
+
+    //
+    // Write data
+    //
+    H5Dwrite(
+      dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+      mapping
+    );
+
+    //
+    // Close/release handles
+    //
+    H5Dclose(dataset);
+    H5Sclose(dataTable);
+    #endif
+  }
 }
 
 
@@ -41,68 +81,95 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::plotCell( int index, double value ) {
-  _out << " " << value;
-  for (int i=1; i<_numberOfUnknowns; i++) {
-    _out << " 0";
+  while (static_cast<int>(_data.size())<(index+1)*_numberOfUnknowns) {
+    _data.push_back(0.0);
   }
-  _patchCounter++;
-  flushIfPatchIsComplete();
+
+  _data[index*_numberOfUnknowns] = value;
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::plotCell( int index, const tarch::la::Vector<2,double>& value ) {
-  _out << " " << value(0) << " " << value(1);
-  for (int i=2; i<_numberOfUnknowns; i++) {
-    _out << " 0";
+  while (static_cast<int>(_data.size())<(index+1)*_numberOfUnknowns) {
+    _data.push_back(0.0);
   }
-  _patchCounter++;
-  flushIfPatchIsComplete();
+
+  _data[index*_numberOfUnknowns+0] = value(0);
+  _data[index*_numberOfUnknowns+1] = value(1);
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::plotCell( int index, const tarch::la::Vector<3,double>& value ) {
-  _out << " " << value(0) << " " << value(1) << " " << value(2);
-  for (int i=3; i<_numberOfUnknowns; i++) {
-    _out << " 0";
+  while (static_cast<int>(_data.size())<(index+1)*_numberOfUnknowns) {
+    _data.push_back(0.0);
   }
-  _patchCounter++;
-  flushIfPatchIsComplete();
+
+  _data[index*_numberOfUnknowns+0] = value(0);
+  _data[index*_numberOfUnknowns+1] = value(1);
+  _data[index*_numberOfUnknowns+2] = value(2);
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::plotCell( int index, double* values, int numberOfValues ) {
+  while (static_cast<int>(_data.size())<(index+1)*_numberOfUnknowns) {
+    _data.push_back(0.0);
+  }
+
   for (int i=0; i<numberOfValues; i++) {
-    _out << " " << values[i];
+    _data[index*_numberOfUnknowns+i] = values[i];
   }
-  for (int i=numberOfValues; i<_numberOfUnknowns; i++) {
-    _out << " 0";
-  }
-  _patchCounter++;
-  flushIfPatchIsComplete();
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::close() {
+  assignRemainingCellsDefaultValues();
+
+  #ifdef HDF5
+  const int lineLenght = std::pow(_writer._numberOfCellsPerAxis,_writer._dimensions);
+
+  assertion( _data.size()%lineLenght == 0);
+
+  //
+  // Create the data space with unlimited dimensions.
+  //
+  hsize_t tableDimensions[] = {
+    lineLenght,
+    static_cast<int>(_data.size())/lineLenght
+  };
+
+  //
+  // Set up handles/tables
+  //
+  hid_t dataTable = H5Screate_simple(2, tableDimensions, NULL);
+  hid_t dataset   = H5Dcreate(
+    _writer._file,
+    (_writer.getNameOfCurrentDataset()+"/"+_identifier).c_str(),
+    H5T_NATIVE_DOUBLE,
+    dataTable, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT
+  );
+
+  //
+  // Write data
+  //
+  H5Dwrite(
+    dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+    _data.data()
+  );
+
+  //
+  // Close/release handles
+  //
+  H5Dclose(dataset);
+  H5Sclose(dataTable);
+  #endif
 }
 
 
-void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::flushIfPatchIsComplete() {
-/*
-  if (_patchCounter>=_writer.getCellsPerPatch()) {
-    _out << std::flush;
-    _writer._out << "  begin cell-values \"" << _identifier << "\"" << std::endl
-                 << "    " << _out.rdbuf() << std::endl
-                 << "  end cell-values" << std::endl;
-    _out.clear();
-    _patchCounter = 0;
-  }
-*/
-}
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::assignRemainingCellsDefaultValues() {
-  while (_patchCounter<_writer.getCellsPerPatch()) {
-    plotCell(-1,0.0);
+  while (static_cast<int>(_data.size())<_writer._cellCounter*_numberOfUnknowns) {
+    _data.push_back(0.0);
   }
 }
 

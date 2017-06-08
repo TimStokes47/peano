@@ -182,7 +182,7 @@ bool tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::writeT
         }
         referencedFilename << "-rank-" << i
                            << ".peano-patch-file";
-        _metaFileOut << "  include\"" << referencedFilename.str() << "\"" << std::endl;
+        _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
       }
     }
 

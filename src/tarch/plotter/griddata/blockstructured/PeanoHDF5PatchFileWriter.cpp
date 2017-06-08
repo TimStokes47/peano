@@ -60,8 +60,9 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
        */
       hid_t dataSetCounterDataSpace = H5Screate(H5S_SCALAR);
       hid_t attribute = H5Acreate(
-	_file, "Number of datasets", H5T_NATIVE_INT,
-	dataSetCounterDataSpace, H5P_DEFAULT, H5P_DEFAULT);
+	      _file, "Number of datasets", H5T_NATIVE_INT,
+	      dataSetCounterDataSpace, H5P_DEFAULT, H5P_DEFAULT
+	    );
 
       /*
       * Write scalar attribute.
@@ -84,32 +85,23 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
     _numberOfActiveDataset--;
 
     //
-    // Create active dataset
+    // Create active dataset group
     //
-    hid_t newGroup = H5Gcreate(_file, getNameOfCurrentDataset().c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    hid_t newGroup;
+    newGroup = H5Gcreate(_file, getNameOfCurrentDataset().c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
     H5Gclose(newGroup);
 
-
     //
-    // Create the data space with unlimited dimensions.
-    hsize_t geometryTableDimensions[]       = {2*static_cast<hsize_t>(_dimensions), 1}; // @todo I guess this has to be 0
-    hsize_t geometryTableMaxDimensions[2]   = {2*static_cast<hsize_t>(_dimensions), H5S_UNLIMITED};
-    hsize_t geometryTableChunkDimensions[2] = {2*static_cast<hsize_t>(_dimensions), static_cast<hsize_t>(chunkSizeForExtendableDataset)};
+    // Create active dataset group
+    //
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/metadata").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
 
-    hid_t dataspace = H5Screate_simple(2, geometryTableDimensions, geometryTableMaxDimensions);
-
-    hid_t cparms = H5Pcreate (H5P_DATASET_CREATE);
-    H5Pset_chunk(cparms, 2, geometryTableChunkDimensions);
-    //H5Pclose(cparms);
-
-    _geometryTableDataset = H5Dcreate(
-      _file, (getNameOfCurrentDataset()+"/geometry").c_str(), H5T_NATIVE_DOUBLE, dataspace,
-      H5P_DEFAULT, cparms, H5P_DEFAULT
-    );
-
-    //H5Sclose(dataspace);
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/mapping").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
   }
   #else
+  logError( "PeanoHDF5PatchFileWriter()", "tried to use Peano's HDF5 writer though code has been compiled without -DHDF5" );
   _isOpen = false;
   #endif
 }
@@ -123,8 +115,6 @@ std::string  tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::~PeanoHDF5PatchFileWriter() {
   #ifdef HDF5
   if (_file>=0) {
-    H5Dclose(_geometryTableDataset);
-
     herr_t   status = H5Fclose(_file);
 
     if (status<0) {
@@ -186,67 +176,10 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
   assertion( _isOpen );
   assertionEquals( _dimensions, 2 );
 
-
-/*
-
-
-  * Extend the dataset. Dataset becomes 10 x 3.
-
-
-
-  dims[0] = dims[0] + 7;
-
-  size[0] = dims[0];
-
-  size[1] = dims[1];
-
-  status = H5Dextend (dataset, size);
-*/
-
-
-  /*
-
-  * Write the data to the dataset using default transfer
-
-  * properties.
-
-  */
-
-  // @todo Man muss ein grosses Array verwenden hier!
-//  status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,
-//
-//  H5P_DEFAULT, data);
-
-/*
-  if (_haveWrittenAtLeastOnePatch) {
-//    _out << "end patch" << std::endl << std::endl;
-  }
-*/
-
-//  _out << "begin patch" << std::endl
-//       << "  offset";
-
-  for (int d=0; d<2; d++) {
-//    _out << " " << offset(d);
-  }
-  if (_dimensions==3) {
-//    _out << " 0";
-  }
-//  _out << std::endl;
-
-/*
-  _out << "  size";
-
-  for (int d=0; d<2; d++) {
-    _out << " " << size(d);
-  }
-  if (_dimensions==3) {
-    _out << " 0";
-  }
-  _out << std::endl;
-*/
-
-//  _haveWrittenAtLeastOnePatch = true;
+  _geometryData.push_back( offset(0) );
+  _geometryData.push_back( offset(1) );
+  _geometryData.push_back( size(0) );
+  _geometryData.push_back( size(1) );
 
   std::pair<int,int> result(_vertexCounter,_cellCounter);
   _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
@@ -261,30 +194,13 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
 ) {
   assertion( _isOpen );
   assertionEquals( _dimensions, 2 );
-/*
-  assertion( _dimensions==3 );
 
-  if (_haveWrittenAtLeastOnePatch) {
-    _out << "end patch" << std::endl << std::endl;
-  }
-
-  _out << "begin patch" << std::endl
-       << "  offset";
-
-  for (int d=0; d<3; d++) {
-    _out << " " << offset(d);
-  }
-  _out << std::endl;
-
-  _out << "  size";
-
-  for (int d=0; d<3; d++) {
-    _out << " " << size(d);
-  }
-  _out << std::endl;
-
-  _haveWrittenAtLeastOnePatch = true;
-*/
+  _geometryData.push_back( offset(0) );
+  _geometryData.push_back( offset(1) );
+  _geometryData.push_back( offset(2) );
+  _geometryData.push_back( size(0) );
+  _geometryData.push_back( size(1) );
+  _geometryData.push_back( size(2) );
 
   std::pair<int,int> result(_vertexCounter,_cellCounter);
   _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
@@ -296,40 +212,43 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
 bool tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::writeToFile( const std::string& filenamePrefix ) {
   assertion( _isOpen );
 
-/*
-  if (filenamePrefix.rfind(".ppf")!=std::string::npos) {
-    logWarning( "writeToFile()", "filename should not end with .ppf as routine adds extension automatically. Chosen filename prefix=" << filenamePrefix );
-  }
-  std::ostringstream filenameStream;
-  filenameStream << filenamePrefix
-    #ifdef Parallel
-                 << "-rank-" << tarch::parallel::Node::getInstance().getRank()
-    #endif
-                 << ".ppf";
-  const std::string filename = filenameStream.str();
-*/
+  #ifdef HDF5
+  //
+  // Create the data space with unlimited dimensions.
+  hsize_t geometryTableDimensions[] = {
+    2*static_cast<hsize_t>(_dimensions),
+    _geometryData.size()/_dimensions/2
+  };
 
-/*
-  std::ofstream out;
-  out.open( filename.c_str(), std::ios::binary );
-  if ( (!out.fail()) && out.is_open() ) {
-    _log.debug( "close()", "opened data file " + filename );
+  //
+  // Set up handles/tables
+  //
+  hid_t geometryTable = H5Screate_simple(2, geometryTableDimensions, NULL);
+  hid_t geometryDataset = H5Dcreate(
+    _file,
+    (getNameOfCurrentDataset()+"/geometry").c_str(),
+    H5T_NATIVE_DOUBLE,
+    geometryTable, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT
+  );
 
-    if (_haveWrittenAtLeastOnePatch) {
-      _out << "end patch" << std::endl << std::endl;
-    }
+  //
+  // Write data
+  //
+  H5Dwrite(
+    geometryDataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+    _geometryData.data()
+  );
 
-    out << _out.rdbuf();
+  //
+  // Close/release handles
+  //
+  hid_t result = H5Dclose(geometryDataset);
+  H5Sclose(geometryTable);
 
-    _writtenToFile = true;
-    return true;
-  }
-  else {
-    _log.error( "close()", "unable to write output file " + filename );
-    return false;
-  }
-*/
+  return result>=0;
+  #else
   return true;
+  #endif
 }
 
 
@@ -339,22 +258,8 @@ bool tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::isOpen
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::clear() {
-//  _out.clear();
-
   _vertexCounter = 0;
   _cellCounter   = 0;
-
-
-/*
-  _out << HEADER
-      << "format ASCII" << std::endl
-      << "dimensions " << _dimensions  << std::endl
-      << "patch-size" ;
-  for (int d=0; d<_dimensions; d++) {
-    _out << " " << _numberOfCellsPerAxis;
-  }
-  _out << std::endl << std::endl;
-*/
 }
 
 
