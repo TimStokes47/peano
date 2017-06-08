@@ -34,14 +34,57 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
   }
 
   #ifdef HDF5
-  _file = H5Fcreate((filename+".hdf5").c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  if (append) {
+    _file = H5Fopen((filename+".hdf5").c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+  }
+  else {
+    _file = H5Fcreate((filename+".hdf5").c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  }
 
   if (_file<0) {
-    logError( "PeanoHDF5PatchFileWriter()", "failed to obtain file handle for HDF5 file " << filename );
+    logError( "PeanoHDF5PatchFileWriter()", "failed to obtain file handle for HDF5 file " << filename << ". Wanted to append data=" << append );
     _isOpen = false;
   }
   else {
     _isOpen = true;
+
+    //
+    // Create the dataset counter attribute on the root level
+    //
+    if (!append) {
+      /*
+       * Create scalar attribute.
+       */
+      hid_t dataSetCounterDataSpace = H5Screate(H5S_SCALAR);
+      hid_t attribute = H5Acreate(
+	_file, "Number of datasets", H5T_NATIVE_INT,
+	dataSetCounterDataSpace, H5P_DEFAULT, H5P_DEFAULT);
+
+      /*
+      * Write scalar attribute.
+      */
+      int i = 0;
+      H5Awrite(attribute, H5T_NATIVE_INT, &i);
+
+      H5Aclose(attribute);
+      H5Sclose(dataSetCounterDataSpace);
+    }
+
+    //
+    // Increase the dataset counter and thus init _numberOfActiveDataset
+    //
+    hid_t attribute = H5Aopen_by_name(_file, "/", "Number of datasets", H5P_DEFAULT, H5P_DEFAULT);
+    H5Aread(attribute, H5T_NATIVE_INT, &_numberOfActiveDataset);
+    _numberOfActiveDataset++;
+    H5Awrite(attribute, H5T_NATIVE_INT, &_numberOfActiveDataset);
+    H5Aclose(attribute);
+    _numberOfActiveDataset--;
+
+    //
+    // Create active dataset
+    //
+    hid_t newGroup = H5Gcreate(_file, getNameOfCurrentDataset().c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
   }
   #else
   _isOpen = false;
@@ -49,12 +92,19 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
 }
 
 
+std::string  tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::getNameOfCurrentDataset() const {
+  return "/dataset-" + std::to_string(_numberOfActiveDataset);
+}
+
+
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::~PeanoHDF5PatchFileWriter() {
   #ifdef HDF5
-  herr_t   status = H5Fclose(_file);
+  if (_file>=0) {
+    herr_t   status = H5Fclose(_file);
 
-  if (status<0) {
-    logError( "PeanoHDF5PatchFileWriter()", "failed to close HDF5 file" );
+    if (status<0) {
+      logError( "PeanoHDF5PatchFileWriter()", "failed to close HDF5 file" );
+    }
   }
   #endif
 

@@ -44,6 +44,19 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
     int getCellsPerPatch() const;
     int getVerticesPerPatch() const;
 
+    /**
+     * See the cookbook. At any time, the writer pipes data only into one
+     * dataset (subdirectory) which is identified through a unique number.
+     * Yet, HDF5 works with identifiers (string) instead of numbers, so you
+     * have to convert it through getNameOfCurrentDataset().
+     */
+    int         _numberOfActiveDataset;
+
+    /**
+     * @see _numberOfActiveDataset
+     */
+    std::string  getNameOfCurrentDataset() const;
+
   public:
     class CellDataWriter: public tarch::plotter::griddata::Writer::CellDataWriter {
       protected:
