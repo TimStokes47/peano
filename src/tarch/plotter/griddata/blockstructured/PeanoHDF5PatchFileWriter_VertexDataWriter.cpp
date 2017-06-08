@@ -145,7 +145,7 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::Vertex
     _writer._file,
     (_writer.getNameOfCurrentDataset()+"/"+_identifier).c_str(),
     H5T_NATIVE_DOUBLE,
-    dataTable, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT
+    dataTable, H5P_DEFAULT, _writer.createDataTableProperties(lineLenght), H5P_DEFAULT
   );
 
   //

@@ -36,15 +36,17 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
     static tarch::logging::Log _log;
     static const std::string HEADER;
 
-    int  _dimensions;
-
-    int  _numberOfCellsPerAxis;
+    const int  _dimensions;
+    const int  _numberOfCellsPerAxis;
+    const bool _compress;
 
     int _vertexCounter;
     int _cellCounter;
 
     #ifdef HDF5
     hid_t       _file;
+
+    hid_t  createDataTableProperties(int lineWidth) const;
     #endif
 
     bool        _isOpen;
@@ -146,7 +148,7 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
       int                  numberOfCellsPerAxis,
       const std::string&   filename,
       bool                 append,
-      int                  chunkSizeForExtendableDataset = 64
+      bool                 compress
     );
     virtual ~PeanoHDF5PatchFileWriter();
 

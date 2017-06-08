@@ -22,10 +22,11 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
   int                  numberOfCellsPerAxis,
   const std::string&   filename,
   bool                 append,
-  int                  chunkSizeForExtendableDataset
+  bool                 compress
 ):
   _dimensions(dimension),
-  _numberOfCellsPerAxis(numberOfCellsPerAxis) {
+  _numberOfCellsPerAxis(numberOfCellsPerAxis),
+  _compress(compress) {
   assertion( dimension>=2 );
   assertion( dimension<=3 );
   assertion( numberOfCellsPerAxis>1 );
@@ -209,6 +210,29 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
 }
 
 
+#ifdef HDF5
+hid_t  tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createDataTableProperties(int lineWidth) const {
+  if (_compress) {
+    //
+    // Dataset is chunked for compression and we use zlib/deflate compression
+    // with level 6
+    //
+    hsize_t cdims[] = {
+      lineWidth,
+      32
+    };
+    hid_t propertyList = H5Pcreate (H5P_DATASET_CREATE);
+    H5Pset_chunk (propertyList, 2, cdims);
+    H5Pset_deflate(propertyList, 6);
+    return propertyList;
+  }
+  else {
+    return H5P_DEFAULT;
+  }
+}
+#endif
+
+
 bool tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::writeToFile( const std::string& filenamePrefix ) {
   assertion( _isOpen );
 
@@ -228,7 +252,9 @@ bool tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::writeT
     _file,
     (getNameOfCurrentDataset()+"/geometry").c_str(),
     H5T_NATIVE_DOUBLE,
-    geometryTable, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT
+    geometryTable, H5P_DEFAULT,
+    createDataTableProperties(2*static_cast<hsize_t>(_dimensions)),
+    H5P_DEFAULT
   );
 
   //
