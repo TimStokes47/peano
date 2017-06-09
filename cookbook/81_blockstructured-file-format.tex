@@ -211,3 +211,11 @@ Per written dataset, data ends up in up to four further subfolders:
   results from the description from the previous bullet point.
 \end{enumerate}
 
+
+\begin{remark}
+ Peano's blockstructured HDF5 format notably pays off if you embed whole patches
+ into the spacetree cells. If you use a low-order scheme with only one or two
+ doubles per cell, it does not pay off that much. The realisation also
+ implements on-the-fly compression (zip) through the plotter's constructor. This
+ way, you can bring down the required memory massively. 
+\end{remark}
