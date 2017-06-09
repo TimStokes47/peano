@@ -12,6 +12,25 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
   _writer(writer),
   _identifier(identifier),
   _numberOfUnknowns(numberOfUnknowns) {
+  #ifdef HDF5
+  /**
+   * Create scalar attribute.
+   */
+  hid_t numberOfUnknownsDataSpace = H5Screate(H5S_SCALAR);
+  hid_t numberOfUnknownsAttribute = H5Acreate(
+    _writer._file, (_writer.getNameOfCurrentDataset()+"/celldata/numberofunknowns/"+_identifier).c_str(), H5T_NATIVE_INT,
+      numberOfUnknownsDataSpace, H5P_DEFAULT, H5P_DEFAULT
+    );
+
+  /**
+   * Write scalar attribute.
+   */
+  H5Awrite(numberOfUnknownsAttribute, H5T_NATIVE_INT, &numberOfUnknowns);
+
+  H5Aclose(numberOfUnknownsAttribute);
+  H5Sclose(numberOfUnknownsDataSpace);
+  #endif
+
   if (!metaData.empty()) {
     #ifdef HDF5
     hid_t metaDataAttribute = H5Screate(H5S_SCALAR);
@@ -21,7 +40,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
     H5Tset_strpad(metaDataType,H5T_STR_NULLTERM);
     hid_t attribute = H5Acreate2(
       _writer._file,
-      (_writer.getNameOfCurrentDataset()+"/metadata/"+_identifier).c_str(),
+      (_writer.getNameOfCurrentDataset()+"/celldata/metadata/"+_identifier).c_str(),
       metaDataType, metaDataAttribute, H5P_DEFAULT, H5P_DEFAULT);
 
     /*
@@ -53,7 +72,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
     hid_t dataTable = H5Screate_simple(2, tableDimensions, NULL);
     hid_t dataset   = H5Dcreate(
       _writer._file,
-      (_writer.getNameOfCurrentDataset()+"/mapping/"+_identifier).c_str(),
+      (_writer.getNameOfCurrentDataset()+"/celldata/mapping/"+_identifier).c_str(),
       H5T_NATIVE_DOUBLE,
       dataTable, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT
     );
@@ -143,7 +162,7 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDa
   hid_t dataTable = H5Screate_simple(2, tableDimensions, NULL);
   hid_t dataset   = H5Dcreate(
     _writer._file,
-    (_writer.getNameOfCurrentDataset()+"/"+_identifier).c_str(),
+    (_writer.getNameOfCurrentDataset()+"/celldata/data/"+_identifier).c_str(),
     H5T_NATIVE_DOUBLE,
     dataTable, H5P_DEFAULT,
     _writer.createDataTableProperties(lineLenght), H5P_DEFAULT

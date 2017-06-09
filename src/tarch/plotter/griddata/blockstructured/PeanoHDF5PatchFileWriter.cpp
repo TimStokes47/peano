@@ -18,13 +18,13 @@ const std::string tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileW
 
 
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5PatchFileWriter(
-  int                  dimension,
+  int                  dimensions,
   int                  numberOfCellsPerAxis,
   const std::string&   filename,
   bool                 append,
   bool                 compress
 ):
-  _dimensions(dimension),
+  _dimensions(dimensions),
   _numberOfCellsPerAxis(numberOfCellsPerAxis),
   _compress(compress) {
   assertion( dimension>=2 );
@@ -56,23 +56,63 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
     // Create the dataset counter attribute on the root level
     //
     if (!append) {
-      /*
-       * Create scalar attribute.
-       */
-      hid_t dataSetCounterDataSpace = H5Screate(H5S_SCALAR);
-      hid_t attribute = H5Acreate(
+      {
+        /*
+         * Create scalar attribute.
+         */
+        hid_t dataSetCounterDataSpace = H5Screate(H5S_SCALAR);
+        hid_t dataSetCounterAttribute = H5Acreate(
 	      _file, "Number of datasets", H5T_NATIVE_INT,
 	      dataSetCounterDataSpace, H5P_DEFAULT, H5P_DEFAULT
 	    );
 
-      /*
-      * Write scalar attribute.
-      */
-      int i = 0;
-      H5Awrite(attribute, H5T_NATIVE_INT, &i);
+        /*
+         * Write scalar attribute.
+         */
+        int i = 0;
+        H5Awrite(dataSetCounterAttribute, H5T_NATIVE_INT, &i);
 
-      H5Aclose(attribute);
-      H5Sclose(dataSetCounterDataSpace);
+        H5Aclose(dataSetCounterAttribute);
+        H5Sclose(dataSetCounterDataSpace);
+      }
+
+      {
+        /**
+         * Create scalar attribute.
+         */
+        hid_t numberOfCellsPerAxisDataSpace = H5Screate(H5S_SCALAR);
+        hid_t numberOfCellsPerAxisAttribute = H5Acreate(
+	      _file, "Number of cells per axis", H5T_NATIVE_INT,
+	      numberOfCellsPerAxisDataSpace, H5P_DEFAULT, H5P_DEFAULT
+	    );
+
+        /**
+         * Write scalar attribute.
+         */
+        H5Awrite(numberOfCellsPerAxisAttribute, H5T_NATIVE_INT, &_numberOfCellsPerAxis);
+
+        H5Aclose(numberOfCellsPerAxisAttribute);
+        H5Sclose(numberOfCellsPerAxisDataSpace);
+      }
+
+      {
+        /**
+         * Create scalar attribute.
+         */
+        hid_t dimensionsDataSpace = H5Screate(H5S_SCALAR);
+        hid_t dimensionsAttribute = H5Acreate(
+	      _file, "Dimensions", H5T_NATIVE_INT,
+	      dimensionsDataSpace, H5P_DEFAULT, H5P_DEFAULT
+	    );
+
+        /**
+         * Write scalar attribute.
+         */
+        H5Awrite(dimensionsAttribute, H5T_NATIVE_INT, &_dimensions);
+
+        H5Aclose(dimensionsAttribute);
+        H5Sclose(dimensionsDataSpace);
+      }
     }
 
     //
@@ -95,10 +135,34 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
     //
     // Create active dataset group
     //
-    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/metadata").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/vertexdata").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
     H5Gclose(newGroup);
 
-    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/mapping").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/vertexdata/data").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
+
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/vertexdata/metadata").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
+
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/vertexdata/mapping").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
+
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/vertexdata/numberofunknowns").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
+
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/celldata").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
+
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/celldata/data").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
+
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/celldata/metadata").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
+
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/celldata/mapping").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
+    H5Gclose(newGroup);
+
+    newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/celldata/numberofunknowns").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
     H5Gclose(newGroup);
   }
   #else
