@@ -27,8 +27,8 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
   _dimensions(dimensions),
   _numberOfCellsPerAxis(numberOfCellsPerAxis),
   _compress(compress) {
-  assertion( dimension>=2 );
-  assertion( dimension<=3 );
+  assertion( _dimensions>=2 );
+  assertion( _dimensions<=3 );
   assertion( numberOfCellsPerAxis>1 );
 
   clear();
