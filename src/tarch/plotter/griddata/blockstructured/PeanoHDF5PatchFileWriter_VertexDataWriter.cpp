@@ -17,7 +17,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataW
     hid_t metaDataAttribute = H5Screate(H5S_SCALAR);
     hid_t metaDataType      = H5Tcopy(H5T_C_S1);
 
-    H5Tset_size(metaDataType, 5);
+    H5Tset_size(metaDataType, metaData.size() );
     H5Tset_strpad(metaDataType,H5T_STR_NULLTERM);
     hid_t attribute = H5Acreate2(
       _writer._file,

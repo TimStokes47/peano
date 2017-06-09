@@ -237,6 +237,28 @@ bool tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::writeT
   assertion( _isOpen );
 
   #ifdef HDF5
+  hid_t metaDataAttribute = H5Screate(H5S_SCALAR);
+  hid_t metaDataType      = H5Tcopy(H5T_C_S1);
+
+  H5Tset_size(metaDataType, filenamePrefix.size());
+  H5Tset_strpad(metaDataType,H5T_STR_NULLTERM);
+  hid_t attribute = H5Acreate2(
+    _file,
+    (getNameOfCurrentDataset()+"/identifier").c_str(),
+    metaDataType, metaDataAttribute, H5P_DEFAULT, H5P_DEFAULT);
+
+  /*
+   * Write string attribute.
+   */
+  H5Awrite(attribute, metaDataType, filenamePrefix.c_str());
+
+  /*
+   * Close attribute and file dataspaces, and datatype.
+   */
+  H5Aclose(attribute);
+  H5Sclose(metaDataAttribute);
+
+
   //
   // Create the data space with unlimited dimensions.
   hsize_t geometryTableDimensions[] = {
