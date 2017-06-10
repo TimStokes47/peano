@@ -167,18 +167,43 @@ If you use a tailored/sophisticated load balancing oracle, this oracle should be
 aware of this level as well.
 \end{remark}
 
-The latter remark leads into code similar to
+The latter remark gives rise to a simple generic formula the scale the
+domain.
+Let $\ell _{max}$ be the level yielding the coarsest level that an application
+is allowed to use.
+We will stretch the grid slightly to create, on this coarse regular grid, a
+halo layer of one cell width that is outside of the domain.
+Therefore, we work with $\ell _{max}+1$ as we have to assume that the
+application code refines once more once we slightly increase the mesh size to
+meet its maximum mesh size constraint.
+
+
+Let $C$ be the mesh size scaling such that exactly two cells are outside:
+\[
+  C \cdot 3^{-(\ell +1)} \left( 3^{\ell +1} -2 \right) 
+  = C \left( 1-2 \cdot 3^{-(\ell +1)} \right)
+  = 1.
+\]
+
+\noindent
+So the overall domain has to be stretched by $\left( 1-2 \cdot 3^{-(\ell +1)}
+\right) ^{-1}$, while an offset of 
+$-C \cdot 3^{-(\ell +1)$ times the original domain dimensions is to be applied.
+
+
 \begin{code}
   assertion1( getCoarsestGridLevelOfAllSolvers()>=3, getCoarsestGridLevelOfAllSolvers() ); 
-  const double boundingBoxScaling = 
-    static_cast<double>(getCoarsestGridLevelOfAllSolvers()) /
-    (static_cast<double>(getCoarsestGridLevelOfAllSolvers())-2); 
-  const double boundingBoxShift   = (1.0-boundingBoxScaling)/2.0; 
+  const double boundingBoxScaling = 1.0 / (
+    1.0 - 2.0 *
+    std::pow(3.0,static_cast<double>(getCoarsestGridLevelOfAllSolvers())+1)
+  );
+  const double normalisedShift = -boundingBoxScaling * 
+    std::pow(3.0,static_cast<double>(getCoarsestGridLevelOfAllSolvers())+1);
   
   exahype::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
       geometry,
       applicationsBoxSize*boundingBoxScaling,
-      applicationsBoxOffset+boundingBoxShift*applicationsBoxSize
+      applicationsBoxOffset-normalisedShift*applicationsBoxSize
       );
 \end{code}
 

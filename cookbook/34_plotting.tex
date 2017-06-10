@@ -165,6 +165,7 @@ Currently, I offer classes for
   while VTU is the up-to-date XML-based file format).
   \item a tailored, patch-based file format and helper routines to write
   patches (regular Cartesian subgrids) manually from within a Peano application.
+  \item a tailored, patch-based dump into HDF5.
 \end{itemize}
 
 
@@ -197,7 +198,22 @@ alongside your actual data plots.
 Notably see the \texttt{VTUTimeSeriesWriter}.
 
 
-\paragraph{\texttt{tarch} usage paradigms}
+\paragraph{Peano's own parallel file format}
+Peano offers its own, text-based parallel file format that allows users to dump
+the tree as a set of patches.
+If you do not use real patches, these patches can be degenerated ones of size
+$1 \times 1$ or $1 \times 1 \times 1$, respectively.
+The file format natively supports the dump of time series and is realised
+within \texttt{tarch/plotter/griddata/blockstructured}.
+
+
+\paragraph{HDF5}
+There is an HDF5 port of the patch-based format available once you compile
+the code with \texttt{-DHDF5}.
+
+
+
+\paragraph{Usage of Peano's \texttt{tarch} plotters}
 All the helper classes to plot data follow the same principles:
 \begin{itemize}
   \item A mapping typically creates an instance of the plotter within
@@ -223,8 +239,3 @@ All the helper classes to plot data follow the same principles:
 \end{itemize}
 
 
-\paragraph{Sophisticated (HDF5-based) parallel file formats}
-At the moment, Peano does not yet provide any tools to write sophisticated file
-formats through HDF5, e.g.
-In all projects using Peano, such features are purely realised on the
-application side.
