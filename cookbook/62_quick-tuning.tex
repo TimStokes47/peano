@@ -351,23 +351,8 @@ int exahype::runners::Runner::getCoarsestGridLevel() {
 
 \noindent
 This information then is used to extend the technical bounding box following  
-\ref{subsection:62:reduce-data-exchange-with-global-master}:
-\begin{code}
-  assertion1( getCoarsestGridLevelOfAllSolvers()>=3, getCoarsestGridLevelOfAllSolvers() ); 
-  const double boundingBoxScaling = 
-    static_cast<double>(getCoarsestGridLevelOfAllSolvers()) /
-    (static_cast<double>(getCoarsestGridLevelOfAllSolvers())-2); 
-  const double boundingBoxShift   = (1.0-boundingBoxScaling)/2.0; 
-  
-  exahype::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
-      geometry,
-      applicationsBoxSize*boundingBoxScaling,
-      applicationsBoxOffset-boundingBoxShift*applicationsBoxSize
-      );
-\end{code}
-
-\noindent
-and we finally hand over the regularity information to the oracles for the load
+\ref{subsection:62:reduce-data-exchange-with-global-master}.
+We finally hand over the regularity information to the oracles for the load
 balancing, too.
 They then enforce regularity of the grid also outside of the domain and thus
 enable the balancing to load balance also boundaries of the domain.
