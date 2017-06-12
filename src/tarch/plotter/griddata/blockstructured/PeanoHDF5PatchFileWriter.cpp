@@ -258,7 +258,7 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
   const tarch::la::Vector<3,double>& size
 ) {
   assertion( _isOpen );
-  assertionEquals( _dimensions, 2 );
+  assertionEquals( _dimensions, 3 );
 
   _geometryData.push_back( offset(0) );
   _geometryData.push_back( offset(1) );

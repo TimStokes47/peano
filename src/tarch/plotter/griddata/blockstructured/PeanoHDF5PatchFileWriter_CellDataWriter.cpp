@@ -146,7 +146,7 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDa
   #ifdef HDF5
   const int lineLenght = std::pow(_writer._numberOfCellsPerAxis,_writer._dimensions);
 
-  assertion( _data.size()%lineLenght == 0);
+  assertion4( _data.size()%lineLenght == 0, _data.size(), lineLenght, _writer._numberOfCellsPerAxis, _writer._dimensions);
 
   //
   // Create the data space with unlimited dimensions.
