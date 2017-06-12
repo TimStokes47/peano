@@ -101,52 +101,74 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::plotCell( int index, double value ) {
   while (static_cast<int>(_data.size())<(index+1)*_numberOfUnknowns) {
-    _data.push_back(0.0);
+    _data.resize( (index+1)*_numberOfUnknowns );
   }
 
   _data[index*_numberOfUnknowns] = value;
+
+  for (int i=1; i<_numberOfUnknowns; i++) {
+    _data[index*_numberOfUnknowns+i] = 0.0;
+  }
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::plotCell( int index, const tarch::la::Vector<2,double>& value ) {
   while (static_cast<int>(_data.size())<(index+1)*_numberOfUnknowns) {
-    _data.push_back(0.0);
+    _data.resize( (index+1)*_numberOfUnknowns );
   }
 
   _data[index*_numberOfUnknowns+0] = value(0);
   _data[index*_numberOfUnknowns+1] = value(1);
+
+  for (int i=2; i<_numberOfUnknowns; i++) {
+    _data[index*_numberOfUnknowns+i] = 0.0;
+  }
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::plotCell( int index, const tarch::la::Vector<3,double>& value ) {
   while (static_cast<int>(_data.size())<(index+1)*_numberOfUnknowns) {
-    _data.push_back(0.0);
+    _data.resize( (index+1)*_numberOfUnknowns );
   }
 
   _data[index*_numberOfUnknowns+0] = value(0);
   _data[index*_numberOfUnknowns+1] = value(1);
   _data[index*_numberOfUnknowns+2] = value(2);
+
+  for (int i=3; i<_numberOfUnknowns; i++) {
+    _data[index*_numberOfUnknowns+i] = 0.0;
+  }
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::plotCell( int index, double* values, int numberOfValues ) {
   while (static_cast<int>(_data.size())<(index+1)*_numberOfUnknowns) {
-    _data.push_back(0.0);
+    _data.resize( (index+1)*_numberOfUnknowns );
   }
 
   for (int i=0; i<numberOfValues; i++) {
     _data[index*_numberOfUnknowns+i] = values[i];
   }
+
+  for (int i=numberOfValues; i<_numberOfUnknowns; i++) {
+    _data[index*_numberOfUnknowns+i] = 0.0;
+  }
 }
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::close() {
+  const int lineLenght = std::pow(_writer._numberOfCellsPerAxis,_writer._dimensions);
+  assertion6(
+    _data.size()%lineLenght == 0,
+    _data.size()%lineLenght, _identifier,
+    _data.size(), lineLenght, _writer._numberOfCellsPerAxis, _writer._dimensions
+  );
   assignRemainingCellsDefaultValues();
 
   #ifdef HDF5
-  const int lineLenght = std::pow(_writer._numberOfCellsPerAxis,_writer._dimensions);
+  assertion5( _data.size()%lineLenght == 0, _data.size(), lineLenght, _writer._numberOfCellsPerAxis, _writer._dimensions, _identifier);
 
-  assertion4( _data.size()%lineLenght == 0, _data.size(), lineLenght, _writer._numberOfCellsPerAxis, _writer._dimensions);
+  logDebug( "close()", "create data table of " << _identifier << " with " << _data.size() << " entries");
 
   //
   // Create the data space with unlimited dimensions.
@@ -165,8 +187,10 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDa
     (_writer.getNameOfCurrentDataset()+"/celldata/data/"+_identifier).c_str(),
     H5T_NATIVE_DOUBLE,
     dataTable, H5P_DEFAULT,
-    _writer.createDataTableProperties(lineLenght), H5P_DEFAULT
+    _writer.createDataTableProperties(lineLenght,static_cast<int>(_data.size())/lineLenght), H5P_DEFAULT
   );
+
+  logDebug( "close()", "dump data of " << _identifier );
 
   //
   // Write data

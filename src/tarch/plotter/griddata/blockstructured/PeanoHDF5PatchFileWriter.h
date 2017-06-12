@@ -46,7 +46,7 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
     #ifdef HDF5
     hid_t       _file;
 
-    hid_t  createDataTableProperties(int lineWidth) const;
+    hid_t  createDataTableProperties(int lineWidth, int rowCount) const;
     #endif
 
     bool        _isOpen;

@@ -126,7 +126,7 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoTextPatchFile
 
   std::pair<int,int> result(_vertexCounter,_cellCounter);
   _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
-  _cellCounter   += std::pow(_numberOfCellsPerAxis+1,_dimensions);
+  _cellCounter   += std::pow(_numberOfCellsPerAxis,_dimensions);
   return result;
 }
 
@@ -160,7 +160,7 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoTextPatchFile
 
   std::pair<int,int> result(_vertexCounter,_cellCounter);
   _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
-  _cellCounter   += std::pow(_numberOfCellsPerAxis+1,_dimensions);
+  _cellCounter   += std::pow(_numberOfCellsPerAxis,_dimensions);
   return result;
 }
 

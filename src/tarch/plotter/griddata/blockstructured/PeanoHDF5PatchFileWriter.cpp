@@ -57,6 +57,8 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
     //
     if (!append) {
       {
+	logDebug( "PeanoHDF5PatchFileWriter(...)", "create Number of datasets attribute" );
+
         /*
          * Create scalar attribute.
          */
@@ -77,6 +79,8 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
       }
 
       {
+        logDebug( "PeanoHDF5PatchFileWriter(...)", "create Number of cells per axis attribute" );
+
         /**
          * Create scalar attribute.
          */
@@ -96,6 +100,8 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
       }
 
       {
+	logDebug( "PeanoHDF5PatchFileWriter(...)", "create Dimensions attribute" );
+
         /**
          * Create scalar attribute.
          */
@@ -115,6 +121,8 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
       }
     }
 
+    logDebug( "PeanoHDF5PatchFileWriter(...)", "Increase Number of datasets counter" );
+
     //
     // Increase the dataset counter and thus init _numberOfActiveDataset
     //
@@ -124,6 +132,8 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
     H5Awrite(attribute, H5T_NATIVE_INT, &_numberOfActiveDataset);
     H5Aclose(attribute);
     _numberOfActiveDataset--;
+
+    logDebug( "PeanoHDF5PatchFileWriter(...)", "create dataset and its subgroups" );
 
     //
     // Create active dataset group
@@ -164,6 +174,8 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
 
     newGroup = H5Gcreate(_file, (getNameOfCurrentDataset()+"/celldata/numberofunknowns").c_str(), H5P_DEFAULT,H5P_DEFAULT, H5P_DEFAULT);
     H5Gclose(newGroup);
+
+    logDebug( "PeanoHDF5PatchFileWriter(...)", "HDF5 file structure set up" );
   }
   #else
   logError( "PeanoHDF5PatchFileWriter()", "tried to use Peano's HDF5 writer though code has been compiled without -DHDF5" );
@@ -248,7 +260,7 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
 
   std::pair<int,int> result(_vertexCounter,_cellCounter);
   _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
-  _cellCounter   += std::pow(_numberOfCellsPerAxis+1,_dimensions);
+  _cellCounter   += std::pow(_numberOfCellsPerAxis,_dimensions);
   return result;
 }
 
@@ -269,21 +281,24 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
 
   std::pair<int,int> result(_vertexCounter,_cellCounter);
   _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
-  _cellCounter   += std::pow(_numberOfCellsPerAxis+1,_dimensions);
+  _cellCounter   += std::pow(_numberOfCellsPerAxis,_dimensions);
   return result;
 }
 
 
 #ifdef HDF5
-hid_t  tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createDataTableProperties(int lineWidth) const {
-  if (_compress) {
+hid_t  tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createDataTableProperties(int lineWidth, int rowCount) const {
+  const int MinNumberOfRowsForCompressionToPayOff = 64;
+  if (_compress && rowCount>MinNumberOfRowsForCompressionToPayOff) {
+    logDebug( "createDataTableProperties(int)", "insert properties of tables which triggers zlib compression" );
+
     //
     // Dataset is chunked for compression and we use zlib/deflate compression
     // with level 6
     //
     hsize_t cdims[] = {
       lineWidth,
-      32
+      MinNumberOfRowsForCompressionToPayOff
     };
     hid_t propertyList = H5Pcreate (H5P_DATASET_CREATE);
     H5Pset_chunk (propertyList, 2, cdims);
@@ -301,6 +316,8 @@ bool tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::writeT
   assertion( _isOpen );
 
   #ifdef HDF5
+  logDebug( "writeToFile(string)", "write dataset identifier" );
+
   hid_t metaDataAttribute = H5Screate(H5S_SCALAR);
   hid_t metaDataType      = H5Tcopy(H5T_C_S1);
 
@@ -325,6 +342,8 @@ bool tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::writeT
 
   //
   // Create the data space with unlimited dimensions.
+  logDebug( "writeToFile(string)", "write geometry table" );
+
   hsize_t geometryTableDimensions[] = {
     2*static_cast<hsize_t>(_dimensions),
     _geometryData.size()/_dimensions/2
@@ -339,7 +358,7 @@ bool tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::writeT
     (getNameOfCurrentDataset()+"/geometry").c_str(),
     H5T_NATIVE_DOUBLE,
     geometryTable, H5P_DEFAULT,
-    createDataTableProperties(2*static_cast<hsize_t>(_dimensions)),
+    createDataTableProperties(2*static_cast<hsize_t>(_dimensions),_geometryData.size()/_dimensions/2),
     H5P_DEFAULT
   );
 
@@ -356,6 +375,8 @@ bool tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::writeT
   //
   hid_t result = H5Dclose(geometryDataset);
   H5Sclose(geometryTable);
+
+  logDebug( "writeToFile(string)", "all mandatory data written to HDF5 file" );
 
   return result>=0;
   #else
