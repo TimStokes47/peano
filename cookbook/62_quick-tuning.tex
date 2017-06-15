@@ -195,10 +195,10 @@ $-C \cdot 3^{-(\ell +1)$ times the original domain dimensions is to be applied.
   assertion1( getCoarsestGridLevelOfAllSolvers()>=3, getCoarsestGridLevelOfAllSolvers() ); 
   const double boundingBoxScaling = 1.0 / (
     1.0 - 2.0 *
-    std::pow(3.0,static_cast<double>(getCoarsestGridLevelOfAllSolvers())+1)
+    std::pow(3.0,-static_cast<double>(getCoarsestGridLevelOfAllSolvers())-1)
   );
   const double normalisedShift = -boundingBoxScaling * 
-    std::pow(3.0,static_cast<double>(getCoarsestGridLevelOfAllSolvers())+1);
+    std::pow(3.0,-static_cast<double>(getCoarsestGridLevelOfAllSolvers())-1);
   
   exahype::repositories::RepositoryFactory::getInstance().createWithSTDStackImplementation(
       geometry,
