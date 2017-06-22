@@ -23,6 +23,12 @@ namespace tarch {
     Matrix<Cols,Rows,Scalar> transpose(const Matrix<Rows,Cols,Scalar>& matrix);
 
     /**
+     * Returns the identity matrix.
+     */
+    template<int Rows, typename Scalar>
+    static Matrix<Rows, Rows, Scalar> identity();
+
+    /**
      * Extract diagonal vector from matrix
      */
     template<int Rows, typename Scalar>
