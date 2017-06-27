@@ -37,7 +37,7 @@ void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, co
   if (_map.count(toRank)==0) {
     logTraceInWith2Arguments( "createBufferManually(int,type)", toRank, bufferAccessType );
     #ifdef SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA
-    _backgroundThread.switchState(BackgroundThread::Suspend);
+    _backgroundThread.switchState(BackgroundThread::State::Suspend);
     #endif
 
     SendReceiveBuffer* newBuffer;
@@ -54,7 +54,7 @@ void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, co
     );
 
     #ifdef SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA
-    _backgroundThread.switchState(BackgroundThread::ReceiveDataInBackground);
+    _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
     #endif
 
     logTraceOut( "createBufferManually(int,type)" );
