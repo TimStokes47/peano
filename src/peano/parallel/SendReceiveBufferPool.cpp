@@ -119,7 +119,7 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesFromAllBuffe
 
 void peano::parallel::SendReceiveBufferPool::terminate() {
   #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
-  _backgroundThread.switchState(BackgroundThread::Terminate);
+  _backgroundThread.switchState(BackgroundThread::State::Terminate);
   #endif
 
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
@@ -142,7 +142,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   logTraceInWith1Argument( "releaseMessages()", toString(_mode) );
 
   #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
-  _backgroundThread.switchState(BackgroundThread::Suspend);
+  _backgroundThread.switchState(BackgroundThread::State::Suspend);
   #endif
 
   for ( std::map<int,SendReceiveBuffer*>::const_reverse_iterator p = _map.rbegin(); p != _map.rend(); p++ ) {
@@ -153,7 +153,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   }
 
   #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
-  _backgroundThread.switchState(BackgroundThread::ReceiveDataInBackground);
+  _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
   #endif
 
   switch (_mode) {
