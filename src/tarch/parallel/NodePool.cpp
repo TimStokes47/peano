@@ -617,6 +617,9 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
           answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
         }
       }
+
+      //NOTE: Take care of recursive calls.
+      _strategy->fillWorkerRequestQueue(queue);
     }
   }
 
