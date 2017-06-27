@@ -114,7 +114,7 @@ outFile.write( "<h2>Mapping of ranks to nodes</h2>" )
 performanceanalysisroutines.fillNodeTable(args.file)
 performanceanalysisroutines.printNodeTable(outFile)
 if dim==2:
-  performanceanalysisroutines.plotDomainDecomposition2d( args.file, numberOfRanks, args.domainoffset, args.domainsize, offset, volume )
+  performanceanalysisroutines.plotDomainDecomposition2d( args.file, numberOfRanks, args.domainoffset, args.domainsize, offset, volume, levels, max(levels)+1 )
   outFile.write( "<a href=\"" + args.file + ".dd.large.pdf\"> <img src=\"" + args.file + ".dd.png\" /> </a> " )
 
  
