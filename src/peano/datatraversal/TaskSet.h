@@ -36,6 +36,19 @@ namespace peano {
  * Please see the documentation of the constructor with only one argument for
  * further details, as this one behaves differently.
  *
+ * <h2> Issuing background tasks </h2>
+ *
+ * If you spawn a task, I cannot know when it is actually executed. As a
+ * result, I never can rely where data is at the very moment the task then is
+ * actually triggered. Notably if you directly try to access vertices/cells,
+ * they might already have been moved to a different memory location. So what
+ * you have to do is that you store the data you wanna manipulate on heaps as
+ * data on heaps doesn't move. And then you equip your tasks with pointers
+ * (indices) to the heap. These pointers/indices are copied but the heap index
+ * itself remains valid, so it doesn't really matter to you if the vertex
+ * holding pointers too moves around.
+ *
+ *
  * @author Tobias Weinzierl
  */
 class peano::datatraversal::TaskSet {
