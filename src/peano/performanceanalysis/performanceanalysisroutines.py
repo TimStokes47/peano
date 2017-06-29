@@ -1330,25 +1330,26 @@ def printNodeTable(outputFile):
  outputFile.write( "</table>" )
 
 
-def plotDomainDecomposition2d(outputFileName,numberOfRanks,domainoffset,domainsize,offset,volume):
+def plotDomainDecomposition2d(outputFileName,numberOfRanks,domainoffset,domainsize,offset,volume,levels,maxLevel):
   NodeNumberTableInverted = {v: k for k, v in NodeNumberTable.items()}
 
   print "plot domain decomposition over nodes",
   pylab.clf()
   pylab.figure(figsize=(float(domainsize[0]),float(domainsize[1])))
-  colorCounter = 0
-  for nodeNumber in NodeNumberTable.itervalues():
+  for level in range(0,maxLevel):
+   colorCounter = 0
+   for nodeNumber in NodeNumberTable.itervalues():
     for rank in RankNodeTable:
-      if RankNodeTable[ rank ]==NodeNumberTableInverted[nodeNumber]:
+      if RankNodeTable[ rank ]==NodeNumberTableInverted[nodeNumber] and level==levels[rank]:
         print ".",
         #lvTmp = np.linspace(0.1,1.0,len(levels)-1)
     
-        myAlpha = 1.0-(volume[rank][0]*volume[rank][1]) / (float(domainsize[0])*float(domainsize[1])) 
+        #myAlpha = 1.0-(volume[rank][0]*volume[rank][1]) / (float(domainsize[0])*float(domainsize[1])) 
         pylab.gca().add_patch(pylab.Rectangle(
-          offset[rank]+(volume[rank][0]*0.01,volume[rank][0]*0.01), 
-          volume[rank][0]*0.98, volume[rank][1]*0.98,
+          offset[rank], 
+          volume[rank][0], volume[rank][1],
           color=NodeColors[colorCounter%len(NodeColors)],
-          alpha=myAlpha
+          alpha=1.0
         ))
     colorCounter = colorCounter + 1
   pylab.xlim( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
