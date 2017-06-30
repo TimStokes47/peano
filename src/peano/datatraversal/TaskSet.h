@@ -48,6 +48,47 @@ namespace peano {
  * itself remains valid, so it doesn't really matter to you if the vertex
  * holding pointers too moves around.
  *
+ * If you want to get data back from a background tasks, you have to take into
+ * account a few properties:
+ * - The task you hand over to the TaskSet constructor is not directly executed.
+ *   Instead, the runtime system makes a copy of your functor/task, stores it
+ *   safely away and executes this one. That means once you hand over a
+ *   functor, you can safely destroy this object. The tasking system has
+ *   created a copy of its own.
+ * - The actual task copy that the runtime system uses is destroyed right after
+ *   it has terminated. There's no way to plug into its result. If you need the
+ *   task to return data, my recommendation is that you
+ *   - create some data on the heap
+ *   - make your task hold a pointer (index) to this heap
+ *   - write a task that writes its result into these heap entries
+ *   The heap entry then later can be read by the mappings, e.g.
+ *
+ * Please note that you notably should have a boolean flag somewhere that
+ * indicates whether your task has terminated. I often store entries with
+ * an enum on a heap. The enum encodes the states BackGroundTaskSpawned and
+ * BackGroundTaskCompleted. I do protect the access to these enums with one
+ * global semaphore to ensure that no two threads read/write it
+ * simultaneously. If a task is spawned, the corresponding value on the heap is
+ * set to BackGroundTaskSpawned. The operator() of the task sets the value to
+ * BackGroundTaskCompleted as very last action. In a mapping where I need the
+ * task result, I add a while loop that looks whether the task has already
+ * terminated:
+ *
+ * <pre>
+bool taskHasTerminated = false;
+while (!taskHasTerminated) {
+  tarch::multicore::Lock myLock(_globalBackgroundTaskStatusSemphore);
+  taskHasTerminated = MyStatusHeap.getIndex(...).getStatus()==BackGroundTaskCompleted;
+  myLock.free();
+  if (!taskHasTerminated) {
+    tarch::multicore::BooleanSemaphore::sendTaskToBackground();
+  }
+}
+</pre>
+ *
+ * Please note that I strongly recommend to add sendTaskToBackground(). It
+ * ensures that multiple while loops cannot block the system.
+ *
  *
  * @author Tobias Weinzierl
  */
