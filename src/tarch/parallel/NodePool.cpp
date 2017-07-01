@@ -601,21 +601,20 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
     while ( !queue.empty() ) {
       tarch::parallel::messages::WorkerRequestMessage nextRequestToAnswer = _strategy->extractElementFromRequestQueue(queue);
       for (int i=0; i<nextRequestToAnswer.getNumberOfRequestedWorkers(); i++) {
+        int activatedNode = NoFreeNodesMessage;
         if ( _isAlive && _strategy->hasIdleNode(nextRequestToAnswer.getSenderRank()) ) {
-          int activatedNode = _strategy->reserveNode(nextRequestToAnswer.getSenderRank());
+          activatedNode = _strategy->reserveNode(nextRequestToAnswer.getSenderRank());
+          assertionEquals(-1,NoFreeNodesMessage);
+        }
 
+        if (activatedNode!=NoFreeNodesMessage) {
           _hasGivenOutRankSizeLastQuery = true;
-
-          tarch::parallel::messages::NodePoolAnswerMessage answerMessage( activatedNode );
-          answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
-
           tarch::parallel::messages::ActivationMessage activationMessage( nextRequestToAnswer.getSenderRank() );
           activationMessage.send( activatedNode, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
         }
-        else {
-          tarch::parallel::messages::NodePoolAnswerMessage answerMessage( NoFreeNodesMessage );
-          answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
-        }
+
+        tarch::parallel::messages::NodePoolAnswerMessage answerMessage( activatedNode );
+        answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
       }
 
       //NOTE: Take care of recursive calls.

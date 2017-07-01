@@ -97,7 +97,11 @@ class tarch::parallel::NodePoolStrategy {
      * Counterpart of setNodeIdle().
      *
      * Makes a node active, and returns its rank. Should be called if and only
-     * if there are still idle nodes.
+     * if there are still idle nodes. Yet, the operation may still return NoFreeNodesMessage
+     * in which case it means that the reserve failed. It might still happen
+     * that there are idle nodes, but the underlying domain decomposition
+     * strategy decides that there are no idle nodes for this particular
+     * rank.
      *
      * @param  forMaster Rank of the node that tries to reserve this node.
      * @return Rank of new active node
