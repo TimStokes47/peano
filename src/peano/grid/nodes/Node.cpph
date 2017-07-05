@@ -940,7 +940,11 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     dfor2(k)
       oneBoundaryVertexIsCritical |= 
         (
+          (
           fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Refining
+          ||
+          fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::RefinementTriggered
+          )
           &&
           fineGridVertices[fineGridVerticesEnumerator(k)].isBoundary()
           &&
@@ -956,8 +960,10 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     #else
     const bool hasToRefineToPreserveRegularityAlongBoundary = false;
     #endif
-        
-    if (hasToRefineOuterCellBecauseOfGeometry || hasToRefineToPreserveRegularityAlongBoundary) {
+    
+    const bool doRefineCellManually = hasToRefineOuterCellBecauseOfGeometry || hasToRefineToPreserveRegularityAlongBoundary;
+
+    if (doRefineCellManually) {
       dfor2(k)
         if (
           fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Unrefined
