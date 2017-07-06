@@ -479,7 +479,7 @@ void peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHa
         partitioner.sendForkMessages(
           fineGridVerticesEnumerator.getVertexPosition(),
           newFineGridVerticesEnumerators[0].getCellSize(),
-          peano::grid::aspects::CellPeanoCurve::getLoopDirection(fineGridCell, state.isTraversalInverted()),
+          peano::grid::aspects::CellPeanoCurve::getLoopDirection(fineGridCell,false),
           fineGridVerticesEnumerator.getLevel(),
           fineGridCell.getEvenFlags()
         );
