@@ -101,6 +101,11 @@ void peano::parallel::Partitioner::sendForkMessages(
 
   int assignedRemoteRanks = 0;
 
+  if ( _ranks[0] < tarch::parallel::Node::getInstance().getRank() ) {
+    // Not sure whether this works
+    loopDirection.flip();
+  }
+
   zfor3(k,loopDirection)
     const int  CellIndex = peano::utils::dLinearised(k,3);
     const bool OutsourceCell =
