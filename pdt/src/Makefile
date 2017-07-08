@@ -37,6 +37,7 @@ createParser:
 	java -jar ../lib/sablecc.jar -d . ../pdt.grammar 
 	tar -xzvf ../lib/DaStGen.tar.gz de
 	rm -f files.mk
+	mkdir ../bin
 
 
 compile: files.mk $(OBJECTS) 
