@@ -160,8 +160,11 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::Vertex
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter::close() {
+  #ifdef Asserts
   const int lineLenght = std::pow(_writer._numberOfCellsPerAxis,_writer._dimensions);
   assertion1( _data.size()%lineLenght == 0, _identifier);
+  #endif
+
   assignRemainingVerticesDefaultValues();
 
   #ifdef HDF5

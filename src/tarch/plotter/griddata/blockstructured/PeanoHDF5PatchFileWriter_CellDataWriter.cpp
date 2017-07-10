@@ -157,12 +157,15 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDa
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::close() {
+  #ifdef Asserts
   const int lineLenght = std::pow(_writer._numberOfCellsPerAxis,_writer._dimensions);
   assertion6(
     _data.size()%lineLenght == 0,
     _data.size()%lineLenght, _identifier,
     _data.size(), lineLenght, _writer._numberOfCellsPerAxis, _writer._dimensions
   );
+  #endif
+
   assignRemainingCellsDefaultValues();
 
   #ifdef HDF5
