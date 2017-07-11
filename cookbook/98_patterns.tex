@@ -98,3 +98,78 @@ vertices have been removed and re-add them.
 This can be very cumbersome.
 Our nested checks ensure that no such oscillation an happen (for all refinement
 criteria we have checked).
+
+
+
+\section{Global statistics}
+
+Global statistics, such as total number of cells, are typically held within the
+state. So I do model them as attribute in \texttt{State.def} and mark them both
+as \texttt{persistent} and as \texttt{parallelise}. The latter flag ensures that
+the attributes are exchanged via MPI, too. Once the fields are added to the
+\texttt{def}-file and we have regenerated the records, a typical analysis of
+such global data then reads as follows:
+
+\begin{enumerate}
+  \item I add several \texttt{getXXX} routines to the \texttt{myproject::State}
+  class that allow the reader to analyse the global attributes. 
+  \item I add a routine \texttt{clearStatistics()} to \texttt{myproject::State}.
+  It sets all the analysed data to zero (or different default values).
+  \item In the runner, I invoke \texttt{clearStatistics()} on the repository's
+  state just before I trigger \texttt{iterate}.
+  \item The real semantics of the analysis is realised through a routine
+  \texttt{mergeStatistics(const State\& otherState)} in the \texttt{State}. It
+  is invoked on a state object and receives another state object. The data from the
+  other state object is merged into the current state. This merge typically is a
+  summation, maximum, minimum, \ldots
+  \item I next program a serial version of the mapping conducting the actual
+  analysis:
+  \begin{enumerate}
+    \item The mapping is given a new attribute \texttt{State \_localState}. The
+    idea is that each mapping works with its local version of the state. This
+    helps us later to avoid data races.
+    \item The mapping's \texttt{beginIteration} invokes
+    \texttt{clearStatistics} on \texttt{\_localState}. This clears the local
+    data at the begin of the traversal.
+    \item I next add routines in the mappings to count the statistics. This
+    might for example be a statement in \texttt{enterCell} that increases cell
+    counters. These statements all alter \texttt{\_localState}. 
+    \item So far, the mapping only works on its local copy of state and thus we
+    do not see any property in the runner. So I finally add a
+    \texttt{solverState.merge(\_localState);} to \texttt{endIteration} to write
+    local analysis data back to the repository's global state.
+  \end{enumerate}
+\end{enumerate}
+
+
+\noindent
+By default, Peano does not analyse maximum or minimum mesh sizes. To enable
+their analysis, you have to compile the code with
+\texttt{-DTrackGridStatistics}. You can study some of the analysis patterns
+described above for these values, i.e.~simply earch for the corresponding
+\texttt{ifdefs}.
+
+
+The present solution fails in a multicore environment, as Peano clones the
+mappings/adapters if it enters parallel regions. To make the analysis work with
+shared memory parallelisation too, only few things are to be done:
+\begin{enumerate}
+  \item We add another \texttt{\_localState.clearStatistics()} call to the copy
+  constructor of our mapping. Whenever a mapping is copied to different threads,
+  it thus works with cleared statistics.
+  \item We add the statements
+  \texttt{\_localState.merge(workerThread.\_localState);} to the function body
+  of \texttt{mergeWithWorkerState}.
+\end{enumerate}
+
+
+Making the approach work with MPI is even simpler. We have to add a statement
+\linebreak
+\texttt{\_localState.merge(workerState)}
+to \texttt{mergeWithMaster()}. If this fails, you have to consult the
+documentation of \texttt{endIteration} and how it interplays with your
+communication specification. For some configurations, \texttt{endIteration} is
+called after a rank's state it sent to its master. If this is the case, you have
+to merge \texttt{\_localState} into the global state within
+\texttt{prepareSendToMaster} to ensure that the correct analysis data goes to
+the master.

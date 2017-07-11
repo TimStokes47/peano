@@ -229,7 +229,7 @@ Peano internally offers two data formats for each individual piece of data
 modelled through the \texttt{.def} files:
 One variant works with plain C++ data types. 
 This is the variant all Peano code parts (mappings, e.g.) are exposed to.
-The other variant is a \textem{packed} storage format where Peano squeezes out
+The other variant is a {\em packed} storage format where Peano squeezes out
 all padding bytes (used to get the alignment right), merges multiple booleans
 into one bit field, eliminates all temporary data, and so forth.
 The latter format is used to store data in-between two grid iterations.
