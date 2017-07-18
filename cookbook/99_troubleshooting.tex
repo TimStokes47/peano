@@ -3,8 +3,8 @@
 \section{PDT}
 
 \begin{itemize}
-  \item {\textbf The PDT does not pass as the jar file is built with the wrong Java
-  version}. Download the whole Peano project (from sourceforge via subversion),
+  \item \textbf{ The PDT does not pass as the jar file is built with the wrong
+  Java version}. Download the whole Peano project (from sourceforge via subversion),
   change into the directory \texttt{pdt/src}, and run
   \begin{code}
   make clean
@@ -31,7 +31,7 @@ the directory.
 
 
 \begin{itemize}
-  \item {\textbf My compiler terminates with `error: unknown
+  \item \textbf{ My compiler terminates with `error: unknown
    attribute 'optimize' ignored*`}. We have seen this issue notably on macOS
    with CLANG replacing GCC. Unfortunately, CLANG seems to pretend to be GNU on
    some systems and then the wrong header is included. Ensure that
@@ -45,10 +45,11 @@ the directory.
 \section{Programming}
 
 \begin{itemize}
-  \item {\textbf How can I find out the location of a cell}. See the documentation
-  of the \texttt{VertexEnumerator}. The object has routines to query cell
+  \item \textbf{ How can I find out the location of a cell}. See the
+  documentation of the \texttt{VertexEnumerator}. The object has routines to query cell
   position, size and level in the spacetree.
-  \item {\textbf The adaptivity pattern lacks behing my adaptivity instructions}.
+  \item \textbf{ The adaptivity pattern lacks behing my adaptivity
+  instructions}.
   For most refinement and erase calls, Peano needs at least one iteration to
   reliase them. It tries to do it faster, but usually needs these two
   iterations. Whenever Peano encounters regular subtrees, it tries to store 
@@ -61,7 +62,7 @@ the directory.
   compile with \texttt{-DnoPersistentRegularSubtrees}. This will make the grid
   react quicker to your refinement requests but might slow down the code
   significantly.
-  \item {\textbf When does a grid coarsen?} If you invoke \texttt{erase}, Peano
+  \item \textbf{ When does a grid coarsen?} If you invoke \texttt{erase}, Peano
   bookkeeps this coarsening requests but continues to traverse the grid. The
   actual grid then is actually coarsened in the subsequent grid sweep. If you
   trigger an erase, grid entities will not be destroyed prior to the next
@@ -82,8 +83,8 @@ the directory.
     bookkeeped but not realised yet, the state's \texttt{isGridStationary}
     attribute does not hold.
   \end{itemize}
-  \item {\textbf I need the state object in my mapping}. Create a copy of the state
-  object in \texttt{beginIteration} and to merge this copy back in \texttt{endIteration}. 
+  \item \textbf{ I need the state object in my mapping}. Create a copy of the
+  state object in \texttt{beginIteration} and to merge this copy back in \texttt{endIteration}. 
   Peano updates the State itself and the state position in memory is not fixed.
   Do never ever hold a pointer to the state object handed into
   \texttt{beginIteration} or \texttt{endIteration}.
@@ -93,7 +94,7 @@ the directory.
 \section{Application tailoring}
 
 \begin{itemize}
-  \item {\textbf The code requires too much memory}.
+  \item \textbf{ The code requires too much memory}.
   You can try to compile your code with
   \linebreak \texttt{-DnoPersistentRegularSubtrees}.
   However, this may lead to a severe performance \linebreak
@@ -103,13 +104,13 @@ the directory.
 \section{MPI troubleshooting}
 
 \begin{itemize}
-  \item {\textbf Does Peano support MPI-2?}. Yes, you can switch to MPI-2 if you add
-  \texttt{-DMPI2}. I have experienced some issues with MPI-2 implementations and
+  \item \textbf{ Does Peano support MPI-2?}. Yes, you can switch to MPI-2 if you
+  add \texttt{-DMPI2}. I have experienced some issues with MPI-2 implementations and
   user-defined datatypes and thus decided to make MPI 1.3 the default. If you
   switch to MPI-2 and experience problems, you  mgiht want to have a look into
   any \texttt{records} directory and search for \texttt{initDatatype} to
   understand where issues arise.
-  \item {\textbf I've altered my data types and MPI starts to crash}. There are
+  \item \textbf{ I've altered my data types and MPI starts to crash}. There are
   multiple reasons why user-defined data types start to fail. Here are some
   ideas to follow-up:
     \begin{enumerate}
@@ -121,11 +122,12 @@ the directory.
       make some compilers reorder class attributes which in turns means that the
       MPI data types hold invalid byte offsets.
     \end{enumerate}
-  \item {\textbf My MPI version complains about a datatype \texttt{MPI\_CXX\_BOOL}}. 
+  \item \textbf{ My MPI version complains about a datatype
+  \texttt{MPI\_CXX\_BOOL}}.
     We have seen this with some older MPI versions. A quick fix is to translate
     your code with the additional argument
     \texttt{-DMPI\_CXX\_BOOL=MPI\_C\_BOOL}.
-  \item {\textbf My code deadlocks once I increase the rank count. It seems that
+  \item \textbf{ My code deadlocks once I increase the rank count. It seems that
     the ranks cannot even register at the global node pool anymore.}
     I've seen this bug with Intel MPI and Omnipath recently. It seems that some
     MPI implementations struggle to handle many polling non-blocking operations:
@@ -151,8 +153,20 @@ the directory.
     additional
     \begin{code}
     export I_MPI_FABRICS="tmi"
-    \end{code}
+    \end{code} 
     in the SLURM script fixes the issue.
+  \item \textbf{ Once I switch to (Intel) MPI, my code seems to receive invalid
+    data}. We have seen this problem with Intel's MPI (but not with OpenMPI,
+    e.g.) and it seems that this one makes very strong assumptions about the
+    alignment of data within arrays to optimise the MPI message exchange. I
+    recommend that you write some ping pong tests (one rank sending stuff to
+    another and then this one sending stuff back where the data is compared to
+    the original) and that you ping pong both single vertices and arrays of
+    vertices. This typically uncovers data inconsistencies. One next step then
+    is to translate your code with \texttt{-DnoParallelRecords}. While switching
+    the flag on reduces the memory footprint dramatically (if you don't use
+    lots of double arrays that is), its underlying skipping of the compiler's
+    padding seems to cause problems for Intel MPI.
   \item To be continued \ldots
 \end{itemize}
 
