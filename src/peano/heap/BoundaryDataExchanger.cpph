@@ -412,11 +412,9 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::releaseReceiv
        );
     }
 
-    // evtl eine ganz bloede Idee: Nachher schaufeln wir um und das
-    // duerfen wir nicht, wenn MPI noch ein Handle hat. Ausserdem
-    // kann hier kein echter Deadlock mehr stattfinden, da die Daten
-    // eigentlich schon alle da sind.
-//    tarch::parallel::Node::getInstance().receiveDanglingMessages();
+    // @see Remark on overtaking messages in switchReceiveAndDeployBuffer()
+    //      It explains that this line has to be commented out.
+    // tarch::parallel::Node::getInstance().receiveDanglingMessages();
   }
   logTraceOut( "releaseReceivedNeighbourMessagesRequests()" );
 }

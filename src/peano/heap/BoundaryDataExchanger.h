@@ -98,6 +98,14 @@ class peano::heap::BoundaryDataExchanger {
      *
      * Besides waiting for MPI to release some handles, the operation also
      * invokes all the services to receive any dangling messages.
+     *
+     * The routine is invoked by startToSendData(), i.e. whenever one starts to
+     * send new stuff, I first validate whether the incoming data already matches
+     * the number of records sent out in the last traversal. One might argue that
+     * such a check should be done in finishedToSendData(), but I want to give
+     * MPI more time to complete all data transfer, so I move it into the subsequent
+     * start call. Once this operation terminates, the calling routine invokes
+     * releaseReceivedNeighbourMessagesRequests() next.
      */
     void waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages(int numberOfMessagesSentThisIteration);
 
@@ -120,7 +128,7 @@ class peano::heap::BoundaryDataExchanger {
      * that do not belong to the previous iteration to the new receive
      * buffer.
      *
-     * !!! Realisation
+     * <h2> Realisation </h2>
      *
      * We assume that all message in the receive buffer are already unpacked/in
      * a state that we can directly extract them from the receive buffer. If
@@ -129,7 +137,7 @@ class peano::heap::BoundaryDataExchanger {
      * details. This operation is really based upon the actual value of the
      * field _receiveTasks[1-_currentReceiveBuffer].size().
      *
-     * !!! Overtaking messages
+     * <h2> Overtaking messages </h2>
      *
      * If Peano manages to break tight synchronisation, i.e. to run multiple
      * sweeps of different traversals in parallel, it can happen that messages
@@ -138,8 +146,11 @@ class peano::heap::BoundaryDataExchanger {
      * the buffers, but then we have to return those additional messages to the
      * receive buffer again.
      *
-     * This return mechanism also has to take into account that we need the
-     * _readDeployBufferInReverseOrder flag to
+     * releaseReceivedNeighbourMessagesRequests() is called directly before we
+     * switch and we are not allowed to receive any dangling stuff in-between.
+     * We therefore may copy around message meta data - we are sure that we do
+     * not move around MPI handles in memory where MPI still might alter stuff.
+     *
      *
      * @param numberOfMessagesSentThisIteration The switch mechanism has to be
      *   know how many data have to be in the new receive buffer. If there are
@@ -155,7 +166,7 @@ class peano::heap::BoundaryDataExchanger {
      * waits until the receive operation has been finished. The operation
      * basically should be const. However, it calls MPI_Test/MPI_Wait on the
      * request objects associated to the heap. This test modifies the request
-     * object which makes the operation (basically via a callback) non-const.
+     * object which renders the operation non-const.
      *
      * Besides waiting for MPI to release some handles, the operation also
      * invokes all the services to receive any dangling messages.
@@ -222,7 +233,7 @@ class peano::heap::BoundaryDataExchanger {
 
     /**
      *
-     * !!! The parameter _isCurrentlySending
+     * <h2> The parameter _isCurrentlySending </h2>
      *
      * _isCurrentlySending primarily acts as assertion. If we try to send
      * something while the flag is not set, Peano quits with an assertion.
@@ -297,7 +308,7 @@ class peano::heap::BoundaryDataExchanger {
      * copying might also induce some type conversion if only subsets of data
      * are actually exchanged via mpi.
      *
-     * !!! Validation
+     * <h2> Validation </h2>
      *
      * If you are in assert mode, the receive operation also validates the
      * received data with the arguments you hand in, i.e. it looks whether the

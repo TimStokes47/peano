@@ -1,4 +1,6 @@
 #include "tarch/la/VectorCompare.h"
+#include "peano/utils/PeanoOptimisations.h"
+
 
 template <class Data>
 tarch::logging::Log  peano::heap::SendReceiveTask<Data>::_log( "peano::heap::SendReceiveTask<Data>" );
@@ -92,6 +94,11 @@ void peano::heap::SendReceiveTask<Data>::triggerSend(int tag) {
       << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }
+
+  #if !defined(NonblockingHeapDataExchange)
+  MPI_Wait(&_request, MPI_STATUS_IGNORE);
+  #endif
+
   #endif
 }
 
@@ -117,6 +124,11 @@ void peano::heap::SendReceiveTask<Data>::triggerReceive(int tag) {
       << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }
+
+  #if !defined(NonblockingHeapDataExchange)
+  MPI_Wait(&_request, MPI_STATUS_IGNORE);
+  #endif
+
   logTraceOut( "triggerReceive(int)" );
   #endif
 }

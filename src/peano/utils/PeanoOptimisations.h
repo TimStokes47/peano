@@ -140,4 +140,17 @@
   #define PersistentRegularSubtrees
 #endif
 
+
+/**
+ * We usually do all the heap data exchange via non-blocking calls, i.e. all
+ * meta data (how many records are exchanged) is communicated immediately while
+ * the actual data transfer might linger in the background. For debugging and
+ * optimisation, i.e. to free MPI from too many dangling requests, you can
+ * alter this behaviour and make each heap send/receive a blocking
+ * send/receive.
+ */
+#ifndef noNonblockingHeapDataExchange
+  #define NonblockingHeapDataExchange
+#endif
+
 #endif
