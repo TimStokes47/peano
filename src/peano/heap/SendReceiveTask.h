@@ -107,6 +107,8 @@ struct peano::heap::SendReceiveTask {
    * data first and then call trigger. Trigger uses MPI and MPI uses memory
    * references. If you move the tasks around later on, MPI references invalid
    * memory addresses and data consistency is not given anymore.
+   *
+   * @see   BoundaryDataExchanger::receiveDanglingMessages()
    */
   void triggerReceive(int tag);
 

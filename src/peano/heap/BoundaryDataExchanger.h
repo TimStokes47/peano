@@ -247,6 +247,40 @@ class peano::heap::BoundaryDataExchanger {
     void startToSendData(bool isTraversalInverted);
     void finishedToSendData(bool isTraversalInverted);
 
+    /**
+     *
+     * <h2> Behaviour </h2>
+     *
+     * While MPI messages with the heap's tag are in the MPI queue (we check
+     * through an iprobe on the meta data tag), the routine receives the meta
+     * data. We work on the meta data as the heap can also be used to send out
+     * zero data. In this case, no real data but only meta data might be
+     * exchanged.
+     *
+     * It is important to receive the meta data with the sleep argument -1.
+     * This way, Peano uses blocking MPI. Otherwise, the code would use a
+     * non-blocking receive and invoke receiveDanglingMessages() until the
+     * receive terminates. This would lead indirectly to recursive calls to
+     * this operation and thus might mess up the receive order. Once the meta
+     * data is in, we invoke handleAndQueueReceivedTask().
+     *
+     * The handleAndQueueReceivedTaks() routine has to enqueue the received
+     * task immediately into _receiveTasks. Some additional steps then might
+     * become necessary, before triggerReceive() on the task object is invoked.
+     * No matter what exactly is done, you may not issue any routine that might
+     * indirectly invoke receiveDanglingMessages() before the actual MPI
+     * receive. Notably, you may not use Peano's/DaStGen's receive and send
+     * operations which map logically blocking routines on their non-blocking
+     * variants with busy polling.
+     *
+     *
+     * <h2> Call points </h2>
+     *
+     * This operation is either called by any send or receive in Peano that is
+     * logically blocking but does not return, or it is invoked through
+     * waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()
+     * or releaseSentMessages() at the begin/end of a traversal.
+     */
     void receiveDanglingMessages();
 
     void sendData(

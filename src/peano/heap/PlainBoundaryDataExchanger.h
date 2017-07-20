@@ -52,6 +52,8 @@ class peano::heap::PlainBoundaryDataExchanger: public peano::heap::BoundaryDataE
     /**
      * A meta data message came in. Insert into local queue and then trigger
      * receive is necessary.
+     *
+     * @see BoundaryDataExchanger::handleAndQueueReceivedTask()
      */
     virtual void handleAndQueueReceivedTask( const SendReceiveTaskType& receivedTask );
 
