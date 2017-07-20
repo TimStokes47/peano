@@ -208,36 +208,39 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::finishedToSen
 
 template<class Data, class SendReceiveTaskType>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::receiveDanglingMessages() {
-  int        flag   = 0;
+  int        flag   = 1;
   MPI_Status status;
-  int        result = MPI_Iprobe(
-    _rank,
-    _metaDataTag,
-    tarch::parallel::Node::getInstance().getCommunicator(),
-    &flag,
-    &status
-  );
-  if (result!=MPI_SUCCESS) {
-    logError(
-      "receiveDanglingMessages()",
-      "probing for messages failed: " << tarch::parallel::MPIReturnValueToString(result)
+  
+  while (flag) {
+    int  result = MPI_Iprobe(
+      _rank,
+      _metaDataTag,
+      tarch::parallel::Node::getInstance().getCommunicator(),
+      &flag,
+      &status
     );
-  }
-  if (flag) {
-    logTraceInWith1Argument( "receiveDanglingMessages(...)", _metaDataTag );
+    if (result!=MPI_SUCCESS) {
+      logError(
+        "receiveDanglingMessages()",
+        "probing for messages failed: " << tarch::parallel::MPIReturnValueToString(result)
+      );
+    }
+    if (flag) {
+      logTraceInWith1Argument( "receiveDanglingMessages(...)", _metaDataTag );
 
-    SendReceiveTaskType receiveTask;
+      SendReceiveTaskType receiveTask;
 
-    const int receiveMetaDataMode = -1;
-    receiveTask._metaInformation.receive(_rank, _metaDataTag, true, receiveMetaDataMode);
-    receiveTask._rank = _rank;
+      const int receiveMetaDataMode = -1;
+      receiveTask._metaInformation.receive(_rank, _metaDataTag, true, receiveMetaDataMode);
+      receiveTask._rank = _rank;
 
-    _numberOfReceivedMessages += 1;
-    _numberOfSentRecords      += receiveTask._metaInformation.getLength();
+      _numberOfReceivedMessages += 1;
+      _numberOfSentRecords      += receiveTask._metaInformation.getLength();
 
-    handleAndQueueReceivedTask( receiveTask );
+      handleAndQueueReceivedTask( receiveTask );
 
-    logTraceOutWith1Argument( "receiveDanglingMessages(...)", receiveTask._metaInformation.toString() );
+      logTraceOutWith1Argument( "receiveDanglingMessages(...)", receiveTask._metaInformation.toString() );
+    }
   }
 }
 
