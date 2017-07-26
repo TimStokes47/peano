@@ -519,6 +519,8 @@ std::string peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Ne
       << ",number-of-heap-frees=" << _numberOfHeapFrees
       #ifdef Parallel
       << ",no-of-data-exchangers=" << _neighbourDataExchanger.size()
+      << ",neighbour-meta-data-exchanger-tag=" << _neighbourDataExchangerMetaDataTag
+      << ",neighbour-data-exchanger-tag" << _neighbourDataExchangerDataTag
       #endif
       << ")";
 
