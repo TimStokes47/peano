@@ -807,8 +807,22 @@ while (!compressionHasFinished) {
     /**
      * Sends heap data associated to one index to one rank.
      *
+     * Please study carefully which type of data communication you use.
+     *
+     * <h2> Heap uses a boundary exchanger with CreateCopiesOfSentData=true </h2>
+     *
+     * The heap creates a copy of the data stored at index and then sends out
+     * this copy asynchronously. You may change the data stored at index
+     * afterwards without altering the operation's semantics. The routine equals
+     * a blocking send in MPI. However, the data exchange procedure can be very
+     * time and memory consuming if the data stored at index is large.
+     *
+     * <h2> Heap uses a boundary exchanger with CreateCopiesOfSentData=false </h2>
+     *
      * Please note that these sends are asynchronous, i.e. if you change the
-     * vertices afterwards, you might run into problems
+     * vertices afterwards, you might run into problems. Notably, you may not
+     * destroy/free the index prior to the next grid sweep where you invoke
+     * startToSendBoundaryData().
      */
     void sendData(
       int                                           index,
@@ -818,6 +832,13 @@ while (!compressionHasFinished) {
       MessageType                                   messageType
     );
 
+    /**
+     * This operation sends out the data from the vector handed over.
+     *
+     * Please consult the description of the alternative sendData() routine to
+     * identify how the configuration of the boundary exchanger determines the
+     * code semantics.
+     */
     void sendData(
       const std::vector<Data>&                      data,
       int                                           toRank,

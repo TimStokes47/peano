@@ -79,27 +79,27 @@ namespace peano {
 
 
 /**
- * DoubleHeap
+ * <h1> DoubleHeap </h1>
  *
  * This is a specialised variant of the heap for doubles. It works directly
  * with doubles held in a std::vector. It does not rely on DaStGen for the
  * data at all and not wrap any data into DaStGen records. It thus should be
  * faster than the standard version.
  *
- * <h1> Working with plain double pointer </h1>
+ * <h2> Working with plain double pointer </h2>
  *
  * With this class, you may use getData().data() yielding a plain double
  * pointer. It is probably aligned if you choose alignment.
  *
  *
- * <h1> Alignment </h1>
+ * <h2> Alignment </h2>
  *
  * A big difference to the standard heap class is that this class can work with
  * aligned data structures. This makes the class however incompatible with
  * other std::vector<double> instances where no alignment is used. Please consult
  * the HeapAllocator for details on the alignment.
  *
- * <h1> Method documentation </h1>
+ * <h2> Method documentation </h2>
  *
  * This is a specialisation of the general-purpose heap. As such, the
  * documentation for the routines here is empty. Please study peano::heap::Heap
