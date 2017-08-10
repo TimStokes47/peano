@@ -226,6 +226,18 @@ class peano::grid::Vertex {
      * In parallel codes, this can lead to a very slow grid setup, as each
      * additional level in the grid requires one grid sweep. Please see the
      * operation enforceRefine() for an alternative.
+     *
+     * Please note that the above definition clarifies that Peano tries to
+     * refine immediately. This terminology implies a pitfall: Users typically
+     * initialise data within createCell(), createInnerVertex() and
+     * createBoundaryVertex(). Let a mapping M1 embedded into an adapter A1
+     * trigger a refinement. Whenever a grid sweep with adapter A1 has
+     * terminated, the user switches to an adapter A2 which does not include
+     * M1 but another mapping M2. Then, both M1 and M2 have to realise the
+     * creational routines as you cannot be sure a priori whether the grid
+     * refinement is realised directly in the run of A1 or in the subsequent
+     * sweep.
+     *
      */
     void refine();
 
