@@ -71,8 +71,10 @@ You may want to change this notion of machine precision in Peano (file
 In general, it would be a good idea to study the content of the \texttt{la}
 component soon---there's lots of useful stuff in there to work with
 tiny, dense vectors\footnote{Peano someday should perhaps be rewritten to use
-boost linear algebra or some fancy template library. Feel free to do so. Right
-at the moment, it is all plain hand-craftet routines.}.
+boost linear algebra (\url{http://www.boost.org}) or some fancy template
+library.
+Feel free to do so.
+Right at the moment, it is all plain hand-craftet routines.}.
 
 \begin{remark}
   Peano realises a {\textbf vertex-based}, {\textbf logical-or} refinement: You can
@@ -83,6 +85,22 @@ at the moment, it is all plain hand-craftet routines.}.
   follows: A cell is refined if the refinement flag is set for any adjacent
   vertex.
 \end{remark}
+
+
+
+\begin{remark}
+  There is a pitfall induced by the above explanation: Users typically
+  initialise data within \texttt{createCell} and \texttt{create...Vertex}.
+  Let a mapping $M_1$ embedded into an adapter $A_1$ trigger a
+  refinement. 
+  Whenever a grid sweep with adapter $A_1$ has terminated, 
+  the user switches to an adapter $A_2$ which does not include $M_1$ but
+  another mapping $M_1$.
+  Then, both $M_1$ and $M_2$ have to realise the creational routines as you
+  cannot be sure a priori whether the grid refinement is realised directly in
+  the run of $A_1$ or in the subsequent sweep.
+\end{remark}
+
 
 
 Whenever you use Peano, you have to do three things:
@@ -97,6 +115,7 @@ Whenever you use Peano, you have to do three things:
   algorithmic phases.
 \end{enumerate}
 
+\noindent
 This scheme lacks the bullet point `run through the grid'. 
 Indeed, Peano applications do never run themselves through the spacetree.
 They specify which set of operations is to be called throughout a run through
