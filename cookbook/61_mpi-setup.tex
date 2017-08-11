@@ -307,7 +307,7 @@ void ...::State::endedGridConstructionIteration(int finestGridLevelPossible) {
   }
   // Reset counter by two. Some LB has happened and we might wanna
   // give the whole system two sweeps to recover from this LB, i.e. to
-  // set up all partitions properly and to recompute LB metrics.
+  // set up all partitions properly and recompute all LB metrics.
   else if (nodePoolHasGivenOutRankSizeLastQuery 
     && _stateData.getMaxRefinementLevelAllowed()>=2) {
     _stateData.setMaxRefinementLevelAllowed(
