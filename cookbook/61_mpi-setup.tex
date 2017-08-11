@@ -206,8 +206,8 @@ A working and simple grid setup pattern is described as follows:
           to -2.
        \\
        \hline
-       -2 & We know that no idle workers are left anymore and that another sweep
-       has already terminated since the last worker has been given out, i.e.,
+       $-2$ & We know that no idle workers are left anymore and that another
+       sweep has already terminated since the last worker has been given out, i.e.,
        we may assume that all workers now have joined the game and the forks
        have completed (a fork needs two iterations to finish; one to exchange
        administrative/meta data and one to transfer the actual data). From
@@ -215,8 +215,8 @@ A working and simple grid setup pattern is described as follows:
        exchange if we know the adaptivity pattern on each rank.
        \\
        \hline
-       -3 & This value indicates that we can stop the grid construction, as we
-       have constructed the whole thing.
+       $\leq -3$ & This value indicates that we can stop the grid construction,
+       as we have constructed the whole thing.
      \end{tabular}
     \end{center}
 
@@ -292,33 +292,43 @@ void ...::State::endedGridConstructionIteration(int finestGridLevelPossible) {
     tarch::parallel::NodePool::getInstance().hasGivenOutRankSizeLastQuery();
 
   // No more nodes left. Start to enforce refinement
-  if (!idleNodesLeft && _stateData.getMaxRefinementLevelAllowed()>=0) {
+  if ( !idleNodesLeft 
+    && _stateData.getMaxRefinementLevelAllowed()>=0 
+    && !nodePoolHasGivenOutRankSizeLastQuery) {
     _stateData.setMaxRefinementLevelAllowed(-1);
-  }
-  // Refinement is enforced. So we decrease counter. Once we underrun -2, grid
-  // construction can terminate as all enforced refined went through.
-  else if (!idleNodesLeft && _stateData.getMaxRefinementLevelAllowed()<=-1) {
-    _stateData.setMaxRefinementLevelAllowed( 
-      _stateData.getMaxRefinementLevelAllowed()-1 );
   }
   // Seems that max permitted level has exceeded max grid level. We may assume
   // that there are more MPI ranks than available trees.
-  else if (isGridStationary() && 
-    _stateData.getMaxRefinementLevelAllowed()>finestGridLevelPossible) {
-    _stateData.setMaxRefinementLevelAllowed( -3 );
+  else if (isGridStationary() 
+    && _stateData.getMaxRefinementLevelAllowed()>finestGridLevelPossible
+    && _stateData.getMaxRefinementLevelAllowed()>=0 
+    && !nodePoolHasGivenOutRankSizeLastQuery) {
+    _stateData.setMaxRefinementLevelAllowed( -1 );
   }
-  else if (nodePoolHasGivenOutRankSizeLastQuery && 
-    _stateData.getMaxRefinementLevelAllowed()>=2) {
+  // Reset counter by two. Some LB has happened and we might wanna
+  // give the whole system two sweeps to recover from this LB, i.e. to
+  // set up all partitions properly and to recompute LB metrics.
+  else if (nodePoolHasGivenOutRankSizeLastQuery 
+    && _stateData.getMaxRefinementLevelAllowed()>=2) {
     _stateData.setMaxRefinementLevelAllowed(
       _stateData.getMaxRefinementLevelAllowed()-2);
   }
-  // Nothing has changed in this grid iteration in the grid and we have not
+  // Refinement is enforced. So we decrease counter. Once we underrun -2, grid
+  // construction can terminate as all enforced refined instructions went
+  // through. 
+  else if (_stateData.getMaxRefinementLevelAllowed()<=-1  
+    && !nodePoolHasGivenOutRankSizeLastQuery 
+    && isGridStationary()) {
+    _stateData.setMaxRefinementLevelAllowed( 
+      _stateData.getMaxRefinementLevelAllowed()-1 );
+  }
+  // Nothing has changed in this grid iteration in the grid and we haven't
   // given out new workers. So increase the permitted maximum grid level by
   // one and give another try whether the grid adds more vertices.
   else if (
-      !(nodePoolHasGivenOutRankSizeLastQuery)
+       (!nodePoolHasGivenOutRankSizeLastQuery)
     && isGridStationary()
-    && _stateData.getMaxRefinementLevelAllowed()>=0
+    && (_stateData.getMaxRefinementLevelAllowed()>=0)
   ) {
     _stateData.setMaxRefinementLevelAllowed(
       _stateData.getMaxRefinementLevelAllowed()+1);
