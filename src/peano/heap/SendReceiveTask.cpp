@@ -62,7 +62,11 @@ void peano::heap::SendReceiveTask<double>::wrapData(const std::vector<double>& d
 
   _freeDataPointer = true;
 
-  _data = new double[data.size()];
+  _data = new (std::nothrow) double[data.size()];
+  if (_data==nullptr) {
+    logError( "wrapData(std::vector<double>)", "memory allocation for wrapped data failed. Terminate" );
+    exit(-1);
+  }
   for (int i=0; i<static_cast<int>( data.size() ); i++) {
     _data[i] = data[i];
   }
@@ -98,8 +102,11 @@ void peano::heap::SendReceiveTask<double>::triggerReceive(int tag) {
 
   #ifdef Parallel
   logTraceInWith2Arguments( "triggerReceive(int)", tag, _metaInformation.toString() );
-  _data = new double[ _metaInformation.getLength() ];
-
+  _data = new (std::nothrow) double[ _metaInformation.getLength() ];
+  if (_data==nullptr) {
+    logError( "triggerReceive(int)", "memory allocation failed. Terminate" );
+    exit(-1);
+  }
   const int  result = MPI_Irecv(
     _data, _metaInformation.getLength(), MPI_DOUBLE,
     _rank, tag, tarch::parallel::Node::getInstance().getCommunicator(),

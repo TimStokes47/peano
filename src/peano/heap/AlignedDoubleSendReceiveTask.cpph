@@ -67,6 +67,7 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const DataVe
   assertion( _data==0 );
 
   _freeDataPointer = true;
+  _data            = nullptr;
 
   #ifdef CompilerICC
   _data = static_cast<double *>(_mm_malloc(data.size()*sizeof(double), Alignment));
@@ -76,6 +77,11 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const DataVe
   // The arguments here are permuted compared to _mm_alloc
   _data = static_cast<double *>(aligned_alloc(Alignment, data.size()*sizeof(double)));
   #endif
+
+  if (_data==nullptr) {
+    logError( "wrapData(DataVectorType)", "memory allocation failed. Terminate" );
+    exit(-1);
+  }
 
   for (int i=0; i<static_cast<int>( data.size() ); i++) {
     _data[i] = data[i];
@@ -112,6 +118,8 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::triggerReceive(int ta
   
   #ifdef Parallel
   logTraceInWith2Arguments( "triggerReceive(int)", tag, _metaInformation.toString() );
+
+  _data = nullptr;
   
   #ifdef CompilerICC
   _data = static_cast<double *>(_mm_malloc(_metaInformation.getLength()*sizeof(double), Alignment));
@@ -121,6 +129,11 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::triggerReceive(int ta
   // The arguments here are permuted compared to _mm_alloc
   _data = static_cast<double *>(aligned_alloc(Alignment, _metaInformation.getLength()*sizeof(double)));
   #endif
+
+  if (_data==nullptr) {
+    logError( "triggerReceive(int)", "memory allocation failed. Terminate" );
+    exit(-1);
+  }
 
   const int  result = MPI_Irecv(
     _data, _metaInformation.getLength(), MPI_DOUBLE,
