@@ -371,7 +371,16 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   int                                           level,
   MessageType                                   messageType
 ) {
-  VectorContainer  dataWrapper(data,data+size);
+  // creates a copy and thus is not appropriate if we wanna use no-copy policies
+  // VectorContainer  dataWrapper(data,data+size);
+
+  // Same as above but we manually extrace the allocator from the typedef. Does
+  // not solve the copy problem. 
+  // std::vector< double, typename VectorContainer::Alloc> dataWrapper(data,data+size);
+
+  // Might be the solution
+  std::vector< std::reference_wrapper<double>, typename VectorContainer::Alloc> dataWrapper(data,data+size);
+  
   sendData(dataWrapper,toRank,position,level,messageType);
 }
 
