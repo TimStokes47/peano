@@ -67,7 +67,7 @@ class peano::heap::SynchronousDataExchanger {
      */
     typename std::list< SendReceiveTaskType >::iterator findMessageFromRankInReceiveBuffer(int ofRank);
 
-    typename SendReceiveTaskType::DataVectorType extractMessageFromReceiveBuffer(
+    std::vector<Data> extractMessageFromReceiveBuffer(
       typename std::list< SendReceiveTaskType >::iterator   messageTask,
       const tarch::la::Vector<DIMENSIONS, double>&          position,
       int                                                   level
@@ -114,13 +114,14 @@ class peano::heap::SynchronousDataExchanger {
      * messes up the memory.
      */
     void sendData(
-      const typename SendReceiveTaskType::DataVectorType&    data,
+      const Data* const                             data,
+      int                                           count,
       int                                           toRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level
     );
 
-    typename SendReceiveTaskType::DataVectorType  receiveData(
+    typename std::vector<Data> receiveData(
       int                                           fromRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level

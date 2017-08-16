@@ -39,7 +39,7 @@ void peano::heap::SendReceiveTask<double>::setInvalid() {
 }
 
 
-void peano::heap::SendReceiveTask<double>::freeMemoryOfSendTask() {
+void peano::heap::SendReceiveTask<double>::freeMemory() {
   if (_freeDataPointer && _metaInformation.getLength()>0) {
     delete[] _data;
   }
@@ -47,27 +47,27 @@ void peano::heap::SendReceiveTask<double>::freeMemoryOfSendTask() {
 
 
 
-void peano::heap::SendReceiveTask<double>::sendDataDirectlyFromBuffer(const std::vector<double>& data) {
-  assertion( !data.empty() );
+void peano::heap::SendReceiveTask<double>::sendDataDirectlyFromBuffer(const double* const data) {
+  assertion( _metaInformation.getLength()>0 );
   assertion( _data==0 );
 
   _freeDataPointer = false;
-  _data            = const_cast< double* >( data.data() );
+  _data            = const_cast< double* >( data );
 }
 
 
-void peano::heap::SendReceiveTask<double>::wrapData(const std::vector<double>& data) {
-  assertion( !data.empty() );
+void peano::heap::SendReceiveTask<double>::wrapData(const double* const data) {
+  assertion( _metaInformation.getLength()>0 );
   assertion( _data==0 );
 
   _freeDataPointer = true;
 
-  _data = new (std::nothrow) double[data.size()];
+  _data = new (std::nothrow) double[ _metaInformation.getLength() ];
   if (_data==nullptr) {
     logError( "wrapData(std::vector<double>)", "memory allocation for wrapped data failed. Terminate" );
     exit(-1);
   }
-  for (int i=0; i<static_cast<int>( data.size() ); i++) {
+  for (int i=0; i<_metaInformation.getLength(); i++) {
     _data[i] = data[i];
   }
 }
@@ -123,26 +123,6 @@ void peano::heap::SendReceiveTask<double>::triggerReceive(int tag) {
   #else
   assertionMsg( false, "should not be called if compiled without -DParallel" );
   #endif
-}
-
-
-std::vector<double> peano::heap::SendReceiveTask<double>::unwrapDataAndFreeMemory() {
-  logTraceInWith1Argument( "unwrapdoubleAndFreeMemory()", _metaInformation.toString() );
-
-  std::vector<double> result;
-
-  assertion( _metaInformation.getLength()>=0 );
-  if (_metaInformation.getLength()>0) {
-    assertion( _data!=0 );
-    for (int i=0; i<_metaInformation.getLength(); i++) {
-      result.push_back(_data[i]);
-    }
-
-    delete[] _data;
-  }
-
-  logTraceOutWith1Argument( "unwrapdoubleAndFreeMemory()", result.size() );
-  return result;
 }
 
 

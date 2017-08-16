@@ -67,15 +67,15 @@ void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRe
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
 void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType>::handleAndQueueSendTask( 
-  const SendReceiveTaskType&                           sendTask,
-  const typename SendReceiveTaskType::DataVectorType&  data 
+  const SendReceiveTaskType&   sendTask,
+  const Data* const            data
 ) {
   logTraceIn( "handleAndQueueSendTask(...)" );
 
   Base::_sendTasks.push_back(sendTask);
   Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
 
-  if(data.size() > 0) {
+  if(Base::_sendTasks.back()._metaInformation.getLength() > 0) {
     if (CreateCopiesOfSentData) {
       Base::_sendTasks.back().wrapData(data);
     }

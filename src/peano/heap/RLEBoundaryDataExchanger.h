@@ -52,7 +52,7 @@ class peano::heap::RLEBoundaryDataExchanger: public peano::heap::BoundaryDataExc
      */
     virtual void handleAndQueueReceivedTask( const SendReceiveTaskType&  receivedTask );
 
-    virtual void handleAndQueueSendTask( const SendReceiveTaskType&  sendTask, const typename SendReceiveTaskType::DataVectorType& data );
+    virtual void handleAndQueueSendTask( const SendReceiveTaskType&  sendTask, const Data* const data );
 
     virtual bool dataExchangerCommunicatesInBackground() const;
   public:

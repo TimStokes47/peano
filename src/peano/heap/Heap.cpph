@@ -30,8 +30,8 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
   ,_name("<heap name not set>")
 {
   #ifdef Parallel
-  if (SendReceiveTask<Data>::MPIData::Datatype==0) {
-    SendReceiveTask<Data>::MPIData::initDatatype();
+  if (Data::Datatype==0) {
+    Data::initDatatype();
   }
   if(peano::heap::records::MetaInformation::Datatype==0) {
     peano::heap::records::MetaInformation::initDatatype();
@@ -387,13 +387,13 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
         );
         _neighbourDataExchanger[toRank].startToSendData(false);
       }
-      _neighbourDataExchanger[toRank].sendData(data,position,level);
+      _neighbourDataExchanger[toRank].sendData(data.data(),data.size(),position,level);
       break;
     case MessageType::ForkOrJoinCommunication:
-      _joinForkExchanger.sendData(data,toRank,position,level);
+      _joinForkExchanger.sendData(data.data(),data.size(),toRank,position,level);
       break;
     case MessageType::MasterWorkerCommunication:
-      _masterWorkerExchanger.sendData(data,toRank,position,level);
+      _masterWorkerExchanger.sendData(data.data(),data.size(),toRank,position,level);
       break;
   }
   #endif

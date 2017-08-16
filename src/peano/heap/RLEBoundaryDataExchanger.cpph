@@ -105,13 +105,13 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
 void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType>::handleAndQueueSendTask( 
-  const SendReceiveTaskType&                           sendTask,
-  const typename SendReceiveTaskType::DataVectorType&  data 
+  const SendReceiveTaskType&     sendTask,
+  const Data* const              data
 ) {
   logTraceIn( "handleAndQueueSendTask(...)" );
   _totalNumberOfSentMessagesThisTraversal++;
 
-  if (data.empty()) {
+  if (sendTask._metaInformation.getLength()==0) {
     _numberOfEmptyMessagesSinceLastNonEmptySendCall++;
   }
   else {

@@ -44,7 +44,7 @@ void peano::heap::SendReceiveTask<Data>::setInvalid() {
 
 
 template <class Data>
-void peano::heap::SendReceiveTask<Data>::freeMemoryOfSendTask() {
+void peano::heap::SendReceiveTask<Data>::freeMemory() {
   if (_freeDataPointer && _metaInformation.getLength()>0) {
     delete[] _data;
   }
@@ -53,28 +53,28 @@ void peano::heap::SendReceiveTask<Data>::freeMemoryOfSendTask() {
 
 
 template <class Data>
-void peano::heap::SendReceiveTask<Data>::sendDataDirectlyFromBuffer(const DataVectorType& data) {
-  assertion( !data.empty() );
+void peano::heap::SendReceiveTask<Data>::sendDataDirectlyFromBuffer(const Data* const data) {
+  assertion( _metaInformation.getLength()>0 );
   assertion( _data==0 );
 
   _freeDataPointer = false;
-  _data            = const_cast< Data* >( data.data() );
+  _data            = const_cast< Data* >( data );
 }
 
 
 template <class Data>
-void peano::heap::SendReceiveTask<Data>::wrapData(const DataVectorType& data) {
-  assertion( !data.empty() );
+void peano::heap::SendReceiveTask<Data>::wrapData(const Data* const data) {
+  assertion( _metaInformation.getLength()>0 );
   assertion( _data==0 );
 
   _freeDataPointer = true;
 
-  _data = new (std::nothrow) MPIData[data.size()];
+  _data = new (std::nothrow) Data[_metaInformation.getLength()];
   if (_data==nullptr) {
     logError( "wrapData(DataVectorType)", "memory allocation failed. Terminate" );
     exit(-1);
   }
-  for (int i=0; i<static_cast<int>( data.size() ); i++) {
+  for (int i=0; i<static_cast<int>( _metaInformation.getLength() ); i++) {
     _data[i] = data[i];
   }
 }
@@ -87,7 +87,7 @@ void peano::heap::SendReceiveTask<Data>::triggerSend(int tag) {
   
   #ifdef Parallel
   const int result = MPI_Isend(
-    _data, _metaInformation.getLength(), MPIData::Datatype, _rank,
+    _data, _metaInformation.getLength(), Data::Datatype, _rank,
     tag,
     tarch::parallel::Node::getInstance().getCommunicator(), &_request
   );
@@ -114,13 +114,13 @@ void peano::heap::SendReceiveTask<Data>::triggerReceive(int tag) {
   
   #ifdef Parallel
   logTraceInWith2Arguments( "triggerReceive(int)", tag, _metaInformation.toString() );
-  _data = new (std::nothrow) typename SendReceiveTask<Data>::MPIData[ _metaInformation.getLength() ];
+  _data = new (std::nothrow) Data[ _metaInformation.getLength() ];
   if (_data==nullptr) {
     logError( "triggerReceive(int)", "memory allocation failed. Terminate" );
     exit(-1);
   }
   const int  result = MPI_Irecv(
-    _data, _metaInformation.getLength(), MPIData::Datatype,
+    _data, _metaInformation.getLength(), Data::Datatype,
     _rank, tag, tarch::parallel::Node::getInstance().getCommunicator(),
     &_request
   );
@@ -138,27 +138,6 @@ void peano::heap::SendReceiveTask<Data>::triggerReceive(int tag) {
 
   logTraceOut( "triggerReceive(int)" );
   #endif
-}
-
-
-template <class Data>
-typename peano::heap::SendReceiveTask<Data>::DataVectorType peano::heap::SendReceiveTask<Data>::unwrapDataAndFreeMemory() {
-  logTraceInWith1Argument( "unwrapDataAndFreeMemory()", _metaInformation.toString() );
-
-  DataVectorType result;
-
-  assertion( _metaInformation.getLength()>=0 );
-  if (_metaInformation.getLength()>0) {
-    assertion( _data!=0 );
-    for (int i=0; i<_metaInformation.getLength(); i++) {
-      result.push_back(_data[i]);
-    }
-
-    delete[] _data;
-  }
-
-  logTraceOutWith1Argument( "unwrapDataAndFreeMemory()", result.size() );
-  return result;
 }
 
 

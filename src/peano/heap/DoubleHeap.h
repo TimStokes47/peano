@@ -211,6 +211,28 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
       MessageType                                   messageType
     );
 
+    /**
+     * Send plain double array throughout heap
+     *
+     * Please ensure that you do not erase data if you use a heap without data
+     * copies until the next grid sweep has successfully started. The heap
+     * gives MPI time to do all data transers until the next
+     * startToSendBoundaryData() is invoked. So until then, the pointer has to
+     * remain valid.
+     *
+     * <h2> Realisation </h2>
+     *
+     * If we work with data copies, the handling is straightforward. The
+     * routine wraps the double pointer into a std::vector and hands it over
+     * to the other routines.
+     *
+     * If we work without data copies, we may not
+     * follow this approach as the std::vector copies all data and then would
+     * be released too early.
+     *
+     *
+     *
+     */
     void sendData(
       const double*                                 data,
       int                                           size,

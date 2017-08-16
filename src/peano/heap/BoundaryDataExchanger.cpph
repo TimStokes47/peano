@@ -182,7 +182,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::releaseSentMe
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
     }
 
-    i->freeMemoryOfSendTask();
+    i->freeMemory();
   }
 
   _sendTasks.clear();
@@ -247,11 +247,12 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::receiveDangli
 
 template<class Data, class SendReceiveTaskType>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::sendData(
-  const typename SendReceiveTaskType::DataVectorType&  data,
+  const Data* const                                    data,
+  int                                                  count,
   const tarch::la::Vector<DIMENSIONS, double>&         position,
   int                                                  level
 ) {
-  assertion5( _isCurrentlySending, _identifier, data.size(), position, level, "forgot to call startToSendBoundaryData on heap?" );
+  assertion5( _isCurrentlySending, _identifier, count, position, level, "forgot to call startToSendBoundaryData on heap?" );
 
   SendReceiveTaskType sendTask;
   sendTask._rank = _rank;
@@ -263,17 +264,17 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::sendData(
 
   logDebug("sendData", "sending data at " << position << " to Rank " << _rank << " with tag " << _dataTag  );
 
-  sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
+  sendTask._metaInformation.setLength(count);
 
   handleAndQueueSendTask( sendTask, data );
 
   _numberOfSentMessages += 1;
-  _numberOfSentRecords  += data.size();
+  _numberOfSentRecords  += count;
 }
 
 
 template<class Data, class SendReceiveTaskType>
-typename SendReceiveTaskType::DataVectorType  peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::receiveData(
+typename std::vector<Data>  peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType>::receiveData(
   const tarch::la::Vector<DIMENSIONS, double>&  position,
   int                                           level
 ) {
@@ -306,8 +307,11 @@ typename SendReceiveTaskType::DataVectorType  peano::heap::BoundaryDataExchanger
   assertion(readElement->_data!=0 || numberOfElementsOfThisEntry==0);
   #endif
 
-  const typename SendReceiveTaskType::DataVectorType result = readElement->unwrapDataAndFreeMemory();
+  const std::vector<Data> result(readElement->_data, readElement->_data+readElement->_metaInformation.getLength());
+
+  readElement->freeMemory();
   _receiveTasks[currentDeployBuffer].erase(readElement);
+
   logTraceOutWith1Argument( "receiveData(...)", result.size() );
   return result;
 }

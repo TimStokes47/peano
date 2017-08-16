@@ -88,7 +88,7 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
     }
 
-    i->freeMemoryOfSendTask();
+    i->freeMemory();
   }
 
   _sendTasks.clear();
@@ -143,7 +143,8 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
 void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendReceiveTaskType>::sendData(
-  const typename SendReceiveTaskType::DataVectorType&  data,
+  const Data * const                                   data,
+  int                                                  count,
   int                                                  toRank,
   const tarch::la::Vector<DIMENSIONS, double>&         position,
   int                                                  level
@@ -160,12 +161,12 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
 
   logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with tag " << _metaDataTag  );
 
-  sendTask._metaInformation.setLength(static_cast<int>( data.size() ));
+  sendTask._metaInformation.setLength(count);
   // @todo See comment above on the -1
   sendTask._metaInformation.send(toRank, _metaDataTag, true, -1 );
   _sendTasks.push_back(sendTask);
 
-  if(data.size() > 0) {
+  if(count>0) {
     if (CreateCopiesOfSentData) {
       _sendTasks.back().wrapData(data);
     }
@@ -177,12 +178,12 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
   }
 
   _numberOfSentMessages += 1;
-  _numberOfSentRecords  += data.size();
+  _numberOfSentRecords  += sendTask._metaInformation.getLength();
 }
 
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
-typename SendReceiveTaskType::DataVectorType
+typename std::vector<Data>
 peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendReceiveTaskType>::receiveData(
   int                                           fromRank,
   const tarch::la::Vector<DIMENSIONS, double>&  position,
@@ -190,7 +191,7 @@ peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendReceiveTa
 ) {
   logTraceInWith3Arguments( "receiveData(...)", fromRank, position, level );
 
-  typename SendReceiveTaskType::DataVectorType  result;
+  typename std::vector<Data>  result;
 
   typename std::list< SendReceiveTaskType >::iterator resultTask = findMessageFromRankInReceiveBuffer(fromRank);
 
@@ -311,7 +312,7 @@ typename std::list< SendReceiveTaskType >::iterator peano::heap::SynchronousData
 
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
-typename SendReceiveTaskType::DataVectorType peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendReceiveTaskType>::extractMessageFromReceiveBuffer(
+std::vector<Data> peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendReceiveTaskType>::extractMessageFromReceiveBuffer(
   typename std::list< SendReceiveTaskType >::iterator messageTask,
   const tarch::la::Vector<DIMENSIONS, double>&        position,
   int                                                 level
@@ -340,8 +341,9 @@ typename SendReceiveTaskType::DataVectorType peano::heap::SynchronousDataExchang
 
   assertion(messageTask->_data!=0 || numberOfElementsOfThisEntry==0);
 
-  const typename SendReceiveTaskType::DataVectorType result = messageTask->unwrapDataAndFreeMemory();
+  const typename std::vector<Data> result( messageTask->_data, messageTask->_data + messageTask->_metaInformation.getLength() );
 
+  messageTask->freeMemory();
   _receiveTasks.erase(messageTask);
 
   return result;

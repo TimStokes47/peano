@@ -61,7 +61,7 @@ class peano::heap::PlainBoundaryDataExchanger: public peano::heap::BoundaryDataE
      * Insert send task into local data structure and wrap and send out data
      * if necessary.
      */
-    virtual void handleAndQueueSendTask( const SendReceiveTaskType& sendTask, const typename SendReceiveTaskType::DataVectorType& data );
+    virtual void handleAndQueueSendTask( const SendReceiveTaskType& sendTask, const Data* const data );
 
     virtual bool dataExchangerCommunicatesInBackground() const;
   public:

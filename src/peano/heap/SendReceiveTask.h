@@ -46,8 +46,6 @@ namespace peano {
  */
 template<class Data>
 struct peano::heap::SendReceiveTask {
-  typedef std::vector<Data>  DataVectorType;
-
   static tarch::logging::Log _log;
 
   /**
@@ -69,13 +67,11 @@ struct peano::heap::SendReceiveTask {
    */
   int             _rank;
 
-  typedef Data    MPIData;
-
   /**
    * Pointer to the actual data. If meta data marks a message without
    * content, this pointer is 0.
    */
-  MPIData*        _data;
+  Data*           _data;
 
   bool            _freeDataPointer;
 
@@ -88,14 +84,18 @@ struct peano::heap::SendReceiveTask {
    *
    * Please note that you have to call delete[] on _data afterwards through
    * operation freeMemoryOfSendTask().
+   *
+   * We assume that the meta data already encodes the correct size.
    */
-  void wrapData(const DataVectorType& data);
+  void wrapData(const Data* const data);
 
   /**
    * Counterpart of wrapData(). The task sends away the data directly from the
    * specified buffer. Please call unwrapDataAndFreeMemory() nevertheless.
+   *
+   * We assume that the meta data already encodes the correct size.
    */
-  void sendDataDirectlyFromBuffer(const DataVectorType& data);
+  void sendDataDirectlyFromBuffer(const Data* const data);
 
   /**
    * @see triggerReceive() for implementation remarks.
@@ -112,14 +112,16 @@ struct peano::heap::SendReceiveTask {
    */
   void triggerReceive(int tag);
 
-  DataVectorType unwrapDataAndFreeMemory();
-
-  void freeMemoryOfSendTask();
+  /**
+   * Frees local memory. Is safe to call even if the message might be empty. Is
+   * not safe to call if you don't work with copies.
+   */
+  void freeMemory();
 
   /**
    * Set a task invalid explicitly. Messages marked that way will pass the
    * validation though their data is not in agreement with checks: it is
-   * explicilty known that the message is invalid and can be ignored. I use
+   * explicitly known that the message is invalid and can be ignored. I use
    * this for null messages, i.e. messages without content that are often
    * squeezed (together with their meta data) by sophisticated communication
    * schemes.
@@ -149,10 +151,7 @@ struct peano::heap::SendReceiveTask {
 
 template<>
 struct peano::heap::SendReceiveTask<double> {
-  typedef std::vector<double>  DataVectorType;
-
   static tarch::logging::Log _log;
-
 
   /**
    * We always use the plain meta information as record, i.e. we do not pack
@@ -190,14 +189,18 @@ struct peano::heap::SendReceiveTask<double> {
    *
    * Please note that you have to call delete[] on _data afterwards through
    * operation freeMemoryOfSendTask().
+   *
+   * We assume that the meta data already encodes the correct size.
    */
-  void wrapData(const std::vector<double>& data);
+  void wrapData(const double* const data);
 
   /**
    * Counterpart of wrapData(). The task sends away the data directly from the
    * specified buffer. Please call unwrapDataAndFreeMemory() nevertheless.
+   *
+   * We assume that the meta data already encodes the correct size.
    */
-  void sendDataDirectlyFromBuffer(const std::vector<double>& data);
+  void sendDataDirectlyFromBuffer(const double* const  data);
 
   /**
    * @see triggerReceive() for implementation remarks.
@@ -212,9 +215,7 @@ struct peano::heap::SendReceiveTask<double> {
    */
   void triggerReceive(int tag);
 
-  std::vector<double> unwrapDataAndFreeMemory();
-
-  void freeMemoryOfSendTask();
+  void freeMemory();
 
   /**
    * Set a task invalid explicitly. Messages marked that way will pass the

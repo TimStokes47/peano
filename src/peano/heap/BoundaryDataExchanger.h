@@ -218,8 +218,8 @@ class peano::heap::BoundaryDataExchanger {
      * result of getNumberOfSentMessages().
      */
     virtual void handleAndQueueSendTask(
-      const SendReceiveTaskType& sendTask,
-      const typename SendReceiveTaskType::DataVectorType& data
+      const SendReceiveTaskType&  sendTask,
+      const Data* const           data
     ) = 0;
 
     /**
@@ -295,7 +295,8 @@ class peano::heap::BoundaryDataExchanger {
     void receiveDanglingMessages();
 
     void sendData(
-      const typename SendReceiveTaskType::DataVectorType&  data,
+      const Data * const                                   data,
+      int                                                  count,
       const tarch::la::Vector<DIMENSIONS, double>&         position,
       int                                                  level
     );
@@ -328,7 +329,7 @@ class peano::heap::BoundaryDataExchanger {
      * @param level    Used for validation, i.e. to ensure that the right
      *                 record is sent back
      */
-    typename SendReceiveTaskType::DataVectorType receiveData(
+    typename std::vector<Data> receiveData(
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level
     );

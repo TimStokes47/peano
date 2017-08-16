@@ -371,29 +371,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   int                                           level,
   MessageType                                   messageType
 ) {
-  // creates a copy and thus is not appropriate if we wanna use no-copy policies
-  // VectorContainer  dataWrapper(data,data+size);
-
-  // Same as above but we manually extrace the allocator from the typedef. Does
-  // not solve the copy problem. 
-  // std::vector< double, typename VectorContainer::Alloc> dataWrapper(data,data+size);
-
-  // Might be the solution
-  std::vector< std::reference_wrapper<double>, typename VectorContainer::Alloc> dataWrapper(data,data+size);
-  
-  sendData(dataWrapper,toRank,position,level,messageType);
-}
-
-
-template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
-void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::sendData(
-  const VectorContainer&                        data,
-  int                                           toRank,
-  const tarch::la::Vector<DIMENSIONS, double>&  position,
-  int                                           level,
-  MessageType                                   messageType
-) {
-  logTraceInWith6Arguments( "sendData(...)", _name, toRank, position, level, peano::heap::toString(messageType), data.size() );
+  logTraceInWith5Arguments( "sendData(...)", size, toRank, position, level, peano::heap::toString(messageType) );
 
   #ifdef Parallel
   switch (messageType) {
@@ -407,16 +385,32 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
         );
         _neighbourDataExchanger[toRank].startToSendData(false);
       }
-      _neighbourDataExchanger[toRank].sendData(data,position,level);
+      _neighbourDataExchanger[toRank].sendData(data,size,position,level);
       break;
     case MessageType::ForkOrJoinCommunication:
-      _joinForkExchanger.sendData(data,toRank,position,level);
+      _joinForkExchanger.sendData(data,size,toRank,position,level);
       break;
     case MessageType::MasterWorkerCommunication:
-      _masterWorkerExchanger.sendData(data,toRank,position,level);
+      _masterWorkerExchanger.sendData(data,size,toRank,position,level);
       break;
   }
   #endif
+
+  logTraceOut( "sendData(...)" );
+}
+
+
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::sendData(
+  const VectorContainer&                        data,
+  int                                           toRank,
+  const tarch::la::Vector<DIMENSIONS, double>&  position,
+  int                                           level,
+  MessageType                                   messageType
+) {
+  logTraceInWith6Arguments( "sendData(...)", _name, toRank, position, level, peano::heap::toString(messageType), data.size() );
+
+  sendData( data.data(), data.size(), toRank, position, level, messageType );
 
   logTraceOut( "sendData(...)" );
 }
@@ -432,7 +426,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 ) {
   logTraceInWith6Arguments( "sendData(...)", _name, index, toRank, position, level, toString(messageType) );
 
-  sendData( getData(index), toRank, position, level, messageType );
+  sendData( getData(index).data(), getData(index).size(), toRank, position, level, messageType );
 
   logTraceOutWith1Argument( "sendData(...)", getData(index).size() );
 }
