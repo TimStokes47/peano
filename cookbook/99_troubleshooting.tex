@@ -163,7 +163,7 @@ the directory.
     another and then this one sending stuff back where the data is compared to
     the original) and that you ping pong both single vertices and arrays of
     vertices. This typically uncovers data inconsistencies. One next step then
-    is to translate your code with \texttt{-DnoParallelRecords}. While switching
+    is to translate your code with \texttt{-DnoPackedRecords}. While switching
     the flag on reduces the memory footprint dramatically (if you don't use
     lots of double arrays that is), its underlying skipping of the compiler's
     padding seems to cause problems for Intel MPI.
