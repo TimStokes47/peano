@@ -166,7 +166,10 @@ the directory.
     is to translate your code with \texttt{-DnoPackedRecords}. While switching
     the flag on reduces the memory footprint dramatically (if you don't use
     lots of double arrays that is), its underlying skipping of the compiler's
-    padding seems to cause problems for Intel MPI.
+    padding seems to cause problems for Intel MPI. If you find 
+    \texttt{-DnoPackedRecords} working, roll back, i.e.~use 
+    \texttt{-DPackedRecords} (which is the default), and follow Section
+    \ref{section:advanced-mpi:tailor-data-exchange-format}.
   \item To be continued \ldots
 \end{itemize}
 
