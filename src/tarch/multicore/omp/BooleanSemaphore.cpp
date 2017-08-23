@@ -13,7 +13,7 @@ tarch::multicore::BooleanSemaphore::BooleanSemaphore() {
 tarch::multicore::BooleanSemaphore::~BooleanSemaphore() {
   #ifdef CompilerICC
   // Fix for Intel Compiler due to a bug in the OpenMP support of the icc (see http://software.intel.com/en-us/forums/showthread.php?t=72204)
-  if(tarch::multicore::openMP::Core::getInstance().isInitialised()) {
+  if(tarch::multicore::Core::getInstance().isInitialised()) {
     omp_destroy_lock(&_lock);
   }
   #else
