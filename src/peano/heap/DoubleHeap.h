@@ -26,23 +26,23 @@ namespace peano {
     >     PlainDoubleHeap;
 
     typedef DoubleHeap<
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16> >,
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16> >,
-      PlainBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<16> >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16>, std::vector< double, HeapAllocator<double, 16> > >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16>, std::vector< double, HeapAllocator<double, 16> > >,
+      PlainBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<16>, std::vector< double, HeapAllocator<double, 16> > >,
       std::vector< double, HeapAllocator<double, 16> >
     >     PlainDoubleHeapAlignment16;
 
     typedef DoubleHeap<
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<32> >,
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<32> >,
-      PlainBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<32> >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<32>, std::vector< double, HeapAllocator<double, 32> > >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<32>, std::vector< double, HeapAllocator<double, 32> > >,
+      PlainBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<32>, std::vector< double, HeapAllocator<double, 32> > >,
       std::vector< double, HeapAllocator<double, 32> >
     >     PlainDoubleHeapAlignment32;
 
     typedef DoubleHeap<
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<64> >,
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<64> >,
-      PlainBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<64> >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<64>, std::vector< double, HeapAllocator<double, 64> > >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<64>, std::vector< double, HeapAllocator<double, 64> > >,
+      PlainBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<64>, std::vector< double, HeapAllocator<double, 64> > >,
       std::vector< double, HeapAllocator<double, 64> >
     >     PlainDoubleHeapAlignment64;
 
@@ -54,23 +54,23 @@ namespace peano {
 
 
     typedef DoubleHeap<
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16> >,
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16> >,
-      RLEBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<16> >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16>, std::vector< double, HeapAllocator<double, 16> > >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16>, std::vector< double, HeapAllocator<double, 16> > >,
+      RLEBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<16>, std::vector< double, HeapAllocator<double, 16> > >,
       std::vector< double, HeapAllocator<double, 16> >
     >     RLEDoubleHeapAlignment16;
 
     typedef DoubleHeap<
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<32> >,
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<32> >,
-      RLEBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<32> >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<32>, std::vector< double, HeapAllocator<double, 32> > >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<32>, std::vector< double, HeapAllocator<double, 32> > >,
+      RLEBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<32>, std::vector< double, HeapAllocator<double, 32> > >,
       std::vector< double, HeapAllocator<double, 32> >
     >     RLEDoubleHeapAlignment32;
 
     typedef DoubleHeap<
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<64> >,
-      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<64> >,
-      RLEBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<64> >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<64>, std::vector< double, HeapAllocator<double, 64> > >,
+      SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<64>, std::vector< double, HeapAllocator<double, 64> > >,
+      RLEBoundaryDataExchanger< double, true, AlignedDoubleSendReceiveTask<64>, std::vector< double, HeapAllocator<double, 64> > >,
       std::vector< double, HeapAllocator<double, 64> >
     >     RLEDoubleHeapAlignment64;
   }

@@ -83,7 +83,7 @@ struct peano::heap::SendReceiveTask {
    * Prelude to sendData().
    *
    * Please note that you have to call delete[] on _data afterwards through
-   * operation freeMemoryOfSendTask().
+   * operation freeMemory().
    *
    * We assume that the meta data already encodes the correct size.
    */
@@ -91,7 +91,7 @@ struct peano::heap::SendReceiveTask {
 
   /**
    * Counterpart of wrapData(). The task sends away the data directly from the
-   * specified buffer. Please call unwrapDataAndFreeMemory() nevertheless.
+   * specified buffer. Please call freeMemory() nevertheless.
    *
    * We assume that the meta data already encodes the correct size.
    */
@@ -196,7 +196,7 @@ struct peano::heap::SendReceiveTask<double> {
 
   /**
    * Counterpart of wrapData(). The task sends away the data directly from the
-   * specified buffer. Please call unwrapDataAndFreeMemory() nevertheless.
+   * specified buffer. Please call freeMemory() nevertheless.
    *
    * We assume that the meta data already encodes the correct size.
    */

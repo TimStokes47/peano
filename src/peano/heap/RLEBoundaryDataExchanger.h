@@ -8,7 +8,7 @@
 
 namespace peano {
   namespace heap {
-    template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
+    template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer = std::vector<Data> >
     class RLEBoundaryDataExchanger;
   }
 }
@@ -64,15 +64,15 @@ namespace peano {
  * Or we can send away data directly from the heap and rely on the user that
  * this data remains persistent.
  */
-template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType>
-class peano::heap::RLEBoundaryDataExchanger: public peano::heap::BoundaryDataExchanger<Data, SendReceiveTaskType> {
+template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer>
+class peano::heap::RLEBoundaryDataExchanger: public peano::heap::BoundaryDataExchanger<Data, SendReceiveTaskType, VectorContainer> {
   private:
     /**
      * Logging device.
      */
     static tarch::logging::Log _log;
 
-    typedef BoundaryDataExchanger<Data, SendReceiveTaskType> Base;
+    typedef BoundaryDataExchanger<Data, SendReceiveTaskType, VectorContainer> Base;
 
     int _numberOfEmptyMessagesSinceLastNonEmptySendCall;
     int _totalNumberOfSentMessagesThisTraversal;

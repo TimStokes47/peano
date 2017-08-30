@@ -77,15 +77,15 @@ struct peano::heap::AlignedDoubleSendReceiveTask {
    * Prelude to sendData().
    *
    * Please note that you have to call delete[] on _data afterwards through
-   * operation freeMemoryOfSendTask().
+   * operation freeMemory().
    */
-  void wrapData(const DataVectorType& data);
+  void wrapData(const double* const data);
 
   /**
    * Counterpart of wrapData(). The task sends away the data directly from the
-   * specified buffer. Please call unwrapDataAndFreeMemory() nevertheless.
+   * specified buffer. Please call freeMemory() nevertheless.
    */
-  void sendDataDirectlyFromBuffer(const DataVectorType& data);
+  void sendDataDirectlyFromBuffer(const double* const data);
 
   /**
    * @see triggerReceive() for implementation remarks.
@@ -100,9 +100,7 @@ struct peano::heap::AlignedDoubleSendReceiveTask {
    */
   void triggerReceive(int tag);
 
-  DataVectorType unwrapDataAndFreeMemory();
-
-  void freeMemoryOfSendTask();
+  void freeMemory();
 
   /**
    * Set a task invalid explicitly. Messages marked that way will pass the

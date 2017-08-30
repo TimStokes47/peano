@@ -6,7 +6,7 @@
 
 namespace peano {
   namespace heap {
-    template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType >
+    template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer=std::vector<Data> >
     class SynchronousDataExchanger;
   }
 }
@@ -20,7 +20,7 @@ namespace peano {
  * Or we can send away data directly from the heap and rely on the user that
  * this data remains persistent.
  */
-template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType >
+template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer >
 class peano::heap::SynchronousDataExchanger {
   private:
     /**
@@ -67,7 +67,7 @@ class peano::heap::SynchronousDataExchanger {
      */
     typename std::list< SendReceiveTaskType >::iterator findMessageFromRankInReceiveBuffer(int ofRank);
 
-    std::vector<Data> extractMessageFromReceiveBuffer(
+    VectorContainer extractMessageFromReceiveBuffer(
       typename std::list< SendReceiveTaskType >::iterator   messageTask,
       const tarch::la::Vector<DIMENSIONS, double>&          position,
       int                                                   level
@@ -121,7 +121,7 @@ class peano::heap::SynchronousDataExchanger {
       int                                           level
     );
 
-    typename std::vector<Data> receiveData(
+    VectorContainer receiveData(
       int                                           fromRank,
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level

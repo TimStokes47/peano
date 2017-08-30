@@ -43,7 +43,7 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::setInvalid() {
 
 
 template<int Alignment>
-void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::freeMemoryOfSendTask() {
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::freeMemory() {
   if (_freeDataPointer && _metaInformation.getLength()>0) {
     delete[] _data;
   }
@@ -52,30 +52,31 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::freeMemoryOfSendTask(
 
 
 template<int Alignment>
-void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::sendDataDirectlyFromBuffer(const DataVectorType& data) {
-  assertion( !data.empty() );
-  assertion( _data==0 );
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::sendDataDirectlyFromBuffer(const double* const data) {
+  assertion(  data!=nullptr );
+  assertion( _data==nullptr );
+  assertion( _metaInformation.getLength()>0 );
 
   _freeDataPointer = false;
-  _data            = const_cast< double* >( data.data() );
+  _data            = const_cast< double* >( data );
 }
 
 
 template<int Alignment>
-void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const DataVectorType& data) {
-  assertion( !data.empty() );
-  assertion( _data==0 );
+void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const double* const data) {
+  assertion(  data!=nullptr );
+  assertion( _data==nullptr );
 
   _freeDataPointer = true;
   _data            = nullptr;
 
   #ifdef CompilerICC
-  _data = static_cast<double *>(_mm_malloc(data.size()*sizeof(double), Alignment));
+  _data = static_cast<double *>(_mm_malloc(_metaInformation.getLength()*sizeof(double), Alignment));
   #elif defined(__APPLE__)
-  posix_memalign(&_data, Alignment, data.size()*sizeof(double));
+  posix_memalign(&_data, Alignment, _metaInformation.getLength()*sizeof(double));
   #else
   // The arguments here are permuted compared to _mm_alloc
-  _data = static_cast<double *>(aligned_alloc(Alignment, data.size()*sizeof(double)));
+  _data = static_cast<double *>(aligned_alloc(Alignment, _metaInformation.getLength()*sizeof(double)));
   #endif
 
   if (_data==nullptr) {
@@ -83,7 +84,7 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const DataVe
     exit(-1);
   }
 
-  for (int i=0; i<static_cast<int>( data.size() ); i++) {
+  for (int i=0; i<_metaInformation.getLength(); i++) {
     _data[i] = data[i];
   }
 }
@@ -152,6 +153,7 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::triggerReceive(int ta
 }
 
 
+/*
 template<int Alignment>
 std::vector< double, peano::heap::HeapAllocator<double, Alignment > > peano::heap::AlignedDoubleSendReceiveTask<Alignment>::unwrapDataAndFreeMemory() {
   logTraceInWith1Argument( "unwrapDataAndFreeMemory()", _metaInformation.toString() );
@@ -171,6 +173,7 @@ std::vector< double, peano::heap::HeapAllocator<double, Alignment > > peano::hea
   logTraceOutWith1Argument( "unwrapDataAndFreeMemory()", result.size() );
   return result;
 }
+*/
 
 
 template<int Alignment>

@@ -6,7 +6,7 @@
 
 namespace peano {
   namespace heap {
-    template<class Data, class SendReceiveTaskType>
+    template<class Data, class SendReceiveTaskType, class VectorContainer>
     class BoundaryDataExchanger;
   }
 }
@@ -27,7 +27,7 @@ namespace peano {
  *
  * @author Tobias Weinzierl
  */
-template<class Data, class SendReceiveTaskType>
+template<class Data, class SendReceiveTaskType, class VectorContainer>
 class peano::heap::BoundaryDataExchanger {
   private:
     /**
@@ -329,7 +329,7 @@ class peano::heap::BoundaryDataExchanger {
      * @param level    Used for validation, i.e. to ensure that the right
      *                 record is sent back
      */
-    typename std::vector<Data> receiveData(
+    VectorContainer receiveData(
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level
     );
