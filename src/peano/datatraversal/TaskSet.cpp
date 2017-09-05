@@ -25,14 +25,12 @@ peano::datatraversal::TaskSet::TaskSet(
       function2
     );
     #elif SharedOMP
-      #pragma omp parallel
-      #pragma omp single
+      #pragma omp parallel sections
       {
-        #pragma omp task
+        #pragma omp section
         function1();
-        #pragma omp task
+        #pragma omp section
         function2();
-        #pragma omp taskwait
       }
     #else
     function1();
@@ -64,16 +62,14 @@ peano::datatraversal::TaskSet::TaskSet(
       function3
     );
     #elif SharedOMP
-      #pragma omp parallel
-      #pragma omp single
+      #pragma omp parallel sections
       {
-        #pragma omp task
+        #pragma omp section
         function1();
-        #pragma omp task
+        #pragma omp section
         function2();
-        #pragma omp task
+        #pragma omp section
         function3();
-        #pragma omp taskwait
       }
     #else
     function1();
@@ -109,18 +105,16 @@ peano::datatraversal::TaskSet::TaskSet(
       function4
     );
     #elif SharedOMP
-      #pragma omp parallel
-      #pragma omp single
+      #pragma omp parallel sections
       {
-        #pragma omp task
+        #pragma omp section
         function1();
-        #pragma omp task
+        #pragma omp section
         function2();
-        #pragma omp task
+        #pragma omp section
         function3();
-        #pragma omp task
+        #pragma omp section
         function4();
-        #pragma omp taskwait
       }
     #else
     function1();
@@ -160,20 +154,16 @@ peano::datatraversal::TaskSet::TaskSet(
       function5
     );
     #elif SharedOMP
-      #pragma omp parallel
-      #pragma omp single
+      #pragma omp parallel sections
       {
-        #pragma omp task
-        function1();
-        #pragma omp task
+        #pragma omp section
         function2();
-        #pragma omp task
+        #pragma omp section
         function3();
-        #pragma omp task
+        #pragma omp section
         function4();
-        #pragma omp task
+        #pragma omp section
         function5();
-        #pragma omp taskwait
       }
     #else
     function1();
