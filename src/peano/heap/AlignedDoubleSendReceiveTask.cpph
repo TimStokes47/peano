@@ -1,6 +1,11 @@
 #include "tarch/la/VectorCompare.h"
 
 
+#if !defined(CompilerICC) and !defined(__APPLE__)
+#include <stdlib.h>
+#endif
+
+
 template<int Alignment>
 tarch::logging::Log  peano::heap::AlignedDoubleSendReceiveTask<Alignment>::_log( "peano::heap::AlignedDoubleSendReceiveTask<Alignment>" );
 
