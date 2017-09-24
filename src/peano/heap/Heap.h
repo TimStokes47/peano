@@ -424,13 +424,13 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      */
     Heap();
 
+  public:
+    typedef std::vector<Data>  HeapEntries;
+
     /**
      * Private destructor to free the MPI datatypes.
      */
     ~Heap();
-
-  public:
-    typedef std::vector<Data>  HeapEntries;
 
     /**
      * Start to send data
