@@ -173,3 +173,71 @@ called after a rank's state it sent to its master. If this is the case, you have
 to merge \texttt{\_localState} into the global state within
 \texttt{prepareSendToMaster} to ensure that the correct analysis data goes to
 the master.
+
+
+
+\section{Avoid hanging nodes along domain boundary}
+
+Hanging nodes along the domain boundary can be quite a pain. 
+Furthermore, they tend to pollute the simulation outcomes quickly. 
+Many Peano applications thus realise the following pattern:
+
+\begin{itemize}
+  \item Identify those cells that are adjacent to the boundary (read, they have
+  at least one boundary vertex) and adjacent to at least one refined vertex.
+  Alternatively, one can search for refinement triggered or refining as state.
+  \item Refine all unrefined boundary vertices of such cells.
+\end{itemize}
+
+\noindent
+We illustrate the behaviour with a brief cartoon story:
+\begin{enumerate}
+  \item Yellow vertices are persistent (normal) boundary vertices, while blue
+  vertices are inner hanging nodes.
+  \item The upper sketch does not impose any problems, unless \ldots
+  \item we trigger \texttt{refine} on the green vertex which could happen
+  through any refinement criterion.
+  \item The adjacent coarse cell now refined (middle row) and we obtain two
+  hanging nodes along the boundary (red). Those guys can cause pain as we
+  cannot, without lots of effort, i.e.~per grid sweep, impose boundary
+  conditions here.
+  \item Our algorithm identifies the original coarse cell as soon as a
+  refinement is triggered on the green vertex. It the calls refine on the
+  boundary vertices which are marked with a slightly darkened yellow. We thus
+  remove all hanging nodes along the grid boundary.
+\end{enumerate}
+
+\begin{center}
+  \includegraphics[width=0.5\textwidth]{98_patterns/boundaries-without-hanging-nodes.pdf}
+\end{center}
+
+\noindent
+The algorithmic pattern is straightforward to implement with the vertex analysis
+routines:
+\begin{code}
+#include "peano/grid/aspects/VertexStateAnalysis.h"
+
+void boxmg::mappings::RefinementCriterion::leaveCell( ...) {
+  if (
+    fineGridCell.isRefined()
+    &&
+    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
+      fineGridVertices, fineGridVerticesEnumerator, Vertex::Records::Unrefined
+    )
+  ) {
+    bool isOneVertexABoundaryVertex = false;
+    dfor2(k)
+      isOneVertexABoundaryVertex |= fineGridVertices[ fineGridVerticesEnumerator(k) ].
+        isBoundary();
+    enddforx
+    if (isOneVertexABoundaryVertex) {
+      dfor2(k)
+        if (fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl()
+          ==Vertex::Records::Unrefined) {
+          fineGridVertices[ fineGridVerticesEnumerator(k) ].refine();
+        }
+      enddforx
+    }
+  }
+}
+\end{code}
