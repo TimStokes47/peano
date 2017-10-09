@@ -22,26 +22,26 @@ namespace peano {
  * <table>
  <tr>
 <td> manipulates </td><td> Nop        </td><td> Operation is empty, and the algorithm's semantics is preserved, if Peano kicks out the whole function call. </td>
-</tr><td>
+</tr><tr>
 <td>             </td><td> OnlyLeaves </td><td> Algorithm's semantics is preserved, if Peano kicks out the whole function call for refined vertices of cells that have solely refined vertices around them.  </td>
-</tr><td>
+</tr><tr>
 <td>             </td><td> WholeTree  </td><td> No events are eliminated.  </td>
-</tr><td>
+</tr><tr>
 <td> multithreading </td><td> Serial               </td><td> Do not run these operation in parallel on a shared memory machine.
 Application hence doesn't need semaphores. </td>
-</tr><td>
+</tr><tr>
 <td>                </td><td> RunConcurrentlyOnFineGrid </td><td> Peano runs the events in parallel on the finest grid, i.e. doesn't
  care about any data dependencies. For multiscale events such as
  ascend, this operation runs the code in parallel for all coarse
  grid cells. </td>
-</tr><td>
+</tr><tr>
 <td>                </td><td> AvoidCoarseGridRaces      </td><td> Peano can try to speed up the application due to multithreading.
  It ensures that events are invoked such that the coarse grid data
  (of enterCell, e.g.) is not shared with another thread. Is more
  restrictive than AvoidFineGridRaces, i.e. ensures this data
  consistency as well. Usually leads to colouring with @f$ 6^d @f$ or
  @f$ 7^d @f$ colors. </td>
-</tr><td>
+</tr><tr>
 <td>                </td><td> AvoidFineGridRaces  </td><td> Peano can try to speed up the application due to multithreading.
  However, Peano ensures that events are invoked such that the fine
  grid data (of enterCell, e.g.) is not shared with another thread.
