@@ -370,6 +370,13 @@ outFile.write( "\
     overview of your runtime. If the code synchronises only everh kth grid sweep, k sweeps are always summarised \
     by one linear graph. \
     </p>\
+    <p style=\"color:red;\">If this plot (and others) are empty, please ensure \
+     <ul> \
+      <li>You have translated your code with -DTrackGridStatistics.</li> \
+      <li>You have enabled all info log output from peano::performanceanalysis.</li> \
+      <li>You have not called peano::performanceanalysis::Analysis::getInstance().enable(false) in your code.</li> \
+     </ul> \
+    </p> \
     <a href=\"#table-of-contents\">To table of contents</a>\
     ")
 
