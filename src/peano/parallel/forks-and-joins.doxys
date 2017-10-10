@@ -33,5 +33,17 @@
  @image html SplitProcess_spacetree_phase3.png
  
  
+ <h2> Further codes to study </h2>
+ 
+ As the fork/join mechanisms integrate into the tree traversal, there is no 
+ specialised code for it. It is simply a postprocessing step after a cell is
+ loaded. 
+ You find details on this at
+ 
+ @see peano::grid::nodes::Node::updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker()
+ @see peano::grid::nodes::Node::updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain()
+ 
+ 
+ 
  */
  

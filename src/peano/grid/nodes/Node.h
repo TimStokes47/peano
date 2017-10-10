@@ -412,9 +412,25 @@ class peano::grid::nodes::Node {
       * is called before enterCell() or leaveCell(). It is however called after
       * a createCell() events if invoking such an event is necessary.
       *
+      * <h2> Heap data </h2>
+      *
+      * Heap data is not automatically administered by forks and joins. If you
+      * create your heap indices correctly in the creational routines, then
+      * your local cell data will hold valid heap indices (it has been created
+      * before anything has been merged) and the remove cells/vertices hold
+      * invalid heap indices. They are simple copied over from the other rank
+      * but the indices used there usually have no meaning on your local rank.
+      * So, you have to transfer all data manually in the events and merge it
+      * into your local data structures manually, too. You can only rely that
+      * the local data structures have been subject to createCell(),
+      * createInnerVertex() or createBoundaryVertex() before.
+      *
+      *
       * @see updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker() which
       *   is the counterpart of the present procedure but follows the same
       *   workflow/concepts.
+      *
+      * @see Page "Forks and Joins of Subtrees" for more details.
       */
      void updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain(
        State&                                    state,
