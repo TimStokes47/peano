@@ -385,6 +385,33 @@ class peano::grid::nodes::Node {
        const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
      ) const;
 
+     /**
+      *
+      * If a domain is split up into two domains, this routine is invoked on
+      * the worker. Peano's high level domain decomposition follows the
+      * following principles:
+      *
+      * - In a first grid sweep, those cells on a rank are marked that shall
+      *   go to another rank. From hereon we use the terms (future) master and
+      *   worker though no data is actually transferred. The master remains
+      *   responsible to call all events on its grid.
+      * - The worker is informed that there will be a grid in the subsequent
+      *   iteration.
+      * - In the second grid sweep, the master runs into the grid entities.
+      *   Now, it streams those directly to the worker and does not invoke
+      *   any operations anymore. The responsibility is streamed to the new
+      *   worker as well.
+      * - As a consequence, the master can now delete its local data.
+      * - The worker in parallel creates a completely new grid, i.e. it invokes
+      *   all the creational events.
+      * - While the worker runs through the grid for the very first time, it
+      *   invokes this routine. For every newly created grid entity, it now
+      *   invokes the merge routines mergeWithRemoteDataDueToForkOrJoin().
+      *
+      * @see updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker() which
+      *   is the counterpart of the present procedure but follows the same
+      *   workflow/concepts.
+      */
      void updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain(
        State&                                    state,
        Cell&                                     fineGridCell,
@@ -397,8 +424,10 @@ class peano::grid::nodes::Node {
      ) const;
 
      /**
+      * Postprocessing routine invoked on the master if parts of its domain are
+      * deployed to another rank.
       *
-      * !!! Rationale
+      * <h2> Rationale </h2>
       *
       * We switch a cell to remote if we have sent it to a worker and it is not
       * assigned to the local node anymore. However, we do this after the loop
@@ -424,12 +453,45 @@ class peano::grid::nodes::Node {
      /**
       * Join cell of worker with local cell
       *
-      * Remark: The following descriptions are errorneous. The adjacency
-      * information on all ranks always has to be consistent. Thus, any
-      * distinction of remote adjacency data and local adjacency data is
-      * unnecessary.
+      * Peano realises a two-step rebalancing of subpartitions: First, it flags
+      * all cells that shall go from one rank to another. In the subsequent
+      * grid sweep, the data then is actually transferred. In the first sweep
+      * (where all the flagging happens), the responsibility for all data is
+      * were the data did recide before the data movement, i.e. the rank where
+      * the flagged data resides is the rank that triggers all the events. In the
+      * second sweep, the data first is transferred to the destination rank and
+      * this destination rank than has ownership. It is responsible to call all
+      * events.
       *
-      * !!! Determine which vertices to exchage
+      * The actual data transfer in the second phase of the rebalancing is
+      * organised cell-wisely. It materialises in the present routine.
+      *
+      * <h2> High level data flow </h2>
+      *
+      * - The routine identifies whether there are joining ranks. If there are
+      *   ranks but no data has been received from those guys, it creates a
+      *   receive buffer.
+      * - If any vertex of the present cell is adjacent to a joining/forking
+      *   cell, we have to exchange some data. The code does exchange join data
+      *   in an overlapping sense, i.e. also cells are exchanged that are
+      *   adjacent but not owned by a joining rank. Those cells do not carry
+      *   information as we work non-overlappingly, but we exchange them to
+      *   ensure the grid remains consistent.
+      * - We take the cell and invoke mergeWithJoinedCellFromWorker().
+      * - This routine sets all the cell attributes but notably tells us
+      *   whether the join forces us to create a new inner cell on the local
+      *   rank: This happens (a) if there has not been such a cell on the local
+      *   rank before or (b) if there has been a cell on the local rank but it
+      *   had been flagged as remote/outside. In both cases, we call
+      *   createCell() and then invoke switchToInside().
+      * - Finally, we call mergeWithRemoteDataDueToForkOrJoin().
+      *
+      * So mergeWithRemoteDataDueToForkOrJoin() is always called after a
+      * createInnerCell() if the cell is inside the domain.
+      *
+      * From hereon, we handle the adjacent vertices.
+      *
+      * <h2> Determine which vertices to exchage </h2>
       *
       * In Peano, a merge exchanges only vertices that are adjacent to the
       * worker's domain. For this, the worker determines those vertices and
