@@ -594,31 +594,31 @@ if (numberOfRanks>1):
       <td>End of iteration on rank.</td></tr> \
     <tr> \
       <td>bright red</td> \
-      <td bgcolor=\"#ff3434\">xxxxx</td> \
+      <td bgcolor=\"#ff3434\" style=\"background-color:#ff3434\">xxxxx</td> \
       <td>Time spent outside of the domain prior to enter the actual local tree; comprises the time the node has to wait for data from the master if master-worker data exchange is not switched off.</td></tr> \
     <tr> \
       <td>green</td> \
-      <td bgcolor=\"#00ab00\">xxxxx</td> \
+      <td bgcolor=\"#00ab00\" style=\"background-color:#00ab00\">xxxxx</td> \
       <td>Time spent within local tree.</td></tr> \
     <tr> \
       <td>dark red</td> \
-      <td bgcolor=\"#560000\">xxxxx</td> \
+      <td bgcolor=\"#560000\" style=\"background-color:#560000\">xxxxx</td> \
       <td>Time spent outside of the domain after local tree has been processed; comprises the time the node has to wait until data is successfully sent to the master if worker-master data exchange is not switched off. Usually this effect however is negligible as MPI buffers away the blocking messages.</td></tr> \
     <tr> \
       <td>dark red on master</td> \
-      <td bgcolor=\"#560000\">xxxxx</td> \
+      <td bgcolor=\"#560000\" style=\"background-color:#560000\">xxxxx</td> \
       <td>Time spent to wait for first worker.</td></tr> \
     <tr> \
       <td>blue</td> \
-      <td bgcolor=\"#0000ab\">xxxxx</td> \
+      <td bgcolor=\"#0000ab\" style=\"background-color:#0000ab\">xxxxx</td> \
       <td>Time required to exchange heap and boundary data; the heap data usually is for free as it overlaps into the subsequent traversal.</td></tr> \
     <tr> \
       <td>yellow</td> \
-      <td bgcolor=\"#ffff00\">xxxxx</td> \
+      <td bgcolor=\"#ffff00\" style=\"background-color:#ffff00\">xxxxx</td> \
       <td>Time required to receive heap data from the master when the rank starts up.</td></tr> \
     <tr> \
       <td>yellow</td> \
-      <td bgcolor=\"#abab00\">xxxxx</td> \
+      <td bgcolor=\"#abab00\" style=\"background-color:#abab00\">xxxxx</td> \
       <td>Time required to send heap data to the master when the rank just has finished.</td></tr> \
     <tr> \
       <td>white</td> \
