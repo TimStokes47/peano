@@ -343,7 +343,7 @@ class peano::grid::nodes::Node {
      /**
       * Handle root cell of remote tree
       *
-      * !!! Block erase on vertices
+      * <h2> Block erase on vertices </h2>
       *
       * Peano allows to block erase on vertices to avoid that mpi processes
       * starve. See Vertex::setAdjacentSubtreeForksIntoOtherRankFlag(). These
@@ -358,7 +358,7 @@ class peano::grid::nodes::Node {
       * holds the trivial tree with only one inner cell. This way, we preserve
       * a halo layer around each worker of at least depth one.
       *
-      * !!! MPI communication mode
+      * <h2> MPI communication mode </h2>
       *
       * Depending on the flag SendMasterWorkerMessagesBlocking, Peano exchanges
       * the messages either blocking or non-blocking.
@@ -407,6 +407,10 @@ class peano::grid::nodes::Node {
       * - While the worker runs through the grid for the very first time, it
       *   invokes this routine. For every newly created grid entity, it now
       *   invokes the merge routines mergeWithRemoteDataDueToForkOrJoin().
+      *
+      * As the routine is invoked by updateCellsParallelStateAfterLoad(), it
+      * is called before enterCell() or leaveCell(). It is however called after
+      * a createCell() events if invoking such an event is necessary.
       *
       * @see updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker() which
       *   is the counterpart of the present procedure but follows the same
