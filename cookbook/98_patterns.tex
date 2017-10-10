@@ -218,26 +218,13 @@ routines:
 #include "peano/grid/aspects/VertexStateAnalysis.h"
 
 void boxmg::mappings::RefinementCriterion::leaveCell( ...) {
-  if (
-    fineGridCell.isRefined()
-    &&
-    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
-      fineGridVertices, fineGridVerticesEnumerator, Vertex::Records::Unrefined
-    )
-  ) {
-    bool isOneVertexABoundaryVertex = false;
+  if (fineGridCell.isRefined()) {
     dfor2(k)
-      isOneVertexABoundaryVertex |= fineGridVertices[ fineGridVerticesEnumerator(k) ].
-        isBoundary();
+      if (fineGridVertices[ fineGridVerticesEnumerator(k) ].isBoundary() &&
+          fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl()==Vertex::Records::Unrefined) {
+        fineGridVertices[ fineGridVerticesEnumerator(k) ].refine();
+      }
     enddforx
-    if (isOneVertexABoundaryVertex) {
-      dfor2(k)
-        if (fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl()
-          ==Vertex::Records::Unrefined) {
-          fineGridVertices[ fineGridVerticesEnumerator(k) ].refine();
-        }
-      enddforx
-    }
   }
 }
 \end{code}
