@@ -21,6 +21,24 @@ point of view. For this, the framework comes along with a rather useful script.
   \item Recompile your code with \texttt{-DPerformanceAnalysis}. For the
     performance analysis, it usually makes sense to compile with the highest
     optimisation level and to disable \texttt{-DDebug} and \texttt{-DAsserts}.
+  \item Ensure that  you use the \texttt{CommandLineLogger} as output device.
+    This is the default Peano logger, so unless you have written your own log
+    format, no further action should be necessary.
+  \item Ensure that your \texttt{CommandLineLogger} plots the time stamp in a
+    machine-readable way, that it uses tabs or spaces as entry separators, it
+    plots the trace, and it plots the machine name (if you use MPI). There's an operation on the logger that allows you to do
+    exactly this:
+    \begin{code}
+tarch::logging::CommandLineLogger::getInstance().setLogFormat(
+  " ",    // columnSeparator has to be a space or a tab
+  true,   // logTimeStamp has to be set to true
+  ...,    // logTimeStampHumanReadable is not important for the performance analysis
+  true,   // logMachineName has to be true if you profile MPI codes
+  ...,    // logMessageType is not relevant for the performance analysis 
+  true,   // logTrace has to be set
+  ...
+);
+    \end{code} 
   \item Run your code and ensure that \texttt{info} outputs from the
     \texttt{peano::performanceanalysis} component are enabled.
   \item Pipe the output into a file:
@@ -29,9 +47,7 @@ point of view. For this, the framework comes along with a rather useful script.
     \end{code} 
     We call this file \texttt{outputfile.txt} from hereon.
   \item Pass the output file to Peano's performance analysis script written in
-  Python. Besides the script (name), you also have to tell the script how many 
-    MPI ranks you have used and how many threads have been enabled. Skip
-    the arguments if you haven't used MPI.
+  Python. 
     \begin{code}
 > python <mypath>/peano/performanceanalysis/performanceanalysis.py 
     \end{code} 
@@ -39,16 +55,6 @@ point of view. For this, the framework comes along with a rather useful script.
   \item Open the web browser of your choice and the generated files (typically
   your Peano output file with an additional \texttt{html} extension).
 \end{itemize}
-
-\begin{remark}
-Besides the output written by Peano through the component
-\texttt{peano::performanceanalysis}, you also have to use the
-\texttt{CommandLineLogger} (the default), and you have to make this one write
-out time stamps as well as trace information. If you use your own logger or a
-modified log format, the Python script will fail.
-All default logging options work as long as you don't use a log filter for
-\texttt{performanceanalysis}.
-\end{remark}
 
 \begin{remark}
 The present document suggests to pipe all output data from the terminal into a
