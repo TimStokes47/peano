@@ -6,12 +6,9 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
-#ifdef CompilerICC
 #include <malloc.h>
-#else
 #include <stdio.h>
 #include <stdlib.h>
-#endif
 
 
 
@@ -30,8 +27,18 @@ namespace peano {
      * class, the two functions allocate and deallocate are thus completely
      * rewritten.
      *
+     * Sice we do not support Windows with this allocator,
+     * we always use posix_memalign to allocate aligned memory.
+     * We do that even if _mm_malloc and _mm_free are available
+     * as we have experienced a number of failing allocations
+     * and frees with the _mm_* routines.
+     *
+     * As we use posix_memalign, Alignment must be
+     * always chosen as a multiple of 2.
+     *
      * @param Alignment Alignment of the allocation, e.g. 16. If you set 0,
-     *                  then we use the standard C heap management
+     *                  then we use the standard C heap management.
+     *                  Alignment must be a multiple of 2.
      */
     template <class T, size_t Alignment>
     struct HeapAllocator: public std::allocator<T> {
@@ -71,16 +78,8 @@ namespace peano {
 
         if (Alignment==0) {
           p = malloc(n*sizeof(T));
-        }
-        else {
-          #ifdef CompilerICC
-          p = _mm_malloc(n*sizeof(T), Alignment);
-          #elif defined(__APPLE__)
+        } else {
           posix_memalign(&p, Alignment, n*sizeof(T));
-          #else
-          // The arguments here are permuted compared to _mm_alloc
-          p = aligned_alloc(Alignment, n*sizeof(T));
-          #endif
         }
 
         if (!p) {
@@ -89,18 +88,8 @@ namespace peano {
         return static_cast<pointer>(p);
       }
 
-
       void deallocate(pointer p, size_type n) {
-        if (Alignment==0) {
-          free(p);
-        }
-        else {
-          #ifdef CompilerICC
-          _mm_free(p);
-          #else
-          free(p);
-          #endif
-        }
+        free(p);
       }
     };
   }
