@@ -1,10 +1,7 @@
 #include "tarch/la/VectorCompare.h"
 
-
-#if !defined(CompilerICC) and !defined(__APPLE__)
 #include <stdlib.h>
-#endif
-
+#include <stdio.h>
 
 template<int Alignment>
 tarch::logging::Log  peano::heap::AlignedDoubleSendReceiveTask<Alignment>::_log( "peano::heap::AlignedDoubleSendReceiveTask<Alignment>" );
@@ -50,7 +47,8 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::setInvalid() {
 template<int Alignment>
 void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::freeMemory() {
   if (_freeDataPointer && _metaInformation.getLength()>0) {
-    delete[] _data;
+    free(_data);
+    _data = nullptr;
   }
 }
 
@@ -75,19 +73,15 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::wrapData(const double
   _freeDataPointer = true;
   _data            = nullptr;
 
-  #ifdef CompilerICC
-  _data = static_cast<double *>(_mm_malloc(_metaInformation.getLength()*sizeof(double), Alignment));
-  #elif defined(__APPLE__)
-  posix_memalign(&_data, Alignment, _metaInformation.getLength()*sizeof(double));
-  #else
-  // The arguments here are permuted compared to _mm_alloc
-  _data = static_cast<double *>(aligned_alloc(Alignment, _metaInformation.getLength()*sizeof(double)));
-  #endif
+  void* p = nullptr;
+  posix_memalign(&p, Alignment, _metaInformation.getLength()*sizeof(double));
 
-  if (_data==nullptr) {
+  if (p==nullptr) {
     logError( "wrapData(DataVectorType)", "memory allocation failed. Terminate" );
     exit(-1);
   }
+  _data = static_cast<double*>(p);
+  p = nullptr;
 
   for (int i=0; i<_metaInformation.getLength(); i++) {
     _data[i] = data[i];
@@ -127,19 +121,15 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::triggerReceive(int ta
 
   _data = nullptr;
   
-  #ifdef CompilerICC
-  _data = static_cast<double *>(_mm_malloc(_metaInformation.getLength()*sizeof(double), Alignment));
-  #elif defined(__APPLE__)
-  posix_memalign(&_data, Alignment, _metaInformation.getLength()*sizeof(double));
-  #else
-  // The arguments here are permuted compared to _mm_alloc
-  _data = static_cast<double *>(aligned_alloc(Alignment, _metaInformation.getLength()*sizeof(double)));
-  #endif
+  void* p = nullptr;
+  posix_memalign(&p, Alignment, _metaInformation.getLength()*sizeof(double));
 
-  if (_data==nullptr) {
+  if (p==nullptr) {
     logError( "triggerReceive(int)", "memory allocation failed. Terminate" );
     exit(-1);
   }
+  _data = static_cast<double*>(p);
+  p = nullptr;
 
   const int  result = MPI_Irecv(
     _data, _metaInformation.getLength(), MPI_DOUBLE,
@@ -156,30 +146,6 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::triggerReceive(int ta
   logTraceOut( "triggerReceive(int)" );
   #endif
 }
-
-
-/*
-template<int Alignment>
-std::vector< double, peano::heap::HeapAllocator<double, Alignment > > peano::heap::AlignedDoubleSendReceiveTask<Alignment>::unwrapDataAndFreeMemory() {
-  logTraceInWith1Argument( "unwrapDataAndFreeMemory()", _metaInformation.toString() );
-
-  std::vector< double, peano::heap::HeapAllocator<double, Alignment > > result;
-
-  assertion( _metaInformation.getLength()>=0 );
-  if (_metaInformation.getLength()>0) {
-    assertion( _data!=0 );
-    for (int i=0; i<_metaInformation.getLength(); i++) {
-      result.push_back(_data[i]);
-    }
-
-    delete[] _data;
-  }
-
-  logTraceOutWith1Argument( "unwrapDataAndFreeMemory()", result.size() );
-  return result;
-}
-*/
-
 
 template<int Alignment>
 std::string peano::heap::AlignedDoubleSendReceiveTask<Alignment>::toString() const {
