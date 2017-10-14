@@ -70,6 +70,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   for(typename std::map<int, VectorContainer*>::iterator i = _heapData.begin(); i != _heapData.end(); i++) {
     assertionMsg((*i).second != 0, _name << ": Null-pointer was stored in heap data map.");
     delete (*i).second;
+    (*i).second=nullptr;
   }
   _heapData.clear();
 
@@ -326,6 +327,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   else {
     _heapData[index]->clear();
     delete _heapData[index];
+    _heapData[index]=nullptr;
     _heapData.erase(index);
 
     _deletedHeapIndices.push_back(index);
