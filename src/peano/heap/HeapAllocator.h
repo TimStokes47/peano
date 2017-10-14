@@ -6,11 +6,8 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
-#include <malloc.h>
-#include <stdio.h>
 #include <stdlib.h>
-
-
+#include <stdio.h>
 
 namespace peano {
   namespace heap {
