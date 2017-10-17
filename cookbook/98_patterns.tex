@@ -213,31 +213,55 @@ We illustrate the behaviour with a brief cartoon story:
 
 \noindent
 The algorithmic pattern is straightforward to implement with the vertex analysis
-routines:
+routines.
+Please note that this code fragment/pattern also erases along the boundary:
 \begin{code}
 #include "peano/grid/aspects/VertexStateAnalysis.h"
 
 void boxmg::mappings::RefinementCriterion::leaveCell( ...) {
-  if (
-    fineGridCell.isRefined()
+ if (fineGridCell.isRefined()) {
+  bool oneInnerVertexIsRefined      = false;
+  bool allInnerVerticesAreUnrefined = true;
+  dfor2(k)
+   oneInnerVertexIsRefined |= 
+    (
+    fineGridVertices[ fineGridVerticesEnumerator(k) ].isInside() 
     &&
-    peano::grid::aspects::VertexStateAnalysis::doesOneVertexCarryRefinementFlag(
-      fineGridVertices, fineGridVerticesEnumerator, Vertex::Records::Unrefined
-    )
-  ) {
-    bool isOneVertexABoundaryVertex = false;
-    dfor2(k)
-      isOneVertexABoundaryVertex |= fineGridVertices[ fineGridVerticesEnumerator(k) ].
-        isBoundary();
-    enddforx
-    if (isOneVertexABoundaryVertex) {
-      dfor2(k)
-        if (fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl()
-          ==Vertex::Records::Unrefined) {
-          fineGridVertices[ fineGridVerticesEnumerator(k) ].refine();
-        }
-      enddforx
+    fineGridVertices[ fineGridVerticesEnumerator(k)].getRefinementControl()
+     ==Vertex::Records::Refined
+    ); 
+   allInnerVerticesAreUnrefined &= 
+    (
+    !fineGridVertices[ fineGridVerticesEnumerator(k) ].isInside()
+    ||
+    fineGridVertices[ fineGridVerticesEnumerator(k)].getRefinementControl()
+     ==Vertex::Records::Unrefined
+    ); 
+  enddforx
+
+  // ensure boundary is refined
+  if (oneInnerVertexIsRefined) {
+   dfor2(k)
+    if (
+     fineGridVertices[ fineGridVerticesEnumerator(k) ].isBoundary() &&
+     fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl() 
+      == exahype::Vertex::Records::Unrefined) { 
+      fineGridVertices[fineGridVerticesEnumerator(k) ].refine(); 
     }
+   enddforx
   }
+  
+  // erase boundary again
+  if (allInnerVerticesAreUnrefined) {
+   dfor2(k)
+    if (
+     fineGridVertices[ fineGridVerticesEnumerator(k) ].isBoundary() &&
+     fineGridVertices[ fineGridVerticesEnumerator(k) ].getRefinementControl() 
+      == exahype::Vertex::Records::Refined) { 
+      fineGridVertices[fineGridVerticesEnumerator(k) ].erase(); 
+    }
+   enddforx
+  }
+ }    
 }
 \end{code}
