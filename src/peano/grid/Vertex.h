@@ -385,6 +385,24 @@ class peano::grid::Vertex {
     /**
      * Save and clear adjacency information
      *
+     * Adjacency information is kind of state information about the surrounding
+     * of a vertex. It is analysed per traversal. This routine takes the
+     * adjacency information and backs it up into a non-persistent field. From
+     * hereon, getAdjacentCellsHeightOfPreviousIteration() allows access to the
+     * grid state information, while a new flag (accessible through
+     * getCurrentAdjacentCellsHeight(), e.g.) is used to analyse the current
+     * grid's state.
+     *
+     * The routine is consequently invoked per vertex load.
+     *
+     * <h2> Marker semantics </h2>
+     *
+     * For details on the marker semantics, please consult
+     *
+     * @see peano::grid::CellFlags
+     *
+     * <h2> Implementation </h2>
+     *
      * - Store the current adjacency information into the field holding the last iteration's record.
      * - If the vertex is unrefined, set current height to zero.
      * - Else if the vertex is not stationary, set the current height to instationary.
@@ -405,7 +423,7 @@ class peano::grid::Vertex {
      * in CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch::performVertexTransition()
      * while the invalidation is done in LoadVerticesOnRegularRefinedPatch::loadVerticesOfOneCellAtBoundaryofSubtree().
      *
-     * !!! Parallel remarks
+     * <h2> Parallelisation remarks </h2>
      *
      * The bottom-up vertex state analysis does not really work along parallel
      * boundaries: Those vertices are sent away at the end of the traversal and
@@ -417,9 +435,13 @@ class peano::grid::Vertex {
     void saveAndClearAdjacentCellsInformation();
 
     /**
-     * @see
+     * @see saveAndClearAdjacentCellsInformation()
      */
     peano::grid::CellFlags getCurrentAdjacentCellsHeight() const;
+
+    /**
+     * @see saveAndClearAdjacentCellsInformation()
+     */
     peano::grid::CellFlags getAdjacentCellsHeightOfPreviousIteration() const;
 
     /**
