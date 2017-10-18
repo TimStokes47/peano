@@ -94,6 +94,7 @@ namespace peano {
  * to be const. Instead, we have to use the parallel_reduce even though we
  * merge the copies ourself in the destructors.
  *
+ *
  * <h2> Serial runs </h2>
  *
  * If the code is running serial, the loop body is not copied at all. If the
@@ -176,6 +177,13 @@ class peano::datatraversal::dForLoop {
         void operator() (const dForRange& range);
 
         /**
+         * A loopInstance wrapper for the LoopBody operator()
+         * Allows for convenient use of the padding and offset functionality of a
+         * LoopInstance
+        */
+        void operator() (const tarch::la::Vector<DIMENSIONS,int>& range);
+
+        /**
          * Maps TBB's join onto mergeWithWorkerThread
          */
         void join(const dForLoopInstance&  with);
@@ -222,6 +230,7 @@ class peano::datatraversal::dForLoop {
         dForLoopInstanceWithoutReduction( const dForLoopInstanceWithoutReduction& loopBody, SplitFlag );
 
         void operator() (const dForRange& range) const;
+        void operator() (const tarch::la::Vector<DIMENSIONS,int>& range) const;
     };
 
     void runSequentially(
