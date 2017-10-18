@@ -15,6 +15,14 @@ peano::datatraversal::TaskSet::TaskSet(
     Task* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) Task(myTask);
 
     tbb::task::enqueue(*tbbTask);
+  /* Will not correctly launch background task */
+  // #elif defined(SharedOMP)
+  //   #pragma omp parallel
+  //   #pragma omp single
+  //   {
+  //     #pragma omp task
+  //     myTask();
+  //   }
   #else
   myTask();
   #endif

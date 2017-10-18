@@ -3,6 +3,7 @@
 #include "peano/utils/Loop.h"
 #include "peano/utils/PeanoOptimisations.h"
 #include "peano/performanceanalysis/Analysis.h"
+#include <iostream>
 
 #ifdef SharedTBB
 #include "tbb/parallel_reduce.h"
@@ -55,7 +56,6 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
   if (grainSize==0) {
     colouring = Serial;
   }
-
   if (colouring==Serial) {
     runSequentially(range,body);
   }
@@ -82,9 +82,11 @@ void peano::datatraversal::dForLoop<LoopBody>::runSequentially(
   const int rangeVolume = tarch::la::volume(range);
   assertion1( tarch::la::volume(range)>0, range ); 
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,rangeVolume);
+
   dfor(i,range) {
     loopBody(i);
   }
+
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(0,-rangeVolume);
 }
 
@@ -108,33 +110,80 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
     );
     loopInstance.mergeIntoMasterThread(loopBody);
     #elif SharedOMP
-    std::vector<dForRange> ranges = createRangesVector(range, grainSize);
-    #pragma omp parallel
-    {
-      dForLoopInstance loopInstance(loopBody,0,1);
-      #pragma omp for schedule(dynamic, 1) 
-      for( int i=0; i < (int)(ranges.size()); i++ ){
-        loopInstance(ranges[i]);
+      #pragma omp parallel 
+      {
+        dForLoopInstance loopInstance(loopBody,0,1);
+        #if DIMENSIONS == 2
+          const int maxI = range[1];
+          const int maxJ = range[0];
+          #pragma omp for collapse(DIMENSIONS) schedule(dynamic, grainSize)
+          for (int i=0; i < maxI; i++) {
+            for (int j=0; j < maxJ; j++) {
+              loopInstance(tarch::la::Vector<DIMENSIONS,int>(j,i));
+            }
+          }
+        #elif DIMENSIONS == 3
+          const int maxI = range[2];
+          const int maxJ = range[1];
+          const int maxK = range[0];
+          #pragma omp for collapse(DIMENSIONS) schedule(dynamic, grainSize)
+          for (int i=0; i < maxI; i++) {
+            for (int j=0; j < maxJ; j++) {
+              for (int k=0; k < maxK; k++) {
+                loopInstance(tarch::la::Vector<DIMENSIONS,int>(k,j,i));
+              }
+            }
+          }
+        #else
+          std::vector<dForRange> ranges = createRangesVector(range, grainSize);
+          #pragma omp for schedule(dynamic, grainSize)
+          for( int i=0; i < (int)(ranges.size()); i++ ){
+            loopInstance(ranges[i]);
+          }
+        #endif
+        #pragma omp critical
+        loopInstance.mergeIntoMasterThread(loopBody);
       }
-      #pragma omp critical
-      loopInstance.mergeIntoMasterThread(loopBody);
-    }
     #endif
   }
   else {
-    dForLoopInstanceWithoutReduction  loopInstance(loopBody,0,1);
     #ifdef SharedTBB
+    dForLoopInstanceWithoutReduction  loopInstance(loopBody,0,1);
     tbb::parallel_for(
       dForRange( range, grainSize ),
       loopInstance,
       TBBPartitioner
     );
     #elif SharedOMP
-    std::vector<dForRange> ranges = createRangesVector(range, grainSize);
-    #pragma omp parallel for schedule(dynamic, 1)
-    for( int i=0; i < (int)(ranges.size()); i++ ){
-      loopInstance(ranges[i]);
-    }
+      #if DIMENSIONS == 2
+        const int maxI = range[1];
+        const int maxJ = range[0];
+        #pragma omp parallel for collapse(DIMENSIONS) schedule(dynamic, grainSize)
+        for (int i=0; i < maxI; i++) {
+          for (int j=0; j < maxJ; j++) {
+          loopBody(tarch::la::Vector<DIMENSIONS,int>(j,i));
+        }
+      }
+      #elif DIMENSIONS == 3
+        const int maxI = range[2];
+        const int maxJ = range[1];
+        const int maxK = range[0];
+        #pragma omp parallel for collapse(DIMENSIONS) schedule(dynamic, grainSize)
+        for (int i=0; i < maxI; i++) {
+          for (int j=0; j < maxJ; j++) {
+            for (int k=0; k < maxK; k++) {
+              loopBody(tarch::la::Vector<DIMENSIONS,int>(k,j,i));
+            }
+          }
+        }
+      #else
+        dForLoopInstanceWithoutReduction  loopInstance(loopBody,0,1);
+        std::vector<dForRange> ranges = createRangesVector(range, grainSize);
+        #pragma omp parallel for schedule(dynamic, 1)
+        for( int i=0; i < (int)(ranges.size()); i++ ){
+          loopInstance(ranges[i]);
+        }
+      #endif
     #endif
   }
   
@@ -176,55 +225,111 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
         TBBPartitioner
       );
       #elif SharedOMP
-      std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
-
-      #pragma omp parallel for schedule(dynamic, 1)
-      for( int i=0; i < (int)(ranges.size()); i++ ){
-        loopInstance(ranges[i]);
-      }
+        #if DIMENSIONS == 2
+          const int maxI = localRange[1];
+          const int maxJ = localRange[0];
+          #pragma omp parallel for collapse(DIMENSIONS) schedule(dynamic, grainSize)
+          for (int i=0; i < maxI; i++) {
+            for (int j=0; j < maxJ; j++) {
+              loopInstance(tarch::la::Vector<DIMENSIONS,int>(j,i));
+            }
+          }
+        #elif DIMENSIONS == 3
+          const int maxI = localRange[2];
+          const int maxJ = localRange[1];
+          const int maxK = localRange[0];
+          #pragma omp parallel for schedule(dynamic, grainSize)
+          for (int i=0; i < maxI; i++) {
+            for (int j=0; j < maxJ; j++) {
+              for (int k=0; k < maxK; k++) {
+                loopInstance(tarch::la::Vector<DIMENSIONS,int>(k,j,i));
+              }
+            }
+          }
+        #else
+          std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
+          #pragma omp parallel for schedule(dynamic, 1)
+          for( int i=0; i < (int)(ranges.size()); i++ ){
+            loopInstance(ranges[i]);
+          }
+        #endif
       #else
       assertion(false);
       #endif
     }
   }
   else {
-    dForLoopInstance loopInstance(loopBody,0,colouring);
-    dfor(k,colouring) {
-      tarch::la::Vector<DIMENSIONS,int> localRange = range;
-      for (int d=0; d<DIMENSIONS; d++) {
-        const int rangeModColouring = localRange(d)%colouring;
-        if (rangeModColouring!=0 && k(d)<rangeModColouring) {
-          localRange(d) = localRange(d) / colouring + 1;
+    #ifdef SharedTBB
+      dForLoopInstance loopInstance(loopBody,0,colouring);
+      dfor(k,colouring) {
+        tarch::la::Vector<DIMENSIONS,int> localRange = range;
+        for (int d=0; d<DIMENSIONS; d++) {
+          const int rangeModColouring = localRange(d)%colouring;
+          if (rangeModColouring!=0 && k(d)<rangeModColouring) {
+            localRange(d) = localRange(d) / colouring + 1;
+          }
+          else {
+            localRange(d) /= colouring;
+          }
+          assertion4( localRange(d)>=1, range, localRange, k, grainSize );
         }
-        else {
-          localRange(d) /= colouring;
-        }
-        assertion4( localRange(d)>=1, range, localRange, k, grainSize );
+        loopInstance.setOffset(k);
+        tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance, TBBPartitioner );
       }
-      loopInstance.setOffset(k);
-      #ifdef SharedTBB
-      tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance, TBBPartitioner );
-      #elif SharedOMP
-      std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
+      loopInstance.mergeIntoMasterThread(loopBody);
+    #endif
 
-      #pragma omp parallel firstprivate(loopInstance) 
+    #ifdef SharedOMP
+      #pragma omp parallel
       {
-        #pragma omp for schedule(dynamic, 1) 
-        for( int i=0; i < (int)(ranges.size()); i++ ){
-          loopInstance(ranges[i]);
+        dForLoopInstance loopInstance(loopBody,0,colouring);
+        dfor(k, colouring) {
+          tarch::la::Vector<DIMENSIONS,int> localRange = range;
+          for (int d=0; d<DIMENSIONS; d++) {
+            const int rangeModColouring = localRange(d)%colouring;
+            if (rangeModColouring!=0 && k(d)<rangeModColouring) {
+              localRange(d) = localRange(d) / colouring + 1;
+            }
+            else {
+              localRange(d) /= colouring;
+            }
+            assertion4( localRange(d)>=1, range, localRange, k, grainSize );
+          }
+          loopInstance.setOffset(k);
+          #if DIMENSIONS == 2
+            const int maxI = localRange[1];
+            const int maxJ = localRange[0];
+            #pragma omp for collapse(DIMENSIONS) schedule(dynamic, grainSize)
+            for (int i=0; i < maxI; i++) {
+              for (int j=0; j < maxJ; j++) {
+                loopInstance(tarch::la::Vector<DIMENSIONS,int>(j,i));
+              }
+            }
+          #elif DIMENSIONS == 3
+            const int maxI = localRange[2];
+            const int maxJ = localRange[1];
+            const int maxK = localRange[0];
+            #pragma omp for collapse(DIMENSIONS) schedule(dynamic, grainSize)
+            for (int i=0; i < maxI; i++) {
+              for (int j=0; j < maxJ; j++) {
+                for (int k=0; k < maxK; k++) {
+                  loopInstance(tarch::la::Vector<DIMENSIONS,int>(k,j,i));
+                }
+              }
+            }
+          #else
+            std::vector<dForRange> ranges = createRangesVector(localRange, grainSize);
+            #pragma omp for schedule(dynamic, 1) 
+            for( int i=0; i < (int)(ranges.size()); i++ ){
+              loopInstance(ranges[i]);
+            }
+          #endif
         }
         #pragma omp critical
         loopInstance.mergeIntoMasterThread(loopBody);
       }
-      #else
-      assertion(false);
-      #endif
-    }
-    #ifdef SharedTBB
-    loopInstance.mergeIntoMasterThread(loopBody);
     #endif
   }
-  
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring)/grainSize,-tarch::la::volume(range)/tarch::la::aPowI(DIMENSIONS,colouring));
 }
 
@@ -248,7 +353,6 @@ std::vector<peano::datatraversal::dForRange> peano::datatraversal::dForLoop<Loop
       }
     }
   } while(dividedRange);
-
   return ranges;
 }
 
@@ -286,6 +390,14 @@ void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::operator() (con
   logTraceOutWith1Argument( "dForLoopInstance::operator()", range.toString() );
 }
 
+template <class LoopBody>
+void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::operator() (const tarch::la::Vector<DIMENSIONS,int>& range) {
+  logTraceInWith1Argument( "dForLoopInstance::operator()", range.toString() );
+
+  _loopBody(range*_padding + _offset);
+
+  logTraceOutWith1Argument( "dForLoopInstance::operator()", range.toString() );
+}
 
 template <class LoopBody>
 void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstance::join(const dForLoopInstance&  with) {
@@ -335,6 +447,15 @@ void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstanceWithoutReduction:
     //    _loopBody( (i + range.getOffset())*_padding + _offset );
     const_cast<LoopBody&>(_loopBody)( (i + range.getOffset())*_padding + _offset );
   }
+
+  logTraceOutWith1Argument( "dForLoopInstance::operator()", range.toString() );
+}
+
+template <class LoopBody>
+void peano::datatraversal::dForLoop<LoopBody>::dForLoopInstanceWithoutReduction::operator() (const tarch::la::Vector<DIMENSIONS,int>& range) const {
+  logTraceInWith1Argument( "dForLoopInstance::operator()", range.toString() );
+  
+  const_cast<LoopBody&>(_loopBody)(range*_padding + _offset);
 
   logTraceOutWith1Argument( "dForLoopInstance::operator()", range.toString() );
 }
