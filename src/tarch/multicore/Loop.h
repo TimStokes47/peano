@@ -1,5 +1,8 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
+#ifndef _TARCH_MULTICORE_LOOP_H_
+#define _TARCH_MULTICORE_LOOP_H_
+
 #ifdef SharedTBB
 #include "tarch/multicore/tbb/Loop.h"
 #elif SharedOMP
@@ -49,4 +52,5 @@ ProblemSize/tarch::multicore::Core::getInstance().getNumberOfThreads()
 #define endpfor }
 
 
+#endif
 #endif
