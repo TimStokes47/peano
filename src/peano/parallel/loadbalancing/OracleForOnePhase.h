@@ -74,7 +74,7 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      * realise this is to write a time stamp within this method, as this method
      * is invoked exactly once per traversal.
      *
-     * @see Oracle
+     * @see Oracle::receivedStartCommand()
      *
      * @param commandFromMaster Usually is a value from the enum LoadBalancingFlag
      */
@@ -112,7 +112,7 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      * receiveDataFromWorker command that you might wanna use to instruct your
      * oracle on further load balancing decisions.
      *
-     * @see Oracle
+     * @see Oracle::getCommandForWorker()
      */
     virtual LoadBalancingFlag getCommandForWorker( int workerRank, bool forkIsAllowed, bool joinIsAllowed ) = 0;
 
@@ -133,12 +133,12 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
     virtual OracleForOnePhase* createNewOracle(int adapterNumber) const = 0;
 
     /**
-     * @see Oracle
+     * @see Oracle::forkFailed()
      */
     virtual void forkFailed() = 0;
 
     /**
-     * @see Oracle
+     * @see Oracle::getRegularLevelAlongBoundary()
      */
     virtual int getRegularLevelAlongBoundary() const = 0;
 };
