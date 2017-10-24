@@ -1,7 +1,5 @@
 #include "peano/datatraversal/TaskSet.h"
 
-#include "tarch/multicore/MulticoreDefinitions.h"
-
 
 #ifdef SharedTBB
 #include <tbb/parallel_invoke.h>

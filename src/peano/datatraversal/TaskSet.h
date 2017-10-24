@@ -4,6 +4,9 @@
 #define _PEANO_DATA_TRAVERSAL_TASK_SET_H_
 
 
+#include "tarch/multicore/MulticoreDefinitions.h"
+
+
 #ifdef SharedTBB
 #include <tbb/task.h>
 #endif
