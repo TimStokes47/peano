@@ -5,7 +5,7 @@
 
 #include <sstream>
 
-#if !defined(SharedTBB) && !defined(SharedOMP) && defined(CompilerHasTimespec)
+#if !defined(SharedTBB) && !defined(SharedTBBInvade) && !defined(SharedOMP) && defined(CompilerHasTimespec)
 namespace tarch {
   namespace timing {
     /**

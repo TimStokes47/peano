@@ -12,7 +12,7 @@
 
 
 #ifdef SharedTBBInvade
-#include "tarch/multicore/tbb/InvasiveCore.h"
+#include "tarch/multicore/tbb/Core.h"
 #elif SharedTBB
 #include "tarch/multicore/tbb/Core.h"
 #elif SharedOMP
@@ -195,7 +195,7 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
 
   std::ostringstream buildString;
   buildString << "build: ";
-  #if defined(SharedTBB)
+  #if defined(SharedTBB) || defined(SharedTBBInvade)
   buildString << "multicore=tbb ";
   #elif defined(SharedOMP)
   buildString << "multicore=openMP ";

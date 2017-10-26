@@ -1,7 +1,7 @@
 #include "peano/datatraversal/TaskSet.h"
 
 
-#ifdef SharedTBB
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 #include <tbb/parallel_invoke.h>
 
 
@@ -17,7 +17,7 @@ peano::datatraversal::TaskSet::TaskSet(
 ) {
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(2,2);
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     tbb::parallel_invoke(
       function1,
       function2
@@ -53,7 +53,7 @@ peano::datatraversal::TaskSet::TaskSet(
 ) {
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(3,3);
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     tbb::parallel_invoke(
       function1,
       function2,
@@ -95,7 +95,7 @@ peano::datatraversal::TaskSet::TaskSet(
 ) {
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(4,4);
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     tbb::parallel_invoke(
       function1,
       function2,
@@ -143,7 +143,7 @@ peano::datatraversal::TaskSet::TaskSet(
 ) {
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(4,4);
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     tbb::parallel_invoke(
       function1,
       function2,

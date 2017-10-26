@@ -145,7 +145,7 @@ class peano::datatraversal::dForLoop {
          * distinguish the split constructor from a standard
          * copy constructor.
          */
-        #if defined(SharedTBB)
+        #if defined(SharedTBB) || defined(SharedTBBInvade)
         typedef tbb::split   SplitFlag;
         #else
         typedef int          SplitFlag;
@@ -213,7 +213,7 @@ class peano::datatraversal::dForLoop {
          * distinguish the split constructor from a standard
          * copy constructor.
          */
-        #if defined(SharedTBB)
+        #if defined(SharedTBB) || defined(SharedTBBInvade)
         typedef tbb::split   SplitFlag;
         #else
         typedef int          SplitFlag;

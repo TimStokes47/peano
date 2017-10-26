@@ -54,13 +54,6 @@ void peano::shutdownParallelEnvironment() {
 
 int peano::initSharedMemoryEnvironment() {
   #ifdef SharedMemoryParallelisation
-    #if defined(SharedTBBInvade)
-    SHMController::cleanup();
-
-    #ifdef Parallel
-    MPI_Barrier(MPI_COMM_WORLD);
-    #endif
-    #endif
   if ( tarch::multicore::Core::getInstance().isInitialised() ) {
     return 0;
   }

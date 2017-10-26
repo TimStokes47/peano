@@ -1,6 +1,6 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#if !defined(_TARCH_MULTICORE_TBB_CORE_H_) && defined(SharedTBB) && !defined(SharedTBBInvade)
+#if !defined(_TARCH_MULTICORE_TBB_CORE_H_) && defined(SharedTBB)
 #define _TARCH_MULTICORE_TBB_CORE_H_
 
 

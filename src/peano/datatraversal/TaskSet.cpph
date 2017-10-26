@@ -9,7 +9,7 @@ peano::datatraversal::TaskSet::TaskSet(
 ) {
   peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
 
-  #if defined(SharedTBB)
+  #if defined(SharedTBB) || defined(SharedTBBInvade)
     typedef GenericTaskWithCopy<Functor> Task;
 
     Task* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) Task(myTask);
@@ -29,7 +29,7 @@ peano::datatraversal::TaskSet::TaskSet(
 }
 
 
-#ifdef SharedTBB
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 template <class Functor>
 peano::datatraversal::TaskSet::GenericTaskWithCopy<Functor>::GenericTaskWithCopy(const Functor&  functor):
   _functor(functor)  {

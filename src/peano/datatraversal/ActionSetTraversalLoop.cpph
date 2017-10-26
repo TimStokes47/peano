@@ -64,7 +64,7 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
   const int maximumPath = traversal.getMaximumPath();
   for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()/grainSize,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     ActionSetTraversalLoopInstance loopInstance(loopBody,traversal.getActionSet(currentStepInPath));
     tbb::parallel_reduce(
       tbb::blocked_range<int>(0,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(),grainSize),
@@ -83,7 +83,7 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
 }
 
 
-#ifdef SharedTBB
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 template <class LoopBody>
 peano::datatraversal::ActionSetTraversalLoop<LoopBody>::ActionSetTraversalLoopInstance::ActionSetTraversalLoopInstance(
   const LoopBody&                         loopBody,

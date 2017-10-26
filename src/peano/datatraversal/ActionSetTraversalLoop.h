@@ -7,7 +7,7 @@
 #include "peano/datatraversal/ActionSetTraversal.h"
 
 
-#ifdef SharedTBB
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 #include <tbb/parallel_reduce.h>
 #include <tbb/blocked_range.h>
 #endif
@@ -53,7 +53,7 @@ class peano::datatraversal::ActionSetTraversalLoop {
       LoopBody&                                        loopBody
     );
 
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     class ActionSetTraversalLoopInstance {
       private:
         LoopBody                                _loopBody;

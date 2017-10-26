@@ -1,6 +1,6 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#if !defined( _TARCH_MULTICORE_BOOLEAN_SEMAPHORE_TBB_H_) && (defined(SharedTBB) || defined(SharedTBBInvade))
+#if !defined( _TARCH_MULTICORE_BOOLEAN_SEMAPHORE_TBB_H_) && defined(SharedTBB)
 #define _TARCH_MULTICORE_BOOLEAN_SEMAPHORE_TBB_H_
 
 
@@ -12,8 +12,6 @@ namespace tarch {
 }
 
 
-
-#if defined(SharedTBB) || defined(SharedTBBInvade)
 
 #include <string>
 #include <tbb/spin_mutex.h>
@@ -76,7 +74,4 @@ class tarch::multicore::BooleanSemaphore {
     static void sendTaskToBack();
 
 };
-#endif
-
-
 #endif

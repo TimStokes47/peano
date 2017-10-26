@@ -17,7 +17,7 @@
 #include <vector>
 #include <map>
 
-#ifdef SharedTBB
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 #include <tbb/cache_aligned_allocator.h>
 #endif
 
@@ -150,13 +150,13 @@ class peano::grid::RegularGridContainer {
      */
     struct LevelData {
       public:
-        #if defined(RegularGridContainerUsesSTDArrays) && !defined(SharedTBB)
+        #if defined(RegularGridContainerUsesSTDArrays) && !defined(SharedTBB) && !defined(SharedTBBInvade)
           std::vector<Vertex>  vertex;
           std::vector<Cell>    cell;
           std::vector<int>     counter;
           std::vector<bool>    isReadFromTemp;
           std::vector<bool>    isToBeWrittenToTemp;
-        #elif defined(RegularGridContainerUsesSTDArrays) && defined(SharedTBB)
+        #elif defined(RegularGridContainerUsesSTDArrays) && (defined(SharedTBB) || defined(SharedTBBInvade))
           std::vector<Vertex,tbb::cache_aligned_allocator<Vertex> >  vertex;
           std::vector<Cell,tbb::cache_aligned_allocator<Cell> >      cell;
           std::vector<int,tbb::cache_aligned_allocator<int> >        counter;

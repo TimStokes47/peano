@@ -7,7 +7,7 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
-#ifdef SharedTBB
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 #include <tbb/task.h>
 #endif
 
@@ -97,7 +97,7 @@ while (!taskHasTerminated) {
  */
 class peano::datatraversal::TaskSet {
   private:
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     static tbb::task_group_context  _backgroundTaskContext;
 
 

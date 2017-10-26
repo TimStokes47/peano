@@ -5,6 +5,8 @@
 
 #ifdef SharedTBB
 #include "tarch/multicore/tbb/Loop.h"
+#elif SharedTBBInvade
+#include "tarch/multicore/invasivetbb/Loop.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Loop.h"
 #else

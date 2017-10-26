@@ -7,8 +7,4 @@
   #define SharedMemoryParallelisation
 #endif
 
-#if defined(SharedTBBInvade)
-  #define SharedTBB
-#endif
-
 #endif

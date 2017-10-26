@@ -4,7 +4,7 @@
 #define _TARCH_MULTICORE_CORE_H_
 
 #if defined(SharedTBBInvade)
-#include "tarch/multicore/tbb/InvasiveCore.h"
+#include "tarch/multicore/invasivetbb/Core.h"
 #elif defined(SharedTBB)
 #include "tarch/multicore/tbb/Core.h"
 #elif SharedOMP

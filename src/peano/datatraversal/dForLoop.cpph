@@ -5,7 +5,7 @@
 #include "peano/performanceanalysis/Analysis.h"
 #include <iostream>
 
-#ifdef SharedTBB
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 #include "tbb/parallel_reduce.h"
 #include "tbb/parallel_for.h"
 
@@ -102,7 +102,7 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(tarch::la::volume(range)/grainSize,tarch::la::volume(range));
 
   if (altersState) {
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     dForLoopInstance loopInstance(loopBody,0,1);
     tbb::parallel_reduce(
       dForRange( range, grainSize ),
@@ -148,7 +148,7 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
     #endif
   }
   else {
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     dForLoopInstanceWithoutReduction  loopInstance(loopBody,0,1);
     tbb::parallel_for(
       dForRange( range, grainSize ),
@@ -219,7 +219,7 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
         assertion4( localRange(d)>=1, range, localRange, k, grainSize );
       }
       loopInstance.setOffset(k);
-      #ifdef SharedTBB
+      #if defined(SharedTBB) || defined(SharedTBBInvade)
       tbb::parallel_for( 
         dForRange( localRange, grainSize ), 
         loopInstance,
@@ -260,7 +260,7 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
     }
   }
   else {
-    #ifdef SharedTBB
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
       dForLoopInstance loopInstance(loopBody,0,colouring);
       dfor(k,colouring) {
         tarch::la::Vector<DIMENSIONS,int> localRange = range;

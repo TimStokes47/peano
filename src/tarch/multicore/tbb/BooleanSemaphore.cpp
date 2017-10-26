@@ -1,4 +1,4 @@
-#if defined(SharedTBB) || defined(SharedTBBInvade)
+#if defined(SharedTBB)
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/logging/Log.h"
 
