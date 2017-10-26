@@ -11,17 +11,14 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
-#ifdef SharedTBB
+#ifdef SharedTBBInvade
+#include "tarch/multicore/tbb/InvasiveCore.h"
+#elif SharedTBB
 #include "tarch/multicore/tbb/Core.h"
-#endif
-
-#ifdef SharedOMP
+#elif SharedOMP
 #include "tarch/multicore/omp/Core.h"
 #endif
 
-#ifdef SharedCobra
-#include "tarch/multicore/cobra/Core.h"
-#endif
 
 #ifdef Parallel
 #include "tarch/parallel/Node.h"
@@ -190,7 +187,7 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
   int numberOfProcesses = 1;
   #endif
 
-  #ifdef SharedMemoryParallelisation
+  #if defined(SharedTBB)
   int numberOfThreads = tarch::multicore::Core::getInstance().getNumberOfThreads();
   #else
   int numberOfThreads = 1;
@@ -202,8 +199,6 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
   buildString << "multicore=tbb ";
   #elif defined(SharedOMP)
   buildString << "multicore=openMP ";
-  #elif SharedCobra
-  buildString << "multicore=cobra ";
   #endif
   buildString << "dim=" << DIMENSIONS;
 
@@ -240,6 +235,9 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
   }
   if (numberOfThreads>0) {
     msg << "threads: " << numberOfThreads;
+    #ifdef SharedTBBInvade
+    msg << "+x";
+    #endif
   }
 
   #ifdef Parallel

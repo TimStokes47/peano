@@ -1,6 +1,6 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#if !defined(_TARCH_MULTICORE_TBB_CORE_H_) && (defined(SharedTBB) || defined(SharedTBBInvade))
+#if !defined(_TARCH_MULTICORE_TBB_CORE_H_) && defined(SharedTBB) && !defined(SharedTBBInvade)
 #define _TARCH_MULTICORE_TBB_CORE_H_
 
 
@@ -8,26 +8,6 @@
 
 #include "tarch/logging/Log.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
-
-
-#if !defined(_TARCH_MULTICORE_SHM_INVADE_H_) && defined(SharedTBBInvade)
-
-#if defined(Asserts)
-  #if !defined(SHM_INVADE_DEBUG) || SHM_INVADE_DEBUG<2
-    #warning It is recommended to set compile flag SHM_INVADE_DEBUG to 2 or bigger if you compile Peano with Asserts
-  #endif
-#endif
-
-#if defined(Debug)
-  #if !defined(SHM_INVADE_DEBUG) || SHM_INVADE_DEBUG<4
-    #warning It is recommended to set compile flag SHM_INVADE_DEBUG to 4 or bigger if you compile Peano with Debug
-  #endif
-#endif
-
-#include "shminvade/SHMInvade.hpp"
-
-
-#endif
 
 
 
@@ -47,10 +27,6 @@ namespace tarch {
  */
 class tarch::multicore::Core {
   private:
-    #if defined(SharedTBBInvade)
-    SHMInvadeRoot _invadeRoot;
-    #endif
-
     Core();
 
     static tarch::logging::Log  _log;
