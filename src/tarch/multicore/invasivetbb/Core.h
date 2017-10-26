@@ -39,7 +39,7 @@ namespace tarch {
  */
 class tarch::multicore::Core {
   private:
-    SHMInvadeRoot _invadeRoot;
+    SHMInvadeRoot     _invadeRoot;
 
     Core();
 
