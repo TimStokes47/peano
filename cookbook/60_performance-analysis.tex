@@ -108,11 +108,31 @@ Peano can manually turn Score-P data aquisition on/off within the code.
 To enable this feature,
 \begin{enumerate}
   \item retranslate your code with \texttt{-DUseScoreP},
-  \item ensure you use the performance analysis as detailed above, and
+  \item ensure you use the performance analysis as detail ed above, and
   \item switch the performance analysis on and off suiting your demands as it is
   detailed in the previous paragraphs.
 \end{enumerate}
 
 
+\noindent
+Internally, Peano's performance analysis deactivates and activates the Score-P
+tracing through
+\begin{code}
+SCOREP_RECORDING_ON()
+SCOREP_RECORDING_OFF()
+\end{code}
+
+\noindent 
+Furthermore, Peano annotates its routines/phases with traces through the 
+\begin{code} 
+SCOREP_USER_REGION("...", SCOREP_USER_REGION_TYPE_FUNCTION)
+\end{code}
+command added as preamble to its core routines. 
+The string is the trace of the routine.
 
 
+To translate an instrumented code, please use
+\begin{code}
+scorep --noonline-access --nocompiler --mpp=mpi  --thread=none --user mpicxx
+scorep --noonline-access --nocompiler --mpp=none  --thread=none --user icpc
+\end{code}
