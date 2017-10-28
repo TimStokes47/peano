@@ -17,6 +17,8 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
+#include "peano/performanceanalysis/ScorePMacros.h"
+
 #if !defined(CompilerICC)
 #include "peano/grid/Grid.cpph"
 #endif
@@ -177,6 +179,7 @@ void __NAMESPACE__::repositories::RepositoryArrayStack::iterate(int numberOfIter
   peano::datatraversal::autotuning::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
   #endif
   
+  SCOREP_USER_REGION( "__NAMESPACE__::repositories::RepositoryArrayStack::iterate::" + _repositoryState.toString( _repositoryState.getAction() ), SCOREP_USER_REGION_TYPE_LOOP )
   for (int i=0; i<numberOfIterations; i++) {
     switch ( _repositoryState.getAction()) {
   __x__NONQUALIFIED_ADAPTER_TYPE__    case __NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__: watch.startTimer(); _gridWith__NONQUALIFIED_ADAPTER_TYPE__.iterate(); watch.stopTimer(); _measure__NONQUALIFIED_ADAPTER_TYPE__CPUTime.setValue( watch.getCPUTime() ); _measure__NONQUALIFIED_ADAPTER_TYPE__CalendarTime.setValue( watch.getCalendarTime() ); break;

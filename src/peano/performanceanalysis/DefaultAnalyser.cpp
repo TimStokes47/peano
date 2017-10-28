@@ -5,9 +5,7 @@
 
 #include "tarch/multicore/Lock.h"
 
-#ifdef UseScoreP
-#include <scorep/SCOREP_User.h>
-#endif
+#include "peano/performanceanalysis/ScorePMacros.h"
 
 
 tarch::logging::Log  peano::performanceanalysis::DefaultAnalyser::_log( "peano::performanceanalysis::DefaultAnalyser" );
@@ -61,14 +59,12 @@ void peano::performanceanalysis::DefaultAnalyser::enable(bool value) {
   _isSwitchedOn=value;
   _concurrencyReportWatch.startTimer();
 
-  #ifdef UseScoreP
   if (value) {
     SCOREP_RECORDING_ON()
   }
   else {
     SCOREP_RECORDING_OFF()
   }
-  #endif
 }
 
 

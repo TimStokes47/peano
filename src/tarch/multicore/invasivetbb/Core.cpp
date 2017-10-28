@@ -10,6 +10,7 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 tarch::multicore::Core::Core():
   _invadeRoot() {
   SHMController::cleanup();
+  // @todo Waere schoen, wenn ich das rausnehmen koennte
   static      SHMInvade s(1);
 }
 
@@ -53,9 +54,7 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
 
 
 int tarch::multicore::Core::getNumberOfThreads() const {
-//  return _numberOfThreads;
-  // @todo
-  return 1;
+  return _invadeRoot.get_num_active_threads();
 }
 
 
