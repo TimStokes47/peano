@@ -18,7 +18,7 @@ void peano::performanceanalysis::SpeedupLaws::addMeasurement( int p, double t ) 
   logInfo( "addMeasurement()", "p=" << p << ", t=" << t );
   #endif
 
-  for (int i=1; i<Entries; i++) {
+  for (int i=Entries-1; i>=1; i--) {
     _p(i) = _p(i-1);
     _t(i) = _t(i-1);
   }
