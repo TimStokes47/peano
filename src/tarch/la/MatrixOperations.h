@@ -45,6 +45,11 @@ namespace tarch {
      */
     template<int Rows, int Cols, typename Scalar>
     Vector<Rows,Scalar> col(const Matrix<Rows,Cols,Scalar>& matrix, int whichColumn);
+
+    template<int Rows, int Cols, typename Scalar>
+    Matrix<Rows,Cols,Scalar> invertEntries (
+      const Matrix<Rows,Cols,Scalar>&  matrix
+    );
   }
 }
 

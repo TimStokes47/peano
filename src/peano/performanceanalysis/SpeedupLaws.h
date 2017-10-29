@@ -5,9 +5,8 @@
 
 
 #include "peano/performanceanalysis/Analyser.h"
-
-
-#include <vector>
+#include "tarch/logging/Log.h"
+#include "tarch/la/Vector.h"
 
 
 namespace peano {
@@ -43,20 +42,24 @@ namespace peano {
  */
 class peano::performanceanalysis::SpeedupLaws {
   private:
-    const int  _MaxEntries;
+    static constexpr int  Entries = 8;
+
+    static tarch::logging::Log _log;
+
     double     _f;
     double     _t1;
 
-    std::vector<double>  _t;
-    std::vector<double>  _p;
+    tarch::la::Vector<Entries, double> _t;
+    tarch::la::Vector<Entries, double> _p;
 
+    int        _samples;
   public:
     /**
      * @param MaxEntries Maximum number of measurements taken into account.
      *        Everytime more entries than this one are added, we remove the
      *        oldest measurement.
      */
-    SpeedupLaws(int MaxEntries=64);
+    SpeedupLaws();
 
     void addMeasurement( int p, double t );
 
