@@ -136,7 +136,7 @@ const __NAMESPACE__::State& __NAMESPACE__::repositories::RepositorySTDStack::get
 
 
 void __NAMESPACE__::repositories::RepositorySTDStack::iterate(int numberOfIterations, bool exchangeBoundaryVertices) {
-  SCOREP_USER_REGION( std::string("__NAMESPACE__::repositories::RepositorySTDStack::iterate() - ") + _repositoryState.toString( _repositoryState.getAction() ), SCOREP_USER_REGION_TYPE_FUNCTION)
+  SCOREP_USER_REGION( (std::string("__NAMESPACE__::repositories::RepositorySTDStack::iterate() - ") + _repositoryState.toString( _repositoryState.getAction() )).c_str(), SCOREP_USER_REGION_TYPE_FUNCTION)
 
   tarch::timing::Watch watch( "__NAMESPACE__::repositories::RepositorySTDStack", "iterate(bool)", false);
   
