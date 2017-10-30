@@ -131,8 +131,14 @@ command added as preamble to its core routines.
 The string is the trace of the routine.
 
 
-To translate an instrumented code, please use
+To translate an instrumented\footnote{
+  We have faces issues with installing Score-P on our OpenSUSE installations which went away when I changed into 
+  \texttt{/lib64} and created a link there: \texttt{ln -s libz.so.1 libz.so}.
+} 
+code, please use
 \begin{code}
 scorep --noonline-access --nocompiler --mpp=mpi  --thread=none --user mpicxx
 scorep --noonline-access --nocompiler --mpp=none  --thread=none --user icpc
 \end{code}
+
+
