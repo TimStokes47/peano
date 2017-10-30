@@ -8,6 +8,7 @@
 
 
 #include "peano/performanceanalysis/Analysis.h"
+#include "peano/performanceanalysis/ScorePMacros.h"
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
@@ -384,6 +385,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   int                                           level,
   MessageType                                   messageType
 ) {
+  SCOREP_USER_REGION("peano::heap::Heap::sendData()", SCOREP_USER_REGION_TYPE_FUNCTION)
   logTraceInWith5Arguments( "sendData(...)", _name, toRank, position, level, data.size() );
 
   #ifdef Parallel
@@ -475,6 +477,8 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::receiveDanglingMessages() {
+  SCOREP_USER_REGION("peano::heap::Heap::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   #ifdef Parallel
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
@@ -517,6 +521,8 @@ template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, clas
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::startToSendSynchronousData() {
   logTraceInWith1Argument( "startToSendSynchronousData(bool)", _name );
 
+  SCOREP_USER_REGION("peano::heap::Heap::startToSendSynchronousData()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   #ifdef Parallel
   _masterWorkerExchanger.startToSendData();
   _joinForkExchanger.startToSendData();
@@ -529,6 +535,8 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::startToSendBoundaryData(bool isTraversalInverted) {
   logTraceInWith1Argument( "startToSendBoundaryData(bool)", _name );
+
+  SCOREP_USER_REGION("peano::heap::Heap::startToSendBoundaryData()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
   #ifdef Parallel
   peano::performanceanalysis::Analysis::getInstance().beginToPrepareAsynchronousHeapDataExchange();
@@ -552,6 +560,8 @@ template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, clas
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::finishedToSendSynchronousData() {
   logTraceInWith1Argument( "finishedToSendSynchronousData()", _name );
 
+  SCOREP_USER_REGION("peano::heap::Heap::finishedToSendSynchronousData()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   #ifdef Parallel
   peano::performanceanalysis::Analysis::getInstance().beginToReleaseSynchronousHeapData();
 
@@ -568,6 +578,8 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::finishedToSendBoundaryData(bool isTraversalInverted) {
   logTraceInWith1Argument( "finishedToSendBoundaryData()", _name );
+
+  SCOREP_USER_REGION("peano::heap::Heap::finishedToSendBoundaryData()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
   #ifdef Parallel
   for (

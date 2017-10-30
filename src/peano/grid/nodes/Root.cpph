@@ -247,6 +247,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   State&  state,
   bool    skipMPICalls
 ) {
+  SCOREP_USER_REGION("peano::grid::nodes::Root::receiveCellAndVerticesFromMaster()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   logTraceIn( "receiveCellAndVerticesFromMaster(...)" );
 
   assertion( !tarch::parallel::Node::getInstance().isGlobalMaster() );
@@ -392,6 +394,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   Vertex*                                      fineGridVertices,
   bool                                         skipMPICalls
 ) {
+  SCOREP_USER_REGION("peano::grid::nodes::Root::sendCellAndVerticesToMaster()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   logTraceIn( "sendCellAndVerticesToMaster(...)" );
 
   assertion( !tarch::parallel::Node::getInstance().isGlobalMaster() );
@@ -502,6 +506,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::traverse(State& state) {
+  SCOREP_USER_REGION("peano::grid::nodes::Root::traverse()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   logTraceInWith1Argument( "traverse(State)", state );
 
   #ifdef Parallel

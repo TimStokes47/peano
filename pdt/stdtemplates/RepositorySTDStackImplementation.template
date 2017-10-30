@@ -136,6 +136,8 @@ const __NAMESPACE__::State& __NAMESPACE__::repositories::RepositorySTDStack::get
 
 
 void __NAMESPACE__::repositories::RepositorySTDStack::iterate(int numberOfIterations, bool exchangeBoundaryVertices) {
+  SCOREP_USER_REGION( std::string("__NAMESPACE__::repositories::RepositorySTDStack::iterate() - ") + _repositoryState.toString( _repositoryState.getAction() ), SCOREP_USER_REGION_TYPE_FUNCTION)
+
   tarch::timing::Watch watch( "__NAMESPACE__::repositories::RepositorySTDStack", "iterate(bool)", false);
   
   #ifdef Parallel
@@ -172,7 +174,6 @@ void __NAMESPACE__::repositories::RepositorySTDStack::iterate(int numberOfIterat
   peano::datatraversal::autotuning::Oracle::getInstance().switchToOracle(_repositoryState.getAction());
   #endif
   
-  SCOREP_USER_REGION( "__NAMESPACE__::repositories::RepositorySTDStack::iterate::" + _repositoryState.toString( _repositoryState.getAction() ), SCOREP_USER_REGION_TYPE_LOOP )
   for (int i=0; i<numberOfIterations; i++) {
     switch ( _repositoryState.getAction()) {
   __x__NONQUALIFIED_ADAPTER_TYPE__    case __NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__: watch.startTimer(); _gridWith__NONQUALIFIED_ADAPTER_TYPE__.iterate(); watch.stopTimer(); _measure__NONQUALIFIED_ADAPTER_TYPE__CPUTime.setValue( watch.getCPUTime() ); _measure__NONQUALIFIED_ADAPTER_TYPE__CalendarTime.setValue( watch.getCalendarTime() ); break;

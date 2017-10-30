@@ -95,6 +95,8 @@ int peano::parallel::SendReceiveBufferPool::getIterationDataTag() const {
 
 
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
+  SCOREP_USER_REGION("peano::parallel::SendReceiveBufferPool::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   #if !defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
   receiveDanglingMessagesFromAllBuffersInPool();
   #else
@@ -139,6 +141,8 @@ void peano::parallel::SendReceiveBufferPool::restart() {
 
 
 void peano::parallel::SendReceiveBufferPool::releaseMessages() {
+  SCOREP_USER_REGION("peano::parallel::SendReceiveBufferPool::releaseMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   logTraceInWith1Argument( "releaseMessages()", toString(_mode) );
 
   #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)

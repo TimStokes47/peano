@@ -46,6 +46,8 @@ compile: files.mk $(OBJECTS)
 dist:
 	tar -czf ../pdt.tar.gz MANIFEST.MF Makefile ../pdt.grammar org
 	jar -xf ../lib/jargs.jar
+	rm -rf ../bin/jargs
+	rm -rf ../bin/META-INF
 	mv -f jargs ../bin
 	mv -f META-INF ../bin
 	mkdir ../bin/stdtemplates

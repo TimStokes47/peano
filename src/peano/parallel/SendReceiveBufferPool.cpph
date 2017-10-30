@@ -3,6 +3,8 @@
 #include "peano/parallel/SendReceiveBufferLIFO.h"
 #include "peano/parallel/SendReceiveBufferFIFO.h"
 
+#include "peano/performanceanalysis/ScorePMacros.h"
+
 
 
 template <class Vertex>
@@ -64,6 +66,8 @@ void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, co
 
 template <class Vertex>
 void peano::parallel::SendReceiveBufferPool::sendVertex(const Vertex& vertex, int toRank, const BufferAccessType& bufferAccessType ) {
+  SCOREP_USER_REGION("peano::parallel::SendReceiveBufferPool::sendVertex()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   assertion1( toRank >= 0, tarch::parallel::Node::getInstance().getRank() );
   assertion1( toRank != tarch::parallel::Node::getInstance().getRank(), tarch::parallel::Node::getInstance().getRank() );
 

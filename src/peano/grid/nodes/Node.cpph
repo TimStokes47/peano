@@ -27,6 +27,8 @@
 
 #include "peano/grid/aspects/VertexStateAnalysis.h"
 
+#include "peano/performanceanalysis/ScorePMacros.h"
+
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 tarch::logging::Log peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::_log( "peano::grid::nodes::Node" );
@@ -125,6 +127,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   const SingleLevelEnumerator&              coarseGridVerticesEnumerator,
   const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
 ) const {
+  SCOREP_USER_REGION("peano::grid::nodes::Node::updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree() - wait for vertical data from workers", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   #ifdef Parallel
     const int currentWorker = fineGridCell.getRankOfRemoteNode();
     logTraceInWith3Arguments( "updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(...)", state.toString(), fineGridCell.toString(), currentWorker );
@@ -279,6 +283,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   const SingleLevelEnumerator&              coarseGridVerticesEnumerator,
   const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
 ) const {
+  SCOREP_USER_REGION("peano::grid::nodes::Node::updateCellsParallelStateAfterLoadForRootOfDeployedSubtree() - send vertical data to worker", SCOREP_USER_REGION_TYPE_FUNCTION)
+      
   #ifdef Parallel
     logTraceInWith2Arguments( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree(...)", state.toString(), fineGridCell.toString() );
     dfor2(k)
@@ -407,6 +413,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   const SingleLevelEnumerator&              coarseGridVerticesEnumerator,
   const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
 ) const {
+  SCOREP_USER_REGION("peano::grid::nodes::Node::updateCellsParallelStateAfterLoadIfStateIsForking()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   #ifdef Parallel
     logTraceInWith2Arguments( "updateCellsParallelStateAfterLoadIfStateIsForking(...)", state.toString(), fineGridCell.toString() );
     const std::set<int> forkingRanks= state.getForkingOrJoiningOrTriggeredForRebalancingRanks();
@@ -493,6 +501,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   const SingleLevelEnumerator&              coarseGridVerticesEnumerator,
   const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
 ) const {
+  SCOREP_USER_REGION("peano::grid::nodes::Node::updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   #ifdef Parallel
     logTraceInWith2Arguments( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", state.toString(), fineGridCell.toString() );
     dfor2(k)
@@ -642,6 +652,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   const SingleLevelEnumerator&              coarseGridVerticesEnumerator,
   const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
 ) const {
+  SCOREP_USER_REGION("peano::grid::nodes::Node::updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain()", SCOREP_USER_REGION_TYPE_FUNCTION)
+        
   #ifdef Parallel
     logTraceInWith2Arguments( "updateCellsParallelStateAfterLoadForNewWorkerDueToForkOfExistingDomain(...)", state.toString(), fineGridCell.toString() );
     const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT> localAdjacencyBitset = peano::grid::aspects::VertexStateAnalysis::whichPersistentVerticesAreAdjacentToRank(tarch::parallel::Node::getInstance().getRank(),fineGridVertices,fineGridVerticesEnumerator);
@@ -718,6 +730,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   const SingleLevelEnumerator&              coarseGridVerticesEnumerator,
   const tarch::la::Vector<DIMENSIONS,int>&  fineGridPositionOfCell
 ) const {
+  SCOREP_USER_REGION("peano::grid::nodes::Node::updateCellsParallelStateAfterLoadIfNodeIsJoiningWithMaster()", SCOREP_USER_REGION_TYPE_FUNCTION)
+        
   #ifdef Parallel
     logTraceInWith2Arguments( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithMaster(...)", state.toString(), fineGridCell.toString() );
     dfor2(k)
