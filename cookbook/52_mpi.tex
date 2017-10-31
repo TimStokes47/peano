@@ -839,6 +839,76 @@ elegant code:
 \end{code}
 
 
+\subsection{Batches of iterations and global control workflow}
+
+Peano's standard data flow per sweep reads as follows:
+
+\begin{enumerate}
+  \item The user selects on the global master which type of adapter to use for
+  the next switch. This is controlled via the \texttt{switch} routines on the
+  repository. The repository on the global master remembers the choice.
+  \item The user triggers \texttt{iterate} on the global master. The global
+  master now sends out a copy of the \texttt{RepositoryState} to all other ranks
+  that are not idling. Afterwards, it triggers the local grid traversal on
+  the master rank.
+  \item Each rank's repository received its state and from hereon knows which
+  adapter to use. It switches to this adapter, notifies all oracles and other
+  services about the current adapter choice and fires up the grid traversal.
+\end{enumerate}
+
+\noindent
+Within the grid traversal, the actual user data then is propagated top-down
+within the spacetree between the ranks. 
+We conclude that there are two types of data flow patterns: 
+The repository states are kind of broadcasted and make, once the user calls
+\texttt{iterate} on the global master. 
+Every single rank then starts up its traversal immediately.
+The actual user data then however is propagates along the MPI rank tree.
+This might cause some ranks to wait for all the required information.
+
+
+How critical these waits are can be controlled through the communication
+specification. 
+If you do not require any parent data at all, i.e.~if you mask out master-worker
+data transfer, then you effectively decouple the ranks. 
+As soon as you invoke \texttt{iterate}, all ranks do their traversal.
+An analogous pattern is realised for the reduction, i.e.~for the worker-master
+sends.
+
+
+The repository state object broadcasted prior to any grid sweep holds first of
+all the number of the adapter to be used.
+This number also encodes special states causing all ranks to terminate.
+Besides this information, you can control two further properties through the
+repository's state: data exchange through the vertices (but only data not
+administered manually on the heap) can be switched off, and you can specify each
+rank to run more than one sweep in one rush.
+The latter technique is called {\em batching}.
+
+
+If batching is used, it effectively disables the load balancing for the batch:
+Within one batch, no load rebalancing may happen.
+Batching alone is not of that great use. 
+It shows its potential however when we combine it with an elimination of
+master-worker and worker-master synchronisation.
+If these two synchronisation points are disabled (throught the communication
+specification and \texttt{prepareSendToWorker()}), an \texttt{iterate} with $N$
+iterations means that
+\begin{itemize}
+  \item the global master runs $N$ iterations in one rush.
+  \item the global master informs any non-idle rank that $N$ iterations in a
+  rush are to be done, i.e.~the batch information is exchanged only once. 
+\end{itemize}
+If you have a weak synchronisation of the ranks---the the `optimal' case you
+disable both boundary data exchange and vertical data exchange, i.e.~data
+exchange between workers and masters---then the iterations now might completely
+shift:
+Rank 20 might already be in the sixth traversal while rank 10 still works in its
+second iteration, while both two and six are member of one batch. 
+
+
+
+
 \subsection{Wrap-up, preparatory work and per-sweep pre- and postprocessing
 on a worker}
 
