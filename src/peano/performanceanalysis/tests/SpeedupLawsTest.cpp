@@ -123,7 +123,7 @@ void peano::performanceanalysis::tests::SpeedupLawsTest::testAmdahl3() {
   law.relaxAmdahlsLaw();
 
   validateWithParams2( std::abs(law.getSerialCodeFraction()-f) < 1.0, f,  law.toString());
-  validateWithParams2( std::abs(law.getSerialTime()-t1) < 1.5,         t1, law.toString());
+  validateWithParams2( std::abs(law.getSerialTime()-t1) < 4.0,        t1, law.toString());
 }
 
 

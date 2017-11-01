@@ -45,7 +45,7 @@ namespace peano {
  */
 class peano::performanceanalysis::SpeedupLaws {
   private:
-    static constexpr int  Entries = 2;
+    static constexpr int  Entries = 16;
 
     static tarch::logging::Log _log;
 

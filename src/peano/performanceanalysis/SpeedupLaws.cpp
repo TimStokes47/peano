@@ -56,10 +56,10 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
       tarch::la::Matrix<2,2,double> gradJgradJT;
       gradJgradJT = gradJ * tarch::la::transpose(gradJ);
 
-      tarch::la::Vector<Entries,double>    rhs;
-      rhs = -1.0 * gradJ * y;
+      tarch::la::Vector<2,double>    rhs;
+      rhs = -1.0 * (gradJ * y);
 
-      tarch::la::Vector<Entries,double>    shifts;
+      tarch::la::Vector<2,double>    shifts;
       shifts = tarch::la::invert( gradJgradJT ) * rhs;
 
       // Problem can be ill-posed
