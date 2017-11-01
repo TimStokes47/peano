@@ -20,7 +20,7 @@
   #endif
 #endif
 
-#include "shminvade/SHMInvade.hpp"
+#include "SHMInvade.hpp"
 
 
 namespace tarch {

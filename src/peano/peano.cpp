@@ -12,7 +12,7 @@
 #endif
 
 #if defined(SharedTBBInvade)
-#include "shminvade/SHMInvade.hpp"
+#include "SHMInvade.hpp"
 #endif
 
 

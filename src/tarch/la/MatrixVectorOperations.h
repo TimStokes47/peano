@@ -10,7 +10,6 @@
 
 namespace tarch {
   namespace la {
-
     /**
      * Performs a matrix x vector multiplication.
      *

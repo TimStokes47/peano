@@ -11,17 +11,18 @@
 namespace tarch {
   namespace la {
     /**
-     * Performs an in-situ LU-decomposition of the square matrix A. Adds pivot
-     * line indices.
+     * Performs an in-situ LU-decomposition of the square matrix A. Returns
+     * pivot values, too. The storage format is normalised such that the
+     * diagonal values of the upper triangular matrix are one.
      */
     template<int Rows, typename Scalar>
     void lu (
       Matrix<Rows,Rows,Scalar>&  A,
-      Vector<Rows,Scalar>&       pivots
+      Vector<Rows,int>&          pivots
     );
 
     /**
-     * In-situ LU without pivoting.
+     * In-situ LU without pivoting. See the other lu routine.
      */
     template<int Rows, typename Scalar>
     void lu (
@@ -40,6 +41,12 @@ namespace tarch {
     Vector<Rows,Scalar> backSubstitution(
       const Matrix<Rows,Rows,Scalar>&  R,
       const Vector<Rows,Scalar>&       f
+    );
+
+
+    template<typename Scalar>
+    Matrix<2,2,Scalar> invert(
+      const Matrix<2,2,Scalar>&  R
     );
   }
 }

@@ -20,7 +20,7 @@ tarch::la::Vector<Rows,Scalar>  tarch::la::backSubstitution(
 template<int Rows, typename Scalar>
 void tarch::la::lu (
   Matrix<Rows,Rows,Scalar>&  A,
-  Vector<Rows,Scalar>&       pivots
+  Vector<Rows,int>&          pivots
 ) {
   for (int k=0; k < Rows; k++){
     int maxIndex = k;
@@ -73,4 +73,21 @@ void tarch::la::lu (
       }
     }
   }
+}
+
+
+template<typename Scalar>
+tarch::la::Matrix<2,2,Scalar> tarch::la::invert(
+  const Matrix<2,2,Scalar>&  R
+) {
+  Matrix<2,2,Scalar> result;
+  
+  const double scaling = 1.0/( R(0,0)*R(1,1)-R(0,1)*R(1,0) );
+  
+  result(0,0) =  R(1,1) * scaling;
+  result(0,1) = -R(0,1) * scaling;
+  result(1,0) = -R(1,0) * scaling;
+  result(1,1) =  R(0,0) * scaling;
+  
+  return result;
 }
