@@ -17,15 +17,22 @@ namespace peano {
 class peano::performanceanalysis::tests::SpeedupLawsTest: public tarch::tests::TestCase {
   private:
    /**
-    * Logging device
+    * Test whether an exact solution is reconstructed once many exact values
+    * are given.
     */
-//   static tarch::logging::Log _log;
+    void testAmdahl1();
 
-   /**
-    * This test divides a 4x4 patch of vertices into the appropriate ranges, using a grain size of 1.
-    * Thus, the result should be to have 16 ranges, each holding one vertex.
-    */
-   void testAmdahl1();
+    /**
+     * Test whether an exact solution is reconstructed once we use two, three or
+     * four exact values. We basically check whether the difference to the real
+     * value becomes smaller.
+     */
+    void testAmdahl2();
+
+    /**
+     * The weird case, where the problem is undetermined.
+     */
+    void testAmdahl3();
 
    double getAmdahlPrediction(double t1, double f, double c);
  public:

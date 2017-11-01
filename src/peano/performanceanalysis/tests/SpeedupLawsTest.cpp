@@ -25,6 +25,8 @@ peano::performanceanalysis::tests::SpeedupLawsTest::~SpeedupLawsTest() {
 
 void peano::performanceanalysis::tests::SpeedupLawsTest::run() {
   testMethod( testAmdahl1 );
+  testMethod( testAmdahl2 );
+  testMethod( testAmdahl3 );
 }
 
 
@@ -54,9 +56,76 @@ void peano::performanceanalysis::tests::SpeedupLawsTest::testAmdahl1() {
 
   law.relaxAmdahlsLaw();
 
-  validateEqualsWithParams1(law.getSerialCodeFraction(),f,  law.toString());
-  validateEqualsWithParams1(law.getSerialTime(),        t1, law.toString());
+  validateNumericalEqualsWithParams1(law.getSerialCodeFraction(),f,  law.toString());
+  validateNumericalEqualsWithParams1(law.getSerialTime(),        t1, law.toString());
 }
+
+
+void peano::performanceanalysis::tests::SpeedupLawsTest::testAmdahl2() {
+  const double t1 = 3.0;
+  const double f  = 0.8;
+
+  SpeedupLaws law(0.1);
+
+  int cores = 4;
+  law.addMeasurement( cores, getAmdahlPrediction(t1,f,cores) );
+  law.relaxAmdahlsLaw();
+
+  double differenceT1 = std::abs( t1-law.getSerialTime() );
+  double differenceF  = std::abs( f-law.getSerialCodeFraction() );
+
+  cores = 5;
+  law.addMeasurement( cores, getAmdahlPrediction(t1,f,cores) );
+  law.relaxAmdahlsLaw();
+  validateWithParams5( (std::abs( t1-law.getSerialTime() )        < 2.0*differenceT1), t1, f, std::abs( t1-law.getSerialTime() ),        differenceT1, law.toString() );
+  validateWithParams5( (std::abs( f-law.getSerialCodeFraction() ) < 2.0*differenceF),  t1, f, std::abs( f-law.getSerialCodeFraction() ), differenceF,  law.toString() );
+  differenceT1 = std::abs( t1-law.getSerialTime() );
+  differenceF  = std::abs( f-law.getSerialCodeFraction() );
+
+  cores = 6;
+  law.addMeasurement( cores, getAmdahlPrediction(t1,f,cores) );
+  law.relaxAmdahlsLaw();
+  validateWithParams5( (std::abs( t1-law.getSerialTime() )        < 2.0*differenceT1), t1, f, std::abs( t1-law.getSerialTime() ),        differenceT1, law.toString() );
+  validateWithParams5( (std::abs( f-law.getSerialCodeFraction() ) < 2.0*differenceF),  t1, f, std::abs( f-law.getSerialCodeFraction() ), differenceF,  law.toString() );
+  differenceT1 = std::abs( t1-law.getSerialTime() );
+  differenceF  = std::abs( f-law.getSerialCodeFraction() );
+
+  cores = 7;
+  law.addMeasurement( cores, getAmdahlPrediction(t1,f,cores) );
+  law.relaxAmdahlsLaw();
+  validateWithParams5( (std::abs( t1-law.getSerialTime() )        < 2.0*differenceT1), t1, f, std::abs( t1-law.getSerialTime() ),        differenceT1, law.toString() );
+  validateWithParams5( (std::abs( f-law.getSerialCodeFraction() ) < 2.0*differenceF),  t1, f, std::abs( f-law.getSerialCodeFraction() ), differenceF,  law.toString() );
+  differenceT1 = std::abs( t1-law.getSerialTime() );
+  differenceF  = std::abs( f-law.getSerialCodeFraction() );
+}
+
+
+void peano::performanceanalysis::tests::SpeedupLawsTest::testAmdahl3() {
+  const double t1 = 4.0;
+  const double f  = 0.1;
+
+  SpeedupLaws law(0.1);
+
+  const int cores = 2;
+  law.addMeasurement( cores, 0.9*getAmdahlPrediction(t1,f,cores) );
+  law.relaxAmdahlsLaw();
+
+  validateWithParams2( std::abs(law.getSerialCodeFraction()-f) < 0.1, f,  law.toString());
+  validateWithParams2( std::abs(law.getSerialTime()-t1) < 2.5,        t1, law.toString());
+
+  law.addMeasurement( cores, 1.1*getAmdahlPrediction(t1,f,cores) );
+  law.relaxAmdahlsLaw();
+
+  validateWithParams2( std::abs(law.getSerialCodeFraction()-f) < 0.05, f,  law.toString());
+  validateWithParams2( std::abs(law.getSerialTime()-t1) < 2.0,         t1, law.toString());
+
+  law.addMeasurement( cores, 0.8*getAmdahlPrediction(t1,f,cores) );
+  law.relaxAmdahlsLaw();
+
+  validateWithParams2( std::abs(law.getSerialCodeFraction()-f) < 1.0, f,  law.toString());
+  validateWithParams2( std::abs(law.getSerialTime()-t1) < 1.5,         t1, law.toString());
+}
+
 
 
 #ifdef UseTestSpecificCompilerSettings

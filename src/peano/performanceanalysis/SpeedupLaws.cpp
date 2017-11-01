@@ -16,8 +16,7 @@ peano::performanceanalysis::SpeedupLaws::SpeedupLaws(double f):
 void peano::performanceanalysis::SpeedupLaws::addMeasurement( int p, double t ) {
   assertion( p>0 );
 
-  // @todo Remove Asserts
-  #if defined(Asserts) || defined(PerformanceAnalysis)
+  #if defined(PerformanceAnalysis)
   logInfo( "addMeasurement()", "p=" << p << ", t=" << t );
   #endif
 
@@ -63,31 +62,34 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
       tarch::la::Vector<Entries,double>    shifts;
       shifts = tarch::la::invert( gradJgradJT ) * rhs;
 
-      _f   += shifts(0);
-      _t_1 += shifts(1);
+      // Problem can be ill-posed
+      if (
+        !std::isnan(shifts(0)) &&
+        !std::isnan(shifts(1))
+      ) {
+        _f   += shifts(0);
+        _t_1 += shifts(1);
+      }
     }
 
-    // Constraints
-/*
-    tarch::la::Vector<2,double> newUnknowns;
-      newUnknowns = gradJ * x;
-      if ( newUnknowns(0)<=0.0 ) { // f
-
-      }
-      if ( newUnknowns(0)>=1.0 ) { // f
-
-      }
-      if ( newUnknowns(1)<=1.0 ) { // t
-
-      }
-*/
+    // Problem can be ill-posed or too non-smooth
+    const double margin=1e-4;
+    if (_f<margin) {
+      _f = margin;
+    }
+    if (_f>1.0-margin) {
+      _f = 1.0-margin;
+    }
+    if (_t_1 < margin ) {
+      _t_1 = margin;
+    }
 
     assertion4( _f>=0,    _f, _t_1, _p, _t );
     assertion4( _f<=1.0,  _f, _t_1, _p, _t );
     assertion4( _t_1>0.0, _f, _t_1, _p, _t );
   }
 
-  #if defined(Asserts) || defined(PerformanceAnalysis)
+  #if defined(PerformanceAnalysis)
   logInfo( "relaxAmdahlsLaw()", "f=" << _f << ", t_1=" << _t_1 );
   #endif
 }
