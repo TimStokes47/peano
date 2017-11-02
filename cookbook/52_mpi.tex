@@ -906,7 +906,13 @@ shift:
 Rank 20 might already be in the sixth traversal while rank 10 still works in its
 second iteration, while both two and six are member of one batch. 
 
-
+\begin{remark}
+  The traversal's state offers a routine \texttt{mayUseLazyStateAndDataReceives}
+  which is true for all iterations of a batch besides the very last one. Many
+  codes copy the state in a mapping locally anyway. They can then return
+  mask-out commands through the communication specification if this flag is 
+  set.
+\end{remark}
 
 
 \subsection{Wrap-up, preparatory work and per-sweep pre- and postprocessing
