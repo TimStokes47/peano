@@ -33,6 +33,7 @@ void tarch::multicore::Core::shutDown() {
 void tarch::multicore::Core::configure( int numberOfThreads ) {
   assertion(_basicInvasion != nullptr);
   assertion(numberOfThreads>=0 || numberOfThreads==UseDefaultNumberOfThreads);
+  assertion( numberOfThreads <= _invadeRoot.get_max_available_cores() );
 
   delete _basicInvasion;
   _basicInvasion = new SHMInvade(numberOfThreads);
@@ -40,6 +41,7 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
 
 
 int tarch::multicore::Core::getNumberOfThreads() const {
+  assertion( _invadeRoot.get_num_active_threads() <= _invadeRoot.get_max_available_cores() );
   return _invadeRoot.get_num_active_threads();
 }
 
