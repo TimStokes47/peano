@@ -13,8 +13,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataW
   _identifier(identifier),
   _numberOfUnknowns(numberOfUnknowns) {
   #ifdef HDF5
-  // todo Change
-  logInfo( "VertexDataWriter(...)", "create numberofunknowns entry" );
+  logDebug( "VertexDataWriter(...)", "create numberofunknowns entry" );
 
   /**
    * Create scalar attribute.
@@ -160,7 +159,7 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::Vertex
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter::close() {
-  const int lineLenght = std::pow(_writer._numberOfCellsPerAxis,_writer._dimensions);
+  const int lineLenght = std::pow(_writer._numberOfCellsPerAxis+1,_writer._dimensions);
   #ifdef Asserts
   assertion1( _data.size()%lineLenght == 0, _identifier);
   #endif
@@ -168,8 +167,6 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::Vertex
   assignRemainingVerticesDefaultValues();
 
   #ifdef HDF5
-  assertion1( _data.size()%lineLenght == 0, _identifier);
-
   logDebug( "close()", "create data table of " << _identifier );
 
   //

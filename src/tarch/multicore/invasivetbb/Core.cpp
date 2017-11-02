@@ -35,6 +35,10 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
   assertion(numberOfThreads>=0 || numberOfThreads==UseDefaultNumberOfThreads);
   assertion( numberOfThreads <= _invadeRoot.get_max_available_cores() );
 
+  if (numberOfThreads > _invadeRoot.get_max_available_cores() ) {
+    logWarning( "configure(int)", "requested " << numberOfThreads << " threads on only " << _invadeRoot.get_max_available_cores() << " cores" );
+  }
+
   delete _basicInvasion;
   _basicInvasion = new SHMInvade(numberOfThreads);
 }
