@@ -4,8 +4,6 @@
 
 #include "tarch/multicore/Core.h"
 
-const int tarch::multicore::Core::UseDefaultNumberOfThreads = 0;
-
 
 tarch::multicore::Core::Core() {
 }

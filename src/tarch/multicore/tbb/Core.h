@@ -34,7 +34,7 @@ class tarch::multicore::Core {
     int                         _numberOfThreads;
     ::tbb::task_scheduler_init  _task_scheduler_init;
   public:
-    static const int UseDefaultNumberOfThreads;
+    static constexpr int UseDefaultNumberOfThreads = 0;
 
     /**
      * Destructor

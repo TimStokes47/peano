@@ -8,12 +8,15 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 
 tarch::multicore::Core::Core():
-  _invadeRoot() {
+  _invadeRoot(),
+  _basicInvasion( new SHMInvade(1) ) {
   SHMController::cleanup();
 }
 
 
 tarch::multicore::Core::~Core() {
+  assertion(_basicInvasion != nullptr);
+  delete _basicInvasion;
 }
 
 
@@ -28,20 +31,11 @@ void tarch::multicore::Core::shutDown() {
 
 
 void tarch::multicore::Core::configure( int numberOfThreads ) {
-/*
-  if (_task_scheduler_init.is_active()) {
-    _task_scheduler_init.terminate();
-  }
+  assertion(_basicInvasion != nullptr);
+  assertion(numberOfThreads>=0 || numberOfThreads==UseDefaultNumberOfThreads);
 
-  if (numberOfThreads==UseDefaultNumberOfThreads) {
-    _numberOfThreads = ::tbb::task_scheduler_init::default_num_threads();
-  }
-  else {
-    _numberOfThreads = numberOfThreads;
-  }
-
-  _task_scheduler_init.initialize( _numberOfThreads );
-*/
+  delete _basicInvasion;
+  _basicInvasion = new SHMInvade(numberOfThreads);
 }
 
 

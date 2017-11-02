@@ -40,11 +40,14 @@ namespace tarch {
 class tarch::multicore::Core {
   private:
     SHMInvadeRoot     _invadeRoot;
+    SHMInvade*        _basicInvasion;
 
     Core();
 
     static tarch::logging::Log  _log;
   public:
+    static constexpr int UseDefaultNumberOfThreads = SHMInvade::AllCoresConcurrencyLevel;
+
     /**
      * Destructor
      */
@@ -56,11 +59,14 @@ class tarch::multicore::Core {
     static Core& getInstance();
 
     /**
-     * Configure the whole thing. If numberOfThreads equals 0, the core is
-     * using the number of standard threads.
+     * Configure the invasion level.
      *
+     * The core's configure tells the core how many cores shall be used at
+     * least/as baseline. You may call it over and over with different arguments
+     * which induces a change of the invasion base level.
      *
-     * @param numberOfThreads Numer of threads that shall be used. This
+     * @param numberOfThreads Number of threads that the code wants to use at
+     *        least. This
      *        parameter either is greater than zero (which defines the number
      *        of threads) or it equals DefaultNumberOfThreads which means that the code should
      *        use the default number of threads.

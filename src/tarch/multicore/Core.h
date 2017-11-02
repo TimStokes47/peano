@@ -31,7 +31,7 @@ class tarch::multicore::Core {
   private:
     Core();
   public:
-    static const int UseDefaultNumberOfThreads;
+    static constexpr int UseDefaultNumberOfThreads = 0;
 
     /**
      * Destructor
