@@ -6,8 +6,6 @@
 
 tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
-const int tarch::multicore::Core::UseDefaultNumberOfThreads = 0;
-
 
 tarch::multicore::Core::Core():
   _numberOfThreads(::tbb::task_scheduler_init::default_num_threads()),

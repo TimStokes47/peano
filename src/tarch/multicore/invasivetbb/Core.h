@@ -35,6 +35,10 @@ namespace tarch {
  *
  * This class is a singleton.
  *
+ * As Peano uses the enqueue routine frequently, our invasive TBB version
+ * invades at least one additional core always. That is, you will always see
+ * two non-idle ranks.
+ *
  * @author Tobias Weinzierl
  */
 class tarch::multicore::Core {
