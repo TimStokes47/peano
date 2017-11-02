@@ -169,7 +169,7 @@ class peano::grid::State {
      */
     int                          _maxForkLevel;
 
-    bool                         _currentlyRunsMultipleIterations;
+    static bool                  _currentlyRunsMultipleIterations;
 
     #ifdef Asserts
     LoadBalancingState           _previousLoadRebalancingState;
@@ -500,7 +500,15 @@ class peano::grid::State {
      * data lazy.
      */
     bool mayUseLazyStateAndDataReceives() const;
-    void currentlyRunsMultipleIterations(bool value);
+
+    static void currentlyRunsMultipleIterations(bool value);
+
+    /**
+     * Tells you whether the user currently runs a batch of iterations, i.e.
+     * has triggered the iterate command on the global master with an
+     * integer greater one.
+     */
+    static bool doesCurrentlyRunMultipleIterations();
 
     /**
      * Has a subworker rebalanced?

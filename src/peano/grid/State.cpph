@@ -726,6 +726,11 @@ void peano::grid::State<StateData>::currentlyRunsMultipleIterations(bool value) 
 }
 
 
+bool peano::grid::State<StateData>::doesCurrentlyRunMultipleIterations() {
+  return _currentlyRunsMultipleIterations;
+}
+
+
 template <class StateData>
 bool peano::grid::State<StateData>::isForkTriggeredForRank(int rank) {
   assertion( rank!=tarch::parallel::Node::getInstance().getRank() || _loadRebalancingRemoteRanks.count(rank)==0 );
