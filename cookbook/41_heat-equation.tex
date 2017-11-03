@@ -28,7 +28,7 @@ solution.
 
 \begin{code}
 Packed-Type: short int;
-class myproject::dastgen::Vertex {
+class myproject::records::Vertex {
   parallelise persistent double  u;
   discard                double  oldU;
 };
@@ -37,7 +37,7 @@ class myproject::dastgen::Vertex {
 
 \begin{code}
 Packed-Type: short int;
-class myproject::dastgen::Cell {
+class myproject::records::Cell {
   persistent double epsilon;
 };
 \end{code}
@@ -52,7 +52,7 @@ accordingly.
 
 \begin{code}
 Packed-Type: short int;
-class myproject::dastgen::State { 
+class myproject::records::State { 
   persistent parallelise double dt;
 };
 \end{code}
@@ -688,7 +688,7 @@ For this, we change the vertex definition
 Packed-Type: short int;
 
 
-class myproject::dastgen::Vertex {  
+class myproject::records::Vertex {  
   parallelise persistent double  u;
   discard    double  oldU;
   discard    double  averagedU;
@@ -979,7 +979,7 @@ runner through the State object and then to use this data alter on.
 Packed-Type: short int;
 
 
-class myproject::dastgen::State {  
+class myproject::records::State {  
   persistent parallelise double dt;
 };
 
