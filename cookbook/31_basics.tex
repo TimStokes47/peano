@@ -249,8 +249,7 @@ Here, we see the following:
 
 \begin{code}
 int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository& repository) {
-  peano::utils::UserInterface userInterface;
-  userInterface.writeHeader();
+  peano::utils::UserInterface::writeHeader();
 
   // @todo Insert your code here
   
@@ -286,8 +285,7 @@ So we have to modify it anyway.
 Lets change the function body as follows:
 
 \begin{code}
-  peano::utils::UserInterface userInterface;
-  userInterface.writeHeader();
+  peano::utils::UserInterface::writeHeader();
 
   repository.switchToCreateGridAndPlot();
   for (int i=0; i<10; i++) repository.iterate();

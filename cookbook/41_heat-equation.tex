@@ -201,8 +201,7 @@ As soon as this first plot is available, as add a time stepping loop in the
 
 \begin{code}
 int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository& repository) {
-  peano::utils::UserInterface userInterface;
-  userInterface.writeHeader();
+  peano::utils::UserInterface::writeHeader();
 
   repository.switchToCreateGridAndPlot();
   repository.iterate();
@@ -218,7 +217,7 @@ int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository&
     repository.iterate();
   }
  
-  repository.logIterationStatistics();
+  repository.logIterationStatistics(true);
   repository.terminate();
 
   return 0;
@@ -896,8 +895,7 @@ We finally modifiy our runner in two ways:
 
 \begin{code}
 int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository& repository) {
- peano::utils::UserInterface userInterface;
- userInterface.writeHeader();
+  peano::utils::UserInterface::writeHeader();
 
  repository.switchToCreateGridAndPlot();
  repository.iterate();
@@ -921,7 +919,7 @@ int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository&
     repository.getState().getMinimumMeshWidth() ); 
  }
  
- repository.logIterationStatistics();
+ repository.logIterationStatistics(true);
  repository.terminate();
 
  return 0;
