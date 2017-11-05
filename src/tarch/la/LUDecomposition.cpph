@@ -77,17 +77,60 @@ void tarch::la::lu (
 
 
 template<typename Scalar>
+double tarch::la::det(
+  const Matrix<2,2,Scalar>&  R
+) {
+  return R(0,0)*R(1,1)-R(0,1)*R(1,0);
+}
+
+
+template<typename Scalar>
 tarch::la::Matrix<2,2,Scalar> tarch::la::invert(
   const Matrix<2,2,Scalar>&  R
 ) {
   Matrix<2,2,Scalar> result;
   
-  const double scaling = 1.0/( R(0,0)*R(1,1)-R(0,1)*R(1,0) );
+  assertion(det(R)!=0.0);
+  const double scaling = 1.0/det(R);
   
   result(0,0) =  R(1,1) * scaling;
   result(0,1) = -R(0,1) * scaling;
   result(1,0) = -R(1,0) * scaling;
   result(1,1) =  R(0,0) * scaling;
+  
+  return result;
+}
+
+
+
+template<typename Scalar>
+double tarch::la::det(
+  const Matrix<3,3,Scalar>&  R
+) {
+  return R(0, 0) * (R(1, 1) * R(2, 2) - R(2, 1) * R(1, 2)) -
+         R(0, 1) * (R(1, 0) * R(2, 2) - R(1, 2) * R(2, 0)) +
+         R(0, 2) * (R(1, 0) * R(2, 1) - R(1, 1) * R(2, 0));
+}
+
+
+template<typename Scalar>
+tarch::la::Matrix<3,3,Scalar> tarch::la::invert(
+  const Matrix<3,3,Scalar>&  R
+) {
+  Matrix<3,3,Scalar> result;
+
+  assertion(det(R)!=0.0);
+  double invdet = 1 / det(R);
+
+  result(0, 0) = (R(1, 1) * R(2, 2) - R(2, 1) * R(1, 2)) * invdet;
+  result(0, 1) = (R(0, 2) * R(2, 1) - R(0, 1) * R(2, 2)) * invdet;
+  result(0, 2) = (R(0, 1) * R(1, 2) - R(0, 2) * R(1, 1)) * invdet;
+  result(1, 0) = (R(1, 2) * R(2, 0) - R(1, 0) * R(2, 2)) * invdet;
+  result(1, 1) = (R(0, 0) * R(2, 2) - R(0, 2) * R(2, 0)) * invdet;
+  result(1, 2) = (R(1, 0) * R(0, 2) - R(0, 0) * R(1, 2)) * invdet;
+  result(2, 0) = (R(1, 0) * R(2, 1) - R(2, 0) * R(1, 1)) * invdet;
+  result(2, 1) = (R(2, 0) * R(0, 1) - R(0, 0) * R(2, 1)) * invdet;
+  result(2, 2) = (R(0, 0) * R(1, 1) - R(1, 0) * R(0, 1)) * invdet;
   
   return result;
 }

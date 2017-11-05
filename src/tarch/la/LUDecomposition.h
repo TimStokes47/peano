@@ -43,10 +43,24 @@ namespace tarch {
       const Vector<Rows,Scalar>&       f
     );
 
-
     template<typename Scalar>
     Matrix<2,2,Scalar> invert(
       const Matrix<2,2,Scalar>&  R
+    );
+
+    template<typename Scalar>
+    Matrix<3,3,Scalar> invert(
+      const Matrix<3,3,Scalar>&  R
+    );
+
+    template<typename Scalar>
+    double det(
+      const Matrix<2,2,Scalar>&  R
+    );
+
+    template<typename Scalar>
+    double det(
+      const Matrix<3,3,Scalar>&  R
     );
   }
 }

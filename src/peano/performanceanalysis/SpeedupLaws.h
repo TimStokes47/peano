@@ -59,6 +59,7 @@ class peano::performanceanalysis::SpeedupLaws {
     static constexpr double  MaxF   = 1.0-1e-2;
     static constexpr double  MinF   = 1e-2;
     static constexpr double  MinT1  = 1.0;
+    static constexpr double  MinS   = 1e-2;
 
     static tarch::logging::Log _log;
 
@@ -68,7 +69,14 @@ class peano::performanceanalysis::SpeedupLaws {
      * Serial code fraction
      */
     double     _f;
+    /**
+     * Serial runtime
+     */
     double     _t_1;
+    /**
+     * Startup cost for the threads
+     */
+    double     _s;
 
     tarch::la::Vector<Entries, double> _t;
     tarch::la::Vector<Entries, double> _p;
@@ -291,8 +299,11 @@ comprising the update rule
      */
     void relaxAmdahlsLaw();
 
+    void relaxAmdahlsLawWithThreadStartupCost();
+
     double getSerialTime() const;
     double getSerialCodeFraction() const;
+    double getStartupCostPerThread() const;
 
     std::string toString() const;
 };
