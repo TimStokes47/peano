@@ -6,11 +6,21 @@
 
 tarch::logging::Log peano::performanceanalysis::SpeedupLaws::_log( "peano::performanceanalysis::SpeedupLaws" );
 
+
+const double  peano::performanceanalysis::SpeedupLaws::Weight  = 0.9;
+const double  peano::performanceanalysis::SpeedupLaws::MaxF   = 1.0-1e-2;
+const double  peano::performanceanalysis::SpeedupLaws::MinF   = 1e-2;
+const double  peano::performanceanalysis::SpeedupLaws::MinT1  = 1.0;
+const double  peano::performanceanalysis::SpeedupLaws::MinS   = 1e-2;
+
+
 peano::performanceanalysis::SpeedupLaws::SpeedupLaws(double f):
   _f(f),
-  _t_1(1.0),
+  _t_1(0.0),
   _s(0.0),
   _samples(0) {
+//  _p = tarch::la::Vector<Entries, double>(0.0);
+//  _t = tarch::la::Vector<Entries, double>(1.0);
 }
 
 
@@ -21,29 +31,37 @@ void peano::performanceanalysis::SpeedupLaws::addMeasurement( int p, double t ) 
   logInfo( "addMeasurement()", "p=" << p << ", t=" << t );
   #endif
 
-  // If you want the algorithm just to erase the oldest measurement, simply
-  // keep this entry to its initial value and do not modify it further.
-  int measurementToBeDropped = Entries;
+  if (_samples==0) {
+    _t   = tarch::la::Vector<Entries, double>(t);
+    _p   = tarch::la::Vector<Entries, double>(p);
+    _t_1 = t * p;
+    _samples++;
+  }
+  else {
+    // If you want the algorithm just to erase the oldest measurement, simply
+    // keep this entry to its initial value and do not modify it further.
+    int measurementToBeDropped = Entries-1;
 
-  // Find last=oldest p entry
-  for (int i=0; i<Entries; i++) {
-    if ( _p(i)==p ) {
-      measurementToBeDropped = i;
+    // Find last=oldest p entry
+    for (int i=1; i<Entries; i++) {
+      if ( std::abs( _p(i)-p ) < 1e-5 ) {
+        measurementToBeDropped = i;
+      }
     }
-  }
 
-  for (int i=measurementToBeDropped-1; i>=1; i--) {
-    _p(i) = _p(i-1);
-    _t(i) = _t(i-1);
-  }
+    for (int i=measurementToBeDropped; i>=1; i--) {
+      _p(i) = _p(i-1);
+      _t(i) = _t(i-1);
+    }
 
-  _p(0) = p;
-  _t(0) = t;
+    _p(0) = p;
+    _t(0) = t;
 
-  if (_samples<Entries) {
-    _t_1 = t;
+    if (_samples<Entries) {
+      _t_1 = t;
+    }
+    _samples++;
   }
-  _samples++;
 }
 
 
@@ -59,9 +77,9 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
         double dtdf       =      _t_1 -            _t_1/_p(n);
         double dtdt_1      = _f       + (1.0-_f)      /_p(n);
 
-        gradJ(0,n) = std::pow(Weight,-n/2.0) * dtdf;
-        gradJ(1,n) = std::pow(Weight,-n/2.0) * dtdt_1;
-        y(n)       = std::pow(Weight,-n/2.0) * amdahlTerm;
+        gradJ(0,n) = std::pow(Weight,n/2.0) * dtdf;
+        gradJ(1,n) = std::pow(Weight,n/2.0) * dtdt_1;
+        y(n)       = std::pow(Weight,n/2.0) * amdahlTerm;
       }
 
       tarch::la::Matrix<2,2,double> gradJgradJT;
@@ -69,6 +87,7 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
 
       tarch::la::Vector<2,double>    rhs;
       rhs = -1.0 * (gradJ * y);
+
 
       if ( std::abs(det(gradJgradJT))>1e-5 ) {
         tarch::la::Vector<2,double>    shifts;
@@ -79,6 +98,7 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
           !std::isnan(shifts(0)) &&
           !std::isnan(shifts(1))
         ) {
+
           _f   += shifts(0);
           _t_1 += shifts(1);
         }
@@ -115,10 +135,10 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLawWithThreadStartupCo
         double dtdt_1     = _f        + (1.0-_f)      /_p(n);
         double dtds       = _p(n)-1.0;
 
-        gradJ(0,n) = std::pow(Weight,-n/2.0) * dtdf;
-        gradJ(1,n) = std::pow(Weight,-n/2.0) * dtdt_1;
-        gradJ(2,n) = std::pow(Weight,-n/2.0) * dtds;
-        y(n)       = std::pow(Weight,-n/2.0) * amdahlTerm;
+        gradJ(0,n) = std::pow(Weight,n/2.0) * dtdf;
+        gradJ(1,n) = std::pow(Weight,n/2.0) * dtdt_1;
+        gradJ(2,n) = std::pow(Weight,n/2.0) * dtds;
+        y(n)       = std::pow(Weight,n/2.0) * amdahlTerm;
       }
 
       tarch::la::Matrix<3,3,double> gradJgradJT;

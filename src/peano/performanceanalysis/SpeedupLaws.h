@@ -48,18 +48,18 @@ class peano::performanceanalysis::SpeedupLaws {
     /**
      * Number of entries (measurements) hold in database
      */
-    static constexpr int     Entries = 32;
+    static constexpr int     Entries = 64;
 
     /**
      * Weighting of entries. First one has weight (validity) 1.0, the second
      * has weight Weight( 0.9 ), then Weight times Weight (0.81), and so forth.
      */
-    static constexpr int     Weight  = 0.9;
+    static const double  Weight;
 
-    static constexpr double  MaxF   = 1.0-1e-2;
-    static constexpr double  MinF   = 1e-2;
-    static constexpr double  MinT1  = 1.0;
-    static constexpr double  MinS   = 1e-2;
+    static const double  MaxF;
+    static const double  MinF;
+    static const double  MinT1;
+    static const double  MinS;
 
     static tarch::logging::Log _log;
 
@@ -105,6 +105,16 @@ class peano::performanceanalysis::SpeedupLaws {
      *
      * So we changed addMeasurement such that it replaced the oldest entry
      * tracking p rather than the overall oldest entry.
+     *
+     * The whole thing faces one problem: If we have Entries measurement
+     * entries, we have to initialise _p and _t somehow. If we initialise
+     * them with (0,0) pairs, e.g., we kind of tell the linear algebra that
+     * 0,0 were a valid measurement point. However, we know that our model
+     * cannot even predict a point 0,0. So we use the very first piece of
+     * data dropping in to initialise our code and then squeeze out this
+     * initial data successively until we have Entries measurements. From
+     * hereon, every new data point replaces the oldest data point available
+     * so far.
      */
     void addMeasurement( int p, double t );
 
