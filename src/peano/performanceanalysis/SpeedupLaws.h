@@ -45,12 +45,28 @@ namespace peano {
  */
 class peano::performanceanalysis::SpeedupLaws {
   private:
-    static constexpr int  Entries = 16;
+    /**
+     * Number of entries (measurements) hold in database
+     */
+    static constexpr int     Entries = 32;
+
+    /**
+     * Weighting of entries. First one has weight (validity) 1.0, the second
+     * has weight Weight( 0.9 ), then Weight times Weight (0.81), and so forth.
+     */
+    static constexpr int     Weight  = 0.9;
+
+    static constexpr double  MaxF   = 1.0-1e-2;
+    static constexpr double  MinF   = 1e-2;
+    static constexpr double  MinT1  = 1.0;
 
     static tarch::logging::Log _log;
 
     friend class peano::performanceanalysis::tests::SpeedupLawsTest;
 
+    /**
+     * Serial code fraction
+     */
     double     _f;
     double     _t_1;
 
@@ -66,6 +82,22 @@ class peano::performanceanalysis::SpeedupLaws {
      */
     SpeedupLaws(double f=0.5);
 
+    /**
+     * My original ideas has been to make this function enqueue the new
+     * measurement into the dataset, i.e. to append them to _t and _p,
+     * respectively. As both sets are sequences (with associated weights)
+     * which are truncated - the number of entries is fixed to Entries -
+     * every add means that one measurement is dropped.
+     *
+     * Such an approach is dangerous: If a long sequence of entries is
+     * added that all refer to the same p count, our underlying dataset
+     * would degenerate to a noisy measurement of one data point. Fitting
+     * a performance model into this is impossible. The problem is ill-posed,
+     * or the model degenerates, too.
+     *
+     * So we changed addMeasurement such that it replaced the oldest entry
+     * tracking p rather than the overall oldest entry.
+     */
     void addMeasurement( int p, double t );
 
     /**
@@ -251,7 +283,11 @@ comprising the update rule
     \left( \nabla J \right)
     y
     @f$
+     * <h2> Implementation remark </h2>
      *
+     * The @f$ 2^{-i} @f$ in the code are replaced with Weight to the power of
+     * an integer. Experiments show that Weight=0.5 is too small, i.e. it should
+     * be chosen higher.
      */
     void relaxAmdahlsLaw();
 

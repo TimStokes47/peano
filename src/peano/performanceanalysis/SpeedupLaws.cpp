@@ -20,7 +20,18 @@ void peano::performanceanalysis::SpeedupLaws::addMeasurement( int p, double t ) 
   logInfo( "addMeasurement()", "p=" << p << ", t=" << t );
   #endif
 
-  for (int i=Entries-1; i>=1; i--) {
+  // If you want the algorithm just to erase the oldest measurement, simply
+  // keep this entry to its initial value and do not modify it further.
+  int measurementToBeDropped = Entries;
+
+  // Find last=oldest p entry
+  for (int i=0; i<Entries; i++) {
+    if ( _p(i)==p ) {
+      measurementToBeDropped = i;
+    }
+  }
+
+  for (int i=measurementToBeDropped-1; i>=1; i--) {
     _p(i) = _p(i-1);
     _t(i) = _t(i-1);
   }
@@ -43,14 +54,13 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
       tarch::la::Vector<Entries,double>    y(0.0);
 
       for (int n=0; n<static_cast<int>(_p.size()); n++) {
-        double base       = 2.0;
         double amdahlTerm = _f * _t_1 + (1.0-_f) * _t_1/_p(n) - _t(n);
         double dtdf       =      _t_1 -            _t_1/_p(n);
         double dtdt_1      = _f       + (1.0-_f)      /_p(n);
 
-        gradJ(0,n) = std::pow(base,-n/2.0) * dtdf;
-        gradJ(1,n) = std::pow(base,-n/2.0) * dtdt_1;
-        y(n)       = std::pow(base,-n/2.0) * amdahlTerm;
+        gradJ(0,n) = std::pow(Weight,-n/2.0) * dtdf;
+        gradJ(1,n) = std::pow(Weight,-n/2.0) * dtdt_1;
+        y(n)       = std::pow(Weight,-n/2.0) * amdahlTerm;
       }
 
       tarch::la::Matrix<2,2,double> gradJgradJT;
@@ -70,18 +80,12 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
         _f   += shifts(0);
         _t_1 += shifts(1);
       }
-    }
 
-    // Problem can be ill-posed or too non-smooth
-    const double margin=1e-4;
-    if (_f<margin) {
-      _f = margin;
-    }
-    if (_f>1.0-margin) {
-      _f = 1.0-margin;
-    }
-    if (_t_1 < margin ) {
-      _t_1 = margin;
+      // Problem can be ill-posed or too non-smooth, so we manually add
+      // these constraints
+      _f   = std::max(_f,MinF);
+      _f   = std::min(_f,MaxF);
+      _t_1 = std::max(_t_1,MinT1);
     }
 
     assertion4( _f>=0,    _f, _t_1, _p, _t );
