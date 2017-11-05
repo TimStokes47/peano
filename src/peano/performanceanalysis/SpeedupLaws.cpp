@@ -156,7 +156,7 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLawWithThreadStartupCo
   }
 
   #if defined(PerformanceAnalysis)
-  logInfo( "relaxAmdahlsLawWithThreadStartupCost()", "f=" << _f << ", t_1=" << _t_1 );
+  logInfo( "relaxAmdahlsLawWithThreadStartupCost()", "f=" << _f << ", t_1=" << _t_1 << ", s=" << _s );
   #endif
 }
 
