@@ -10,7 +10,7 @@ tarch::logging::Log peano::performanceanalysis::SpeedupLaws::_log( "peano::perfo
 const double  peano::performanceanalysis::SpeedupLaws::Weight  = 0.9;
 const double  peano::performanceanalysis::SpeedupLaws::MaxF   = 1.0-1e-2;
 const double  peano::performanceanalysis::SpeedupLaws::MinF   = 1e-2;
-const double  peano::performanceanalysis::SpeedupLaws::MinT1  = 1.0;
+const double  peano::performanceanalysis::SpeedupLaws::MinT1  = 1e-4;
 const double  peano::performanceanalysis::SpeedupLaws::MinS   = 1e-2;
 
 
