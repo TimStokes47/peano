@@ -182,13 +182,13 @@ class peano::grid::State {
      */
     int                          _maxForkLevel;
 
-    static BatchState            _batchState;
-
     #ifdef Asserts
     LoadBalancingState           _previousLoadRebalancingState;
     #endif
 
     #endif
+
+    static BatchState            _batchState;
 
     #ifdef PersistentRegularSubtrees
     int                          _smallestRegularTreeThatIsToBeHeldPersistently;
@@ -470,6 +470,15 @@ class peano::grid::State {
      */
     void resetStateAtEndOfIteration();
 
+    static void currentlyRunsMultipleIterations(BatchState batchState = BatchState::NoBatch);
+
+    /**
+     * Tells you whether the user currently runs a batch of iterations, i.e.
+     * has triggered the iterate command on the global master with an
+     * integer greater one.
+     */
+    static BatchState getBatchState();
+
     #ifdef Parallel
     /**
      * Blocking send. initDatatype() has to be called before.
@@ -513,15 +522,6 @@ class peano::grid::State {
      * data lazy.
      */
     bool mayUseLazyStateAndDataReceives() const;
-
-    static void currentlyRunsMultipleIterations(BatchState batchState = BatchState::NoBatch);
-
-    /**
-     * Tells you whether the user currently runs a batch of iterations, i.e.
-     * has triggered the iterate command on the global master with an
-     * integer greater one.
-     */
-    static BatchState getBatchState();
 
     /**
      * Has a subworker rebalanced?

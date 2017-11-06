@@ -545,6 +545,18 @@ void peano::grid::State<StateData>::incNumberOfOuterLeafCells( double increment 
 #endif
 
 
+template <class StateData>
+void peano::grid::State<StateData>::currentlyRunsMultipleIterations(BatchState batchState) {
+  _batchState = batchState;
+}
+
+
+template <class StateData>
+typename peano::grid::State<StateData>::BatchState peano::grid::State<StateData>::getBatchState() {
+  return _batchState;
+}
+
+
 #ifdef Parallel
 template <class StateData>
 std::set<int> peano::grid::State<StateData>::getForkingOrJoiningOrTriggeredForRebalancingRanks() {
@@ -720,18 +732,6 @@ bool peano::grid::State<StateData>::isInvolvedInJoinOrFork() {
 template <class StateData>
 bool peano::grid::State<StateData>::mayUseLazyStateAndDataReceives() const {
   return (_loadRebalancingState == LoadBalancingState::NoRebalancing) && _batchState!=BatchState::NoBatch;
-}
-
-
-template <class StateData>
-void peano::grid::State<StateData>::currentlyRunsMultipleIterations(BatchState batchState) {
-  _batchState = batchState;
-}
-
-
-template <class StateData>
-typename peano::grid::State<StateData>::BatchState peano::grid::State<StateData>::getBatchState() {
-  return _batchState;
 }
 
 
