@@ -17,6 +17,9 @@ std::set<int>       peano::grid::State<StateData>::_loadRebalancingRemoteRanks;
 
 template <class StateData>
 typename peano::grid::State<StateData>::LoadBalancingState  peano::grid::State<StateData>::_loadRebalancingState(peano::grid::State<StateData>::LoadBalancingState::NoRebalancing);
+
+template <class StateData>
+typename peano::grid::State<StateData>::BatchState          peano::grid::State<StateData>::_batchState(BatchState::NoBatch);
 #endif
 
 
@@ -716,18 +719,19 @@ bool peano::grid::State<StateData>::isInvolvedInJoinOrFork() {
 
 template <class StateData>
 bool peano::grid::State<StateData>::mayUseLazyStateAndDataReceives() const {
-  return (_loadRebalancingState == LoadBalancingState::NoRebalancing) && _currentlyRunsMultipleIterations;
+  return (_loadRebalancingState == LoadBalancingState::NoRebalancing) && _batchState!=BatchState::NoBatch;
 }
 
 
 template <class StateData>
-void peano::grid::State<StateData>::currentlyRunsMultipleIterations(bool value) {
-  _currentlyRunsMultipleIterations = value;
+void peano::grid::State<StateData>::currentlyRunsMultipleIterations(BatchState batchState) {
+  _batchState = batchState;
 }
 
 
-bool peano::grid::State<StateData>::doesCurrentlyRunMultipleIterations() {
-  return _currentlyRunsMultipleIterations;
+template <class StateData>
+typename peano::grid::State<StateData>::BatchState peano::grid::State<StateData>::getBatchState() {
+  return _batchState;
 }
 
 

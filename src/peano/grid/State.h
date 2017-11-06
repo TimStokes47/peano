@@ -96,6 +96,19 @@ class peano::grid::State {
 
     typedef StateData                                      Records;
 
+    enum class BatchState {
+      /**
+       * No batch is currently running (default)
+       */
+      NoBatch,
+      /**
+       * As a batch comprises, by definition, more than one sweep, there is
+       * always a first and a last one.
+       */
+      FirstIterationOfBatch,
+      LastIterationOfBatch,
+      IntermediateIterationOfBatch
+    };
   protected:
     StateData           _stateData;
 
@@ -169,7 +182,7 @@ class peano::grid::State {
      */
     int                          _maxForkLevel;
 
-    static bool                  _currentlyRunsMultipleIterations;
+    static BatchState            _batchState;
 
     #ifdef Asserts
     LoadBalancingState           _previousLoadRebalancingState;
@@ -501,14 +514,14 @@ class peano::grid::State {
      */
     bool mayUseLazyStateAndDataReceives() const;
 
-    static void currentlyRunsMultipleIterations(bool value);
+    static void currentlyRunsMultipleIterations(BatchState batchState = BatchState::NoBatch);
 
     /**
      * Tells you whether the user currently runs a batch of iterations, i.e.
      * has triggered the iterate command on the global master with an
      * integer greater one.
      */
-    static bool doesCurrentlyRunMultipleIterations();
+    static BatchState getBatchState();
 
     /**
      * Has a subworker rebalanced?
