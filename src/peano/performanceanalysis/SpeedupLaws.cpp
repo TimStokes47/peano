@@ -124,9 +124,9 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
 
 void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLawWithThreadStartupCost() {
   if (_samples>Entries) {
-    const double oldF   = _f;
-    const double oldT_1 = _t_1;
-    const double oldS   = _s;
+    //const double oldF   = _f;
+    //const double oldT_1 = _t_1;
+    //const double oldS   = _s;
 	    
     const int NewtonIterations = Entries;
     for (int it=0; it<NewtonIterations; it++) {
@@ -174,9 +174,9 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLawWithThreadStartupCo
       _s   = std::max(   _s,MinS  );
     }
 
-    _f   = 0.5 * _f   + 0.5 * oldF;
-    _t_1 = 0.5 * _t_1 + 0.5 * oldT_1;
-    _s   = 0.5 * _s   + 0.5 * oldS;
+    //_f   = 0.5 * _f   + 0.5 * oldF;
+    //_t_1 = 0.5 * _t_1 + 0.5 * oldT_1;
+    //_s   = 0.5 * _s   + 0.5 * oldS;
 
     assertion4( _f>=0,    _f, _t_1, _p, _t );
     assertion4( _f<=1.0,  _f, _t_1, _p, _t );
