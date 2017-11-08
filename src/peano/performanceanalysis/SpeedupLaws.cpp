@@ -281,7 +281,7 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     newtonIterations++;
   }
 
-  logInfo( "getOptimalNumberOfThreads(...)", "result=" << c[rankNumber] );
+  //logInfo( "getOptimalNumberOfThreads(...)", "result=" << c[rankNumber] );
   return std::floor(c[rankNumber]+0.5);
 }
 
