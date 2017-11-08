@@ -8,9 +8,11 @@ import networkx
 import datetime
 import performanceanalysisroutines
 
+import os
+import errno
+
 import gc
 import re
-
 
 #from argparse import RawTextHelpFormatter
 
@@ -183,13 +185,20 @@ parser.add_argument('-domainoffset',nargs="+",required=True,help="Offset of boun
 parser.add_argument('-domainsize',nargs="+",required=True,help="Size of domain's bounding box.")
 args   = parser.parse_args();
 
+inputFileName     = args.file
+plotDirectoryName = "_"+inputFileName
+try:
+    os.makedirs(plotDirectoryName)
+except OSError as e:
+    if e.errno != errno.EEXIST:
+        raise
+plotPrefix = plotDirectoryName + "/" + inputFileName
 
-numberOfRanks   = performanceanalysisroutines.getNumberOfRanks(args.file)
-numberOfThreads = performanceanalysisroutines.getNumberOfThreads(args.file)
+
+numberOfRanks   = performanceanalysisroutines.getNumberOfRanks(inputFileName)
+numberOfThreads = performanceanalysisroutines.getNumberOfThreads(inputFileName)
 
 performanceanalysisroutines.AlphaValue = 1.0/numberOfRanks
-
-inputFileName   = args.file
 
 print "start to process input file " + inputFileName + " with " + str(numberOfRanks) + " rank(s) and " + str(numberOfThreads) + " thread(s)" 
 
@@ -209,7 +218,7 @@ performanceanalysisroutines.parseInputFile(numberOfRanks,inputFileName)
 
 dim = int(args.dimension)
 
-(parents,levels,offset,volume) = performanceanalysisroutines.plotLogicalTopology(args.file,numberOfRanks,dim);
+(parents,levels,offset,volume) = performanceanalysisroutines.plotLogicalTopology(numberOfRanks,dim,inputFileName,plotDirectoryName);
 (volumes,overlaps,work) = performanceanalysisroutines.computeVolumesOverlapsWork(numberOfRanks,volume,offset,dim,args.domainoffset,args.domainsize,parents)
 
 print "validate data ",
@@ -242,39 +251,39 @@ for i in range(0,numberOfRanks):
 print " done "
 
 
-performanceanalysisroutines.plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,work,args.file);
+performanceanalysisroutines.plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,work,plotPrefix);
 
 
 print "plot walltime overview"
-performanceanalysisroutines.plotWalltimeOverview(numberOfRanks,args.file)
+performanceanalysisroutines.plotWalltimeOverview(numberOfRanks,plotPrefix)
 
 print "plot global grid overview"
-performanceanalysisroutines.plotGlobalGridOverview(numberOfRanks,args.file)
+performanceanalysisroutines.plotGlobalGridOverview(numberOfRanks,plotPrefix)
 
 if (numberOfThreads>1):      
   print "plot concurrency levels"
   if (numberOfRanks>1):
     for rank in range(0,numberOfRanks):
-      performanceanalysisroutines.plotConcurrency(rank,args.file)
+      performanceanalysisroutines.plotConcurrency(rank,inputFileName,plotDirectoryName)
   else:
     print "plot concurrency levels"
-    performanceanalysisroutines.plotConcurrency(0,args.file)
+    performanceanalysisroutines.plotConcurrency(0,inputFileName,plotDirectoryName)
   
 if (numberOfRanks>1):      
   print "extract fork and join statistics"
-  performanceanalysisroutines.plotForkJoinStatistics(numberOfRanks,args.file)
+  performanceanalysisroutines.plotForkJoinStatistics(numberOfRanks,inputFileName,plotDirectoryName)
 
   gc.collect() 
   print "plot mpi phases"
-  performanceanalysisroutines.plotMPIPhases(numberOfRanks,args.file)
+  performanceanalysisroutines.plotMPIPhases(numberOfRanks,inputFileName,plotDirectoryName)
   gc.collect() 
 
   print "master-worker data exchange"
   GlobalSynchronisationOnRank0 = False
-  GlobalSynchronisationOnRank0 = performanceanalysisroutines.plotMasterWorkerLateSends(numberOfRanks,inputFileName)
+  GlobalSynchronisationOnRank0 = performanceanalysisroutines.plotMasterWorkerLateSends(numberOfRanks,inputFileName,plotDirectoryName)
 
   print "boundary data exchange"
-  performanceanalysisroutines.plotBoundaryLateSends(numberOfRanks,inputFileName)
+  performanceanalysisroutines.plotBoundaryLateSends(numberOfRanks,inputFileName,plotDirectoryName)
 
 
 
@@ -352,7 +361,7 @@ outFile.write( "\
 #
 outFile.write( "\
     <h2 id=\"walltime-overview\">Walltime overview</h2>\
-     <img src=\"" + inputFileName + ".walltime.png\" />\
+     <img src=\"" + plotPrefix + ".walltime.png\" />\
     <br /><br />\
     <p>\
     The fuzzy dots summarise the local runtimes of the individual ranks, \
@@ -385,16 +394,16 @@ outFile.write( "\
 #
 outFile.write( "\
     <h2 id=\"global-grid-overview\">Global grid overview</h2>\
-    <img src=\"" + inputFileName + ".grid-overview.png\" />\
-    <img src=\"" + inputFileName + ".grid-overview-global-master.png\" />\
+    <img src=\"" + plotPrefix + ".grid-overview.png\" />\
+    <img src=\"" + plotPrefix + ".grid-overview-global-master.png\" />\
     <br /><br />\
     ")
     
     
 if (numberOfRanks>1):      
   outFile.write( "\
-    <img src=\"" + inputFileName + ".local-cells.png\" />\
-    <img src=\"" + inputFileName + ".local-vertices.png\" />\
+    <img src=\"" + plotPrefix + ".local-cells.png\" />\
+    <img src=\"" + plotPrefix + ".local-vertices.png\" />\
     <br /><br />\
     ")
 
@@ -441,13 +450,13 @@ if (numberOfRanks>1):
 if (numberOfThreads>1):      
   outFile.write( "<h2 id=\"concurrency\">Multithreading concurrency</h2>" )
   if numberOfRanks==1:
-    outFile.write( "<img src=\"" + inputFileName + "-rank-0.concurrency.png\" />" )
-    outFile.write( "<br /><a href=\"" + inputFileName + "-rank-0.concurrency.large.png\">Big version</a>" )
+    outFile.write( "<img src=\"" + plotPrefix + "-rank-0.concurrency.png\" />" )
+    outFile.write( "<br /><a href=\"" + plotPrefix + "-rank-0.concurrency.large.png\">Big version</a>" )
 
   for rank in range(0,numberOfRanks):
     outFile.write( "<h3>Rank " + str(rank) + "</h2>" )
-    outFile.write( "<img src=\"" + inputFileName + "-rank-" + str(rank) + ".concurrency.png\" />" )
-    outFile.write( "<br /><a href=\"" + inputFileName + "-rank-" + str(rank) + ".concurrency.large.png\">Big version</a>" )
+    outFile.write( "<img src=\"" + plotPrefix + "-rank-" + str(rank) + ".concurrency.png\" />" )
+    outFile.write( "<br /><a href=\"" + plotPrefix + "-rank-" + str(rank) + ".concurrency.large.png\">Big version</a>" )
     
     #  <li>Dotted black line: Concurrency level is one</li> \
     outFile.write("\
@@ -473,7 +482,7 @@ if (numberOfRanks>1):
   #
   outFile.write( "\
     <h2 id=\"logical-topology\">Logical topology</h2>\
-    <a href=\"" + args.file + ".topology.large.png\"><img src=\"" + args.file + ".topology.png\" /></a>\
+    <a href=\"" + plotPrefix + ".topology.large.png\"><img src=\"" + plotPrefix + ".topology.png\" /></a>\
     <br /><br />\
     <i>Performance hint: </i>\
     <p>\
@@ -504,19 +513,19 @@ if (numberOfRanks>1):
     ")
 
   outFile.write( "<h2>Mapping of ranks to nodes</h2>" )
-  performanceanalysisroutines.fillNodeTable(args.file)
+  performanceanalysisroutines.fillNodeTable(inputFileName)
   performanceanalysisroutines.printNodeTable(outFile)
   if dim==2:
-    performanceanalysisroutines.plotDomainDecomposition2d( args.file, numberOfRanks, args.domainoffset, args.domainsize, offset, volume, levels, max(levels)+1 )
-    outFile.write( "<a href=\"" + args.file + ".dd.large.pdf\"> <img src=\"" + args.file + ".dd.png\" /> </a> " )
+    performanceanalysisroutines.plotDomainDecomposition2d( plotPrefix, numberOfRanks, args.domainoffset, args.domainsize, offset, volume, levels, max(levels)+1 )
+    outFile.write( "<a href=\"" + plotPrefix + ".dd.large.pdf\"> <img src=\"" + plotPrefix + ".dd.png\" /> </a> " )
   
   outFile.write( "<h2 id=\"work-distribution\">Work distribution</h2>" )
-  outFile.write( "<a href=\"" + args.file + ".work-distribution.large.png\"><img src=\"" + args.file + ".work-distribution.png\" /></a>" )
-  outFile.write( "<a href=\"" + args.file + "-symlog.work-distribution.large.png\"><img src=\"" + args.file + "-symlog.work-distribution.png\" /></a>" )
+  outFile.write( "<a href=\"" + plotPrefix + ".work-distribution.large.png\"><img src=\"" + plotPrefix + ".work-distribution.png\" /></a>" )
+  outFile.write( "<a href=\"" + plotPrefix + "-symlog.work-distribution.large.png\"><img src=\"" + plotPrefix + "-symlog.work-distribution.png\" /></a>" )
   outFile.write( "<p>The filled region is the actual local work volume of a rank. It has to be smaller than the region of responsibility that might overlap the actual domain.</p>" )
   outFile.write( "<h2>Domain decomposition (level by level)</h2>" )
   for l in range(1,max(levels)+1):
-    outFile.write( "<a href=\"" + args.file + ".level" + str(l) + ".large.pdf\"> <img src=\"" + args.file + ".level" + str(l) + ".png\" /> </a> " )
+    outFile.write( "<a href=\"" + plotPrefix + ".level" + str(l) + ".large.pdf\"> <img src=\"" + plotPrefix + ".level" + str(l) + ".png\" /> </a> " )
 
 
   #
@@ -524,7 +533,7 @@ if (numberOfRanks>1):
   #
   outFile.write( "\
     <h2 id=\"fork-join-statistics\">Fork and join statistics</h2>\
-    <img src=\"" + inputFileName + ".fork-join-statistics.png\" />\
+    <img src=\"" + plotPrefix + ".fork-join-statistics.png\" />\
     <br /><br />\
     <p>\
     The statistics use the node's timers. If the timers of nodes ran with MPI \
@@ -572,7 +581,7 @@ if (numberOfRanks>1):
   # 
   outFile.write( "\
     <h2 id=\"mpi-phases\">MPI Phases</h2>\
-    <a href=\"" + inputFileName + ".mpi-phases.large.png\"> <img src=\"" + inputFileName + ".mpi-phases.png\" /> </a> \
+    <a href=\"" + plotPrefix + ".mpi-phases.large.png\"> <img src=\"" + plotPrefix + ".mpi-phases.png\" /> </a> \
     <br /><br />\
     <h3>Legend:</h3>\
     <table> \
@@ -637,9 +646,9 @@ if (numberOfRanks>1):
     <li>If the green bars are significantly smaller than the other bars, your problem is too small for this number of ranks. All your time is spent on communication.</li>\
     </ul>\
     <p>The script automatically generated pdf versions of all images (simple exchange the estension .png), so you can include it in other documentation. However, it is also sometimes easier to study the MPI phase diagram as \
-    <a href=\"" + inputFileName + ".mpi-phases.pdf\">pdf</a> \
+    <a href=\"" + plotPrefix + ".mpi-phases.pdf\">pdf</a> \
     or as \
-    <a href=\"" + inputFileName + ".mpi-phases.large.pdf\">large pdf</a>. \
+    <a href=\"" + plotPrefix + ".mpi-phases.large.pdf\">large pdf</a>. \
     as they are vector formats. </p> \
     ")
 
@@ -650,11 +659,11 @@ if (numberOfRanks>1):
   outFile.write( "\
     <h2 id=\"master-worker-data-exchange\">Master-worker data exchange</h2>\
     <p>If an edge points from a to b, it means that master b had to wait for its worker a. The labels are wait times in seconds. </p>\
-    <a href=\"" + inputFileName + ".master-worker-data-exchange.large.png\" /><img src=\"" + inputFileName + ".master-worker-data-exchange.png\" /></a>\
+    <a href=\"" + plotPrefix + ".master-worker-data-exchange.large.png\" /><img src=\"" + plotPrefix + ".master-worker-data-exchange.png\" /></a>\
     <p>The following graph holds only edges whose average is beyond the average of averages.</p>\
-    <a href=\"" + inputFileName + ".master-worker-data-exchange.sparse-average.large.png\" /><img src=\"" + inputFileName + ".master-worker-data-exchange.sparse-average.png\" /></a>\
+    <a href=\"" + plotPrefix + ".master-worker-data-exchange.sparse-average.large.png\" /><img src=\"" + plotPrefix + ".master-worker-data-exchange.sparse-average.png\" /></a>\
     <p>The following graph holds only edges whose maximum weight is with 10% of the total maximum weight.</p>\
-    <a href=\"" + inputFileName + ".master-worker-data-exchange.sparse-max.large.png\" /><img src=\"" + inputFileName + ".master-worker-data-exchange.sparse-max.png\" /></a>\
+    <a href=\"" + plotPrefix + ".master-worker-data-exchange.sparse-max.large.png\" /><img src=\"" + plotPrefix + ".master-worker-data-exchange.sparse-max.png\" /></a>\
     ")
 
   # This is one of the reasons why we have to generate the plots first    
@@ -714,11 +723,11 @@ if (numberOfRanks>1):
     <p>\
     In all diagrams, singular events, i.e. events waits only once or twice, are omitted.\
     </p>\
-    <a href=\"" + inputFileName + ".boundary-data-exchange.large.png\" /><img src=\"" + inputFileName + ".boundary-data-exchange.png\" /></a>\
+    <a href=\"" + plotPrefix + ".boundary-data-exchange.large.png\" /><img src=\"" + plotPrefix + ".boundary-data-exchange.png\" /></a>\
     <p>The following graph holds only edges whose average is beyond the average of averages.</p>\
-    <a href=\"" + inputFileName + ".boundary-data-exchange.sparse-average.large.png\" /><img src=\"" + inputFileName + ".boundary-data-exchange.sparse-average.png\" /></a>\
+    <a href=\"" + plotPrefix + ".boundary-data-exchange.sparse-average.large.png\" /><img src=\"" + plotPrefix + ".boundary-data-exchange.sparse-average.png\" /></a>\
     <p>The following graph holds only edges whose maximum weight is with 10% of the total maximum weight.</p>\
-    <a href=\"" + inputFileName + ".boundary-data-exchange.sparse-max.large.png\" /><img src=\"" + inputFileName + ".boundary-data-exchange.sparse-max.png\" /></a>\
+    <a href=\"" + plotPrefix + ".boundary-data-exchange.sparse-max.large.png\" /><img src=\"" + plotPrefix + ".boundary-data-exchange.sparse-max.png\" /></a>\
     ")
 
   outFile.write( "\
@@ -817,10 +826,10 @@ if (numberOfRanks>1):
     outFile.write( "<h3 id=\"runtime-rank-" + str(rank) + "\">Profile of rank " + str(rank) + "</h2>")
     createRankDetails(rank)  
     outFile.write( "\
-      <img src=\"" + inputFileName + ".walltime-rank-" + str(rank) + ".png\" />\
-      <img src=\"" + inputFileName + ".local-cells-rank-" + str(rank) + ".png\" />\
-      <img src=\"" + inputFileName + ".runtime-profile-calendar-rank-" + str(rank) + ".png\" />\
-      <img src=\"" + inputFileName + ".runtime-profile-cpu-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + plotPrefix + ".walltime-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + plotPrefix + ".local-cells-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + plotPrefix + ".runtime-profile-calendar-rank-" + str(rank) + ".png\" />\
+      <img src=\"" + plotPrefix + ".runtime-profile-cpu-rank-" + str(rank) + ".png\" />\
     <br /><br />\
     <a href=\"#individual-ranks\">To rank overview</a>\
     <br /><br />\
@@ -846,11 +855,9 @@ if (numberOfRanks>1):
   print "continue to write individual rank statistics ... html file however should be readable already"
   for l in range(1,max(levels)+1):
    if dim==2:
-    performanceanalysisroutines.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
+    performanceanalysisroutines.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,plotPrefix)
    if dim==3:
-    performanceanalysisroutines.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,args.file)
+    performanceanalysisroutines.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,plotPrefix)
   for rank in range(0,numberOfRanks):
     print "plot statistics for rank " + str(rank)
-    performanceanalysisroutines.plotStatisticsForRank(rank,numberOfRanks,args.file)
-
-    
+    performanceanalysisroutines.plotStatisticsForRank(rank,numberOfRanks,inputFileName,plotDirectoryName)

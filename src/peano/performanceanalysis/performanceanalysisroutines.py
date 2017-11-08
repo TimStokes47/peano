@@ -192,7 +192,7 @@ def parseInputFile(numberOfRanks,inputFileName):
 
 
 
-def plotConcurrency(rank,inputFileName):
+def plotConcurrency(rank,inputFileName,plotDirectoryName):
   pylab.clf()
   pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
   pylab.title( "Concurrency levels" )
@@ -286,18 +286,19 @@ def plotConcurrency(rank,inputFileName):
   pylab.xlabel('t')
   pylab.ylabel('Concurrency level')
   pylab.grid(True)
-  pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.png" )
-  pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.pdf" )
+  plotPrefix = plotDirectoryName + "/" + inputFileName
+  pylab.savefig( plotPrefix + "-rank-" + str(rank) + ".concurrency.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + "-rank-" + str(rank) + ".concurrency.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:  
     switchToLargePlot()
-    pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.png" )
-    pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.pdf" )
+    pylab.savefig( plotPrefix + "-rank-" + str(rank) + ".concurrency.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + "-rank-" + str(rank) + ".concurrency.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     switchBackToStandardPlot()  
   except:
     print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()  
-    pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.png" )
-    pylab.savefig( inputFileName + "-rank-" + str(rank) + ".concurrency.large.pdf" )
+    pylab.savefig( plotPrefix + "-rank-" + str(rank) + ".concurrency.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + "-rank-" + str(rank) + ".concurrency.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
 
 
@@ -313,7 +314,7 @@ def plotConcurrency(rank,inputFileName):
 # @writes A file inputFileName.mpi-phases.pdf
 #
 #
-def plotMPIPhases(numberOfRanks,inputFileName):
+def plotMPIPhases(numberOfRanks,inputFileName,plotDirectoryName):
   beforeInTraversalColor  = "#ff3434"
   inTraversalColor        = "#00ab00"
   afterInTraversalColor   = "#560000"
@@ -402,26 +403,27 @@ def plotMPIPhases(numberOfRanks,inputFileName):
   ax.autoscale_view()
   pylab.xlabel('t')
   pylab.grid(False)
-  pylab.savefig( inputFileName + ".mpi-phases.png" )
-  pylab.savefig( inputFileName + ".mpi-phases.pdf" )
+  plotPrefix = plotDirectoryName + "/" + inputFileName
+  pylab.savefig( plotPrefix + ".mpi-phases.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".mpi-phases.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
     switchToLargePlot()
     if numberOfRanks<=16:
       pylab.yticks([i for i in range(0,numberOfRanks)]) 
     else:
       pylab.yticks([i*16 for i in range(0,numberOfRanks/16)]) 
-    pylab.savefig( inputFileName + ".mpi-phases.large.png" )
-    pylab.savefig( inputFileName + ".mpi-phases.large.pdf" )
+    pylab.savefig( plotPrefix + ".mpi-phases.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".mpi-phases.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     switchBackToStandardPlot()  
   except:
     print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()  
-    pylab.savefig( inputFileName + ".mpi-phases.large.png" )
-    pylab.savefig( inputFileName + ".mpi-phases.large.pdf" )
+    pylab.savefig( plotPrefix + ".mpi-phases.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".mpi-phases.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
 
 
-def plotForkJoinStatistics(numberOfRanks,inputFileName):
+def plotForkJoinStatistics(numberOfRanks,inputFileName,plotDirectoryName):
   numberOfWorkingNodes = []
   numberOfIdleNodes    = []
   numberOfForks        = []
@@ -486,16 +488,16 @@ def plotForkJoinStatistics(numberOfRanks,inputFileName):
   pylab.plot(timelineOfJoins, numberOfJoins,        'x-',  markersize=10, color='#ff00aa', label='total joins' )
   
   setGeneralPlotSettings()
-  
-  pylab.savefig( inputFileName + ".fork-join-statistics.png" )
-  pylab.savefig( inputFileName + ".fork-join-statistics.pdf" )
+  plotPrefix = plotDirectoryName + "/" + inputFileName
+  pylab.savefig( plotPrefix + ".fork-join-statistics.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".fork-join-statistics.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
 
 
 
   
 
-def plotBoundaryLateSends(numberOfRanks,inputFileName):
+def plotBoundaryLateSends(numberOfRanks,inputFileName,plotDirectoryName):
   pairs = dict()
   totalMaxCardinality     = 0
   totalCount              = 0
@@ -559,55 +561,56 @@ def plotBoundaryLateSends(numberOfRanks,inputFileName):
   pylab.clf()
   pylab.title( "Late sends from neighbours" )
   drawTreeGraph(graph)
-  pylab.savefig( inputFileName + ".boundary-data-exchange.png" )
-  pylab.savefig( inputFileName + ".boundary-data-exchange.pdf" )
+  plotPrefix = plotDirectoryName + "/" + inputFileName
+  pylab.savefig( plotPrefix + ".boundary-data-exchange.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".boundary-data-exchange.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
     switchToLargePlot()
-    pylab.savefig( inputFileName + ".boundary-data-exchange.large.png" )
-    pylab.savefig( inputFileName + ".boundary-data-exchange.large.pdf" )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     switchBackToStandardPlot()
   except:
     print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()
-    pylab.savefig( inputFileName + ".boundary-data-exchange.large.png" )
-    pylab.savefig( inputFileName + ".boundary-data-exchange.large.pdf" )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   pylab.clf()
   pylab.title( "Late sends from neighbours (only edges with weight more than average)" )
   drawTreeGraph(sparseAverageGraph)
-  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.png" )
-  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.pdf" )
+  pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-average.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-average.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
     switchToLargePlot()
-    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.png" )
-    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.pdf" )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-average.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-average.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     switchBackToStandardPlot()
   except:
     print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()
-    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.png" )
-    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-average.large.pdf" )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-average.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-average.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   switchBackToStandardPlot()
 
   pylab.clf()
   pylab.title( "Late sends from neighbours (only 10% heaviest edges)" )
   drawTreeGraph(sparseMaxGraph)
-  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.png" )
-  pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.pdf" )
+  pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-max.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-max.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
     switchToLargePlot()
-    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.png" )
-    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.pdf" )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-max.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-max.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     switchBackToStandardPlot()
   except:
     print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()
-    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.png" )
-    pylab.savefig( inputFileName + ".boundary-data-exchange.sparse-max.large.pdf" )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-max.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".boundary-data-exchange.sparse-max.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   switchBackToStandardPlot()
 
 
-def plotMasterWorkerLateSends(numberOfRanks,inputFileName):
+def plotMasterWorkerLateSends(numberOfRanks,inputFileName,plotDirectoryName):
   GlobalSynchronisationOnRank0 = False
   
   #  <a href=\"" + outputFileName + ".master-worker-data-exchange.large.png\" /><img src=\"" + outputFileName + ".master-worker-data-exchange.png\" />\
@@ -681,50 +684,51 @@ def plotMasterWorkerLateSends(numberOfRanks,inputFileName):
   pylab.clf()
   pylab.title( "Late workers" )
   drawTreeGraph(graph)
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.png" )
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.pdf" )
+  plotPrefix = plotDirectoryName + "/" + inputFileName
+  pylab.savefig( plotPrefix + ".master-worker-data-exchange.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".master-worker-data-exchange.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
     switchToLargePlot()
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.large.png" )
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.large.pdf" )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     switchBackToStandardPlot()
   except:
     print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.large.png" )
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.large.pdf" )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   pylab.clf()
   pylab.title( "Late workers (only edges with weight more than average)" )
   drawTreeGraph(sparseAverageGraph)
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.png" )
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.pdf" )
+  pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-average.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-average.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try: 
     switchToLargePlot()
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.png" )
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.pdf" )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-average.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-average.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     switchBackToStandardPlot()
   except:
     print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.png" )
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-average.large.pdf" )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-average.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-average.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   pylab.clf()
   pylab.title( "Late workers (only 10% heaviest edges)" )
   drawTreeGraph(sparseMaxGraph)
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.png" )
-  pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.pdf" )
+  pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-max.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-max.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
     switchToLargePlot()
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.png" )
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.pdf" )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-max.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-max.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     switchBackToStandardPlot()
   except:
     print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.png" )
-    pylab.savefig( inputFileName + ".master-worker-data-exchange.sparse-max.large.pdf" )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-max.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".master-worker-data-exchange.sparse-max.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   return GlobalSynchronisationOnRank0
 
@@ -733,7 +737,7 @@ def plotMasterWorkerLateSends(numberOfRanks,inputFileName):
 # its parent is. The second entry of the return tuple is an array of the 
 # corresponding levels.
 #
-def plotLogicalTopology(inputFileName,numberOfRanks,dim):
+def plotLogicalTopology(numberOfRanks,dim,inputFileName,plotDirectoryName):
   parents  = [-1 for x in range(0,numberOfRanks)]
   levels   = [-1 for x in range(0,numberOfRanks)]
   if dim==2:
@@ -774,18 +778,19 @@ def plotLogicalTopology(inputFileName,numberOfRanks,dim):
   pylab.clf()
   pylab.title( "Logical topology" )
   drawTreeGraph(topologyGraph)
-  pylab.savefig( inputFileName + ".topology.png" )
-  pylab.savefig( inputFileName + ".topology.pdf" )
+  plotPrefix = plotDirectoryName + "/" + inputFileName
+  pylab.savefig( plotPrefix + ".topology.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".topology.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
     switchToLargePlot()
-    pylab.savefig( inputFileName + ".topology.large.png" )
-    pylab.savefig( inputFileName + ".topology.large.pdf" )
+    pylab.savefig( plotPrefix + ".topology.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".topology.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     switchBackToStandardPlot()
   except:
     print "ERROR: failed to generated large-scale plot"
     switchBackToStandardPlot()
-    pylab.savefig( inputFileName + ".topology.large.png" )
-    pylab.savefig( inputFileName + ".topology.large.pdf" )
+    pylab.savefig( plotPrefix + ".topology.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( plotPrefix + ".topology.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   return (parents,levels,offset,volume)
 
 
@@ -817,8 +822,8 @@ def plotGlobalGridOverview(numberOfRanks,inputFileName):
   pylab.plot(tTotal[0], numberOfOuterCells[0],     'x-',  markersize=10, color='#00aa66', label='#outer cells' )
   setGeneralPlotSettings()
   pylab.legend(fontsize=9, loc='upper left', framealpha=0.5)
-  pylab.savefig( inputFileName + ".grid-overview-global-master.png" )
-  pylab.savefig( inputFileName + ".grid-overview-global-master.pdf" )
+  pylab.savefig( inputFileName + ".grid-overview-global-master.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( inputFileName + ".grid-overview-global-master.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   pylab.clf()
   pylab.title( "Local cells" )
@@ -830,8 +835,8 @@ def plotGlobalGridOverview(numberOfRanks,inputFileName):
     if len(tTotal[rank])==len(numberOfLocalCells[rank]):
       pylab.plot(tTotal[rank], numberOfLocalCells[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
   pylab.xlabel('t')
-  pylab.savefig( inputFileName + ".local-cells.png" )
-  pylab.savefig( inputFileName + ".local-cells.pdf" )
+  pylab.savefig( inputFileName + ".local-cells.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( inputFileName + ".local-cells.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   globalNumberOfInnerLeafCells = [a for a in numberOfInnerLeafCells[0]]
   globalNumberOfOuterLeafCells = [a for a in numberOfOuterLeafCells[0]]
@@ -865,8 +870,8 @@ def plotGlobalGridOverview(numberOfRanks,inputFileName):
   pylab.plot(tTotal[0], globalNumberOfOuterCells,     'x-',  markersize=10, color='#00aa66', label='#outer cells' )
   pylab.legend(fontsize=9, loc='upper left', framealpha=0.5)
   setGeneralPlotSettings()
-  pylab.savefig( inputFileName + ".grid-overview.png" )
-  pylab.savefig( inputFileName + ".grid-overview.pdf" )
+  pylab.savefig( inputFileName + ".grid-overview.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( inputFileName + ".grid-overview.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   pylab.clf()
   pylab.title( "Local vertices" )
@@ -878,8 +883,8 @@ def plotGlobalGridOverview(numberOfRanks,inputFileName):
     if len(tTotal[rank])==len(numberOfLocalVertices[rank]):
       pylab.plot(tTotal[rank], numberOfLocalVertices[rank], 'o',  color='#000000', alpha=AlphaValue, markersize=10)
   pylab.xlabel('t')
-  pylab.savefig( inputFileName + ".local-vertices.png" )
-  pylab.savefig( inputFileName + ".local-vertices.pdf" )
+  pylab.savefig( inputFileName + ".local-vertices.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( inputFileName + ".local-vertices.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
 
 def plotWalltimeOverview(numberOfRanks,inputFileName): 
@@ -897,14 +902,14 @@ def plotWalltimeOverview(numberOfRanks,inputFileName):
     if len(tTotal[rank])==len(tTraversal[rank]):
       pylab.plot(tTotal[rank], tTraversal[rank], 'o',  color='r', alpha=AlphaValue, markersize=10)
   setGeneralPlotSettings()
-  pylab.savefig( inputFileName + ".walltime.png" )
-  pylab.savefig( inputFileName + ".walltime.pdf" )
+  pylab.savefig( inputFileName + ".walltime.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( inputFileName + ".walltime.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
 
 
 
 
-def plotStatisticsForRank(currentRank,numberOfRanks,inputFileName):
+def plotStatisticsForRank(currentRank,numberOfRanks,inputFileName,plotDirectoryName):
   pylab.clf()
   pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
   pylab.title( "Walltime" )
@@ -922,8 +927,9 @@ def plotStatisticsForRank(currentRank,numberOfRanks,inputFileName):
     else:
       print "WARNING: tTotal and tTraversal for rank " + str(rank) + " do not hold the same number of entries. Input file seems to be corrupted"
   setGeneralPlotSettings()
-  pylab.savefig( inputFileName + ".walltime-rank-" + str(currentRank) + ".png" )
-  pylab.savefig( inputFileName + ".walltime-rank-" + str(currentRank) + ".pdf" )
+  plotPrefix = plotDirectoryName + "/" + inputFileName
+  pylab.savefig( plotPrefix + ".walltime-rank-" + str(currentRank) + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".walltime-rank-" + str(currentRank) + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   pylab.clf()
   pylab.title( "Cells" )
@@ -942,8 +948,8 @@ def plotStatisticsForRank(currentRank,numberOfRanks,inputFileName):
     else:
       print "WARNING: arrays tTotal and numberOfLocalCells of rank " + str(rank) + " have different sizes. Input file might be corrupted"
   setGeneralPlotSettings()
-  pylab.savefig( inputFileName + ".local-cells-rank-" + str(currentRank) + ".png" )
-  pylab.savefig( inputFileName + ".local-cells-rank-" + str(currentRank) + ".pdf" )
+  pylab.savefig( plotPrefix + ".local-cells-rank-" + str(currentRank) + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".local-cells-rank-" + str(currentRank) + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   
   totalTimeCalendar            = []
   joinTimeCalendar             = []
@@ -1064,8 +1070,8 @@ def plotStatisticsForRank(currentRank,numberOfRanks,inputFileName):
 
   setGeneralPlotSettings()
 
-  pylab.savefig( inputFileName + ".runtime-profile-calendar-rank-" + str(currentRank) + ".png" )
-  pylab.savefig( inputFileName + ".runtime-profile-calendar-rank-" + str(currentRank) + ".pdf" )
+  pylab.savefig( plotPrefix + ".runtime-profile-calendar-rank-" + str(currentRank) + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".runtime-profile-calendar-rank-" + str(currentRank) + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
 
 
@@ -1088,8 +1094,8 @@ def plotStatisticsForRank(currentRank,numberOfRanks,inputFileName):
     print "- error in centralElementCPU"
 
   setGeneralPlotSettings()
-  pylab.savefig( inputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".png" )
-  pylab.savefig( inputFileName + ".runtime-profile-cpu-rank-" + str(currentRank) + ".pdf" )
+  pylab.savefig( plotPrefix + ".runtime-profile-cpu-rank-" + str(currentRank) + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( plotPrefix + ".runtime-profile-cpu-rank-" + str(currentRank) + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   
 def computeVolumesOverlapsWork(numberOfRanks,volume,offset,dim,domainoffset,domainsize,parents):
@@ -1201,18 +1207,18 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,wor
  setGeneralPlotSettings()
  pylab.xlabel('rank')  
  pylab.ylabel('$\Omega $')
- pylab.savefig( outputFileName + "-symlog.work-distribution.png" )
- pylab.savefig( outputFileName + "-symlog.work-distribution.pdf" )
+ pylab.savefig( outputFileName + "-symlog.work-distribution.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+ pylab.savefig( outputFileName + "-symlog.work-distribution.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
  try:
    switchToLargePlot()
-   pylab.savefig( outputFileName + "-symlog.work-distribution.large.png" )
-   pylab.savefig( outputFileName + "-symlog.work-distribution.large.pdf" )
+   pylab.savefig( outputFileName + "-symlog.work-distribution.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+   pylab.savefig( outputFileName + "-symlog.work-distribution.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
    switchBackToStandardPlot()
  except:
    print "ERROR: failed to generated large-scale plot"
    switchBackToStandardPlot()
-   pylab.savefig( outputFileName + "-symlog.work-distribution.large.png" )
-   pylab.savefig( outputFileName + "-symlog.work-distribution.large.pdf" )
+   pylab.savefig( outputFileName + "-symlog.work-distribution.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+   pylab.savefig( outputFileName + "-symlog.work-distribution.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
  ax.set_yscale('symlog', basey=10)
 
@@ -1223,18 +1229,18 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,volumes,overlaps,wor
  setGeneralPlotSettings()
  pylab.xlabel('rank')  
  pylab.ylabel('$\Omega $')
- pylab.savefig( outputFileName + ".work-distribution.png" )
- pylab.savefig( outputFileName + ".work-distribution.pdf" )
+ pylab.savefig( outputFileName + ".work-distribution.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+ pylab.savefig( outputFileName + ".work-distribution.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
  try:
    switchToLargePlot()
-   pylab.savefig( outputFileName + ".work-distribution.large.png" )
-   pylab.savefig( outputFileName + ".work-distribution.large.pdf" )
+   pylab.savefig( outputFileName + ".work-distribution.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+   pylab.savefig( outputFileName + ".work-distribution.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
    switchBackToStandardPlot()
  except:
    print "ERROR: failed to generated large-scale plot"
    switchBackToStandardPlot()
-   pylab.savefig( outputFileName + ".work-distribution.large.png" )
-   pylab.savefig( outputFileName + ".work-distribution.large.pdf" )
+   pylab.savefig( outputFileName + ".work-distribution.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+   pylab.savefig( outputFileName + ".work-distribution.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
  print "done"
 
  
@@ -1262,12 +1268,12 @@ def plot2dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   print ".",
   pylab.xlim( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
   pylab.ylim( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
-  pylab.savefig( outputFileName + ".level" + str(l) + ".png" )
-  pylab.savefig( outputFileName + ".level" + str(l) + ".pdf" )
+  pylab.savefig( outputFileName + ".level" + str(l) + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( outputFileName + ".level" + str(l) + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
     switchToLargePlot()
-    pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
-    pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     print "done"
     switchBackToStandardPlot()  
   except:
@@ -1354,12 +1360,12 @@ def plotDomainDecomposition2d(outputFileName,numberOfRanks,domainoffset,domainsi
     colorCounter = colorCounter + 1
   pylab.xlim( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
   pylab.ylim( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
-  pylab.savefig( outputFileName + ".dd.png" )
-  pylab.savefig( outputFileName + ".dd.pdf" )
+  pylab.savefig( outputFileName + ".dd.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( outputFileName + ".dd.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
     switchToLargePlot()
-    pylab.savefig( outputFileName + ".dd.large.png" )
-    pylab.savefig( outputFileName + ".dd.large.pdf" )
+    pylab.savefig( outputFileName + ".dd.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( outputFileName + ".dd.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     print "done"
     switchBackToStandardPlot()  
   except:
@@ -1435,19 +1441,19 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
       numberOfPartitionsPlottedInThisSubfigure = numberOfPartitionsPlottedInThisSubfigure+1      
       colorCounter = colorCounter + 1
   
-  pylab.savefig( outputFileName + ".level" + str(l) + ".png" )
-  pylab.savefig( outputFileName + ".level" + str(l) + ".pdf" )
+  pylab.savefig( outputFileName + ".level" + str(l) + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( outputFileName + ".level" + str(l) + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   try:  
     switchToLargePlot()
   
-    pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
-    pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     switchBackToStandardPlot()  
     print "done"
   except:
     print "could not create large size plots"
     switchBackToStandardPlot()  
-    pylab.savefig( outputFileName + ".level" + str(l) + ".large.png" )
-    pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf" )
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( outputFileName + ".level" + str(l) + ".large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     

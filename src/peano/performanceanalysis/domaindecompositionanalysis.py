@@ -2,7 +2,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 
 import matplotlib
-#matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
+matplotlib.use('Agg') # Must be before importing matplotlib.pyplot or pylab!
 
 import pylab
 import networkx
@@ -51,7 +51,7 @@ dim = int(args.dimension)
 numberOfRanks = performanceanalysisroutines.getNumberOfRanks(args.file)
 
 
-(parents,levels,offset,volume) = performanceanalysisroutines.plotLogicalTopology(args.file,numberOfRanks,dim);
+(parents,levels,offset,volume) = performanceanalysisroutines.plotLogicalTopology(numberOfRanks,dim,args.file,".");
 outFile.write( "<h2>Logical topology</h2>" )
 outFile.write( "<a href=\"" + args.file + ".topology.large.png\"><img src=\"" + args.file + ".topology.png\" /></a>" )
 
