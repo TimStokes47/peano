@@ -27,6 +27,7 @@ void peano::performanceanalysis::tests::SpeedupLawsTest::run() {
   testMethod( testAmdahl1 );
   testMethod( testAmdahl2 );
   testMethod( testAmdahl3 );
+  testMethod( testGetOptimalNumberOfThreads );
 }
 
 
@@ -126,6 +127,32 @@ void peano::performanceanalysis::tests::SpeedupLawsTest::testAmdahl3() {
   validateWithParams2( std::abs(law.getSerialTime()-t1) < 4.0,        t1, law.toString());
 }
 
+
+void peano::performanceanalysis::tests::SpeedupLawsTest::testGetOptimalNumberOfThreads() {
+  std::vector<double>  t_1;
+  std::vector<double>  f;
+  std::vector<double>  s;
+
+  const int MaxThreads = 4;
+
+  t_1.push_back(2);
+  f.push_back(0.1);
+  s.push_back(0.1);
+
+  int recommendation = peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
+    0, t_1, f, s, MaxThreads );
+
+  validateEquals(recommendation,MaxThreads);
+
+  t_1[0] = 6.456e-6;
+  f[0] = 0.5;
+  s[0] = 0.0;
+
+  recommendation = peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
+    0, t_1, f, s, MaxThreads );
+
+  validateEquals(recommendation,MaxThreads);
+}
 
 
 #ifdef UseTestSpecificCompilerSettings

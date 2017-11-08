@@ -9,6 +9,9 @@
 #include "tarch/la/Vector.h"
 
 
+#include <vector>
+
+
 namespace peano {
   namespace performanceanalysis {
     class SpeedupLaws;
@@ -316,6 +319,33 @@ comprising the update rule
     double getStartupCostPerThread() const;
 
     std::string toString() const;
+
+    /**
+     * Computes the optimal number of threads for one particular rank if
+     * multiple ranks run on the same node and we have an augmented Amdahl
+     * model for each of them.
+     *
+     * <h2> Implementation details </h2>
+     *
+     * We always start with c=1 for all settings, so we approach the optimal
+     * c distribution from below.
+     *
+     * @param alpha Weight of penalty term
+     * @param m     2m is the exponent of the speed weight. The higher m the
+     *              closer our algorithm to a minimisation of the maximum
+     *              runtime
+     * @param eps   Convergence criterion
+     */
+    static int getOptimalNumberOfThreads(
+      int                  rankNumber,
+      std::vector<double>  t1,
+      std::vector<double>  f,
+      std::vector<double>  s,
+      int                  totalThreadsAvailable,
+      double               alpha=0.1,
+      int                  m=4,
+      double               eps=1e-4
+    );
 };
 
 #endif

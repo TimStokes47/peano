@@ -7,11 +7,11 @@
 #include "tarch/tests/TestCase.h"
 
 namespace peano {
-    namespace performanceanalysis {
-      namespace tests {
-        class SpeedupLawsTest;
-      }
+  namespace performanceanalysis {
+    namespace tests {
+      class SpeedupLawsTest;
     }
+  }
 }
 
 class peano::performanceanalysis::tests::SpeedupLawsTest: public tarch::tests::TestCase {
@@ -33,6 +33,8 @@ class peano::performanceanalysis::tests::SpeedupLawsTest: public tarch::tests::T
      * The weird case, where the problem is undetermined.
      */
     void testAmdahl3();
+
+    void testGetOptimalNumberOfThreads();
 
    double getAmdahlPrediction(double t1, double f, double c);
  public:
