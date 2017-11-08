@@ -243,11 +243,12 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     c.push_back(1.0);
     M.push_back(0.0);
     M_kdc_k.push_back(0.0);
+    logDebug( "getOptimalNumberOfThreads(...)", "c[" << k << "]=" << c[k] << ", t_1[k]=" << t_1[k] << ", f[k]=" << f[k] << ", s[k]=" << s[k] );
   }
 
   double maxM_kdc_k       = eps + 1.0;
   int    newtonIterations = 0;
-  const int MaxNewtonIterations = 10;
+  const int MaxNewtonIterations = 100;
   while (maxM_kdc_k>eps && newtonIterations<MaxNewtonIterations) {
     // Penalty term is the same for all components
     double penalty    = totalThreadsAvailable;
@@ -255,13 +256,12 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
       penalty -= c[k];
     }
 
-
     for (int k=0; k<static_cast<int>(f.size()); k++) {
       const double amdahlTerm = f[k] * t_1[k] + (1.0-f[k])*t_1[k]/c[k] + s[k]*c[k];
       const double scalingOfAmdahlPow =  -(1.0-f[k])*t_1[k]/c[k]/c[k] + s[k];
       M[k] =
        std::pow(amdahlTerm,2.0 * m - 1.0) * scalingOfAmdahlPow - alpha * penalty;
-      M_kdc_k[0] = 1.0 / (2*m - 1.0) *
+      M_kdc_k[k] = 1.0 / (2*m - 1.0) *
        std::pow(amdahlTerm,2.0 * m - 2.0) * scalingOfAmdahlPow * scalingOfAmdahlPow +
        std::pow(amdahlTerm,2.0 * m - 1.0) * ( 2.0 * (1.0-f[k]) * t_1[k] / c[k] / c[k] / c[k] ) +
        alpha
@@ -271,96 +271,28 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     // update c distribution and also determine termination criteration
     maxM_kdc_k = 0.0;
     for (int k=0; k<static_cast<int>(f.size()); k++) {
-      //logInfo( "getOptimalNumberOfThreads(...)", "c[k]=" << c[k] << ", D=" << D << ", Ddc[k]=" << Ddc[k] );
-      assertion( std::abs(M_kdc_k[k])>eps/2.0 );
       if (std::abs(M_kdc_k[k])>eps/2.0) {
-        c[k]   -= M[k] / M_kdc_k[k];
+        double update = - M[k] / M_kdc_k[k];
+        if (update<0.0) update *= 0.9;
+        c[k]  += update;
       }
       maxM_kdc_k  = std::max( maxM_kdc_k, std::abs(M_kdc_k[k]) );
+
+      logDebug( "getOptimalNumberOfThreads(...)", "c[" << k << "]=" << c[k] << ", M[k]=" << M[k] << ", M_kdc_k[k]=" << M_kdc_k[k] );
     }
     newtonIterations++;
   }
 
-  //logInfo( "getOptimalNumberOfThreads(...)", "result=" << c[rankNumber] );
-  return std::floor(c[rankNumber]+0.5);
-}
 
-
-
-
-/*
-
-
-
-int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
-  int                  rankNumber,
-  std::vector<double>  t_1,
-  std::vector<double>  f,
-  std::vector<double>  s,
-  int                  totalThreadsAvailable,
-  double               alpha,
-  int                  m,
-  double               eps
-) {
-  m=1;
-  assertion(alpha>0.0);
-  assertion(m>=1);
-  assertionEquals(f.size(),t_1.size());
-  assertionEquals(s.size(),t_1.size());
-  assertion2(rankNumber<static_cast<int>( s.size() ), rankNumber, s.size() );
-
-  std::vector<double>  c;
-  std::vector<double>  Ddc;
-
+  double assignedCores = 0.0;
   for (int k=0; k<static_cast<int>(f.size()); k++) {
-    c.push_back(1.0);
-    Ddc.push_back(0.0);
+    assignedCores += c[k];
+  }
+  if (assignedCores<totalThreadsAvailable) {
+    for (int k=0; k<static_cast<int>(f.size()); k++) {
+      c[k] += 1.0;
+    }
   }
 
-  double maxDdc           = eps + 1.0;
-  int    newtonIterations = 0;
-  const int MaxNewtonIterations = 10;
-  while (maxDdc>eps && newtonIterations<MaxNewtonIterations) {
-    double D          = 0.0;
-    double penalty    = totalThreadsAvailable;
-
-    // compute functional value -> stored in functional, while penalty is the
-    // stuff under the square
-    for (int k=0; k<static_cast<int>(f.size()); k++) {
-      D += std::pow(
-        f[k]*t_1[k]+(1.0-f[k])*t_1[k]+c[k]*s[k],
-        2*m
-      );
-      penalty -= c[k];
-    }
-    D = D / 2.0 / m + alpha / 2.0 * penalty * penalty;
-
-    // compute derivative where we need the penalty variable again
-    for (int k=0; k<static_cast<int>(f.size()); k++) {
-      const double gradientScaling = std::pow(
-          f[k]*t_1[k] + ( (1-f[k])*t_1[k] ) / c[k] + s[k]*c[k],
-          2*m-1
-        );
-      const double gradient = -(1-f[k]) * t_1[k]/c[k]/c[k] + s[k];
-      Ddc[k] =  gradientScaling * gradient - alpha * penalty;
-    }
-
-
-    // update c distribution and also determine termination criteration
-    maxDdc = 0.0;
-    for (int k=0; k<static_cast<int>(f.size()); k++) {
-      logInfo( "getOptimalNumberOfThreads(...)", "c[k]=" << c[k] << ", D=" << D << ", Ddc[k]=" << Ddc[k] );
-      if (std::abs(Ddc[k])>eps/2.0) {
-        c[k]   -= D / Ddc[k];
-      }
-      maxDdc  = std::max( maxDdc, std::abs(Ddc[k]) );
-    }
-    newtonIterations++;
-  }
-
-  logInfo( "getOptimalNumberOfThreads(...)", "result=" << c[rankNumber] );
   return std::floor(c[rankNumber]+0.5);
 }
-
-
- */

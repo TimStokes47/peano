@@ -34,7 +34,8 @@ class peano::performanceanalysis::tests::SpeedupLawsTest: public tarch::tests::T
      */
     void testAmdahl3();
 
-    void testGetOptimalNumberOfThreads();
+    void testGetOptimalNumberOfThreadsWithOneRank();
+    void testGetOptimalNumberOfThreadsWithTwoRanks();
 
    double getAmdahlPrediction(double t1, double f, double c);
  public:
