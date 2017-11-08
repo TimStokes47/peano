@@ -25,7 +25,6 @@ clean:
 	rm -f $(OBJECTS)
 	rm -f files.mk
 	rm -rf ../bin
-	mkdir ../bin
 	rm -rf org/peano/pdt/analysis
 	rm -rf org/peano/pdt/lexer
 	rm -rf org/peano/pdt/node
@@ -37,10 +36,11 @@ createParser:
 	java -jar ../lib/sablecc.jar -d . ../pdt.grammar 
 	tar -xzvf ../lib/DaStGen.tar.gz de
 	rm -f files.mk
-	mkdir ../bin
 
+prepare:
+	mkdir -p ../bin
 
-compile: files.mk $(OBJECTS) 
+compile: prepare files.mk $(OBJECTS) 
 
 
 dist:
