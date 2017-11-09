@@ -159,15 +159,13 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::Vertex
 
 
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter::close() {
-  const int lineLenght = std::pow(_writer._numberOfCellsPerAxis+1,_writer._dimensions);
-  #ifdef Asserts
-  assertion1( _data.size()%lineLenght == 0, _identifier);
-  #endif
-
   assignRemainingVerticesDefaultValues();
 
   #ifdef HDF5
   logDebug( "close()", "create data table of " << _identifier );
+
+  const int lineLenght = std::pow(_writer._numberOfCellsPerAxis+1,_writer._dimensions);
+  assertion1( _data.size()%lineLenght == 0, _identifier);
 
   //
   // Create the data space with unlimited dimensions.
