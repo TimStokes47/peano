@@ -224,11 +224,6 @@ class peano::parallel::loadbalancing::Oracle {
     peano::parallel::loadbalancing::LoadBalancingFlag getCommandForWorker( int workerRank, bool forkIsAllowed = true, bool joinIsAllowed = true);
 
     /**
-     * Notifies the oracle that from now on, the master starts to wait for workers.
-     */
-    void masterStartsToWaitForWorkers();
-
-    /**
      * Fork Has Failed
      *
      * Informs the active oracle that a fork has failed. This is usually due to

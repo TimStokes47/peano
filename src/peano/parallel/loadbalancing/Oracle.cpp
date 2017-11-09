@@ -160,11 +160,6 @@ void peano::parallel::loadbalancing::Oracle::plotStatistics() {
 }
 
 
-void peano::parallel::loadbalancing::Oracle::masterStartsToWaitForWorkers() {
-  peano::performanceanalysis::Analysis::getInstance().beginToReceiveDataFromWorker();
-}
-
-
 void peano::parallel::loadbalancing::Oracle::setNumberOfOracles(int value) {
   assertion( value>0 );
 
