@@ -150,14 +150,16 @@ void peano::performanceanalysis::DefaultAnalyser::removeWorker(
 
 
 void peano::performanceanalysis::DefaultAnalyser::beginToReceiveDataFromWorker() {
-  if (_isSwitchedOn && !_waitForWorkerDataWatch.isOn()) {
+  if (_isSwitchedOn) {
+//    if (_isSwitchedOn && !_waitForWorkerDataWatch.isOn()) {
     _waitForWorkerDataWatch.startTimer();
   }
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromWorker( int fromRank ) {
-  if (_isSwitchedOn && _waitForWorkerDataWatch.isOn()) {
+  if (_isSwitchedOn) {
+  //if (_isSwitchedOn && _waitForWorkerDataWatch.isOn()) {
     _waitForWorkerDataWatch.stopTimer();
     const double elapsedTime = _waitForWorkerDataWatch.getCalendarTime();
 
@@ -169,9 +171,9 @@ void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromWorker( in
         "s"
       );
     }
+    _waitForWorkerDataWatch.startTimer();
   }
 }
-
 
 
 void peano::performanceanalysis::DefaultAnalyser::beginToReceiveDataFromMaster() {
