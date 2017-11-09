@@ -91,7 +91,9 @@ class peano::performanceanalysis::Analyser {
     virtual void endToReleaseSynchronousHeapData() = 0;
     virtual void beginToPrepareAsynchronousHeapDataExchange() = 0;
     virtual void endToPrepareAsynchronousHeapDataExchange() = 0;
+    virtual void beginReleaseOfJoinData() = 0;
     virtual void endReleaseOfJoinData() = 0;
+    virtual void beginReleaseOfBoundaryData() = 0;
     virtual void endReleaseOfBoundaryData() = 0;
 
     /**

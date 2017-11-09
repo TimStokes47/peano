@@ -48,6 +48,8 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     tarch::timing::Watch           _waitForWorkerDataWatch;
     tarch::timing::Watch           _synchronousHeapWatch;
     tarch::timing::Watch           _asynchronousHeapWatch;
+    tarch::timing::Watch           _releaseJoinDataWatch;
+    tarch::timing::Watch           _releaseBoundaryDataWatch;
 
     tarch::timing::Watch                _concurrencyReportWatch;
     tarch::multicore::BooleanSemaphore  _concurrencyReportSemaphore;
@@ -132,7 +134,10 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
      */
     virtual void endToPrepareAsynchronousHeapDataExchange();
 
+    virtual void beginReleaseOfJoinData();
     virtual void endReleaseOfJoinData();
+
+    virtual void beginReleaseOfBoundaryData();
     virtual void endReleaseOfBoundaryData();
 
     virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange);

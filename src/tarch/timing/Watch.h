@@ -120,7 +120,8 @@ class tarch::timing::Watch {
     Watch(
       const std::string& className,
       const std::string& operationName,
-      bool               plotResultInDestructor
+      bool               plotResultInDestructor,
+      bool               startToTickImmediately = true
     );
 
     /**

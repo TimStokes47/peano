@@ -103,7 +103,9 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
     virtual void endToReleaseSynchronousHeapData();
     virtual void beginToPrepareAsynchronousHeapDataExchange();
     virtual void endToPrepareAsynchronousHeapDataExchange();
+    virtual void beginReleaseOfJoinData();
     virtual void endReleaseOfJoinData();
+    virtual void beginReleaseOfBoundaryData();
     virtual void endReleaseOfBoundaryData();
 
     virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange);

@@ -16,13 +16,15 @@ double peano::performanceanalysis::DefaultAnalyser::TimeInBetweenTwoConcurrencyD
 
 peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   _isSwitchedOn(true),
-  _totalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _traversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _waitForWorkerDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _synchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
-  _concurrencyReportWatch("peano::performanceanalysis::DefaultAnalyser", "-", false),
+  _totalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _traversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _waitForWorkerDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _synchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _concurrencyReportWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _releaseJoinDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _releaseBoundaryDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
   _currentConcurrencyLevel(1),
   _currentPotentialConcurrencyLevel(1),
   _maxConcurrencyLevel(1),
@@ -146,14 +148,14 @@ void peano::performanceanalysis::DefaultAnalyser::removeWorker(
 
 
 void peano::performanceanalysis::DefaultAnalyser::beginToReceiveDataFromWorker() {
-  if (_isSwitchedOn) {
+  if (_isSwitchedOn && !_waitForWorkerDataWatch.isOn()) {
     _waitForWorkerDataWatch.startTimer();
   }
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromWorker( int fromRank ) {
-  if (_isSwitchedOn) {
+  if (_isSwitchedOn && _waitForWorkerDataWatch.isOn()) {
     _waitForWorkerDataWatch.stopTimer();
     const double elapsedTime = _waitForWorkerDataWatch.getCalendarTime();
 
@@ -165,7 +167,6 @@ void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromWorker( in
         "s"
       );
     }
-    _waitForWorkerDataWatch.startTimer();
   }
 }
 
@@ -184,14 +185,14 @@ void peano::performanceanalysis::DefaultAnalyser::dataWasNotReceivedInBackground
 
 
 void peano::performanceanalysis::DefaultAnalyser::beginToReleaseSynchronousHeapData() {
-  if (_isSwitchedOn) {
+  if (_isSwitchedOn && !_synchronousHeapWatch.isOn()) {
     _synchronousHeapWatch.startTimer();
   }
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::endToReleaseSynchronousHeapData() {
-  if (_isSwitchedOn) {
+  if (_isSwitchedOn && _synchronousHeapWatch.isOn()) {
     _synchronousHeapWatch.stopTimer();
 
     logInfo(
@@ -206,14 +207,14 @@ void peano::performanceanalysis::DefaultAnalyser::endToReleaseSynchronousHeapDat
 
 
 void peano::performanceanalysis::DefaultAnalyser::beginToPrepareAsynchronousHeapDataExchange() {
-  if (_isSwitchedOn) {
+  if (_isSwitchedOn && !_asynchronousHeapWatch.isOn()) {
     _asynchronousHeapWatch.startTimer();
   }
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange() {
-  if (_isSwitchedOn) {
+  if (_isSwitchedOn && _asynchronousHeapWatch.isOn()) {
     _asynchronousHeapWatch.stopTimer();
 
     logInfo(
@@ -227,36 +228,46 @@ void peano::performanceanalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDa
 }
 
 
+void peano::performanceanalysis::DefaultAnalyser::beginReleaseOfJoinData() {
+  if (_isSwitchedOn && !_releaseJoinDataWatch.isOn()) {
+    _releaseJoinDataWatch.startTimer();
+  }
+}
+
+
 void peano::performanceanalysis::DefaultAnalyser::endReleaseOfJoinData() {
-  if (_isSwitchedOn) {
-    _traversalWatch.stopTimer();
+  if (_isSwitchedOn && _releaseJoinDataWatch.isOn()) {
+      _releaseJoinDataWatch.stopTimer();
 
     logInfo(
       "endReleaseOfJoinData()",
       "time=" <<
-      _traversalWatch.getCalendarTime() <<
+      _releaseJoinDataWatch.getCalendarTime() <<
       ", cpu time=" <<
-      _traversalWatch.getCPUTime()
+      _releaseJoinDataWatch.getCPUTime()
     );
+  }
+}
 
-    _traversalWatch.startTimer();
+
+void peano::performanceanalysis::DefaultAnalyser::beginReleaseOfBoundaryData() {
+  if (_isSwitchedOn && !_releaseBoundaryDataWatch.isOn() ) {
+    _releaseBoundaryDataWatch.startTimer();
   }
 }
 
 
 void peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData() {
-  if (_isSwitchedOn) {
-    _traversalWatch.stopTimer();
+  if (_isSwitchedOn && _releaseBoundaryDataWatch.isOn() ) {
+      _releaseBoundaryDataWatch.stopTimer();
 
     logInfo(
       "endReleaseOfBoundaryData()",
       "time=" <<
-      _traversalWatch.getCalendarTime() <<
+      _releaseBoundaryDataWatch.getCalendarTime() <<
       ", cpu time=" <<
-      _traversalWatch.getCPUTime()
+      _releaseBoundaryDataWatch.getCPUTime()
     );
-
-    _traversalWatch.startTimer();
   }
 }
 

@@ -110,9 +110,21 @@ void peano::performanceanalysis::Analysis::endToPrepareAsynchronousHeapDataExcha
 }
 
 
+void peano::performanceanalysis::Analysis::beginReleaseOfJoinData() {
+  assertion( _device!=0 );
+  _device->beginReleaseOfJoinData();
+}
+
+
 void peano::performanceanalysis::Analysis::endReleaseOfJoinData() {
   assertion( _device!=0 );
   _device->endReleaseOfJoinData();
+}
+
+
+void peano::performanceanalysis::Analysis::beginReleaseOfBoundaryData() {
+  assertion( _device!=0 );
+  _device->beginReleaseOfBoundaryData();
 }
 
 

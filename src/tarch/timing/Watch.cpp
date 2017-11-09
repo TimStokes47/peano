@@ -1,9 +1,9 @@
-#include "tarch/timing/Watch.h"
-#include "tarch/compiler/CompilerSpecificSettings.h"
+#include "Watch.h"
 
-#include <time.h>
-
+#include <sys/time.h>
 #include <sstream>
+#include <string>
+
 
 #if !defined(SharedTBB) && !defined(SharedTBBInvade) && !defined(SharedOMP) && defined(CompilerHasTimespec)
 namespace tarch {
@@ -24,7 +24,8 @@ namespace tarch {
 tarch::timing::Watch::Watch(
   const std::string& className,
   const std::string& operationName,
-  const bool         plotResultInDestructor
+  const bool         plotResultInDestructor,
+  bool               startToTickImmediately
   ):
   _log( className ),
   _plotResultInDestructor(plotResultInDestructor),
@@ -33,7 +34,7 @@ tarch::timing::Watch::Watch(
   _startTime(),
   _elapsedClockTicks( 0 ),
   _elapsedTime( 0 ),
-  _isRunning(true) {
+  _isRunning(startToTickImmediately) {
 
   #ifdef __APPLE__
   host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
@@ -117,4 +118,9 @@ std::clock_t tarch::timing::Watch::getCPUTicks() {
 
 double tarch::timing::Watch::getCalendarTime()  {
   return _elapsedTime;
+}
+
+
+bool tarch::timing::Watch::isOn() const {
+  return _isRunning;
 }
