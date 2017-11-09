@@ -33,7 +33,7 @@ tarch::timing::Watch::Watch(
   _startTime(),
   _elapsedClockTicks( 0 ),
   _elapsedTime( 0 ),
-  _calledStopManually(false) {
+  _isRunning(true) {
 
   #ifdef __APPLE__
   host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
@@ -44,7 +44,7 @@ tarch::timing::Watch::Watch(
 
 
 tarch::timing::Watch::~Watch() {
-  if (!_calledStopManually) {
+  if (_isRunning) {
     stopTimer();
   }
 
@@ -78,6 +78,7 @@ void tarch::timing::Watch::startTimer() {
 	   _startTime = (double)ts.tv_sec + (double)ts.tv_nsec * 1e-09;
   }
   #endif
+  _isRunning           = true;
 }
 
 
@@ -98,7 +99,7 @@ void tarch::timing::Watch::stopTimer() {
   _elapsedTime = -1;
   #endif
   _elapsedClockTicks   = clock() - _startClockTicks;
-  _calledStopManually  = true;
+  _isRunning           = false;
 }
 
 

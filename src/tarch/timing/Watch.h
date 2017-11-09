@@ -103,7 +103,7 @@ class tarch::timing::Watch {
     /**
      * Has stopTimer() been called before.
      */
-    bool _calledStopManually;
+    bool           _isRunning;
 
     #ifdef __APPLE__
     clock_serv_t cclock;
@@ -179,6 +179,14 @@ class tarch::timing::Watch {
      * seconds.
      */
     double getCalendarTime();
+
+    /**
+     * This operation returns whether the watch is currently on. If the routine
+     * returns false, it is currently stopped. The concept of on/off is a
+     * logical concept. Internally, a watch simply administers system time
+     * snapshots, while the get routines return differences of these snapshots.
+     */
+    bool isOn() const;
 };
 
 #endif
