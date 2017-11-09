@@ -133,6 +133,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     const int currentWorker = fineGridCell.getRankOfRemoteNode();
     logTraceInWith3Arguments( "updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(...)", state.toString(), fineGridCell.toString(), currentWorker );
 
+   
     Cell    receivedWorkerCell;
     Vertex  receivedWorkerVertices[TWO_POWER_D];
     State   workerState;
@@ -143,7 +144,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     );
 
     if ( state.reduceDataFromWorker(currentWorker) ) {
-      peano::parallel::loadbalancing::Oracle::getInstance().masterStartsToWaitForWorkers();
+      peano::performanceanalysis::Analysis::getInstance().beginToReceiveDataFromWorker();
 
       if (_eventHandle.communicationSpecification().sendDataBackToMaster()!=peano::CommunicationSpecification::Action::Skip) {
         receivedWorkerCell.receive(
@@ -202,6 +203,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
       // Does not hold if heaps are used
       // tarch::parallel::Node::getInstance().ensureThatMessageQueuesAreEmpty(currentWorker,peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag());
+
+      peano::performanceanalysis::Analysis::getInstance().endToReceiveDataFromWorker(currentWorker);
     }
     else {
       logInfo( "updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(...)", "skip reduction from rank " << currentWorker );
