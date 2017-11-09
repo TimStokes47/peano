@@ -106,6 +106,13 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
       int                                 level
     );
 
+    /**
+     * The worker receives are slightly different than all the other receives.
+     * As a master may have multiple workers, this routine resets the timer no
+     * matter whether it has been switched on/off before. In return, the
+     * corresponding end does not switch off any timer. It just grabs the time
+     * stamp and then immediately restarts the clock.
+     */
     virtual void beginToReceiveDataFromWorker();
     virtual void endToReceiveDataFromWorker( int fromRank );
     virtual void beginToReceiveDataFromMaster();
