@@ -98,6 +98,8 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
      */
     virtual void beginToReceiveDataFromWorker();
     virtual void endToReceiveDataFromWorker( int fromRank );
+    virtual void beginToReceiveDataFromMaster();
+    virtual void endToReceiveDataFromMaster();
 
     virtual void beginToReleaseSynchronousHeapData();
     virtual void endToReleaseSynchronousHeapData();
@@ -144,20 +146,20 @@ class peano::performanceanalysis::Analysis {
     /**
      * @see Analyser
      */
-    void beginIteration() {}
+    virtual void beginIteration() {}
 
     /**
      * @see beginIteration()
      */
-    void endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells, double numberOfInnerCells, double numberOfOuterCells, double numberOfLocalCells, double numberOfLocalVertices) {}
+    virtual void endIteration(double numberOfInnerLeafCells, double numberOfOuterLeafCells, double numberOfInnerCells, double numberOfOuterCells, double numberOfLocalCells, double numberOfLocalVertices) {}
 
-    void enterCentralElementOfEnclosingSpacetree() {}
-    void leaveCentralElementOfEnclosingSpacetree() {}
+    virtual void enterCentralElementOfEnclosingSpacetree() {}
+    virtual void leaveCentralElementOfEnclosingSpacetree() {}
 
     /**
      * @see Analyser
      */
-    void addWorker(
+    virtual void addWorker(
       int                                 workerRank,
       int                                 level
     ) {}
@@ -165,7 +167,7 @@ class peano::performanceanalysis::Analysis {
     /**
      * @see Analyser
      */
-    void removeWorker(
+    virtual void removeWorker(
       int                                 workerRank,
       int                                 level
     ) {}
@@ -173,20 +175,24 @@ class peano::performanceanalysis::Analysis {
     /**
      * @see Analyser
      */
-    void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {}
+    virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize ) {}
 
     /**
      * @see Analyser
      */
-    void beginToReceiveDataFromWorker() {}
-    void endToReceiveDataFromWorker( int fromRank ) {}
+    virtual void beginToReceiveDataFromWorker() {}
+    virtual void endToReceiveDataFromWorker( int fromRank ) {}
+    virtual void beginToReceiveDataFromMaster() {};
+    virtual void endToReceiveDataFromMaster() {};
 
-    void beginToReleaseSynchronousHeapData() {}
-    void endToReleaseSynchronousHeapData() {}
-    void beginToPrepareAsynchronousHeapDataExchange() {}
-    void endToPrepareAsynchronousHeapDataExchange() {}
-    void endReleaseOfJoinData() {}
-    void endReleaseOfBoundaryData()  {}
+    virtual void beginToReleaseSynchronousHeapData() {}
+    virtual void endToReleaseSynchronousHeapData() {}
+    virtual void beginToPrepareAsynchronousHeapDataExchange() {}
+    virtual void endToPrepareAsynchronousHeapDataExchange() {}
+    virtual void beginReleaseOfJoinData() {}
+    virtual void endReleaseOfJoinData() {}
+    virtual void beginReleaseOfBoundaryData()  {}
+    virtual void endReleaseOfBoundaryData()  {}
 
     virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange) {}
     virtual void fireAndForgetBackgroundTask(int taskCount) {}

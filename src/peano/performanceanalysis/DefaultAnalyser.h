@@ -46,6 +46,7 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
     tarch::timing::Watch           _traversalWatch;
     tarch::timing::Watch           _actualDomainTraversalWatch;
     tarch::timing::Watch           _waitForWorkerDataWatch;
+    tarch::timing::Watch           _waitForMasterDataWatch;
     tarch::timing::Watch           _synchronousHeapWatch;
     tarch::timing::Watch           _asynchronousHeapWatch;
     tarch::timing::Watch           _releaseJoinDataWatch;
@@ -107,6 +108,8 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
 
     virtual void beginToReceiveDataFromWorker();
     virtual void endToReceiveDataFromWorker( int fromRank );
+    virtual void beginToReceiveDataFromMaster();
+    virtual void endToReceiveDataFromMaster();
 
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
 

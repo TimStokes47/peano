@@ -1,6 +1,7 @@
 #include "peano/performanceanalysis/DefaultAnalyser.h"
 
 #include "tarch/parallel/Node.h"
+#include "tarch/parallel/NodePool.h"
 #include "tarch/logging/CommandLineLogger.h"
 
 #include "tarch/multicore/Lock.h"
@@ -20,11 +21,12 @@ peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   _traversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
   _actualDomainTraversalWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
   _waitForWorkerDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _waitForMasterDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
   _synchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
   _asynchronousHeapWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
-  _concurrencyReportWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
   _releaseJoinDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
   _releaseBoundaryDataWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
+  _concurrencyReportWatch("peano::performanceanalysis::DefaultAnalyser", "-", false,false),
   _currentConcurrencyLevel(1),
   _currentPotentialConcurrencyLevel(1),
   _maxConcurrencyLevel(1),
@@ -163,6 +165,31 @@ void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromWorker( in
       logInfo(
         "endToReceiveDataFromWorker()",
         "rank had to wait for worker " << fromRank <<
+        " for " << elapsedTime <<
+        "s"
+      );
+    }
+  }
+}
+
+
+
+void peano::performanceanalysis::DefaultAnalyser::beginToReceiveDataFromMaster() {
+  if (_isSwitchedOn && !_waitForMasterDataWatch.isOn()) {
+    _waitForMasterDataWatch.startTimer();
+  }
+}
+
+
+void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromMaster() {
+  if (_isSwitchedOn && _waitForMasterDataWatch.isOn()) {
+    _waitForMasterDataWatch.stopTimer();
+    const double elapsedTime = _waitForMasterDataWatch.getCalendarTime();
+
+    if (tarch::la::greater(elapsedTime,0.0)) {
+      logInfo(
+        "endToReceiveDataFromMaster()",
+        "rank had to wait for master " << tarch::parallel::NodePool::getInstance().getMasterRank() <<
         " for " << elapsedTime <<
         "s"
       );
