@@ -86,6 +86,18 @@ void peano::performanceanalysis::Analysis::endToReceiveDataFromWorker( int fromR
 }
 
 
+void peano::performanceanalysis::Analysis::beginToReceiveDataFromMaster() {
+  assertion( _device!=0 );
+  _device->beginToReceiveDataFromMaster();
+}
+
+
+void peano::performanceanalysis::Analysis::endToReceiveDataFromMaster() {
+  assertion( _device!=0 );
+  _device->endToReceiveDataFromMaster(fromRank);
+}
+
+
 void peano::performanceanalysis::Analysis::beginToReleaseSynchronousHeapData() {
   assertion( _device!=0 );
   _device->beginToReleaseSynchronousHeapData();
