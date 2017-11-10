@@ -49,6 +49,14 @@ class tarch::multicore::Core {
     Core();
 
     static tarch::logging::Log  _log;
+
+    /**
+     * We never allocate fewer than two cores per MPI ranks. One core is a
+     * trivial lower bound. Yet, it makes sense to set it to zero. If the
+     * invasion is tied to one core and Peano enqueues a background task, then
+     * the system will deadlock.
+     */
+    static constexpr int MinThreads = 2;
   public:
     static constexpr int UseDefaultNumberOfThreads = SHMInvade::AllCoresConcurrencyLevel;
 
