@@ -94,7 +94,7 @@ void peano::performanceanalysis::Analysis::beginToReceiveDataFromMaster() {
 
 void peano::performanceanalysis::Analysis::endToReceiveDataFromMaster() {
   assertion( _device!=0 );
-  _device->endToReceiveDataFromMaster(fromRank);
+  _device->endToReceiveDataFromMaster();
 }
 
 
