@@ -283,6 +283,9 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     newtonIterations++;
   }
 
+  for (int k=0; k<static_cast<int>(f.size()); k++) {
+    c[k] = c[k]<1.0 ? 1.0 : c[k];
+  }
 
   double assignedCores = 0.0;
   for (int k=0; k<static_cast<int>(f.size()); k++) {
