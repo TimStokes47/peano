@@ -1,0 +1,52 @@
+<h2>Logical topology on MPI ranks</h2>
+
+<a href="_IMAGE_DIRECTORY_/topology.pdf"><img src="_IMAGE_DIRECTORY_/topology.png" /></a>
+
+
+<h2>Workload</h2>
+
+<h3>Workload per rank</h3>
+
+<a href="_IMAGE_DIRECTORY_/.workload.pdf"><img src="_IMAGE_DIRECTORY_/workload.png" /></a>
+<a href="_IMAGE_DIRECTORY_/.workload.symlog.pdf"><img src="_IMAGE_DIRECTORY_/workload.symlog.png" /></a>
+
+<p>
+  The filled region is the actual local work volume of a rank. It has to be 
+  smaller than the region of responsibility that might overlap the actual domain.
+  Rank 0 should deploy all of its work to other ranks and focus solely on load 
+  balancing and simulation administration, i.e. its filled region should be empty.
+  The vertical lines highlight those ranks with a particular high workload.
+  If you want to speed up your code, it might be reasonable to try to reduce the
+  load on these ranks or to make them benefit from multiple cores significiantly.
+</p>
+
+
+<h3>Workload per node</h3>
+
+<a href="_IMAGE_DIRECTORY_/.workload.pdf"><img src="_IMAGE_DIRECTORY_/workload.png" /></a>
+<a href="_IMAGE_DIRECTORY_/.workload.symlog.pdf"><img src="_IMAGE_DIRECTORY_/workload.symlog.png" /></a>
+
+<p>
+ Ueber Speicher argumentieren
+</p>
+
+
+Wir brauchen irgendwo halt die Node-Sichtweise und eben nicht nur die Rank-Sichtweise
+evtl. workload per rank und workload per node unterscheiden
+
+<!--
+
+ 
+
+outFile.write( "<h2>Mapping of ranks to nodes</h2>" )
+performanceanalysisroutines.fillNodeTable(args.file)
+performanceanalysisroutines.printNodeTable(outFile)
+if dim==2:
+  performanceanalysisroutines.plotDomainDecomposition2d( args.file, numberOfRanks, args.domainoffset, args.domainsize, offset, volume, levels, max(levels)+1 )
+  outFile.write( "<a href=\"" + args.file + ".dd.large.pdf\"> <img src=\"" + args.file + ".dd.png\" /> </a> " )
+
+ 
+outFile.write( "</html>" )
+
+  
+-->

@@ -1,7 +1,6 @@
 import argparse
 from argparse import RawTextHelpFormatter
 
-import matplotlib
 
 import pylab
 import networkx
@@ -185,18 +184,20 @@ parser.add_argument('-domainoffset',nargs="+",required=True,help="Offset of boun
 parser.add_argument('-domainsize',nargs="+",required=True,help="Size of domain's bounding box.")
 args   = parser.parse_args();
 
-inputFileName     = args.file
-plotDirectoryName = "_"+inputFileName
-try:
-    os.makedirs(plotDirectoryName)
-except OSError as e:
-    if e.errno != errno.EEXIST:
-        raise
-plotPrefix = plotDirectoryName + "/" + inputFileName
+
+dim = int(args.dimension)
+
+performanceanalysis_output.createOutputDirectory(args.file);
+
+outFile         = performanceanalysis_output.getOutputFile(args.file)
+
+numberOfRanks   = performanceanalysis_parser.getNumberOfRanks(args.file)
+numberOfThreads = performanceanalysis_parser.getNumberOfThreads(args.file)
+
+performanceanalysis_output.writeHeader(outFile,args.file,numberOfRanks,numberOfThreads);
 
 
-numberOfRanks   = performanceanalysisroutines.getNumberOfRanks(inputFileName)
-numberOfThreads = performanceanalysisroutines.getNumberOfThreads(inputFileName)
+
 
 performanceanalysisroutines.AlphaValue = 1.0/numberOfRanks
 
@@ -300,29 +301,7 @@ outFile.write(
      <p>Data file: " + inputFileName + "</p>\
   ")
      
-if (numberOfRanks==1):      
-  outFile.write( "\
-     <p>Ranks: no MPI used</p>\
-  ")
-else:      
-  outFile.write( "\
-     <p>Ranks: " + str(numberOfRanks) + "</p>\
-  ")
-     
-if (numberOfThreads==1):      
-  outFile.write( "\
-     <p>Threads: no multithreading used</p>\
-  ")
-else:      
-  outFile.write( "\
-     <p>Threads: " + str(numberOfThreads) + "</p>\
-  ")
-     
-outFile.write( "\
-     <center><img src=\"http://www.peano-framework.org/logo.png\" />\
-     <br /><a href=\"http://www.peano-framework.org\" >www.peano-framework.org</a></center>\
-  ")
-
+is jetzt im output
 outFile.write( "\
    <h2 id=\"table-of-contents\">Table of contents</h2>\
    <ul>\
