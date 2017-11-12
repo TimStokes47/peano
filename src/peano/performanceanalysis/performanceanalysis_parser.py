@@ -44,7 +44,7 @@ def getBoundingBox(line):
   
 def getLogicalTopology(numberOfRanks,dim,inputFileName,plotDirectoryName):
   parents  = [-1 for x in range(0,numberOfRanks)]
-  nodes    = ["undef" for x in range(0,numberOfRanks)]
+  nodes    = ["global master" for x in range(0,numberOfRanks)]
   levels   = [-1 for x in range(0,numberOfRanks)]
   if dim==2:
     volume = [(0.0,0.0) for x in range(0,numberOfRanks)]

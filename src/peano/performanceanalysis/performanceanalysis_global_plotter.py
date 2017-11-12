@@ -42,8 +42,8 @@ def plotLogicalTopology(numberOfRanks,inputFileNamePlusPath,parents,levels,offse
   pylab.savefig( inputFileNamePlusPath + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
     
-def plotWorkloadAndResponsibilityDistribution(numberOfRanks,outputFileName,volumes,overlaps,work):
- print "plot workload distribution ",
+def plotWorkloadAndResponsibilityDistributionPerRank(numberOfRanks,outputFileName,volumes,overlaps,work):
+ print "plot workload distribution per rank",
  pylab.clf()
  ranks = [x for x in range(0,numberOfRanks)]
 
@@ -111,4 +111,36 @@ def plotWorkloadAndResponsibilityDistribution(numberOfRanks,outputFileName,volum
  pylab.savefig( outputFileName + ".pdf" )
  print "done"
 
+
+
     
+def plotWorkloadAndResponsibilityDistributionPerNode(numberOfRanks,outputFileName,work,nodes):
+ print "plot workload distribution per node",
+ pylab.clf()
+
+ data = {nodes[i]:0 for i in range(0,numberOfRanks)}
+ 
+ for i in range(0,numberOfRanks):
+   print ".",
+   data[ nodes[i] ] = data[ nodes[i] ] + work[i]
+   
+ pylab.bar(range(len(data)), data.values(), align='center')
+ pylab.xticks(range(len(data)), data.keys())
+
+ ax = pylab.gca()
+ ax.autoscale_view()
+ ax.set_yscale('symlog', basey=10)
+
+ pylab.xlabel('rank')  
+ pylab.ylabel('$\Omega $')
+ pylab.savefig( outputFileName + ".symlog.png", transparent = True )
+ pylab.savefig( outputFileName + ".symlog.pdf", transparent = True )
+
+
+ ax.set_yscale('linear' )
+ pylab.xlabel('rank')  
+ pylab.ylabel('$\Omega $')
+ pylab.savefig( outputFileName + ".png" )
+ pylab.savefig( outputFileName + ".pdf" )
+ print "done"
+

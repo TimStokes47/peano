@@ -51,7 +51,8 @@ performanceanalysis_output.writeHeader(outFile,args.file,numberOfRanks,numberOfT
 
 performanceanalysis_global_plotter.plotLogicalTopology(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/topology",parents,levels,offset,volume);
 
-performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistribution(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/workload",volumes,overlaps,work);
+performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistributionPerRank(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/workload-per-rank",volumes,overlaps,work);
+performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistributionPerNode(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/workload-per-node",work,nodes);
 
 for l in range(1,max(levels)+1):
  if dim==2:
