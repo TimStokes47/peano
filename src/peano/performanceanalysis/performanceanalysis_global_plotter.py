@@ -124,8 +124,8 @@ def plotWorkloadAndResponsibilityDistributionPerNode(numberOfRanks,outputFileNam
    print ".",
    data[ nodes[i] ] = data[ nodes[i] ] + work[i]
    
- pylab.bar(range(len(data)), data.values(), align='center')
- pylab.xticks(range(len(data)), data.keys())
+ bars = pylab.bar(range(len(data)), data.values(), align='center')
+ pylab.xticks(range(len(data)), data.keys(), rotation=-70, fontsize=6)
 
  ax = pylab.gca()
  ax.autoscale_view()

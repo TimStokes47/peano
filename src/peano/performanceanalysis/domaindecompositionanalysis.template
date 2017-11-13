@@ -7,8 +7,8 @@
 
 <h3>Workload per rank</h3>
 
-<a href="_IMAGE_DIRECTORY_/.workload-per-rank.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-rank.png" /></a>
-<a href="_IMAGE_DIRECTORY_/.workload-per-rank.symlog.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-rank.symlog.png" /></a>
+<a href="_IMAGE_DIRECTORY_/workload-per-rank.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-rank.png" /></a>
+<a href="_IMAGE_DIRECTORY_/workload-per-rank.symlog.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-rank.symlog.png" /></a>
 
 <p>
   The filled region is the actual local work volume of a rank. It has to be 
@@ -23,8 +23,8 @@
 
 <h3>Workload per node</h3>
 
-<a href="_IMAGE_DIRECTORY_/.workload-per-node.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-node.png" /></a>
-<a href="_IMAGE_DIRECTORY_/.workload-per-node.symlog.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-node.symlog.png" /></a>
+<a href="_IMAGE_DIRECTORY_/workload-per-node.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-node.png" /></a>
+<a href="_IMAGE_DIRECTORY_/workload-per-node.symlog.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-node.symlog.png" /></a>
 
 <p>
  The plots illustrate the aggregated work per compute node. A strong imbalance 
@@ -35,6 +35,17 @@
 
 
 <h2>Domain decomposition</h2>
+
+<h3> Node-wisely </h3>
+
+<a href="_IMAGE_DIRECTORY_/dd.pdf"><img src="_IMAGE_DIRECTORY_/dd.png" /></a>
+
+
+<p>
+ This view is not available for d=3.
+</p>
+
+<h3> Level-wisely </h3>
 
 <a href="_IMAGE_DIRECTORY_/dd.level1.pdf"><img src="_IMAGE_DIRECTORY_/dd.level1.png" /></a>
 <a href="_IMAGE_DIRECTORY_/dd.level2.pdf"><img src="_IMAGE_DIRECTORY_/dd.level2.png" /></a>

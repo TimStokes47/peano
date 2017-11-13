@@ -56,9 +56,15 @@ performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistributionPerN
 
 for l in range(1,max(levels)+1):
  if dim==2:
-  performanceanalysis_dd.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
+  performanceanalysis_dd.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
  if dim==3:
-  performanceanalysis_dd.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
+  performanceanalysis_dd.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
+
+if dim==2:
+  performanceanalysis_dd.plot2dDomainDecomposition(numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
+#if dim==3:
+#  performanceanalysis_dd.plot3dDomainDecomposition(numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
+
 
 performanceanalysis_dd.printNodeTable(outFile,numberOfRanks,parents,nodes)
 
