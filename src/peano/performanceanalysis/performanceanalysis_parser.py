@@ -27,7 +27,7 @@ def getNumberOfThreads(filename):
       print ".",
       if "threads:" in line:
         numberOfThreads = int(line.split( "threads:" )[1].split( "(per process)" )[0])
-        print str(numberOfThreads) + " threads ranks used"
+        print str(numberOfThreads) + " threads per rank used"
         return numberOfThreads
 
   except Exception as inst:
@@ -78,4 +78,164 @@ def getLogicalTopology(numberOfRanks,dim,inputFileName,plotDirectoryName):
     print "failed to read " + inputFileName
     print inst
   return (parents,levels,offset,volume,nodes)
+
+
+def getConcurrency(rank,inputFileName):
+  timeStampPattern = "([0-9]+\.?[0-9]*)"
+  floatPattern = "([0-9]\.?[0-9]*)"
+  
+  searchPatternConcurrencyPattern = timeStampPattern
+  if rank>=0:
+    searchPatternConcurrencyPattern = searchPatternConcurrencyPattern + ".*rank:" + str(rank)
+  
+  searchPatternConcurrencyPattern = searchPatternConcurrencyPattern + " .*peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel" + \
+                               ".*dt_real=" + floatPattern + \
+                               ".*dt_cpu=" + floatPattern + \
+                               ".*time-averaged-concurrency-level=" + floatPattern + \
+                               ".*time-averaged-potential-concurrency-level=" + floatPattern + \
+                               ".*max-concurrency-level=" + floatPattern + \
+                               ".*max-potential-concurrency-level=" + floatPattern + \
+                               ".*background-tasks=" + floatPattern
+
+  timeStamps = []
+  measuredConcurrencyLevels     = []  
+  obtainedConcurrencyLevels     = []  
+  maxConcurrencyLevels          = []
+  maxPotentialConcurrencyLevels = []
+  numberOfBackgroundTasks       = []  
+  timeAveragedConcurrencyLevels = []
+  timeAveragedPotentialConcurrencyLevels = []
+
+  try:
+    inputFile = open( inputFileName,  "r" )
+    print "parse concurrency level of rank " + str(rank),
+    for line in inputFile:
+      m = re.search( searchPatternConcurrencyPattern, line )
+      if (m):
+        realTime                          = float( m.group(1) )
+        dtRealTim                         = float( m.group(2) ) 
+        dtCPUTime                         = float( m.group(3) ) 
+
+        timeAveragedConcurrency           = float( m.group(4) )
+        timeAveragedPotentialConcurrency  = float( m.group(5) )
+
+        maxConcurrencyLevel               = float( m.group(6) )
+        maxPotentialConcurrencyLevel      = float( m.group(7) )
+        backgroundTasks                   = float( m.group(8) )
+        
+        timeStamps.append( realTime )
+        measuredConcurrencyLevels.append( dtCPUTime/dtRealTim )
+
+        maxConcurrencyLevels.append( maxConcurrencyLevel )
+        maxPotentialConcurrencyLevels.append( maxPotentialConcurrencyLevel )
+        numberOfBackgroundTasks.append( backgroundTasks )
+
+        timeAveragedConcurrencyLevels.append(timeAveragedConcurrency/dtRealTim) 
+        timeAveragedPotentialConcurrencyLevels.append(timeAveragedPotentialConcurrency/dtRealTim)
+
+        print ".",
+    print " done"
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+
+  return (timeStamps,measuredConcurrencyLevels,obtainedConcurrencyLevels,maxConcurrencyLevels,
+    maxPotentialConcurrencyLevels,numberOfBackgroundTasks,timeAveragedConcurrencyLevels,
+    timeAveragedPotentialConcurrencyLevels)
+
+
+
+def getBeginIterations(inputFileName,isParallelCode):
+  timeStampPattern = "([0-9]+\.?[0-9]*)"
+  floatPattern = "([0-9]\.?[0-9]*)"
+  
+  searchPatternBeginIteration = timeStampPattern
+  if isParallelCode:
+    searchPatternBeginIteration = searchPatternBeginIteration + ".*rank:0"
+  searchPatternBeginIteration = searchPatternBeginIteration + " .*peano::performanceanalysis::DefaultAnalyser::beginIteration";
+
+  beginIterations               = []
+
+  try:
+    inputFile = open( inputFileName,  "r" )
+    print "parse begin iteration statements ",
+    for line in inputFile:
+      m = re.search( searchPatternBeginIteration, line )
+      if (m):
+        realTime                          = float( m.group(1) )
+        beginIterations.append(realTime)
+        print ".",
+    print " done"
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+
+  return beginIterations
+    
+    
+
+def getCellsPerRank(inputFileName,numberOfRanks):
+  print "parse cells per rank ",
+
+  searchPatternNumberOfCells         = "peano::performanceanalysis::DefaultAnalyser::endIteration.*cells=\("
+  searchPatternTTotal                = "([0-9]\.?[0-9]*).*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_total=\("
+
+  numberOfInnerLeafCells  = {}
+  numberOfInnerCells      = {}
+  numberOfOuterLeafCells  = {}
+  numberOfOuterCells      = {}
+  numberOfLocalCells      = {}
+  tTotal                  = {}
+  
+  myNumberOfRanks = numberOfRanks
+  if myNumberOfRanks==0:
+    myNumberOfRanks = 1
+  for rank in range(0,myNumberOfRanks):
+    numberOfInnerLeafCells[rank]  = []
+    numberOfInnerCells[rank]      = []
+    numberOfOuterLeafCells[rank]  = []
+    numberOfOuterCells[rank]      = []
+    numberOfLocalCells[rank]      = []
+    tTotal[rank]                  = []
+    print ".",
+  print " done"
+   
+  try:
+    inputFile = open( inputFileName,  "r" )
+    print "parse ",
+    for line in inputFile:
+        if ("DefaultAnalyser" in line):
+          m = re.search( searchPatternNumberOfCells, line )
+          if (m):
+            rank  = 0
+            if numberOfRanks>0:
+              rank  = int(line.split( "rank:" )[-1].split( " " )[0])
+            token = line.replace("(",",").replace(")","").strip().split(",")
+            numberOfInnerLeafCells[rank].append(float(token[-5]))
+            numberOfOuterLeafCells[rank].append(float(token[-4]))
+            numberOfInnerCells[rank].append(float(token[-3]))
+            numberOfOuterCells[rank].append(float(token[-2]))
+            numberOfLocalCells[rank].append(float(token[-1]))
+            print ".",
+          m = re.search( searchPatternTTotal, line )
+          if (m):
+            rank  = 0
+            if numberOfRanks>0:
+              rank  = int(line.split( "rank:" )[-1].split( " " )[0])
+            timeStamp = float( m.group(1) )
+            tTotal[rank].append(timeStamp)
+            print ".",
+          
+    print " done"
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+
+  return (
+    numberOfInnerLeafCells,
+    numberOfInnerCells,
+    numberOfOuterLeafCells,
+    numberOfOuterCells,
+    numberOfLocalCells,
+    tTotal )
 

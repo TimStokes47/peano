@@ -10,6 +10,7 @@ import performanceanalysis_output
 
 
 def drawTreeGraph(myGraph):
+  pos=networkx.spring_layout(myGraph)
   try:
     from networkx import graphviz_layout
     pos=networkx.graphviz_layout(myGraph,prog='twopi',args='')
@@ -32,8 +33,23 @@ def drawTreeGraph(myGraph):
 
 def plotLogicalTopology(numberOfRanks,inputFileNamePlusPath,parents,levels,offset,volume):
   topologyGraph = networkx.DiGraph()
+
+  GlobalMaster = "global master"
+  NodePool     = "pool of\nidle nodes"
+  
+  topologyGraph.add_node(GlobalMaster)
+  topologyGraph.add_node(NodePool)
+
   for c in range(1,numberOfRanks):
-    topologyGraph.add_edge(c,parents[c])
+    topologyGraph.add_node(c)
+  
+  for c in range(1,numberOfRanks):
+    myParent = parents[c]
+    if myParent<0:
+      myParent = NodePool
+    if myParent==0:
+      myParent = GlobalMaster
+    topologyGraph.add_edge(c,myParent)
 
   pylab.clf()
   pylab.title( "Logical topology" )
@@ -144,3 +160,20 @@ def plotWorkloadAndResponsibilityDistributionPerNode(numberOfRanks,outputFileNam
  pylab.savefig( outputFileName + ".pdf" )
  print "done"
 
+
+
+def plotWalltimeOverview(outputFileName,beginIterations): 
+  pylab.clf()
+  #pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
+  pylab.title( "Walltime" )
+  pylab.ylabel( "time per grid sweep [t]=s" )
+  pylab.xlabel( "grid sweep" )
+  xData = range(0,len(beginIterations))
+  yData = [0.0]
+  for i in range(1,len(beginIterations)):
+    yData.append(beginIterations[i]-beginIterations[i-1])
+  pylab.plot(xData, yData, '-',  markersize=10, color='#000066', label='time per traversal on global master' )
+  pylab.savefig( outputFileName + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( outputFileName + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
+  
+  
