@@ -11,7 +11,7 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 
 tarch::multicore::Core::Core():
-  _invadeRoot() {
+  _invadeRoot(nullptr) {
 //  _basicInvasion( nullptr ) {
 
   #ifdef Parallel
@@ -20,15 +20,15 @@ tarch::multicore::Core::Core():
   if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
     logInfo( "Core()", "start cleanup of shared memory region ..." );
     SHMController::cleanup();
-    logInfo( "Core()", "cleanup has been successful. Invade " << MinThreads << " threads as default" );
+    logInfo( "Core()", "cleanup has been successful. " << _invadeRoot->get_max_available_cores() << " cores available in total" );
   }
   else {
     logInfo( "Core()", "rank does not clean up shared memory regions as it is not the first rank on node" );
   }
   MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
   #endif
-  // @todo invade root sollte weg
-  //       was ist min threads
+
+  _invadeRoot = new SHMInvadeRoot();
 
   //_basicInvasion = new SHMInvade(MinThreads);
   //logInfo( "Core()", "invasion successful" );
