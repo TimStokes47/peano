@@ -47,8 +47,8 @@ namespace tarch {
  */
 class tarch::multicore::Core {
   private:
-    SHMInvadeRoot     _invadeRoot;
-    SHMInvade*        _basicInvasion;
+    SHMInvadeRoot*    _invadeRoot;
+    //SHMInvade*        _basicInvasion;
 
     /**
      * As the class is a singleton, this constructor is protected and you

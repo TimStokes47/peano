@@ -11,19 +11,36 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 
 tarch::multicore::Core::Core():
-  _invadeRoot(),
-  _basicInvasion( nullptr ) {
-  logInfo( "Core()", "start cleanup of shared memory region ..." );
-  SHMController::cleanup();
-  logInfo( "Core()", "cleanup has been successful. Invade " << MinThreads << " threads as default" );
-  _basicInvasion = new SHMInvade(MinThreads);
-  logInfo( "Core()", "invasion successful" );
+  _invadeRoot() {
+//  _basicInvasion( nullptr ) {
+
+  #ifdef Parallel
+  MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
+  // @todo Das ist falsch, das sollte immer der erste Rank pro KNoten sein
+  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
+    logInfo( "Core()", "start cleanup of shared memory region ..." );
+    SHMController::cleanup();
+    logInfo( "Core()", "cleanup has been successful. Invade " << MinThreads << " threads as default" );
+  }
+  else {
+    logInfo( "Core()", "rank does not clean up shared memory regions as it is not the first rank on node" );
+  }
+  MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
+  #endif
+  // @todo invade root sollte weg
+  //       was ist min threads
+
+  //_basicInvasion = new SHMInvade(MinThreads);
+  //logInfo( "Core()", "invasion successful" );
 }
 
 
 tarch::multicore::Core::~Core() {
-  assertion(_basicInvasion != nullptr);
-  delete _basicInvasion;
+  assertion(_invadeRoot != nullptr);
+  delete _invadeRoot;
+
+//  assertion(_basicInvasion != nullptr);
+ // delete _basicInvasion;
 }
 
 
@@ -38,7 +55,7 @@ void tarch::multicore::Core::shutDown() {
 
 
 void tarch::multicore::Core::configure( int numberOfThreads ) {
-  assertion(_basicInvasion != nullptr);
+  //assertion(_basicInvasion != nullptr);
   assertion(numberOfThreads>=0 || numberOfThreads==UseDefaultNumberOfThreads);
 //  assertion2( numberOfThreads <= _invadeRoot.get_max_available_cores(), numberOfThreads, _invadeRoot.get_max_available_cores() );
 
@@ -46,18 +63,20 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
     logWarning( "configure(int)", "requested " << numberOfThreads << " which is fewer than " << MinThreads << " threads. Increase manually to minimum thread count" );
     numberOfThreads = MinThreads;
   }
+/*
   if (numberOfThreads > _invadeRoot.get_max_available_cores() ) {
     logWarning( "configure(int)", "requested " << numberOfThreads << " threads on only " << _invadeRoot.get_max_available_cores() << " cores" );
   }
 
   delete _basicInvasion;
   _basicInvasion = new SHMInvade(numberOfThreads);
+*/
 }
 
 
 int tarch::multicore::Core::getNumberOfThreads() const {
-  assertion( _invadeRoot.get_num_active_threads() <= _invadeRoot.get_max_available_cores() );
-  return _invadeRoot.get_num_active_threads();
+  assertion( _invadeRoot->get_num_active_threads() <= _invadeRoot->get_max_available_cores() );
+  return _invadeRoot->get_num_active_threads();
 }
 
 
@@ -69,6 +88,9 @@ bool tarch::multicore::Core::isInitialised() const {
 
   if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
     int registeredRanks = 1;
+
+    logInfo( "isInitialised()", "global master got " << getNumberOfThreads() << " thread(s)");
+
     std::clock_t warningTimeStamp = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
     std::clock_t timeoutTimeStamp = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
 
