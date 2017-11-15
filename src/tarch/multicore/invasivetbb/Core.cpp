@@ -1,11 +1,10 @@
 #if defined(SharedTBBInvade)
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/multicore/invasivetbb/Core.h"
+
 #include "tarch/Assertions.h"
 
-#ifdef Parallel
-#include <mpi.h>
-#endif
+#include "tarch/parallel/Node.h"
 
 
 tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
@@ -66,7 +65,43 @@ bool tarch::multicore::Core::isInitialised() const {
   #ifdef Parallel
   logInfo( "isInitialised()", "start to collect information from individual ranks" );
 
-  MPI_Barrier(MPI_COMM_WORLD);
+  const int tag = 0;
+
+  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
+    int registeredRanks = 1;
+    std::clock_t warningTimeStamp = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+    std::clock_t timeoutTimeStamp = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+
+    while ( registeredRanks < tarch::parallel::Node::getInstance().getNumberOfNodes() ) {
+      if (clock()>warningTimeStamp) {
+        tarch::parallel::Node::getInstance().writeTimeOutWarning(
+          "tarch::multicore::Core",
+          "isInitialised()",
+          -1, tag, 1
+        );
+      }
+      if (clock()>timeoutTimeStamp) {
+        tarch::parallel::Node::getInstance().writeTimeOutWarning(
+          "tarch::multicore::Core",
+          "isInitialised()",
+          -1, tag, 1
+        );
+      }
+
+      MPI_Status status;
+      int threadsBooked = 0.0;
+      MPI_Recv(&threadsBooked, 1, MPI_INT, MPI_ANY_SOURCE, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
+      registeredRanks++;
+
+      logInfo( "isInitialised()", "received notification that rank " << status.MPI_SOURCE << " has successfully booked " << threadsBooked << " thread(s)");
+    }
+  }
+  else {
+    int threadsBooked = getNumberOfThreads();
+    MPI_Send(&threadsBooked, 1, MPI_INT, tarch::parallel::Node::getGlobalMasterRank(), tag, tarch::parallel::Node::getInstance().getCommunicator() );
+  }
+
+  MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
   #endif
 
   return true;

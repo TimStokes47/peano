@@ -101,6 +101,8 @@ class tarch::multicore::Core {
     void shutDown();
 
     /**
+     * This query has to be triggered after all MPI ranks are up and running.
+     *
      * @return Shared memory environment is up and running.
      */
     bool isInitialised() const;
