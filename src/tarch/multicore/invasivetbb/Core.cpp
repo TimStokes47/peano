@@ -66,7 +66,7 @@ bool tarch::multicore::Core::isInitialised() const {
   #ifdef Parallel
   logInfo( "isInitialised()", "start to collect information from individual ranks" );
 
-  MPI_Barrier();
+  MPI_Barrier(MPI_COMM_WORLD);
   #endif
 
   return true;
