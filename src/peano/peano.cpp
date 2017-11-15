@@ -11,10 +11,6 @@
 #include "tarch/multicore/Core.h"
 #endif
 
-#if defined(SharedTBBInvade)
-#include "SHMInvade.hpp"
-#endif
-
 
 #include "tarch/parallel/Node.h"
 #include "tarch/parallel/NodePool.h"
