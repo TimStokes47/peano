@@ -15,6 +15,7 @@ tarch::multicore::Core::Core():
 //  _basicInvasion( nullptr ) {
 
   #ifdef Parallel
+/*
   MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
   // @todo Das ist falsch, das sollte immer der erste Rank pro KNoten sein
   if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
@@ -25,6 +26,10 @@ tarch::multicore::Core::Core():
   else {
     logInfo( "Core()", "rank does not clean up shared memory regions as it is not the first rank on node" );
   }
+*/
+
+
+  SHMController::cleanup();
   MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
   #endif
 
