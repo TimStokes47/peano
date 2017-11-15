@@ -85,23 +85,14 @@ bool tarch::multicore::Core::isInitialised() const {
 
     logInfo( "isInitialised()", "global master got " << getNumberOfThreads() << " thread(s)");
 
-    std::clock_t warningTimeStamp = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-    std::clock_t timeoutTimeStamp = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+    const int waitForTimeout = 60;
+    std::clock_t timeoutTimeStamp = clock() + waitForTimeout * CLOCKS_PER_SEC;
 
     while ( registeredRanks < tarch::parallel::Node::getInstance().getNumberOfNodes() ) {
-      if (clock()>warningTimeStamp) {
-        tarch::parallel::Node::getInstance().writeTimeOutWarning(
-          "tarch::multicore::Core",
-          "isInitialised()",
-          -1, tag, 1
-        );
-      }
       if (clock()>timeoutTimeStamp) {
-        tarch::parallel::Node::getInstance().writeTimeOutWarning(
-          "tarch::multicore::Core",
-          "isInitialised()",
-          -1, tag, 1
-        );
+	logError("isInitialised()", "global master waited for more than " << waitForTimeout <<
+	  "s on information from other ranks" );
+	return false;
       }
 
       MPI_Status status;
