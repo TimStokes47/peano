@@ -20,7 +20,7 @@ tarch::multicore::Core::Core():
   if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
     logInfo( "Core()", "start cleanup of shared memory region ..." );
     SHMController::cleanup();
-    logInfo( "Core()", "cleanup has been successful. " << _invadeRoot->get_max_available_cores() << " cores available in total" );
+    logInfo( "Core()", "cleanup has been successful" );
   }
   else {
     logInfo( "Core()", "rank does not clean up shared memory regions as it is not the first rank on node" );
@@ -29,6 +29,13 @@ tarch::multicore::Core::Core():
   #endif
 
   _invadeRoot = new SHMInvadeRoot();
+
+  #ifdef Parallel
+  // s.o. erster Rank pro Knoten
+  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
+    logInfo( "Core()", _invadeRoot->get_max_available_cores() << " cores available in total" );
+  }
+  #endif
 
   //_basicInvasion = new SHMInvade(MinThreads);
   //logInfo( "Core()", "invasion successful" );
