@@ -3,6 +3,10 @@
 #include "tarch/multicore/invasivetbb/Core.h"
 #include "tarch/Assertions.h"
 
+#ifdef Parallel
+#include <mpi.h>
+#endif
+
 
 tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
