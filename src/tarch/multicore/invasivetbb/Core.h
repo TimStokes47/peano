@@ -37,18 +37,19 @@ namespace tarch {
  *
  * As Peano uses the enqueue routine frequently, our invasive TBB version
  * invades at least one additional core always. That is, you will always see
- * two non-idle ranks.
+ * two non-idle ranks. As a consequence, this feature does not support
+ * implementations that overbook cores with MPI ranks.
  *
  * Please ensure that isInitialised() or any other routine is called early
- * throughout the user cycle. In Peano, peano::initSharedMemoryEnvironment()
- * does this job.
+ * throughout the user cycle. This implies that the underlying singleton is
+ * created.  In Peano, peano::initSharedMemoryEnvironment() does this job.
  *
  * @author Tobias Weinzierl
  */
 class tarch::multicore::Core {
   private:
     SHMInvadeRoot*    _invadeRoot;
-    //SHMInvade*        _basicInvasion;
+    SHMInvade*        _basicInvasion;
 
     /**
      * As the class is a singleton, this constructor is protected and you

@@ -11,24 +11,10 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 
 tarch::multicore::Core::Core():
-  _invadeRoot(nullptr) {
-//  _basicInvasion( nullptr ) {
+  _invadeRoot(nullptr),
+  _basicInvasion( nullptr ) {
 
   #ifdef Parallel
-/*
-  MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
-  // @todo Das ist falsch, das sollte immer der erste Rank pro KNoten sein
-  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
-    logInfo( "Core()", "start cleanup of shared memory region ..." );
-    SHMController::cleanup();
-    logInfo( "Core()", "cleanup has been successful" );
-  }
-  else {
-    logInfo( "Core()", "rank does not clean up shared memory regions as it is not the first rank on node" );
-  }
-*/
-
-
   SHMController::cleanup();
   MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
   #endif
@@ -36,23 +22,21 @@ tarch::multicore::Core::Core():
   _invadeRoot = new SHMInvadeRoot();
 
   #ifdef Parallel
-  // s.o. erster Rank pro Knoten
   if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
     logInfo( "Core()", _invadeRoot->get_max_available_cores() << " cores available in total" );
   }
   #endif
 
-  //_basicInvasion = new SHMInvade(MinThreads);
-  //logInfo( "Core()", "invasion successful" );
+  _basicInvasion = new SHMInvade(MinThreads-1);
 }
 
 
 tarch::multicore::Core::~Core() {
+  assertion(_basicInvasion != nullptr);
+  delete _basicInvasion;
+
   assertion(_invadeRoot != nullptr);
   delete _invadeRoot;
-
-//  assertion(_basicInvasion != nullptr);
- // delete _basicInvasion;
 }
 
 
@@ -67,22 +51,20 @@ void tarch::multicore::Core::shutDown() {
 
 
 void tarch::multicore::Core::configure( int numberOfThreads ) {
-  //assertion(_basicInvasion != nullptr);
+  assertion(_basicInvasion != nullptr);
   assertion(numberOfThreads>=0 || numberOfThreads==UseDefaultNumberOfThreads);
-//  assertion2( numberOfThreads <= _invadeRoot.get_max_available_cores(), numberOfThreads, _invadeRoot.get_max_available_cores() );
+  assertion2( numberOfThreads <= _invadeRoot->get_max_available_cores(), numberOfThreads, _invadeRoot->get_max_available_cores() );
 
   if (numberOfThreads < MinThreads ) {
     logWarning( "configure(int)", "requested " << numberOfThreads << " which is fewer than " << MinThreads << " threads. Increase manually to minimum thread count" );
     numberOfThreads = MinThreads;
   }
-/*
-  if (numberOfThreads > _invadeRoot.get_max_available_cores() ) {
-    logWarning( "configure(int)", "requested " << numberOfThreads << " threads on only " << _invadeRoot.get_max_available_cores() << " cores" );
+  if (numberOfThreads > _invadeRoot->get_max_available_cores() ) {
+    logWarning( "configure(int)", "requested " << numberOfThreads << " threads on only " << _invadeRoot->get_max_available_cores() << " cores" );
   }
 
   delete _basicInvasion;
-  _basicInvasion = new SHMInvade(numberOfThreads);
-*/
+  _basicInvasion = new SHMInvade(numberOfThreads-1);
 }
 
 
