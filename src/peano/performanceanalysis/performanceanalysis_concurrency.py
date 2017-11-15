@@ -13,8 +13,10 @@ def plotConcurrency(threads, file,
   
   for t in timeStamps:
     pylab.plot( [t,t], [0,threads], "--", color="#787878" )
-  pylab.plot( [0,timeStamps[-1]], [threads,threads], "--", color="#787878" )
-  pylab.plot( [0,timeStamps[-1]], [1,1], "--", color="#787878" )
+
+  if len(timeStamps)>0:
+    pylab.plot( [0,timeStamps[-1]], [threads,threads], "--", color="#787878" )
+    pylab.plot( [0,timeStamps[-1]], [1,1], "--", color="#787878" )
 
   pylab.plot(timeStamps,measuredConcurrencyLevels,     "-",  label="cpu time/real time",        color="#000000" )
   pylab.plot(timeStamps,maxConcurrencyLevels,          "-",  label="max concurrency level",     color="#ff0000" )

@@ -7,6 +7,7 @@ import networkx
 
 
 import performanceanalysis_output
+import performanceanalysis_dd
 
 
 def drawTreeGraph(myGraph):
@@ -141,7 +142,20 @@ def plotWorkloadAndResponsibilityDistributionPerNode(numberOfRanks,outputFileNam
    data[ nodes[i] ] = data[ nodes[i] ] + work[i]
    
  bars = pylab.bar(range(len(data)), data.values(), align='center')
- pylab.xticks(range(len(data)), data.keys(), rotation=-70, fontsize=6)
+ pylab.xticks(range(len(data)), data.keys(), rotation=-90, fontsize=6)
+
+ #pylab.axis.xaxis().tick_top() 
+ #pylab.subplots_adjust(bottom=2.15)
+
+ for i in range(0,len(bars)):
+   nodeName = data.keys()[i]
+
+   oneRankBelongingToThisNode = 0
+   while nodes[oneRankBelongingToThisNode]!=nodeName:
+     oneRankBelongingToThisNode = oneRankBelongingToThisNode+1
+     
+   bars[i].set_color( performanceanalysis_dd.getNodeColor(oneRankBelongingToThisNode,nodes) )
+   
 
  ax = pylab.gca()
  ax.autoscale_view()
