@@ -114,6 +114,7 @@ class tarch::multicore::Core {
      * @return Number of threads available.
      */
     int getNumberOfThreads() const;
+
 };
 
 

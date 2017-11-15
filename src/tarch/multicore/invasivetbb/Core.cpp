@@ -10,8 +10,11 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 tarch::multicore::Core::Core():
   _invadeRoot(),
   _basicInvasion( nullptr ) {
+  logInfo( "Core()", "start cleanup of shared memory region ..." );
   SHMController::cleanup();
+  logInfo( "Core()", "cleanup has been successful. Invade " << MinThreads << " threads as default" );
   _basicInvasion = new SHMInvade(MinThreads);
+  logInfo( "Core()", "invasion successful" );
 }
 
 
@@ -56,6 +59,12 @@ int tarch::multicore::Core::getNumberOfThreads() const {
 
 
 bool tarch::multicore::Core::isInitialised() const {
+  #ifdef Parallel
+  logInfo( "isInitialised()", "start to collect information from individual ranks" );
+
+  MPI_Barrier();
+  #endif
+
   return true;
 }
 
