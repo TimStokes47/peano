@@ -9,8 +9,9 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 tarch::multicore::Core::Core():
   _invadeRoot(),
-  _basicInvasion( new SHMInvade(MinThreads) ) {
+  _basicInvasion( nullptr ) {
   SHMController::cleanup();
+  _basicInvasion = new SHMInvade(MinThreads);
 }
 
 
@@ -33,7 +34,7 @@ void tarch::multicore::Core::shutDown() {
 void tarch::multicore::Core::configure( int numberOfThreads ) {
   assertion(_basicInvasion != nullptr);
   assertion(numberOfThreads>=0 || numberOfThreads==UseDefaultNumberOfThreads);
-  assertion( numberOfThreads <= _invadeRoot.get_max_available_cores() );
+//  assertion2( numberOfThreads <= _invadeRoot.get_max_available_cores(), numberOfThreads, _invadeRoot.get_max_available_cores() );
 
   if (numberOfThreads < MinThreads ) {
     logWarning( "configure(int)", "requested " << numberOfThreads << " which is fewer than " << MinThreads << " threads. Increase manually to minimum thread count" );

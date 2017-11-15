@@ -39,6 +39,10 @@ namespace tarch {
  * invades at least one additional core always. That is, you will always see
  * two non-idle ranks.
  *
+ * Please ensure that isInitialised() or any other routine is called early
+ * throughout the user cycle. In Peano, peano::initSharedMemoryEnvironment()
+ * does this job.
+ *
  * @author Tobias Weinzierl
  */
 class tarch::multicore::Core {
@@ -46,6 +50,12 @@ class tarch::multicore::Core {
     SHMInvadeRoot     _invadeRoot;
     SHMInvade*        _basicInvasion;
 
+    /**
+     * As the class is a singleton, this constructor is protected and you
+     * solely are allowed to create an object indirectly through getIntance().
+     * The constructor first cleans up the shared memory environment and then
+     * invades the node with the first MinThreads threads.
+     */
     Core();
 
     static tarch::logging::Log  _log;
