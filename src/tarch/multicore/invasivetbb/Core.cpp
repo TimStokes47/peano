@@ -63,8 +63,15 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
     logWarning( "configure(int)", "requested " << numberOfThreads << " threads on only " << _invadeRoot->get_max_available_cores() << " cores" );
   }
 
+  const int oldActiveCores = getNumberOfThreads();
+
   delete _basicInvasion;
   _basicInvasion = new SHMInvade(numberOfThreads-1);
+
+  logInfo( "configure(int)",
+    "rank had " << oldActiveCores << " threads, tried to change to " << numberOfThreads <<
+    " threads and got " << getNumberOfThreads() << " threads"
+  );
 }
 
 
