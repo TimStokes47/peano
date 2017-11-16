@@ -202,6 +202,7 @@ std::string peano::performanceanalysis::SpeedupLaws::toString() const {
 
   out << "(f="  << _f
       << ",t_1=" << _t_1
+      << ",s="  << _s
       << ",s="  << _samples
       << ",t="  << _t
       << ",p="  << _p
