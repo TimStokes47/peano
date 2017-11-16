@@ -342,6 +342,7 @@ comprising the update rule
       std::vector<double>  f,
       std::vector<double>  s,
       int                  totalThreadsAvailable,
+      bool                 logResultingDistributionToInto = false,
       double               alpha=0.1,
       int                  m=4,
       double               eps=1e-4

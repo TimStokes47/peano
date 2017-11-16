@@ -3,7 +3,6 @@
 #include "tarch/la/Matrix.h"
 #include "tarch/la/LUDecomposition.h"
 
-#include "tarch/parallel/Node.h"
 
 #include <sstream>
 
@@ -218,6 +217,7 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
   std::vector<double>  f,
   std::vector<double>  s,
   int                  totalThreadsAvailable,
+  bool                 logResultingDistributionToInto,
   double               alpha,
   int                  m,
   double               eps
@@ -291,7 +291,7 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     }
   }
 
-  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+  if (logResultingDistributionToInto) {
     logInfo( "getOptimalNumberOfThreads(...)", "identified new optimal core distribution:" );
     for (int k=0; k<static_cast<int>(f.size());k++) {
       logInfo(
