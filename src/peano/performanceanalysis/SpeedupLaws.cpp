@@ -293,7 +293,7 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
 
   if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
     logInfo( "getOptimalNumberOfThreads(...)", "identified new optimal core distribution:" );
-    for (int k=0; k<tarch::parallel::Node::getInstance().getNumberOfNodes();k++) {
+    for (int k=0; k<static_cast<int>(f.size());k++) {
       logInfo(
 	"getOptimalNumberOfThreads(...)", "c[" << k << "]=" << c[k] << "\t" <<
 	"(t_1=" << t_1[k] <<
