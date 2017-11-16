@@ -1,6 +1,9 @@
 #include "peano/performanceanalysis/SpeedupLaws.h"
+
 #include "tarch/la/Matrix.h"
 #include "tarch/la/LUDecomposition.h"
+
+#include "tarch/parallel/Node.h"
 
 #include <sstream>
 
@@ -19,8 +22,6 @@ peano::performanceanalysis::SpeedupLaws::SpeedupLaws(double f):
   _t_1(0.0),
   _s(0.0),
   _samples(0) {
-//  _p = tarch::la::Vector<Entries, double>(0.0);
-//  _t = tarch::la::Vector<Entries, double>(1.0);
 }
 
 
@@ -124,10 +125,6 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
 
 void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLawWithThreadStartupCost() {
   if (_samples>Entries) {
-    //const double oldF   = _f;
-    //const double oldT_1 = _t_1;
-    //const double oldS   = _s;
-	    
     const int NewtonIterations = Entries;
     for (int it=0; it<NewtonIterations; it++) {
       tarch::la::Matrix<3,Entries,double>  gradJ(0.0);
@@ -173,10 +170,6 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLawWithThreadStartupCo
       _t_1 = std::max( _t_1,MinT1 );
       _s   = std::max(   _s,MinS  );
     }
-
-    //_f   = 0.5 * _f   + 0.5 * oldF;
-    //_t_1 = 0.5 * _t_1 + 0.5 * oldT_1;
-    //_s   = 0.5 * _s   + 0.5 * oldS;
 
     assertion4( _f>=0,    _f, _t_1, _p, _t );
     assertion4( _f<=1.0,  _f, _t_1, _p, _t );
@@ -294,6 +287,18 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
   if (assignedCores<totalThreadsAvailable) {
     for (int k=0; k<static_cast<int>(f.size()); k++) {
       c[k] += 1.0;
+    }
+  }
+
+  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+    logInfo( "getOptimalNumberOfThreads(...)", "identified new optimal core distribution:" );
+    for (int k=0; k<tarch::parallel::Node::getInstance().getNumberOfNodes();k++) {
+      logInfo(
+	"getOptimalNumberOfThreads(...)", "c[" << k << "]=" << c[k] << "\t" <<
+	"(t_1=" << t_1[k] <<
+	",f=" << f[k] <<
+	",s=" << s[k] << ")"
+      );
     }
   }
 
