@@ -267,8 +267,9 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     for (int k=0; k<static_cast<int>(f.size()); k++) {
       if (std::abs(M_kdc_k[k])>eps/2.0) {
         double update = - M[k] / M_kdc_k[k];
-        if (update<0.0) update *= 0.9;
-        c[k]  += update;
+        c[k]  += update / totalThreadsAvailable;
+        c[k] = std::max(c[k],1.0);
+        c[k] = std::min(c[k], totalThreadsAvailable-static_cast<int>(f.size())+1.0 );
       }
       maxM_kdc_k  = std::max( maxM_kdc_k, std::abs(M_kdc_k[k]) );
 
@@ -277,28 +278,19 @@ int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     newtonIterations++;
   }
 
-  for (int k=0; k<static_cast<int>(f.size()); k++) {
-    c[k] = c[k]<1.0 ? 1.0 : c[k];
-  }
-
-  double assignedCores = 0.0;
-  for (int k=0; k<static_cast<int>(f.size()); k++) {
-    assignedCores += c[k];
-  }
-  if (assignedCores<totalThreadsAvailable) {
-    for (int k=0; k<static_cast<int>(f.size()); k++) {
-      c[k] += 1.0;
-    }
-  }
-
   if (logResultingDistributionToInto) {
-    logInfo( "getOptimalNumberOfThreads(...)", "identified new optimal core distribution:" );
+    logInfo(
+      "getOptimalNumberOfThreads(...)",
+      "identified new optimal core distribution after " << newtonIterations <<
+      " Newton iteration(s) reducing the error to " << maxM_kdc_k <<
+      " (eps=" << eps << ")"
+    );
     for (int k=0; k<static_cast<int>(f.size());k++) {
       logInfo(
-	"getOptimalNumberOfThreads(...)", "c[" << k << "]=" << c[k] << "\t" <<
-	"(t_1=" << t_1[k] <<
-	",f=" << f[k] <<
-	",s=" << s[k] << ")"
+        "getOptimalNumberOfThreads(...)", "c[" << k << "]=" << c[k] << "\t" <<
+        "(t_1=" << t_1[k] <<
+        ",f=" << f[k] <<
+        ",s=" << s[k] << ")"
       );
     }
   }

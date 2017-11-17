@@ -7,9 +7,6 @@
 registerTest(peano::performanceanalysis::tests::SpeedupLawsTest)
 
 
-//tarch::logging::Log peano::performanceanalysis::tests::SpeedupLawsTest::_log( "peano::performanceanalysis::tests::SpeedupLawsTest" );
-
-
 #ifdef UseTestSpecificCompilerSettings
 #pragma optimize("",off)
 #endif
@@ -29,6 +26,7 @@ void peano::performanceanalysis::tests::SpeedupLawsTest::run() {
   testMethod( testAmdahl3 );
   testMethod( testGetOptimalNumberOfThreadsWithOneRank );
   testMethod( testGetOptimalNumberOfThreadsWithTwoRanks );
+  testMethod( testGetOptimalNumberOfThreadsWithSixRanks );
 }
 
 
@@ -129,6 +127,42 @@ void peano::performanceanalysis::tests::SpeedupLawsTest::testAmdahl3() {
 }
 
 
+void peano::performanceanalysis::tests::SpeedupLawsTest::testGetOptimalNumberOfThreadsWithSixRanks() {
+  std::vector<double>  t_1;
+  std::vector<double>  f;
+  std::vector<double>  s;
+
+  const int MaxThreads = 24;
+
+  t_1.push_back(0.00515314);
+  t_1.push_back(0);
+  t_1.push_back(0.00516363);
+  t_1.push_back(0.00514758);
+  t_1.push_back(0.00506833);
+  t_1.push_back(0.00516871);
+
+  f.push_back(0.5);
+  f.push_back(1.0);
+  f.push_back(0.5);
+  f.push_back(0.5);
+  f.push_back(0.5);
+  f.push_back(0.5);
+
+  s.push_back(0);
+  s.push_back(1);
+  s.push_back(0);
+  s.push_back(0);
+  s.push_back(0);
+  s.push_back(0);
+
+  int recommendation = 0;
+
+  recommendation = peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
+    0, t_1, f, s, MaxThreads );
+  validateEquals(recommendation,MaxThreads/5+1);
+}
+
+
 void peano::performanceanalysis::tests::SpeedupLawsTest::testGetOptimalNumberOfThreadsWithOneRank() {
   std::vector<double>  t_1;
   std::vector<double>  f;
@@ -146,7 +180,7 @@ void peano::performanceanalysis::tests::SpeedupLawsTest::testGetOptimalNumberOfT
 
   recommendation = peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     0, t_1, f, s, MaxThreads*2 );
-  validateEquals(recommendation,MaxThreads*2);
+  validateEquals(recommendation,MaxThreads*2-1);
 
   t_1[0] = 6.456e-6;
   f[0] = 0.5;
@@ -201,19 +235,19 @@ void peano::performanceanalysis::tests::SpeedupLawsTest::testGetOptimalNumberOfT
 
   recommendation = peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     0, t_1, f, s, MaxThreads );
-  validateEquals(recommendation,MaxThreads/2+1);
+  validateEquals(recommendation,MaxThreads/2);
 
   recommendation = peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     1, t_1, f, s, MaxThreads );
-  validateEquals(recommendation,MaxThreads/2+1);
+  validateEquals(recommendation,MaxThreads/2);
 
   recommendation = peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     0, t_1, f, s, MaxThreads*2 );
-  validateEquals(recommendation,MaxThreads*2/2+1);
+  validateEquals(recommendation,MaxThreads*2/2);
 
   recommendation = peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
     1, t_1, f, s, MaxThreads*2 );
-  validateEquals(recommendation,MaxThreads*2/2+1);
+  validateEquals(recommendation,MaxThreads*2/2);
 }
 
 
