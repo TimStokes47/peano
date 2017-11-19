@@ -3,12 +3,14 @@
 #ifndef _PEANO_DATA_TRAVERSAL_TASK_SET_H_
 #define _PEANO_DATA_TRAVERSAL_TASK_SET_H_
 
-
 #include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/logging/Log.h"
 
 
 #if defined(SharedTBB) || defined(SharedTBBInvade)
 #include <tbb/task.h>
+
+#include <tbb/concurrent_queue.h>
 #endif
 
 
@@ -93,16 +95,34 @@ while (!taskHasTerminated) {
  * ensures that multiple while loops cannot block the system.
  *
  *
+ * <h2> Number of background tasks </h2>
+ *
+ * I did occasionally run into situations where too many background tasks made the
+ * overall system starve. So you can restrict the number of background tasks now
+ * manually. The system queues all tasks and then checks whether a background task
+ * is active already. If not, it launches a consumer task.
+ *
+ * You  can control the number of background tasks by setting the compile variable
+ *
+ * -DNoOfPeanoBackgroundTasks=10
+ *
+ *
  * @author Tobias Weinzierl
  */
 class peano::datatraversal::TaskSet {
   private:
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
-    static tbb::task_group_context  _backgroundTaskContext;
+    static tarch::logging::Log  _log;
 
+
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
+    class BackgroundTask {
+      public:
+        virtual void run() = 0;
+        virtual ~BackgroundTask() {}
+    };
 
     template <class Functor>
-    class GenericTaskWithCopy: public tbb::task {
+    class GenericTaskWithCopy: public BackgroundTask {
       private:
         /**
          * See the outer class description for an explanation why this is an
@@ -111,8 +131,41 @@ class peano::datatraversal::TaskSet {
         Functor   _functor;
       public:
         GenericTaskWithCopy(const Functor& functor);
+        void run() override;
+        virtual ~GenericTaskWithCopy() {}
+    };
+
+
+    class ConsumerTask: public tbb::task {
+      public:
+        ConsumerTask();
         tbb::task* execute();
     };
+
+    /**
+     * Use this to launch all background with very low priority
+     */
+    static tbb::task_group_context  _backgroundTaskContext;
+
+    /**
+     * Number of actively running background tasks. If a task tries to run, and
+     * there are more than a given number of threads already active, it
+     * immediately yields again.
+     */
+    static tbb::atomic<int>         _numberOfRunningBackgroundThreads;
+
+    /**
+     * The active tasks
+     */
+    static tbb::concurrent_queue<BackgroundTask*>  _backgroundTasks;
+
+    /**
+     * You may call this always. It checks how many background tasks are
+     * currently running and, if necessary, kicks a background task off.
+     * Hand over a pointer to a background task. The destruction is up to
+     * the tasking scheme.
+     */
+    static void kickOffBackgroundTask(BackgroundTask* task);
     #endif
 
   public:

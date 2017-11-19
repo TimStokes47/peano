@@ -1,28 +1,13 @@
 #include "tarch/Assertions.h"
-
-#include "peano/performanceanalysis/Analysis.h"
-
-
+    
+    
 template <class Functor>
 peano::datatraversal::TaskSet::TaskSet(
   Functor&  myTask
 ) {
-  peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
-
   #if defined(SharedTBB) || defined(SharedTBBInvade)
     typedef GenericTaskWithCopy<Functor> Task;
-
-    Task* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) Task(myTask);
-
-    tbb::task::enqueue(*tbbTask);
-  /* Will not correctly launch background task */
-  // #elif defined(SharedOMP)
-  //   #pragma omp parallel
-  //   #pragma omp single
-  //   {
-  //     #pragma omp task
-  //     myTask();
-  //   }
+    kickOffBackgroundTask( new Task(myTask) );
   #else
   myTask();
   #endif
@@ -37,8 +22,7 @@ peano::datatraversal::TaskSet::GenericTaskWithCopy<Functor>::GenericTaskWithCopy
 
 
 template <class Functor>
-tbb::task* peano::datatraversal::TaskSet::GenericTaskWithCopy<Functor>::execute() {
+void peano::datatraversal::TaskSet::GenericTaskWithCopy<Functor>::run() {
   _functor();
-  return 0;
 }
 #endif
