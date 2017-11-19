@@ -366,8 +366,6 @@ void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int act
         ", background-tasks=" << _numberOfSpawnedBackgroundTask
       );
 
-      _numberOfSpawnedBackgroundTask      /= 4;
-
       _timeAveragedConcurrencyLevel          = 0;
       _timeAveragedPotentialConcurrencyLevel = 0;
 
@@ -389,5 +387,14 @@ void peano::performanceanalysis::DefaultAnalyser::fireAndForgetBackgroundTask(in
     tarch::multicore::Lock lock(_concurrencyReportSemaphore);
 
     _numberOfSpawnedBackgroundTask += taskCount;
+  }
+}
+
+
+void peano::performanceanalysis::DefaultAnalyser::terminatedBackgroundTask(int taskCount) {
+  if (_isSwitchedOn) {
+    tarch::multicore::Lock lock(_concurrencyReportSemaphore);
+
+    _numberOfSpawnedBackgroundTask -= taskCount;
   }
 }

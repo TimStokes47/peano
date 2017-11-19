@@ -170,6 +170,12 @@ void peano::performanceanalysis::Analysis::fireAndForgetBackgroundTask(int taskC
 }
 
 
+void peano::performanceanalysis::Analysis::terminatedBackgroundTask(int taskCount) {
+  assertion( _device!=0 );
+  _device->terminatedBackgroundTask(taskCount);
+}
+
+
 void peano::performanceanalysis::Analysis::enable(bool value) {
   assertion( _device!=0 );
   _device->enable(value);

@@ -112,6 +112,7 @@ class peano::performanceanalysis::Analyser {
     virtual void changeConcurrencyLevel(int actualChange, int maxPossibleChange) = 0;
 
     virtual void fireAndForgetBackgroundTask(int taskCount) = 0;
+    virtual void terminatedBackgroundTask(int taskCount) = 0;
 
     /**
      * Switch on/off.
