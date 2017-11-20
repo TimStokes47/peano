@@ -70,7 +70,7 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
 
   logInfo( "configure(int)",
     "rank had " << oldActiveCores << " threads, tried to change to " << numberOfThreads <<
-    " threads and got " << getNumberOfThreads() << " out of " << _invadeRoot->get_free_cores() << " available threads"
+    " threads and got " << getNumberOfThreads() << " (" << _invadeRoot->get_free_cores() << " thread(s) remain available)"
   );
 }
 
