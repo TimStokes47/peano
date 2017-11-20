@@ -3,11 +3,12 @@
     
 template <class Functor>
 peano::datatraversal::TaskSet::TaskSet(
-  Functor&  myTask
+  Functor&  myTask,
+  bool      isLongRunningOrPersistentTask
 ) {
   #if defined(SharedTBB) || defined(SharedTBBInvade)
     typedef GenericTaskWithCopy<Functor> Task;
-    kickOffBackgroundTask( new Task(myTask) );
+    kickOffBackgroundTask( new Task(myTask,isLongRunningOrPersistentTask) );
   #else
   myTask();
   #endif
@@ -16,7 +17,8 @@ peano::datatraversal::TaskSet::TaskSet(
 
 #if defined(SharedTBB) || defined(SharedTBBInvade)
 template <class Functor>
-peano::datatraversal::TaskSet::GenericTaskWithCopy<Functor>::GenericTaskWithCopy(const Functor&  functor):
+peano::datatraversal::TaskSet::GenericTaskWithCopy<Functor>::GenericTaskWithCopy(const Functor&  functor,  bool isLongRunning):
+  BackgroundTask(isLongRunning),
   _functor(functor)  {
 }
 

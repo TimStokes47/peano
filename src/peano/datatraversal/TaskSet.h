@@ -102,9 +102,7 @@ while (!taskHasTerminated) {
  * manually. The system queues all tasks and then checks whether a background task
  * is active already. If not, it launches a consumer task.
  *
- * You  can control the number of background tasks by setting the compile variable
- *
- * -DNoOfPeanoBackgroundTasks=10
+ * You  can control the number of background tasks.
  *
  *
  * @author Tobias Weinzierl
@@ -116,9 +114,13 @@ class peano::datatraversal::TaskSet {
 
     #if defined(SharedTBB) || defined(SharedTBBInvade)
     class BackgroundTask {
+      private:
+        const bool _isLongRunning;
       public:
+        BackgroundTask( bool isLongRunning ): _isLongRunning(isLongRunning) {}
         virtual void run() = 0;
         virtual ~BackgroundTask() {}
+        bool isLongRunning() const {return _isLongRunning;}
     };
 
     template <class Functor>
@@ -130,7 +132,7 @@ class peano::datatraversal::TaskSet {
          */
         Functor   _functor;
       public:
-        GenericTaskWithCopy(const Functor& functor);
+        GenericTaskWithCopy(const Functor& functor,  bool isLongRunning );
         void run() override;
         virtual ~GenericTaskWithCopy() {}
     };
@@ -168,7 +170,12 @@ class peano::datatraversal::TaskSet {
     static void kickOffBackgroundTask(BackgroundTask* task);
     #endif
 
+
+    static int                      _maxNumberOfRunningBackgroundThreads;
+
   public:
+    static void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
+
     /**
      * Spawn One Asynchronous Task
      *
@@ -197,7 +204,8 @@ class peano::datatraversal::TaskSet {
      */
     template <class Functor>
     inline TaskSet(
-      Functor&  task
+      Functor&  task,
+      bool      isLongRunningOrPersistentTask
     );
 
     /**

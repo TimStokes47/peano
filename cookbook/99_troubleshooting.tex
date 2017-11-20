@@ -36,7 +36,11 @@ the directory.
    with CLANG replacing GCC. Unfortunately, CLANG seems to pretend to be GNU on
    some systems and then the wrong header is included. Ensure that
    \texttt{CompilerSpecificSettings.h} includes a file such that the compiler
+   \linebreak
    \texttt{CompilerCLANG} is defined.
+  \item \textbf{ My compiler requires ages to translate the unit tests}. Ensure
+  that the flag \texttt{UseTestSpecificCompilerSettings} is enabled. This
+  effectively disables any optimisation for the unit tests.
 \end{itemize}
 
 

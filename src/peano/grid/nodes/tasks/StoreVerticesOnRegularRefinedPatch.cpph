@@ -491,7 +491,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
       _stackView.isOpen() ? _stackView.pushBlockOnOutputStack(ExpectedNumberOfStoresToOutputStack) : _vertexStack.pushBlockOnOutputStack(ExpectedNumberOfStoresToOutputStack),
       _forkedSubtree
     );
-    peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask);
+    peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,false);
 
     logTraceOutWith2Arguments( "storeSubVerticesWithCellsFromGridContainer(...)", "forked", ExpectedNumberOfStoresToOutputStack );
     return;
@@ -626,7 +626,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
          topLevelStackView[currentFineCellIndex],
          _forkedSubtree
       );
-      peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask);
+      peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,false);
     }
   endzfor
 
