@@ -39,6 +39,8 @@ namespace {
   tbb::concurrent_queue<tarch::multicore::BackgroundTask*>  _backgroundTasks;
 
   int                      _maxNumberOfRunningBackgroundThreads(1);
+
+  tarch::logging::Log _log( "tarch::multicore" );
 }
 
 
