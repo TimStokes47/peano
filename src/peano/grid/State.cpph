@@ -906,6 +906,8 @@ bool peano::grid::State<StateData>::hasSubworkerRebalanced() const {
 
 template <class StateData>
 void peano::grid::State<StateData>::receiveStartupDataFromMaster() {
+  SCOREP_USER_REGION("peano::grid::State<StateData>::receiveStartupDataFromMaster()", SCOREP_USER_REGION_TYPE_FUNCTION)
+    
   logTraceInWith1Argument( "receiveStartupDataFromMaster()", toString() );
   if ( tarch::parallel::Node::getInstance().isGlobalMaster()) {
     setReduceStateAndCell(true);
