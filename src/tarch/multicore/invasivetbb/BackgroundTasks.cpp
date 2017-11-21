@@ -1,7 +1,7 @@
 #include "tarch/multicore/BackgroundTasks.h"
 #include "peano/performanceanalysis/Analysis.h"
 
-#if defined(SharedTBB)
+#if defined(SharedTBBInvade)
 
 #include <vector>
 #include <tbb/task.h>
