@@ -49,6 +49,14 @@ peano::datatraversal::TaskSet::ConsumerTask::ConsumerTask() {
 
 
 tbb::task* peano::datatraversal::TaskSet::ConsumerTask::execute() {
+  processBackgroundTasks();
+  return 0;
+}
+#endif
+
+
+void peano::datatraversal::TaskSet::processBackgroundTasks() {
+  #if defined(SharedTBB) || defined(SharedTBBInvade)
   logDebug( "execute()", "background consumer task becomes awake" );
 
   BackgroundTask* myTask = nullptr;
@@ -68,10 +76,8 @@ tbb::task* peano::datatraversal::TaskSet::ConsumerTask::execute() {
   }
 
   logDebug( "execute()", "background task consumer is done and kills itself" );
-
-  return 0;
+  #endif
 }
-#endif
 
 
 void peano::datatraversal::TaskSet::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {

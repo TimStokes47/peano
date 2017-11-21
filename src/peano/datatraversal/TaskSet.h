@@ -174,6 +174,8 @@ class peano::datatraversal::TaskSet {
     static int                      _maxNumberOfRunningBackgroundThreads;
 
   public:
+    static void processBackgroundTasks();
+
     static void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
 
     /**

@@ -54,22 +54,7 @@ class tarch::multicore::BooleanSemaphore {
      * any shared memory support. This documentation documents only
      * implementation details.
      *
-     * The operation first analyses the _pauseCounter reset by
-     * continueWithTask().
-     *
-     * - If it is smaller than _pauseBeforeYield, we double it, pause, and
-     *   return. The pause is realised due to __TBB_Pause which implies a
-     *   couple of nops. A thread hence is not suspended, it keeps on running
-     *   but it does not disturb other processes. If only this variant would
-     *   exist, tasks could starve.
-     * - If however the _pauseCounter exceeds, the operation invokes
-     *   __TBB_Yield. Furthermore, it writes an error message once.
-     *
-     *
-     * If you use this operation to do busy waiting in a pipeline (you wait for
-     * a variable to signal that you can go ahead) and if you require more than
-     * one piece of data thereafter, please see remarks in the documentation of
-     * BooleanSemaphore for details.
+     * Triggers TBB's yield().
      */
     static void sendTaskToBack();
 

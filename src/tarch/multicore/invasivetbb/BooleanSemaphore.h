@@ -49,27 +49,17 @@ class tarch::multicore::BooleanSemaphore {
     /**
      * Send task to background
      *
-     * For a description from the user's point of view please see the
-     * BooleanSemaphore implementation that is active if you don't compile with
-     * any shared memory support. This documentation documents only
-     * implementation details.
+     * We found that yielding alone does not work for the invasive TBB version
+     * though I'm not 100% clear why. It seems to deadlock, but the deadlocks
+     * show up if and only if we have tree splitting and we have a significantly
+     * large grid. So we may as well assume that the system is not deadlocking
+     * but the background tasks are starving. So what I do in this version is
+     * that I work through the background tasks before I yield.
      *
-     * The operation first analyses the _pauseCounter reset by
-     * continueWithTask().
+     * This is not a particularly nice implementation.
      *
-     * - If it is smaller than _pauseBeforeYield, we double it, pause, and
-     *   return. The pause is realised due to __TBB_Pause which implies a
-     *   couple of nops. A thread hence is not suspended, it keeps on running
-     *   but it does not disturb other processes. If only this variant would
-     *   exist, tasks could starve.
-     * - If however the _pauseCounter exceeds, the operation invokes
-     *   __TBB_Yield. Furthermore, it writes an error message once.
-     *
-     *
-     * If you use this operation to do busy waiting in a pipeline (you wait for
-     * a variable to signal that you can go ahead) and if you require more than
-     * one piece of data thereafter, please see remarks in the documentation of
-     * BooleanSemaphore for details.
+     * @todo All the background stuff should go into the multicore/tarch part
+     *       of the code. It does not belong into datatraversal.
      */
     static void sendTaskToBack();
 
