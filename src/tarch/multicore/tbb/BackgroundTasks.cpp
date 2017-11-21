@@ -3,6 +3,8 @@
 
 #if defined(SharedTBB)
 
+#include "tarch/logging/Log.h"
+
 #include <vector>
 #include <tbb/task.h>
 #include <tbb/concurrent_queue.h>
