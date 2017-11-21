@@ -6,6 +6,8 @@
 
 #include "peano/utils/PeanoOptimisations.h"
 
+#include "peano/performanceanalysis/ScorePMacros.h"
+
 
 template <class Vertex>
 void peano::parallel::JoinDataBufferPool::createVertexBufferManually(bool isReceiveBuffer, int toRank) {
@@ -28,6 +30,8 @@ void peano::parallel::JoinDataBufferPool::createVertexBufferManually(bool isRece
 
 template <class Vertex>
 void peano::parallel::JoinDataBufferPool::sendVertex( const Vertex& vertex, int toRank ) {
+  SCOREP_USER_REGION("peano::parallel::JoinDataBufferPool::sendVertex()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   logTraceInWith2Arguments( "sendVertex(Vertex,int)", vertex.toString(), toRank );
   assertion2( _map.count(toRank) == 0 || _map[toRank]._vertexBuffer==0 || !_map[toRank]._vertexBuffer->isReceiveBuffer(), toRank, tarch::parallel::Node::getInstance().getRank() );
 
@@ -77,6 +81,8 @@ void peano::parallel::JoinDataBufferPool::sendCell(
   const std::bitset<NUMBER_OF_VERTICES_PER_ELEMENT>&  cellMarker,
   int toRank
 ) {
+  SCOREP_USER_REGION("peano::parallel::JoinDataBufferPool::sendCell()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   logTraceInWith3Arguments( "sendCell(Cell,int,int)", cell.toString(), cellMarker, toRank );
   assertion2( _map.count(toRank) == 0 || _map[toRank]._cellBuffer==0 || !_map[toRank]._cellBuffer->isReceiveBuffer(), toRank, tarch::parallel::Node::getInstance().getRank() );
   assertion2( _map.count(toRank) == 0 || _map[toRank]._cellMarkerBuffer==0 || !_map[toRank]._cellMarkerBuffer->isReceiveBuffer(), toRank, tarch::parallel::Node::getInstance().getRank() );
@@ -111,6 +117,8 @@ void peano::parallel::JoinDataBufferPool::sendCell(
 
 template <class Vertex>
 Vertex peano::parallel::JoinDataBufferPool::getVertexFromStream(int fromRank) {
+  SCOREP_USER_REGION("peano::parallel::JoinDataBufferPool::getVertexFromStream()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   logTraceInWith1Argument( "getVertexFromStream(int)", fromRank );
   assertion2( _map.count(fromRank) == 0 || _map[fromRank]._vertexBuffer==0 || _map[fromRank]._vertexBuffer->isReceiveBuffer(), fromRank, tarch::parallel::Node::getInstance().getRank() );
 
@@ -138,6 +146,8 @@ Vertex peano::parallel::JoinDataBufferPool::getVertexFromStream(int fromRank) {
 
 template <class Cell>
 Cell peano::parallel::JoinDataBufferPool::getCellFromStream(int fromRank) {
+  SCOREP_USER_REGION("peano::parallel::JoinDataBufferPool::getCellFromStream()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   logTraceInWith1Argument( "getCellFromStream(int)", fromRank );
   assertion2( _map.count(fromRank) == 0 || _map[fromRank]._cellBuffer==0 || _map[fromRank]._cellBuffer->isReceiveBuffer(), fromRank, tarch::parallel::Node::getInstance().getRank() );
 
