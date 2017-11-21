@@ -5,6 +5,8 @@
 
 #include "peano/datatraversal/TaskSet.h"
 
+#include "tarch/multicore/BackgroundTasks.h"
+
 #include <limits>
 
 
@@ -32,7 +34,8 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 
 
 void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
-  peano::datatraversal::TaskSet::processBackgroundTasks();
+  processBackgroundTasks();
   tbb::this_tbb_thread::yield();
 }
+
 #endif

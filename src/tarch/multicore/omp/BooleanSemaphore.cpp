@@ -1,6 +1,7 @@
 #if defined(SharedOMP)
 
 #include "tarch/multicore/omp/BooleanSemaphore.h"
+#include "tarch/multicore/BackgroundTasks.h"
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/multicore/omp/Core.h"
@@ -34,6 +35,7 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 
 
 void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
+  processBackgroundTasks();
 }
 
 #endif

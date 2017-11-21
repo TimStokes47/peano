@@ -7,13 +7,6 @@
 #include "tarch/logging/Log.h"
 
 
-#if defined(SharedTBB) || defined(SharedTBBInvade)
-#include <tbb/task.h>
-
-#include <tbb/concurrent_queue.h>
-#endif
-
-
 #include <functional>
 
 
@@ -111,73 +104,7 @@ class peano::datatraversal::TaskSet {
   private:
     static tarch::logging::Log  _log;
 
-
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
-    class BackgroundTask {
-      private:
-        const bool _isLongRunning;
-      public:
-        BackgroundTask( bool isLongRunning ): _isLongRunning(isLongRunning) {}
-        virtual void run() = 0;
-        virtual ~BackgroundTask() {}
-        bool isLongRunning() const {return _isLongRunning;}
-    };
-
-    template <class Functor>
-    class GenericTaskWithCopy: public BackgroundTask {
-      private:
-        /**
-         * See the outer class description for an explanation why this is an
-         * attribute, i.e. why we copy the functor here always.
-         */
-        Functor   _functor;
-      public:
-        GenericTaskWithCopy(const Functor& functor,  bool isLongRunning );
-        void run() override;
-        virtual ~GenericTaskWithCopy() {}
-    };
-
-
-    class ConsumerTask: public tbb::task {
-      public:
-        ConsumerTask();
-        tbb::task* execute();
-    };
-
-    /**
-     * Use this to launch all background with very low priority
-     */
-    static tbb::task_group_context  _backgroundTaskContext;
-
-    /**
-     * Number of actively running background tasks. If a task tries to run, and
-     * there are more than a given number of threads already active, it
-     * immediately yields again.
-     */
-    static tbb::atomic<int>         _numberOfRunningBackgroundThreads;
-
-    /**
-     * The active tasks
-     */
-    static tbb::concurrent_queue<BackgroundTask*>  _backgroundTasks;
-
-    /**
-     * You may call this always. It checks how many background tasks are
-     * currently running and, if necessary, kicks a background task off.
-     * Hand over a pointer to a background task. The destruction is up to
-     * the tasking scheme.
-     */
-    static void kickOffBackgroundTask(BackgroundTask* task);
-    #endif
-
-
-    static int                      _maxNumberOfRunningBackgroundThreads;
-
   public:
-    static void processBackgroundTasks();
-
-    static void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
-
     /**
      * Spawn One Asynchronous Task
      *

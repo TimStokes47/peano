@@ -1,30 +1,13 @@
 #include "tarch/Assertions.h"
     
+#include "tarch/multicore/BackgroundTasks.h"
+
     
 template <class Functor>
 peano::datatraversal::TaskSet::TaskSet(
   Functor&  myTask,
   bool      isLongRunningOrPersistentTask
 ) {
-  #if defined(SharedTBB) || defined(SharedTBBInvade)
-    typedef GenericTaskWithCopy<Functor> Task;
-    kickOffBackgroundTask( new Task(myTask,isLongRunningOrPersistentTask) );
-  #else
-  myTask();
-  #endif
+  typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+  tarch::multicore::spawnBackgroundTask( new Task(myTask,isLongRunningOrPersistentTask) );
 }
-
-
-#if defined(SharedTBB) || defined(SharedTBBInvade)
-template <class Functor>
-peano::datatraversal::TaskSet::GenericTaskWithCopy<Functor>::GenericTaskWithCopy(const Functor&  functor,  bool isLongRunning):
-  BackgroundTask(isLongRunning),
-  _functor(functor)  {
-}
-
-
-template <class Functor>
-void peano::datatraversal::TaskSet::GenericTaskWithCopy<Functor>::run() {
-  _functor();
-}
-#endif

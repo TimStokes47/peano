@@ -1,4 +1,6 @@
 #include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/multicore/BackgroundTasks.h"
+
 
 // This implementation is valid iff neither OpenMP nor TBBs nor any other
 // shared memory parallelisation are active
@@ -22,6 +24,7 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 
 
 void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
+  processBackgroundTasks();
 }
 
 #endif
