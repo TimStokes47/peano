@@ -334,7 +334,23 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
     if (loadBalancingMessage.getLoadBalancingFlag()!=static_cast<int>(peano::parallel::loadbalancing::LoadBalancingFlag::Continue)) {
       eventHandlesRequestReduction = true;
-      logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "reset worker's reduction flag due to load balancing" );
+      logInfo( 
+        "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", 
+        "reset worker's reduction flag for rank " << currentWorker << " due to load balancing " <<
+        "(mapping's instruction had been " << loadBalancingMessage.toString( loadBalancingMessage.getLoadBalancingFlag() ) << ")"
+      );
+    }
+
+    if (
+      (state.isForkingRank(currentWorker) || state.isForkingRank(currentWorker))
+      &&
+      !eventHandlesRequestReduction
+    ) {
+      eventHandlesRequestReduction = true;
+      logInfo( 
+        "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", 
+        "reset worker's reduction flag for rank " << currentWorker << " as this worker is joining or forking"
+      );
     }
 
     State stateCopy = state;
