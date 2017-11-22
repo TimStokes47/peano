@@ -337,7 +337,9 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       logInfo( 
         "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", 
         "reset worker's reduction flag for rank " << currentWorker << " due to load balancing " <<
-        "(mapping's instruction had been " << loadBalancingMessage.toString( loadBalancingMessage.getLoadBalancingFlag() ) << ")"
+        "(mapping's instruction had been " << peano::parallel::loadbalancing::convertLoadBalancingFlagToString( 
+          static_cast<peano::parallel::loadbalancing::LoadBalancingFlag>(loadBalancingMessage.getLoadBalancingFlag()) 
+        ) << ")"
       );
     }
 
