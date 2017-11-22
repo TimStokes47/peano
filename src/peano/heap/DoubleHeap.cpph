@@ -365,6 +365,19 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::createBuffersManually( int communicationRank ) {
+  #ifdef Parallel
+  _neighbourDataExchanger.insert(
+    std::pair<int, NeighbourDataExchanger>(
+      communicationRank,
+      NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,communicationRank)
+    )
+  );
+  #endif
+}
+    
+    
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::sendData(
   const double*                                 data,
   int                                           size,

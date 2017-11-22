@@ -157,6 +157,11 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
      * data from the master, i.e. it hasn't even created the corresponding
      * buffers. We'll thus run into a deadlock.
      *
+     * Usually, this operation is used with the argument
+     * peano::parallel::SendReceiveBufferPool::LIFO by users. Please do not
+     * forget also to create heap buffers manually in case you use heaps.
+     *
+     *
      * @param toRank Usually always the master process if you call it
      *               externally. However, I also use this method inside the
      *               class and there it may have a different value.

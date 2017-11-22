@@ -833,6 +833,13 @@ while (!compressionHasFinished) {
     );
 
     /**
+     * We found that in some cases, the heaps deadlock as they do not receive on
+     * time. If you face this problem, please call this operation manually in case
+     * you now all your communication partners.
+     */
+    void createBuffersManually( int communicationRank );
+
+    /**
      * This operation sends out the data from the vector handed over.
      *
      * Please consult the description of the alternative sendData() routine to

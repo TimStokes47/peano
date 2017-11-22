@@ -195,6 +195,8 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
 
     void setName(std::string name);
 
+    void createBuffersManually( int communicationRank );
+
     void sendData(
       int                                           index,
       int                                           toRank,

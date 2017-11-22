@@ -378,6 +378,18 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::createBuffersManually( int communicationRank ) {
+  #ifdef Parallel
+  _neighbourDataExchanger.insert(
+    std::pair<int, NeighbourDataExchanger>(
+      communicationRank,
+      NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,communicationRank)
+    )
+  );
+  #endif
+}
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::sendData(
   const std::vector< Data >&                    data,
   int                                           toRank,
