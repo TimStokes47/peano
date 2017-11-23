@@ -39,8 +39,8 @@ coresWanted = [ [] for x in range(0,noOfRanks) ]
 # =================
 # Build up database
 # =================
+inputFile = open( args.file,  "r" )
 try:
-  inputFile = open( args.file,  "r" )
   for line in inputFile:
     for rank in range(firstRank,firstRank+noOfRanks):
       # The tricky thing here is the additional space in the expression. Otherwise 6 and 64 match
