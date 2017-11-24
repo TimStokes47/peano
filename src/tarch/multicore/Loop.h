@@ -3,10 +3,8 @@
 #ifndef _TARCH_MULTICORE_LOOP_H_
 #define _TARCH_MULTICORE_LOOP_H_
 
-#ifdef SharedTBB
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 #include "tarch/multicore/tbb/Loop.h"
-#elif SharedTBBInvade
-#include "tarch/multicore/invasivetbb/Loop.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Loop.h"
 #else
