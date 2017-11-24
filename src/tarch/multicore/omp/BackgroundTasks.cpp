@@ -18,7 +18,7 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
 }
 
 
-void tarch::multicore::processBackgroundTasks() {
+bool tarch::multicore::processBackgroundTasks() {
   int tasksToTrigger;
   std::vector<tarch::multicore::BackgroundTask*>  triggeredTasks;
 
@@ -34,6 +34,8 @@ void tarch::multicore::processBackgroundTasks() {
     triggeredTasks[i]->run();
     delete triggeredTasks[i];
   }
+
+  return tasksToTrigger;
 }
 
 

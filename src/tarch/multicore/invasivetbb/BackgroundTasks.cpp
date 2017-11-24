@@ -68,11 +68,12 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
 }
 
 
-void tarch::multicore::processBackgroundTasks() {
+bool tarch::multicore::processBackgroundTasks() {
   logDebug( "execute()", "background consumer task becomes awake" );
 
   BackgroundTask* myTask = nullptr;
   bool gotOne = _backgroundTasks.try_pop(myTask);
+  bool result = false;
   bool taskHasBeenLongRunning = false;
   while (gotOne) {
     logDebug( "execute()", "consumer task found job to do" );
@@ -81,6 +82,7 @@ void tarch::multicore::processBackgroundTasks() {
     taskHasBeenLongRunning = myTask->isLongRunning();
     delete myTask;
     gotOne = taskHasBeenLongRunning ? false : _backgroundTasks.try_pop(myTask);
+    result = true;
   }
 
   if (!taskHasBeenLongRunning) {
@@ -88,6 +90,8 @@ void tarch::multicore::processBackgroundTasks() {
   }
 
   logDebug( "execute()", "background task consumer is done and kills itself" );
+
+  return result;
 }
 
 

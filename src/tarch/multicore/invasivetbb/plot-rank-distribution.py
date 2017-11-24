@@ -124,9 +124,15 @@ while entriesRemaining:
  
 for rank in range(0,noOfRanks):
   pylab.fill_between( postprocessedTimeStamps, accumulatedCoresBooked[rank], accumulatedCoresBooked[rank-1], alpha=0.5 )
-  pylab.plot( postprocessedTimeStamps, accumulatedCoresWanted[rank] )
 
 pylab.xlabel('Runtime [t]=s')  
 pylab.ylabel('Cores used/requested')
 pylab.savefig( args.output + ".png", transparent = True )
 pylab.savefig( args.output + ".pdf", transparent = True ) 
+
+for rank in range(0,noOfRanks):
+  pylab.plot( postprocessedTimeStamps, accumulatedCoresWanted[rank] )
+
+
+pylab.savefig( args.output + "-plus-wanted.png", transparent = True )
+pylab.savefig( args.output + "-plus-wanted.pdf", transparent = True ) 

@@ -11,7 +11,8 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
 }
 
 
-void tarch::multicore::processBackgroundTasks() {
+bool tarch::multicore::processBackgroundTasks() {
+  return false;
 }
 
 

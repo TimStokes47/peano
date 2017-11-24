@@ -46,7 +46,11 @@ namespace tarch {
      */
     void spawnBackgroundTask(BackgroundTask* task);
 
-    void processBackgroundTasks();
+    /**
+     * Work through the background tasks and let the caller know whether some
+     * tasks have been processed.
+     */
+    bool processBackgroundTasks();
 
     void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
   }

@@ -68,12 +68,13 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
 }
 
 
-void tarch::multicore::processBackgroundTasks() {
+bool tarch::multicore::processBackgroundTasks() {
   logDebug( "execute()", "background consumer task becomes awake" );
 
   BackgroundTask* myTask = nullptr;
   bool gotOne = _backgroundTasks.try_pop(myTask);
   bool taskHasBeenLongRunning = false;
+  bool result                 = false;
   while (gotOne) {
     logDebug( "execute()", "consumer task found job to do" );
     peano::performanceanalysis::Analysis::getInstance().terminatedBackgroundTask(1);
@@ -81,6 +82,7 @@ void tarch::multicore::processBackgroundTasks() {
     taskHasBeenLongRunning = myTask->isLongRunning();
     delete myTask;
     gotOne = taskHasBeenLongRunning ? false : _backgroundTasks.try_pop(myTask);
+    result = true;
   }
 
   if (!taskHasBeenLongRunning) {
@@ -89,6 +91,8 @@ void tarch::multicore::processBackgroundTasks() {
 
   logDebug( "execute()", "background task consumer is done and kills itself" );
   tbb::this_tbb_thread::yield();
+
+  return result;
 }
 
 

@@ -34,8 +34,10 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 
 
 void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
-  processBackgroundTasks();
-  tbb::this_tbb_thread::yield();
+  bool hasProcessedATask = processBackgroundTasks();
+  if (!hasProcessedATask) {
+    tbb::this_tbb_thread::yield();
+  }
 }
 
 #endif
