@@ -45,7 +45,7 @@ void tarch::multicore::logThreadAffinities() {
 
 #ifndef SharedMemoryParallelisation
 std::vector<tarch::multicore::AffinityMask> tarch::multicore::getThreadAffinities() {
-  return std::vector<int>();
+  return std::vector<tarch::multicore::AffinityMask>();
 }
 #endif
 
