@@ -4,10 +4,20 @@
 
 
 #include <sys/sysinfo.h>
+#include <sstream>
 
 
 int tarch::multicore::getNumberOfPhysicalCores() {
   return get_nprocs();
+}
+
+
+std::string tarch::multicore::tailoredAffinityMask( const AffinityMask& mask ) {
+  std::ostringstream msg;
+  for (int i=0; i<getNumberOfPhysicalCores(); i++) {
+    msg << mask[i] ? "x" : "0";
+  }
+  return msg;
 }
 
 
@@ -31,12 +41,12 @@ void tarch::multicore::logThreadAffinities() {
   static tarch::logging::Log _log("tarch::multicore");
 
   logInfo( "logThreadAffinities()", "number of physical cores=" << getNumberOfPhysicalCores() );
-  logInfo( "logThreadAffinities()", "cpuset=" << getCPUSet() << " (cores available to application/rank)" );
+  logInfo( "logThreadAffinities()", "cpuset=" << tailoredAffinityMask(getCPUSet()) << " (" << getCPUSet().count() << " cores available to application/rank)" );
 
   std::vector<AffinityMask> coreAffinities = getThreadAffinities();
   for (int i=0; i<static_cast<int>(coreAffinities.size()); i++) {
     logInfo( "logThreadAffinities()",
-      "thread " << i << " core affinity: " << coreAffinities[i]
+      "thread " << i << " core affinity: " << tailoredAffinityMask( coreAffinities[i] )
     );
   }
 }

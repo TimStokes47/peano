@@ -23,6 +23,8 @@ namespace tarch {
     AffinityMask getCPUSet();
 
     std::vector<AffinityMask> getThreadAffinities();
+
+    std::string tailoredAffinityMask( const AffinityMask& mask );
   }
 }
 
