@@ -15,9 +15,9 @@ int tarch::multicore::getNumberOfPhysicalCores() {
 std::string tarch::multicore::tailoredAffinityMask( const AffinityMask& mask ) {
   std::ostringstream msg;
   for (int i=0; i<getNumberOfPhysicalCores(); i++) {
-    msg << mask[i] ? "x" : "0";
+    msg << (mask[i] ? "x" : "0");
   }
-  return msg;
+  return msg.str();
 }
 
 
@@ -25,7 +25,7 @@ std::bitset<sizeof(long int)*8> tarch::multicore::getCPUSet() {
   std::bitset<sizeof(long int)*8> result = 0;
 
   cpu_set_t cpuset;
-  int coreMaskAnalysis = sched_getaffinity(0, sizeof(cpuset), &cpuset);
+  sched_getaffinity(0, sizeof(cpuset), &cpuset);
 
   for (long i = 0; i < getNumberOfPhysicalCores(); i++) {
     if (CPU_ISSET(i, &cpuset)) {
