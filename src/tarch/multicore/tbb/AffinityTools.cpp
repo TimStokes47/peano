@@ -4,6 +4,10 @@
 
 #if defined(SharedTBB) || defined(SharedTBBInvade)
 
+#include <tbb/blocked_range.h>
+#include <tbb/parallel_for.h>
+
+
 std::vector<tarch::multicore::AffinityMask> tarch::multicore::getThreadAffinities() {
   std::vector<tarch::multicore::AffinityMask> coreAffinities( Core::getInstance().getNumberOfThreads(), -1 );
 
