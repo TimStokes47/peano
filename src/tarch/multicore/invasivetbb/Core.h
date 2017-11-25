@@ -94,7 +94,7 @@ class tarch::multicore::Core {
      *        of threads) or it equals DefaultNumberOfThreads which means that the code should
      *        use the default number of threads.
      */
-    void configure( int numberOfThreads );
+    void configure( int numberOfThreads, bool enableInvasion=false );
 
     /**
      * Shutdown parallel environment.

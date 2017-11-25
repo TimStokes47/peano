@@ -51,7 +51,7 @@ void tarch::multicore::Core::shutDown() {
 }
 
 
-void tarch::multicore::Core::configure( int numberOfThreads ) {
+void tarch::multicore::Core::configure( int numberOfThreads, bool enableInvasion ) {
   assertion(_basicInvasion != nullptr);
   assertion(numberOfThreads>=0 || numberOfThreads==UseDefaultNumberOfThreads);
   assertion2( numberOfThreads <= _invadeRoot->get_max_available_cores(), numberOfThreads, _invadeRoot->get_max_available_cores() );
@@ -73,6 +73,13 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
     "rank had " << oldActiveCores << " threads, tried to change to " << numberOfThreads <<
     " threads and got " << getNumberOfThreads() << " (" << _invadeRoot->get_free_cores() << " thread(s) remain available)"
   );
+
+  if (enableInvasion) {
+    _invadeRoot->switchOn();
+  }
+  else {
+    _invadeRoot->switchOff();
+  }
 }
 
 
