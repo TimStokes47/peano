@@ -68,7 +68,7 @@ std::vector<tarch::multicore::AffinityMask> tarch::multicore::getThreadAffinitie
 }
 
 
-std::vector<int> getCPUIdsThreadsAreRunningOn() {
+std::vector<int> tarch::multicore::getCPUIdsThreadsAreRunningOn() {
   std::vector<int> result;
   result.push_back( getCPUId() );
   return result;
