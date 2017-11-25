@@ -4,6 +4,7 @@
 
 
 #include <sys/sysinfo.h>
+#include <sched.h>
 #include <sstream>
 
 
@@ -44,18 +45,33 @@ void tarch::multicore::logThreadAffinities() {
   logInfo( "logThreadAffinities()", "cpuset=" << tailoredAffinityMask(getCPUSet()) << " (" << getCPUSet().count() << " cores available to application/rank)" );
 
   std::vector<AffinityMask> coreAffinities = getThreadAffinities();
+  std::vector<int>          coreCPUIds     = getCPUIdsThreadsAreRunningOn();
+
   for (int i=0; i<static_cast<int>(coreAffinities.size()); i++) {
     logInfo( "logThreadAffinities()",
-      "thread " << i << " core affinity: " << tailoredAffinityMask( coreAffinities[i] )
+      "thread " << i << " is running on cpu " << coreCPUIds[i] << " with core affinity " << tailoredAffinityMask( coreAffinities[i] )
     );
   }
 }
 
 
+int tarch::multicore::getCPUId() {
+  return sched_getcpu();
+}
+
 
 #ifndef SharedMemoryParallelisation
 std::vector<tarch::multicore::AffinityMask> tarch::multicore::getThreadAffinities() {
-  return std::vector<tarch::multicore::AffinityMask>();
+  std::vector<tarch::multicore::AffinityMask> result;
+  result.push_back( getCPUSet() );
+  return result;
+}
+
+
+std::vector<int> getCPUIdsThreadsAreRunningOn() {
+  std::vector<int> result;
+  result.push_back( getCPUId() );
+  return result;
 }
 #endif
 
