@@ -8,6 +8,11 @@
 #include "peano/performanceanalysis/Analysis.h"
 
 
+#if defined(SharedTBBInvade)
+#include "SHMInvade.hpp"
+#endif
+
+
 template <class LoopBody>
 tarch::logging::Log peano::datatraversal::ActionSetTraversalLoop<LoopBody>::_log( "peano::datatraversal::ActionSetTraversalLoop" );
 
@@ -65,6 +70,9 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
   for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()/grainSize,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
     #if defined(SharedTBB) || defined(SharedTBBInvade)
+      #if defined(SharedTBBInvade)
+        SHMInvade invade(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
+      #endif
     ActionSetTraversalLoopInstance loopInstance(loopBody,traversal.getActionSet(currentStepInPath));
     tbb::parallel_reduce(
       tbb::blocked_range<int>(0,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(),grainSize),

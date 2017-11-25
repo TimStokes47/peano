@@ -10,6 +10,11 @@ tarch::logging::Log  peano::datatraversal::TaskSet::_log( "peano::datatraversal:
 #endif
 
 
+#if defined(SharedTBBInvade)
+#include "SHMInvade.hpp"
+#endif
+
+
 peano::datatraversal::TaskSet::TaskSet(
   std::function<void ()>&& function1,
   std::function<void ()>&& function2,
@@ -18,6 +23,9 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(2,2);
     #if defined(SharedTBB) || defined(SharedTBBInvade)
+      #if defined(SharedTBBInvade)
+        SHMInvade invade(2);
+      #endif
     tbb::parallel_invoke(
       function1,
       function2
@@ -54,6 +62,9 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(3,3);
     #if defined(SharedTBB) || defined(SharedTBBInvade)
+      #if defined(SharedTBBInvade)
+        SHMInvade invade(3);
+      #endif
     tbb::parallel_invoke(
       function1,
       function2,
@@ -96,6 +107,9 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(4,4);
     #if defined(SharedTBB) || defined(SharedTBBInvade)
+      #if defined(SharedTBBInvade)
+        SHMInvade invade(4);
+      #endif
     tbb::parallel_invoke(
       function1,
       function2,
@@ -144,6 +158,9 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(4,4);
     #if defined(SharedTBB) || defined(SharedTBBInvade)
+      #if defined(SharedTBBInvade)
+        SHMInvade invade(5);
+      #endif
     tbb::parallel_invoke(
       function1,
       function2,

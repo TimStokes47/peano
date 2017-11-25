@@ -9,6 +9,12 @@
 #include "tbb/parallel_reduce.h"
 #include "tbb/parallel_for.h"
 
+
+#if defined(SharedTBBInvade)
+#include "SHMInvade.hpp"
+#endif
+
+
 /**
  * Per default, TBB versions greater than TBB 2.2 do use the auto partitioner.
  * An auto partitioner is similar to OpenMP's guided: It splits up the problem 
@@ -103,6 +109,9 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
 
   if (altersState) {
     #if defined(SharedTBB) || defined(SharedTBBInvade)
+      #if defined(SharedTBBInvade)
+        SHMInvade invade( grainSize>0 ? tarch::la::volume(range)/grainSize : 0 );
+      #endif
     dForLoopInstance loopInstance(loopBody,0,1);
     tbb::parallel_reduce(
       dForRange( range, grainSize ),
@@ -149,6 +158,9 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
   }
   else {
     #if defined(SharedTBB) || defined(SharedTBBInvade)
+      #if defined(SharedTBBInvade)
+        SHMInvade invade( grainSize > 0 ? tarch::la::volume(range)/grainSize : 0 );
+      #endif
     dForLoopInstanceWithoutReduction  loopInstance(loopBody,0,1);
     tbb::parallel_for(
       dForRange( range, grainSize ),
@@ -220,6 +232,11 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
       }
       loopInstance.setOffset(k);
       #if defined(SharedTBB) || defined(SharedTBBInvade)
+
+        #if defined(SharedTBBInvade)
+          SHMInvade invade( grainSize>0 ? tarch::la::volume(localRange)/grainSize : 0 );
+        #endif
+
       tbb::parallel_for( 
         dForRange( localRange, grainSize ), 
         loopInstance,
@@ -275,6 +292,11 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
           assertion4( localRange(d)>=1, range, localRange, k, grainSize );
         }
         loopInstance.setOffset(k);
+
+        #if defined(SharedTBBInvade)
+          SHMInvade invade( grainSize > 0 ? tarch::la::volume(localRange)/grainSize : 0 );
+        #endif
+
         tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance, TBBPartitioner );
       }
       loopInstance.mergeIntoMasterThread(loopBody);

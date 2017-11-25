@@ -13,6 +13,8 @@
 #include <tbb/task.h>
 #include <tbb/tbb_thread.h>
 
+#include "SHMInvade.hpp"
+
 namespace {
   class ConsumerTask: public tbb::task {
     public:
@@ -70,6 +72,8 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
 
 bool tarch::multicore::processBackgroundTasks() {
   logDebug( "execute()", "background consumer task becomes awake" );
+
+  SHMInvade invade( 1 );
 
   BackgroundTask* myTask = nullptr;
   bool gotOne = _backgroundTasks.try_pop(myTask);
