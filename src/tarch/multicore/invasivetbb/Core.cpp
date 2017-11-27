@@ -64,6 +64,9 @@ void tarch::multicore::Core::configure( int numberOfThreads, bool enableInvasion
     logWarning( "configure(int)", "requested " << numberOfThreads << " threads on only " << _invadeRoot->get_max_available_cores() << " cores" );
   }
 
+  // Switch on. Might be temporary
+  _invadeRoot->switchOn();
+
   const int oldActiveCores = getNumberOfThreads();
 
   delete _basicInvasion;
