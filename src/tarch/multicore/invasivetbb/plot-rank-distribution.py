@@ -122,16 +122,18 @@ while entriesRemaining:
     
     entriesRemaining = True
  
+Colors=[ "#ff0000", "#232323", "#00ff00", "#0000ff", "#ffaa00", "#ff00aa", "#00ffaa", "#ededed", "#aaff00", "#aa00ff", "#00aaff" ]
 for rank in range(0,noOfRanks):
-  pylab.fill_between( postprocessedTimeStamps, accumulatedCoresBooked[rank], accumulatedCoresBooked[rank-1], alpha=0.5 )
+  pylab.fill_between( postprocessedTimeStamps, accumulatedCoresBooked[rank], accumulatedCoresBooked[rank-1], alpha=0.8, color=Colors[rank % len(Colors) ] )
 
 pylab.xlabel('Runtime [t]=s')  
 pylab.ylabel('Cores used/requested')
 pylab.savefig( args.output + ".png", transparent = True )
 pylab.savefig( args.output + ".pdf", transparent = True ) 
 
+
 for rank in range(0,noOfRanks):
-  pylab.plot( postprocessedTimeStamps, accumulatedCoresWanted[rank] )
+  pylab.plot( postprocessedTimeStamps, accumulatedCoresWanted[rank], color=Colors[rank % len(Colors) ] )
 
 
 pylab.savefig( args.output + "-plus-wanted.png", transparent = True )
