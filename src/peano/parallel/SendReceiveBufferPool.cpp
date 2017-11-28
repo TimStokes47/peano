@@ -149,9 +149,19 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   _backgroundThread.switchState(BackgroundThread::State::Suspend);
   #endif
 
-  for ( std::map<int,SendReceiveBuffer*>::const_reverse_iterator p = _map.rbegin(); p != _map.rend(); p++ ) {
+
+  std::map<int,SendReceiveBuffer*>::reverse_iterator p = _map.rbegin();
+  while (  p != _map.rend() ) {
     p->second->releaseSentMessages();
+    if ( p->second->getNumberOfSentMessages()==0 ) {
+      logInfo( "releaseMessages()", "no message have been sent out, so remove buffer" );
+      p = _map.erase(p);
+    }
+    else {
+      p++;
+    }
   }
+
   for ( std::map<int,SendReceiveBuffer*>::const_reverse_iterator p = _map.rbegin(); p != _map.rend(); p++ ) {
     p->second->releaseReceivedMessages(true);
   }
