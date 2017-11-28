@@ -153,7 +153,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   std::map<int,SendReceiveBuffer*>::reverse_iterator p = _map.rbegin();
   while (  p != _map.rend() ) {
     p->second->releaseSentMessages();
-    if ( p->second.getNumberOfSentMessages()==0 ) {
+    if ( p->second->getNumberOfSentMessages()==0 ) {
       logInfo( "releaseMessages()", "no message have been sent out, so remove buffer" );
       p = _map.erase(p);
     }

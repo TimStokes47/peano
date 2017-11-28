@@ -338,7 +338,7 @@ class peano::parallel::SendReceiveBufferAbstractImplementation: public peano::pa
      * This is just a debug counter to check how many sendVertex() operations
      * have been called.
      */
-    int getNumberOfSentMessages() const;
+    int getNumberOfSentMessages() const override;
 
     /**
      * Return Size of Receive Buffer

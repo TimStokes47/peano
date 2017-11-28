@@ -130,6 +130,8 @@ class peano::parallel::SendReceiveBuffer {
      * @return Release has finished.
      */
     virtual void releaseReceivedMessages(bool) = 0;
+
+    virtual int getNumberOfSentMessages() const = 0;
 };
 
 
