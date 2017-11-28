@@ -6,6 +6,7 @@
 
 #include "peano/utils/PeanoOptimisations.h"
 #include "peano/grid/State.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
 
 
 namespace peano {
