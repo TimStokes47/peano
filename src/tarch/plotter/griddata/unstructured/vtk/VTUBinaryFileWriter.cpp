@@ -46,6 +46,7 @@ bool tarch::plotter::griddata::unstructured::vtk::VTUBinaryFileWriter::writeToFi
   logError( "writeToFile(std::string)", "The VTU binary write is under construction. We do not recommend to use it. ");
 
   assertion(false);
+  std::terminate();
 
   if (filename.rfind(".vtu")==std::string::npos) {
     logWarning( "writeToFile()", "filename should end with .vtu but is " << filename );
