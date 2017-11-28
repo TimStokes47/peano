@@ -2,8 +2,11 @@ import pylab
 import re
 
 
-def getNodeColor(c,nodes):
- NodeColors = [ 
+from mpl_toolkits.mplot3d import Axes3D
+
+
+
+NodeColors = [ 
   "#ff0000", "#00ff00", "#0000ff", 
   "#ffff00", "#ff00ff", "#00ffff", 
   "#ff6767", "#67ff67", "#6767ff", 
@@ -14,6 +17,8 @@ def getNodeColor(c,nodes):
   "#cc9966", "#99cc66", "#66cc99",  
   "#cc6699", "#9966cc", "#6699cc"
  ]
+
+def getNodeColor(c,nodes):
  return NodeColors[nodes.index(nodes[c])%len(NodeColors)]
     
 
@@ -69,15 +74,16 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   #fig = pylab.figure()
   #ax = fig.add_subplot(111, projection='3d')
   
-  NumberOfPartitionsPerPlot = len(Colors)
+  #NumberOfPartitionsPerPlot = len(Colors)
+  NumberOfPartitionsPerPlot = len(NodeColors)
   NumberOfDifferentPlots    = int(round(numberOfRanks/NumberOfPartitionsPerPlot+0.5))
   numberOfPartitionsPlottedInThisSubfigure = 0
   currentSubPlot                           = 0
   
   pylab.figure(figsize=(float(domainsize[0]),float(domainsize[1])*NumberOfDifferentPlots))
   
+  ax = pylab.subplot2grid((NumberOfDifferentPlots,1), (0,0), projection='3d')
   try:
-   ax = pylab.subplot2grid((NumberOfDifferentPlots,1), (0,0), projection='3d')
    ax.set_xlim3d( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
    ax.set_ylim3d( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
    ax.set_zlim3d( float(domainoffset[2]), float(domainoffset[2])+float(domainsize[2]) )
