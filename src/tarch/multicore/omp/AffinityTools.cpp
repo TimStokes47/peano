@@ -4,6 +4,9 @@
 
 #if defined(SharedOMP)
 
+#include <omp.h>
+
+
 std::vector<tarch::multicore::AffinityMask> tarch::multicore::getThreadAffinities() {
   std::vector<tarch::multicore::AffinityMask> coreAffinities( Core::getInstance().getNumberOfThreads(), -1 );
 
