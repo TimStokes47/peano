@@ -6,7 +6,8 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 
-NodeColors = [ 
+def getNodeColor(c,nodes):
+ NodeColors = [ 
   "#ff0000", "#00ff00", "#0000ff", 
   "#ffff00", "#ff00ff", "#00ffff", 
   "#ff6767", "#67ff67", "#6767ff", 
@@ -17,11 +18,10 @@ NodeColors = [
   "#cc9966", "#99cc66", "#66cc99",  
   "#cc6699", "#9966cc", "#6699cc"
  ]
-
-def getNodeColor(c,nodes):
  return NodeColors[nodes.index(nodes[c])%len(NodeColors)]
     
 
+BaseFontSize=10
    
     
 def plot2dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,offset,volume,levels,nodes,outputFileName):
@@ -34,7 +34,7 @@ def plot2dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
       
       pylab.gca().add_patch(pylab.Rectangle(offset[i]+(volume[i][0]*0.01,volume[i][0]*0.01), volume[i][0]*0.98, volume[i][1]*0.98, color=getNodeColor(i,nodes)))
       
-      chosenFontSize = int(round(float(domainsize[0])*12.0/(l)))
+      chosenFontSize = BaseFontSize/(l+1)
       
       pylab.text(
         offset[i][0] + volume[i][0]/2,
@@ -74,8 +74,7 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   #fig = pylab.figure()
   #ax = fig.add_subplot(111, projection='3d')
   
-  #NumberOfPartitionsPerPlot = len(Colors)
-  NumberOfPartitionsPerPlot = len(NodeColors)
+  NumberOfPartitionsPerPlot = 8
   NumberOfDifferentPlots    = int(round(numberOfRanks/NumberOfPartitionsPerPlot+0.5))
   numberOfPartitionsPlottedInThisSubfigure = 0
   currentSubPlot                           = 0
@@ -87,6 +86,10 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
    ax.set_xlim3d( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
    ax.set_ylim3d( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
    ax.set_zlim3d( float(domainoffset[2]), float(domainoffset[2])+float(domainsize[2]) )
+
+   ax.set_xticks([])
+   ax.set_yticks([])
+   ax.set_zticks([])
   except:
    pass
   for i in range(0,numberOfRanks):
@@ -126,7 +129,7 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
       ax.plot3D([offset[i][0]+volume[i][0], offset[i][0]+volume[i][0]], [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2],              offset[i][2]],              color=myColor, linewidth=2.0)
       ax.plot3D([offset[i][0]+volume[i][0], offset[i][0]+volume[i][0]], [offset[i][1],  offset[i][1]+volume[i][1]], [offset[i][2]+volume[i][2], offset[i][2]+volume[i][2]], color=myColor, linewidth=2.0)
 
-      chosenFontSize = 12
+      chosenFontSize = BaseFontSize/(l+1)
       ax.text(offset[i][0]+volume[i][0]/2, offset[i][1]+volume[i][1]/2, offset[i][2]+volume[i][2]/2, str(i), "y", fontsize=chosenFontSize)      
 
       numberOfPartitionsPlottedInThisSubfigure = numberOfPartitionsPlottedInThisSubfigure+1      
