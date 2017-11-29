@@ -57,9 +57,6 @@ class tarch::multicore::BooleanSemaphore {
      * that I work through the background tasks before I yield.
      *
      * This is not a particularly nice implementation.
-     *
-     * @todo All the background stuff should go into the multicore/tarch part
-     *       of the code. It does not belong into datatraversal.
      */
     static void sendTaskToBack();
 

@@ -16,15 +16,6 @@
 #include "SHMInvade.hpp"
 
 namespace {
-  class ConsumerTask: public tbb::task {
-    public:
-      ConsumerTask() {}
-      tbb::task* execute() {
-        tarch::multicore::processBackgroundTasks();
-        return 0;
-      }
-  };
-
   /**
    * Use this to launch all background with very low priority
    */
@@ -42,9 +33,19 @@ namespace {
    */
   tbb::concurrent_queue<tarch::multicore::BackgroundTask*>  _backgroundTasks;
 
-  int                      _maxNumberOfRunningBackgroundThreads(1);
+  int                      _maxNumberOfRunningBackgroundThreads(-1);
 
   tarch::logging::Log _log( "tarch::multicore" );
+
+  class ConsumerTask: public tbb::task {
+    public:
+      ConsumerTask() {}
+      tbb::task* execute() {
+        tarch::multicore::processBackgroundTasks();
+        _numberOfRunningBackgroundThreads.fetch_and_add(-1);
+        return 0;
+      }
+  };
 }
 
 
@@ -56,12 +57,16 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
   if (
     currentlyRunningBackgroundThreads<_maxNumberOfRunningBackgroundThreads
     ||
-    task->isLongRunning()
+    (
+      task->isLongRunning()
+      &&
+      _maxNumberOfRunningBackgroundThreads>=0
+    )
   ) {
-    logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet; kick off" );
-    if ( !task->isLongRunning() ) {
-      _numberOfRunningBackgroundThreads.fetch_and_add(1);
-    }
+    logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
+    _numberOfRunningBackgroundThreads.fetch_and_add(1);
+    // @todo raus
+    assertion3(false,currentlyRunningBackgroundThreads,_maxNumberOfRunningBackgroundThreads,task->isLongRunning());
     ConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) ConsumerTask();
     tbb::task::enqueue(*tbbTask);
     _backgroundTaskContext.set_priority(tbb::priority_low);
@@ -71,36 +76,26 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
 
 
 bool tarch::multicore::processBackgroundTasks() {
-  logDebug( "execute()", "background consumer task becomes awake" );
-
   SHMInvade invade( 1 );
 
   BackgroundTask* myTask = nullptr;
   bool gotOne = _backgroundTasks.try_pop(myTask);
   bool result = false;
-  bool taskHasBeenLongRunning = false;
   while (gotOne) {
     logDebug( "execute()", "consumer task found job to do" );
-    peano::performanceanalysis::Analysis::getInstance().terminatedBackgroundTask(1);
     myTask->run();
-    taskHasBeenLongRunning = myTask->isLongRunning();
+    peano::performanceanalysis::Analysis::getInstance().terminatedBackgroundTask(1);
+    gotOne = myTask->isLongRunning() ? false : _backgroundTasks.try_pop(myTask);
     delete myTask;
-    gotOne = taskHasBeenLongRunning ? false : _backgroundTasks.try_pop(myTask);
     result = true;
   }
-
-  if (!taskHasBeenLongRunning) {
-    _numberOfRunningBackgroundThreads.fetch_and_add(-1);
-  }
-
-  logDebug( "execute()", "background task consumer is done and kills itself" );
 
   return result;
 }
 
 
 void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {
-  assertion(maxNumberOfRunningBackgroundThreads>=1);
+  assertion(maxNumberOfRunningBackgroundThreads>=-1);
   _maxNumberOfRunningBackgroundThreads = maxNumberOfRunningBackgroundThreads;
 }
 

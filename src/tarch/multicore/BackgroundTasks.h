@@ -52,6 +52,29 @@ namespace tarch {
      */
     bool processBackgroundTasks();
 
+    /**
+     * By default, we disable all background tasks in SHMInvade. Background
+     * tasks are passed into TBB via enqueue and they seem to cause problems.
+     * You can however re-enable them by invoking this routine. If background
+     * tasks are enabled they try to concurrently work through the queue of
+     * tasks spawned into the background until the queue is empty. Once it is
+     * empty, the corresponding task terminates.
+     *
+     * The default setting of the invasive component equals calling this
+     * routine with a value of -1.
+     *
+     * @param maxNumberOfRunningBackgroundThreads -1 Switch off any tasks
+     *   running in the background.
+     * @param maxNumberOfRunningBackgroundThreads 0 Do not use background tasks
+     *   unless the user instructs the component that this background task is a
+     *   very long running task. If a long-lasting task is issued, the component
+     *   launches a task for it specifically.
+     * @param maxNumberOfRunningBackgroundThreads >0 Enable the code to use up
+     *   to a certain number of background tasks. Usually, 1 or any small
+     *   number should be sufficient, where small is to be read relative to the
+     *   threads available. You don't want your system to spend all of its tasks
+     *   onto background activities at any time.
+     */
     void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
   }
 }
