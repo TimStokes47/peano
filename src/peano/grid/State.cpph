@@ -49,6 +49,10 @@ peano::grid::State<StateData>::State():
   _smallestRegularTreeThatIsToBeHeldPersistently                    = 0; 
   _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = 0; 
   #endif
+
+  _stateData.setHasRefined( false );
+  _stateData.setHasErased( false );
+  _stateData.setHasChangedVertexOrCellState( false );
 }
 
 
