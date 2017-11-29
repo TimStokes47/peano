@@ -51,6 +51,8 @@ class tarch::multicore::Core {
     SHMInvadeRoot*    _invadeRoot;
     SHMInvade*        _basicInvasion;
 
+    bool              _isInitialised;
+
     /**
      * As the class is a singleton, this constructor is protected and you
      * solely are allowed to create an object indirectly through getIntance().

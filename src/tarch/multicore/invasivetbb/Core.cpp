@@ -13,7 +13,8 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 tarch::multicore::Core::Core():
   _invadeRoot(nullptr),
-  _basicInvasion( nullptr ) {
+  _basicInvasion( nullptr ),
+  _isInitialised(false) {
 
   #ifdef Parallel
   SHMController::cleanup();
@@ -94,39 +95,43 @@ int tarch::multicore::Core::getNumberOfThreads() const {
 
 bool tarch::multicore::Core::isInitialised() const {
   #ifdef Parallel
-  logInfo( "isInitialised()", "start to collect information from individual ranks" );
+  if (!_isInitialised) {
+    logInfo( "isInitialised()", "start to collect information from individual ranks" );
 
-  const int tag = 0;
+    const int tag = 0;
 
-  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
-    int registeredRanks = 1;
+    if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
+      int registeredRanks = 1;
 
-    logInfo( "isInitialised()", "global master got " << getNumberOfThreads() << " thread(s)");
+      logInfo( "isInitialised()", "global master got " << getNumberOfThreads() << " thread(s)");
 
-    const int waitForTimeout = 60;
-    std::clock_t timeoutTimeStamp = clock() + waitForTimeout * CLOCKS_PER_SEC;
+      const int waitForTimeout = 60;
+      std::clock_t timeoutTimeStamp = clock() + waitForTimeout * CLOCKS_PER_SEC;
 
-    while ( registeredRanks < tarch::parallel::Node::getInstance().getNumberOfNodes() ) {
-      if (clock()>timeoutTimeStamp) {
-	logError("isInitialised()", "global master waited for more than " << waitForTimeout <<
-	  "s on information from other ranks" );
-	return false;
+      while ( registeredRanks < tarch::parallel::Node::getInstance().getNumberOfNodes() ) {
+        if (clock()>timeoutTimeStamp) {
+          logError("isInitialised()", "global master waited for more than " << waitForTimeout <<
+          "s on information from other ranks" );
+          return false;
+        }
+
+        MPI_Status status;
+        int threadsBooked = 0.0;
+        MPI_Recv(&threadsBooked, 1, MPI_INT, MPI_ANY_SOURCE, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
+        registeredRanks++;
+
+        logInfo( "isInitialised()", "received notification that rank " << status.MPI_SOURCE << " has successfully booked " << threadsBooked << " thread(s)");
       }
-
-      MPI_Status status;
-      int threadsBooked = 0.0;
-      MPI_Recv(&threadsBooked, 1, MPI_INT, MPI_ANY_SOURCE, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status );
-      registeredRanks++;
-
-      logInfo( "isInitialised()", "received notification that rank " << status.MPI_SOURCE << " has successfully booked " << threadsBooked << " thread(s)");
     }
-  }
-  else {
-    int threadsBooked = getNumberOfThreads();
-    MPI_Send(&threadsBooked, 1, MPI_INT, tarch::parallel::Node::getGlobalMasterRank(), tag, tarch::parallel::Node::getInstance().getCommunicator() );
-  }
+    else {
+      int threadsBooked = getNumberOfThreads();
+      MPI_Send(&threadsBooked, 1, MPI_INT, tarch::parallel::Node::getGlobalMasterRank(), tag, tarch::parallel::Node::getInstance().getCommunicator() );
+    }
 
-  MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
+    MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
+
+    _isInitialised = true;
+  }
   #endif
 
   return true;
