@@ -20,7 +20,6 @@
   load on these ranks or to make them benefit from multiple cores significiantly.
 </p>
 
-
 <h3>Workload per node</h3>
 
 <a href="_IMAGE_DIRECTORY_/workload-per-node.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-node.png" /></a>
@@ -33,6 +32,13 @@
  it suggests that we quickly might run into out of memory problems.
 </p>
 
+<h3>Memory usage per rank</h3>
+
+<a href="_IMAGE_DIRECTORY_/memory-per-rank.pdf"><img src="_IMAGE_DIRECTORY_/memory-per-rank.png" /></a>
+
+<p>
+ The plot illustrates the memory usage per rank.
+</p>
 
 <h2>Domain decomposition</h2>
 

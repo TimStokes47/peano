@@ -1,6 +1,16 @@
+#!/usr/bin/python
 import sys
 import re
 
+'''
+.. module:: performanceanalysis_parser.py
+  :platform: Unix, Windows, Mac
+  :synopsis: Contains routines for scanning Peano output files.
+   
+.. moduleauthor:: Tobias Weinzierl
+
+:synopsis: Contains routines for scanning Peano output files.
+'''
 
 def getNumberOfRanks(filename):
   print "parse input file header ",
@@ -238,4 +248,51 @@ def getCellsPerRank(inputFileName,numberOfRanks):
     numberOfOuterCells,
     numberOfLocalCells,
     tTotal )
+    
+    
+    
+def getMemoryUsagePerRank(inputFileName,numberOfRanks):
+  '''
+  Per rank, this function scans the file for entries of the form
+  
+  " 4.08824      [cn6001.hpc.dur.ac.uk],rank:1 info         exahype::runners::Runner::runAsWorker(...)                     memoryUsage    =839 MB"
+  
+  Args:
+     inputFileName(str):
+        Path to the input file.
+     numberOfRanks (int):
+        The number of ranks used for the simulation.
+  
+  Returns:
+     A list per rank storing the rank's memory usage in each time step
+  '''
+  print "parse memory usage per rank ",
 
+  memoryUsage  = [ ([],[]) for r in range(0,numberOfRanks) ]
+  firstWorker  = -1
+  
+  try:
+    inputFile = open( inputFileName,  "r" )
+    print "parse ",
+    for line in inputFile:
+      if ("memoryUsage" in line):
+        rank  = 0
+        if numberOfRanks>0:
+          rank  = int(line.split( "rank:" )[-1].split( " " )[0])
+        print ".",
+        
+        # Parse time
+        # Example: " 4.08824      [cn6001.hpc.dur.ac.uk]"
+        time = line.split("      ")[0].strip()
+        memoryUsage[rank][0].append(float(time))
+        
+        # Parse memory usage
+        # Example: "memoryUsage    =839 MB"
+        memory = line.split("=")[-1].split("MB")[0];
+        memoryUsage[rank][1].append(int(memory))
+    print " done"
+  except Exception as inst:
+    print "failed to read " + inputFileName
+    print inst
+  
+  return memoryUsage

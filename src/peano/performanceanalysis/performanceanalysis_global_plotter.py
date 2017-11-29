@@ -156,16 +156,14 @@ def plotWorkloadAndResponsibilityDistributionPerNode(numberOfRanks,outputFileNam
      
    bars[i].set_color( performanceanalysis_dd.getNodeColor(oneRankBelongingToThisNode,nodes) )
    
-
  ax = pylab.gca()
  ax.autoscale_view()
- ax.set_yscale('symlog', basey=10)
+ ax.set_yscale('log', basey=10)
 
  pylab.xlabel('rank')  
  pylab.ylabel('$\Omega $')
  pylab.savefig( outputFileName + ".symlog.png", transparent = True )
  pylab.savefig( outputFileName + ".symlog.pdf", transparent = True )
-
 
  ax.set_yscale('linear' )
  pylab.xlabel('rank')  
@@ -174,6 +172,32 @@ def plotWorkloadAndResponsibilityDistributionPerNode(numberOfRanks,outputFileNam
  pylab.savefig( outputFileName + ".pdf" )
  print "done"
 
+
+
+def plotMemoryUsagePerRank(outputFileName,memoryUsages):
+ '''
+ Plot the memory usage per node over time.
+ '''
+ print "plot memory usage per node",
+ pylab.clf()
+ 
+ maxUsage = 0
+ minUsage = 10**20 
+ for rank in range(0,len(memoryUsages)):
+  pylab.scatter(memoryUsages[rank][0],memoryUsages[rank][1], marker='$'+str(rank)+'$', s=100)
+  if memoryUsages[rank][1]:
+    maxUsage = max(maxUsage, max(memoryUsages[rank][1]))
+    minUsage = min(maxUsage, min(memoryUsages[rank][1]))
+  
+  
+ ax = pylab.gca()
+ ax.set_ylim([minUsage*0.9,maxUsage*1.1])
+ 
+ pylab.xlabel('time / s')  
+ pylab.ylabel('memory usage / MB')
+ pylab.savefig( outputFileName + ".png" )
+ pylab.savefig( outputFileName + ".pdf" )
+ print "done"
 
 
 def plotWalltimeOverview(outputFileName,beginIterations): 
