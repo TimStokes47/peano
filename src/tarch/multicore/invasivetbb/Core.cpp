@@ -93,7 +93,7 @@ int tarch::multicore::Core::getNumberOfThreads() const {
 }
 
 
-bool tarch::multicore::Core::isInitialised() const {
+bool tarch::multicore::Core::isInitialised() {
   #ifdef Parallel
   if (!_isInitialised) {
     logInfo( "isInitialised()", "start to collect information from individual ranks" );

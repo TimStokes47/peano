@@ -106,9 +106,11 @@ class tarch::multicore::Core {
     /**
      * This query has to be triggered after all MPI ranks are up and running.
      *
+     * The routine is not const, as it invokes some MPI calls.
+     *
      * @return Shared memory environment is up and running.
      */
-    bool isInitialised() const;
+    bool isInitialised();
 
     /**
      * Returns the number of threads that is used by TBB. This routine usually
