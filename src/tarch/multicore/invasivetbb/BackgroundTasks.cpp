@@ -85,8 +85,9 @@ bool tarch::multicore::processBackgroundTasks() {
     logDebug( "execute()", "consumer task found job to do" );
     myTask->run();
     peano::performanceanalysis::Analysis::getInstance().terminatedBackgroundTask(1);
-    gotOne = myTask->isLongRunning() ? false : _backgroundTasks.try_pop(myTask);
+    const bool hasBeenLongRunning = myTask->isLongRunning();
     delete myTask;
+    gotOne = hasBeenLongRunning ? false : _backgroundTasks.try_pop(myTask);
     result = true;
   }
 
