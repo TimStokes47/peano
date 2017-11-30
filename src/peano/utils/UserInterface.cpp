@@ -187,7 +187,7 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
   int numberOfProcesses = 1;
   #endif
 
-  #if defined(SharedTBB)
+  #if defined(SharedTBB) || defined(SharedOMP)
   int numberOfThreads = tarch::multicore::Core::getInstance().getNumberOfThreads();
   #else
   int numberOfThreads = 1;
