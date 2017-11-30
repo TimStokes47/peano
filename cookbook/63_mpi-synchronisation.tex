@@ -118,6 +118,22 @@ the sections below on details.
 \end{remark}
 
 
+\paragraph{A ``popular'' pattern}
+
+If a master-worker exchange is switched on and you make
+\texttt{prepareSendToWorker} return \texttt{false}, then information is
+sent to the worker but no result is sent back.
+This is often done in the first iteration of a batch.
+Many codes then switch off the master-worker for the remainder of the batch.
+
+Yet, they do activate the worker-master communication at the end of the batch. 
+If master-worker data is switched off, the worker however still continues with
+the old state object which holds the information that the master's last 
+\texttt{prepareSendToWorker} had returned \texttt{false} and skips data sends.
+So you need master-worker switched on, too.
+
+
+
 \subsection{Weaken synchronisation with global master}
 
 \begin{center}
