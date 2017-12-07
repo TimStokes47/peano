@@ -279,7 +279,7 @@ VectorContainer& peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchange
 
   assertion4(_heapData.count(index)==1, _name, message, index, _heapData.size());
 
-  #if defined(SharedTBB) || defined(SharedTBB)
+  #if defined(SharedTBB) || defined(SharedTBBInvade)
   typename HeapContainer::accessor result;
   _heapData.find(result,index);
   return *(result->second);

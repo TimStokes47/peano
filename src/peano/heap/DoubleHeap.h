@@ -4,7 +4,7 @@
 #define _PEANO_HEAP_DOUBLE_HEAP_H_
 
 
-#if defined(SharedTBB) || defined(SharedTBB)
+#if defined(SharedTBB) || defined(SharedTBBInvade)
 #include <tbb/cache_aligned_allocator.h>
 #include <tbb/concurrent_hash_map.h>
 #else
