@@ -138,7 +138,7 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
 
     static tarch::multicore::BooleanSemaphore _recycleAndDeleteSemaphore;
 
-    #if defined(SharedTBB) || defined(SharedTBB)
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
     typedef tbb::concurrent_hash_map<int, VectorContainer*>  HeapContainer;
     #else
     typedef std::map<int, VectorContainer*>  HeapContainer;
