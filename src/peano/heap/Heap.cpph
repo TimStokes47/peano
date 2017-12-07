@@ -211,8 +211,6 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
-  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
-
   int index;
   bool allocateNewEntry;
   if ( _recycledHeapIndices.empty() && allocation==Allocation::UseOnlyRecycledEntries) {
@@ -220,6 +218,8 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     logWarning( "createData(int,int,Allocation)", "was not able to create data with argument Allocation::UseOnlyRecycledEntries as no recycled entries have been available" );
     return -1;
   }
+
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
 
   if ( !_recycledHeapIndices.empty() && allocation!=Allocation::DoNotUseAnyRecycledEntry ) {
     index = *_recycledHeapIndices.begin();

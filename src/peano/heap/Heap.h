@@ -5,10 +5,9 @@
 
 #if defined(SharedTBB) || defined(SharedTBBInvade)
 #include <tbb/concurrent_hash_map.h>
-#else
-#include <map>
 #endif
 
+#include <map>
 #include <set>
 #include <vector>
 
