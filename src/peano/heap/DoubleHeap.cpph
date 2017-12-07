@@ -67,7 +67,9 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 bool peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::areRecycleEntriesAvailable() const {
-  return !_recycledHeapIndices.empty();
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
+  bool result = !_recycledHeapIndices.empty();
+  return result;
 }
 
 
@@ -88,6 +90,8 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::plotStatistics() const {
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
+
   if(_name != "") {
     logInfo("plotStatistics()", "Statistics for " << _name);
   }
@@ -209,13 +213,20 @@ int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
+  bool recycledHeapIndicesEmpty;
+  {
+    tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
+    recycledHeapIndicesEmpty = _recycledHeapIndices.empty();
+  }
+
   int  index;
   bool allocateNewEntry;
-  if ( _recycledHeapIndices.empty() && allocation==Allocation::UseOnlyRecycledEntries) {
+  if ( recycledHeapIndicesEmpty && allocation==Allocation::UseOnlyRecycledEntries) {
     logTraceOutWith1Argument( "createData()", "not served" );
     return -1;
   }
 
+  
   tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
 
   if ( !_recycledHeapIndices.empty() && allocation!=Allocation::DoNotUseAnyRecycledEntry ) {
@@ -551,6 +562,8 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 std::string peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::toString() const {
   std::ostringstream msg;
+
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
 
   msg << "(name=" << _name
       << ",heap-map-size=" << _heapData.size()

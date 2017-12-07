@@ -161,7 +161,9 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 bool peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::areRecycleEntriesAvailable() const {
-  return !_recycledHeapIndices.empty();
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
+  bool result = !_recycledHeapIndices.empty();
+  return result;
 }
 
 
@@ -211,9 +213,15 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
+  bool recycledHeapIndicesEmpty;
+  {
+    tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
+    recycledHeapIndicesEmpty = _recycledHeapIndices.empty();
+  }
+
   int index;
   bool allocateNewEntry;
-  if ( _recycledHeapIndices.empty() && allocation==Allocation::UseOnlyRecycledEntries) {
+  if ( recycledHeapIndicesEmpty && allocation==Allocation::UseOnlyRecycledEntries) {
     logTraceOutWith1Argument( "createData(int,int,Allocation)", "not served" );
     logWarning( "createData(int,int,Allocation)", "was not able to create data with argument Allocation::UseOnlyRecycledEntries as no recycled entries have been available" );
     return -1;
