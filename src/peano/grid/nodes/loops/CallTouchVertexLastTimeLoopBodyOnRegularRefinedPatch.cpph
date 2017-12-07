@@ -31,7 +31,16 @@ template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::mergeWithWorkerThread(
   const  CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch&  worker
 ) {
-  _localTreeRemainsStatic      &= worker._localTreeRemainsStatic;
+  // Seems to be necessary. Otherwise, Intel Inspector claims that there are
+  // data races. Indeed, the TBB documentation says that no to joins
+  // (triggering these merges) may run in parallel. Yet, a join and copy
+  // may run in parallel:
+  // https://www.threadingbuildingblocks.org/docs/help/reference/algorithms/parallel_reduce_func.html
+  // Not sure however why the compiler then complains about two merges running at the same time.
+  {
+    tarch::multicore::Lock lock(peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::_semaphore);
+    _localTreeRemainsStatic      &= worker._localTreeRemainsStatic;
+  }
 
   #if defined(SharedMemoryParallelisation)
   _threadLocalEventHandle.mergeWithWorkerThread( worker._threadLocalEventHandle );
