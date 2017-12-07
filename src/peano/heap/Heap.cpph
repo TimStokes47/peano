@@ -63,7 +63,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::deleteAllData() {
-  for(typename std::map<int, std::vector<Data>*>::iterator i = _heapData.begin(); i != _heapData.end(); i++) {
+  for(typename HeapContainer::iterator i = _heapData.begin(); i != _heapData.end(); i++) {
     assertionMsg((*i).second != 0, _name << ": Null-pointer was stored in heap data map.");
     delete (*i).second;
   }
@@ -134,7 +134,7 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::reserveHeapEntriesForRecycling(int numberOfEntries) {
   for (int i=0; i<numberOfEntries; i++) {
-    _recycledHeapIndices.push_back( _nextIndex );
+    _recycledHeapIndices.insert( _nextIndex );
 
     std::vector<Data>* newData = new (std::nothrow) std::vector<Data>();
     if (newData==nullptr) {
@@ -145,8 +145,6 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
     assertion( _heapData.find(_nextIndex) != _heapData.end() );
     
-    _recycledHeapIndices.pop_front();
-
     logDebug( "reserveHeapEntriesForRecycling(int)", "inserted recycle index " << _nextIndex << " manually" );
 
     _nextIndex++;
@@ -167,14 +165,19 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
-  _deletedHeapIndices.remove(wantedIndex);
-  _recycledHeapIndices.remove(wantedIndex);
+  #if defined(SharedTBB) || defined(SharedTBB)
+  _deletedHeapIndices.unsafe_erase(wantedIndex);
+  _recycledHeapIndices.unsafe_erase(wantedIndex);
+  #else
+  _deletedHeapIndices.erase(wantedIndex);
+  _recycledHeapIndices.erase(wantedIndex);
+  #endif
 
   if (_nextIndex<=wantedIndex){
     _nextIndex = wantedIndex+1;
   }
 
-  assertion3(_heapData.find(wantedIndex) == _heapData.end(), "heap entry does exist already", wantedIndex, _name );
+  assertion3(_heapData.count(wantedIndex)==0, "heap entry does exist already", wantedIndex, _name );
   std::vector<Data>* newData = new (std::nothrow) std::vector<Data>(numberOfEntries);
   if (newData==nullptr) {
     logError( "createDataForIndex(int,int,int)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
@@ -182,10 +185,10 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   }
   _heapData.insert( typename HeapContainer::value_type(wantedIndex,newData) );
   if (initialCapacity>0) {
-    _heapData[wantedIndex]->reserve(initialCapacity);
+    getData(wantedIndex).reserve(initialCapacity);
   }
 
-  assertionMsg(_heapData.find(wantedIndex) != _heapData.end(), "insertion of heap data not successful.");
+  assertionMsg(_heapData.count(wantedIndex)==1, "insertion of heap data not successful.");
   assertion(wantedIndex >= 0);
 
   _numberOfHeapAllocations += 1;
@@ -214,26 +217,34 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   }
 
   if ( !_recycledHeapIndices.empty() && allocation!=Allocation::DoNotUseAnyRecycledEntry ) {
-    index = _recycledHeapIndices.front();
+    index = *_recycledHeapIndices.begin();
     allocateNewEntry = false;
-    _recycledHeapIndices.pop_front();
+    #if defined(SharedTBB) || defined(SharedTBB)
+    _recycledHeapIndices.unsafe_erase(index);
+    #else
+    _recycledHeapIndices.erase(index);
+    #endif
     assertionMsg(
-      _heapData.find(index) != _heapData.end(), 
+      _heapData.count(index)==1,
       "recycled heap entry " << index << " of heap " << _name << 
-      " seems not to exist. Next free entry would have been " << _recycledHeapIndices.front()
+      " seems not to exist. Next free entry would have been " << *_recycledHeapIndices.begin()
     );
   }
   else if (!_deletedHeapIndices.empty() ){
-    index = _deletedHeapIndices.front();
+    index = *_deletedHeapIndices.begin();
     allocateNewEntry = true;
-    _deletedHeapIndices.pop_front();
-    assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry of heap " + _name + " does exist already.");
+    #if defined(SharedTBB) || defined(SharedTBB)
+    _deletedHeapIndices.unsafe_erase(index);
+    #else
+    _deletedHeapIndices.erase(index);
+    #endif
+    assertionMsg(_heapData.count(index)==0, "heap entry of heap " + _name + " does exist already.");
   }
   else {
     index = _nextIndex;
     allocateNewEntry = true;
     _nextIndex++;
-    assertionMsg(_heapData.find(index) == _heapData.end(), "heap entry of heap " + _name + " does exist already.");
+    assertionMsg(_heapData.count(index)==0, "heap entry of heap " + _name + " does exist already.");
   }
 
   if (allocateNewEntry) {
@@ -245,7 +256,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     _heapData.insert( typename HeapContainer::value_type(index,newData) );
   }
   else {
-    _heapData[index]->resize(numberOfEntries);
+    getData(index).resize(numberOfEntries);
   }
   
   //
@@ -255,11 +266,11 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   //_heapData[index]->shrink_to_fit();
 
   if (initialCapacity>0) {
-    _heapData[index]->reserve(initialCapacity);
+    getData(index).reserve(initialCapacity);
   }
 
   assertion5(
-    _heapData.find(index) != _heapData.end(), 
+    _heapData.count(index)==1,
     allocateNewEntry, numberOfEntries, initialCapacity, peano::heap::toString(allocation), _name
   );
   assertion(index >= 0);
@@ -280,9 +291,17 @@ std::vector<Data>& peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchan
   #ifdef Asserts
   std::string message = "Trying to get heap data for unknown index. Has the index been initialized correctly?";
   #endif
-  assertion4(_heapData.find(index) != _heapData.end(), _name, message, index, _heapData.size());
+
+  assertion4(_heapData.count(index)==1, _name, message, index, _heapData.size());
+
+  #if defined(SharedTBB) || defined(SharedTBB)
+  typename HeapContainer::accessor result;
+  _heapData.find(result,index);
+  return *(result->second);
+  #else
   assertionMsg(_heapData[index] != 0, _name << ": Null-pointer was stored in heap data map");
   return *(_heapData[index]);
+  #endif
 }
 
 
@@ -325,7 +344,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 bool peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::isValidIndex(int index) const {
-  return _heapData.find(index) != _heapData.end();
+  return _heapData.count(index)==1;
 }
 
 
@@ -336,19 +355,18 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   #ifdef Asserts
   std::string message = "Trying to get heap data for unknown index. Has the index been initialized correctly?";
   #endif
-  assertion4(_heapData.find(index) != _heapData.end(), _name, message, index, _heapData.size());
-  assertionMsg(_heapData[index] != 0, _name << ": Null-pointer was stored in heap data map");
+  assertion4(_heapData.count(index)==1, _name, message, index, _heapData.size());
 
   if (recycle) {
-    _heapData[index]->clear();
-    _recycledHeapIndices.push_back(index);
+    getData(index).clear();
+    _recycledHeapIndices.insert(index);
   }
   else {
-    _heapData[index]->clear();
-    delete _heapData[index];
+    getData(index).clear();
+    delete &getData(index);
     _heapData.erase(index);
 
-    _deletedHeapIndices.push_back(index);
+    _deletedHeapIndices.insert(index);
   }
 
   _numberOfHeapFrees++;

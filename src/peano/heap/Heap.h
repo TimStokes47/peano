@@ -3,9 +3,15 @@
 #ifndef _PEANO_HEAP_HEAP_H_
 #define _PEANO_HEAP_HEAP_H_
 
+#if defined(SharedTBB) || defined(SharedTBB)
+#include <tbb/concurrent_hash_map.h>
+#include <tbb/concurrent_unordered_set.h>
+#else
 #include <map>
-#include <vector>
 #include <list>
+#endif
+
+#include <vector>
 
 #include "peano/heap/AbstractHeap.h"
 #include "peano/heap/SendReceiveTask.h"
@@ -346,7 +352,13 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      */
     static tarch::logging::Log _log;
 
+    #if defined(SharedTBB) || defined(SharedTBB)
+    typedef tbb::concurrent_hash_map<int, std::vector<Data>*>  HeapContainer;
+    typedef tbb::concurrent_unordered_set<int>                 RecycledAndDeletedEntriesContainer;
+    #else
     typedef std::map<int, std::vector<Data>*>  HeapContainer;
+    typedef std::set<int>                      RecycledAndDeletedEntriesContainer;
+    #endif
 
     /**
      * Map that holds all data that is stored on the heap
@@ -370,12 +382,12 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      * @see deleteData
      * @see _recycledHeapIndices
      */
-    std::list<int>   _deletedHeapIndices;
+    RecycledAndDeletedEntriesContainer   _deletedHeapIndices;
 
     /**
      * @see _deletedHeapIndices
      */
-    std::list<int>   _recycledHeapIndices;
+    RecycledAndDeletedEntriesContainer   _recycledHeapIndices;
 
     /**
      * Stores the next available index. By now the indices

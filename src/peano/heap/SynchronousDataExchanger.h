@@ -4,6 +4,8 @@
 #define _PEANO_HEAP_SYNCHRONOUS_DATA_EXCHANGER_H_
 
 
+#include <list>
+
 namespace peano {
   namespace heap {
     template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer=std::vector<Data> >

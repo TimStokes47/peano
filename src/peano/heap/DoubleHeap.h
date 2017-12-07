@@ -4,8 +4,13 @@
 #define _PEANO_HEAP_DOUBLE_HEAP_H_
 
 
-#if defined(SharedTBB) || defined(SharedTBBInvade)
+#if defined(SharedTBB) || defined(SharedTBB)
 #include <tbb/cache_aligned_allocator.h>
+#include <tbb/concurrent_hash_map.h>
+#include <tbb/concurrent_unordered_set.h>
+#else
+#include <map>
+#include <list>
 #endif
 
 
@@ -128,13 +133,21 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
   private:
     static tarch::logging::Log _log;
 
+
+    #if defined(SharedTBB) || defined(SharedTBB)
+    typedef tbb::concurrent_hash_map<int, VectorContainer*>  HeapContainer;
+    typedef tbb::concurrent_unordered_set<int>               RecycledAndDeletedEntriesContainer;
+    #else
     typedef std::map<int, VectorContainer*>  HeapContainer;
+    typedef std::set<int>                    RecycledAndDeletedEntriesContainer;
+    #endif
+
 
     HeapContainer    _heapData;
 
-    std::list<int>   _deletedHeapIndices;
+    RecycledAndDeletedEntriesContainer   _deletedHeapIndices;
 
-    std::list<int>   _recycledHeapIndices;
+    RecycledAndDeletedEntriesContainer   _recycledHeapIndices;
 
     int _nextIndex;
 
