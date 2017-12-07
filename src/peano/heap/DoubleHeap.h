@@ -42,11 +42,19 @@ namespace peano {
     #endif
 
 
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
+    typedef DoubleHeap<
+      SynchronousDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >,
+      SynchronousDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >,
+      PlainBoundaryDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >
+    >     PlainDoubleHeap;
+    #else
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true, SendReceiveTask<double> >,
       SynchronousDataExchanger< double, true, SendReceiveTask<double> >,
       PlainBoundaryDataExchanger< double, true, SendReceiveTask<double> >
     >     PlainDoubleHeap;
+    #endif
 
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16>, std::vector< double, HeapAllocator<double, 16> > >,
@@ -69,12 +77,20 @@ namespace peano {
       std::vector< double, HeapAllocator<double, 64> >
     >     PlainDoubleHeapAlignment64;
 
+
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
+    typedef DoubleHeap<
+      SynchronousDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >,
+      SynchronousDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >,
+      RLEBoundaryDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >
+    >     RLEDoubleHeap;
+    #else
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true, SendReceiveTask<double> >,
       SynchronousDataExchanger< double, true, SendReceiveTask<double> >,
       RLEBoundaryDataExchanger< double, true, SendReceiveTask<double> >
     >     RLEDoubleHeap;
-
+    #endif
 
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16>, std::vector< double, HeapAllocator<double, 16> > >,
