@@ -100,9 +100,14 @@ template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::performVertexTransition( Vertex& vertex, int level, int treeDepth, bool& treeRemainsStatic ) {
   bool const vertexRemainsStatic = vertex.getRefinementControl()==Vertex::Records::Refined || vertex.getRefinementControl()==Vertex::Records::Unrefined;
 
-  treeRemainsStatic &= vertexRemainsStatic;
+  bool myTreeRemainsStatic;
+  {
+  tarch::multicore::Lock lock(peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::_semaphore);
+  treeRemainsStatic   &= vertexRemainsStatic;
+  myTreeRemainsStatic =  treeRemainsStatic;
+  }
 
-  if (!treeRemainsStatic) {
+  if (!myTreeRemainsStatic) {
     vertex.setCurrentAdjacentCellsHeight(peano::grid::NotStationary);
   }
   else {
