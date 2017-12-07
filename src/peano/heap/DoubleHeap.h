@@ -23,6 +23,15 @@
 
 namespace peano {
   namespace heap {
+    template<
+      class MasterWorkerExchanger,
+      class JoinForkExchanger,
+      class NeighbourDataExchanger,
+      class VectorContainer = std::vector<double>
+    >
+    class DoubleHeap;
+
+
     /**
      * TBB
      *
