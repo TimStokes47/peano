@@ -236,7 +236,11 @@ int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     _heapData[index]->resize(numberOfEntries);
   }
 
-  _heapData[index]->shrink_to_fit();
+  //
+  // According to several webpage (https://stackoverflow.com/questions/23502291/is-shrink-to-fit-the-proper-way-of-reducing-the-capacity-a-stdvector-to-its)
+  // this causes all kind of problems and doesn't work anyway.
+  //
+  //_heapData[index]->shrink_to_fit();
 
   if (initialCapacity>0) {
     _heapData[index]->reserve(initialCapacity);

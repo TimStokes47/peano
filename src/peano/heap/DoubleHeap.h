@@ -4,12 +4,26 @@
 #define _PEANO_HEAP_DOUBLE_HEAP_H_
 
 
+#if defined(SharedTBB) || defined(SharedTBBInvade)
+#include <tbb/cache_aligned_allocator.h>
+#endif
+
+
 #include "peano/heap/Heap.h"
 #include "peano/heap/AlignedDoubleSendReceiveTask.h"
 
 
 namespace peano {
   namespace heap {
+    #if defined(SharedTBB) || defined(SharedTBBInvade)
+    template<
+      class MasterWorkerExchanger,
+      class JoinForkExchanger,
+      class NeighbourDataExchanger,
+      class VectorContainer = std::vector<double, tbb::cache_aligned_allocator<double> >
+    >
+    class DoubleHeap;
+    #else
     template<
       class MasterWorkerExchanger,
       class JoinForkExchanger,
@@ -17,6 +31,7 @@ namespace peano {
       class VectorContainer = std::vector<double>
     >
     class DoubleHeap;
+    #endif
 
 
     typedef DoubleHeap<
