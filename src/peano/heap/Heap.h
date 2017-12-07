@@ -5,12 +5,11 @@
 
 #if defined(SharedTBB) || defined(SharedTBB)
 #include <tbb/concurrent_hash_map.h>
-#include <tbb/concurrent_unordered_set.h>
 #else
 #include <map>
-#include <list>
 #endif
 
+#include <set>
 #include <vector>
 
 #include "peano/heap/AbstractHeap.h"
@@ -31,6 +30,9 @@
 #include "tarch/logging/Log.h"
 
 #include "tarch/services/Service.h"
+
+#include "tarch/multicore/BooleanSemaphore.h"
+
 
 
 namespace peano {
@@ -352,13 +354,15 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      */
     static tarch::logging::Log _log;
 
+    static tarch::multicore::BooleanSemaphore _recycleAndDeleteSemaphore;
+
     #if defined(SharedTBB) || defined(SharedTBB)
     typedef tbb::concurrent_hash_map<int, std::vector<Data>*>  HeapContainer;
-    typedef tbb::concurrent_unordered_set<int>                 RecycledAndDeletedEntriesContainer;
     #else
     typedef std::map<int, std::vector<Data>*>  HeapContainer;
-    typedef std::set<int>                      RecycledAndDeletedEntriesContainer;
     #endif
+
+    typedef std::set<int>                      RecycledAndDeletedEntriesContainer;
 
     /**
      * Map that holds all data that is stored on the heap

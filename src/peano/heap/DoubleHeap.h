@@ -7,15 +7,18 @@
 #if defined(SharedTBB) || defined(SharedTBB)
 #include <tbb/cache_aligned_allocator.h>
 #include <tbb/concurrent_hash_map.h>
-#include <tbb/concurrent_unordered_set.h>
 #else
 #include <map>
-#include <list>
 #endif
+
+#include <set>
 
 
 #include "peano/heap/Heap.h"
 #include "peano/heap/AlignedDoubleSendReceiveTask.h"
+
+
+#include "tarch/multicore/BooleanSemaphore.h"
 
 
 namespace peano {
@@ -133,14 +136,15 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
   private:
     static tarch::logging::Log _log;
 
+    static tarch::multicore::BooleanSemaphore _recycleAndDeleteSemaphore;
 
     #if defined(SharedTBB) || defined(SharedTBB)
     typedef tbb::concurrent_hash_map<int, VectorContainer*>  HeapContainer;
-    typedef tbb::concurrent_unordered_set<int>               RecycledAndDeletedEntriesContainer;
     #else
     typedef std::map<int, VectorContainer*>  HeapContainer;
-    typedef std::set<int>                    RecycledAndDeletedEntriesContainer;
     #endif
+
+    typedef std::set<int>                    RecycledAndDeletedEntriesContainer;
 
 
     HeapContainer    _heapData;

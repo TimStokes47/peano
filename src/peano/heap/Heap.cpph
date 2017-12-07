@@ -9,10 +9,15 @@
 
 #include "peano/performanceanalysis/Analysis.h"
 #include "peano/performanceanalysis/ScorePMacros.h"
+#include "tarch/multicore/Lock.h"
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 tarch::logging::Log peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::_log("peano::heap::Heap");
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+tarch::multicore::BooleanSemaphore  peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::_recycleAndDeleteSemaphore;
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
@@ -133,6 +138,8 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::reserveHeapEntriesForRecycling(int numberOfEntries) {
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
+
   for (int i=0; i<numberOfEntries; i++) {
     _recycledHeapIndices.insert( _nextIndex );
 
@@ -165,13 +172,9 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
-  #if defined(SharedTBB) || defined(SharedTBB)
-  _deletedHeapIndices.unsafe_erase(wantedIndex);
-  _recycledHeapIndices.unsafe_erase(wantedIndex);
-  #else
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
   _deletedHeapIndices.erase(wantedIndex);
   _recycledHeapIndices.erase(wantedIndex);
-  #endif
 
   if (_nextIndex<=wantedIndex){
     _nextIndex = wantedIndex+1;
@@ -208,6 +211,8 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
+
   int index;
   bool allocateNewEntry;
   if ( _recycledHeapIndices.empty() && allocation==Allocation::UseOnlyRecycledEntries) {
@@ -219,11 +224,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   if ( !_recycledHeapIndices.empty() && allocation!=Allocation::DoNotUseAnyRecycledEntry ) {
     index = *_recycledHeapIndices.begin();
     allocateNewEntry = false;
-    #if defined(SharedTBB) || defined(SharedTBB)
-    _recycledHeapIndices.unsafe_erase(index);
-    #else
     _recycledHeapIndices.erase(index);
-    #endif
     assertionMsg(
       _heapData.count(index)==1,
       "recycled heap entry " << index << " of heap " << _name << 
@@ -233,11 +234,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   else if (!_deletedHeapIndices.empty() ){
     index = *_deletedHeapIndices.begin();
     allocateNewEntry = true;
-    #if defined(SharedTBB) || defined(SharedTBB)
-    _deletedHeapIndices.unsafe_erase(index);
-    #else
     _deletedHeapIndices.erase(index);
-    #endif
     assertionMsg(_heapData.count(index)==0, "heap entry of heap " + _name + " does exist already.");
   }
   else {
@@ -356,6 +353,8 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   std::string message = "Trying to get heap data for unknown index. Has the index been initialized correctly?";
   #endif
   assertion4(_heapData.count(index)==1, _name, message, index, _heapData.size());
+
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
 
   if (recycle) {
     getData(index).clear();
