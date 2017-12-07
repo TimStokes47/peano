@@ -115,6 +115,8 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
     p->second.plotStatistics();
   }
   #endif
+  
+  lock.free();
 }
 
 
@@ -165,7 +167,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   VectorContainer* newData = new (std::nothrow) VectorContainer(numberOfEntries);
   if (newData==nullptr) {
     logError( "createDataForIndex(int,int,int)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
-    exit(-1);
+    //exit(-1);
   }
   _heapData.insert( typename HeapContainer::value_type(wantedIndex,newData) );
   if (initialCapacity>0) {
@@ -180,6 +182,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   if(static_cast<int>(_heapData.size()) > _maximumNumberOfHeapEntries) {
     _maximumNumberOfHeapEntries = static_cast<int>(_heapData.size());
   }
+  lock.free();
 
   logTraceOut( "createDataForIndex()" );
 }
@@ -197,12 +200,14 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
     VectorContainer* newData = new (std::nothrow) VectorContainer(numberOfEntries);
     if (newData==nullptr) {
       logError( "createDataForIndex(int,int,int)", "memory allocation for recycle entry failed. Terminate" );
-      exit(-1);
+      //exit(-1);
     }
     _heapData.insert( typename HeapContainer::value_type(_nextIndex,newData) );
 
     _nextIndex++;
   }
+
+  lock.free();
 }
 
 
@@ -213,22 +218,19 @@ int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
-  bool recycledHeapIndicesEmpty;
-  {
-    tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
-    recycledHeapIndicesEmpty = _recycledHeapIndices.empty();
-  }
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
 
   int  index;
   bool allocateNewEntry;
-  if ( recycledHeapIndicesEmpty && allocation==Allocation::UseOnlyRecycledEntries) {
+  if ( _recycledHeapIndices.empty() && allocation==Allocation::UseOnlyRecycledEntries) {
     logTraceOutWith1Argument( "createData()", "not served" );
+    lock.free();
     return -1;
   }
 
+  lock.free();
+  lock.lock();
   
-  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
-
   if ( !_recycledHeapIndices.empty() && allocation!=Allocation::DoNotUseAnyRecycledEntry ) {
     index = *_recycledHeapIndices.begin();
     allocateNewEntry = false;
@@ -249,8 +251,11 @@ int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     assertionMsg(_heapData.count(index)==0, "heap entry does exist already.");
     VectorContainer* newData = new (std::nothrow) VectorContainer(numberOfEntries);
     if (newData==nullptr) {
-       logError( "createDataForIndex(int,int)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
-      exit(-1);
+      logError( "createDataForIndex(int,int)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
+      // The problem with exits here and in other places is that the lifetime 
+      // analysis of C++ sometimes seems to fail and, therefore, the lock is 
+      // released before line 263. This induces race conditions.
+      // exit(-1);
     }
     _heapData.insert( typename HeapContainer::value_type(index,newData) );
   }
@@ -276,6 +281,7 @@ int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   if(static_cast<int>(_heapData.size()) > _maximumNumberOfHeapEntries) {
     _maximumNumberOfHeapEntries = static_cast<int>(_heapData.size());
   }
+  lock.free();
 
   logTraceOutWith2Arguments("createData()", index, _numberOfHeapAllocations);
   return index;
@@ -368,6 +374,8 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   }
 
   _numberOfHeapFrees++;
+
+  lock.free();
 
   logTraceOut("deleteData(int,bool)");
 }
@@ -579,6 +587,8 @@ std::string peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Ne
       << ",neighbour-data-exchanger-tag" << _neighbourDataExchangerDataTag
       #endif
       << ")";
+
+  lock.free();
 
   return msg.str();
 }

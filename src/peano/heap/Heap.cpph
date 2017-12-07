@@ -146,7 +146,6 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
     std::vector<Data>* newData = new (std::nothrow) std::vector<Data>();
     if (newData==nullptr) {
       logError( "reserveHeapEntriesForRecycling(int)", "memory allocation for recycle entry failed. Terminate" );
-      exit(-1);
     }
     _heapData.insert( typename HeapContainer::value_type(_nextIndex,newData) );
 
@@ -156,6 +155,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
     _nextIndex++;
   }
+  lock.free();
 }
 
 
@@ -163,6 +163,7 @@ template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, clas
 bool peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::areRecycleEntriesAvailable() const {
   tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
   bool result = !_recycledHeapIndices.empty();
+  lock.free();
   return result;
 }
 
@@ -186,7 +187,6 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   std::vector<Data>* newData = new (std::nothrow) std::vector<Data>(numberOfEntries);
   if (newData==nullptr) {
     logError( "createDataForIndex(int,int,int)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
-    exit(-1);
   }
   _heapData.insert( typename HeapContainer::value_type(wantedIndex,newData) );
   if (initialCapacity>0) {
@@ -202,6 +202,8 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
     _maximumNumberOfHeapEntries = static_cast<int>(_heapData.size());
   }
 
+  lock.free();
+
   logTraceOut( "createDataForIndex()" );
 }
 
@@ -213,21 +215,16 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   assertion2(numberOfEntries >= 0, numberOfEntries, initialCapacity);
   assertion2(initialCapacity==0 || initialCapacity>=numberOfEntries, numberOfEntries, initialCapacity);
 
-  bool recycledHeapIndicesEmpty;
-  {
-    tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
-    recycledHeapIndicesEmpty = _recycledHeapIndices.empty();
-  }
+  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
 
   int index;
   bool allocateNewEntry;
-  if ( recycledHeapIndicesEmpty && allocation==Allocation::UseOnlyRecycledEntries) {
+  if ( _recycledHeapIndices.empty() && allocation==Allocation::UseOnlyRecycledEntries) {
     logTraceOutWith1Argument( "createData(int,int,Allocation)", "not served" );
     logWarning( "createData(int,int,Allocation)", "was not able to create data with argument Allocation::UseOnlyRecycledEntries as no recycled entries have been available" );
+    lock.free();
     return -1;
   }
-
-  tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
 
   if ( !_recycledHeapIndices.empty() && allocation!=Allocation::DoNotUseAnyRecycledEntry ) {
     index = *_recycledHeapIndices.begin();
@@ -256,7 +253,6 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
     std::vector<Data>* newData = new (std::nothrow) std::vector<Data>(numberOfEntries);
     if (newData==nullptr) {
       logError( "createData(int,int,Allocation)", "memory allocation of " << numberOfEntries << " entries failed. Terminate" );
-      exit(-1);
     }
     _heapData.insert( typename HeapContainer::value_type(index,newData) );
   }
@@ -285,6 +281,7 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
   if(static_cast<int>(_heapData.size()) > _maximumNumberOfHeapEntries) {
     _maximumNumberOfHeapEntries = static_cast<int>(_heapData.size());
   }
+  lock.free();
 
   logTraceOutWith2Arguments("createData(int,int,Allocation)", index, _numberOfHeapAllocations);
   return index;
@@ -377,6 +374,7 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   }
 
   _numberOfHeapFrees++;
+  lock.free();
 
   logTraceOut("deleteData(int)");
 }
