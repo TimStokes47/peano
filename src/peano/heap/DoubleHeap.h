@@ -23,7 +23,16 @@
 
 namespace peano {
   namespace heap {
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
+    /**
+     * TBB
+     *
+     * It makes sense to replace the std::vector with
+     *
+     * std::vector<double, tbb::cache_aligned_allocator<double> >
+     *
+     * to have a proper cache alignment if you don't manually align your stuff
+     * anyway:
+     *
     template<
       class MasterWorkerExchanger,
       class JoinForkExchanger,
@@ -31,30 +40,12 @@ namespace peano {
       class VectorContainer = std::vector<double, tbb::cache_aligned_allocator<double> >
     >
     class DoubleHeap;
-    #else
-    template<
-      class MasterWorkerExchanger,
-      class JoinForkExchanger,
-      class NeighbourDataExchanger,
-      class VectorContainer = std::vector<double>
-    >
-    class DoubleHeap;
-    #endif
-
-
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
-    typedef DoubleHeap<
-      SynchronousDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >,
-      SynchronousDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >,
-      PlainBoundaryDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >
-    >     PlainDoubleHeap;
-    #else
+     */
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true, SendReceiveTask<double> >,
       SynchronousDataExchanger< double, true, SendReceiveTask<double> >,
       PlainBoundaryDataExchanger< double, true, SendReceiveTask<double> >
     >     PlainDoubleHeap;
-    #endif
 
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16>, std::vector< double, HeapAllocator<double, 16> > >,
@@ -78,19 +69,11 @@ namespace peano {
     >     PlainDoubleHeapAlignment64;
 
 
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
-    typedef DoubleHeap<
-      SynchronousDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >,
-      SynchronousDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >,
-      RLEBoundaryDataExchanger< double, true, SendReceiveTask<double>, std::vector<double, tbb::cache_aligned_allocator<double> > >
-    >     RLEDoubleHeap;
-    #else
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true, SendReceiveTask<double> >,
       SynchronousDataExchanger< double, true, SendReceiveTask<double> >,
       RLEBoundaryDataExchanger< double, true, SendReceiveTask<double> >
     >     RLEDoubleHeap;
-    #endif
 
     typedef DoubleHeap<
       SynchronousDataExchanger< double, true, AlignedDoubleSendReceiveTask<16>, std::vector< double, HeapAllocator<double, 16> > >,
