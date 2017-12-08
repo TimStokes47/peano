@@ -13,6 +13,11 @@ namespace tarch {
 }
 
 
+/**
+ * Create a lock around a boolean semaphore region
+ *
+ * @see tarch::multicore::BooleanSemaphore
+ */
 class tarch::multicore::Lock {
   private:
     BooleanSemaphore&  _semaphore;

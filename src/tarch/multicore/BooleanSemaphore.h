@@ -70,7 +70,7 @@ namespace tarch {
  *
  * - A pure critical section does not work for many applications: A plotter for
  *   example writes both vertices and cells to an output file. The write
- *   process has to be protected. A criticial section within the vertex plotter
+ *   process has to be protected. A critical section within the vertex plotter
  *   scope does not prevent the cells to be written to the file simultaneously.
  *   This has to be forbidden by a plotter semaphore.
  * - Intel TBB's have a built-in semaphore concept called scoped lock.
@@ -90,6 +90,23 @@ namespace tarch {
  * - The subdirectories of this directory hold the TBB- and OpenMP-specific
  *   implementations of the semaphore.
  *
+ *
+ * <h2> Bugs due to the locks </h2>
+ *
+ * Inserting Locks and relying on the lock destructor turns out to be
+ * problematic in two cases:
+ *
+ * - If the Lock is used within a routine that contains a return, it seems
+ *   that some compilers invoke the destructor of Lock before the return
+ *   statement (regardless whether it is called or not). This means variable
+ *   accesses following a branch with a return are not protected anymore.
+ *
+ * - If the Lock is used within a template, it seems that some compilers
+ *   simply embed the code block into the calling function. The scoping
+ *   rules are not preserved.
+ *
+ * If you run into such cases, we recommend that you call the lock's free()
+ * explicitly. In our codes, this did resolve all the issues.
  *
  *
  * <h2> Semaphores protecting more than one variable</h2>
@@ -112,6 +129,8 @@ namespace tarch {
  * problem arises only for producer-consumer patterns where the reading thread
  * has already an instance of a variable but reads multiple variables from the
  * other guy.
+ *
+ * Remark: Statements alike these guys are typically not required for correct code!
  *
  * @author Tobias Weinzierl
  */
