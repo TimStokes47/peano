@@ -20,7 +20,7 @@
   #endif
 #endif
 
-#include "SHMInvade.hpp"
+#include "shminvade/SHMInvade.h"
 
 
 namespace tarch {
@@ -48,9 +48,6 @@ namespace tarch {
  */
 class tarch::multicore::Core {
   private:
-    SHMInvadeRoot*    _invadeRoot;
-    SHMInvade*        _basicInvasion;
-
     bool              _isInitialised;
 
     /**
@@ -71,7 +68,7 @@ class tarch::multicore::Core {
      */
     static constexpr int MinThreads = 2;
   public:
-    static constexpr int UseDefaultNumberOfThreads = SHMInvade::AllCoresConcurrencyLevel;
+    static constexpr int UseDefaultNumberOfThreads = 0;
 
     /**
      * Destructor

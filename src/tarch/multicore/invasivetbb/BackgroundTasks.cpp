@@ -13,7 +13,7 @@
 #include <tbb/task.h>
 #include <tbb/tbb_thread.h>
 
-#include "SHMInvade.hpp"
+#include "shminvade/SHMInvade.h"
 
 namespace {
   /**
@@ -65,8 +65,6 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
   ) {
     logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
     _numberOfRunningBackgroundThreads.fetch_and_add(1);
-    // @todo raus
-    assertion3(false,currentlyRunningBackgroundThreads,_maxNumberOfRunningBackgroundThreads,task->isLongRunning());
     ConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) ConsumerTask();
     tbb::task::enqueue(*tbbTask);
     _backgroundTaskContext.set_priority(tbb::priority_low);
@@ -76,7 +74,7 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
 
 
 bool tarch::multicore::processBackgroundTasks() {
-  SHMInvade invade( 1 );
+  shminvade::SHMInvade invade( 1 );
 
   BackgroundTask* myTask = nullptr;
   bool gotOne = _backgroundTasks.try_pop(myTask);
@@ -90,6 +88,8 @@ bool tarch::multicore::processBackgroundTasks() {
     gotOne = hasBeenLongRunning ? false : _backgroundTasks.try_pop(myTask);
     result = true;
   }
+
+  invade.retreat();
 
   return result;
 }

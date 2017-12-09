@@ -2,6 +2,9 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/multicore/invasivetbb/Core.h"
 
+#include "shminvade/SHMController.h"
+#include "shminvade/SHMStrategy.h"
+#include "shminvade/SHMMultipleRanksPerNodeStrategy.h"
 
 #include "tarch/Assertions.h"
 
@@ -12,33 +15,20 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 
 tarch::multicore::Core::Core():
-  _invadeRoot(nullptr),
-  _basicInvasion( nullptr ),
   _isInitialised(false) {
 
   #ifdef Parallel
-  SHMController::cleanup();
+  shminvade::SHMStrategy::getInstance().setStrategy( new shminvade::SHMMultipleRanksPerNodeStrategy() );
+
+
+  shminvade::SHMStrategy::getInstance().cleanUp();
   MPI_Barrier( tarch::parallel::Node::getInstance().getCommunicator() );
   #endif
-
-  _invadeRoot = new SHMInvadeRoot();
-
-  #ifdef Parallel
-  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
-    logInfo( "Core()", _invadeRoot->get_max_available_cores() << " cores available in total" );
-  }
-  #endif
-
-  _basicInvasion = new SHMInvade(MinThreads-1);
 }
 
 
 tarch::multicore::Core::~Core() {
-  assertion(_basicInvasion != nullptr);
-  delete _basicInvasion;
-
-  assertion(_invadeRoot != nullptr);
-  delete _invadeRoot;
+  shminvade::SHMController::getInstance().shutdown();
 }
 
 
@@ -53,43 +43,37 @@ void tarch::multicore::Core::shutDown() {
 
 
 void tarch::multicore::Core::configure( int numberOfThreads, bool enableInvasion ) {
-  assertion(_basicInvasion != nullptr);
   assertion(numberOfThreads>=0 || numberOfThreads==UseDefaultNumberOfThreads);
-  assertion2( numberOfThreads <= _invadeRoot->get_max_available_cores(), numberOfThreads, _invadeRoot->get_max_available_cores() );
 
   if (numberOfThreads < MinThreads ) {
     logWarning( "configure(int)", "requested " << numberOfThreads << " which is fewer than " << MinThreads << " threads. Increase manually to minimum thread count" );
     numberOfThreads = MinThreads;
   }
-  if (numberOfThreads > _invadeRoot->get_max_available_cores() ) {
-    logWarning( "configure(int)", "requested " << numberOfThreads << " threads on only " << _invadeRoot->get_max_available_cores() << " cores" );
+  if (numberOfThreads > shminvade::SHMController::getInstance().getMaxAvailableCores() ) {
+    logWarning( "configure(int)", "requested " << numberOfThreads << " threads on only " << shminvade::SHMController::getInstance().getMaxAvailableCores() << " cores" );
   }
 
   // Switch on. Might be temporary
-  _invadeRoot->switchOn();
+  shminvade::SHMController::getInstance().switchOn();
 
   const int oldActiveCores = getNumberOfThreads();
 
-  delete _basicInvasion;
-  _basicInvasion = new SHMInvade(numberOfThreads-1);
-
   logInfo( "configure(int)",
     "rank had " << oldActiveCores << " threads, tried to change to " << numberOfThreads <<
-    " threads and got " << getNumberOfThreads() << " (" << _invadeRoot->get_free_cores() << " thread(s) remain available)"
+    " threads and got " << getNumberOfThreads() << " (" << shminvade::SHMController::getInstance().getFreeCores() << " thread(s) remain available)"
   );
 
   if (enableInvasion) {
-    _invadeRoot->switchOn();
+    shminvade::SHMController::getInstance().switchOn();
   }
   else {
-    _invadeRoot->switchOff();
+    shminvade::SHMController::getInstance().switchOff();
   }
 }
 
 
 int tarch::multicore::Core::getNumberOfThreads() const {
-  assertion( _invadeRoot->get_num_active_threads() <= _invadeRoot->get_max_available_cores() );
-  return _invadeRoot->get_num_active_threads();
+  return shminvade::SHMController::getInstance().getBookedCores();
 }
 
 
