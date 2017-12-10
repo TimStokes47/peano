@@ -8,6 +8,9 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
+#include "shminvade/SHMInvade.h"
+
+
 #if defined(Asserts)
   #if !defined(SHM_INVADE_DEBUG) || SHM_INVADE_DEBUG<2
     #warning It is recommended to set compile flag SHM_INVADE_DEBUG to 2 or bigger if you compile Peano with Asserts
@@ -48,7 +51,13 @@ namespace tarch {
  */
 class tarch::multicore::Core {
   private:
-    bool              _isInitialised;
+    bool                   _isInitialised;
+
+    /**
+     * Baseline of invasion. Doesn't have to be set if no multicore
+     * parallelisation is wanted.
+     */
+    shminvade::SHMInvade*  _baseInvade;
 
     /**
      * As the class is a singleton, this constructor is protected and you

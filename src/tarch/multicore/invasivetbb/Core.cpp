@@ -15,7 +15,8 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 
 tarch::multicore::Core::Core():
-  _isInitialised(false) {
+  _isInitialised(false),
+  _baseInvade(nullptr) {
 
   #ifdef Parallel
   shminvade::SHMStrategy::getInstance().setStrategy( new shminvade::SHMMultipleRanksPerNodeStrategy() );
@@ -28,6 +29,9 @@ tarch::multicore::Core::Core():
 
 
 tarch::multicore::Core::~Core() {
+  if (_baseInvade!=nullptr) {
+    delete _baseInvade;
+  }
   shminvade::SHMController::getInstance().shutdown();
 }
 
@@ -45,6 +49,11 @@ void tarch::multicore::Core::shutDown() {
 void tarch::multicore::Core::configure( int numberOfThreads, bool enableInvasion ) {
   assertion(numberOfThreads>=0 || numberOfThreads==UseDefaultNumberOfThreads);
 
+  if (_baseInvade!=nullptr) {
+    delete _baseInvade;
+    _baseInvade = nullptr;
+  }
+
   if (numberOfThreads < MinThreads ) {
     logWarning( "configure(int)", "requested " << numberOfThreads << " which is fewer than " << MinThreads << " threads. Increase manually to minimum thread count" );
     numberOfThreads = MinThreads;
@@ -57,6 +66,10 @@ void tarch::multicore::Core::configure( int numberOfThreads, bool enableInvasion
   shminvade::SHMController::getInstance().switchOn();
 
   const int oldActiveCores = getNumberOfThreads();
+
+  if (numberOfThreads>1) {
+    _baseInvade = new shminvade::SHMInvade(numberOfThreads-1);
+  }
 
   logInfo( "configure(int)",
     "rank had " << oldActiveCores << " threads, tried to change to " << numberOfThreads <<
