@@ -75,7 +75,7 @@ class tarch::multicore::Core {
      * invasion is tied to one core and Peano enqueues a background task, then
      * the system will deadlock.
      */
-    static constexpr int MinThreads = 2;
+    static constexpr int MinThreads = 1;
   public:
     static constexpr int UseDefaultNumberOfThreads = 0;
 

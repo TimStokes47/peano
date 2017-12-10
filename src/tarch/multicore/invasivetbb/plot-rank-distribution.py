@@ -53,6 +53,7 @@ try:
       if re.search( "rank:" + str(rank) + " .*tarch::multicore::Core::configure", line):
         newTimeStamp = float( line.strip().split( " " )[0] )
         
+        print "found entry in line " + line
         if len(timeStamps[rank-firstRank])>1 and timeStamps[rank-firstRank][-1]>newTimeStamp:
           print "error in line " + line
           print "series of previous time stamps for this rank: " + str(timeStamps[rank-firstRank])
