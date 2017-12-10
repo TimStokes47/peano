@@ -11,7 +11,7 @@ tarch::logging::Log  peano::datatraversal::TaskSet::_log( "peano::datatraversal:
 
 
 #if defined(SharedTBBInvade)
-#include "SHMInvade.hpp"
+#include "shminvade/SHMInvade.h"
 #endif
 
 
@@ -23,13 +23,16 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(2,2);
     #if defined(SharedTBB) || defined(SharedTBBInvade)
-      #if defined(SharedTBBInvade)
-        SHMInvade invade(2);
-      #endif
+    #if defined(SharedTBBInvade)
+    shminvade::SHMInvade invade(2);
+    #endif
     tbb::parallel_invoke(
       function1,
       function2
     );
+    #if defined(SharedTBBInvade)
+    invade.retreat();
+    #endif
     #elif SharedOMP
       #pragma omp parallel sections
       {
@@ -62,14 +65,17 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(3,3);
     #if defined(SharedTBB) || defined(SharedTBBInvade)
-      #if defined(SharedTBBInvade)
-        SHMInvade invade(3);
-      #endif
+    #if defined(SharedTBBInvade)
+    shminvade::SHMInvade invade(3);
+    #endif
     tbb::parallel_invoke(
       function1,
       function2,
       function3
     );
+    #if defined(SharedTBBInvade)
+    invade.retreat();
+    #endif
     #elif SharedOMP
       #pragma omp parallel sections
       {
@@ -107,15 +113,19 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(4,4);
     #if defined(SharedTBB) || defined(SharedTBBInvade)
-      #if defined(SharedTBBInvade)
-        SHMInvade invade(4);
-      #endif
+    #if defined(SharedTBBInvade)
+    shminvade::SHMInvade invade(4);
+    #endif
     tbb::parallel_invoke(
       function1,
       function2,
       function3,
       function4
     );
+    #if defined(SharedTBBInvade)
+    invade.retreat();
+    #endif
+
     #elif SharedOMP
       #pragma omp parallel sections
       {
@@ -158,9 +168,9 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(4,4);
     #if defined(SharedTBB) || defined(SharedTBBInvade)
-      #if defined(SharedTBBInvade)
-        SHMInvade invade(5);
-      #endif
+    #if defined(SharedTBBInvade)
+    shminvade::SHMInvade invade(5);
+    #endif
     tbb::parallel_invoke(
       function1,
       function2,
@@ -168,6 +178,9 @@ peano::datatraversal::TaskSet::TaskSet(
       function4,
       function5
     );
+    #if defined(SharedTBBInvade)
+    invade.retreat();
+    #endif
     #elif SharedOMP
       #pragma omp parallel sections
       {

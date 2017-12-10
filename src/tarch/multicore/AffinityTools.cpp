@@ -1,6 +1,7 @@
 #include "tarch/multicore/AffinityTools.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/logging/Log.h"
+#include "tarch/Assertions.h"
 
 
 #include <sys/sysinfo.h>
@@ -46,6 +47,8 @@ void tarch::multicore::logThreadAffinities() {
 
   std::vector<AffinityMask> coreAffinities = getThreadAffinities();
   std::vector<int>          coreCPUIds     = getCPUIdsThreadsAreRunningOn();
+
+  assertion1( coreAffinities.size()<128, coreAffinities.size() );
 
   for (int i=0; i<static_cast<int>(coreAffinities.size()); i++) {
     logInfo( "logThreadAffinities()",

@@ -9,7 +9,7 @@
 
 
 #if defined(SharedTBBInvade)
-#include "SHMInvade.hpp"
+#include "shminvade/SHMInvade.h"
 #endif
 
 
@@ -70,14 +70,17 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
   for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()/grainSize,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
     #if defined(SharedTBB) || defined(SharedTBBInvade)
-      #if defined(SharedTBBInvade)
-        SHMInvade invade(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
-      #endif
+    #if defined(SharedTBBInvade)
+    shminvade::SHMInvade invade(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
+    #endif
     ActionSetTraversalLoopInstance loopInstance(loopBody,traversal.getActionSet(currentStepInPath));
     tbb::parallel_reduce(
       tbb::blocked_range<int>(0,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(),grainSize),
       loopInstance
     );
+    #if defined(SharedTBBInvade)
+    invade.retreat();
+    #endif
     #elif SharedOMP 
     #pragma omp for schedule(dynamic, grainSize)
     for (int j = 0; j < traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {

@@ -11,7 +11,7 @@
 
 
 #if defined(SharedTBBInvade)
-#include "SHMInvade.hpp"
+#include "shminvade/SHMInvade.h"
 #endif
 
 
@@ -109,9 +109,9 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
 
   if (altersState) {
     #if defined(SharedTBB) || defined(SharedTBBInvade)
-      #if defined(SharedTBBInvade)
-        SHMInvade invade( grainSize>0 ? tarch::la::volume(range)/grainSize : 0 );
-      #endif
+    #if defined(SharedTBBInvade)
+    shminvade::SHMInvade invade( grainSize>0 ? tarch::la::volume(range)/grainSize : 0 );
+    #endif
     dForLoopInstance loopInstance(loopBody,0,1);
     tbb::parallel_reduce(
       dForRange( range, grainSize ),
@@ -119,6 +119,10 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
       TBBPartitioner
     );
     loopInstance.mergeIntoMasterThread(loopBody);
+#if defined(SharedTBBInvade)
+invade.retreat();
+#endif
+
     #elif SharedOMP
       #pragma omp parallel 
       {
@@ -158,15 +162,18 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
   }
   else {
     #if defined(SharedTBB) || defined(SharedTBBInvade)
-      #if defined(SharedTBBInvade)
-        SHMInvade invade( grainSize > 0 ? tarch::la::volume(range)/grainSize : 0 );
-      #endif
+    #if defined(SharedTBBInvade)
+    shminvade::SHMInvade invade( grainSize > 0 ? tarch::la::volume(range)/grainSize : 0 );
+    #endif
     dForLoopInstanceWithoutReduction  loopInstance(loopBody,0,1);
     tbb::parallel_for(
       dForRange( range, grainSize ),
       loopInstance,
       TBBPartitioner
     );
+    #if defined(SharedTBBInvade)
+    invade.retreat();
+    #endif
     #elif SharedOMP
       #if DIMENSIONS == 2
         const int maxI = range[1];
@@ -233,15 +240,20 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
       loopInstance.setOffset(k);
       #if defined(SharedTBB) || defined(SharedTBBInvade)
 
-        #if defined(SharedTBBInvade)
-          SHMInvade invade( grainSize>0 ? tarch::la::volume(localRange)/grainSize : 0 );
-        #endif
+      #if defined(SharedTBBInvade)
+      shminvade::SHMInvade invade( grainSize>0 ? tarch::la::volume(localRange)/grainSize : 0 );
+      #endif
 
       tbb::parallel_for( 
         dForRange( localRange, grainSize ), 
         loopInstance,
         TBBPartitioner
       );
+      
+      #if defined(SharedTBBInvade)
+      invade.retreat();
+      #endif
+
       #elif SharedOMP
         #if DIMENSIONS == 2
           const int maxI = localRange[1];
@@ -294,10 +306,14 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
         loopInstance.setOffset(k);
 
         #if defined(SharedTBBInvade)
-          SHMInvade invade( grainSize > 0 ? tarch::la::volume(localRange)/grainSize : 0 );
+        shminvade::SHMInvade invade( grainSize > 0 ? tarch::la::volume(localRange)/grainSize : 0 );
         #endif
 
         tbb::parallel_reduce( dForRange( localRange, grainSize ), loopInstance, TBBPartitioner );
+ 
+        #if defined(SharedTBBInvade)
+        invade.retreat();
+        #endif
       }
       loopInstance.mergeIntoMasterThread(loopBody);
     #endif
