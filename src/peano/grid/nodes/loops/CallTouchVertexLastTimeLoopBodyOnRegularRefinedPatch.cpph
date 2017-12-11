@@ -101,11 +101,12 @@ void peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefinedP
   bool const vertexRemainsStatic = vertex.getRefinementControl()==Vertex::Records::Refined || vertex.getRefinementControl()==Vertex::Records::Unrefined;
 
   bool myTreeRemainsStatic;
-  {
+  
   tarch::multicore::Lock lock(peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::_semaphore);
   treeRemainsStatic   &= vertexRemainsStatic;
   myTreeRemainsStatic =  treeRemainsStatic;
-  }
+  lock.free();
+  
 
   if (!myTreeRemainsStatic) {
     vertex.setCurrentAdjacentCellsHeight(peano::grid::NotStationary);
