@@ -74,6 +74,8 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
 
 
 bool tarch::multicore::processBackgroundTasks() {
+  logDebug( "execute()", "background consumer task becomes awake" );
+
   shminvade::SHMInvade invade( 1 );
 
   BackgroundTask* myTask = nullptr;
@@ -81,15 +83,16 @@ bool tarch::multicore::processBackgroundTasks() {
   bool result = false;
   while (gotOne) {
     logDebug( "execute()", "consumer task found job to do" );
-    myTask->run();
     peano::performanceanalysis::Analysis::getInstance().terminatedBackgroundTask(1);
-    const bool hasBeenLongRunning = myTask->isLongRunning();
+    myTask->run();
+    const bool taskHasBeenLongRunning = myTask->isLongRunning();
     delete myTask;
-    gotOne = hasBeenLongRunning ? false : _backgroundTasks.try_pop(myTask);
+    gotOne = taskHasBeenLongRunning ? false : _backgroundTasks.try_pop(myTask);
     result = true;
   }
 
   invade.retreat();
+  logDebug( "execute()", "background task consumer is done and kills itself" );
 
   return result;
 }
@@ -100,5 +103,9 @@ void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRun
   _maxNumberOfRunningBackgroundThreads = maxNumberOfRunningBackgroundThreads;
 }
 
+
+int tarch::multicore::getNumberOfWaitingBackgroundTasks() {
+  return _numberOfRunningBackgroundThreads + _backgroundTasks.unsafe_size();
+}
 
 #endif

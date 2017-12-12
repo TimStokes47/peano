@@ -19,4 +19,9 @@ bool tarch::multicore::processBackgroundTasks() {
 void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {
 }
 
+
+int tarch::multicore::getNumberOfWaitingBackgroundTasks() {
+  return 0;
+}
+
 #endif

@@ -45,4 +45,17 @@ void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRun
 }
 
 
+
+int tarch::multicore::getNumberOfWaitingBackgroundTasks() {
+  int result = 0;
+
+  #pragma omp critical(BackgroundCriticalSection)
+  {
+    result = _backgroundTasks.size();
+  }
+
+  return result;
+}
+
+
 #endif

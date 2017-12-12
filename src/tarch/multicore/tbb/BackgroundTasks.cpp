@@ -14,15 +14,6 @@
 #include <tbb/tbb_thread.h>
 
 namespace {
-  class ConsumerTask: public tbb::task {
-    public:
-      ConsumerTask() {}
-      tbb::task* execute() {
-        tarch::multicore::processBackgroundTasks();
-        return 0;
-      }
-  };
-
   /**
    * Use this to launch all background with very low priority
    */
@@ -43,6 +34,16 @@ namespace {
   int                      _maxNumberOfRunningBackgroundThreads(1);
 
   tarch::logging::Log _log( "tarch::multicore" );
+
+  class ConsumerTask: public tbb::task {
+    public:
+      ConsumerTask() {}
+      tbb::task* execute() {
+        tarch::multicore::processBackgroundTasks();
+        _numberOfRunningBackgroundThreads.fetch_and_add(-1);
+        return 0;
+      }
+  };
 }
 
 
@@ -56,10 +57,8 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
     ||
     task->isLongRunning()
   ) {
-    logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet; kick off" );
-    if ( !task->isLongRunning() ) {
-      _numberOfRunningBackgroundThreads.fetch_and_add(1);
-    }
+    logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
+    _numberOfRunningBackgroundThreads.fetch_and_add(1);
     ConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) ConsumerTask();
     tbb::task::enqueue(*tbbTask);
     _backgroundTaskContext.set_priority(tbb::priority_low);
@@ -73,24 +72,18 @@ bool tarch::multicore::processBackgroundTasks() {
 
   BackgroundTask* myTask = nullptr;
   bool gotOne = _backgroundTasks.try_pop(myTask);
-  bool taskHasBeenLongRunning = false;
-  bool result                 = false;
+  bool result = false;
   while (gotOne) {
     logDebug( "execute()", "consumer task found job to do" );
     peano::performanceanalysis::Analysis::getInstance().terminatedBackgroundTask(1);
     myTask->run();
-    taskHasBeenLongRunning = myTask->isLongRunning();
+    const bool taskHasBeenLongRunning = myTask->isLongRunning();
     delete myTask;
     gotOne = taskHasBeenLongRunning ? false : _backgroundTasks.try_pop(myTask);
     result = true;
   }
 
-  if (!taskHasBeenLongRunning) {
-    _numberOfRunningBackgroundThreads.fetch_and_add(-1);
-  }
-
   logDebug( "execute()", "background task consumer is done and kills itself" );
-  tbb::this_tbb_thread::yield();
 
   return result;
 }
@@ -101,5 +94,9 @@ void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRun
   _maxNumberOfRunningBackgroundThreads = maxNumberOfRunningBackgroundThreads;
 }
 
+
+int tarch::multicore::getNumberOfWaitingBackgroundTasks() {
+  return _numberOfRunningBackgroundThreads + _backgroundTasks.unsafe_size();
+}
 
 #endif

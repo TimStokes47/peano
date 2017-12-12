@@ -76,6 +76,12 @@ namespace tarch {
      *   onto background activities at any time.
      */
     void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
+
+    /**
+     * This is the logical number of background tasks, i.e. how many things
+     * could, in theory, run the the background.
+     */
+    int getNumberOfWaitingBackgroundTasks();
   }
 }
 
