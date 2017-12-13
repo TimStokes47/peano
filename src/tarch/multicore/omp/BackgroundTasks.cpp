@@ -13,7 +13,9 @@ namespace {
 
 
 void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
-  if (_maxNumberOfRunningBackgroundThreads==MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately) {
+  if (
+    _maxNumberOfRunningBackgroundThreads==static_cast<int>(MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately)
+  ) {
     task->run();
     delete task;
   }

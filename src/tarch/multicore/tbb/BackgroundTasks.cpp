@@ -49,7 +49,7 @@ namespace {
 
 void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
   if (
-    _maxNumberOfRunningBackgroundThreads==MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately
+    _maxNumberOfRunningBackgroundThreads==static_cast<int>(MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately)
   ) {
     task->run();
     delete task;
@@ -66,7 +66,7 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
       (
         task->isLongRunning()
         &&
-        _maxNumberOfRunningBackgroundThreads>=MaxNumberOfRunningBackgroundThreads::DontUseBackgroundTasksForNormalTasks
+        _maxNumberOfRunningBackgroundThreads>=static_cast<int>(MaxNumberOfRunningBackgroundThreads::DontUseBackgroundTasksForNormalTasks)
       )
     ) {
       logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
