@@ -52,6 +52,30 @@ namespace tarch {
      */
     bool processBackgroundTasks();
 
+    enum class MaxNumberOfRunningBackgroundThreads {
+      /**
+       * Still allows the multicore sublayer to invoke a background task if
+       * there are tasks which are known to run really long.
+       */
+      DontUseBackgroundTasksForNormalTasks = 0,
+      /**
+       * Effectively switches off all background tasks. If the user submits any
+       * background tasks, they are only enqueued. Once a thread says
+       * sendTaskToBackground(), it first runs through all the pending tasks
+       * before it really goes to the background (or continues).
+       */
+      DontUseAnyBackgroundTasks            = -1,
+      /*
+       * No background task is ever enqueued. Instead, we process them
+       * immediately.
+       */
+      ProcessBackgroundTasksImmediately    = -2,
+      /**
+       * Help which is not to be used.
+       */
+      SmallestValue                        = -3
+    };
+
     /**
      * By default, we disable all background tasks in SHMInvade. Background
      * tasks are passed into TBB via enqueue and they seem to cause problems.
@@ -74,8 +98,14 @@ namespace tarch {
      *   number should be sufficient, where small is to be read relative to the
      *   threads available. You don't want your system to spend all of its tasks
      *   onto background activities at any time.
+     * @see MaxNumberOfRunningBackgroundThreads
      */
     void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
+
+    /**
+     * Wrapper around setMaxNumberOfRunningBackgroundThreads(int).
+     */
+    void setMaxNumberOfRunningBackgroundThreads(const MaxNumberOfRunningBackgroundThreads& maxNumberOfRunningBackgroundThreads);
 
     /**
      * This is the logical number of background tasks, i.e. how many things

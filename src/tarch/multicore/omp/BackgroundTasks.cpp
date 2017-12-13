@@ -13,8 +13,14 @@ namespace {
 
 
 void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
-  #pragma omp critical(BackgroundCriticalSection)
-  _backgroundTasks.push_back(task);
+  if (task->isLongRunning() && _maxNumberOfRunningBackgroundThreads==MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately) {
+    task->run();
+    delete task;
+  }
+  else {
+    #pragma omp critical(BackgroundCriticalSection)
+    _backgroundTasks.push_back(task);
+  }
 }
 
 
@@ -71,8 +77,8 @@ bool tarch::multicore::processBackgroundTasks() {
  * cores it uses in doubt to process the background tasks available.
  */
 void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {
-  assertion(maxNumberOfRunningBackgroundThreads>=-1);
-  if (maxNumberOfRunningBackgroundThreads<=0) {
+  assertion1(maxNumberOfRunningBackgroundThreads > static_cast<int>(MaxNumberOfRunningBackgroundThreads::SmallestValue), maxNumberOfRunningBackgroundThreads );
+  if (maxNumberOfRunningBackgroundThreads<=0 && maxNumberOfRunningBackgroundThreads!=static_cast<int>(MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately)) {
     static tarch::logging::Log _log( "tarch::multicore" );
     logWarning( "setMaxNumberOfRunningBackgroundThreads", "OpenMP realisation does not support natively -1 and 0 as number of background tasks. Fall back to 1" );
     maxNumberOfRunningBackgroundThreads = 1;

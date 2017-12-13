@@ -50,6 +50,12 @@ namespace {
 
 
 void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
+  if (task->isLongRunning() && _maxNumberOfRunningBackgroundThreads==MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately) {
+    task->run();
+    delete task;
+    return;
+  }
+
   _backgroundTasks.push(task);
   peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
 
@@ -60,7 +66,7 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
     (
       task->isLongRunning()
       &&
-      _maxNumberOfRunningBackgroundThreads>=0
+      _maxNumberOfRunningBackgroundThreads>=MaxNumberOfRunningBackgroundThreads::DontUseBackgroundTasksForNormalTasks
     )
   ) {
     logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
@@ -99,7 +105,8 @@ bool tarch::multicore::processBackgroundTasks() {
 
 
 void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {
-  assertion(maxNumberOfRunningBackgroundThreads>=-1);
+  assertion1(maxNumberOfRunningBackgroundThreads > static_cast<int>(MaxNumberOfRunningBackgroundThreads::SmallestValue), maxNumberOfRunningBackgroundThreads );
+
   _maxNumberOfRunningBackgroundThreads = maxNumberOfRunningBackgroundThreads;
 }
 
