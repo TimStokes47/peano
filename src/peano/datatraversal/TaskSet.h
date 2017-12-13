@@ -130,6 +130,23 @@ class peano::datatraversal::TaskSet {
      * Please note that your code might deadlock if you spawn a task without
      * multicore support and if you hope/rely on the fact that this task cannot
      * complete right at the moment but will later on be able to do so.
+     *
+     * <h2> Lambda calculus </h2>
+     *
+     * In principle, you can simply pass in a lambda expression instead of a
+     * defined functor, but I often struggle with this. I can solve it by
+     * constructing a function object explicitly:
+     *
+     * <pre>
+        std::function<void ()> myFunctor = [=] () {
+          // do something
+        };
+
+        peano::datatraversal::TaskSet backgroundTask(myFunctor,true);
+       </pre>
+     *
+     * It is important that myFunctor catches everything via copy. As a
+     * consequence do something only includes static and const accessors.
      */
     template <class Functor>
     inline TaskSet(
