@@ -30,7 +30,7 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
   _iterationDataTag       = tarch::parallel::Node::getInstance().reserveFreeTag("SendReceiveBufferPool[it-data]");
 
   #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
-  peano::datatraversal::TaskSet spawnTask(_backgroundThread);
+  peano::datatraversal::TaskSet spawnTask(_backgroundThread,true);
   #endif
 }
 #else
