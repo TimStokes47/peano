@@ -50,7 +50,9 @@ namespace {
 
 
 void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
-  if (task->isLongRunning() && _maxNumberOfRunningBackgroundThreads==MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately) {
+  if (
+    _maxNumberOfRunningBackgroundThreads==MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately
+  ) {
     task->run();
     delete task;
     return;

@@ -48,31 +48,34 @@ namespace {
 
 
 void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
-  if (task->isLongRunning() && _maxNumberOfRunningBackgroundThreads==MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately) {
+  if (
+    _maxNumberOfRunningBackgroundThreads==MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately
+  ) {
     task->run();
     delete task;
     return;
   }
+  else {
+    _backgroundTasks.push(task);
+    peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
 
-  _backgroundTasks.push(task);
-  peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
-
-  const int currentlyRunningBackgroundThreads = _numberOfRunningBackgroundThreads;
-  if (
-    currentlyRunningBackgroundThreads<_maxNumberOfRunningBackgroundThreads
-    ||
-    (
-      task->isLongRunning()
-      &&
-      _maxNumberOfRunningBackgroundThreads>=MaxNumberOfRunningBackgroundThreads::DontUseBackgroundTasksForNormalTasks
-    )
-  ) {
-    logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
-    _numberOfRunningBackgroundThreads.fetch_and_add(1);
-    ConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) ConsumerTask();
-    tbb::task::enqueue(*tbbTask);
-    _backgroundTaskContext.set_priority(tbb::priority_low);
-    logDebug( "kickOffBackgroundTask(BackgroundTask*)", "it is out now" );
+    const int currentlyRunningBackgroundThreads = _numberOfRunningBackgroundThreads;
+    if (
+      currentlyRunningBackgroundThreads<_maxNumberOfRunningBackgroundThreads
+      ||
+      (
+        task->isLongRunning()
+        &&
+        _maxNumberOfRunningBackgroundThreads>=MaxNumberOfRunningBackgroundThreads::DontUseBackgroundTasksForNormalTasks
+      )
+    ) {
+      logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
+      _numberOfRunningBackgroundThreads.fetch_and_add(1);
+      ConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) ConsumerTask();
+      tbb::task::enqueue(*tbbTask);
+      _backgroundTaskContext.set_priority(tbb::priority_low);
+      logDebug( "kickOffBackgroundTask(BackgroundTask*)", "it is out now" );
+    }
   }
 }
 

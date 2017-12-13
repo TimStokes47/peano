@@ -67,7 +67,7 @@ namespace tarch {
       DontUseAnyBackgroundTasks            = -1,
       /*
        * No background task is ever enqueued. Instead, we process them
-       * immediately.
+       * immediately. This could lead to deadlocks!
        */
       ProcessBackgroundTasksImmediately    = -2,
       /**
