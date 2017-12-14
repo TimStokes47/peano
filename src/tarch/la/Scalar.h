@@ -7,7 +7,7 @@ namespace tarch {
   namespace la {
     constexpr double PI = 3.1415926535897932384626433832795028841972;
     constexpr double E = 2.7182818284590452353602874713526624977572;
-    #ifndef MACHINE_PRECISION
+    #ifdef MACHINE_PRECISION
     constexpr double NUMERICAL_ZERO_DIFFERENCE = MACHINE_PRECISION;
     #else
     constexpr double NUMERICAL_ZERO_DIFFERENCE = 1.0e-12;
