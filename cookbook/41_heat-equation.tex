@@ -227,12 +227,44 @@ int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository&
 \noindent
 The implementation of the \texttt{State}'s \texttt{void setTimeStepSize(double
 dt)} operation is left to the reader. 
-Please add the corresponding \texttt{double getTimeStepSize() const}, too.
+Please add the corresponding \texttt{double getTimeStepSize() const}, too, we we
+will need it later.
 
 \begin{center}
   \includegraphics[width=0.7\textwidth]{41_heat-equation/epsilon.png}
 \end{center}
 
+\noindent
+What we might want to do before we continue is to add well-suited initial and
+boundary conditions. 
+To do so, we return to \texttt{createInnerVertex} and
+\texttt{createBoundaryVertex} of the \texttt{CreateGrid} mapping and add some
+calls there as well as an implementation to the vertex:
+
+\begin{code}
+...::createBoundaryVertex(...) {
+  ...
+  const double myValue = 17.3;
+  fineGridVertex.init(myValue); // Might be different for the inner vertices
+}
+
+
+myproject::Vertex::Vertex() {
+  _vertexData.setU(0.0);
+}
+
+
+void myproject::Vertex::init(double value) {
+  _vertexData.setU(value);
+}
+\end{code}
+
+\noindent
+As mentioned, an initialisation of the $u$ value in the constructor is not
+necessary as we use a flyweight pattern.
+However, it has proven to be reasonable to set it to a reasonable value, as
+garbage data tends on the one hand to make your debugging hard.
+On the other hand, it sometimes messes up VTK/Paraview.
 
 
 \begin{remark}
