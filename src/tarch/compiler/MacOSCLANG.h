@@ -20,6 +20,7 @@
 //#define CompilerHasProcStat
 #define CompilerHasUTSName
 #define CompilerHasTimespec
+//#define CompilerHasSysinfo
 //#define CompilerDefinesMPIMaxNameString
 //#define DaStGenPackedPadding 1      // 32 bit version
 // #define DaStGenPackedPadding 2   // 64 bit version

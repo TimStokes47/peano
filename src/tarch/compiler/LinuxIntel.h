@@ -16,6 +16,8 @@
 
 #define CompilerHasTimespec
 
+#define CompilerHasSysinfo
+
 //#define CompilerDefinesMPIMaxNameString
 
 
