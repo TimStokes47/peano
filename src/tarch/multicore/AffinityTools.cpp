@@ -2,15 +2,25 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/logging/Log.h"
 #include "tarch/Assertions.h"
+#include "tarch/compiler/CompilerSpecificSettings.h"
 
 
+#ifdef CompilerHasSysinfo
 #include <sys/sysinfo.h>
 #include <sched.h>
+#else
+#include <thread>
+#endif
+
 #include <sstream>
 
 
 int tarch::multicore::getNumberOfPhysicalCores() {
+  #ifdef CompilerHasSysinfo
   return get_nprocs();
+  #else
+  return std::thread::hardware_concurrency();
+  #endif
 }
 
 
