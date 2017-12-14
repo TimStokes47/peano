@@ -36,14 +36,18 @@ std::string tarch::multicore::tailoredAffinityMask( const AffinityMask& mask ) {
 std::bitset<sizeof(long int)*8> tarch::multicore::getCPUSet() {
   std::bitset<sizeof(long int)*8> result = 0;
 
+  #ifdef CompilerHasSysinfo
   cpu_set_t cpuset;
   sched_getaffinity(0, sizeof(cpuset), &cpuset);
+
+  https://yyshen.github.io/2015/01/18/binding_threads_to_cores_osx.html
 
   for (long i = 0; i < getNumberOfPhysicalCores(); i++) {
     if (CPU_ISSET(i, &cpuset)) {
       result[i] = true;
     }
   }
+  #endif
 
   return result;
 }
@@ -69,7 +73,12 @@ void tarch::multicore::logThreadAffinities() {
 
 
 int tarch::multicore::getCPUId() {
+  #ifdef CompilerHasSysinfo
   return sched_getcpu();
+  #else
+  //  https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
+  return 1;
+  #endif
 }
 
 
