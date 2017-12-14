@@ -39,8 +39,8 @@ the directory.
    \linebreak
    \texttt{CompilerCLANG} is defined.
   \item \textbf{ My compiler requires ages to translate the unit tests}. Ensure
-  that the flag \texttt{UseTestSpecificCompilerSettings} is enabled. This
-  effectively disables any optimisation for the unit tests.
+  that the flag \linebreak \texttt{UseTestSpecificCompilerSettings} is enabled.
+  This effectively disables any optimisation for the unit tests.
 \end{itemize}
 
 
@@ -92,6 +92,10 @@ the directory.
   Peano updates the State itself and the state position in memory is not fixed.
   Do never ever hold a pointer to the state object handed into
   \texttt{beginIteration} or \texttt{endIteration}.
+  \item \textbf{Peano's technical architecture uses a too precise machine
+  precision}. By default, we use $10^{-12}$ as machine precision. You can change
+  this however by compiling with \linebreak
+  \texttt{-DMACHINE\_PRECISION=0.000001}, e.g.
 \end{itemize}
 
 
