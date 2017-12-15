@@ -36,11 +36,10 @@ std::string tarch::multicore::tailoredAffinityMask( const AffinityMask& mask ) {
 std::bitset<sizeof(long int)*8> tarch::multicore::getCPUSet() {
   std::bitset<sizeof(long int)*8> result = 0;
 
+//  https://yyshen.github.io/2015/01/18/binding_threads_to_cores_osx.html
   #ifdef CompilerHasSysinfo
   cpu_set_t cpuset;
   sched_getaffinity(0, sizeof(cpuset), &cpuset);
-
-  https://yyshen.github.io/2015/01/18/binding_threads_to_cores_osx.html
 
   for (long i = 0; i < getNumberOfPhysicalCores(); i++) {
     if (CPU_ISSET(i, &cpuset)) {
