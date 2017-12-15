@@ -65,16 +65,21 @@ int myproject::runners::Runner::run() {
 
 
 int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository& repository) {
-  peano::utils::UserInterface userInterface;
-  userInterface.writeHeader();
+  peano::utils::UserInterface::writeHeader();
+
+  // Should perhaps go into the header and then as static attribute into the class
+  static tarch::logging::Log _log( "myproject::runners::Runner" );
 
   repository.switchToCreateGridAndPlot();
   repository.iterate();
   
-  const double initialDt = 1e-4;
+  const double initialDt = 1e-3;
   repository.getState().setTimeStepSize( initialDt );
+  double t = 0.0;
   for (int i=0; i<10000; i++) {
-    if (i%100==0 || !repository.getState().isGridStationary()) {
+    logInfo( "runAsMaster(...)", "t=" << t );
+    if (i%32==0 || !repository.getState().isGridStationary()) {
+      logInfo( "runAsMaster(...)", "write a snapshot" );
       repository.switchToTimeStepAndPlot();
     }
     else {
@@ -86,7 +91,7 @@ int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository&
     logInfo( "runAsMaster(...)", "time step " << i << ": dt=" << dt << ", h_min=" << repository.getState().getMinimumMeshWidth() );
   }
  
-  repository.logIterationStatistics();
+  repository.logIterationStatistics(true);
   repository.terminate();
 
   return 0;

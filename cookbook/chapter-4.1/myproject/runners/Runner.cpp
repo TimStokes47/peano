@@ -63,25 +63,30 @@ int myproject::runners::Runner::run() {
 
 
 int myproject::runners::Runner::runAsMaster(myproject::repositories::Repository& repository) {
-  peano::utils::UserInterface userInterface;
-  userInterface.writeHeader();
+  peano::utils::UserInterface::writeHeader();
+  
+  // Should perhaps go into the header and then as static attribute into the class
+  static tarch::logging::Log _log( "myproject::runners::Runner" );
 
   repository.switchToCreateGridAndPlot();
   repository.iterate();
   
-  //repository.getState().setTimeStepSize( 1e-8 );
-  repository.getState().setTimeStepSize( 0.5e-7 );
+  repository.getState().setTimeStepSize( 0.1e-3 );
+  double t = 0.0;
   for (int i=0; i<10000; i++) {
-    if (i%100==0) {
+    logInfo( "runAsMaster(...)", "t=" << t );
+    if (i%32==0) {
+    logInfo( "runAsMaster(...)", "write a snapshot" );
       repository.switchToTimeStepAndPlot();
     }
     else {
      repository.switchToTimeStep();
     }
     repository.iterate();
+    t += repository.getState().getTimeStepSize();
   }
  
-  repository.logIterationStatistics();
+  repository.logIterationStatistics(false);
   repository.terminate();
 
   return 0;

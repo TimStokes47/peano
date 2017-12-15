@@ -3,26 +3,26 @@
 #include "peano/utils/Loop.h"
 
 
-peano::CommunicationSpecification   myproject::mappings::InterpolateHangingNodes::communicationSpecification() {
-  return peano::CommunicationSpecification(peano::CommunicationSpecification::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::SendDataAndStateAfterLastTouchVertexLastTime,false);
+peano::CommunicationSpecification   myproject::mappings::InterpolateHangingNodes::communicationSpecification() const {
+return peano::CommunicationSpecification(peano::CommunicationSpecification::ExchangeMasterWorkerData::SendDataAndStateBeforeFirstTouchVertexFirstTime,peano::CommunicationSpecification::ExchangeWorkerMasterData::SendDataAndStateAfterLastTouchVertexLastTime,false);
 }
-peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::touchVertexLastTimeSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::touchVertexLastTimeSpecification(int leve) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid,true);
 }
-peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::touchVertexFirstTimeSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid);
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::touchVertexFirstTimeSpecification(int leve) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::RunConcurrentlyOnFineGrid,true);
 }
-peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::enterCellSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::enterCellSpecification(int leve) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces,true);
 }
-peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::leaveCellSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces);
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::leaveCellSpecification(int leve) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidFineGridRaces,true);
 }
-peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::ascendSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::ascendSpecification(int leve) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces,true);
 }
-peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::descendSpecification() {
-  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces);
+peano::MappingSpecification   myproject::mappings::InterpolateHangingNodes::descendSpecification(int leve) const {
+  return peano::MappingSpecification(peano::MappingSpecification::WholeTree,peano::MappingSpecification::AvoidCoarseGridRaces,true);
 }
 
 

@@ -58,7 +58,7 @@ SYSTEM_LFLAGS = $(LINK_TBB)    $(LINK_MPI)
 # Settings for the GNU Compiler (Debug Mode)
 # ------------------------------------------
 CC=g++
-COMPILER_CFLAGS=-O3 -pedantic -pedantic-errors -Wall -Werror -Wstrict-aliasing -fstrict-aliasing -ggdb -std=c++0x
+COMPILER_CFLAGS=-DTrackGridStatistics -O3 -pedantic -pedantic-errors -Wall -Werror -Wstrict-aliasing -fstrict-aliasing -ggdb -std=c++0x
 
 
 # Settings for the GNU Compiler (Release Mode)
