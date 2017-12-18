@@ -6,27 +6,15 @@
 
 
 #include <ctime>
+#include <chrono>
 #include "tarch/logging/Log.h"
 
-#ifdef __APPLE__
-#include <mach/mach_time.h>
-#include <mach/mach.h>
-#include <mach/clock.h>
-#endif
 
 namespace tarch {
   namespace timing {
     class Watch;
   }
 }
-
-
-
-#ifdef SharedOMP
-#include <omp.h>
-#elif defined(SharedTBB) || defined(SharedTBBInvade)
-#include <tbb/tick_count.h>
-#endif
 
 
 /**
@@ -78,17 +66,10 @@ class tarch::timing::Watch {
      */
     std::clock_t   _startClockTicks;
 
-    #ifdef SharedOMP
-    double          _startTime;
-    #elif defined(SharedTBB) || defined(SharedTBBInvade)
-    tbb::tick_count _startTime;
-    #else
     /**
      * Holds the time at the beginning of the time measurement.
      */
-    double          _startTime;
-    //std::time_t    _startTime;
-    #endif
+    std::chrono::high_resolution_clock::time_point _startTime;
 
     /**
      * Holds the elapsed processor time.
@@ -98,16 +79,12 @@ class tarch::timing::Watch {
     /**
      * Holds the elapsed calendar time.
      */
-    double         _elapsedTime;
+    double _elapsedTime;
 
     /**
      * Has stopTimer() been called before.
      */
     bool           _isRunning;
-
-    #ifdef __APPLE__
-    clock_serv_t cclock;
-    #endif
 
   public:
     /**
