@@ -2,7 +2,7 @@
 #include "tarch/Assertions.h"
 
 
-#if defined(SharedOMP)
+#if defined(SharedOMP) && defined(SharedTBB)
 
 #include <vector>
 
@@ -20,6 +20,7 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
     delete task;
   }
   else {
+    #error This might not work at the moment
     #pragma omp critical(BackgroundCriticalSection)
     _backgroundTasks.push_back(task);
   }

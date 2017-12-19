@@ -8,7 +8,8 @@ void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(const MaxNumberOfR
 }
 
 
-#if !defined(SharedOMP) && !defined(SharedTBB) && !defined(SharedTBBInvade)
+//#if !defined(SharedOMP) && !defined(SharedTBB) && !defined(SharedTBBInvade)
+#if !defined(SharedTBB) && !defined(SharedTBBInvade)
 
 #include <vector>
 
