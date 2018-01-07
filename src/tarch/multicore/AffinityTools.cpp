@@ -1,4 +1,5 @@
 #include "tarch/multicore/AffinityTools.h"
+#include "tarch/multicore/Core.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/logging/Log.h"
 #include "tarch/Assertions.h"
@@ -61,13 +62,26 @@ void tarch::multicore::logThreadAffinities() {
   std::vector<AffinityMask> coreAffinities = getThreadAffinities();
   std::vector<int>          coreCPUIds     = getCPUIdsThreadsAreRunningOn();
 
+  AffinityMask combinedAffinityMask = 0;
+  bool         overbookedCPU        = false;
+
   assertion1( coreAffinities.size()<128, coreAffinities.size() );
 
   for (int i=0; i<static_cast<int>(coreAffinities.size()); i++) {
     logInfo( "logThreadAffinities()",
       "thread " << i << " is running on cpu " << coreCPUIds[i] << " with core affinity " << tailoredAffinityMask( coreAffinities[i] )
     );
+    overbookedCPU         = (combinedAffinityMask | coreAffinities[i]).any();
+    combinedAffinityMask |= coreAffinities[i];
   }
+
+  if (overbookedCPU) {
+    logInfo( "logThreadAffinities()", "no or weak affinities set, i.e. individual cores might be overbooked with multiple threads" );
+  }
+  if (static_cast<int>(combinedAffinityMask.count())<tarch::multicore::Core::getInstance().getNumberOfThreads()) {
+    logWarning( "logThreadAffinities()", "fewer cores made available to process than process' logical thread count" );
+  }
+  logInfo( "logThreadAffinities()", combinedAffinityMask.count() << " CPUs made available through affinity masks in total" );
 }
 
 
