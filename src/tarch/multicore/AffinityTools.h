@@ -10,8 +10,6 @@
 
 namespace tarch {
   namespace multicore {
-    void logThreadAffinities();
-
     int getNumberOfPhysicalCores();
 
     /**
@@ -26,8 +24,6 @@ namespace tarch {
      * length getNumberOfPhysicalCores() to get a better output.
      */
     AffinityMask getCPUSet();
-
-    std::vector<AffinityMask> getThreadAffinities();
 
     std::vector<int> getCPUIdsThreadsAreRunningOn();
 

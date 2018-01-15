@@ -52,7 +52,7 @@ std::bitset<sizeof(long int)*8> tarch::multicore::getCPUSet() {
   return result;
 }
 
-
+/*
 void tarch::multicore::logThreadAffinities() {
   static tarch::logging::Log _log("tarch::multicore");
 
@@ -82,7 +82,7 @@ void tarch::multicore::logThreadAffinities() {
     logWarning( "logThreadAffinities()", "fewer cores made available to process than process' logical thread count" );
   }
   logInfo( "logThreadAffinities()", combinedAffinityMask.count() << " CPUs made available through affinity masks in total" );
-}
+}*/
 
 
 int tarch::multicore::getCPUId() {
@@ -96,13 +96,6 @@ int tarch::multicore::getCPUId() {
 
 
 #ifndef SharedMemoryParallelisation
-std::vector<tarch::multicore::AffinityMask> tarch::multicore::getThreadAffinities() {
-  std::vector<tarch::multicore::AffinityMask> result;
-  result.push_back( getCPUSet() );
-  return result;
-}
-
-
 std::vector<int> tarch::multicore::getCPUIdsThreadsAreRunningOn() {
   std::vector<int> result;
   result.push_back( getCPUId() );

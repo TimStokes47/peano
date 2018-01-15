@@ -1,6 +1,6 @@
 #if defined(SharedTBB)
 #include "tarch/multicore/tbb/PinningObserver.h"
-
+ #include <sched.h>
 
 tarch::logging::Log tarch::multicore::PinningObserver::_log( "tarch::multicore::PinningObserver" );
 
@@ -69,7 +69,7 @@ void tarch::multicore::PinningObserver::on_scheduler_entry( bool ) {
     exit( EXIT_FAILURE );
   }
   else {
-    logInfo( "PinningObserver()", "Set thread affinity: Thread " << thr_idx << ": CPU " << mapped_idx);
+    logInfo( "PinningObserver()", "Set thread affinity: thread " << thr_idx << " is pinned to CPU " << mapped_idx);
   }
 
   CPU_FREE( target_mask );

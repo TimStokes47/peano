@@ -5,6 +5,11 @@
 #include <sched.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+
+#include "tarch/multicore/AffinityTools.h"
+
+
 #include <tbb/task_arena.h>
 #include <tbb/task_scheduler_observer.h>
 #include <tbb/atomic.h>
@@ -44,7 +49,8 @@ class tarch::multicore::PinningObserver: public tbb::task_scheduler_observer {
      * is a subset of the actual cores available on a node. The fild is
      * initialised in the constructor.
      */
-    cpu_set_t*       _mask;
+    cpu_set_t*    _mask;
+    //AffinityMask*    _mask;
 
     int              _ncpus;
 
@@ -65,65 +71,10 @@ class tarch::multicore::PinningObserver: public tbb::task_scheduler_observer {
     virtual ~PinningObserver();
 
 
-/*
-    : pinning_step(pinning_step), thread_index();
+    void on_scheduler_entry( bool ) override;
+    void on_scheduler_exit( bool ) override;
 
-  {
-*/
-
-
-/*
-  override void on_scheduler_entry( bool ) {
-    if ( !mask ) return;
-
-    const size_t size = CPU_ALLOC_SIZE( ncpus );
-    const int num_cpus = CPU_COUNT_S( size, mask );
-    int thr_idx =  tbb::task_arena::current_thread_index();
-    thr_idx %= num_cpus; // To limit unique number in [0; num_cpus-1] range
-    // Place threads with specified step
-    int cpu_idx = 0;
-    for ( int i = 0, offset = 0; i<thr_idx; ++i ) {
-      cpu_idx += pinning_step;
-      if ( cpu_idx >= num_cpus )
-        cpu_idx = ++offset;
-    }
-
-
-    // Find index of 'cpu_idx'-th bit equal to 1
-    int mapped_idx = -1;
-    while ( cpu_idx >= 0 ) {
-      if ( CPU_ISSET_S( ++mapped_idx, size, mask ) )
-        --cpu_idx;
-    }
-
-    cpu_set_t *target_mask = CPU_ALLOC( ncpus );
-    CPU_ZERO_S( size, target_mask );
-    CPU_SET_S( mapped_idx, size, target_mask );
-    const int err = sched_setaffinity( 0, size, target_mask );
-
-if ( err ) {
-  logInfo( "PinningObserver()","Failed to set thread affinity!\n");
-  exit( EXIT_FAILURE );
- }
- else {
-  logInfo( "PinningObserver()", "Set thread affinity: Thread " << thr_idx << ": CPU " << mapped_idx);
- }
-
- CPU_FREE( target_mask );
-}
-
-~pinning_observer() {
-  if ( mask )
-    CPU_FREE( mask );
-}
-*/
-
-  void on_scheduler_entry( bool ) override;
-  void on_scheduler_exit( bool ) override;
-
-
-  int getNumberOfRegisteredThreads();
-
+    int getNumberOfRegisteredThreads();
 };
 
 #endif
