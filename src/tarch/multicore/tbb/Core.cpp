@@ -9,11 +9,17 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 tarch::multicore::Core::Core():
   _numberOfThreads(::tbb::task_scheduler_init::default_num_threads()),
-  _task_scheduler_init(_numberOfThreads) {
+  _task_scheduler_init(_numberOfThreads),
+  _pinningObserver(1) {
 }
 
 
 tarch::multicore::Core::~Core() {
+}
+
+
+void tarch::multicore::Core::pinThreads(bool value) {
+  _pinningObserver.observe(value);
 }
 
 

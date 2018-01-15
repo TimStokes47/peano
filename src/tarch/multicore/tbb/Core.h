@@ -10,6 +10,9 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
+#include "tarch/multicore/tbb/PinningObserver.h"
+
+
 
 namespace tarch {
   namespace multicore {
@@ -33,6 +36,8 @@ class tarch::multicore::Core {
 
     int                         _numberOfThreads;
     ::tbb::task_scheduler_init  _task_scheduler_init;
+
+    PinningObserver             _pinningObserver;
   public:
     static constexpr int UseDefaultNumberOfThreads = 0;
 
@@ -77,6 +82,8 @@ class tarch::multicore::Core {
      * @return Number of threads available.
      */
     int getNumberOfThreads() const;
+
+    void pinThreads(bool value);
 };
 
 
