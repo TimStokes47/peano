@@ -11,7 +11,7 @@ def getNodeColor(c,nodes):
   "#ff0000", "#00ff00", "#0000ff", 
   "#ffff00", "#ff00ff", "#00ffff", 
   "#ff6767", "#67ff67", "#6767ff", 
-  "#ffff67", "#ff67ff", "#67ffff" 
+  "#ffff67", "#ff67ff", "#67ffff", 
   "#ababab", 
   "#ab55ab", "#abab55", 
   "#5555ab", "#55ab55", "#ab5555",
