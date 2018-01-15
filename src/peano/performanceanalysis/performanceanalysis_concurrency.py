@@ -6,7 +6,7 @@ def plotConcurrency(threads, file,
   maxPotentialConcurrencyLevels,numberOfBackgroundTasks,timeAveragedConcurrencyLevels,
   timeAveragedPotentialConcurrencyLevels,beginIterations):
   pylab.clf()
-  #pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
+  pylab.gcf().set_size_inches( 1*40, 10 )
   pylab.title( "Concurrency levels" )
 
   ax = pylab.gca()
