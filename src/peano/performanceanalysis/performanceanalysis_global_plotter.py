@@ -202,16 +202,28 @@ def plotMemoryUsagePerRank(outputFileName,memoryUsages):
 
 def plotWalltimeOverview(outputFileName,beginIterations): 
   pylab.clf()
+  DefaultSize = pylab.gcf().get_size_inches()
   #pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
   pylab.title( "Walltime" )
   pylab.ylabel( "time per grid sweep [t]=s" )
   pylab.xlabel( "grid sweep" )
   xData = range(0,len(beginIterations))
   yData = [0.0]
+
   for i in range(1,len(beginIterations)):
     yData.append(beginIterations[i]-beginIterations[i-1])
   pylab.plot(xData, yData, '-',  markersize=10, color='#000066', label='time per traversal on global master' )
+
   pylab.savefig( outputFileName + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
   pylab.savefig( outputFileName + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
+
+  ax = pylab.gca()
+  ax.autoscale_view()
+  ax.set_yscale('symlog', basey=10)
+
+  pylab.savefig( outputFileName + ".symlog.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( outputFileName + ".symlog.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   
+  pylab.gcf().set_size_inches( DefaultSize[0], DefaultSize[1] )
+    
   

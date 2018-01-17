@@ -46,6 +46,22 @@ def getNumberOfThreads(filename):
   return 0
 
 
+def getDimensions(filename):
+  print "parse input file header ",
+  try:
+    inputFile = open( filename,  "r" )
+    for line in inputFile:
+      print ".",
+      if "peano::utils::UserInterface::writeHeader" in line and "dim=" in line:
+        dim = int(line.split( "dim=" )[1].split( " " )[0])
+        print str(dim) + " dimensions"
+        return dim
+  except Exception as inst:
+    print "failed to read " + filename
+    print inst
+  return 0
+  
+
 def getBoundingBox(line):
   line    = line.replace( "]x[", "," )
   results = line.split( "node for subdomain [")[1].split( "] on level" )[0].split( "," )

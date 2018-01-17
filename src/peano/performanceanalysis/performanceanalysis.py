@@ -9,6 +9,7 @@ import performanceanalysis_analysis
 import performanceanalysis_concurrency
 import performanceanalysis_dd
 import performanceanalysis_griddata
+import performanceanalysis_mpicommunication
 
 
 import gc
@@ -30,12 +31,9 @@ python domain-decomposition-analysis.py -file 112x16-0.results -dimension 2 -dom
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 parser.add_argument('-file',required=True,help="Input file")
-parser.add_argument('-dimension',required=True,help="Dimension of problem. Either 2 or 3.")
 parser.add_argument('-domainoffset',nargs="+",required=True,help="Offset of bounding box.")
 parser.add_argument('-domainsize',nargs="+",required=True,help="Size of domain's bounding box.")
 args   = parser.parse_args();
-
-dim = int(args.dimension)
 
 scriptLocation = os.path.realpath(__file__)[:os.path.realpath(__file__).rfind("/")]
 
@@ -45,6 +43,7 @@ outFile         = performanceanalysis_output.getOutputFile(args.file)
 
 numberOfRanks   = performanceanalysis_parser.getNumberOfRanks(args.file)
 numberOfThreads = performanceanalysis_parser.getNumberOfThreads(args.file)
+dim             = performanceanalysis_parser.getDimensions(args.file)
 
 performanceanalysis_output.writeHeader(outFile,args.file,numberOfRanks,numberOfThreads);
 
@@ -116,6 +115,8 @@ performanceanalysis_griddata.plotGridEntities(
   numberOfRanks,
   numberOfLocalCells,
   tTotal)
+
+performanceanalysis_mpicommunication.plotMPIPhases(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/mpi-trace")
 
 performanceanalysis_output.processTemplateFile(
  scriptLocation + "/performanceanalysis.template",outFile,

@@ -43,6 +43,10 @@ def computeVolumesOverlapsWork(numberOfRanks,parents,offset,volume,dim,domainoff
   for i in range(0,numberOfRanks):
     if work[i] <0:
       work[i]=0
+
+  if len(volumes)>1:
+    volumes[0]=0
+    volumes[1]=0
       
   print " done "
   return (volumes,overlaps,work)

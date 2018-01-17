@@ -78,15 +78,16 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   NumberOfDifferentPlots    = int(round(numberOfRanks/NumberOfPartitionsPerPlot+0.5))
   numberOfPartitionsPlottedInThisSubfigure = 0
   currentSubPlot                           = 0
-  
+
+  DefaultSize = pylab.gcf().get_size_inches()
   pylab.figure(figsize=(float(domainsize[0]),float(domainsize[1])*NumberOfDifferentPlots))
+  # The first entry is [1] on purpose!
+  print "there will be up to " + str(NumberOfDifferentPlots) + " plots"
+  pylab.gcf().set_size_inches( DefaultSize[1], DefaultSize[1]*(NumberOfDifferentPlots+1) )
   
+  numberOfPartitionsPlottedInThisSubfigure = NumberOfPartitionsPerPlot+1
   ax = pylab.subplot2grid((NumberOfDifferentPlots,1), (0,0), projection='3d')
   try:
-   ax.set_xlim3d( float(domainoffset[0]), float(domainoffset[0])+float(domainsize[0]) )
-   ax.set_ylim3d( float(domainoffset[1]), float(domainoffset[1])+float(domainsize[1]) )
-   ax.set_zlim3d( float(domainoffset[2]), float(domainoffset[2])+float(domainsize[2]) )
-
    ax.set_xticks([])
    ax.set_yticks([])
    ax.set_zticks([])
@@ -137,6 +138,8 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   pylab.savefig( outputFileName + ".level" + str(l) + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
   pylab.savefig( outputFileName + ".level" + str(l) + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   print "done"
+    
+  pylab.gcf().set_size_inches( DefaultSize[0], DefaultSize[1] )
     
         
 

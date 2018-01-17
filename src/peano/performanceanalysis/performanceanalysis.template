@@ -4,6 +4,7 @@
 
 <h2>Walltimes</h2>
 <a href="_IMAGE_DIRECTORY_/walltime.pdf"><img src="_IMAGE_DIRECTORY_/walltime.png" /></a>
+<a href="_IMAGE_DIRECTORY_/walltime.symlog.pdf"><img src="_IMAGE_DIRECTORY_/walltime.symlog.png" /></a>
 
 <p>
  We plot the time per grid sweeps. Please note that the first time per grid sweep
@@ -17,12 +18,29 @@
 <a href="_IMAGE_DIRECTORY_/inner-leaf-cells.pdf"><img src="_IMAGE_DIRECTORY_/inner-leaf-cells.png" /></a>
 <a href="_IMAGE_DIRECTORY_/inner-cells.pdf"><img src="_IMAGE_DIRECTORY_/inner-cells.png" /></a>
 
+<p>
+ If the values here all are -1, you have compiled Peano without -DTrackGridStatistics. 
+</p>
+
 <h3>Outer leaf cells and total outer cells</h3>
 <a href="_IMAGE_DIRECTORY_/outer-leaf-cells.pdf"><img src="_IMAGE_DIRECTORY_/outer-leaf-cells.png" /></a>
 <a href="_IMAGE_DIRECTORY_/outer-cells.pdf"><img src="_IMAGE_DIRECTORY_/outer-cells.png" /></a>
 
+<p>
+ If the values here all are -1, you have compiled Peano without -DTrackGridStatistics. 
+</p>
+
 <h3>Local cells</h3>
 <a href="_IMAGE_DIRECTORY_/local-cells.pdf"><img src="_IMAGE_DIRECTORY_/local-cells.png" /></a>
+
+<p>
+ These statistics are determined by the max. dynamic memory required. Peano relies on standard C++ vectors
+ which may grow but hardly ever shrink. If you see a massive imbalance here, it may not neccessarily mean
+ that you are ill-balanced. It might be that only temporarily some ranks have a very high cell count and thus
+ require data structures that are reasonably big. If some ranks see dramatically high cell counts, you have 
+ to build up your grid more carefully and re-balance more often.
+</p> 
+
 
 <h2>Workload</h2>
 
@@ -79,6 +97,15 @@
 <p>
   The gallery above illustrates the domain decomposition for up to the first six levels of the grid 
   resolution. If finer levels are split up, too, you find further plots in the output directory.
+</p>
+
+
+
+<h3>MPI communication trace</h3>
+<a href="_IMAGE_DIRECTORY_/mpi-trace.pdf"><img src="_IMAGE_DIRECTORY_/mpi-trace.png" /></a>
+
+<p>
+  A legend is missing!
 </p>
 
 <h2>Rank-specific analyses</h2>

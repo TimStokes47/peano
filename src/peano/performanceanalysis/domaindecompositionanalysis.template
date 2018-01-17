@@ -37,7 +37,8 @@
 <a href="_IMAGE_DIRECTORY_/memory-per-rank.pdf"><img src="_IMAGE_DIRECTORY_/memory-per-rank.png" /></a>
 
 <p>
- The plot illustrates the memory usage per rank.
+ The plot illustrates the memory usage per rank. If the plot is empty, please ensure that you do not filter 
+ out information from runners::Runner::runAsWorker.
 </p>
 
 <h2>Domain decomposition</h2>
