@@ -55,6 +55,10 @@ performanceanalysis_global_plotter.plotLogicalTopology(numberOfRanks,performance
 performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistributionPerRank(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/workload-per-rank",volumes,overlaps,work);
 performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistributionPerNode(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/workload-per-node",work,nodes);
 
+performanceanalysis_mpicommunication.plotLateWorkers(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/late-workers") 
+performanceanalysis_mpicommunication.plotLateMasters(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/late-masters") 
+performanceanalysis_mpicommunication.plotLateBoundaries(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/late-boundaries") 
+
 for l in range(1,max(levels)+1):
  if dim==2:
   performanceanalysis_dd.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")

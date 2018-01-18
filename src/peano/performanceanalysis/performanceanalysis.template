@@ -30,7 +30,7 @@
  If the values here all are -1, you have compiled Peano without -DTrackGridStatistics. 
 </p>
 
-<h3>Local cells</h3>
+<h3>Max. memory demands for local cells</h3>
 <a href="_IMAGE_DIRECTORY_/local-cells.pdf"><img src="_IMAGE_DIRECTORY_/local-cells.png" /></a>
 
 <p>
@@ -63,7 +63,6 @@
 <h3>Workload per node</h3>
 
 <a href="_IMAGE_DIRECTORY_/workload-per-node.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-node.png" /></a>
-<a href="_IMAGE_DIRECTORY_/workload-per-node.symlog.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-node.symlog.png" /></a>
 
 <p>
  The plots illustrate the aggregated work per compute node. A strong imbalance 
@@ -108,7 +107,6 @@ Two two plots have different zoom factors. The more detailed plot might not be a
 </p>
 
 <a href="_IMAGE_DIRECTORY_/mpi-trace.pdf"><img src="_IMAGE_DIRECTORY_/mpi-trace.png" /></a>
-<a href="_IMAGE_DIRECTORY_/mpi-trace-detailed.pdf"><img src="_IMAGE_DIRECTORY_/mpi-trace-detailed.png" /></a>
 
 <table border="1">
  <tr>
@@ -121,18 +119,19 @@ Two two plots have different zoom factors. The more detailed plot might not be a
  </tr>
  <tr>
   <td bgcolor="#00ff00"> </td>
-  <td> Time spent within the local compute tree. Can coincide with time waiting for workers. </td>
+  <td> Time spent within the local compute tree. Can coincide with time waiting for workers (see below). </td>
  </tr>
  <tr>
   <td bgcolor="#ff0000"> </td>
-  <td> Time local iteration waits for one of its worker to deliver worker-finished message (vertical communication). </td>
+  <td> Time local iteration waits for one of its worker to deliver worker-finished message (vertical communication). 
+       This is often part of the local tree traversal, i.e. the two activities overlap and then yield a very dark red phase. </td>
  </tr>
  <tr>
   <td bgcolor="#660000"> </td>
   <td> Time local iteration waits for its master to deliver kick-off messages (vertical communication). </td>
  </tr>
  <tr>
-  <td bgcolor="#0000ff"> </td>
+  <td bgcolor="#0066ff"> </td>
   <td> Time required to release synchronous heap data (typically vertical master-worker communication). </td>
  </tr>
  <tr>
@@ -147,6 +146,10 @@ Two two plots have different zoom factors. The more detailed plot might not be a
   <td bgcolor="#666600"> </td>
   <td> Time required to release boundary data (horizontal data). </td>
  </tr>
+ <tr>
+  <td bgcolor="#ffffff"> </td>
+  <td> White areas typically depict time each rank traverses outer or remove cells neighbouring its own partition. </td>
+ </tr>
 </table>
 
 
@@ -157,6 +160,28 @@ Two two plots have different zoom factors. The more detailed plot might not be a
   <a href="_IMAGE_DIRECTORY_/mpi-trace-detailed.pdf">pdf</a>
   if the local matplotlib plotter supports reasonably big images.
 </p>
+
+
+<h3>Late workers</h3>
+
+<a href="_IMAGE_DIRECTORY_/late-workers.plain.pdf"><img src="_IMAGE_DIRECTORY_/late-workers.plain.png" /></a>
+<a href="_IMAGE_DIRECTORY_/late-workers.plain.pdf"><img src="_IMAGE_DIRECTORY_/late-workers.average.png" /></a>
+<a href="_IMAGE_DIRECTORY_/late-workers.plain.pdf"><img src="_IMAGE_DIRECTORY_/late-workers.max.png" /></a>
+
+
+
+<h3>Late masters</h3>
+
+<a href="_IMAGE_DIRECTORY_/late-masters.plain.pdf"><img src="_IMAGE_DIRECTORY_/late-masters.plain.png" /></a>
+<a href="_IMAGE_DIRECTORY_/late-masters.plain.pdf"><img src="_IMAGE_DIRECTORY_/late-masters.average.png" /></a>
+<a href="_IMAGE_DIRECTORY_/late-masters.plain.pdf"><img src="_IMAGE_DIRECTORY_/late-masters.max.png" /></a>
+
+
+
+<h3>Late boundary exchanges</h3>
+
+<a href="_IMAGE_DIRECTORY_/late-boundaries.pdf"><img src="_IMAGE_DIRECTORY_/late-boundaries.png" /></a>
+
 
 
 <h2>Rank-specific analyses</h2>
