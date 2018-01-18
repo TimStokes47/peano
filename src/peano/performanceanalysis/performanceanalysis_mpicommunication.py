@@ -279,7 +279,7 @@ def plotLateMasters(numberOfRanks,inputFileName,outputFileName):
   pylab.gcf().set_size_inches( DefaultSize[0], DefaultSize[1] )
   
   pylab.clf()
-  pylab.title( "Late masters (only more than average wegith)" )
+  pylab.title( "Late masters (only more than average weight)" )
   performanceanalysis_global_plotter.drawTreeGraph(sparseAverageGraph)
   pylab.savefig( outputFileName + ".average.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
   pylab.savefig( outputFileName + ".average.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
@@ -292,7 +292,7 @@ def plotLateMasters(numberOfRanks,inputFileName,outputFileName):
   pylab.gcf().set_size_inches( DefaultSize[0], DefaultSize[1] )
   
   pylab.clf()
-  pylab.title( "Late masters (max 10\%)" )
+  pylab.title( "Late masters (max 10%)" )
   performanceanalysis_global_plotter.drawTreeGraph(sparseMaxGraph)
   pylab.savefig( outputFileName + ".max.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
   pylab.savefig( outputFileName + ".max.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
@@ -387,7 +387,7 @@ def plotLateWorkers(numberOfRanks,inputFileName,outputFileName):
   pylab.gcf().set_size_inches( DefaultSize[0], DefaultSize[1] )
   
   pylab.clf()
-  pylab.title( "Late workers (only more than average wegith)" )
+  pylab.title( "Late workers (only more than average weight)" )
   performanceanalysis_global_plotter.drawTreeGraph(sparseAverageGraph)
   pylab.savefig( outputFileName + ".average.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
   pylab.savefig( outputFileName + ".average.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
@@ -400,7 +400,7 @@ def plotLateWorkers(numberOfRanks,inputFileName,outputFileName):
   pylab.gcf().set_size_inches( DefaultSize[0], DefaultSize[1] )
   
   pylab.clf()
-  pylab.title( "Late workers (max 10\%)" )
+  pylab.title( "Late workers (max 10%)" )
   performanceanalysis_global_plotter.drawTreeGraph(sparseMaxGraph)
   pylab.savefig( outputFileName + ".max.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
   pylab.savefig( outputFileName + ".max.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
