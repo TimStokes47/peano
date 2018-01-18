@@ -99,7 +99,6 @@ void peano::performanceanalysis::DefaultAnalyser::endIteration(double numberOfIn
 
 void peano::performanceanalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree() {
   if (_isSwitchedOn) {
-    logInfo( "enterCentralElementOfEnclosingSpacetree()", "enter central element" );
     _actualDomainTraversalWatch.startTimer();
   }
 }

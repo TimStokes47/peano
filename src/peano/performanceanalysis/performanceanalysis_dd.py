@@ -82,7 +82,6 @@ def plot3dDomainDecompositionOnLevel(l,numberOfRanks,domainoffset,domainsize,off
   DefaultSize = pylab.gcf().get_size_inches()
   pylab.figure(figsize=(float(domainsize[0]),float(domainsize[1])*NumberOfDifferentPlots))
   # The first entry is [1] on purpose!
-  print "there will be up to " + str(NumberOfDifferentPlots) + " plots"
   pylab.gcf().set_size_inches( DefaultSize[1], DefaultSize[1]*(NumberOfDifferentPlots+1) )
   
   numberOfPartitionsPlottedInThisSubfigure = NumberOfPartitionsPerPlot+1

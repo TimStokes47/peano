@@ -104,8 +104,9 @@
 <h3>MPI communication trace</h3>
 <a href="_IMAGE_DIRECTORY_/mpi-trace.pdf"><img src="_IMAGE_DIRECTORY_/mpi-trace.png" /></a>
 
-<p>
-  A legend is missing!
-</p>
+<ul>
+ <li>Vertical lines identify grid sweep starts.</li>
+</ul>
+
 
 <h2>Rank-specific analyses</h2>

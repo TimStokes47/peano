@@ -73,7 +73,7 @@ outFile.write( "<h2>Fork history</h2>" )
 performanceanalysis_dd.extractForkHistory(outFile,args.file,numberOfRanks)
 
 
-beginIterations = performanceanalysis_parser.getBeginIterations(args.file,numberOfThreads>1)
+beginIterations = performanceanalysis_parser.getBeginIterations(args.file,numberOfRanks>1)
 performanceanalysis_global_plotter.plotWalltimeOverview(performanceanalysis_output.getOutputDirectory(args.file)+"/walltime",beginIterations)
 
 
@@ -116,7 +116,7 @@ performanceanalysis_griddata.plotGridEntities(
   numberOfLocalCells,
   tTotal)
 
-performanceanalysis_mpicommunication.plotMPIPhases(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/mpi-trace")
+performanceanalysis_mpicommunication.plotMPIPhases(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/mpi-trace") 
 
 performanceanalysis_output.processTemplateFile(
  scriptLocation + "/performanceanalysis.template",outFile,

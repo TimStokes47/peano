@@ -13,14 +13,15 @@ import re
 # @writes A file inputFileName.mpi-phases.pdf
 #
 #
-def plotMPIPhases(numberOfRanks,inputFileName,plotDirectoryName):
-  beforeInTraversalColor  = "#ff3434"
-  inTraversalColor        = "#00ab00"
-  afterInTraversalColor   = "#560000"
-  afterBoundaryExchange   = "#0000ab"
-  prepareAsynchronousBoundaryExchangeColor = "#ffff00"
-  releaseAsynchronousBoundaryExchangeColor = "#abab00"
-
+def plotMPIPhases(numberOfRanks,inputFileName,fileName):
+  ColorInsideTree                  = "#00ff00"
+  ColorReceiveDataFromWorker       = "#ff0000"
+  ColorReceiveDataFromMaster       = "#660000"
+  ColorReleaseSynchronousHeapData  = "#0000ff"
+  ColorReleaseAsynchronousHeapData = "#000066"
+  ColorReleaseJoinData             = "#ffff00"
+  ColorReleaseBoundaryData         = "#666600"
+  
   pylab.clf()
   DefaultSize = pylab.gcf().get_size_inches()
   pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
@@ -30,23 +31,19 @@ def plotMPIPhases(numberOfRanks,inputFileName,plotDirectoryName):
   timeStampPattern = "([0-9]+\.?[0-9]*)"
   floatPattern = "([0-9]\.?[0-9]*)"
   
-  beginIterationPattern      = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::beginIteration"
-  enterCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::enterCentralElementOfEnclosingSpacetree"
-  leaveCentralElementPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree.*t_central-tree-traversal=\(" + floatPattern
-  endIterationPattern        = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endIteration.*t_traversal=\(" + floatPattern
-  endDataExchange            = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData"
-  prepareAsynchronousHeap    = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange"
-  releaseAsynchronousHeap    = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endToReleaseSynchronousHeapData"
+  beginIterationPattern              = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::beginIteration"
+  leaveCentralElementPattern         = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::leaveCentralElementOfEnclosingSpacetree.*t_central-tree-traversal=\(" + floatPattern
+  receiveDataFromWorkerPattern       = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromWorker.* for " + floatPattern
+  receiveDataFromMasterPattern       = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromMaster.* for " + floatPattern
+  releaseSynchronousHeapDataPattern  = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endToReleaseSynchronousHeapData.*time=" + floatPattern
+  releaseAsynchronousHeapDataPattern = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endToPrepareAsynchronousHeapDataExchange.*time=" + floatPattern
+  releaseJoinDataPattern             = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endReleaseOfJoinData.*time=" + floatPattern
+  releaseBoundaryDataPattern         = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData.*time=" + floatPattern
 
-  lastTimeStamp  = [0] * numberOfRanks
-
-  def plotMPIPhasesBar(rank,timeStamp,color):
-    if (lastTimeStamp[rank]==0):
-      lastTimeStamp[rank] = timeStamp
-    rectLength = timeStamp-lastTimeStamp[rank]
-    rect = pylab.Rectangle([lastTimeStamp[rank],rank-0.5],rectLength,1,facecolor=color,edgecolor=color,alpha=Alpha)
-    ax.add_patch(rect)
-    lastTimeStamp[rank] = lastTimeStamp[rank] + rectLength
+  def plotMPIPhasesBar( rank, start, end, color):
+    if end>start:
+      rect = pylab.Rectangle([start,rank-0.5],end-start,1,facecolor=color,edgecolor=color,alpha=Alpha)
+      ax.add_patch(rect)
   
   Alpha = 0.5
   
@@ -58,41 +55,54 @@ def plotMPIPhases(numberOfRanks,inputFileName,plotDirectoryName):
       if (m):
         rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        lastTimeStamp[rank] = timeStamp
         print ".",
         if (rank==0):
-          pylab.plot((timeStamp, timeStamp), (-0.5, numberOfRanks+1), '--', color="#445544", alpha=Alpha)
-        pylab.plot((timeStamp, timeStamp), (rank-0.5, rank+0.5), '-', color="#000000" )
-      m = re.search( prepareAsynchronousHeap, line )
-      if (m):
-        rank = int( m.group(2) )
-        timeStamp = float( m.group(1) )
-        plotMPIPhasesBar(rank,timeStamp,prepareAsynchronousBoundaryExchangeColor)
-      m = re.search( releaseAsynchronousHeap, line )
-      if (m):
-        rank = int( m.group(2) )
-        timeStamp = float( m.group(1) )
-        plotMPIPhasesBar(rank,timeStamp,releaseAsynchronousBoundaryExchangeColor)
-      m = re.search( enterCentralElementPattern, line )
-      if (m):
-        rank = int( m.group(2) )
-        timeStamp = float( m.group(1) )
-        plotMPIPhasesBar(rank,timeStamp,beforeInTraversalColor)
+          pylab.plot((timeStamp, timeStamp), (-0.5, numberOfRanks+1), ':', color="#445544", alpha=Alpha)
+        pylab.plot((timeStamp, timeStamp), (rank-0.5, rank+0.5), '-', color="#ababab" )
       m = re.search( leaveCentralElementPattern, line )
       if (m):
-        rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        plotMPIPhasesBar(rank,timeStamp,inTraversalColor)
-      m = re.search( endIterationPattern, line )
+        rank      = int( m.group(2) )
+        duration  = float( m.group(3) )
+        plotMPIPhasesBar(rank,timeStamp-duration,timeStamp,ColorInsideTree)
+      m = re.search( receiveDataFromWorkerPattern, line )
       if (m):
-        rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        plotMPIPhasesBar(rank,timeStamp,afterInTraversalColor)
-      m = re.search( endDataExchange, line )
+        rank      = int( m.group(2) )
+        duration  = float( m.group(3) )
+        plotMPIPhasesBar(rank,timeStamp-duration,timeStamp,ColorReceiveDataFromWorker)
+      m = re.search( receiveDataFromMasterPattern, line )
       if (m):
-        rank = int( m.group(2) )
         timeStamp = float( m.group(1) )
-        plotMPIPhasesBar(rank,timeStamp,afterBoundaryExchange)
+        rank      = int( m.group(2) )
+        duration  = float( m.group(3) )
+        plotMPIPhasesBar(rank,timeStamp-duration,timeStamp,ColorReceiveDataFromMaster)
+      m = re.search( releaseSynchronousHeapDataPattern, line )
+      if (m):
+        timeStamp = float( m.group(1) )
+        rank      = int( m.group(2) )
+        duration  = float( m.group(3) )
+        plotMPIPhasesBar(rank,timeStamp-duration,timeStamp,ColorReleaseSynchronousHeapData)
+      m = re.search( releaseAsynchronousHeapDataPattern, line )
+      if (m):
+        timeStamp = float( m.group(1) )
+        rank      = int( m.group(2) )
+        duration  = float( m.group(3) )
+        plotMPIPhasesBar(rank,timeStamp-duration,timeStamp,ColorReleaseAsynchronousHeapData)
+      m = re.search( releaseJoinDataPattern, line )
+      if (m):
+        timeStamp = float( m.group(1) )
+        rank      = int( m.group(2) )
+        duration  = float( m.group(3) )
+        plotMPIPhasesBar(rank,timeStamp-duration,timeStamp,ColorReleaseJoinData)
+      m = re.search( releaseBoundaryDataPattern, line )
+      if (m):
+        timeStamp = float( m.group(1) )
+        rank      = int( m.group(2) )
+        duration  = float( m.group(3) )
+        plotMPIPhasesBar(rank,timeStamp-duration,timeStamp,ColorReleaseBoundaryData)
+        
+        
 
     print " done"
   except Exception as inst:
@@ -103,23 +113,20 @@ def plotMPIPhases(numberOfRanks,inputFileName,plotDirectoryName):
   ax.autoscale_view()
   pylab.xlabel('t')
   pylab.grid(False)
-  plotPrefix = plotDirectoryName + "/" + inputFileName
-  pylab.savefig( plotPrefix + ".mpi-phases.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
-  pylab.savefig( plotPrefix + ".mpi-phases.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
+  pylab.savefig( fileName + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+  pylab.savefig( fileName + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
-    switchToLargePlot()
+    pylab.gcf().set_size_inches( DefaultSize[0]*4*10, DefaultSize[1]*10 )
     if numberOfRanks<=16:
       pylab.yticks([i for i in range(0,numberOfRanks)]) 
     else:
       pylab.yticks([i*16 for i in range(0,numberOfRanks/16)]) 
-    pylab.savefig( plotPrefix + ".mpi-phases.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
-    pylab.savefig( plotPrefix + ".mpi-phases.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
-    switchBackToStandardPlot()  
+    pylab.savefig( fileName + ".large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( fileName + ".large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   except:
     print "ERROR: failed to generated large-scale plot"
-    switchBackToStandardPlot()  
-    pylab.savefig( plotPrefix + ".mpi-phases.large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
-    pylab.savefig( plotPrefix + ".mpi-phases.large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
+    pylab.savefig( fileName + ".large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( fileName + ".large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   pylab.gcf().set_size_inches( DefaultSize[0], DefaultSize[1] )
 
