@@ -102,11 +102,61 @@
 
 
 <h3>MPI communication trace</h3>
-<a href="_IMAGE_DIRECTORY_/mpi-trace.pdf"><img src="_IMAGE_DIRECTORY_/mpi-trace.png" /></a>
 
-<ul>
- <li>Vertical lines identify grid sweep starts.</li>
-</ul>
+<p>
+Two two plots have different zoom factors. The more detailed plot might not be available if trace is too detailed due to plot restrictions.
+</p>
+
+<a href="_IMAGE_DIRECTORY_/mpi-trace.pdf"><img src="_IMAGE_DIRECTORY_/mpi-trace.png" /></a>
+<a href="_IMAGE_DIRECTORY_/mpi-trace-detailed.pdf"><img src="_IMAGE_DIRECTORY_/mpi-trace-detailed.png" /></a>
+
+<table border="1">
+ <tr>
+  <td> Dotted vertical line  </td>
+  <td> Identifies global grid sweep starts. </td>
+ </tr>
+ <tr>
+  <td> Solid (small) vertical line</td>
+  <td> Identifies local (per rank) grid sweep start. </td>
+ </tr>
+ <tr>
+  <td bgcolor="#00ff00"> </td>
+  <td> Time spent within the local compute tree. Can coincide with time waiting for workers. </td>
+ </tr>
+ <tr>
+  <td bgcolor="#ff0000"> </td>
+  <td> Time local iteration waits for one of its worker to deliver worker-finished message (vertical communication). </td>
+ </tr>
+ <tr>
+  <td bgcolor="#660000"> </td>
+  <td> Time local iteration waits for its master to deliver kick-off messages (vertical communication). </td>
+ </tr>
+ <tr>
+  <td bgcolor="#0000ff"> </td>
+  <td> Time required to release synchronous heap data (typically vertical master-worker communication). </td>
+ </tr>
+ <tr>
+  <td bgcolor="#000066"> </td>
+  <td> Time required to release asynchronous heap data (horizontal communication). </td>
+ </tr>
+ <tr>
+  <td bgcolor="#ffff00"> </td>
+  <td> Time required to release join data (dynamic load balancing). </td>
+ </tr>
+ <tr>
+  <td bgcolor="#666600"> </td>
+  <td> Time required to release boundary data (horizontal data). </td>
+ </tr>
+</table>
+
+
+<p>
+  A very detailed plot might be available as 
+  <a href="_IMAGE_DIRECTORY_/mpi-trace-detailed.png">png</a>
+  or 
+  <a href="_IMAGE_DIRECTORY_/mpi-trace-detailed.pdf">pdf</a>
+  if the local matplotlib plotter supports reasonably big images.
+</p>
 
 
 <h2>Rank-specific analyses</h2>

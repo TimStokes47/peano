@@ -116,7 +116,8 @@ performanceanalysis_griddata.plotGridEntities(
   numberOfLocalCells,
   tTotal)
 
-performanceanalysis_mpicommunication.plotMPIPhases(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/mpi-trace") 
+performanceanalysis_mpicommunication.plotMPIPhases(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/mpi-trace",1) 
+performanceanalysis_mpicommunication.plotMPIPhases(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/mpi-trace-detailed",16) 
 
 performanceanalysis_output.processTemplateFile(
  scriptLocation + "/performanceanalysis.template",outFile,

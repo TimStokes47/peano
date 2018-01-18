@@ -7,13 +7,7 @@ import re
 # Creates the one big trace picture where we see what different ranks do at 
 # different times
 #
-# @writes A file inputFileName.mpi-phases.large.png
-# @writes A file inputFileName.mpi-phases.large.pdf
-# @writes A file inputFileName.mpi-phases.png
-# @writes A file inputFileName.mpi-phases.pdf
-#
-#
-def plotMPIPhases(numberOfRanks,inputFileName,fileName):
+def plotMPIPhases(numberOfRanks,inputFileName,fileName,upscaling):
   ColorInsideTree                  = "#00ff00"
   ColorReceiveDataFromWorker       = "#ff0000"
   ColorReceiveDataFromMaster       = "#660000"
@@ -24,7 +18,7 @@ def plotMPIPhases(numberOfRanks,inputFileName,fileName):
   
   pylab.clf()
   DefaultSize = pylab.gcf().get_size_inches()
-  pylab.gcf().set_size_inches( DefaultSize[0]*4, DefaultSize[1] )
+  pylab.gcf().set_size_inches( DefaultSize[0]*4*upscaling, DefaultSize[1]*upscaling )
   pylab.title( "MPI trace of activities" )
   ax = pylab.gca()
   
@@ -41,8 +35,8 @@ def plotMPIPhases(numberOfRanks,inputFileName,fileName):
   releaseBoundaryDataPattern         = timeStampPattern + ".*rank:(\d+)*.*peano::performanceanalysis::DefaultAnalyser::endReleaseOfBoundaryData.*time=" + floatPattern
 
   def plotMPIPhasesBar( rank, start, end, color):
-    if end>start:
-      rect = pylab.Rectangle([start,rank-0.5],end-start,1,facecolor=color,edgecolor=color,alpha=Alpha)
+    if end>start and (end-start)*upscaling>=1:
+      rect = pylab.Rectangle([start*upscaling,(rank-0.5)*upscaling],(end-start)*upscaling,upscaling,facecolor=color,edgecolor=color,alpha=Alpha)
       ax.add_patch(rect)
   
   Alpha = 0.5
@@ -57,8 +51,8 @@ def plotMPIPhases(numberOfRanks,inputFileName,fileName):
         timeStamp = float( m.group(1) )
         print ".",
         if (rank==0):
-          pylab.plot((timeStamp, timeStamp), (-0.5, numberOfRanks+1), ':', color="#445544", alpha=Alpha)
-        pylab.plot((timeStamp, timeStamp), (rank-0.5, rank+0.5), '-', color="#ababab" )
+          pylab.plot((timeStamp*upscaling, timeStamp*upscaling), (-0.5, (numberOfRanks+1)*upscaling), '--', color="#445544", alpha=Alpha)
+        pylab.plot((timeStamp*upscaling, timeStamp*upscaling), ( (rank-0.5)*upscaling, (rank+0.5)*upscaling), '-', color="#ababab" )
       m = re.search( leaveCentralElementPattern, line )
       if (m):
         timeStamp = float( m.group(1) )
@@ -113,9 +107,9 @@ def plotMPIPhases(numberOfRanks,inputFileName,fileName):
   ax.autoscale_view()
   pylab.xlabel('t')
   pylab.grid(False)
-  pylab.savefig( fileName + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
-  pylab.savefig( fileName + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   try:
+    pylab.savefig( fileName + ".png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
+    pylab.savefig( fileName + ".pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
     pylab.gcf().set_size_inches( DefaultSize[0]*4*10, DefaultSize[1]*10 )
     if numberOfRanks<=16:
       pylab.yticks([i for i in range(0,numberOfRanks)]) 
@@ -125,8 +119,6 @@ def plotMPIPhases(numberOfRanks,inputFileName,fileName):
     pylab.savefig( fileName + ".large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
   except:
     print "ERROR: failed to generated large-scale plot"
-    pylab.savefig( fileName + ".large.png", transparent = True, bbox_inches = 'tight', pad_inches = 0, dpi=80 )
-    pylab.savefig( fileName + ".large.pdf", transparent = True, bbox_inches = 'tight', pad_inches = 0 )
 
   pylab.gcf().set_size_inches( DefaultSize[0], DefaultSize[1] )
 
