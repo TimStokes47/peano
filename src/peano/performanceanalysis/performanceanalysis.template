@@ -136,7 +136,7 @@ Two two plots have different zoom factors. The more detailed plot might not be a
  </tr>
  <tr>
   <td bgcolor="#000066"> </td>
-  <td> Time required to release asynchronous heap data (horizontal communication). </td>
+  <td> Time required to release asynchronous heap data (horizontal communication). These bars are long if heap data from neighbouring ranks is not available yet. </td>
  </tr>
  <tr>
   <td bgcolor="#ffff00"> </td>
