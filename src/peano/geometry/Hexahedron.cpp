@@ -5,6 +5,38 @@
 tarch::logging::Log peano::geometry::Hexahedron::_log( "peano::geometry::Hexahedron" );
 
 
+bool peano::geometry::Hexahedron::greaterUpToRelativeTolerance(const double& lhs, const double& rhs) {
+  double scaling =
+      std::max(
+          1.0, std::max( tarch::la::abs(lhs), tarch::la::abs(rhs) )
+  );
+  return tarch::la::greater( lhs, rhs, scaling*tarch::la::NUMERICAL_ZERO_DIFFERENCE );
+}
+
+bool peano::geometry::Hexahedron::smallerUpToRelativeTolerance(const double& lhs, const double& rhs) {
+  double scaling =
+      std::max(
+          1.0, std::max( tarch::la::abs(lhs), tarch::la::abs(rhs) )
+  );
+  return tarch::la::smaller( lhs, rhs, scaling*tarch::la::NUMERICAL_ZERO_DIFFERENCE );
+}
+
+bool peano::geometry::Hexahedron::greaterEqualsUpToRelativeTolerance(const double& lhs, const double& rhs) {
+  double scaling =
+      std::max(
+          1.0, std::max( tarch::la::abs(lhs), tarch::la::abs(rhs) )
+  );
+  return tarch::la::greaterEquals( lhs, rhs, scaling*tarch::la::NUMERICAL_ZERO_DIFFERENCE );
+}
+
+bool peano::geometry::Hexahedron::smallerEqualsUpToRelativeTolerance(const double& lhs, const double& rhs) {
+  double scaling =
+      std::max(
+          1.0, std::max( tarch::la::abs(lhs), tarch::la::abs(rhs) )
+  );
+  return tarch::la::smallerEquals( lhs, rhs, scaling*tarch::la::NUMERICAL_ZERO_DIFFERENCE );
+}
+
 peano::geometry::Hexahedron::Hexahedron(
   const tarch::la::Vector<DIMENSIONS,double>&  width,
   const tarch::la::Vector<DIMENSIONS,double>&  offset
@@ -36,8 +68,8 @@ bool peano::geometry::Hexahedron::isInsideOpenHexahedron( const tarch::la::Vecto
   bool result = true;
   for (int d=0; d<DIMENSIONS; d++) {
     assertion( _width(d) >= 0.0 );
-    result &= tarch::la::greater(x(d),_offset(d));
-    result &= tarch::la::smaller(x(d),_offset(d)+_width(d));
+    result &= greaterUpToRelativeTolerance(x(d),_offset(d));
+    result &= smallerUpToRelativeTolerance(x(d),_offset(d)+_width(d));
   }
   logTraceOutWith1Argument("isInsideOpenHexahedron(...)", result);
   return result;
@@ -49,8 +81,8 @@ bool peano::geometry::Hexahedron::isInsideClosedHexahedron( const tarch::la::Vec
   bool result = true;
   for (int d=0; d<DIMENSIONS; d++) {
     assertion( _width(d) >= 0.0 );
-    result &= !tarch::la::smaller(x(d),_offset(d));
-    result &= !tarch::la::greater(x(d),_offset(d)+_width(d));
+    result &= !smallerUpToRelativeTolerance(x(d),_offset(d));
+    result &= !greaterUpToRelativeTolerance(x(d),_offset(d)+_width(d));
   }
   logTraceOutWith1Argument("isInsideClosedHexahedron(...)", result);
   return result;
@@ -76,12 +108,12 @@ bool peano::geometry::Hexahedron::isCompletelyOutside( const tarch::la::Vector<D
   bool result = false;
   for( int i = 0; i < DIMENSIONS; i++ ){
     bool dimResult = true;
-    dimResult &= !(tarch::la::smaller(x(i) - resolution(i), _offset(i) + _width(i)) &&
-                tarch::la::greater(x(i) - resolution(i), _offset(i)));
-    dimResult &= !(tarch::la::smaller(x(i) + resolution(i), _offset(i) + _width(i)) &&
-                tarch::la::greater(x(i) + resolution(i), _offset(i)));
-    dimResult &= !(!tarch::la::greater(x(i) - resolution(i), _offset(i)) &&
-                !tarch::la::smaller(x(i) + resolution(i), _offset(i) + _width(i)));
+    dimResult &= !(smallerUpToRelativeTolerance(x(i) - resolution(i), _offset(i) + _width(i)) &&
+                greaterUpToRelativeTolerance(x(i) - resolution(i), _offset(i)));
+    dimResult &= !(smallerUpToRelativeTolerance(x(i) + resolution(i), _offset(i) + _width(i)) &&
+                greaterUpToRelativeTolerance(x(i) + resolution(i), _offset(i)));
+    dimResult &= !(!greaterUpToRelativeTolerance(x(i) - resolution(i), _offset(i)) &&
+                !smallerUpToRelativeTolerance(x(i) + resolution(i), _offset(i) + _width(i)));
     result |= dimResult;
   }
 
@@ -117,8 +149,8 @@ bool peano::geometry::Hexahedron::refineOuterCellWithExclusivelyOuterVerticesAsI
 
   bool isInsideMinkowskiSum = true;
   for (int d=0; d<DIMENSIONS; d++) {
-    isInsideMinkowskiSum &= !tarch::la::smallerEquals(x(d),_offset(d)-resolution(d));
-    isInsideMinkowskiSum &= !tarch::la::greaterEquals(x(d),_offset(d)+_width(d)+resolution(d));
+    isInsideMinkowskiSum &= !smallerEqualsUpToRelativeTolerance(x(d),_offset(d)-resolution(d));
+    isInsideMinkowskiSum &= !greaterEqualsUpToRelativeTolerance(x(d),_offset(d)+_width(d)+resolution(d));
   }
 
   bool result = isInsideMinkowskiSum && tarch::la::allGreater(resolution,_width/2.0);

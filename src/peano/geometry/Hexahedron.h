@@ -35,6 +35,14 @@ class peano::geometry::Hexahedron: public peano::geometry::Geometry {
     tarch::la::Vector<DIMENSIONS,double> _width;
 
     /**
+     * Comparison operators up to relative tolerance.
+     */
+    static bool greaterUpToRelativeTolerance(const double& lhs, const double& rhs);
+    static bool smallerUpToRelativeTolerance(const double& lhs, const double& rhs);
+    static bool greaterEqualsUpToRelativeTolerance(const double& lhs, const double& rhs);
+    static bool smallerEqualsUpToRelativeTolerance(const double& lhs, const double& rhs);
+
+    /**
      * This method checks if a point (tarch::la::Vector<DIMENSIONS,double>) x lies inside the open hexahedron.
      *
      * @param x Point (tarch::la::Vector<DIMENSIONS,double>) to be checked.
