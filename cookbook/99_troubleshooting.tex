@@ -164,7 +164,7 @@ the directory.
     \end{code} 
     in the SLURM script fixes the issue.
   \item \textbf{ Once I switch to (Intel) MPI, my code seems to receive invalid
-    data}. We have seen this problem with Intel's MPI (but not with OpenMPI,
+    data}. We have seen this problem with Intel's MPI (but not with OpenMPI, 
     e.g.) and it seems that this one makes very strong assumptions about the
     alignment of data within arrays to optimise the MPI message exchange. I
     recommend that you write some ping pong tests (one rank sending stuff to
@@ -180,5 +180,15 @@ the directory.
     \ref{section:advanced-mpi:tailor-data-exchange-format}.
   \item To be continued \ldots
 \end{itemize}
+
+
+
+\section{Tool Troubleshooting}
+\begin{itemize}
+  \item \textbf{The Intel tools yield invalid or messed up results}. Ensure 
+    you have built your code with \texttt{-DTBB\_USE\_ASSERT -DTBB\_USE\_THREADING\_TOOLS}.
+  \item To be continued \dots
+\end{itemize}
+
 
 
