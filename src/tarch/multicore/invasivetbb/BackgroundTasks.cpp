@@ -33,8 +33,6 @@ namespace {
    */
   tbb::concurrent_queue<tarch::multicore::BackgroundTask*>  _backgroundTasks;
 
-  int                      _maxNumberOfRunningBackgroundThreads(1);
-
   tarch::logging::Log _log( "tarch::multicore" );
 
   class ConsumerTask: public tbb::task {
@@ -57,6 +55,8 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
     delete task;
     return;
   }
+
+  Redo
 
   _backgroundTasks.push(task);
   peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
@@ -103,13 +103,6 @@ bool tarch::multicore::processBackgroundTasks() {
   logDebug( "execute()", "background task consumer is done and kills itself" );
 
   return result;
-}
-
-
-void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {
-  assertion1(maxNumberOfRunningBackgroundThreads > static_cast<int>(MaxNumberOfRunningBackgroundThreads::SmallestValue), maxNumberOfRunningBackgroundThreads );
-
-  _maxNumberOfRunningBackgroundThreads = maxNumberOfRunningBackgroundThreads;
 }
 
 

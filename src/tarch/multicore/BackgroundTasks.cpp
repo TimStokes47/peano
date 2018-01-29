@@ -8,6 +8,22 @@ void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(const MaxNumberOfR
 }
 
 
+int  tarch::multicore::BackgroundTask::_maxNumberOfRunningBackgroundThreads(1);
+
+
+
+void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {
+  assertion1(maxNumberOfRunningBackgroundThreads > static_cast<int>(MaxNumberOfRunningBackgroundThreads::SmallestValue), maxNumberOfRunningBackgroundThreads );
+
+
+#ifdef SharedOMP
+#error Fix; should only accept 0 and -1
+#endif
+
+  BackgroundTask::_maxNumberOfRunningBackgroundThreads = maxNumberOfRunningBackgroundThreads;
+}
+
+
 //#if !defined(SharedOMP) && !defined(SharedTBB) && !defined(SharedTBBInvade)
 #if !defined(SharedTBB) && !defined(SharedTBBInvade)
 

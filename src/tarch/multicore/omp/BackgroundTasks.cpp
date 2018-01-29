@@ -73,23 +73,6 @@ bool tarch::multicore::processBackgroundTasks() {
 }
 
 
-/**
- * To remain consistent with TBB versions, we do support -1 and 0. Please note
- * that all background settings have different semantics anyway: We never run
- * real background tasks but at least we can make the code decide how many
- * cores it uses in doubt to process the background tasks available.
- */
-void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {
-  assertion1(maxNumberOfRunningBackgroundThreads > static_cast<int>(MaxNumberOfRunningBackgroundThreads::SmallestValue), maxNumberOfRunningBackgroundThreads );
-  if (maxNumberOfRunningBackgroundThreads<=0 && maxNumberOfRunningBackgroundThreads!=static_cast<int>(MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately)) {
-    static tarch::logging::Log _log( "tarch::multicore" );
-    logWarning( "setMaxNumberOfRunningBackgroundThreads", "OpenMP realisation does not support natively -1 and 0 as number of background tasks. Fall back to 1" );
-    maxNumberOfRunningBackgroundThreads = 1;
-  }
-  _maxNumberOfBackgroundTasks = maxNumberOfRunningBackgroundThreads;
-}
-
-
 
 int tarch::multicore::getNumberOfWaitingBackgroundTasks() {
   int result = 0;

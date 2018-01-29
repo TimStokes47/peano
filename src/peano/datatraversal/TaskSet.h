@@ -4,6 +4,7 @@
 #define _PEANO_DATA_TRAVERSAL_TASK_SET_H_
 
 #include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/BackgroundTasks.h"
 #include "tarch/logging/Log.h"
 
 
@@ -147,11 +148,21 @@ class peano::datatraversal::TaskSet {
      *
      * It is important that myFunctor catches everything via copy. As a
      * consequence do something only includes static and const accessors.
+     *
+     * Note: This interface is only used for tasks that do not have to run
+     * persistently (in the background) for a very long time. It is only
+     * to be used for tasks that either are reasonably short.
      */
     template <class Functor>
     inline TaskSet(
       Functor&  task,
       bool      isLongRunningOrPersistentTask
+    );
+
+    template <class Functor>
+    inline TaskSet(
+      Functor&  task,
+      tarch::multicore::TaskType taskType
     );
 
     /**

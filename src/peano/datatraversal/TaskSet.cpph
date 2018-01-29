@@ -9,5 +9,15 @@ peano::datatraversal::TaskSet::TaskSet(
   bool      isLongRunningOrPersistentTask
 ) {
   typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
-  tarch::multicore::spawnBackgroundTask( new Task(myTask,isLongRunningOrPersistentTask) );
+  tarch::multicore::spawnBackgroundTask( new Task(myTask,isLongRunningOrPersistentTask ? tarch::multicore::TaskType::LongRunning : tarch::multicore::TaskType::Default ) );
+}
+
+    
+template <class Functor>
+peano::datatraversal::TaskSet::TaskSet(
+  Functor&  myTask,
+  tarch::multicore::TaskType taskType
+) {
+  typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+  tarch::multicore::spawnBackgroundTask( new Task(myTask,taskType) );
 }

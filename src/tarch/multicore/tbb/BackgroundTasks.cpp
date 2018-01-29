@@ -31,8 +31,6 @@ namespace {
    */
   tbb::concurrent_queue<tarch::multicore::BackgroundTask*>  _backgroundTasks;
 
-  int                      _maxNumberOfRunningBackgroundThreads(1);
-
   tarch::logging::Log _log( "tarch::multicore" );
 
   class ConsumerTask: public tbb::task {
@@ -41,41 +39,73 @@ namespace {
       tbb::task* execute() {
         tarch::multicore::processBackgroundTasks();
         _numberOfRunningBackgroundThreads.fetch_and_add(-1);
-        return 0;
+        return nullptr;
+      }
+  };
+
+
+  class FunctorTaskWrapper: public tbb::task {
+    private:
+	  tarch::multicore::BackgroundTask* _myTask;
+    public:
+	  FunctorTaskWrapper(tarch::multicore::BackgroundTask* myTask): _myTask(myTask) {}
+
+      tbb::task* execute() {
+        _myTask->run();
+        delete _myTask;
+        return nullptr;
       }
   };
 }
 
 
 void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
-  if (
-    _maxNumberOfRunningBackgroundThreads==static_cast<int>(MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately)
-  ) {
-    task->run();
-    delete task;
-    return;
-  }
-  else {
-    _backgroundTasks.push(task);
-    peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
+  TaskType mode = task->getTaskType();
 
-    const int currentlyRunningBackgroundThreads = _numberOfRunningBackgroundThreads;
-    if (
-      currentlyRunningBackgroundThreads<_maxNumberOfRunningBackgroundThreads
-      ||
-      (
-        task->isLongRunning()
-        &&
-        _maxNumberOfRunningBackgroundThreads>=static_cast<int>(MaxNumberOfRunningBackgroundThreads::DontUseBackgroundTasksForNormalTasks)
-      )
-    ) {
-      logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
-      _numberOfRunningBackgroundThreads.fetch_and_add(1);
-      ConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) ConsumerTask();
+  switch (mode) {
+    case TaskType::ExecuteImmediately:
+      task->run();
+      delete task;
+      break;
+    case TaskType::Default:
+      {
+        _backgroundTasks.push(task);
+        peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
+
+        const int currentlyRunningBackgroundThreads = _numberOfRunningBackgroundThreads;
+        if (
+          currentlyRunningBackgroundThreads<BackgroundTask::_maxNumberOfRunningBackgroundThreads
+        ) {
+          logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
+          _numberOfRunningBackgroundThreads.fetch_and_add(1);
+          ConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) ConsumerTask();
+          tbb::task::enqueue(*tbbTask);
+          _backgroundTaskContext.set_priority(tbb::priority_low);
+          logDebug( "kickOffBackgroundTask(BackgroundTask*)", "it is out now" );
+        }
+      }
+      break;
+    case TaskType::LongRunning:
+      {
+        _backgroundTasks.push(task);
+        peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
+
+        if (
+         BackgroundTask::_maxNumberOfRunningBackgroundThreads>=static_cast<int>(MaxNumberOfRunningBackgroundThreads::DontUseBackgroundTasksForNormalTasks)
+        ) {
+          logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
+          _numberOfRunningBackgroundThreads.fetch_and_add(1);
+          ConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) ConsumerTask();
+          tbb::task::enqueue(*tbbTask);
+          _backgroundTaskContext.set_priority(tbb::priority_low);
+          logDebug( "kickOffBackgroundTask(BackgroundTask*)", "it is out now" );
+        }
+      }
+      break;
+    case TaskType::Persistent:
+      FunctorTaskWrapper* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) FunctorTaskWrapper(task);
       tbb::task::enqueue(*tbbTask);
-      _backgroundTaskContext.set_priority(tbb::priority_low);
-      logDebug( "kickOffBackgroundTask(BackgroundTask*)", "it is out now" );
-    }
+      break;
   }
 }
 
@@ -102,11 +132,6 @@ bool tarch::multicore::processBackgroundTasks() {
 }
 
 
-void tarch::multicore::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {
-  assertion1(maxNumberOfRunningBackgroundThreads > static_cast<int>(MaxNumberOfRunningBackgroundThreads::SmallestValue), maxNumberOfRunningBackgroundThreads );
-
-  _maxNumberOfRunningBackgroundThreads = maxNumberOfRunningBackgroundThreads;
-}
 
 
 int tarch::multicore::getNumberOfWaitingBackgroundTasks() {
