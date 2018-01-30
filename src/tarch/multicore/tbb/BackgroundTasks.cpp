@@ -69,7 +69,7 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
       break;
     case TaskType::RunAsSoonAsPossible:
       {
-        ConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) ConsumerTask();
+        FunctorTaskWrapper* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) FunctorTaskWrapper(task);
         tbb::task::spawn(*tbbTask);
       }
       break;
