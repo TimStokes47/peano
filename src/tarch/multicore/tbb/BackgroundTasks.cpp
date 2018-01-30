@@ -67,7 +67,13 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
       task->run();
       delete task;
       break;
-    case TaskType::Default:
+    case TaskType::RunAsSoonAsPossible:
+      {
+        ConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) ConsumerTask();
+        tbb::task::spawn(*tbbTask);
+      }
+      break;
+    case TaskType::Background:
       {
         _backgroundTasks.push(task);
         peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);
@@ -85,7 +91,7 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
         }
       }
       break;
-    case TaskType::LongRunning:
+    case TaskType::LongRunningBackground:
       {
         _backgroundTasks.push(task);
         peano::performanceanalysis::Analysis::getInstance().fireAndForgetBackgroundTask(1);

@@ -7,8 +7,9 @@ namespace tarch {
   namespace multicore {
     enum class TaskType {
       ExecuteImmediately,
-	  Default,
-	  LongRunning,
+	  RunAsSoonAsPossible,
+	  Background,
+	  LongRunningBackground,
 	  Persistent
     };
 
@@ -41,21 +42,21 @@ namespace tarch {
      */
     class BackgroundTask {
       public:
-        const TaskType _isLongRunning;
+        const TaskType _taskType;
 
         static int  _maxNumberOfRunningBackgroundThreads;
       public:
-        BackgroundTask( TaskType isLongRunning ):
-        _isLongRunning(
+        BackgroundTask( TaskType taskType ):
+        _taskType(
           _maxNumberOfRunningBackgroundThreads==static_cast<int>(MaxNumberOfRunningBackgroundThreads::ProcessBackgroundTasksImmediately)
 		  &&
-		  isLongRunning != TaskType::Persistent ?
-          TaskType::ExecuteImmediately : isLongRunning
+		  taskType != TaskType::Persistent ?
+          TaskType::ExecuteImmediately : taskType
         ) {}
         virtual void run() = 0;
         virtual ~BackgroundTask() {}
-        bool isLongRunning() const {return _isLongRunning==TaskType::LongRunning;}
-        TaskType getTaskType() const {return _isLongRunning;}
+        bool isLongRunning() const {return _taskType==TaskType::LongRunningBackground;}
+        TaskType getTaskType() const {return _taskType;}
     };
 
     template <class Functor>
@@ -67,8 +68,8 @@ namespace tarch {
          */
         Functor   _functor;
       public:
-        GenericTaskWithCopy(const Functor& functor, TaskType isLongRunning ):
-          BackgroundTask(isLongRunning),
+        GenericTaskWithCopy(const Functor& functor, TaskType taskType ):
+          BackgroundTask(taskType),
           _functor(functor)  {
         }
 
