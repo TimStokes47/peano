@@ -1,4 +1,5 @@
 #include "tarch/multicore/BackgroundTasks.h"
+#include "tarch/multicore/Core.h"
 #include "peano/performanceanalysis/Analysis.h"
 
 #if defined(SharedTBB)
@@ -41,7 +42,7 @@ namespace {
       }
   };
 
-
+/*
   class FunctorTaskWrapper: public tbb::task {
     private:
 	  tarch::multicore::BackgroundTask* _myTask;
@@ -53,7 +54,7 @@ namespace {
         delete _myTask;
         return nullptr;
       }
-  };
+  };*/
 }
 
 
@@ -67,8 +68,13 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
       break;
     case TaskType::RunAsSoonAsPossible:
       {
-        FunctorTaskWrapper* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) FunctorTaskWrapper(task);
-        tbb::task::spawn(*tbbTask);
+        // This is basically an alternative for spawn introduced with newer TBB version
+        Core::getInstance()._task_group.run(
+          [task]() {
+            task->run();
+            delete task;
+          }
+        );
       }
       break;
     case TaskType::Background:
@@ -107,8 +113,13 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
       }
       break;
     case TaskType::Persistent:
-      FunctorTaskWrapper* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) FunctorTaskWrapper(task);
-      tbb::task::enqueue(*tbbTask);
+      // This is basically an alternative for spawn introduced with newer TBB version
+      Core::getInstance()._task_group.run(
+        [task]() {
+          task->run();
+          delete task;
+        }
+      );
       break;
   }
 }

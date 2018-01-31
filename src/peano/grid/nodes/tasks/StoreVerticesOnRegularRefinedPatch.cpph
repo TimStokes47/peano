@@ -493,6 +493,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     );
     // Was not able to see any difference here with RunAsSoon and the other stuff.
     peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
+//    peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::Background);
 
     logTraceOutWith2Arguments( "storeSubVerticesWithCellsFromGridContainer(...)", "forked", ExpectedNumberOfStoresToOutputStack );
     return;

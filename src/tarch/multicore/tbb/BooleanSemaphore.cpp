@@ -1,5 +1,6 @@
 #if defined(SharedTBB)
 #include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/multicore/Core.h"
 #include "tarch/logging/Log.h"
 
 
@@ -30,7 +31,6 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 
 
 void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
-// tbb::task::self().wait_for_all();
-  //tbb::this_tbb_thread::yield();
+//  Core::getInstance()._task_group.wait();
 }
 #endif
