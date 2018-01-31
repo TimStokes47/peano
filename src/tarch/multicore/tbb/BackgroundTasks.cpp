@@ -20,9 +20,7 @@ namespace {
   tbb::task_group_context  _backgroundTaskContext;
 
   /**
-   * Number of actively running background tasks. If a task tries to run, and
-   * there are more than a given number of threads already active, it
-   * immediately yields again.
+   * Number of actively running background tasks.
    */
   tbb::atomic<int>         _numberOfRunningBackgroundThreads(0);
 

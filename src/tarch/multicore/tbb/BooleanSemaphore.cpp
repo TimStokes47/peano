@@ -30,6 +30,7 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 
 
 void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
-  tbb::this_tbb_thread::yield();
+tbb::task::self().wait_for_all();
+  //tbb::this_tbb_thread::yield();
 }
 #endif

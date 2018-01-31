@@ -605,6 +605,8 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       _stackView.isEmpty() ? _vertexStack.popBlockFromInputStack(ExpectedNumberOfLoadsFromInputStack) : _stackView.popBlockFromInputStack(ExpectedNumberOfLoadsFromInputStack),
       _forkedSubtree
     );
+    // Das scheint nix auszumachen
+//    peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::Background);
     peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
 
     logTraceOutWith2Arguments( "loadSubVerticesWithCellsFromGridContainer(...)", "forked", ExpectedNumberOfLoadsFromInputStack );
@@ -762,7 +764,10 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
            topLevelStackView[currentFineCellIndex],
            _forkedSubtree
       );
-      peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
+      peano::datatraversal::TaskSet spawnTaskAsynchronously(
+        forkedTask,
+        tarch::multicore::TaskType::Background
+      );
     }
   endzfor
 

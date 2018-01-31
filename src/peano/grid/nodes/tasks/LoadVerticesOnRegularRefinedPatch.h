@@ -226,6 +226,15 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      * patch, handle depth-first the view, and then continue with the stack.
      * In parallel, the central element will fork further and perhaps fill the
      * other cores with additional workload.
+     *
+     * <h2> Multicore parallelisation </h2>
+     *
+     * If a load vertex process split up on its coarsest level, it is important
+     * that it does not use task's RunAsSoonAsPossible. In TBB, this flag
+     * implies that the spawned operations are done on the same thread if not
+     * possible otherwise in a depth-first order. This means the current thread
+     * is stopped and we continue with the new subthread. This is not wanted
+     * here and made my codes starve for larger problems.
      */
     void loadSubVerticesWithCellsOnFirstLevelInSharedMemoryMode();
 

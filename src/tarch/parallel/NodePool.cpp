@@ -85,7 +85,7 @@ int tarch::parallel::NodePool::getNumberOfIdleNodes() const {
 
   return _strategy->getNumberOfIdleNodes();
   #else
-  return 1;
+  return 0;
   #endif
 }
 

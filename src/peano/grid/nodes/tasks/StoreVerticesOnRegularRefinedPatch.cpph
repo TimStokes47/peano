@@ -491,6 +491,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
       _stackView.isOpen() ? _stackView.pushBlockOnOutputStack(ExpectedNumberOfStoresToOutputStack) : _vertexStack.pushBlockOnOutputStack(ExpectedNumberOfStoresToOutputStack),
       _forkedSubtree
     );
+    // Was not able to see any difference here with RunAsSoon and the other stuff.
     peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
 
     logTraceOutWith2Arguments( "storeSubVerticesWithCellsFromGridContainer(...)", "forked", ExpectedNumberOfStoresToOutputStack );
@@ -626,7 +627,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
          topLevelStackView[currentFineCellIndex],
          _forkedSubtree
       );
-      peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
+      peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::Background);
     }
   endzfor
 
