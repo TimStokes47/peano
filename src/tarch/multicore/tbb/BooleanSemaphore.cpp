@@ -28,9 +28,4 @@ void tarch::multicore::BooleanSemaphore::enterCriticalSection() {
 void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
   _mutex.unlock();
 }
-
-
-void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
-//  Core::getInstance()._task_group.wait();
-}
 #endif

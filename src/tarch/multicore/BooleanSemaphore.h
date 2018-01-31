@@ -161,38 +161,6 @@ class tarch::multicore::BooleanSemaphore {
   public:
     BooleanSemaphore();
     ~BooleanSemaphore();
-
-    /**
-     *
-     * Macro for pipelining
-     *
-     * You should send your task to the background if no input data are available
-     * to continue. This might e.g. materialise in a semaphore not released yet.
-     * Please invoke continuedWithTask() as soon as your waiting code fragment
-     * continues. The operation does not termine/stop the task. It might only stop
-     * it for a brief time and then continue.
-     *
-     * A typical pattern how to use the macro reads as follows:
-     * \code
-
-    bool hasFinished = false;
-
-    while (!hasFinished) {
-      {
-        tarch::multicore::Lock lock(mySemaphore);
-        hasFinished = get data from some place protected by mySemaphore;
-      }
-      tarch::multicore::BooleanSemaphore::sendTaskToBack();
-    }
-
-    tarch::multicore::BooleanSemaphore::continuedWithTask();
-
- \endcode
-    *
-    * Please be aware of the inner brackets. We thus explicitly invoke the
-    * lock's destructor. Alternatively, we could unlock manually.
-    */
-    static void sendTaskToBack();
 };
 #endif
 

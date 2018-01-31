@@ -11,7 +11,8 @@
 
 
 #include <atomic>
-
+#include <chrono>
+#include <thread>
 
 #include "tarch/services/ServiceFactory.h"
 registerService(peano::parallel::SendReceiveBufferPool)
@@ -227,7 +228,7 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
         terminate = true;
         break;
     }
-    tarch::multicore::BooleanSemaphore::sendTaskToBack();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }
 

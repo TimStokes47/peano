@@ -45,21 +45,6 @@ class tarch::multicore::BooleanSemaphore {
   public:
     BooleanSemaphore();
     ~BooleanSemaphore();
-
-    /**
-     * Send task to background
-     *
-     * We found that yielding alone does not work for the invasive TBB version
-     * though I'm not 100% clear why. It seems to deadlock, but the deadlocks
-     * show up if and only if we have tree splitting and we have a significantly
-     * large grid. So we may as well assume that the system is not deadlocking
-     * but the background tasks are starving. So what I do in this version is
-     * that I work through the background tasks before I yield.
-     *
-     * This is not a particularly nice implementation.
-     */
-    static void sendTaskToBack();
-
 };
 
 #endif

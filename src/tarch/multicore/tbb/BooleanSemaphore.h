@@ -45,18 +45,5 @@ class tarch::multicore::BooleanSemaphore {
   public:
     BooleanSemaphore();
     ~BooleanSemaphore();
-
-    /**
-     * Send task to background
-     *
-     * For a description from the user's point of view please see the
-     * BooleanSemaphore implementation that is active if you don't compile with
-     * any shared memory support. This documentation documents only
-     * implementation details.
-     *
-     * Triggers TBB's yield().
-     */
-    static void sendTaskToBack();
-
 };
 #endif

@@ -79,14 +79,8 @@ while (!taskHasTerminated) {
   tarch::multicore::Lock myLock(_globalBackgroundTaskStatusSemphore);
   taskHasTerminated = MyStatusHeap.getIndex(...).getStatus()==BackGroundTaskCompleted;
   myLock.free();
-  if (!taskHasTerminated) {
-    tarch::multicore::BooleanSemaphore::sendTaskToBackground();
-  }
 }
 </pre>
- *
- * Please note that I strongly recommend to add sendTaskToBackground(). It
- * ensures that multiple while loops cannot block the system.
  *
  *
  * <h2> Number of background tasks </h2>

@@ -5,7 +5,6 @@
 
 
 #include <tbb/task_scheduler_init.h>
-#include <tbb/task_group.h>
 
 #include "tarch/logging/Log.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
@@ -39,7 +38,6 @@ class tarch::multicore::Core {
 
     int                         _numberOfThreads;
     ::tbb::task_scheduler_init  _task_scheduler_init;
-    ::tbb::task_group           _task_group;
 
     PinningObserver             _pinningObserver;
 

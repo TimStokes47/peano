@@ -262,7 +262,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         SplitLoadVerticesTask.runsParallel() &&
         !_regularGridContainer.isLevelInitialised(TreeDepth)
       ) {
-        tarch::multicore::BooleanSemaphore::sendTaskToBack();
+        //tarch::multicore::BooleanSemaphore::sendTaskToBack();
       }
       #endif
       SplitLoadVerticesTask.parallelSectionHasTerminated();

@@ -23,8 +23,4 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 }
 
 
-void tarch::multicore::BooleanSemaphore::sendTaskToBack() {
-  processBackgroundTasks();
-}
-
 #endif

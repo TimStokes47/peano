@@ -492,8 +492,8 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
       _forkedSubtree
     );
     // Was not able to see any difference here with RunAsSoon and the other stuff.
-    peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
-//    peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::Background);
+//    peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
+    peano::datatraversal::TaskSet spawnTaskAsynchronously(forkedTask,tarch::multicore::TaskType::Background);
 
     logTraceOutWith2Arguments( "storeSubVerticesWithCellsFromGridContainer(...)", "forked", ExpectedNumberOfStoresToOutputStack );
     return;
@@ -540,7 +540,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     _regularGridContainer.getVertexEnumerator(0).getCellFlags()
   );
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel)) {
-    tarch::multicore::BooleanSemaphore::sendTaskToBack();
+    //tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
   #endif
 
@@ -663,7 +663,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
   assertion( _storeProcessRunsInParallelToOtherTasks || _regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel) );
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel)) {
-    tarch::multicore::BooleanSemaphore::sendTaskToBack();
+    //tarch::multicore::BooleanSemaphore::sendTaskToBack();
   }
 
   // handle the first level, i.e. the level that has not been handled yet. At
@@ -737,7 +737,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     bool allTasksHaveTerminated = false;
     logDebug( "operator()()", "wait until all store processes have terminated. active-tasks=" << _activeStoreTasks );
     while (!allTasksHaveTerminated) {
-      tarch::multicore::BooleanSemaphore::sendTaskToBack();
+      //tarch::multicore::BooleanSemaphore::sendTaskToBack();
       leaveOperatorlock.lock();
       allTasksHaveTerminated = _activeStoreTasks == 1;
       leaveOperatorlock.free();

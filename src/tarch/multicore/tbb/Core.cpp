@@ -15,7 +15,6 @@ tarch::multicore::Core::Core():
 
 
 tarch::multicore::Core::~Core() {
-  _task_group.wait();
 }
 
 

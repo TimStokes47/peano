@@ -627,7 +627,8 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     _loadProcessRunsInParallelToOtherTasks &&
     !_regularGridContainer.areCellsOfLevelLoaded(currentFineGridLevel)
   ) {
-    tarch::multicore::BooleanSemaphore::sendTaskToBack();
+	//
+    // tarch::multicore::BooleanSemaphore::sendTaskToBack();
   };
 
   zfor3(k,loopDirection1)
@@ -704,7 +705,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     _loadProcessRunsInParallelToOtherTasks &&
     !_regularGridContainer.areCellsOfLevelLoaded(currentFineGridLevel)
   ) {
-    tarch::multicore::BooleanSemaphore::sendTaskToBack();
+    //tarch::multicore::BooleanSemaphore::sendTaskToBack();
   };
 
 

@@ -13,12 +13,15 @@
 #include <tbb/tbb_machine.h>
 #include <tbb/task.h>
 #include <tbb/tbb_thread.h>
+#include <tbb/task_group.h>
 
 namespace {
   /**
    * Use this to launch all background with very low priority
    */
   tbb::task_group_context  _backgroundTaskContext;
+
+  ::tbb::task_group        _task_group;
 
   /**
    * Number of actively running background tasks.
@@ -69,7 +72,7 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
     case TaskType::RunAsSoonAsPossible:
       {
         // This is basically an alternative for spawn introduced with newer TBB version
-        Core::getInstance()._task_group.run(
+        _task_group.run(
           [task]() {
             task->run();
             delete task;
@@ -113,8 +116,8 @@ void tarch::multicore::spawnBackgroundTask(BackgroundTask* task) {
       }
       break;
     case TaskType::Persistent:
-      // This is basically an alternative for spawn introduced with newer TBB version
-      Core::getInstance()._task_group.run(
+      // This is basically an alternative for spawn introduced with newer TBB version; internally does run
+      _task_group.run(
         [task]() {
           task->run();
           delete task;

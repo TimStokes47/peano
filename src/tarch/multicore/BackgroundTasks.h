@@ -21,9 +21,7 @@ namespace tarch {
       DontUseBackgroundTasksForNormalTasks = 0,
       /**
        * Effectively switches off all background tasks. If the user submits any
-       * background tasks, they are only enqueued. Once a thread says
-       * sendTaskToBackground(), it first runs through all the pending tasks
-       * before it really goes to the background (or continues).
+       * background tasks, they are only enqueued.
        */
       DontUseAnyBackgroundTasks            = -1,
       /*

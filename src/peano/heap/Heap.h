@@ -656,9 +656,7 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
     * (the compression tasks' constructor increments the counter while we
     * decrement the counter when the task functor has terminated). Whenever I
     * want to access the heap within my main code, I first check in a while
-    * loop whether all background tasks have terminated. If not, I wait invoking
-    * tarch::multicore::BooleanSemaphore::sendTaskToBack(). This means there
-    * are never any background tasks when I access the heap.
+    * loop whether all background tasks have terminated. If not, I wait.
     *
     * This is my gold version to get started with tasks running the
     * background. The variant is slow as it does not really allow too many
@@ -711,7 +709,6 @@ while (!compressionHasFinished) {
    tarch::multicore::Lock lock(boxmg::HeapEntryCompression::_heapSemaphore);
    compressionHasFinished = _isCurrentlyCompressed.contains(compressedHeapIndex);
    lock.free();
-   tarch::multicore::BooleanSemaphore::sendTaskToBack();
 }
        \endcode
      *
