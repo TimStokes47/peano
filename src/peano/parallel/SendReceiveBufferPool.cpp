@@ -210,7 +210,6 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
   bool terminate = false;
 
   while (!terminate) {
-
     switch (_state) {
       case State::ReceiveDataInBackground:
        {

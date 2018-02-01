@@ -21,6 +21,12 @@ namespace {
    */
   tbb::task_group_context  _backgroundTaskContext;
 
+  /**
+   * So we use the background task context above explicitly as we rely on
+   * enqueue quite a lot. Whenever we however span a task directly, we do
+   * spawn it into this task group using TBB's novel functor/lambda
+   * interface.
+   */
   ::tbb::task_group        _task_group;
 
   /**
@@ -44,20 +50,6 @@ namespace {
         return nullptr;
       }
   };
-
-/*
-  class FunctorTaskWrapper: public tbb::task {
-    private:
-	  tarch::multicore::BackgroundTask* _myTask;
-    public:
-	  FunctorTaskWrapper(tarch::multicore::BackgroundTask* myTask): _myTask(myTask) {}
-
-      tbb::task* execute() {
-        _myTask->run();
-        delete _myTask;
-        return nullptr;
-      }
-  };*/
 }
 
 

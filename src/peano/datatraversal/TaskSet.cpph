@@ -6,8 +6,67 @@
 template <class Functor>
 peano::datatraversal::TaskSet::TaskSet(
   Functor&  myTask,
-  tarch::multicore::TaskType taskType
+  TaskType  taskType
 ) {
-  typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
-  tarch::multicore::spawnBackgroundTask( new Task(myTask,taskType) );
+  switch (taskType) {
+    case TaskType::RunAsSoonAsPossible:
+      {
+        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible) );
+      }
+      break;
+    case TaskType::LoadCellsOnRegularSubtree:
+      {
+        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+        // @todo
+        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+      }
+      break;
+    case TaskType::LoadVerticesOnRegularSubtree:
+      {
+        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+        // @todo
+        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+      }
+      break;
+    case TaskType::TriggerEventsOnRegularSubtree:
+      {
+        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+        // @todo
+        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+      }
+      break;
+    case TaskType::StoreCellsOnRegularSubtree:
+      {
+        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+        // @todo
+        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+      }
+      break;
+    case TaskType::StoreVerticesOnRegularSubtree:
+      {
+        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+        // @todo
+        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+      }
+      break;
+    case TaskType::Background:
+      {
+        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+      }
+      break;
+    case TaskType::LongRunningBackground:
+      {
+        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::LongRunningBackground) );
+      }
+      break;
+    case TaskType::PersistentBackground:
+      {
+        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
+        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Persistent) );
+      }
+      break;
+  }
 }

@@ -4,7 +4,6 @@
 #define _PEANO_DATA_TRAVERSAL_TASK_SET_H_
 
 #include "tarch/multicore/MulticoreDefinitions.h"
-#include "tarch/multicore/BackgroundTasks.h"
 #include "tarch/logging/Log.h"
 
 
@@ -100,6 +99,18 @@ class peano::datatraversal::TaskSet {
     static tarch::logging::Log  _log;
 
   public:
+    enum class TaskType {
+  	  RunAsSoonAsPossible,
+	  LoadCellsOnRegularSubtree,
+	  LoadVerticesOnRegularSubtree,
+	  TriggerEventsOnRegularSubtree,
+	  StoreCellsOnRegularSubtree,
+	  StoreVerticesOnRegularSubtree,
+  	  Background,
+  	  LongRunningBackground,
+  	  PersistentBackground
+    };
+
     /**
      * Spawn One Asynchronous Task
      *
@@ -149,8 +160,8 @@ class peano::datatraversal::TaskSet {
      */
     template <class Functor>
     inline TaskSet(
-      Functor&  task,
-      tarch::multicore::TaskType taskType
+      Functor&   task,
+      TaskType   taskType
     );
 
     /**
