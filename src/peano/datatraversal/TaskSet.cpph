@@ -8,65 +8,96 @@ peano::datatraversal::TaskSet::TaskSet(
   Functor&  myTask,
   TaskType  taskType
 ) {
+  #if defined(SharedTBB) || defined(SharedTBBInvade)
+  typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
   switch (taskType) {
     case TaskType::RunAsSoonAsPossible:
       {
-        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
         tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible) );
+      }
+      break;
+    case TaskType::RunImmediately:
+      {
+        myTask();
       }
       break;
     case TaskType::LoadCells:
       {
-        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
-        // @todo
-        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+          myTask();
+/*
+    	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
+        _loadCellsTaskGroup.run([newTask]{
+       	newTask->run();
+           delete newTask;
+        });
+*/
       }
       break;
     case TaskType::LoadVertices:
       {
-        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
-        // @todo
-        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+          myTask();
+/*
+      	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
+        _loadVerticesTaskGroup.run([newTask]{
+        	newTask->run();
+            delete newTask;
+         });
+*/
       }
       break;
     case TaskType::TriggerEvents:
       {
-        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
-        // @todo
-        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+          myTask();
+/*
+      	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
+        _triggerEventsTaskGroup.run([newTask]{
+        	newTask->run();
+            delete newTask;
+         });
+*/
       }
       break;
     case TaskType::StoreCells:
       {
-        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
-        // @todo
-        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+          myTask();
+/*
+      	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
+        _storeCellsTaskGroup.run([newTask]{
+        	newTask->run();
+            delete newTask;
+         });
+*/
       }
       break;
     case TaskType::StoreVertices:
       {
-        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
-        // @todo
-        tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
+          myTask();
+/*
+      	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
+        _storeVerticesTaskGroup.run([newTask]{
+        	newTask->run();
+            delete newTask;
+         });
+*/
       }
       break;
     case TaskType::Background:
       {
-        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
         tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
       }
       break;
     case TaskType::LongRunningBackground:
       {
-        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
         tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::LongRunningBackground) );
       }
       break;
     case TaskType::PersistentBackground:
       {
-        typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
         tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Persistent) );
       }
       break;
   }
+  #else
+  myTask();
+  #endif
 }

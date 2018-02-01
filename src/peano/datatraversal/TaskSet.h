@@ -113,9 +113,10 @@ class peano::datatraversal::TaskSet {
   public:
     enum class TaskType {
       /**
-       * Is deployed to background, but we run it asap. Not for parallel for though! Has  to be this one here.
+       * Is deployed to background.
        */
   	  RunAsSoonAsPossible,
+  	  RunImmediately,
 	  LoadCells,
 	  LoadVertices,
 	  TriggerEvents,
@@ -199,8 +200,8 @@ class peano::datatraversal::TaskSet {
     TaskSet(
       std::function<void ()>&& function1,
       std::function<void ()>&& function2,
-      TaskType                 taskType1,
-      TaskType                 taskType2,
+	  TaskType                 taskType1,
+	  TaskType                 taskType2,
       bool                     parallelise
     );
 
@@ -208,9 +209,9 @@ class peano::datatraversal::TaskSet {
       std::function<void ()>&& function1,
       std::function<void ()>&& function2,
       std::function<void ()>&& function3,
-      TaskType                 taskType1,
-      TaskType                 taskType2,
-      TaskType                 taskType3,
+	  TaskType                 taskType1,
+	  TaskType                 taskType2,
+	  TaskType                 taskType3,
       bool                     parallelise
     );
 
@@ -219,10 +220,10 @@ class peano::datatraversal::TaskSet {
       std::function<void ()>&& function2,
       std::function<void ()>&& function3,
       std::function<void ()>&& function4,
-      TaskType                 taskType1,
-      TaskType                 taskType2,
-      TaskType                 taskType3,
-      TaskType                 taskType4,
+	  TaskType                 taskType1,
+	  TaskType                 taskType2,
+	  TaskType                 taskType3,
+	  TaskType                 taskType4,
       bool                     parallelise
     );
 
@@ -232,14 +233,21 @@ class peano::datatraversal::TaskSet {
       std::function<void ()>&& function3,
       std::function<void ()>&& function4,
       std::function<void ()>&& function5,
-      TaskType                 taskType1,
-      TaskType                 taskType2,
-      TaskType                 taskType3,
-      TaskType                 taskType4,
-      TaskType                 taskType5,
+	  TaskType                 taskType1,
+	  TaskType                 taskType2,
+	  TaskType                 taskType3,
+	  TaskType                 taskType4,
+	  TaskType                 taskType5,
       bool                     parallelise
     );
 
+    /**
+     * The name is slightly wrong. We actually wait for all load cell tasks
+     * spawned by the original load cell task (root) to complete. We cannot
+     * wait for the original task, as this task might have been triggered
+     * together with an other task triggering this wait. Which would inevitably
+     * lead into a deadlock.
+     */
     static void waitForAllLoadCellsTasks();
 	static void waitForAllLoadVerticesTasks();
 	static void waitForAllEventTasks();

@@ -24,35 +24,45 @@ tbb::task_group peano::datatraversal::TaskSet::_storeVerticesTaskGroup;
 
 
 void peano::datatraversal::TaskSet::waitForAllLoadCellsTasks() {
-
+  #if defined(SharedTBB) || defined(SharedTBBInvade)
+  _loadCellsTaskGroup.wait();
+  #endif
 }
 
 
 void peano::datatraversal::TaskSet::waitForAllLoadVerticesTasks() {
-
+  #if defined(SharedTBB) || defined(SharedTBBInvade)
+  _loadVerticesTaskGroup.wait();
+  #endif
 }
 
 
 void peano::datatraversal::TaskSet::waitForAllEventTasks() {
-
+  #if defined(SharedTBB) || defined(SharedTBBInvade)
+  _triggerEventsTaskGroup.wait();
+  #endif
 }
 
 
 void peano::datatraversal::TaskSet::waitForAllStoreCellsTasks() {
-
+  #if defined(SharedTBB) || defined(SharedTBBInvade)
+  _storeCellsTaskGroup.wait();
+  #endif
 }
 
 
 void peano::datatraversal::TaskSet::waitForAllStoreVerticesTasks() {
-
+  #if defined(SharedTBB) || defined(SharedTBBInvade)
+  _storeVerticesTaskGroup.wait();
+  #endif
 }
 
 
 peano::datatraversal::TaskSet::TaskSet(
   std::function<void ()>&& function1,
   std::function<void ()>&& function2,
-  TaskType                 taskType1,
-  TaskType                 taskType2,
+  TaskType                 type1,
+  TaskType                 type2,
   bool                     parallelise
 ) {
   if (parallelise) {
@@ -63,8 +73,8 @@ peano::datatraversal::TaskSet::TaskSet(
     #endif
     tbb::parallel_invoke(
       function1,
-      function2
-    );
+	  function2
+	);
     #if defined(SharedTBBInvade)
     invade.retreat();
     #endif
@@ -95,9 +105,9 @@ peano::datatraversal::TaskSet::TaskSet(
   std::function<void ()>&& function1,
   std::function<void ()>&& function2,
   std::function<void ()>&& function3,
-  TaskType                 taskType1,
-  TaskType                 taskType2,
-  TaskType                 taskType3,
+  TaskType                 type1,
+  TaskType                 type2,
+  TaskType                 type3,
   bool                     parallelise
 ) {
   if (parallelise) {
@@ -108,8 +118,8 @@ peano::datatraversal::TaskSet::TaskSet(
     #endif
     tbb::parallel_invoke(
       function1,
-      function2,
-      function3
+	  function2,
+	  function3
     );
     #if defined(SharedTBBInvade)
     invade.retreat();
@@ -146,10 +156,10 @@ peano::datatraversal::TaskSet::TaskSet(
   std::function<void ()>&& function2,
   std::function<void ()>&& function3,
   std::function<void ()>&& function4,
-  TaskType                 taskType1,
-  TaskType                 taskType2,
-  TaskType                 taskType3,
-  TaskType                 taskType4,
+  TaskType                 type1,
+  TaskType                 type2,
+  TaskType                 type3,
+  TaskType                 type4,
   bool                     parallelise
 ) {
   if (parallelise) {
@@ -160,9 +170,9 @@ peano::datatraversal::TaskSet::TaskSet(
     #endif
     tbb::parallel_invoke(
       function1,
-      function2,
-      function3,
-      function4
+	  function2,
+	  function3,
+	  function4
     );
     #if defined(SharedTBBInvade)
     invade.retreat();
@@ -205,11 +215,11 @@ peano::datatraversal::TaskSet::TaskSet(
   std::function<void ()>&& function3,
   std::function<void ()>&& function4,
   std::function<void ()>&& function5,
-  TaskType                 taskType1,
-  TaskType                 taskType2,
-  TaskType                 taskType3,
-  TaskType                 taskType4,
-  TaskType                 taskType5,
+  TaskType                 type1,
+  TaskType                 type2,
+  TaskType                 type3,
+  TaskType                 type4,
+  TaskType                 type5,
   bool                     parallelise
 ) {
   if (parallelise) {
@@ -220,10 +230,10 @@ peano::datatraversal::TaskSet::TaskSet(
     #endif
     tbb::parallel_invoke(
       function1,
-      function2,
-      function3,
-      function4,
-      function5
+	  function2,
+	  function3,
+	  function4,
+	  function5
     );
     #if defined(SharedTBBInvade)
     invade.retreat();

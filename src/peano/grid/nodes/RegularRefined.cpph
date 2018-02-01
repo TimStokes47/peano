@@ -145,7 +145,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     peano::datatraversal::TaskSet(
       initialiseVertexEnumeratorsTask,
       invokeEnterCellTask,
-	  peano::datatraversal::TaskSet::TaskType::TriggerEvents,
+	  peano::datatraversal::TaskSet::TaskType::RunImmediately,
 	  peano::datatraversal::TaskSet::TaskType::TriggerEvents,
       grainSize.getGrainSize()>0
     );

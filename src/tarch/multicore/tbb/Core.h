@@ -40,9 +40,6 @@ class tarch::multicore::Core {
     ::tbb::task_scheduler_init  _task_scheduler_init;
 
     PinningObserver             _pinningObserver;
-
-    friend void tarch::multicore::spawnBackgroundTask(BackgroundTask* task);
-    friend class BooleanSemaphore;
   public:
     static constexpr int UseDefaultNumberOfThreads = 0;
 
