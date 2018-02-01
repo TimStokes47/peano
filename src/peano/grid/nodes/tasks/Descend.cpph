@@ -283,6 +283,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::operator
           touchVerticesFirstTime( level+1 );
           descend(level+1);
         },
+		peano::datatraversal::TaskSet::TaskType::TriggerEvents,
+		peano::datatraversal::TaskSet::TaskType::TriggerEvents,
         grainSize.runsParallel()
       );
     }

@@ -15,35 +15,35 @@ peano::datatraversal::TaskSet::TaskSet(
         tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible) );
       }
       break;
-    case TaskType::LoadCellsOnRegularSubtree:
+    case TaskType::LoadCells:
       {
         typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
         // @todo
         tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
       }
       break;
-    case TaskType::LoadVerticesOnRegularSubtree:
+    case TaskType::LoadVertices:
       {
         typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
         // @todo
         tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
       }
       break;
-    case TaskType::TriggerEventsOnRegularSubtree:
+    case TaskType::TriggerEvents:
       {
         typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
         // @todo
         tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
       }
       break;
-    case TaskType::StoreCellsOnRegularSubtree:
+    case TaskType::StoreCells:
       {
         typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
         // @todo
         tarch::multicore::spawnBackgroundTask( new Task(myTask,tarch::multicore::TaskType::Background) );
       }
       break;
-    case TaskType::StoreVerticesOnRegularSubtree:
+    case TaskType::StoreVertices:
       {
         typedef tarch::multicore::GenericTaskWithCopy<Functor> Task;
         // @todo

@@ -144,6 +144,8 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     peano::datatraversal::TaskSet(
       initialiseVertexEnumeratorsTask,
       invokeEnterCellTask,
+	  peano::datatraversal::TaskSet::TaskType::TriggerEvents,
+	  peano::datatraversal::TaskSet::TaskType::TriggerEvents,
       grainSize.getGrainSize()>0
     );
     grainSize.parallelSectionHasTerminated();
@@ -236,6 +238,9 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         loadCellsTask,
         loadVerticesTask,
         descendTask,
+		peano::datatraversal::TaskSet::TaskType::LoadCells,
+		peano::datatraversal::TaskSet::TaskType::LoadVertices,
+		peano::datatraversal::TaskSet::TaskType::TriggerEvents,
         PipelineTasks.runsParallel()
       );
 
@@ -378,6 +383,9 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         ascendTask,
         storeVerticesTask,
         storeCellsTask,
+		peano::datatraversal::TaskSet::TaskType::TriggerEvents,
+		peano::datatraversal::TaskSet::TaskType::StoreVertices,
+		peano::datatraversal::TaskSet::TaskType::StoreCells,
         PipelineTasks.runsParallel() 
       );
 

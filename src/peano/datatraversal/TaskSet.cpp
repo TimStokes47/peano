@@ -7,6 +7,13 @@ tarch::logging::Log  peano::datatraversal::TaskSet::_log( "peano::datatraversal:
 
 #if defined(SharedTBB) || defined(SharedTBBInvade)
 #include <tbb/parallel_invoke.h>
+
+
+tbb::task_group peano::datatraversal::TaskSet::_loadCellsOnRegularSubtreeTaskGroup;
+tbb::task_group peano::datatraversal::TaskSet::_loadVerticesOnRegularSubtreeTaskGroup;
+tbb::task_group peano::datatraversal::TaskSet::_triggerEventsOnRegularSubtreeTaskGroup;
+tbb::task_group peano::datatraversal::TaskSet::_storeCellsOnRegularSubtreeTaskGroup;
+tbb::task_group peano::datatraversal::TaskSet::_storeVerticesOnRegularSubtreeTaskGroup;
 #endif
 
 
@@ -18,6 +25,8 @@ tarch::logging::Log  peano::datatraversal::TaskSet::_log( "peano::datatraversal:
 peano::datatraversal::TaskSet::TaskSet(
   std::function<void ()>&& function1,
   std::function<void ()>&& function2,
+  TaskType                 taskType1,
+  TaskType                 taskType2,
   bool                     parallelise
 ) {
   if (parallelise) {
@@ -60,6 +69,9 @@ peano::datatraversal::TaskSet::TaskSet(
   std::function<void ()>&& function1,
   std::function<void ()>&& function2,
   std::function<void ()>&& function3,
+  TaskType                 taskType1,
+  TaskType                 taskType2,
+  TaskType                 taskType3,
   bool                     parallelise
 ) {
   if (parallelise) {
@@ -108,6 +120,10 @@ peano::datatraversal::TaskSet::TaskSet(
   std::function<void ()>&& function2,
   std::function<void ()>&& function3,
   std::function<void ()>&& function4,
+  TaskType                 taskType1,
+  TaskType                 taskType2,
+  TaskType                 taskType3,
+  TaskType                 taskType4,
   bool                     parallelise
 ) {
   if (parallelise) {
@@ -163,6 +179,11 @@ peano::datatraversal::TaskSet::TaskSet(
   std::function<void ()>&& function3,
   std::function<void ()>&& function4,
   std::function<void ()>&& function5,
+  TaskType                 taskType1,
+  TaskType                 taskType2,
+  TaskType                 taskType3,
+  TaskType                 taskType4,
+  TaskType                 taskType5,
   bool                     parallelise
 ) {
   if (parallelise) {

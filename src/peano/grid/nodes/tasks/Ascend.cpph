@@ -296,6 +296,8 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
         [&]() -> void {
           leaveCells(level-1);
         },
+		peano::datatraversal::TaskSet::TaskType::StoreVertices,
+		peano::datatraversal::TaskSet::TaskType::StoreCells,
         grainSize.runsParallel()
       );
     }

@@ -10,6 +10,11 @@
 #include <functional>
 
 
+#ifdef SharedTBB
+#include <tbb/task_group.h>
+#endif
+
+
 namespace peano {
   namespace datatraversal {
     class TaskSet;
@@ -98,14 +103,24 @@ class peano::datatraversal::TaskSet {
   private:
     static tarch::logging::Log  _log;
 
+    #ifdef SharedTBB
+    static tbb::task_group _loadCellsOnRegularSubtreeTaskGroup;
+	static tbb::task_group _loadVerticesOnRegularSubtreeTaskGroup;
+	static tbb::task_group _triggerEventsOnRegularSubtreeTaskGroup;
+	static tbb::task_group _storeCellsOnRegularSubtreeTaskGroup;
+	static tbb::task_group _storeVerticesOnRegularSubtreeTaskGroup;
+    #endif
   public:
     enum class TaskType {
+      /**
+       * Is deployed to background, but we run it asap. Not for parallel for though! Has  to be this one here.
+       */
   	  RunAsSoonAsPossible,
-	  LoadCellsOnRegularSubtree,
-	  LoadVerticesOnRegularSubtree,
-	  TriggerEventsOnRegularSubtree,
-	  StoreCellsOnRegularSubtree,
-	  StoreVerticesOnRegularSubtree,
+	  LoadCells,
+	  LoadVertices,
+	  TriggerEvents,
+	  StoreCells,
+	  StoreVertices,
   	  Background,
   	  LongRunningBackground,
   	  PersistentBackground
@@ -184,6 +199,8 @@ class peano::datatraversal::TaskSet {
     TaskSet(
       std::function<void ()>&& function1,
       std::function<void ()>&& function2,
+      TaskType                 taskType1,
+      TaskType                 taskType2,
       bool                     parallelise
     );
 
@@ -191,6 +208,9 @@ class peano::datatraversal::TaskSet {
       std::function<void ()>&& function1,
       std::function<void ()>&& function2,
       std::function<void ()>&& function3,
+      TaskType                 taskType1,
+      TaskType                 taskType2,
+      TaskType                 taskType3,
       bool                     parallelise
     );
 
@@ -199,6 +219,10 @@ class peano::datatraversal::TaskSet {
       std::function<void ()>&& function2,
       std::function<void ()>&& function3,
       std::function<void ()>&& function4,
+      TaskType                 taskType1,
+      TaskType                 taskType2,
+      TaskType                 taskType3,
+      TaskType                 taskType4,
       bool                     parallelise
     );
 
@@ -208,6 +232,11 @@ class peano::datatraversal::TaskSet {
       std::function<void ()>&& function3,
       std::function<void ()>&& function4,
       std::function<void ()>&& function5,
+      TaskType                 taskType1,
+      TaskType                 taskType2,
+      TaskType                 taskType3,
+      TaskType                 taskType4,
+      TaskType                 taskType5,
       bool                     parallelise
     );
 };
