@@ -105,9 +105,6 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
     tarch::multicore::Lock lock(BackgroundThread::_semaphore);
     receiveDanglingMessagesFromAllBuffersInPool();
   }
-  else {
-    tarch::multicore::BooleanSemaphore::sendTaskToBack();
-  }
   #endif
 }
 

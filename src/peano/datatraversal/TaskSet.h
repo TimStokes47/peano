@@ -104,11 +104,11 @@ class peano::datatraversal::TaskSet {
     static tarch::logging::Log  _log;
 
     #ifdef SharedTBB
-    static tbb::task_group _loadCellsOnRegularSubtreeTaskGroup;
-	static tbb::task_group _loadVerticesOnRegularSubtreeTaskGroup;
-	static tbb::task_group _triggerEventsOnRegularSubtreeTaskGroup;
-	static tbb::task_group _storeCellsOnRegularSubtreeTaskGroup;
-	static tbb::task_group _storeVerticesOnRegularSubtreeTaskGroup;
+    static tbb::task_group _loadCellsTaskGroup;
+	static tbb::task_group _loadVerticesTaskGroup;
+	static tbb::task_group _triggerEventsTaskGroup;
+	static tbb::task_group _storeCellsTaskGroup;
+	static tbb::task_group _storeVerticesTaskGroup;
     #endif
   public:
     enum class TaskType {
@@ -239,6 +239,13 @@ class peano::datatraversal::TaskSet {
       TaskType                 taskType5,
       bool                     parallelise
     );
+
+    static void waitForAllLoadCellsTasks();
+	static void waitForAllLoadVerticesTasks();
+	static void waitForAllEventTasks();
+	static void waitForAllStoreCellsTasks();
+	static void waitForAllStoreVerticesTasks();
+
 };
 
 

@@ -9,17 +9,43 @@ tarch::logging::Log  peano::datatraversal::TaskSet::_log( "peano::datatraversal:
 #include <tbb/parallel_invoke.h>
 
 
-tbb::task_group peano::datatraversal::TaskSet::_loadCellsOnRegularSubtreeTaskGroup;
-tbb::task_group peano::datatraversal::TaskSet::_loadVerticesOnRegularSubtreeTaskGroup;
-tbb::task_group peano::datatraversal::TaskSet::_triggerEventsOnRegularSubtreeTaskGroup;
-tbb::task_group peano::datatraversal::TaskSet::_storeCellsOnRegularSubtreeTaskGroup;
-tbb::task_group peano::datatraversal::TaskSet::_storeVerticesOnRegularSubtreeTaskGroup;
+tbb::task_group peano::datatraversal::TaskSet::_loadCellsTaskGroup;
+tbb::task_group peano::datatraversal::TaskSet::_loadVerticesTaskGroup;
+tbb::task_group peano::datatraversal::TaskSet::_triggerEventsTaskGroup;
+tbb::task_group peano::datatraversal::TaskSet::_storeCellsTaskGroup;
+tbb::task_group peano::datatraversal::TaskSet::_storeVerticesTaskGroup;
 #endif
 
 
 #if defined(SharedTBBInvade)
 #include "shminvade/SHMInvade.h"
 #endif
+
+
+
+void peano::datatraversal::TaskSet::waitForAllLoadCellsTasks() {
+
+}
+
+
+void peano::datatraversal::TaskSet::waitForAllLoadVerticesTasks() {
+
+}
+
+
+void peano::datatraversal::TaskSet::waitForAllEventTasks() {
+
+}
+
+
+void peano::datatraversal::TaskSet::waitForAllStoreCellsTasks() {
+
+}
+
+
+void peano::datatraversal::TaskSet::waitForAllStoreVerticesTasks() {
+
+}
 
 
 peano::datatraversal::TaskSet::TaskSet(

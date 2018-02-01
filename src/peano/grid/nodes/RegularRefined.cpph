@@ -19,6 +19,7 @@
 
 #include "peano/datatraversal/autotuning/Oracle.h"
 
+#include "peano/datatraversal/TaskSet.h"
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 tarch::logging::Log peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::_log( "peano::grid::nodes::RegularRefined" );
@@ -267,7 +268,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         SplitLoadVerticesTask.runsParallel() &&
         !_regularGridContainer.isLevelInitialised(TreeDepth)
       ) {
-        //tarch::multicore::BooleanSemaphore::sendTaskToBack();
+   	    peano::datatraversal::TaskSet::waitForAllLoadVerticesTasks();
       }
       #endif
       SplitLoadVerticesTask.parallelSectionHasTerminated();
