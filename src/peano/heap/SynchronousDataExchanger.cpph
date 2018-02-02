@@ -330,8 +330,18 @@ VectorContainer peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentDa
     tarch::parallel::Node::getInstance().getRank()
   );
   for (int d=0; d<DIMENSIONS; d++) {
+    #ifdef Asserts
+    const double tolerance =
+      tarch::la::NUMERICAL_ZERO_DIFFERENCE *
+      std::max(
+        1.0, std::max(
+          tarch::la::abs(messageTask->_metaInformation.getPosition(d)), tarch::la::abs(position(d))
+        )
+      );
+    #endif
+    
     assertion5(
-      tarch::la::equals(messageTask->_metaInformation.getPosition(d), position(d)),
+      tarch::la::equals(messageTask->_metaInformation.getPosition(d), position(d), tolerance),
       messageTask->_metaInformation.toString(),
       level,  position,  d,
       tarch::parallel::Node::getInstance().getRank()

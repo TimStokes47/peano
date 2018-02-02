@@ -178,8 +178,8 @@ int peano::grid::UnrolledAscendDescendLevelEnumerator::lineariseVertexIndex( con
 bool peano::grid::UnrolledAscendDescendLevelEnumerator::overlaps(const Vector& offset, const Vector& size) const {
   bool result = true;
   for (int d=0; d<DIMENSIONS; d++) {
-    result &= tarch::la::smallerEquals( offset(d),         _domainOffset(d)+(_discreteOffset(d)+1.0)*_fineGridCellSize(d));
-    result &= tarch::la::greaterEquals( offset(d)+size(d), _domainOffset(d)+_discreteOffset(d)*_fineGridCellSize(d));
+    result &= smallerEqualsUpToRelativeTolerance( offset(d),         _domainOffset(d)+(_discreteOffset(d)+1.0)*_fineGridCellSize(d));
+    result &= greaterEqualsUpToRelativeTolerance( offset(d)+size(d), _domainOffset(d)+_discreteOffset(d)*_fineGridCellSize(d));
   }
   return result;
 }

@@ -143,8 +143,8 @@ int peano::grid::SingleElementVertexEnumerator::cell(const LocalVertexIntegerInd
 bool peano::grid::SingleElementVertexEnumerator::overlaps(const Vector& offset, const Vector& size) const {
   bool result = true;
   for (int d=0; d<DIMENSIONS; d++) {
-    result &= tarch::la::smallerEquals( offset(d),         _cellOffset(d)+_cellSize(d) );
-    result &= tarch::la::greaterEquals( offset(d)+size(d), _cellOffset(d) );
+    result &= smallerEqualsUpToRelativeTolerance( offset(d),         _cellOffset(d)+_cellSize(d) );
+    result &= greaterEqualsUpToRelativeTolerance( offset(d)+size(d), _cellOffset(d) );
   }
   return result;
 }

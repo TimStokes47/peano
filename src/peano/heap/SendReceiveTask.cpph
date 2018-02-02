@@ -21,11 +21,19 @@ bool peano::heap::SendReceiveTask<Data>::fits(
   int                                           level
 ) const {
   #ifdef Asserts
+  const double tolerance =
+    tarch::la::NUMERICAL_ZERO_DIFFERENCE *
+    std::max(
+      1.0, std::max( 
+        tarch::la::maxAbs(_metaInformation.getPosition()), tarch::la::maxAbs(position)
+      )
+    );
+  
   return
     (_metaInformation.getLevel() == -1) ||
     (
       _metaInformation.getLevel() == level &&
-      tarch::la::equals(_metaInformation.getPosition(), position)
+      tarch::la::equals(_metaInformation.getPosition(), position, tolerance)
     );
   #else
   return true;

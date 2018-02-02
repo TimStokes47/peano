@@ -235,6 +235,27 @@ class peano::grid::VertexEnumerator {
      * multigrid/multiscale operations.
      */
     virtual bool isVertexAtPatchBoundaryWithinRegularSubtree(const LocalVertexIntegerIndex& localVertexNumber) const = 0;
+
+
+  protected:
+    /**
+     * Comparison operators up to relative tolerance.
+     */
+    static bool greaterEqualsUpToRelativeTolerance(const double& lhs, const double& rhs) {
+      const double scaling =
+          std::max(
+              1.0, std::max( tarch::la::abs(lhs), tarch::la::abs(rhs) )
+      );
+      return tarch::la::greaterEquals( lhs, rhs, scaling*tarch::la::NUMERICAL_ZERO_DIFFERENCE );
+    }
+
+    static bool smallerEqualsUpToRelativeTolerance(const double& lhs, const double& rhs) {
+      const double scaling =
+          std::max(
+              1.0, std::max( tarch::la::abs(lhs), tarch::la::abs(rhs) )
+      );
+      return tarch::la::smallerEquals( lhs, rhs, scaling*tarch::la::NUMERICAL_ZERO_DIFFERENCE );
+    }
 };
 
 
