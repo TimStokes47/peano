@@ -26,12 +26,16 @@ peano::datatraversal::TaskSet::TaskSet(
     case TaskType::StoreCells:
     case TaskType::StoreVertices:
       {
+        myTask();
+      }
+/*
     	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
     	getTaskGroup(taskType).run([newTask]{
            newTask->run();
            delete newTask;
         });
       }
+*/
       break;
     case TaskType::Background:
       {
