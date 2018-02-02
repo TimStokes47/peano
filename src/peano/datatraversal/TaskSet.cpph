@@ -2,7 +2,6 @@
     
 #include "tarch/multicore/BackgroundTasks.h"
 
-
 template <class Functor>
 peano::datatraversal::TaskSet::TaskSet(
   Functor&  myTask,
@@ -22,63 +21,16 @@ peano::datatraversal::TaskSet::TaskSet(
       }
       break;
     case TaskType::LoadCells:
-      {
-          myTask();
-/*
-    	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
-        _loadCellsTaskGroup.run([newTask]{
-       	newTask->run();
-           delete newTask;
-        });
-*/
-      }
-      break;
     case TaskType::LoadVertices:
-      {
-          myTask();
-/*
-      	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
-        _loadVerticesTaskGroup.run([newTask]{
-        	newTask->run();
-            delete newTask;
-         });
-*/
-      }
-      break;
     case TaskType::TriggerEvents:
-      {
-          myTask();
-/*
-      	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
-        _triggerEventsTaskGroup.run([newTask]{
-        	newTask->run();
-            delete newTask;
-         });
-*/
-      }
-      break;
     case TaskType::StoreCells:
-      {
-          myTask();
-/*
-      	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
-        _storeCellsTaskGroup.run([newTask]{
-        	newTask->run();
-            delete newTask;
-         });
-*/
-      }
-      break;
     case TaskType::StoreVertices:
       {
-          myTask();
-/*
-      	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
-        _storeVerticesTaskGroup.run([newTask]{
-        	newTask->run();
-            delete newTask;
-         });
-*/
+    	Task* newTask = new Task(myTask,tarch::multicore::TaskType::RunAsSoonAsPossible);
+    	getTaskGroup(taskType).run([newTask]{
+           newTask->run();
+           delete newTask;
+        });
       }
       break;
     case TaskType::Background:
@@ -101,3 +53,4 @@ peano::datatraversal::TaskSet::TaskSet(
   myTask();
   #endif
 }
+

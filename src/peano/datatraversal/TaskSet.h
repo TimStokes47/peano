@@ -100,16 +100,6 @@ while (!taskHasTerminated) {
  * @author Tobias Weinzierl
  */
 class peano::datatraversal::TaskSet {
-  private:
-    static tarch::logging::Log  _log;
-
-    #ifdef SharedTBB
-    static tbb::task_group _loadCellsTaskGroup;
-	static tbb::task_group _loadVerticesTaskGroup;
-	static tbb::task_group _triggerEventsTaskGroup;
-	static tbb::task_group _storeCellsTaskGroup;
-	static tbb::task_group _storeVerticesTaskGroup;
-    #endif
   public:
     enum class TaskType {
       /**
@@ -126,7 +116,20 @@ class peano::datatraversal::TaskSet {
   	  LongRunningBackground,
   	  PersistentBackground
     };
+  private:
+    static tarch::logging::Log  _log;
 
+    #ifdef SharedTBB
+    static tbb::task_group _genericTaskGroup;
+    static tbb::task_group _loadCellsTaskGroup;
+	static tbb::task_group _loadVerticesTaskGroup;
+	static tbb::task_group _triggerEventsTaskGroup;
+	static tbb::task_group _storeCellsTaskGroup;
+	static tbb::task_group _storeVerticesTaskGroup;
+
+	static tbb::task_group&  getTaskGroup( TaskType type );
+    #endif
+  public:
     /**
      * Spawn One Asynchronous Task
      *
@@ -196,6 +199,7 @@ class peano::datatraversal::TaskSet {
     true
   );
      *
+     * Please do not invoke any background threads through this operation.
      */
     TaskSet(
       std::function<void ()>&& function1,
