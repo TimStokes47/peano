@@ -152,7 +152,7 @@ int tarch::multicore::jobs::getNumberOfPendingJobs(int jobClass) {
 }
 
 
-bool tarch::multicore::jobs::processJobs(int jobClass, bool continueWithOtherClassesIfJobClassIsEmpty) {
+bool tarch::multicore::jobs::processJob(int jobClass) {
   return false;
 }
 
