@@ -537,6 +537,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     _regularGridContainer.toString(), _coarsestLevelOfThisTask, _regularGridContainer.getCell(0,0).toString(),
     _regularGridContainer.getVertexEnumerator(0).getCellFlags()
   );
+
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel)) {
     peano::datatraversal::TaskSet::waitForEventTask();
   }
@@ -735,7 +736,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
     bool allTasksHaveTerminated = false;
     logDebug( "operator()()", "wait until all store processes have terminated. active-tasks=" << _activeStoreTasks );
     while (!allTasksHaveTerminated) {
-      peano::datatraversal::TaskSet::waitForEventTask();
+      peano::datatraversal::TaskSet::waitForStoreVerticesTask();
 
       leaveOperatorlock.lock();
       allTasksHaveTerminated = _activeStoreTasks == 1;

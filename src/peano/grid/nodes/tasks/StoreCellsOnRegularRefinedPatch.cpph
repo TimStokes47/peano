@@ -58,6 +58,10 @@ void peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch<Vertex,Cell,Cell
   assertion2( _storeProcessRunsInParallelToOtherTasks || _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel), currentLevel, _regularGridContainer.toString() );
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel)) {
     peano::datatraversal::TaskSet::waitForEventTask();
+    // Hier bleibt der 1er stecken
+    // Der 2er wartet auch draussen
+    // Der 3er wartet auch draussen
+    // Der 4er wartet auch draussen
   }
   #endif
 

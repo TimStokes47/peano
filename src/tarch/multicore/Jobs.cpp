@@ -16,9 +16,9 @@ tarch::multicore::jobs::BackgroundJob::BackgroundJob( tarch::multicore::jobs::Ba
       ( _maxNumberOfRunningBackgroundThreads==DontUseAnyBackgroundJobs )
       ||
       (
-        _maxNumberOfRunningBackgroundThreads==ProcessNormalBackgroundJobsImmediately
-        &
-        jobType != BackgroundJobType::PersistentBackgroundJob
+        (_maxNumberOfRunningBackgroundThreads==ProcessNormalBackgroundJobsImmediately)
+        &&
+        (jobType!=BackgroundJobType::PersistentBackgroundJob)
       )
 	)
 	? BackgroundJobType::ProcessImmediately : jobType
@@ -147,12 +147,8 @@ int tarch::multicore::jobs::getNumberOfPendingJobs() {
 }
 
 
-int tarch::multicore::jobs::getNumberOfPendingJobs(int jobClass) {
-  return 0;
-}
 
-
-bool tarch::multicore::jobs::processJob(int jobClass) {
+bool tarch::multicore::jobs::processJobs(int jobClass) {
   return false;
 }
 

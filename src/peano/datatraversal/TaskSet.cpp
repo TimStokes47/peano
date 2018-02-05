@@ -63,35 +63,35 @@ bool peano::datatraversal::TaskSet::isTask( TaskType type ) {
 
 void peano::datatraversal::TaskSet::waitForLoadCellsTask() {
   logDebug( "waitForAllLoadCellsTasks()", "start to wait for load cell tasks" );
-  tarch::multicore::jobs::processJob(translateIntoJobClass(TaskType::LoadCells));
+  tarch::multicore::jobs::processJobs(translateIntoJobClass(TaskType::LoadCells));
   logDebug( "waitForAllLoadCellsTasks()", "wait for load cell tasks finished" );
 }
 
 
 void peano::datatraversal::TaskSet::waitForLoadVerticesTask() {
   logDebug( "waitForAllLoadVerticesTasks()", "start to wait for load vertices tasks" );
-  tarch::multicore::jobs::processJob(translateIntoJobClass(TaskType::LoadVertices));
+  tarch::multicore::jobs::processJobs(translateIntoJobClass(TaskType::LoadVertices));
   logDebug( "waitForAllLoadVerticesTasks()", "wait for load vertices tasks finished" );
 }
 
 
 void peano::datatraversal::TaskSet::waitForEventTask() {
   logDebug( "waitForAllEventTasks()", "start to wait for event tasks" );
-  tarch::multicore::jobs::processJob(translateIntoJobClass(TaskType::TriggerEvents));
+  tarch::multicore::jobs::processJobs(translateIntoJobClass(TaskType::TriggerEvents));
   logDebug( "waitForAllEventTasks()", "wait for event tasks finished" );
 }
 
 
 void peano::datatraversal::TaskSet::waitForStoreCellsTask() {
   logDebug( "waitForAllStoreCellsTasks()", "start to wait for store cell tasks" );
-  tarch::multicore::jobs::processJob(translateIntoJobClass(TaskType::StoreCells));
+  tarch::multicore::jobs::processJobs(translateIntoJobClass(TaskType::StoreCells));
   logDebug( "waitForAllStoreCellsTasks()", "wait for store cell tasks finished" );
 }
 
 
 void peano::datatraversal::TaskSet::waitForStoreVerticesTask() {
   logDebug( "waitForAllStoreVerticesTasks()", "start to wait for store vertices tasks" );
-  tarch::multicore::jobs::processJob(translateIntoJobClass(TaskType::StoreVertices));
+  tarch::multicore::jobs::processJobs(translateIntoJobClass(TaskType::StoreVertices));
   logDebug( "waitForAllStoreVerticesTasks()", "wait for store vertices tasks finished" );
 }
 

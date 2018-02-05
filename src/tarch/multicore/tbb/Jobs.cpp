@@ -13,6 +13,7 @@
 #include <tbb/task.h>
 #include <tbb/tbb_thread.h>
 #include <tbb/task_group.h>
+#include <tbb/concurrent_hash_map.h>
 
 
 namespace {
@@ -39,11 +40,29 @@ namespace {
    * The active tasks
    */
   tbb::concurrent_queue<tarch::multicore::jobs::BackgroundJob*>  _backgroundJobs;
-  tbb::concurrent_queue<tarch::multicore::jobs::Job*>            _jobs;
+
+  struct JobQueue {
+    tbb::concurrent_queue<tarch::multicore::jobs::Job*> jobs;
+  };
+
+  typedef tbb::concurrent_hash_map< int, JobQueue >  JobMap;
+
+  JobMap     _pendingJobs;
 
 
   tarch::logging::Log _log( "tarch::multicore" );
 
+
+
+  JobQueue& getJobQueue( int jobClass ) {
+	if ( _pendingJobs.count(jobClass)==0 ) {
+      JobMap::accessor    a;
+      _pendingJobs.insert( a, jobClass );
+	}
+    JobMap::accessor c;
+    _pendingJobs.find( c, jobClass );
+    return c->second;
+  }
 
   /**
    * This is a task which consumes background jobs, as it invokes
@@ -77,7 +96,7 @@ namespace {
       
       
       tbb::task* execute() {
-        tarch::multicore::jobs::processJob(_jobClass);
+        tarch::multicore::jobs::processJobs(_jobClass);
         return nullptr;
       }
   };
@@ -146,6 +165,56 @@ namespace {
         return nullptr;
       }
   };
+
+  /**
+   * Helper function of the for loops and the parallel task invocations.
+   *
+   * Primarily invoked by the spawnAndWait routines.
+   *
+   * As we call this helper within a parallel section, it makes sense to run all real
+   * tasks immediately. It does not make sense to wait. If we have a non-task,
+   * we enqueue it and we return. Originally, I thought it might be clever to
+   * trigger a consumer task. But this is not that clever actually: If a parallel
+   * section triggers k tasks (which in turn might spawn new subtasks) on a
+   * machine with less than k hardware threads (l < k), then it might happen that
+   * these l tasks all rely on input from one of the remaining k-l tasks. the
+   * waits typically enter a busy loop where they try to process further tasks.
+   * We might end up with a deadlock, as the original jobs of the parallel section
+   * that insert the k-l jobs into their respective queue haven't been started up
+   * yet. The system deadlocks as TBB does process jobs depth-first.
+   *
+   * The solution is rather straightforward consequently: A parallel for has to
+   * spawn all of its tasks though spawnBlockingJob. All of these invocations will
+   * insert jobs into the queues - besides the real tasks which can be handled
+   * straight away as they, by definition, do not rely on input data while they are
+   * running. Once all the jobs are enqueued (spawned), we actually kick off the
+   * processing TBB tasks, i.e. the consumer tasks. Here, we can be overambitious -
+   * if one of these guys finds its queues empty, it terminates immediately.
+   */
+  void spawnBlockingJob(
+    std::function<void()>&  job,
+    tbb::atomic<int>&       semaphore,
+    bool                    isTask,
+    int                     jobClass
+  ) {
+    if ( isTask ) {
+      job();
+      semaphore.fetch_and_add(-1);
+    }
+    else {
+      getJobQueue(jobClass).jobs.push(
+        new JobWithoutCopyOfFunctorAndSemaphore(job, semaphore, isTask, jobClass )
+      );
+
+      logDebug( "spawnBlockingJob(...)", "enqueued job. tasks in this queue of class " << jobClass << "=" << getJobQueue(jobClass).jobs.unsafe_size() );
+
+      // @todo revise comments: Here, we may neither spawn nor enqueue as this causes deadlocks; other producer tasks might then not be active,
+      //       while these guys start off immediately and then wait for their dependencies
+      // JobConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) JobConsumerTask(jobClass,false);
+      // tbb::task::enqueue(*tbbTask);
+      // _backgroundTaskContext.set_priority(tbb::priority_high);
+    }
+  }
 }
 
 
@@ -257,61 +326,15 @@ void tarch::multicore::jobs::spawn(Job*  job) {
     tbb::task::spawn(*tbbTask);
   }
   else {
-    _jobs.push(job);
+    getJobQueue(job->getClass()).jobs.push(job);
 
-    logDebug( "spawn(Job*)", "enqueued job and issue consumer TBB task" );
+    logDebug( "spawn(Job*)", "enqueued job of class " << job->getClass() );
 
-    JobConsumerTask* tbbTask = new(tbb::task::allocate_root(_jobTaskContext)) JobConsumerTask(job->getClass(),false);
-    tbb::task::spawn(*tbbTask);
+    // Vorsicht hier
+    //JobConsumerTask* tbbTask = new(tbb::task::allocate_root(_jobTaskContext)) JobConsumerTask(job->getClass(),false);
+    //tbb::task::spawn(*tbbTask);
   }
 }
-
-
-
-/**
- * Helper function of the for loops and the parallel task invocations. 
- * 
- * Primarily invoked by the spawnAndWait routines.
- * 
- * As we call this helper within a parallel section, it makes sense to run all real
- * tasks immediately. It does not make sense to wait. If we have a non-task,
- * we enqueue it and we return. Originally, I thought it might be clever to 
- * trigger a consumer task. But this is not that clever actually: If a parallel
- * section triggers k tasks (which in turn might spawn new subtasks) on a 
- * machine with less than k hardware threads (l < k), then it might happen that 
- * these l tasks all rely on input from one of the remaining k-l tasks. the
- * waits typically enter a busy loop where they try to process further tasks. 
- * We might end up with a deadlock, as the original jobs of the parallel section
- * that insert the k-l jobs into their respective queue haven't been started up 
- * yet. The system deadlocks as TBB does process jobs depth-first.
- * 
- * The solution is rather straightforward consequently: A parallel for has to 
- * spawn all of its tasks though spawnBlockingJob. All of these invocations will
- * insert jobs into the queues - besides the real tasks which can be handled
- * straightaway as they, by definition, do not rely on input data while they are 
- * running. Once all the jobs are enqueued (spawned), we actually kick off the 
- * processing TBB tasks, i.e. the consumer tasks. Here, we can be overambitious - 
- * if one of these guys finds its queues empty, it terminates immediately.
- */
-void spawnBlockingJob(
-  std::function<void()>&  job,
-  tbb::atomic<int>&       semaphore,
-  bool                    isTask,
-  int                     jobClass
-) {     
-  if ( isTask ) {
-    job();
-    semaphore.fetch_and_add(-1);
-  }
-  else {
-    _jobs.push(
-      new JobWithoutCopyOfFunctorAndSemaphore(job, semaphore, isTask, jobClass )
-    );
-
-    logDebug( "spawnBlockingJob(Job*)", "enqueued job and issue consumer TBB task" );
-  }
-}
-
 
 
 void tarch::multicore::jobs::spawn(std::function<void()>& job, bool isTask, int jobClass) {
@@ -319,31 +342,38 @@ void tarch::multicore::jobs::spawn(std::function<void()>& job, bool isTask, int 
 }
 
 
+/**
+ * @see processJobs()
+ */
 int tarch::multicore::jobs::getNumberOfPendingJobs() {
-  return _jobs.unsafe_size();
+  int result = 0;
+  logDebug( "processJobs()", "there are " << _pendingJobs.size() << " class queues" );
+  for (auto& p: _pendingJobs) {
+	result += p.second.jobs.unsafe_size();
+  }
+  return result;
 }
 
 
-bool tarch::multicore::jobs::processJob(int jobClass) {
+bool tarch::multicore::jobs::processJobs(int jobClass) {
   logDebug( "processJobs()", "search for jobs of class " << jobClass );
 
   Job* myTask   = nullptr;
-  bool gotOne   = _jobs.try_pop(myTask);
+  bool gotOne   = getJobQueue(jobClass).jobs.try_pop(myTask);
   bool result   = false;
-  bool foundOne = false;
   while (gotOne) {
     result   = true;
-    foundOne = myTask->getClass()==jobClass;
+    logDebug( "processJob(int)", "start to process job of class " << jobClass );
     myTask->run();
     delete myTask;
-    if (!foundOne) {
-      gotOne = _jobs.try_pop(myTask);
-    }
-    else {
-      gotOne = false;
-    }
+    logDebug(
+      "processJob(int)", "job of class " << jobClass << " complete, there are still " <<
+	  getJobQueue(jobClass).jobs.unsafe_size() <<
+	  " jobs of this class pending"
+	);
+    gotOne = getJobQueue(jobClass).jobs.try_pop(myTask);
   }
-  
+
   return result;
 }
 
@@ -353,18 +383,25 @@ bool tarch::multicore::jobs::processJob(int jobClass) {
  * invoke processJobs() again, i.e. pass in false as argument, as we otherwise
  * obtain endless cascadic recursion. The routine should not spawn new tasks on
  * its own, as it is itself used by the job consumer tasks.
+ *
+ * <h2> Implementation </h2>
+ *
+ * It is absolutely essential that one uses auto&. With a copy/read-only
+ * reference, the code crashes if someone insert stuff concurrently.
+ *
+ * <h2> Danger </h2>
+ *
+ * If you run with many job classes, i.e. 'tasks' that depend on each other, then
+ * invoking this routine is dangerous. It bears the risk that you spawn more and
+ * more jobs that depend on another job and you thus run into a situation, where
+ * all TBB tasks process one particular job type.
  */
 bool tarch::multicore::jobs::processJobs() {
-  Job* myTask   = nullptr;
-  bool gotOne   = _jobs.try_pop(myTask);
-  bool result   = false;
-  while (gotOne) {
-    result   = true;
-    myTask->run();
-    delete myTask;
-    gotOne = _jobs.try_pop(myTask);
+  bool result = false;
+
+  for (auto& p: _pendingJobs) {
+	result |= processJobs(p.first);
   }
-  
   result |= processBackgroundJobs();
   
   return result;
@@ -391,10 +428,16 @@ void tarch::multicore::jobs::spawnAndWait(
     }
   );
 
-  logDebug( "spawnAndWait(...)", "have handed both jobs over to system. Wait for them to terminate" );
 
   while (semaphore>0) {
-    processJobs();    
+    tbb::parallel_invoke(
+      [&] () -> void {
+        processJobs(jobClass0);
+      },
+      [&] () -> void {
+        processJobs(jobClass1);
+      }
+    );
   }
 }
 
@@ -411,7 +454,7 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass2
 ) {
   tbb::atomic<int>  semaphore(3);
-  
+
   tbb::parallel_invoke(
     [&] () -> void {
       spawnBlockingJob( job0, semaphore, isTask0, jobClass0 );
@@ -423,19 +466,19 @@ void tarch::multicore::jobs::spawnAndWait(
       spawnBlockingJob( job2, semaphore, isTask2, jobClass2 );
     }
   );
-  
-  logDebug( "spawnAndWait(...)", "have handed both jobs over to runtime system. Wait for them to terminate" );
-
-  if (semaphore>0) {
-    tbb::task_group g;
-    g.run( [&]() {processJob(jobClass0); } );
-    g.run( [&]() {processJob(jobClass1); } );
-    g.run( [&]() {processJob(jobClass2); } );
-    g.wait();
-  }
 
   while (semaphore>0) {
-    processJobs();    
+    tbb::parallel_invoke(
+      [&] () -> void {
+        processJobs(jobClass0);
+      },
+      [&] () -> void {
+        processJobs(jobClass1);
+      },
+      [&] () -> void {
+        processJobs(jobClass2);
+      }
+    );
   }
 }
 
@@ -474,10 +517,21 @@ void tarch::multicore::jobs::spawnAndWait(
     }
   );
   
-  logDebug( "spawnAndWait(...)", "have handed both jobs over to runtime system. Wait for them to terminate" );
-  
   while (semaphore>0) {
-    processJobs();    
+    tbb::parallel_invoke(
+      [&] () -> void {
+        processJobs(jobClass0);
+      },
+      [&] () -> void {
+        processJobs(jobClass1);
+      },
+      [&] () -> void {
+        processJobs(jobClass2);
+      },
+      [&] () -> void {
+        processJobs(jobClass3);
+      }
+    );
   }
 }
 
@@ -519,10 +573,25 @@ void tarch::multicore::jobs::spawnAndWait(
     }
   );
   
-  logDebug( "spawnAndWait(...)", "have handed both jobs over to runtime system. Wait for them to terminate" );
-  
+
   while (semaphore>0) {
-    processJobs();    
+    tbb::parallel_invoke(
+      [&] () -> void {
+        processJobs(jobClass0);
+      },
+      [&] () -> void {
+        processJobs(jobClass1);
+      },
+      [&] () -> void {
+        processJobs(jobClass2);
+      },
+      [&] () -> void {
+        processJobs(jobClass3);
+      },
+      [&] () -> void {
+        processJobs(jobClass4);
+      }
+    );
   }
 }
 
@@ -570,10 +639,27 @@ void tarch::multicore::jobs::spawnAndWait(
     }
   );
   
-  logDebug( "spawnAndWait(...)", "have handed both jobs over to runtime system. Wait for them to terminate" );
-
   while (semaphore>0) {
-    processJobs();    
+    tbb::parallel_invoke(
+      [&] () -> void {
+        processJobs(jobClass0);
+      },
+      [&] () -> void {
+        processJobs(jobClass1);
+      },
+      [&] () -> void {
+        processJobs(jobClass2);
+      },
+      [&] () -> void {
+        processJobs(jobClass3);
+      },
+      [&] () -> void {
+        processJobs(jobClass4);
+      },
+      [&] () -> void {
+        processJobs(jobClass5);
+      }
+    );
   }
 }
 

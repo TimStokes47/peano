@@ -307,7 +307,7 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
       leaveCells(level-1);
     }
   }
-  
+
   if (_treeRemainsStatic) {
     dfor2(i)
       _gridContainer.getVertex(0,iScalar).setCurrentAdjacentCellsHeight(static_cast<peano::grid::CellFlags>(_treeDepth));

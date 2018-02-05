@@ -244,7 +244,11 @@ namespace tarch {
        );
 
        int getNumberOfPendingJobs();
-       bool processJob(int jobClass);
+
+       /**
+        * Handle only jobs of one job class.
+        */
+       bool processJobs(int jobClass);
 
        /**
         * Process any pending job. This includes background threads.
