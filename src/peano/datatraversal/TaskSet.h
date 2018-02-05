@@ -10,11 +10,6 @@
 #include <functional>
 
 
-#ifdef SharedTBB
-#include <tbb/task_group.h>
-#endif
-
-
 namespace peano {
   namespace datatraversal {
     class TaskSet;
@@ -119,16 +114,9 @@ class peano::datatraversal::TaskSet {
   private:
     static tarch::logging::Log  _log;
 
-    #ifdef SharedTBB
-    static tbb::task_group _genericTaskGroup;
-    static tbb::task_group _loadCellsTaskGroup;
-	static tbb::task_group _loadVerticesTaskGroup;
-	static tbb::task_group _triggerEventsTaskGroup;
-	static tbb::task_group _storeCellsTaskGroup;
-	static tbb::task_group _storeVerticesTaskGroup;
+    static int   translateIntoJobClass( TaskType type );
+    static bool  isTask( TaskType type );
 
-	static tbb::task_group&  getTaskGroup( TaskType type );
-    #endif
   public:
     /**
      * Spawn One Asynchronous Task
@@ -177,10 +165,9 @@ class peano::datatraversal::TaskSet {
      * persistently (in the background) for a very long time. It is only
      * to be used for tasks that either are reasonably short.
      */
-    template <class Functor>
-    inline TaskSet(
-      Functor&   task,
-      TaskType   taskType
+    TaskSet(
+      std::function<void()>&& task,
+      TaskType                taskType
     );
 
     /**
@@ -202,11 +189,11 @@ class peano::datatraversal::TaskSet {
      * Please do not invoke any background threads through this operation.
      */
     TaskSet(
-      std::function<void ()>&& function1,
-      std::function<void ()>&& function2,
-	  TaskType                 taskType1,
-	  TaskType                 taskType2,
-      bool                     parallelise
+      std::function<void ()>&&  function1,
+      std::function<void ()>&&  function2,
+	  TaskType                  taskType1,
+	  TaskType                  taskType2,
+      bool                      parallelise
     );
 
     TaskSet(
@@ -245,23 +232,14 @@ class peano::datatraversal::TaskSet {
       bool                     parallelise
     );
 
-    /**
-     * The name is slightly wrong. We actually wait for all load cell tasks
-     * spawned by the original load cell task (root) to complete. We cannot
-     * wait for the original task, as this task might have been triggered
-     * together with an other task triggering this wait. Which would inevitably
-     * lead into a deadlock.
-     */
-    static void waitForAllLoadCellsTasks();
-	static void waitForAllLoadVerticesTasks();
-	static void waitForAllEventTasks();
-	static void waitForAllStoreCellsTasks();
-	static void waitForAllStoreVerticesTasks();
+    static void waitForLoadCellsTask();
+	static void waitForLoadVerticesTask();
+	static void waitForEventTask();
+	static void waitForStoreCellsTask();
+	static void waitForStoreVerticesTask();
 
 };
 
-
-#include "peano/datatraversal/TaskSet.cpph"
 
 #endif
 

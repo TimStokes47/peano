@@ -7,6 +7,9 @@
 #include "tarch/timing/Watch.h"
 #include "tarch/multicore/Lock.h"
 
+
+#include "tarch/multicore/Jobs.h"
+
 #include "peano/datatraversal/TaskSet.h"
 
 
@@ -224,7 +227,7 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
         terminate = true;
         break;
     }
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    tarch::multicore::jobs::processJobs();
   }
 }
 

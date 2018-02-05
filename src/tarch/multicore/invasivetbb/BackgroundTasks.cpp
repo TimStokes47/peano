@@ -1,4 +1,4 @@
-#include "tarch/multicore/BackgroundTasks.h"
+#include "../Jobs.h"
 #include "peano/performanceanalysis/Analysis.h"
 
 #if defined(SharedTBBInvade)

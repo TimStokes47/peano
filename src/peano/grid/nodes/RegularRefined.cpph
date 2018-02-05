@@ -268,7 +268,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         SplitLoadVerticesTask.runsParallel() &&
         !_regularGridContainer.isLevelInitialised(TreeDepth)
       ) {
-   	    peano::datatraversal::TaskSet::waitForAllLoadVerticesTasks();
+   	    peano::datatraversal::TaskSet::waitForLoadVerticesTask();
       }
       #endif
       SplitLoadVerticesTask.parallelSectionHasTerminated();

@@ -1,4 +1,4 @@
-#include "tarch/multicore/BackgroundTasks.h"
+#include "../Jobs.h"
 #include "tarch/Assertions.h"
 
 

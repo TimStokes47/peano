@@ -41,8 +41,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
   assertion2(_gridContainer.isLevelInitialised(level), level, _gridContainer.toString());
   #else
   while (_descendProcessRunsInParallelToOtherTasks && !_gridContainer.isLevelInitialised(level)) {
-    peano::datatraversal::TaskSet::waitForAllLoadCellsTasks();
-    peano::datatraversal::TaskSet::waitForAllLoadVerticesTasks();
+    peano::datatraversal::TaskSet::waitForLoadCellsTask();
+    peano::datatraversal::TaskSet::waitForLoadVerticesTask();
   }
   #endif
 
