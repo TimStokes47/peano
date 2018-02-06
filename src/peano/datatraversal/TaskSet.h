@@ -100,8 +100,8 @@ class peano::datatraversal::TaskSet {
       /**
        * Is deployed to background.
        */
-  	  RunAsSoonAsPossible,
-  	  RunImmediately,
+  	  IsTaskAndRunAsSoonAsPossible,
+  	  IsTaskAndRunImmediately,
 	  LoadCells,
 	  LoadVertices,
 	  TriggerEvents,

@@ -23,7 +23,10 @@ namespace tarch {
     namespace jobs {
        enum class BackgroundJobType {
          BackgroundJob,
-		 RunAsSoonAsPossible,
+		 /**
+		  * Task implies that there are no dependencies.
+		  */
+		 IsTaskAndRunAsSoonAsPossible,
          LongRunningBackgroundJob,
          PersistentBackgroundJob,
 		 /**

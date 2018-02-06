@@ -16,9 +16,9 @@ tarch::logging::Log  peano::datatraversal::TaskSet::_log( "peano::datatraversal:
 int  peano::datatraversal::TaskSet::translateIntoJobClass( TaskType type ) {
   const int Default = 32;
   switch ( type ) {
-    case TaskType::RunAsSoonAsPossible:
+    case TaskType::IsTaskAndRunAsSoonAsPossible:
    	  return 0;
-    case TaskType::RunImmediately:
+    case TaskType::IsTaskAndRunImmediately:
      	  return Default;
     case TaskType::LoadCells:
  	  return 1;
@@ -42,8 +42,8 @@ int  peano::datatraversal::TaskSet::translateIntoJobClass( TaskType type ) {
 
 bool peano::datatraversal::TaskSet::isTask( TaskType type ) {
   switch ( type ) {
-    case TaskType::RunAsSoonAsPossible:
-    case TaskType::RunImmediately:
+    case TaskType::IsTaskAndRunAsSoonAsPossible:
+    case TaskType::IsTaskAndRunImmediately:
    	  return true;
     case TaskType::LoadCells:
     case TaskType::LoadVertices:
@@ -259,10 +259,10 @@ peano::datatraversal::TaskSet::TaskSet(
   typedef tarch::multicore::jobs::GenericBackgroundJobWithCopyOfFunctor BackgroundJob;
   typedef tarch::multicore::jobs::GenericJobWithCopyOfFunctor           Job;
   switch (taskType) {
-    case TaskType::RunImmediately:
+    case TaskType::IsTaskAndRunImmediately:
       myTask();
       break;
-    case TaskType::RunAsSoonAsPossible:
+    case TaskType::IsTaskAndRunAsSoonAsPossible:
     case TaskType::LoadCells:
     case TaskType::LoadVertices:
     case TaskType::TriggerEvents:

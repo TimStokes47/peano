@@ -230,7 +230,7 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      * <h2> Multicore parallelisation </h2>
      *
      * If a load vertex process split up on its coarsest level, it is important
-     * that it does not use task's RunAsSoonAsPossible. In TBB, this flag
+     * that it does not use task's IsTaskAndRunAsSoonAsPossible. In TBB, this flag
      * implies that the spawned operations are done on the same thread if not
      * possible otherwise in a depth-first order. This means the current thread
      * is stopped and we continue with the new subthread. This is not wanted

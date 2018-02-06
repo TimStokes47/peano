@@ -14,6 +14,7 @@
 #include <tbb/tbb_thread.h>
 #include <tbb/task_group.h>
 #include <tbb/concurrent_hash_map.h>
+#include <limits>
 
 
 namespace {
@@ -63,21 +64,6 @@ namespace {
     _pendingJobs.find( c, jobClass );
     return c->second;
   }
-
-  /**
-   * This is a task which consumes background jobs, as it invokes
-   * processBackgroundJobs().
-   */
-  class BackgroundJobConsumerTask: public tbb::task {
-    public:
-      BackgroundJobConsumerTask() {}
-      tbb::task* execute() {
-        tarch::multicore::jobs::processBackgroundJobs();
-        _numberOfRunningBackgroundThreads.fetch_and_add(-1);
-        return nullptr;
-      }
-  };
-
 
   /**
    * This is a task which consumes background jobs, as it invokes
@@ -215,6 +201,59 @@ namespace {
       // _backgroundTaskContext.set_priority(tbb::priority_high);
     }
   }
+
+  bool processNumberOfBackgroundJobs(int maxJobs) {
+    logDebug( "processNumberOfBackgroundJobs()", "background consumer task becomes awake" );
+
+    tarch::multicore::jobs::BackgroundJob* myTask = nullptr;
+    bool gotOne = _backgroundJobs.try_pop(myTask);
+    bool result = false;
+    while (gotOne && maxJobs>0) {
+      logDebug( "processNumberOfBackgroundJobs()", "consumer task found job to do" );
+      myTask->run();
+      const bool taskHasBeenLongRunning = myTask->isLongRunning();
+      delete myTask;
+      maxJobs--;
+      result = true;
+      if ( maxJobs>0 && !taskHasBeenLongRunning ) {
+        gotOne = _backgroundJobs.try_pop(myTask);
+      }
+    }
+
+    logDebug( "processNumberOfBackgroundJobs()", "background task consumer is done and kills itself" );
+
+    return result;
+  }
+
+  /**
+   * This is a task which consumes background jobs, as it invokes
+   * processBackgroundJobs().
+   */
+  class BackgroundJobConsumerTask: public tbb::task {
+    private:
+	  const int _maxJobs;
+      BackgroundJobConsumerTask(int maxJobs):
+        _maxJobs(maxJobs) {
+      }
+    public:
+      static void enqueue() {
+        _numberOfRunningBackgroundThreads.fetch_and_add(1);
+        BackgroundJobConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) BackgroundJobConsumerTask(
+          std::max( 1, static_cast<int>(_backgroundJobs.unsafe_size())/2 )
+        );
+        tbb::task::enqueue(*tbbTask);
+        _backgroundTaskContext.set_priority(tbb::priority_low);
+      }
+
+      tbb::task* execute() {
+        processNumberOfBackgroundJobs(_maxJobs);
+        _numberOfRunningBackgroundThreads.fetch_and_add(-1);
+        if (!_backgroundJobs.empty()) {
+          enqueue();
+        }
+        return nullptr;
+      }
+  };
 }
 
 
@@ -226,7 +265,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* task) {
       task->run();
       delete task;
       break;
-    case BackgroundJobType::RunAsSoonAsPossible:
+    case BackgroundJobType::IsTaskAndRunAsSoonAsPossible:
       {
         // This is basically an alternative for spawn introduced with newer TBB version
         _task_group.run(
@@ -246,23 +285,14 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* task) {
           currentlyRunningBackgroundThreads<BackgroundJob::_maxNumberOfRunningBackgroundThreads
         ) {
           logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
-          _numberOfRunningBackgroundThreads.fetch_and_add(1);
-          BackgroundJobConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) BackgroundJobConsumerTask();
-          tbb::task::enqueue(*tbbTask);
-          _backgroundTaskContext.set_priority(tbb::priority_low);
-          logDebug( "kickOffBackgroundTask(BackgroundTask*)", "it is out now" );
+          BackgroundJobConsumerTask::enqueue();
         }
       }
       break;
     case BackgroundJobType::LongRunningBackgroundJob:
       {
         _backgroundJobs.push(task);
-        
-        _numberOfRunningBackgroundThreads.fetch_and_add(1);
-        BackgroundJobConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) BackgroundJobConsumerTask();
-        tbb::task::enqueue(*tbbTask);
-        _backgroundTaskContext.set_priority(tbb::priority_low);
-        logDebug( "kickOffBackgroundTask(BackgroundTask*)", "it is out now" );
+        BackgroundJobConsumerTask::enqueue();
       }
       break;
     case BackgroundJobType::PersistentBackgroundJob:
@@ -279,23 +309,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* task) {
 
 
 bool tarch::multicore::jobs::processBackgroundJobs() {
-  logDebug( "execute()", "background consumer task becomes awake" );
-
-  BackgroundJob* myTask = nullptr;
-  bool gotOne = _backgroundJobs.try_pop(myTask);
-  bool result = false;
-  while (gotOne) {
-    logDebug( "execute()", "consumer task found job to do" );
-    myTask->run();
-    const bool taskHasBeenLongRunning = myTask->isLongRunning();
-    delete myTask;
-    gotOne = taskHasBeenLongRunning ? false : _backgroundJobs.try_pop(myTask);
-    result = true;
-  }
-
-  logDebug( "execute()", "background task consumer is done and kills itself" );
-
-  return result;
+  return processNumberOfBackgroundJobs(std::numeric_limits<int>::max());
 }
 
 
