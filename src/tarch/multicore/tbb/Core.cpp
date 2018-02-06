@@ -8,8 +8,8 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 
 tarch::multicore::Core::Core():
-  _numberOfThreads(::tbb::task_scheduler_init::default_num_threads()),
-  _task_scheduler_init(_numberOfThreads),
+//  _numberOfThreads(::tbb::task_scheduler_init::default_num_threads()),
+  _task_scheduler_init(tbb::task_scheduler_init::deferred),
   _pinningObserver(1) {
 }
 
@@ -59,7 +59,8 @@ int tarch::multicore::Core::getNumberOfThreads() const {
 
 
 bool tarch::multicore::Core::isInitialised() const {
-  return _task_scheduler_init.is_active();
+  return true;
+//  return _task_scheduler_init.is_active();
 }
 
 #endif
