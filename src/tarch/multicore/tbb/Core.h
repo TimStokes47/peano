@@ -4,7 +4,9 @@
 #define _TARCH_MULTICORE_TBB_CORE_H_
 
 
-#include <tbb/task_scheduler_init.h>
+// This seems to be an Intel requirement as this feature isnt' released yet officially.
+#define TBB_PREVIEW_GLOBAL_CONTROL 1
+#include <tbb/global_control.h>
 
 #include "tarch/logging/Log.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
@@ -37,7 +39,7 @@ class tarch::multicore::Core {
     static tarch::logging::Log  _log;
 
     int                         _numberOfThreads;
-    ::tbb::task_scheduler_init  _task_scheduler_init;
+    ::tbb::global_control*      _globalControl;
 
     PinningObserver             _pinningObserver;
   public:

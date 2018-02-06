@@ -2,19 +2,24 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/multicore/tbb/Core.h"
 #include "tarch/Assertions.h"
+#include <thread>
 
 
 tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 
 tarch::multicore::Core::Core():
-//  _numberOfThreads(::tbb::task_scheduler_init::default_num_threads()),
-  _task_scheduler_init(tbb::task_scheduler_init::deferred),
+  _numberOfThreads(std::thread::hardware_concurrency()),
+  _globalControl(nullptr),
   _pinningObserver(1) {
 }
 
 
 tarch::multicore::Core::~Core() {
+  if (_globalControl!=nullptr) {
+    delete _globalControl;
+    _globalControl = nullptr;
+  }
 }
 
 
@@ -30,25 +35,29 @@ tarch::multicore::Core& tarch::multicore::Core::getInstance() {
 
 
 void tarch::multicore::Core::shutDown() {
-  _task_scheduler_init.terminate();
+  if (_globalControl!=nullptr) {
+    delete _globalControl;
+    _globalControl = nullptr;
+  }
   _numberOfThreads = -1;
 }
 
 
 void tarch::multicore::Core::configure( int numberOfThreads ) {
   logInfo( "configure(int)", "manually set number of threads to " << numberOfThreads );
-  if (_task_scheduler_init.is_active()) {
-    _task_scheduler_init.terminate();
+
+  if (_globalControl!=nullptr) {
+    delete _globalControl;
   }
 
   if (numberOfThreads==UseDefaultNumberOfThreads) {
-    _numberOfThreads = ::tbb::task_scheduler_init::default_num_threads();
+    _numberOfThreads = std::thread::hardware_concurrency();
   }
   else {
     _numberOfThreads = numberOfThreads;
   }
 
-  _task_scheduler_init.initialize( _numberOfThreads );
+  _globalControl = new tbb::global_control(tbb::global_control::max_allowed_parallelism,_numberOfThreads);
 }
 
 
@@ -59,8 +68,8 @@ int tarch::multicore::Core::getNumberOfThreads() const {
 
 
 bool tarch::multicore::Core::isInitialised() const {
+  //return _globalControl!=nullptr;
   return true;
-//  return _task_scheduler_init.is_active();
 }
 
 #endif
