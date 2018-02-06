@@ -30,12 +30,12 @@ namespace {
    * spawn it into this task group using TBB's novel functor/lambda
    * interface.
    */
-  ::tbb::task_group        _task_group;
+  ::tbb::task_group        _backgroundThreadTaskGroup;
 
   /**
    * Number of actively running background tasks.
    */
-  tbb::atomic<int>         _numberOfRunningBackgroundThreads(0);
+  tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks(0);
 
   /**
    * The active tasks
@@ -237,7 +237,7 @@ namespace {
       }
     public:
       static void enqueue() {
-        _numberOfRunningBackgroundThreads.fetch_and_add(1);
+        _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(1);
         BackgroundJobConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) BackgroundJobConsumerTask(
           std::max( 1, static_cast<int>(_backgroundJobs.unsafe_size())/2 )
         );
@@ -247,7 +247,7 @@ namespace {
 
       tbb::task* execute() {
         processNumberOfBackgroundJobs(_maxJobs);
-        _numberOfRunningBackgroundThreads.fetch_and_add(-1);
+        _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
         if (!_backgroundJobs.empty()) {
           enqueue();
         }
@@ -268,7 +268,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* task) {
     case BackgroundJobType::IsTaskAndRunAsSoonAsPossible:
       {
         // This is basically an alternative for spawn introduced with newer TBB version
-        _task_group.run(
+        _backgroundThreadTaskGroup.run(
           [task]() {
             task->run();
             delete task;
@@ -280,7 +280,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* task) {
       {
         _backgroundJobs.push(task);
         
-        const int currentlyRunningBackgroundThreads = _numberOfRunningBackgroundThreads;
+        const int currentlyRunningBackgroundThreads = _numberOfRunningBackgroundJobConsumerTasks;
         if (
           currentlyRunningBackgroundThreads<BackgroundJob::_maxNumberOfRunningBackgroundThreads
         ) {
@@ -297,7 +297,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* task) {
       break;
     case BackgroundJobType::PersistentBackgroundJob:
       // This is basically an alternative for spawn introduced with newer TBB version; internally does run
-      _task_group.run(
+      _backgroundThreadTaskGroup.run(
         [task]() {
           task->run();
           delete task;
@@ -309,7 +309,14 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* task) {
 
 
 bool tarch::multicore::jobs::processBackgroundJobs() {
-  return processNumberOfBackgroundJobs(std::numeric_limits<int>::max());
+  bool result = false;
+
+  while (_numberOfRunningBackgroundJobConsumerTasks>0) {
+	result |= processNumberOfBackgroundJobs(std::numeric_limits<int>::max());
+  }
+
+  _backgroundThreadTaskGroup.wait();
+  return result;
 }
 
 
