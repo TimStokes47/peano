@@ -22,8 +22,9 @@ tarch::multicore::PinningObserver::PinningObserver(int pinningStep):
     if ( errno != EINVAL )  break;
   }
   if ( !_mask ) {
-    logWarning( "PinningObserver()","Failed to obtain process affinity mask. Thread affinitization is disabled.");
+    logWarning( "PinningObserver()","Failed to obtain process affinity mask");
   }
+  observe(true); // activate the observer
 }
 
 

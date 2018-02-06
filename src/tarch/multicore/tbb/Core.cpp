@@ -36,6 +36,7 @@ void tarch::multicore::Core::shutDown() {
 
 
 void tarch::multicore::Core::configure( int numberOfThreads ) {
+  logInfo( "configure(int)", "manually set number of threads to " << numberOfThreads );
   if (_task_scheduler_init.is_active()) {
     _task_scheduler_init.terminate();
   }
