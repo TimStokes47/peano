@@ -4,6 +4,7 @@
 #if defined(SharedTBB)
 
 #include "tarch/logging/Log.h"
+#include "tarch/Assertions.h"
 
 #include <vector>
 #include <tbb/task.h>
