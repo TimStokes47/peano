@@ -24,9 +24,51 @@ tarch::multicore::PinningObserver::PinningObserver(int pinningStep):
   if ( !_mask ) {
     logWarning( "PinningObserver()","Failed to obtain process affinity mask");
   }
-  observe(true); // activate the observer
+//  observe(true); // activate the observer
 }
 
+/*
+
+
+
+std::string tarch::multicore::tailoredAffinityMask( const AffinityMask& mask ) {
+  std::ostringstream msg;
+  for (int i=0; i<getNumberOfPhysicalCores(); i++) {
+    msg << (mask[i] ? "x" : "0");
+  }
+  return msg.str();
+}
+
+std::bitset<sizeof(long int)*8> tarch::multicore::getCPUSet() {
+  std::bitset<sizeof(long int)*8> result = 0;
+
+//  https://yyshen.github.io/2015/01/18/binding_threads_to_cores_osx.html
+  #ifdef CompilerHasSysinfo
+  cpu_set_t cpuset;
+  sched_getaffinity(0, sizeof(cpuset), &cpuset);
+
+  for (long i = 0; i < getNumberOfPhysicalCores(); i++) {
+    if (CPU_ISSET(i, &cpuset)) {
+      result[i] = true;
+    }
+  }
+  #endif
+
+  return result;
+}
+
+int tarch::multicore::getCPUId() {
+  #ifdef CompilerHasSysinfo
+  return sched_getcpu();
+  #else
+  //  https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
+  return 1;
+  #endif
+}
+
+
+
+ */
 
 tarch::multicore::PinningObserver::~PinningObserver() {
   if ( _mask != nullptr ) {
@@ -35,11 +77,7 @@ tarch::multicore::PinningObserver::~PinningObserver() {
 }
 
 
-void tarch::multicore::PinningObserver::on_scheduler_entry( bool ) {
-  ++_numThreads;
-
-  if ( !_mask ) return;
-
+void tarch::multicore::PinningObserver::pinCurrentThread() {
   const size_t size = CPU_ALLOC_SIZE( _ncpus );
   const int num_cpus = CPU_COUNT_S( size, _mask );
   int thr_idx =  tbb::task_arena::current_thread_index();
@@ -73,7 +111,16 @@ void tarch::multicore::PinningObserver::on_scheduler_entry( bool ) {
     logInfo( "PinningObserver()", "Set thread affinity: thread " << thr_idx << " is pinned to CPU " << mapped_idx);
   }
 
-  CPU_FREE( target_mask );
+  //CPU_FREE( target_mask );
+}
+
+
+void tarch::multicore::PinningObserver::on_scheduler_entry( bool ) {
+  ++_numThreads;
+
+  if ( _mask ) {
+    pinCurrentThread();
+  }
 }
 
 

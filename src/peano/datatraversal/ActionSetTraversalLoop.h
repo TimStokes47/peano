@@ -7,11 +7,6 @@
 #include "peano/datatraversal/ActionSetTraversal.h"
 
 
-#if defined(SharedTBB) || defined(SharedTBBInvade)
-#include <tbb/parallel_reduce.h>
-#include <tbb/blocked_range.h>
-#endif
-
 
 namespace peano {
     namespace datatraversal {
@@ -52,6 +47,7 @@ class peano::datatraversal::ActionSetTraversalLoop {
       const peano::datatraversal::ActionSetTraversal&  traversal,
       LoopBody&                                        loopBody
     );
+
 
     #if defined(SharedTBB) || defined(SharedTBBInvade)
     class ActionSetTraversalLoopInstance {

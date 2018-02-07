@@ -98,18 +98,57 @@ class peano::datatraversal::TaskSet {
   public:
     enum class TaskType {
       /**
-       * Is deployed to background.
+       * Job does not depend on any other job or input or IO at all. Peano
+       * runs it as soon as possible. If you use this arguments for TaskSet
+       * with a single task, it does not really make sense: The whole thing
+       * become a direct function call. Otherwise, eapch call is deployed to
+       * its own task.
        */
-  	  IsTaskAndRunAsSoonAsPossible,
-  	  IsTaskAndRunImmediately,
-	  LoadCells,
-	  LoadVertices,
-	  TriggerEvents,
-	  StoreCells,
-	  StoreVertices,
+      IsTaskAndRunImmediately,
+	  /**
+	   * Not different to IsTaskAndRunImmediately if used in a construct with 
+       * multiple functors. If you use only the single functor, it usually 
+       * behaves the same as IsTaskAndRunImmediately, but technically it 
+       * launches a new task, i.e. something else might squeeze in-between.
+	   */
+	  IsTaskAndRunAsSoonAsPossible,
+      /**
+       * A classic background task that is processed any time Peano thinks it
+       * to be appropriate. You can set an upper bound on the number of 
+       * background tasks that run concurrently. See tarch::multicore::jobs.
+       */
   	  Background,
+      /**
+       * A long-running background task. The upper constraints on the maximum
+       * number of background tasks do not hold. As a result: if you spawn a 
+       * long running background job, it cannot starve other background jobs.
+       */
   	  LongRunningBackground,
-  	  PersistentBackground
+      /**
+       * A background job that runs over a significant amount of the whole 
+       * runtime.
+       */
+  	  PersistentBackground,
+      /**
+       * Used by Peano's grid management.
+       */
+	  LoadCells,
+      /**
+       * Used by Peano's grid management.
+       */
+	  LoadVertices,
+      /**
+       * Used by Peano's grid management.
+       */
+	  TriggerEvents,
+      /**
+       * Used by Peano's grid management.
+       */
+	  StoreCells,
+      /**
+       * Used by Peano's grid management.
+       */
+	  StoreVertices
     };
   private:
     static tarch::logging::Log  _log;

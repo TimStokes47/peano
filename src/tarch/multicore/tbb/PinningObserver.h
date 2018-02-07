@@ -7,9 +7,6 @@
 #include <unistd.h>
 
 
-#include "tarch/multicore/AffinityTools.h"
-
-
 #include <tbb/task_arena.h>
 #include <tbb/task_scheduler_observer.h>
 #include <tbb/atomic.h>
@@ -60,6 +57,11 @@ class tarch::multicore::PinningObserver: public tbb::task_scheduler_observer {
      * How many threads have been registered through callback
      */
     tbb::atomic<int> _numThreads;
+
+    /**
+     * If the observer is switched on, it automatically pins all threads.
+     */
+    void pinCurrentThread();
 
   public:
     /**

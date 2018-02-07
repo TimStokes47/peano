@@ -8,8 +8,8 @@
 #include "peano/performanceanalysis/Analysis.h"
 
 
-#if defined(SharedTBBInvade)
-#include "shminvade/SHMInvade.h"
+#if defined(SharedTBB) || defined(SharedTBBInvade)
+#include <tbb/parallel_reduce.h>
 #endif
 
 
@@ -69,6 +69,7 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
   const int maximumPath = traversal.getMaximumPath();
   for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()/grainSize,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
+
     #if defined(SharedTBB) || defined(SharedTBBInvade)
     #if defined(SharedTBBInvade)
     shminvade::SHMInvade invade(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());

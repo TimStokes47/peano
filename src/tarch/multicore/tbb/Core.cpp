@@ -10,15 +10,20 @@ tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
 
 tarch::multicore::Core::Core():
   _numberOfThreads(std::thread::hardware_concurrency()),
-  _globalControl(nullptr),
+  _globalThreadCountControl(nullptr),
+  _globalStackSizeControl(nullptr),
   _pinningObserver(1) {
 }
 
 
 tarch::multicore::Core::~Core() {
-  if (_globalControl!=nullptr) {
-    delete _globalControl;
-    _globalControl = nullptr;
+  if (_globalThreadCountControl!=nullptr) {
+    delete _globalThreadCountControl;
+    _globalThreadCountControl = nullptr;
+  }
+  if (_globalStackSizeControl!=nullptr) {
+    delete _globalStackSizeControl;
+    _globalStackSizeControl = nullptr;
   }
 }
 
@@ -35,19 +40,28 @@ tarch::multicore::Core& tarch::multicore::Core::getInstance() {
 
 
 void tarch::multicore::Core::shutDown() {
-  if (_globalControl!=nullptr) {
-    delete _globalControl;
-    _globalControl = nullptr;
+  if (_globalThreadCountControl!=nullptr) {
+    delete _globalThreadCountControl;
+    _globalThreadCountControl = nullptr;
+  }
+  if (_globalStackSizeControl!=nullptr) {
+    delete _globalStackSizeControl;
+    _globalStackSizeControl = nullptr;
   }
   _numberOfThreads = -1;
 }
 
 
-void tarch::multicore::Core::configure( int numberOfThreads ) {
+void tarch::multicore::Core::configure( int numberOfThreads, int stackSize ) {
   logInfo( "configure(int)", "manually set number of threads to " << numberOfThreads );
 
-  if (_globalControl!=nullptr) {
-    delete _globalControl;
+  if (_globalThreadCountControl!=nullptr) {
+    delete _globalThreadCountControl;
+    _globalThreadCountControl = nullptr;
+  }
+  if (_globalStackSizeControl!=nullptr) {
+    delete _globalStackSizeControl;
+    _globalStackSizeControl = nullptr;
   }
 
   if (numberOfThreads==UseDefaultNumberOfThreads) {
@@ -56,8 +70,11 @@ void tarch::multicore::Core::configure( int numberOfThreads ) {
   else {
     _numberOfThreads = numberOfThreads;
   }
+  _globalThreadCountControl = new tbb::global_control(tbb::global_control::max_allowed_parallelism,_numberOfThreads);
 
-  _globalControl = new tbb::global_control(tbb::global_control::max_allowed_parallelism,_numberOfThreads);
+  if (stackSize>UseDefaultStackSize) {
+    _globalStackSizeControl = new tbb::global_control(tbb::global_control::thread_stack_size,stackSize);
+  }
 }
 
 
@@ -68,7 +85,7 @@ int tarch::multicore::Core::getNumberOfThreads() const {
 
 
 bool tarch::multicore::Core::isInitialised() const {
-  //return _globalControl!=nullptr;
+  //return _globalThreadCountControl!=nullptr;
   return true;
 }
 

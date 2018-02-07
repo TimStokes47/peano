@@ -39,11 +39,14 @@ class tarch::multicore::Core {
     static tarch::logging::Log  _log;
 
     int                         _numberOfThreads;
-    ::tbb::global_control*      _globalControl;
+
+    ::tbb::global_control*      _globalThreadCountControl;
+    ::tbb::global_control*      _globalStackSizeControl;
 
     PinningObserver             _pinningObserver;
   public:
     static constexpr int UseDefaultNumberOfThreads = 0;
+    static constexpr int UseDefaultStackSize       = 0;
 
     /**
      * Destructor
@@ -64,8 +67,10 @@ class tarch::multicore::Core {
      *        parameter either is greater than zero (which defines the number
      *        of threads) or it equals DefaultNumberOfThreads which means that the code should
      *        use the default number of threads.
+     * @param stackSize Please compare to https://software.intel.com/en-us/node/589744 and
+     *        see UseDefaultStackSize
      */
-    void configure( int numberOfThreads );
+    void configure( int numberOfThreads, int stackSize );
 
     /**
      * Shutdown parallel environment.
@@ -73,6 +78,9 @@ class tarch::multicore::Core {
     void shutDown();
 
     /**
+     * This routine basically always return true, as the shared memory stuff
+     * always works properly even without a particular configuration.
+     *
      * @return Shared memory environment is up and runnning.
      */
     bool isInitialised() const;
