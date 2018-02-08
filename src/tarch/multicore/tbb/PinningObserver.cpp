@@ -1,6 +1,8 @@
 #if defined(SharedTBB)
 #include "tarch/multicore/tbb/PinningObserver.h"
- #include <sched.h>
+#include <sched.h>
+#include <sys/resource.h>
+
 
 tarch::logging::Log tarch::multicore::PinningObserver::_log( "tarch::multicore::PinningObserver" );
 
@@ -108,10 +110,12 @@ void tarch::multicore::PinningObserver::pinCurrentThread() {
     exit( EXIT_FAILURE );
   }
   else {
-    logInfo( "PinningObserver()", "Set thread affinity: thread " << thr_idx << " is pinned to CPU " << mapped_idx);
+    struct rlimit l;
+    getrlimit(RLIMIT_STACK, &l);
+    logInfo( "PinningObserver()", "Set thread affinity: thread " << thr_idx << " is pinned to CPU " << mapped_idx << ", stack size is " << l.rlim_cur );
   }
 
-  //CPU_FREE( target_mask );
+  CPU_FREE( target_mask );
 }
 
 
