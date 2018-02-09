@@ -45,7 +45,16 @@ class tarch::multicore::Core {
 
     PinningObserver             _pinningObserver;
   public:
+    /**
+     * Tells the constructor to use the default. Does not mean that 0 is used
+     * as core count, as that would not make any sense. Usually implies that
+     * all cores plus hyperthreading are used.
+     */
     static constexpr int UseDefaultNumberOfThreads = 0;
+    /**
+     * Tells the constructor to use the default. Does not mean that 0 is used
+     * as stack size, as that would not make any sense.
+     */
     static constexpr int UseDefaultStackSize       = 0;
 
     /**
@@ -62,13 +71,17 @@ class tarch::multicore::Core {
      * Configure the whole thing. If numberOfThreads equals 0, the core is
      * using the number of standard threads.
      *
-     *
-     * @param numberOfThreads Numer of threads that shall be used. This
+     * @param numberOfThreads Number of threads that shall be used. This
      *        parameter either is greater than zero (which defines the number
      *        of threads) or it equals DefaultNumberOfThreads which means that the code should
      *        use the default number of threads.
-     * @param stackSize Please compare to https://software.intel.com/en-us/node/589744 and
-     *        see UseDefaultStackSize
+     * @param stackSize Use UseDefaultStackSize if you are fine with TBB's
+     *        default settings (which should work out in most of the cases).
+     *        Otherwise, consult https://software.intel.com/en-us/node/589744
+     *        for meaningful values.
+     *
+     * @see UseDefaultStackSize
+     * @see UseDefaultNumberOfThreads
      */
     void configure( int numberOfThreads, int stackSize );
 
