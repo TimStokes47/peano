@@ -47,19 +47,12 @@ namespace peano {
  * holding pointers too moves around.
  *
  * If you want to get data back from a background tasks, you have to take into
- * account a few properties:
- * - The task you hand over to the TaskSet constructor is not directly executed.
+ * account that the task you hand over to the TaskSet constructor is not directly executed
+ *   if you declare it as background task.
  *   Instead, the runtime system makes a copy of your functor/task, stores it
  *   safely away and executes this one. That means once you hand over a
  *   functor, you can safely destroy this object. The tasking system has
  *   created a copy of its own.
- * - The actual task copy that the runtime system uses is destroyed right after
- *   it has terminated. There's no way to plug into its result. If you need the
- *   task to return data, my recommendation is that you
- *   - create some data on the heap
- *   - make your task hold a pointer (index) to this heap
- *   - write a task that writes its result into these heap entries
- *   The heap entry then later can be read by the mappings, e.g.
  *
  * Please note that you notably should have a boolean flag somewhere that
  * indicates whether your task has terminated. I often store entries with
@@ -81,16 +74,26 @@ while (!taskHasTerminated) {
 }
 </pre>
  *
+ * Alternatively, you can ask the tarch::multicore::jobs component whether all
+ * background tasks have terminated.
  *
  * <h2> Number of background tasks </h2>
  *
  * I did occasionally run into situations where too many background tasks made the
  * overall system starve. So you can restrict the number of background tasks now
  * manually. The system queues all tasks and then checks whether a background task
- * is active already. If not, it launches a consumer task.
+ * is active already. If not, it launches a consumer task. See tarch::multicore::jobs.
  *
- * You  can control the number of background tasks.
+ * <h2> Difference of tasks and jobs</h2>
  *
+ * In Peano, I prefer to speak of jobs rather than tasks. Tasks are atomic, i.e.
+ * once they kick off, there are no further dependencies that they require to
+ * terminate. Jobs in turn might internally wait for further input data. As a
+ * consequence, jobs easily deadlock. Tasks are a special case of jobs.
+ *
+ * The name TaskSet consequently is not perfect. It should be JobSet. Anyway, you
+ * can always tell Peano whether a job you pass is actually a task. If it is a
+ * task, Peano can optimise the execution pattern.
  *
  * @author Tobias Weinzierl
  */
@@ -116,17 +119,26 @@ class peano::datatraversal::TaskSet {
        * A classic background task that is processed any time Peano thinks it
        * to be appropriate. You can set an upper bound on the number of 
        * background tasks that run concurrently. See tarch::multicore::jobs.
+       *
+       * Please note that job passed has to be a task. See class documentation
+       * on the difference between jobs and tasks.
        */
   	  Background,
       /**
        * A long-running background task. The upper constraints on the maximum
        * number of background tasks do not hold. As a result: if you spawn a 
        * long running background job, it cannot starve other background jobs.
+       *
+       * Please note that job passed has to be a task. See class documentation
+       * on the difference between jobs and tasks.
        */
   	  LongRunningBackground,
       /**
        * A background job that runs over a significant amount of the whole 
        * runtime.
+       *
+       * Please note that job passed has to be a task. See class documentation
+       * on the difference between jobs and tasks.
        */
   	  PersistentBackground,
       /**
@@ -158,43 +170,68 @@ class peano::datatraversal::TaskSet {
 
   public:
     /**
-     * Spawn One Asynchronous Task
+     * Spawn One Task
      *
-     * Different to other tasks, I have to copy the functor here. Otherwise,
-     * this operation might return, the calling code might destroy the functor,
-     * and the asynchronous task then tries to invoke it. This would result in
-     * a seg fault.
+     * If you spawn one task, you have to clarify which type of task you spawn.
+     * This is controlled through TaskType. See the documentation there.
+     * Actually, it rarely makes sense to pass a job through this constructor
+     * that is not some type of a background task, i.e. can run at any time
+     * later without any further dependencies.
      *
-     * As a consequence, you have to very carefully when the destructor is not
-     * empty. Task objects might be copied multiple times and you never know
-     * which destructor is the one belonging to the task object that is really
-     * executed.
+     * <h2> Spawn task through a dedicated task class</h2>
      *
-     * <h2> TBB </h2>
+     * If you go down this route, then you write your own little class that
+     * represents your job. The class has the following properties:
      *
-     * I do not use the spawn command of TBB here but the enqueue. In
-     * particular on Windows systems, I often encounter starvation processes if
-     * a load vertices or store vertices task splits very often and spawns too
-     * many task children due to this operation.
+     * - It has attributes that basically store all the data you require for
+     *   this job to complete. If you job needs some parameters, the class
+     *   needs local attributes. If your job has to write some global output
+     *   data, your class needs a reference or pointer to these data.
+     * - The class needs a constructor that initialises all class attributes.
+     *   Please note that background tasks could be run at any time throughout
+     *   the application execution. Hence, a job class may not hold references
+     *   or pointers to local variables of the calling function.
+     * - The class needs a functor that does the actual work.
      *
-     * <h2> Deadlocks </h2>
+     * Here's an example of a  job class from the ExaHyPE project:
+     * <pre>
+
+  class PredictionTask {
+  private:
+    ADERDGSolver&    _solver;
+    CellDescription& _cellDescription;
+  public:
+    PredictionTask(
+        ADERDGSolver&     solver,
+        CellDescription&  cellDescription);
+
+    void operator()();
+  };
+
+       </pre>
      *
-     * Please note that your code might deadlock if you spawn a task without
-     * multicore support and if you hope/rely on the fact that this task cannot
-     * complete right at the moment but will later on be able to do so.
+     * This task then is used as follows:
+     * <pre>
+
+      PredictionTask predictionTask( myPointer, cellDescription );
+      peano::datatraversal::TaskSet spawnedSet( predictionTask, peano::datatraversal::TaskSet::TaskType::Background  );
+
+       </pre>
+     *
+     *
      *
      * <h2> Lambda calculus </h2>
      *
      * In principle, you can simply pass in a lambda expression instead of a
-     * defined functor, but I often struggle with this. I can solve it by
-     * constructing a function object explicitly:
+     * defined functor:
      *
      * <pre>
-        std::function<void ()> myFunctor = [=] () {
+        peano::datatraversal::TaskSet backgroundTask(
+         [=] () {
           // do something
-        };
-
-        peano::datatraversal::TaskSet backgroundTask(myFunctor,true);
+         },
+         peano::datatraversal::TaskSet::TaskType::Background
+       );
        </pre>
      *
      * It is important that myFunctor catches everything via copy. As a
@@ -202,7 +239,9 @@ class peano::datatraversal::TaskSet {
      *
      * Note: This interface is only used for tasks that do not have to run
      * persistently (in the background) for a very long time. It is only
-     * to be used for tasks that either are reasonably short.
+     * to be used for tasks that are reasonably short. So you can use it if
+     * your routine checks whether the tasks are all complete before it
+     * terminates.
      */
     TaskSet(
       std::function<void()>&& task,
