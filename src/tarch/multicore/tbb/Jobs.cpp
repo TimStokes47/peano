@@ -26,14 +26,6 @@ namespace {
   tbb::task_group_context  _jobTaskContext;
 
   /**
-   * So we use the background task context above explicitly as we rely on
-   * enqueue quite a lot. Whenever we however span a task directly, we do
-   * spawn it into this task group using TBB's novel functor/lambda
-   * interface.
-   */
-  ::tbb::task_group        _backgroundThreadTaskGroup;
-
-  /**
    * Number of actively running background tasks.
    */
   tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks(0);
@@ -129,8 +121,24 @@ namespace {
         return nullptr;
       }
   };
-  
+
+
+  class TBBBackgroundJobWrapper: public tbb::task {
+    private:
+      tarch::multicore::jobs::BackgroundJob*        _job;
+    public:
+      TBBBackgroundJobWrapper( tarch::multicore::jobs::BackgroundJob* job ):
+        _job(job) {
+      }
+
+      tbb::task* execute() {
+        _job->run();
+        delete _job;
+        return nullptr;
+      }
+  };
     
+
   class TBBFunctorWrapper: public tbb::task {
     private:
       std::function<void()>&   _functor;
@@ -258,28 +266,23 @@ namespace {
 }
 
 
-void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* task) {
-  BackgroundJobType mode = task->getJobType();
+void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
+  BackgroundJobType mode = job->getJobType();
 
   switch (mode) {
     case BackgroundJobType::ProcessImmediately:
-      task->run();
-      delete task;
+      job->run();
+      delete job;
       break;
     case BackgroundJobType::IsTaskAndRunAsSoonAsPossible:
       {
-        // This is basically an alternative for spawn introduced with newer TBB version
-        _backgroundThreadTaskGroup.run(
-          [task]() {
-            task->run();
-            delete task;
-          }
-        );
+        TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) TBBBackgroundJobWrapper(job);
+        tbb::task::spawn(*tbbTask);
       }
       break;
     case BackgroundJobType::BackgroundJob:
       {
-        _backgroundJobs.push(task);
+        _backgroundJobs.push(job);
         
         const int currentlyRunningBackgroundThreads = _numberOfRunningBackgroundJobConsumerTasks;
         if (
@@ -292,18 +295,13 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* task) {
       break;
     case BackgroundJobType::LongRunningBackgroundJob:
       {
-        _backgroundJobs.push(task);
+        _backgroundJobs.push(job);
         BackgroundJobConsumerTask::enqueue();
       }
       break;
     case BackgroundJobType::PersistentBackgroundJob:
-      // This is basically an alternative for spawn introduced with newer TBB version; internally does run
-      _backgroundThreadTaskGroup.run(
-        [task]() {
-          task->run();
-          delete task;
-        }
-      );
+      TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) TBBBackgroundJobWrapper(job);
+      tbb::task::enqueue(*tbbTask);
       break;
   }
 }
@@ -316,7 +314,6 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
 	result |= processNumberOfBackgroundJobs(std::numeric_limits<int>::max());
   }
 
-  _backgroundThreadTaskGroup.wait();
   return result;
 }
 
@@ -339,7 +336,7 @@ int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
  *
  * <h2> The spawned job is not a task </h2>
  *
- * We enqueue it first of all.
+ * We enqueue it. We may not immediately.
  */
 void tarch::multicore::jobs::spawn(Job*  job) {
   if ( job->isTask() ) {

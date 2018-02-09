@@ -33,6 +33,14 @@
 #include "tarch/multicore/BooleanSemaphore.h"
 
 
+/**
+ * With this ifdef, we can define whether the pool shall use a dedicated
+ * thread to receive data in the background.
+ */
+#if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noHeapBuffersUseBackgroundThread)
+#define HeapBuffersUseBackgroundThread
+#endif
+
 
 namespace peano {
   namespace heap {

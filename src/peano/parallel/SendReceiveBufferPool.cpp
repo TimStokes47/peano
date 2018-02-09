@@ -49,7 +49,7 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
 
 peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
   #if defined(MPIUsesItsOwnThread)
-  assertion1( _backgroundThread._state == BackgroundThread::Terminate, _backgroundThread.toString() );
+  assertion1( _backgroundThread._state == BackgroundThread::State::Terminate, _backgroundThread.toString() );
   #endif
 
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
