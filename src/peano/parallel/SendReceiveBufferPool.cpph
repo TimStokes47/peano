@@ -38,7 +38,7 @@ template <class Vertex>
 void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, const BufferAccessType& bufferAccessType ) {
   if (_map.count(toRank)==0) {
     logTraceInWith2Arguments( "createBufferManually(int,type)", toRank, bufferAccessType );
-    #ifdef SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA
+    #ifdef MPIUsesItsOwnThread
     _backgroundThread.switchState(BackgroundThread::State::Suspend);
     #endif
 
@@ -55,7 +55,7 @@ void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, co
       std::pair<int,SendReceiveBuffer*>( toRank,newBuffer )
     );
 
-    #ifdef SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA
+    #ifdef MPIUsesItsOwnThread
     _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
     #endif
 

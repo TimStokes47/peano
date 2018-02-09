@@ -33,8 +33,8 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
   _iterationManagementTag = tarch::parallel::Node::getInstance().reserveFreeTag("SendReceiveBufferPool[it-mgmt]");
   _iterationDataTag       = tarch::parallel::Node::getInstance().reserveFreeTag("SendReceiveBufferPool[it-data]");
 
-  #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
-  peano::datatraversal::TaskSet spawnTask(_backgroundThread,true);
+  #if defined(MPIUsesItsOwnThread)
+  peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::PersistentBackground);
   #endif
 }
 #else
@@ -48,7 +48,7 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
 
 
 peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
-  #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
+  #if defined(MPIUsesItsOwnThread)
   assertion1( _backgroundThread._state == BackgroundThread::Terminate, _backgroundThread.toString() );
   #endif
 
@@ -101,7 +101,7 @@ int peano::parallel::SendReceiveBufferPool::getIterationDataTag() const {
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
   SCOREP_USER_REGION("peano::parallel::SendReceiveBufferPool::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
-  #if !defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
+  #if !defined(MPIUsesItsOwnThread)
   receiveDanglingMessagesFromAllBuffersInPool();
   #else
   if (BackgroundThread::_state==BackgroundThread::State::Suspend) {
@@ -121,7 +121,7 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesFromAllBuffe
 
 
 void peano::parallel::SendReceiveBufferPool::terminate() {
-  #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
+  #if defined(MPIUsesItsOwnThread)
   _backgroundThread.switchState(BackgroundThread::State::Terminate);
   #endif
 
@@ -146,7 +146,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
   logTraceInWith1Argument( "releaseMessages()", toString(_mode) );
 
-  #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
+  #if defined(MPIUsesItsOwnThread)
   _backgroundThread.switchState(BackgroundThread::State::Suspend);
   #endif
 
@@ -167,7 +167,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
     p->second->releaseReceivedMessages(true);
   }
 
-  #if defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
+  #if defined(MPIUsesItsOwnThread)
   _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
   #endif
 
@@ -203,7 +203,7 @@ peano::parallel::SendReceiveBufferPool::BackgroundThread::State  peano::parallel
 
 
 void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
-  #if !defined(SEND_RECEIVE_BUFFER_POOL_USES_BACKGROUND_THREAD_TO_RECEIVE_DATA)
+  #if !defined(MPIUsesItsOwnThread)
   assertionMsg( false, "not never enter this operator" );
   #endif
 

@@ -926,6 +926,34 @@ file that even contains, if created by the development toolkit, some remarks
 where to add source code.
 
 
+\subsection{Multithreaded MPI}
+
+If you use MPI plus multithreading (we recommend Intel's TBB), Peano sacrifies 
+one thread to focus on the MPI data exchange. This thread polls MPI permanently
+and tries to receive data as soon as possible even though MPI might have decided
+that it requires rendezvous data exchange. If you want to disable this feature, 
+please compile your code with 
+
+\begin{code}
+ -DMPIUsesItsOwnThread
+\end{code}
+
+
+\noindent
+The thread deployed to handle MPI is not totally lost to the application. If 
+no MPI messages are dropping in, it processes background tasks left over 
+(cmp.~Section \ref{section:51_shared-memory:tasks}).
+We found those Peano applications benefit the most from the MPI data exchange
+in a separate thread that
+\begin{itemize}
+  \item exchange boundary data in every grid sweep (as they use lots of dynamic AMR, e.g.),
+  \item exchange a lot of data through the heap,
+  \item spawn plenty of background tasks.
+\end{itemize}
+
+
+
+
 \subsection{Further MPI remarks}
 
 \begin{itemize}

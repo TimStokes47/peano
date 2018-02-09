@@ -333,6 +333,8 @@ updated.
 
 
 \subsection{Working with Peano's tasks, semaphores, locks and loops}
+\label{section:51_shared-memory:tasks}
+
 
 All shared memory parallelisation standards today provide tasks, semaphores,
 locks, and so forth.
@@ -340,7 +342,11 @@ Peano provides a wrapper around those which allows you to create one
 implementation that then runs with OpenMP, TBBs and so forth.
 To use them, I recommend to study all classes stored in
 \texttt{tarch::multicore}.
-Notably \texttt{BooleanSemaphore} and \texttt{Lock} are of interest:
+
+
+For Peano applications that leave it to Peano to parallelise the code, 
+i.e.~that decide to specify all concurrency through the specification 
+objects, notably \texttt{BooleanSemaphore} and \texttt{Lock} are of interest:
 
 \begin{code}
   static tarch::multicore::BooleanSemaphore  mysemaphore;
@@ -358,6 +364,9 @@ Notably \texttt{BooleanSemaphore} and \texttt{Lock} are of interest:
 The code above is removed automatically if you do not use OpenMP or TBB.
 Otherwise, it introduces a critical section that is processed by at most one
 thread at a time.
+This way, you can let Peano run events concurrently, but still make them 
+exchange/maintain shared data.
+
 
 Furthermore, the header \texttt{Loop.h} might be of interest. 
 It provides very useful macros:
@@ -375,9 +384,9 @@ It provides very useful macros:
 Peano's task concept basically mirrors TBB's task concept. 
 However, if you implement everything within Peano's context, you can also switch
 to OpenMP later on.
-The idea is very simple: You create a new class that does you job and
+The idea is very simple: You create a new functor (a class 
+with an operation \texttt{operator()} that does you job and
 you create an instance of this class in your code.
-Ensure that the class has a functor:
 
 \begin{code}
   void MyTaskClass::operator()() {
@@ -386,16 +395,27 @@ Ensure that the class has a functor:
 \end{code}
 
 \noindent
-and then pass it over to the \texttt{TaskSet} class:
+This class then is to be passed over to the \texttt{TaskSet} class:
 
 \begin{code}
-  MyTaskClass myTask(...); // pass in the constructor whatever dataa your task needs 
-  peano::datatraversal::TaskSet( myTask ); // the task now runs in the background
+  MyTaskClass myTask(...); // pass in the constructor whatever data your task needs 
+  peano::datatraversal::TaskSet( myTask, flag ); // the task now runs in the background
 \end{code}
 
 \noindent
-This constructor sends \texttt{myTask} to the background and continues. 
-It does not wait for the task to finish.
+\texttt{flag} is from the enum \texttt{peano::datatraversal::TaskSet::TaskType}.
+The type \texttt{TaskSet} has multiple constructors. 
+Those accepting multiple constructors run these constructors in parallel. 
+For the constructor with only argument, you typically make \texttt{flag} specify that 
+the passed task is a background task, i.e.~you want Peano to continue immediately 
+and the task system to process your functor at any time later. 
+Please note that such functors have to copy all data they require.
+Please note that lambda expressions might be a useful alternative here to avoid
+the overhead involved with writing dedicated task classes.
+
+
+
+This single-functor constructor does not wait for the task to finish.
 A classic pattern is that you introduce a boolean set to false before you launch
 the task.
 Modifications to the boolean are protected by a semaphore.
@@ -412,18 +432,10 @@ continues to poll the boolean
 \end{code}
 
 \noindent
-until it is set.
-
-Finally, there are two useful static operations in \texttt{BooleanSemaphore}.
-The operation \linebreak
-\texttt{tarch::multicore::BooleanSemaphore::sendTaskToBack()}
-which is useful to realise \linebreak low-\-priority tasks: Other tasks in the
-system (see section below) are activated if you call this operation.
+until it is set. Alternatively, there's an operation in \texttt{tarch::multicore::jobs} which 
+allows you to tell Peano to wait until all background tasks have terminated.
 
 
-Please note that there are other constructors of \texttt{TaskSet} that run
-multiple tasks in parallel and wait until both have terminated. 
-See the class description for details.
 
 
 
