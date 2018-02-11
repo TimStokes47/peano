@@ -207,27 +207,27 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
   assertionMsg( false, "not never enter this operator" );
   #endif
 
-  bool terminate = false;
+  tarch::multicore::Lock lock(_semaphore);
+  State state = _state;
+  lock.free();
 
-  while (!terminate) {
-    switch (_state) {
-      case State::ReceiveDataInBackground:
-       {
-          tarch::multicore::Lock lock(_semaphore);
+  switch (state) {
+    case State::ReceiveDataInBackground:
+      {
+        tarch::multicore::Lock lock(_semaphore);
+        SendReceiveBufferPool::getInstance().receiveDanglingMessagesFromAllBuffersInPool();
 
-          SendReceiveBufferPool::getInstance().receiveDanglingMessagesFromAllBuffersInPool();
-
-          // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
-          //std::atomic_thread_fence(std::memory_order_release);
-	     }
-        break;
-      case State::Suspend:
-        break;
-      case State::Terminate:
-        terminate = true;
-        break;
-    }
-    tarch::multicore::jobs::processJobs();
+        // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
+        //std::atomic_thread_fence(std::memory_order_release);
+      }
+      break;
+    case State::Suspend:
+      {
+        peano::datatraversal::TaskSet spawnTask(*this,peano::datatraversal::TaskSet::TaskType::PersistentBackground);
+      }
+      break;
+    case State::Terminate:
+      break;
   }
 }
 
@@ -255,13 +255,12 @@ std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString(S
 
 void peano::parallel::SendReceiveBufferPool::BackgroundThread::switchState(State newState ) {
   logTraceInWith1Argument( "switchState(State)", toString() );
-  tarch::multicore::Lock lock(_semaphore);
 
   assertion1( _state != BackgroundThread::State::Terminate, toString() );
 
-  logInfo( "switchState(State)", "switch state from " << toString(_state) << " to " << toString(newState) );
-
+  tarch::multicore::Lock lock(_semaphore);
   _state = newState;
+
   logTraceOutWith1Argument( "switchState(State)", toString() );
 }
 

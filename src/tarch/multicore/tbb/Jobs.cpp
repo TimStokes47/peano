@@ -299,10 +299,6 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
       {
    	    static tbb::task_group_context  backgroundTaskContext;
         TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(backgroundTaskContext)) TBBBackgroundJobWrapper(job);
-/*
-    	xxxx
-      TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root()) TBBBackgroundJobWrapper(job);
-*/
         tbb::task::enqueue(*tbbTask);
         backgroundTaskContext.set_priority(tbb::priority_low);
       }
