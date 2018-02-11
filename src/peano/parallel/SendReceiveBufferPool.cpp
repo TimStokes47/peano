@@ -232,8 +232,15 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
 }
 
 
+
+
 std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString() const {
-  switch (_state) {
+  return toString(_state);
+}
+
+
+std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString(State state) {
+  switch (state) {
     case State::ReceiveDataInBackground:
       return "receive-data-in-background";
     case State::Suspend:
@@ -251,6 +258,8 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::switchState(State
   tarch::multicore::Lock lock(_semaphore);
 
   assertion1( _state != BackgroundThread::State::Terminate, toString() );
+
+  logInfo( "switchState(State)", "switch state from " << toString(_state) << " to " << toString(newState) );
 
   _state = newState;
   logTraceOutWith1Argument( "switchState(State)", toString() );

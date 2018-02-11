@@ -16,7 +16,7 @@
  * With this ifdef, we can define whether the pool shall use a dedicated
  * thread to receive data in the background.
  */
-#if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread)
+#if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
 #define MPIUsesItsOwnThread
 #endif
 
@@ -66,6 +66,8 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
           Suspend,
           Terminate
         };
+
+        static std::string toString(State state);
 
         /**
          * There is only one background thread object from the pool's point of

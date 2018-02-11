@@ -20,12 +20,6 @@
 
 namespace {
   /**
-   * Use this to launch all background with very low priority
-   */
-  tbb::task_group_context  _backgroundTaskContext;
-  tbb::task_group_context  _jobTaskContext;
-
-  /**
    * Number of actively running background tasks.
    */
   tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks(0);
@@ -246,12 +240,13 @@ namespace {
       }
     public:
       static void enqueue() {
+        static tbb::task_group_context  backgroundTaskContext;
         _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(1);
-        BackgroundJobConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) BackgroundJobConsumerTask(
+        BackgroundJobConsumerTask* tbbTask = new(tbb::task::allocate_root(backgroundTaskContext)) BackgroundJobConsumerTask(
           std::max( 1, static_cast<int>(_backgroundJobs.unsafe_size())/2 )
         );
         tbb::task::enqueue(*tbbTask);
-        _backgroundTaskContext.set_priority(tbb::priority_low);
+        backgroundTaskContext.set_priority(tbb::priority_low);
       }
 
       tbb::task* execute() {
@@ -276,7 +271,8 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
       break;
     case BackgroundJobType::IsTaskAndRunAsSoonAsPossible:
       {
-        TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) TBBBackgroundJobWrapper(job);
+        //static tbb::task_group_context  backgroundTaskContext;
+        TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root()) TBBBackgroundJobWrapper(job);
         tbb::task::spawn(*tbbTask);
       }
       break;
@@ -300,8 +296,16 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
       }
       break;
     case BackgroundJobType::PersistentBackgroundJob:
-      TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) TBBBackgroundJobWrapper(job);
-      tbb::task::enqueue(*tbbTask);
+      {
+   	    static tbb::task_group_context  backgroundTaskContext;
+        TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(backgroundTaskContext)) TBBBackgroundJobWrapper(job);
+/*
+    	xxxx
+      TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root()) TBBBackgroundJobWrapper(job);
+*/
+        tbb::task::enqueue(*tbbTask);
+        backgroundTaskContext.set_priority(tbb::priority_low);
+      }
       break;
   }
 }
@@ -341,7 +345,9 @@ int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
 void tarch::multicore::jobs::spawn(Job*  job) {
   if ( job->isTask() ) {
     logDebug( "spawn(Job*)", "job is a task, so issue TBB task immediately that handles job" );
-    TBBJobWrapper* tbbTask = new(tbb::task::allocate_root(_jobTaskContext)) TBBJobWrapper(job);
+    //static tbb::task_group_context  jobTaskContext;
+    // @todo Change withotu context
+    TBBJobWrapper* tbbTask = new(tbb::task::allocate_root()) TBBJobWrapper(job);
     tbb::task::spawn(*tbbTask);
   }
   else {
