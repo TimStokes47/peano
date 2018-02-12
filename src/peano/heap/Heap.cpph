@@ -9,7 +9,10 @@
 
 #include "peano/performanceanalysis/Analysis.h"
 #include "peano/performanceanalysis/ScorePMacros.h"
+
 #include "tarch/multicore/Lock.h"
+
+#include "peano/datatraversal/TaskSet.h"
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
@@ -44,6 +47,10 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
   }
   #endif
 
+  #if defined(HeapMPIUsesItsOwnThread)
+  peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::PersistentBackground);
+  #endif
+
   tarch::services::ServiceRepository::getInstance().addService( this, "peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>" );
   registerHeap( this );
 }
@@ -51,6 +58,10 @@ peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::~Heap() {
+  #if defined(HeapMPIUsesItsOwnThread)
+  assertion1( _backgroundThread._state == BackgroundThread::State::Terminate, _backgroundThread.toString() );
+  #endif
+
   deleteAllData();
 }
 
@@ -388,12 +399,23 @@ int peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourD
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::restart() {
+  #if defined(HeapMPIUsesItsOwnThread)
+  _backgroundThread.switchState(BackgroundThread::State::Terminate);
+  #endif
+
   deleteAllData();
+
+  #if defined(HeapMPIUsesItsOwnThread)
+  peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::PersistentBackground);
+  #endif
 }
 
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::shutdown() {
+#if defined(HeapMPIUsesItsOwnThread)
+_backgroundThread.switchState(BackgroundThread::State::Terminate);
+#endif
   deleteAllData();
 }
 
@@ -406,6 +428,10 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
 void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::createBuffersManually( int communicationRank ) {
+  #ifdef HeapMPIUsesItsOwnThread
+  _backgroundThread.switchState(BackgroundThread::State::Suspend);
+  #endif
+
   #ifdef Parallel
   _neighbourDataExchanger.insert(
     std::pair<int, NeighbourDataExchanger>(
@@ -413,6 +439,10 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
       NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,communicationRank)
     )
   );
+  #endif
+
+  #ifdef HeapMPIUsesItsOwnThread
+  _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
   #endif
 }
 
@@ -519,6 +549,11 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   SCOREP_USER_REGION("peano::heap::Heap::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
   #ifdef Parallel
+
+  #if defined(HeapMPIUsesItsOwnThread)
+  if (BackgroundThread::_state==BackgroundThread::State::Suspend) {
+  #endif
+
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
     p != _neighbourDataExchanger.end();
@@ -527,8 +562,13 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
     p->second.receiveDanglingMessages();
   }
 
+  #if defined(HeapMPIUsesItsOwnThread)
+  }
+  #endif
+
   _masterWorkerExchanger.receiveDanglingMessages();
   _joinForkExchanger.receiveDanglingMessages();
+
   #endif
 }
 
@@ -580,6 +620,10 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   #ifdef Parallel
   peano::performanceanalysis::Analysis::getInstance().beginToPrepareAsynchronousHeapDataExchange();
 
+#if defined(HeapMPIUsesItsOwnThread)
+_backgroundThread.switchState(BackgroundThread::State::Suspend);
+#endif
+
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
     p != _neighbourDataExchanger.end();
@@ -589,6 +633,9 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   }
 
   peano::performanceanalysis::Analysis::getInstance().endToPrepareAsynchronousHeapDataExchange();
+#if defined(HeapMPIUsesItsOwnThread)
+_backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
+#endif
   #endif
 
   logTraceOut( "startToSendBoundaryData(bool)" );
@@ -621,6 +668,11 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   SCOREP_USER_REGION("peano::heap::Heap::finishedToSendBoundaryData()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
   #ifdef Parallel
+
+#if defined(HeapMPIUsesItsOwnThread)
+_backgroundThread.switchState(BackgroundThread::State::Suspend);
+#endif
+
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
     p != _neighbourDataExchanger.end();
@@ -628,6 +680,11 @@ void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   ) {
     p->second.finishedToSendData(isTraversalInverted);
   }
+
+#if defined(HeapMPIUsesItsOwnThread)
+_backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
+#endif
+
   #endif
 
   logTraceOut( "finishedToSendBoundaryData()" );
@@ -642,3 +699,85 @@ bool peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, Neighbour
   return true;
   #endif
 }
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+tarch::multicore::BooleanSemaphore     peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::BackgroundThread::_semaphore;
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+typename peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::BackgroundThread::State  peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::BackgroundThread::_state(peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::BackgroundThread::State::Suspend);
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::BackgroundThread::operator()() {
+  #if !defined(HeapMPIUsesItsOwnThread)
+  assertionMsg( false, "not never enter this operator" );
+  #endif
+
+  tarch::multicore::Lock lock(_semaphore);
+  State state = _state;
+  lock.free();
+
+  switch (state) {
+    case State::ReceiveDataInBackground:
+      {
+        tarch::multicore::Lock lock(_semaphore);
+
+        for (
+          typename std::map<int, NeighbourDataExchanger>::iterator p = peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::getInstance()._neighbourDataExchanger.begin();
+          p != peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::getInstance()._neighbourDataExchanger.end();
+          p++
+        ) {
+          p->second.receiveDanglingMessages();
+        }
+
+        // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
+        //std::atomic_thread_fence(std::memory_order_release);
+      }
+      break;
+    case State::Suspend:
+      {
+        peano::datatraversal::TaskSet spawnTask(*this,peano::datatraversal::TaskSet::TaskType::PersistentBackground);
+      }
+      break;
+    case State::Terminate:
+      break;
+  }
+}
+
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+std::string peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::BackgroundThread::toString() const {
+  return toString(_state);
+}
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+std::string peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::BackgroundThread::toString(State state) {
+  switch (state) {
+    case State::ReceiveDataInBackground:
+      return "receive-data-in-background";
+    case State::Suspend:
+      return "suspend";
+    case State::Terminate:
+      return "terminate";
+  }
+
+  return "<undef>";
+}
+
+
+template <class Data, class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger>
+void peano::heap::Heap<Data, MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger>::BackgroundThread::switchState(State newState ) {
+  logTraceInWith1Argument( "switchState(State)", toString() );
+
+  assertion1( _state != BackgroundThread::State::Terminate, toString() );
+
+  tarch::multicore::Lock lock(_semaphore);
+  _state = newState;
+
+  logTraceOutWith1Argument( "switchState(State)", toString() );
+}
+

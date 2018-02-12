@@ -21,6 +21,20 @@
 #include "tarch/multicore/BooleanSemaphore.h"
 
 
+
+/**
+ * With this ifdef, we can define whether the pool shall use a dedicated
+ * thread to receive data in the background.
+ */
+#if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
+#define MPIUsesItsOwnThread
+#endif
+
+#ifdef MPIUsesItsOwnThread
+#define DoubleHeapMPIUsesItsOwnThread
+#endif
+
+
 namespace peano {
   namespace heap {
     template<
@@ -154,6 +168,35 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
 
     typedef std::set<int>                    RecycledAndDeletedEntriesContainer;
 
+    struct BackgroundThread {
+      public:
+        enum class State {
+          ReceiveDataInBackground,
+          Suspend,
+          Terminate
+        };
+
+        static std::string toString(State state);
+
+        /**
+         * There is only one background thread object from the pool's point of
+         * view. However, we deploy the thread as a task of its own. Then, it
+         * is copied. However, as all copies of the thread shall share one state
+         * and one semaphore, I have to make all attributes static. As a
+         * consequence, any instance seems to be an object but indeed it is only
+         * a lightweight object wrapper around global data.
+         */
+        static tarch::multicore::BooleanSemaphore _semaphore;
+        static State                              _state;
+
+        void operator()();
+        std::string toString() const;
+        void switchState( State newState );
+    };
+
+    #ifdef MPIUsesItsOwnThread
+    BackgroundThread _backgroundThread;
+    #endif
 
     HeapContainer    _heapData;
 
