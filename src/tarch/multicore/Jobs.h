@@ -10,7 +10,7 @@
 namespace tarch {
   namespace multicore {
     /**
-     * Jobs are Peano's abstraction of tasks. However, they generalise the
+     * Jobs are Peano's abstraction of tasks. They generalise the
      * term tasks. A task in Peano's notion follows Intel's TBB and is an
      * atomic unit. That is, it may have children which have to be processed
      * first, but it can not be interrupted and it does not depend on anybody
@@ -51,6 +51,9 @@ namespace tarch {
         */
        constexpr int ProcessNormalBackgroundJobsImmediately = -2;
 
+       /**
+        * Abstract superclass of background jobs.
+        */
        class BackgroundJob {
          public:
            const BackgroundJobType _jobType;
@@ -64,17 +67,13 @@ namespace tarch {
            BackgroundJobType getJobType() const;
 
            /**
-            * By default, we disable all background tasks. Background
-            * tasks are passed into TBB via enqueue and they seem to cause problems.
-            * You can however re-enable them by invoking this routine. If background
-            * tasks are enabled they try to concurrently work through the queue of
-            * tasks spawned into the background until the queue is empty. Once it is
-            * empty, the corresponding task terminates.
-            *
-            * The default setting of the invasive component equals calling this
-            * routine with a value of -1.
-            *
-            * @todo Documentation needs revision
+            * If jobs are enqueued, they are typically not processed
+            * immediately (unless we run on a single core machine), but Peano
+            * puts them into a queue. This queue then is processed by
+            * tasks/threads/whatever they are called. The maximum nmber of
+            * these guys that work themselves through the queue of jobs is
+            * set by this routine. By default, there is no upper number, so
+            * you might end up with all your cores doing background jobs.
             *
             * @param maxNumberOfRunningBackgroundThreads -1 Switch off any tasks
             *   running in the background.
@@ -92,6 +91,9 @@ namespace tarch {
            static void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
        };
 
+       /**
+        * Frequently used helper class to write background jobs for functors.
+        */
        class GenericBackgroundJobWithCopyOfFunctor: public BackgroundJob {
          private:
     	   /**
@@ -127,6 +129,13 @@ namespace tarch {
 
        void terminateAllPersistentBackgroundJobs();
 
+       /**
+        * Abstract super class for a job. Job class is an integer. A job may
+        * depend on input data from other jobs and may write out data to
+        * another job as well (through a shared memory region protected by
+        * a semaphore). However, it should never exchange information with
+        * another job of the same class.
+        */
        class Job {
          private:
     	   const bool _isTask;
@@ -144,6 +153,9 @@ namespace tarch {
            int getClass() const;
        };
 
+       /**
+        * Frequently used implementation for job with a functor.
+        */
        class GenericJobWithCopyOfFunctor: public Job {
          private:
     	   /**
@@ -159,6 +171,9 @@ namespace tarch {
            virtual ~GenericJobWithCopyOfFunctor();
        };
 
+       /**
+        * Frequently used implementation for job with a functor.
+        */
        class GenericJobWithoutCopyOfFunctor: public Job {
          private:
     	   /**
@@ -174,7 +189,20 @@ namespace tarch {
            virtual ~GenericJobWithoutCopyOfFunctor();
        };
 
+       /**
+        * Kick out a new job. The job's type has to be set properly: It
+        * has to be clear whether the job is a job or even a task, i.e. a
+        * special type of job. In the latter case, a runtime system could
+        * deploy the pointer to a different thread and return immediately.
+        *
+        * Ownership goes over to Peano's job namespace, i.e. you don't have
+        * to delete the pointer.
+        */
        void spawn(Job*  job);
+
+       /**
+        * Wrapper around other spawn operation.
+        */
        void spawn(std::function<void()>& job, bool isTask, int jobClass);
 
        void spawnAndWait(
@@ -260,7 +288,7 @@ namespace tarch {
        bool processJobs(int jobClass);
 
        /**
-        * Process any pending job. This includes background threads.
+        * Process any pending job. This includes background jobs.
         */
        bool processJobs();
     }

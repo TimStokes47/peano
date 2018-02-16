@@ -31,7 +31,7 @@
 #endif
 
 #if defined(MPIUsesItsOwnThread) && defined(SharedMemoryParallelisation)
-#define DoubleHeapMPIUsesItsOwnThread
+//#define DoubleHeapMPIUsesItsOwnThread
 #endif
 
 
@@ -195,8 +195,6 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
 
     #ifdef MPIUsesItsOwnThread
     BackgroundThread _backgroundThread;
-
-    static int _numberOfRunningBackgroundTasks;
     #endif
 
     HeapContainer    _heapData;

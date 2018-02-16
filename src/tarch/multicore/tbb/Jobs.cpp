@@ -20,29 +20,49 @@
 
 namespace {
   /**
-   * Number of actively running background tasks.
+   * Number of actively running background consumer tasks.
+   *
+   * @see BackgroundJobConsumerTask
    */
-tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks(0);
-tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
+  tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks(0);
 
   /**
-   * The active tasks
+   * Number of persistent background tasks. I need this counter in
+   *
+   * @see terminateAllPersistentBackgroundJobs
+   */
+  tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
+
+  /**
+   * This queue holds jobs that should be processed in the background. Consumer
+   * tasks then read jobs from this queue and process them.
    */
   tbb::concurrent_queue<tarch::multicore::jobs::BackgroundJob*>  _backgroundJobs;
 
+  /**
+   * Work around for future versions where I might want to augment each
+   * individual job queue.
+   */
   struct JobQueue {
     tbb::concurrent_queue<tarch::multicore::jobs::Job*> jobs;
   };
 
+  /**
+   * There are different classes of jobs. See Job class description.
+   * Per job class, there is one queue.
+   */
   typedef tbb::concurrent_hash_map< int, JobQueue >  JobMap;
-
   JobMap     _pendingJobs;
 
 
   tarch::logging::Log _log( "tarch::multicore" );
 
-
-
+  /**
+   * Return job queue for one type of job. Does not hold for background jobs.
+   * They are a completely different beast. If a job queue for one class does
+   * not exist yet, it is created, i.e. there's a lazy creation mechanism
+   * implemented here.
+   */
   JobQueue& getJobQueue( int jobClass ) {
 	if ( _pendingJobs.count(jobClass)==0 ) {
       JobMap::accessor    a;
@@ -55,7 +75,7 @@ tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
 
   /**
    * This is a task which consumes background jobs, as it invokes
-   * processBackgroundJobs(). It is tied to one particular job 
+   * processJobs(). It is tied to one particular job
    * class.
    */
   class JobConsumerTask: public tbb::task {
@@ -75,8 +95,12 @@ tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
       }
   };
   
-  
-  
+  /**
+   * The spawn and wait routines fire their job and then have to wait for all
+   * jobs to be processed. They do this through an integer atomic that they
+   * count down to zero, i.e. the atomic stores how many jobs are still
+   * pending.
+   */
   class JobWithoutCopyOfFunctorAndSemaphore: public tarch::multicore::jobs::Job {
     private:
       std::function<void()>&   _functor;
@@ -101,7 +125,13 @@ tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
       virtual ~JobWithoutCopyOfFunctorAndSemaphore() {}
   };
   
-    
+  /**
+   * Maps one job onto a TBB task. Is used if Peano's job component is asked
+   * to process a job and this job is a task, i.e. has no incoming and outgoing
+   * dependencies. In this case, it wraps a TBB task around the job and spawns
+   * or enqueues it. The wrapper takes over the responsibility to delete the
+   * job instance in the end.
+   */
   class TBBJobWrapper: public tbb::task {
     private:
       tarch::multicore::jobs::Job*        _job;
@@ -117,7 +147,12 @@ tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
       }
   };
 
-
+  /**
+   * Same as TBBJobWrapper but for background jobs. Usually, background jobs
+   * are enqueued and then processed one by one by a background job consumer.
+   * There are however background jobs which should be done asap. Those guys
+   * are directly mapped onto a TBB task.
+   */
   class TBBBackgroundJobWrapper: public tbb::task {
     private:
       tarch::multicore::jobs::BackgroundJob*        _job;
@@ -133,7 +168,20 @@ tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
       }
   };
 
-
+  /**
+   * Persistent background jobs should not be enqueued. Instead, they are
+   * mapped upon a tbb task which processes the operator. Once it has
+   * processed the job, it does not delete it as it is a persistent one.
+   * Instead, it re-enqueues itself. Enqueued tasks in TBB have a very low
+   * priority, so we know that we will be stolen at some point later again
+   * and then will rerun the job's operator() again.
+   *
+   * For enqueue, we have to ensure that we use the same task context again.
+   * There's one task context for all background tasks and we use this one
+   * later to cancel all persistent jobs.
+   *
+   * @see terminateAllPersistentBackgroundJobs()
+   */
   class TBBPersistentBackgroundJobWrapper: public tbb::task {
     private:
       tarch::multicore::jobs::BackgroundJob*        _job;
@@ -149,8 +197,6 @@ tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
 
       tbb::task* execute() {
         _job->run();
-        // @todo
-//        delete _job;
 
         TBBPersistentBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(*group())) TBBPersistentBackgroundJobWrapper(_job);
         tbb::task::enqueue(*tbbTask);
@@ -159,33 +205,20 @@ tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
   };
     
 
-
-  class TBBFunctorWrapper: public tbb::task {
-    private:
-      std::function<void()>&   _functor;
-      tbb::atomic<int>&        _semaphore;
-    public:
-      TBBFunctorWrapper( std::function<void()>&  functor, tbb::atomic<int>& semaphore ):
-        _functor(functor),
-        _semaphore(semaphore) {
-      }
-           
-      tbb::task* execute() {
-        _functor();
-        #ifdef Asserts
-        int result = _semaphore.fetch_and_add(-1);
-        assertion( result>=1 );
-        #else
-        _semaphore.fetch_and_add(-1);
-        #endif
-        return nullptr;
-      }
-  };
-
   /**
    * Helper function of the for loops and the parallel task invocations.
    *
-   * Primarily invoked by the spawnAndWait routines.
+   * Primarily invoked by the spawnAndWait routines. A spawn and wait routine always
+   * realises the same pattern:
+   *
+   * - create an atomic set to the number of concurrent jobs (they are
+   *   concurrent but might depend on each other).
+   * - open a parallel section
+   * -- invoke spawnBlockingJob() for each job, i.e. start to do something in parallel
+   * -- if a job is a real task, it will be executed straightaway and we decrease the atomic
+   * -- otherwise, we enqueue it in the job queues
+   * - trigger the job consumer tasks
+   * - wait until all jobs have terminated, i.e. the atomic counter equals 0
    *
    * As we call this helper within a parallel section, it makes sense to run all real
    * tasks immediately. It does not make sense to wait. If we have a non-task,
@@ -223,15 +256,20 @@ tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
       );
 
       logDebug( "spawnBlockingJob(...)", "enqueued job. tasks in this queue of class " << jobClass << "=" << getJobQueue(jobClass).jobs.unsafe_size() );
-
-      // @todo revise comments: Here, we may neither spawn nor enqueue as this causes deadlocks; other producer tasks might then not be active,
-      //       while these guys start off immediately and then wait for their dependencies
-      // JobConsumerTask* tbbTask = new(tbb::task::allocate_root(_backgroundTaskContext)) JobConsumerTask(jobClass,false);
-      // tbb::task::enqueue(*tbbTask);
-      // _backgroundTaskContext.set_priority(tbb::priority_high);
     }
   }
 
+
+  /**
+   * Process background tasks. If there is a large number of background tasks
+   * pending, we do not process all of them but only up to maxJobs. The reason
+   * is simple: background job consumer tasks are enqueued with low priority.
+   * Whenever TBB threads become idle, they steal those consumer tasks and thus
+   * start to process the jobs. However, these consumer tasks now should not do
+   * all of the jobs, as we otherwise run risk that the (more importan) actual
+   * implementation has to wait for the background jobs to be finished. Thus,
+   * this routine does only up to a certain number of jobs.
+   */
   bool processNumberOfBackgroundJobs(int maxJobs) {
     logDebug( "processNumberOfBackgroundJobs()", "background consumer task becomes awake" );
 
@@ -257,7 +295,11 @@ tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
 
   /**
    * This is a task which consumes background jobs, as it invokes
-   * processBackgroundJobs().
+   * processBackgroundJobs(). Typically, I make such a job consume up to
+   * half of the available background jobs, before it then stops the
+   * processing. When it stops and finds out that there would still
+   * have been more jobs to process, then it enqueues another consumer task
+   * to continue to work on the jobs at a later point.
    */
   class BackgroundJobConsumerTask: public tbb::task {
     private:
@@ -290,7 +332,8 @@ tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
 
 /**
  * I have no clue why I can't make this context global here and then use it
- * within spawn. But it seg faults then.
+ * within spawn. But it seg faults without this pointer hack. The pointer is
+ * set within spawnBackgroundJob() and used by terminateAllPersistentBackgroundJobs().
  */
 tbb::task_group_context*  globalBackgroundTaskContext(nullptr);
 
@@ -305,7 +348,6 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
       break;
     case BackgroundJobType::IsTaskAndRunAsSoonAsPossible:
       {
-        //static tbb::task_group_context  backgroundTaskContext;
         TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root()) TBBBackgroundJobWrapper(job);
         tbb::task::spawn(*tbbTask);
       }
@@ -342,6 +384,10 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
 }
 
 
+/**
+ * This routine is typically invoked by user codes to ensure that all
+ * background jobs have finished before the user code continues.
+ */
 bool tarch::multicore::jobs::processBackgroundJobs() {
   bool result = false;
 
@@ -353,16 +399,13 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
 }
 
 
-
-
 int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
   return _backgroundJobs.unsafe_size();
 }
 
 
 /**
- * Spawn means a thread fires a new job and wants to coninueu itself.
- * There is no parent-child relation established directly.
+ * Spawn means a thread fires a new job and wants to continue itself.
  *
  * <h2> The spawned job is a task </h2>
  *
@@ -371,13 +414,14 @@ int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
  *
  * <h2> The spawned job is not a task </h2>
  *
- * We enqueue it. We may not immediately.
+ * We enqueue it. We may not immediately spawn a job consumer task, as this
+ * might mean that TBB might immediately start to consume the job and halt the
+ * current thread. This is not what we want: We want to continue with the
+ * calling thread immediately.
  */
 void tarch::multicore::jobs::spawn(Job*  job) {
   if ( job->isTask() ) {
     logDebug( "spawn(Job*)", "job is a task, so issue TBB task immediately that handles job" );
-    //static tbb::task_group_context  jobTaskContext;
-    // @todo Change withotu context
     TBBJobWrapper* tbbTask = new(tbb::task::allocate_root()) TBBJobWrapper(job);
     tbb::task::spawn(*tbbTask);
   }
@@ -385,10 +429,6 @@ void tarch::multicore::jobs::spawn(Job*  job) {
     getJobQueue(job->getClass()).jobs.push(job);
 
     logDebug( "spawn(Job*)", "enqueued job of class " << job->getClass() );
-
-    // Vorsicht hier
-    //JobConsumerTask* tbbTask = new(tbb::task::allocate_root(_jobTaskContext)) JobConsumerTask(job->getClass(),false);
-    //tbb::task::spawn(*tbbTask);
   }
 }
 
@@ -465,6 +505,10 @@ bool tarch::multicore::jobs::processJobs() {
 
 
 
+
+/**
+ * @see spawnBlockingJob
+ */
 void tarch::multicore::jobs::spawnAndWait(
   std::function<void()>&  job0,
   std::function<void()>&  job1,  
@@ -498,6 +542,10 @@ void tarch::multicore::jobs::spawnAndWait(
 }
 
 
+
+/**
+ * @see spawnBlockingJob
+ */
 void tarch::multicore::jobs::spawnAndWait(
   std::function<void()>&  job0,
   std::function<void()>&  job1,
@@ -592,6 +640,10 @@ void tarch::multicore::jobs::spawnAndWait(
 }
 
 
+
+/**
+ * @see spawnBlockingJob
+ */
 void tarch::multicore::jobs::spawnAndWait(
   std::function<void()>& job0,
   std::function<void()>& job1,
@@ -652,6 +704,10 @@ void tarch::multicore::jobs::spawnAndWait(
 }
 
 
+
+/**
+ * @see spawnBlockingJob
+ */
 void tarch::multicore::jobs::spawnAndWait(
   std::function<void()>&  job0,
   std::function<void()>&  job1,
@@ -720,6 +776,11 @@ void tarch::multicore::jobs::spawnAndWait(
 }
 
 
+/**
+ * Invoke the cancellation of the task group and then busy wait until all the
+ * jobs are down. If we return immediately, the code might terminate even
+ * though some tasks still are around.
+ */
 void tarch::multicore::jobs::terminateAllPersistentBackgroundJobs() {
   if (globalBackgroundTaskContext!=nullptr) {
     logInfo( "terminateAllPersistentBackgroundJobs()", "wait for " << _numberOfRunningPersistentBackgroundTasks << " persistent background tasks to terminate" );
