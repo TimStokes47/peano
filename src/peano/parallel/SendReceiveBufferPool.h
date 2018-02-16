@@ -63,8 +63,7 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
       public:
         enum class State {
           ReceiveDataInBackground,
-          Suspend,
-          Terminate
+          Suspend
         };
 
         static std::string toString(State state);

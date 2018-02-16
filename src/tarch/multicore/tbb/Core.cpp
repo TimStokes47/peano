@@ -1,6 +1,7 @@
 #if defined(SharedTBB)
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/multicore/tbb/Core.h"
+#include "tarch/multicore/Jobs.h"
 #include "tarch/Assertions.h"
 #include <thread>
 
@@ -17,6 +18,8 @@ tarch::multicore::Core::Core():
 
 
 tarch::multicore::Core::~Core() {
+  tarch::multicore::jobs::terminateAllPersistentBackgroundJobs();
+
   if (_globalThreadCountControl!=nullptr) {
     delete _globalThreadCountControl;
     _globalThreadCountControl = nullptr;
@@ -40,6 +43,8 @@ tarch::multicore::Core& tarch::multicore::Core::getInstance() {
 
 
 void tarch::multicore::Core::shutDown() {
+  tarch::multicore::jobs::terminateAllPersistentBackgroundJobs();
+
   if (_globalThreadCountControl!=nullptr) {
     delete _globalThreadCountControl;
     _globalThreadCountControl = nullptr;

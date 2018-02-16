@@ -3,7 +3,6 @@
 #ifndef PEANO_DATATRAVERSAL_TESTS_DFORLOOPTEST_H_
 #define PEANO_DATATRAVERSAL_TESTS_DFORLOOPTEST_H_
 
-#include "peano/utils/Globals.h"
 #include "tarch/tests/TestCase.h"
 #include "tarch/la/Vector.h"
 #include "tarch/logging/Log.h"
@@ -64,7 +63,8 @@ namespace peano
             ~TestLoopBody();
             void mergeWithWorkerThread(const TestLoopBody& worker);
             void mergeIntoMasterThread(TestLoopBody& master) const;
-            void operator() (const tarch::la::Vector<DIMENSIONS,int>& i);
+            void operator() (const tarch::la::Vector<2,int>& i);
+            void operator() (const tarch::la::Vector<3,int>& i);
 
             static void resetGlobalCounter();
         };

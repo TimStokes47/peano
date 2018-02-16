@@ -158,6 +158,10 @@ bool tarch::multicore::jobs::processJobs() {
 }
 
 
+void tarch::multicore::jobs::terminateAllPersistentBackgroundJobs() {
+}
+
+
 void tarch::multicore::jobs::spawnAndWait(
   std::function<void()>& job0,
   std::function<void()>& job1,

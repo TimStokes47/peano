@@ -42,8 +42,8 @@
 #endif
 
 
-#ifdef MPIUsesItsOwnThread
-#define HeapMPIUsesItsOwnThread
+#if defined(MPIUsesItsOwnThread) && defined(SharedMemoryParallelisation)
+//#define HeapMPIUsesItsOwnThread
 #endif
 
 
@@ -381,8 +381,7 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
       public:
         enum class State {
           ReceiveDataInBackground,
-          Suspend,
-          Terminate
+          Suspend
         };
 
         static std::string toString(State state);

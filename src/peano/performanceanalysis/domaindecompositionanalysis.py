@@ -43,6 +43,14 @@ numberOfRanks   = performanceanalysis_parser.getNumberOfRanks(args.file)
 numberOfThreads = performanceanalysis_parser.getNumberOfThreads(args.file)
 dim             = performanceanalysis_parser.getDimensions(args.file)
 
+if len(args.domainoffset)!=dim:
+  print "dimensions of offset does not match dimensions. If input file is for dimension 2, then we need two offset values separated by a space"
+  exit(-1)
+
+if len(args.domainsize)!=dim:
+  print "dimensions of domain size does not match dimensions. If input file is for dimension 2, then we need two size values separated by a space"
+  exit(-1)
+
 performanceanalysis_output.writeHeader(outFile,args.file,numberOfRanks,numberOfThreads);
 
 (parents,levels,offset,volume,nodes) = performanceanalysis_parser.getLogicalTopology(numberOfRanks,dim,args.file,".");

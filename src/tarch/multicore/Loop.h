@@ -3,12 +3,89 @@
 #ifndef _TARCH_MULTICORE_LOOP_H_
 #define _TARCH_MULTICORE_LOOP_H_
 
+
+#include "tarch/multicore/dForRange.h"
+#include "tarch/la/Vector.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
+
+#include <functional>
+
+
+
+
+
+
+namespace tarch {
+  namespace multicore {
+    /**
+     * Peano's parallel fors may alter the state (so they are different to TBB
+     * where we distinguish fors from reduces). It is up to the user to ensure
+     * that nothing bad is happening.
+     */
+    void parallelFor(
+      const tarch::multicore::dForRange<1>&  range,
+	  std::function< void( int ) >&          function
+    );
+
+    void parallelFor(
+      const tarch::multicore::dForRange<1>& range,
+      std::function< void( const tarch::la::Vector<1,int>& ) >&  function
+    );
+
+    void parallelFor(
+      const tarch::multicore::dForRange<2>& range,
+	  std::function< void( const tarch::la::Vector<2,int>& ) >&  function
+    );
+
+    void parallelFor(
+      const tarch::multicore::dForRange<3>& range,
+	  std::function< void( const tarch::la::Vector<3,int>& ) >&  function
+    );
+
+    void parallelFor(
+      const tarch::multicore::dForRange<4>& range,
+	  std::function< void( const tarch::la::Vector<4,int>& ) >&  function
+    );
+
+    /**
+     * Loop over range but ensure that any copy made is merged again
+     * into input class. Therefore, the input has to have a functor
+     * which accepts an integer vector, and it has to have an operation
+     *
+     * mergeIntoMasterThread
+     *
+     * <h2> Serial case </h2>
+     *
+     * If you compile without TBB or OpenMP, then the parallel reduce is a
+     * parallel for basically.
+     */
+    template <typename F>
+    void parallelReduce(
+      const tarch::multicore::dForRange<2>&  range,
+      F&                                     function
+    );
+
+    template <typename F>
+    void parallelReduce(
+      const tarch::multicore::dForRange<3>&  range,
+      F&                                     function
+    );
+
+    template <typename F>
+    void parallelReduce(
+      const tarch::multicore::dForRange<4>&  range,
+      F&                                     function
+    );
+  }
+}
+
+
+
 #if defined(SharedTBB) || defined(SharedTBBInvade)
 #include "tarch/multicore/tbb/Loop.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Loop.h"
 #else
-
 /**
  * Basically is a for loop that can be parallelised.
  *
@@ -52,5 +129,32 @@ ProblemSize/tarch::multicore::Core::getInstance().getNumberOfThreads()
 #define endpfor }
 
 
+template <typename F>
+void tarch::multicore::parallelReduce(
+  const tarch::multicore::dForRange<2>&  range,
+  F&                                     function
+) {
+  parallelFor(range, function);
+}
+
+
+template <typename F>
+void tarch::multicore::parallelReduce(
+  const tarch::multicore::dForRange<3>&  range,
+  F&                                     function
+) {
+  parallelFor(range, function);
+}
+
+
+template <typename F>
+void tarch::multicore::parallelReduce(
+  const tarch::multicore::dForRange<4>&  range,
+  F&                                     function
+) {
+  parallelFor(range, function);
+}
 #endif
+
+
 #endif

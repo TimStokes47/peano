@@ -28,6 +28,10 @@ namespace tarch {
 		  */
 		 IsTaskAndRunAsSoonAsPossible,
          LongRunningBackgroundJob,
+		 /**
+		  * A persistent background job's operator() is called over and over
+		  * again.
+		  */
          PersistentBackgroundJob,
 		 /**
 		  * It does not really make sense to specify this flag by a user.
@@ -120,6 +124,8 @@ namespace tarch {
         * could, in theory, run the the background.
         */
        int getNumberOfWaitingBackgroundJobs();
+
+       void terminateAllPersistentBackgroundJobs();
 
        class Job {
          private:

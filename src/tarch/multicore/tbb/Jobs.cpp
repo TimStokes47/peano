@@ -22,7 +22,8 @@ namespace {
   /**
    * Number of actively running background tasks.
    */
-  tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks(0);
+tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks(0);
+tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
 
   /**
    * The active tasks
@@ -121,7 +122,7 @@ namespace {
     private:
       tarch::multicore::jobs::BackgroundJob*        _job;
     public:
-      TBBBackgroundJobWrapper( tarch::multicore::jobs::BackgroundJob* job ):
+ 	  TBBBackgroundJobWrapper( tarch::multicore::jobs::BackgroundJob* job ):
         _job(job) {
       }
 
@@ -131,7 +132,33 @@ namespace {
         return nullptr;
       }
   };
+
+
+  class TBBPersistentBackgroundJobWrapper: public tbb::task {
+    private:
+      tarch::multicore::jobs::BackgroundJob*        _job;
+    public:
+      TBBPersistentBackgroundJobWrapper( tarch::multicore::jobs::BackgroundJob* job ):
+        _job(job) {
+        _numberOfRunningPersistentBackgroundTasks++;
+      }
+
+      virtual ~TBBPersistentBackgroundJobWrapper() {
+        _numberOfRunningPersistentBackgroundTasks--;
+      }
+
+      tbb::task* execute() {
+        _job->run();
+        // @todo
+//        delete _job;
+
+        TBBPersistentBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(*group())) TBBPersistentBackgroundJobWrapper(_job);
+        tbb::task::enqueue(*tbbTask);
+        return nullptr;
+      }
+  };
     
+
 
   class TBBFunctorWrapper: public tbb::task {
     private:
@@ -261,6 +288,13 @@ namespace {
 }
 
 
+/**
+ * I have no clue why I can't make this context global here and then use it
+ * within spawn. But it seg faults then.
+ */
+tbb::task_group_context*  globalBackgroundTaskContext(nullptr);
+
+
 void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
   BackgroundJobType mode = job->getJobType();
 
@@ -297,10 +331,11 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
       break;
     case BackgroundJobType::PersistentBackgroundJob:
       {
-   	    static tbb::task_group_context  backgroundTaskContext;
-        TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(backgroundTaskContext)) TBBBackgroundJobWrapper(job);
+        static tbb::task_group_context  backgroundTaskContext;
+        TBBPersistentBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(backgroundTaskContext)) TBBPersistentBackgroundJobWrapper(job);
         tbb::task::enqueue(*tbbTask);
         backgroundTaskContext.set_priority(tbb::priority_low);
+        globalBackgroundTaskContext = &backgroundTaskContext;
       }
       break;
   }
@@ -684,6 +719,20 @@ void tarch::multicore::jobs::spawnAndWait(
   }
 }
 
+
+void tarch::multicore::jobs::terminateAllPersistentBackgroundJobs() {
+  if (globalBackgroundTaskContext!=nullptr) {
+    logInfo( "terminateAllPersistentBackgroundJobs()", "wait for " << _numberOfRunningPersistentBackgroundTasks << " persistent background tasks to terminate" );
+
+    globalBackgroundTaskContext->cancel_group_execution();
+    globalBackgroundTaskContext = nullptr;
+
+    while (_numberOfRunningPersistentBackgroundTasks>0) {
+    }
+
+    logInfo( "terminateAllPersistentBackgroundJobs()", "all persistent background tasks are down" );
+  }
+}
 
 
 #endif

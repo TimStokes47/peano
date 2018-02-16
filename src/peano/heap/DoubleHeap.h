@@ -30,8 +30,8 @@
 #define MPIUsesItsOwnThread
 #endif
 
-#ifdef MPIUsesItsOwnThread
-#define DoubleHeapMPIUsesItsOwnThread
+#if defined(MPIUsesItsOwnThread) && defined(SharedMemoryParallelisation)
+//#define DoubleHeapMPIUsesItsOwnThread
 #endif
 
 
@@ -172,8 +172,7 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
       public:
         enum class State {
           ReceiveDataInBackground,
-          Suspend,
-          Terminate
+          Suspend
         };
 
         static std::string toString(State state);
@@ -196,6 +195,8 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
 
     #ifdef MPIUsesItsOwnThread
     BackgroundThread _backgroundThread;
+
+    static int _numberOfRunningBackgroundTasks;
     #endif
 
     HeapContainer    _heapData;

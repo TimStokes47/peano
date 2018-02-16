@@ -1,16 +1,11 @@
-#ifdef SharedOMP
-#include <omp.h>
-#endif
-
 #include "peano/datatraversal/autotuning/Oracle.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "peano/utils/PeanoOptimisations.h"
 #include "peano/performanceanalysis/Analysis.h"
 
 
-#if defined(SharedTBB) || defined(SharedTBBInvade)
-#include <tbb/parallel_reduce.h>
-#endif
+#include "tarch/multicore/Loop.h"
+
 
 
 template <class LoopBody>
@@ -23,7 +18,7 @@ peano::datatraversal::ActionSetTraversalLoop<LoopBody>::ActionSetTraversalLoop(
   LoopBody&                                loopBody,
   int                                      grainSize
 ) {
-  #if defined(SharedMemoryParallelisation)
+  #if defined(SharedMemoryParallelisation) && defined(Todo)
   if (grainSize>0) {
     loopParallel(traversal, loopBody, grainSize);
   }
@@ -59,75 +54,28 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopSequential(
 template <class LoopBody>
 void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
   const peano::datatraversal::ActionSetTraversal&  traversal,
-  #ifdef SharedOMP
-  LoopBody                                         loopBody,
-  #else
-  const LoopBody&                                  loopBody,
-  #endif
+  LoopBody&                                        loopBody,
   int                                              grainSize
 ) {
   const int maximumPath = traversal.getMaximumPath();
   for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()/grainSize,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
 
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
     #if defined(SharedTBBInvade)
     shminvade::SHMInvade invade(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
     #endif
-    ActionSetTraversalLoopInstance loopInstance(loopBody,traversal.getActionSet(currentStepInPath));
-    tbb::parallel_reduce(
-      tbb::blocked_range<int>(0,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(),grainSize),
-      loopInstance
+
+    tarch::multicore::parallelFor(
+      tarch::multicore::dForRange<1>( traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(), grainSize ),
+  	  [&] (int i) {
+        loopBody(traversal.getActionSet(currentStepInPath).getAction(i));
+      }
     );
+
     #if defined(SharedTBBInvade)
     invade.retreat();
     #endif
-    #elif SharedOMP 
-    #pragma omp for schedule(dynamic, grainSize)
-    for (int j = 0; j < traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(); j++) {
-      loopBody(traversal.getActionSet(currentStepInPath).getAction(j));
-    }
-    #else
-    assertion(false);
-    #endif
+
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()/grainSize,-traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
   }
 }
-
-
-#if defined(SharedTBB) || defined(SharedTBBInvade)
-template <class LoopBody>
-peano::datatraversal::ActionSetTraversalLoop<LoopBody>::ActionSetTraversalLoopInstance::ActionSetTraversalLoopInstance(
-  const LoopBody&                         loopBody,
-  const peano::datatraversal::ActionSet&  actionSet
-):
-  _loopBody(loopBody),
-  _actionSet(actionSet) {
-}
-
-
-template <class LoopBody>
-peano::datatraversal::ActionSetTraversalLoop<LoopBody>::ActionSetTraversalLoopInstance::ActionSetTraversalLoopInstance(
-  const ActionSetTraversalLoopInstance&  copy,
-  tbb::split
-):
-  _loopBody(copy._loopBody),
-  _actionSet(copy._actionSet) {
-}
-
-
-template <class LoopBody>
-void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::ActionSetTraversalLoopInstance::operator() (const tbb::blocked_range<int>& range) {
-  assertion( range.begin() >= 0 );
-  assertion( range.end() <= _actionSet.getNumberOfParallelActions() );
-
-  for (int i=range.begin(); i!=range.end(); i++) {
-    _loopBody(_actionSet.getAction(i));
-  }
-}
-
-
-template <class LoopBody>
-void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::ActionSetTraversalLoopInstance::join(const ActionSetTraversalLoopInstance&  with) {
-}
-#endif

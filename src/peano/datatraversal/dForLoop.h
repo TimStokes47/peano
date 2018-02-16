@@ -8,9 +8,11 @@
 #include "tarch/logging/Log.h"
 
 
-#include "peano/datatraversal/dForRange.h"
-#include "peano/datatraversal/tests/dForLoopTest.h"
 #include "tarch/multicore/BooleanSemaphore.h"
+
+#include "peano/utils/Globals.h"
+
+#include "peano/datatraversal/tests/dForLoopTest.h"
 
 #include <vector>
 
@@ -115,123 +117,6 @@ class peano::datatraversal::dForLoop {
     friend class peano::datatraversal::tests::dForLoopTest;
 
     static tarch::logging::Log _log;
-
-    /**
-     * Required only for OpenMP (not used currently)
-     */
-    static std::vector<dForRange> createRangesVector(
-      const tarch::la::Vector<DIMENSIONS,int>&  range,
-      int                                       grainSize
-    );
-
-    class dForLoopInstance {
-      private:
-        LoopBody                           _loopBody;
-
-        tarch::la::Vector<DIMENSIONS,int>  _offset;
-        const int                          _padding;
-
-      public:
-        dForLoopInstance(
-          const LoopBody&                    loopBody,
-          tarch::la::Vector<DIMENSIONS,int>  offset,
-          const int                          padding
-        );
-
-        void setOffset(const tarch::la::Vector<DIMENSIONS,int>&  offset);
-
-        /**
-         * See documentation of TBB. This flag is just used to
-         * distinguish the split constructor from a standard
-         * copy constructor.
-         */
-        #if defined(SharedTBB) || defined(SharedTBBInvade)
-        typedef tbb::split   SplitFlag;
-        #else
-        typedef int          SplitFlag;
-        #endif
-
-        /**
-         * Copy Constructor
-         *
-         * TBB requires the copy constructor for loops to accept an additional
-         * argument to be able to distinguish it from the standard copy
-         * constructor. As a consequence, the code does not compile anymore
-         * without tbb. I thus wrap the TBB type with a typedef of my own.
-         */
-        dForLoopInstance( const dForLoopInstance& loopBody, SplitFlag );
-
-        /**
-         * Process range
-         *
-         * Could, at first glance, be const as the method copies the loop body anyway. The
-         * operation first copies the loop body. This process can run
-         * in parallel, as the copy process may not modify the original
-         * loop body instance. When the operation has terminated, it calls the
-         * loop body copy's updateGlobalValues(). Usually, the copy holds a
-         * reference to the original data. A reference not used until this
-         * final operation is called. The final operation then commits changes
-         * to the original data set. This operation hence is not const.
-         * Consequently, the whole operator may not be const.
-         */
-        void operator() (const dForRange& range);
-
-        /**
-         * A loopInstance wrapper for the LoopBody operator()
-         * Allows for convenient use of the padding and offset functionality of a
-         * LoopInstance
-        */
-        void operator() (const tarch::la::Vector<DIMENSIONS,int>& range);
-
-        /**
-         * Maps TBB's join onto mergeWithWorkerThread
-         */
-        void join(const dForLoopInstance&  with);
-
-        void mergeIntoMasterThread( LoopBody&  originalLoopBody ) const;
-    };
-
-    class dForLoopInstanceWithoutReduction {
-      private:
-        //const LoopBody&                    _loopBody;
-        LoopBody                           _loopBody;
-
-        tarch::la::Vector<DIMENSIONS,int>  _offset;
-        const int                          _padding;
-
-      public:
-        dForLoopInstanceWithoutReduction(
-          const LoopBody&                    loopBody,
-          tarch::la::Vector<DIMENSIONS,int>  offset,
-          const int                          padding
-        );
-
-        void setOffset(const tarch::la::Vector<DIMENSIONS,int>&  offset);
-
-        /**
-         * See documentation of TBB. This flag is just used to
-         * distinguish the split constructor from a standard
-         * copy constructor.
-         */
-        #if defined(SharedTBB) || defined(SharedTBBInvade)
-        typedef tbb::split   SplitFlag;
-        #else
-        typedef int          SplitFlag;
-        #endif
-
-        /**
-         * Copy Constructor
-         *
-         * TBB requires the copy constructor for loops to accept an additional
-         * argument to be able to distinguish it from the standard copy
-         * constructor. As a consequence, the code does not compile anymore
-         * without tbb. I thus wrap the TBB type with a typedef of my own.
-         */
-        dForLoopInstanceWithoutReduction( const dForLoopInstanceWithoutReduction& loopBody, SplitFlag );
-
-        void operator() (const dForRange& range) const;
-        void operator() (const tarch::la::Vector<DIMENSIONS,int>& range) const;
-    };
 
     void runSequentially(
       const tarch::la::Vector<DIMENSIONS,int>&  range,

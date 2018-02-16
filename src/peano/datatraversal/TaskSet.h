@@ -139,6 +139,9 @@ class peano::datatraversal::TaskSet {
        *
        * Please note that job passed has to be a task. See class documentation
        * on the difference between jobs and tasks.
+       *
+       * Background implies that the task's operator() is called over and over
+       * again. The passed task is not destroyed anymore.
        */
   	  PersistentBackground,
       /**

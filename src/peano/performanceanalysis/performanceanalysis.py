@@ -31,8 +31,8 @@ python domain-decomposition-analysis.py -file 112x16-0.results -dimension 2 -dom
 
 parser = argparse.ArgumentParser(description=help,formatter_class=RawTextHelpFormatter)
 parser.add_argument('-file',required=True,help="Input file")
-parser.add_argument('-domainoffset',nargs="+",required=True,help="Offset of bounding box.")
-parser.add_argument('-domainsize',nargs="+",required=True,help="Size of domain's bounding box.")
+parser.add_argument('-domainoffset',nargs="+",required=True,help="Offset of bounding box. Ensure there are as many arguments as you have dimensions.")
+parser.add_argument('-domainsize',nargs="+",required=True,help="Size of domain's bounding box. Ensure there are as many arguments as you have dimensions.")
 args   = parser.parse_args();
 
 scriptLocation = os.path.realpath(__file__)[:os.path.realpath(__file__).rfind("/")]
@@ -44,6 +44,14 @@ outFile         = performanceanalysis_output.getOutputFile(args.file)
 numberOfRanks   = performanceanalysis_parser.getNumberOfRanks(args.file)
 numberOfThreads = performanceanalysis_parser.getNumberOfThreads(args.file)
 dim             = performanceanalysis_parser.getDimensions(args.file)
+
+if len(args.domainoffset)!=dim:
+  print "dimensions of offset does not match dimensions. If input file is for dimension 2, then we need two offset values separated by a space"
+  exit(-1)
+
+if len(args.domainsize)!=dim:
+  print "dimensions of domain size does not match dimensions. If input file is for dimension 2, then we need two size values separated by a space"
+  exit(-1)
 
 performanceanalysis_output.writeHeader(outFile,args.file,numberOfRanks,numberOfThreads);
 

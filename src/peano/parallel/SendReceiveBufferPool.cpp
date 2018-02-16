@@ -24,6 +24,7 @@ registerService(peano::parallel::SendReceiveBufferPool)
 tarch::logging::Log                                                              peano::parallel::SendReceiveBufferPool::_log( "peano::parallel::SendReceiveBufferPool" );
 
 
+
 #ifdef Parallel
 peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
   _iterationManagementTag(MPI_ANY_TAG),
@@ -33,7 +34,7 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
   _iterationManagementTag = tarch::parallel::Node::getInstance().reserveFreeTag("SendReceiveBufferPool[it-mgmt]");
   _iterationDataTag       = tarch::parallel::Node::getInstance().reserveFreeTag("SendReceiveBufferPool[it-data]");
 
-  #if defined(MPIUsesItsOwnThread)
+  #ifdef MPIUsesItsOwnThread
   peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::PersistentBackground);
   #endif
 }
@@ -48,10 +49,6 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
 
 
 peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
-  #if defined(MPIUsesItsOwnThread)
-  assertion1( _backgroundThread._state == BackgroundThread::State::Terminate, _backgroundThread.toString() );
-  #endif
-
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     std::cerr << "encountered open buffer for destination " << p->first << " on rank " << tarch::parallel::Node::getInstance().getRank() <<  ". Would be nicer to call terminate() on SendReceiveBufferPool." << std::endl;
     delete p->second;
@@ -105,8 +102,14 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
   receiveDanglingMessagesFromAllBuffersInPool();
   #else
   if (BackgroundThread::_state==BackgroundThread::State::Suspend) {
-    tarch::multicore::Lock lock(BackgroundThread::_semaphore);
     receiveDanglingMessagesFromAllBuffersInPool();
+  }
+  else {
+    _backgroundThread.switchState(BackgroundThread::State::Suspend);
+
+    receiveDanglingMessagesFromAllBuffersInPool();
+
+    _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
   }
   #endif
 }
@@ -121,10 +124,6 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesFromAllBuffe
 
 
 void peano::parallel::SendReceiveBufferPool::terminate() {
-  #if defined(MPIUsesItsOwnThread)
-  _backgroundThread.switchState(BackgroundThread::State::Terminate);
-  #endif
-
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     assertion1(  p->first >= 0, tarch::parallel::Node::getInstance().getRank() );
     assertion1( _map.count(p->first) == 1, tarch::parallel::Node::getInstance().getRank() );
@@ -223,10 +222,7 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
       break;
     case State::Suspend:
       {
-        peano::datatraversal::TaskSet spawnTask(*this,peano::datatraversal::TaskSet::TaskType::PersistentBackground);
       }
-      break;
-    case State::Terminate:
       break;
   }
 }
@@ -245,8 +241,6 @@ std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString(S
       return "receive-data-in-background";
     case State::Suspend:
       return "suspend";
-    case State::Terminate:
-      return "terminate";
   }
 
   return "<undef>";
@@ -255,8 +249,6 @@ std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString(S
 
 void peano::parallel::SendReceiveBufferPool::BackgroundThread::switchState(State newState ) {
   logTraceInWith1Argument( "switchState(State)", toString() );
-
-  assertion1( _state != BackgroundThread::State::Terminate, toString() );
 
   tarch::multicore::Lock lock(_semaphore);
   _state = newState;

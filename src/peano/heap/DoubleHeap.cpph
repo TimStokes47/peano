@@ -26,6 +26,12 @@ template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourD
 tarch::multicore::BooleanSemaphore peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::_recycleAndDeleteSemaphore;
 
 
+#if defined(DoubleHeapMPIUsesItsOwnThread)
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::_numberOfRunningBackgroundTasks(0);
+#endif
+
+
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::DoubleHeap()
   : _heapData(), _deletedHeapIndices(), _recycledHeapIndices(), _nextIndex(0)
@@ -58,10 +64,6 @@ peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataE
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::~DoubleHeap() {
-  #if defined(DoubleHeapMPIUsesItsOwnThread)
-  assertion1( _backgroundThread._state == BackgroundThread::State::Terminate, _backgroundThread.toString() );
-  #endif
-
   deleteAllData();
 }
 
@@ -405,10 +407,6 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   #endif
 
   deleteAllData();
-
-  #if defined(DoubleHeapMPIUsesItsOwnThread)
-  peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::PersistentBackground);
-  #endif
 }
 
 
@@ -769,11 +767,6 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
       }
       break;
     case State::Suspend:
-      {
-        peano::datatraversal::TaskSet spawnTask(*this,peano::datatraversal::TaskSet::TaskType::PersistentBackground);
-      }
-      break;
-    case State::Terminate:
       break;
   }
 }
@@ -804,8 +797,6 @@ std::string peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Ne
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::BackgroundThread::switchState(State newState ) {
   logTraceInWith1Argument( "switchState(State)", toString() );
-
-  assertion1( _state != BackgroundThread::State::Terminate, toString() );
 
   tarch::multicore::Lock lock(_semaphore);
   _state = newState;

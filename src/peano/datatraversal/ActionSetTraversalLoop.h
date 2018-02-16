@@ -34,11 +34,7 @@ class peano::datatraversal::ActionSetTraversalLoop {
 
     void loopParallel(
       const peano::datatraversal::ActionSetTraversal&  traversal,
-      #ifdef SharedOMP
-      LoopBody                                         loopBody,
-      #else
-      const LoopBody&                                  loopBody,
-      #endif
+      LoopBody&                                        loopBody,
       int                                              grainSize
     );
 
@@ -47,48 +43,6 @@ class peano::datatraversal::ActionSetTraversalLoop {
       const peano::datatraversal::ActionSetTraversal&  traversal,
       LoopBody&                                        loopBody
     );
-
-
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
-    class ActionSetTraversalLoopInstance {
-      private:
-        LoopBody                                _loopBody;
-        const peano::datatraversal::ActionSet&  _actionSet;
-      public:
-        ActionSetTraversalLoopInstance(
-          const LoopBody&                         loopBody,
-          const peano::datatraversal::ActionSet&  actionSet
-        );
-
-        ActionSetTraversalLoopInstance(
-          const ActionSetTraversalLoopInstance&  copy,
-          tbb::split
-        );
-
-        /**
-         * Process range
-         *
-         * Could, at first glance, be const as the method copies the loop body anyway. The
-         * operation first copies the loop body. This process can run
-         * in parallel, as the copy process may not modify the original
-         * loop body instance. When the operation has terminated, it calls the
-         * loop body copy's updateGlobalValues(). Usually, the copy holds a
-         * reference to the original data. A reference not used until this
-         * final operation is called. The final operation then commits changes
-         * to the original data set. This operation hence is not const.
-         * Consequently, the whole operator may not be const.
-         *
-         * Unfortunately, the operator() has to be const according to the
-         */
-        void operator() (const tbb::blocked_range<int>& range);
-
-        /**
-         * nop
-         */
-        void join(const ActionSetTraversalLoopInstance&  with);
-    };
-    #endif
-
 
   public:
     /**
