@@ -49,6 +49,10 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
 
 
 peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
+  #if defined(MPIUsesItsOwnThread)
+  _backgroundThread.switchState(BackgroundThread::State::Suspend);
+  #endif
+
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     std::cerr << "encountered open buffer for destination " << p->first << " on rank " << tarch::parallel::Node::getInstance().getRank() <<  ". Would be nicer to call terminate() on SendReceiveBufferPool." << std::endl;
     delete p->second;
@@ -124,6 +128,10 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesFromAllBuffe
 
 
 void peano::parallel::SendReceiveBufferPool::terminate() {
+  #if defined(MPIUsesItsOwnThread)
+  _backgroundThread.switchState(BackgroundThread::State::Suspend);
+  #endif
+
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     assertion1(  p->first >= 0, tarch::parallel::Node::getInstance().getRank() );
     assertion1( _map.count(p->first) == 1, tarch::parallel::Node::getInstance().getRank() );
