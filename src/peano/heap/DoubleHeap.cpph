@@ -581,12 +581,28 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::receiveDanglingMessages() {
-  #ifdef Parallel
-
   #if defined(DoubleHeapMPIUsesItsOwnThread)
   if (BackgroundThread::_state==BackgroundThread::State::Suspend) {
-  #endif
-
+    for (
+      typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
+      p != _neighbourDataExchanger.end();
+      p++
+    ) {
+      p->second.receiveDanglingMessages();
+    }
+  }
+  else {
+    _backgroundThread.switchState(BackgroundThread::State::Suspend);
+    for (
+      typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
+      p != _neighbourDataExchanger.end();
+      p++
+    ) {
+      p->second.receiveDanglingMessages();
+    }
+    _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
+  }
+  #else
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
     p != _neighbourDataExchanger.end();
@@ -594,15 +610,10 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   ) {
     p->second.receiveDanglingMessages();
   }
-
-  #if defined(DoubleHeapMPIUsesItsOwnThread)
-  }
   #endif
 
   _masterWorkerExchanger.receiveDanglingMessages();
   _joinForkExchanger.receiveDanglingMessages();
-
-  #endif
 }
 
 
@@ -747,13 +758,10 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
   tarch::multicore::Lock lock(_semaphore);
   State state = _state;
-  lock.free();
 
   switch (state) {
     case State::ReceiveDataInBackground:
       {
-        tarch::multicore::Lock lock(_semaphore);
-
         for (
           typename std::map<int, NeighbourDataExchanger>::iterator p = peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::getInstance()._neighbourDataExchanger.begin();
           p != peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::getInstance()._neighbourDataExchanger.end();
@@ -769,6 +777,8 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
     case State::Suspend:
       break;
   }
+
+  lock.free();
 }
 
 

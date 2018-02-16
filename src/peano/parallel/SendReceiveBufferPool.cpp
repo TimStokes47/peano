@@ -208,14 +208,11 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
 
   tarch::multicore::Lock lock(_semaphore);
   State state = _state;
-  lock.free();
 
   switch (state) {
     case State::ReceiveDataInBackground:
       {
-        tarch::multicore::Lock lock(_semaphore);
         SendReceiveBufferPool::getInstance().receiveDanglingMessagesFromAllBuffersInPool();
-
         // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
         //std::atomic_thread_fence(std::memory_order_release);
       }
@@ -225,6 +222,8 @@ void peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
       }
       break;
   }
+
+  lock.free();
 }
 
 
