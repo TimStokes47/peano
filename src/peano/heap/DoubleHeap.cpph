@@ -88,6 +88,10 @@ bool peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::deleteAllData() {
+  #ifdef MPIUsesItsOwnThread
+  _backgroundThread.switchState(BackgroundThread::State::Suspend);
+  #endif
+
   for(typename HeapContainer::iterator i = _heapData.begin(); i != _heapData.end(); i++) {
     assertionMsg((*i).second != 0, _name << ": Null-pointer was stored in heap data map.");
     delete (*i).second;
@@ -97,6 +101,10 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
   #ifdef Parallel
   _neighbourDataExchanger.clear();
+  #endif
+
+  #ifdef MPIUsesItsOwnThread
+  _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
   #endif
 }
 
@@ -372,6 +380,10 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   #endif
   assertion4(_heapData.count(index)==1, _name, message, index, _heapData.size());
 
+  #ifdef MPIUsesItsOwnThread
+  _backgroundThread.switchState(BackgroundThread::State::Suspend);
+  #endif
+
   tarch::multicore::Lock lock(_recycleAndDeleteSemaphore);
 
   if (recycle) {
@@ -390,6 +402,10 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
   lock.free();
 
+  #ifdef MPIUsesItsOwnThread
+  _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
+  #endif
+
   logTraceOut("deleteData(int,bool)");
 }
 
@@ -402,10 +418,6 @@ int peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourD
 
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::restart() {
-  #if defined(DoubleHeapMPIUsesItsOwnThread)
-  _backgroundThread.switchState(BackgroundThread::State::Terminate);
-  #endif
-
   deleteAllData();
 }
 
@@ -413,7 +425,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::shutdown() {
   #if defined(DoubleHeapMPIUsesItsOwnThread)
-  _backgroundThread.switchState(BackgroundThread::State::Terminate);
+  _backgroundThread.switchState(BackgroundThread::State::Suspend);
   #endif
 
   deleteAllData();
@@ -593,6 +605,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   }
   else {
     _backgroundThread.switchState(BackgroundThread::State::Suspend);
+
     for (
       typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
       p != _neighbourDataExchanger.end();
@@ -600,6 +613,7 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
     ) {
       p->second.receiveDanglingMessages();
     }
+
     _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
   }
   #else
@@ -668,9 +682,9 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   #ifdef Parallel
   peano::performanceanalysis::Analysis::getInstance().beginToPrepareAsynchronousHeapDataExchange();
 
-#if defined(DoubleHeapMPIUsesItsOwnThread)
-_backgroundThread.switchState(BackgroundThread::State::Suspend);
-#endif
+  #if defined(DoubleHeapMPIUsesItsOwnThread)
+  _backgroundThread.switchState(BackgroundThread::State::Suspend);
+  #endif
 
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
@@ -717,9 +731,9 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 
   #ifdef Parallel
 
-#if defined(DoubleHeapMPIUsesItsOwnThread)
-_backgroundThread.switchState(BackgroundThread::State::Suspend);
-#endif
+  #if defined(DoubleHeapMPIUsesItsOwnThread)
+  _backgroundThread.switchState(BackgroundThread::State::Suspend);
+  #endif
 
   for (
     typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
@@ -729,9 +743,9 @@ _backgroundThread.switchState(BackgroundThread::State::Suspend);
     p->second.finishedToSendData(isTraversalInverted);
   }
 
-#if defined(DoubleHeapMPIUsesItsOwnThread)
-_backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
-#endif
+  #if defined(DoubleHeapMPIUsesItsOwnThread)
+  _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
+  #endif
 
   #endif
 

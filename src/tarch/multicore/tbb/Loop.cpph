@@ -1,0 +1,7 @@
+template <typename F>
+void tarch::multicore::parallelReduce(
+  const tarch::multicore::dForRange<2>&  range,
+  F&                                     function
+) {
+  parallelFor(range, function);
+}

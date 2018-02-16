@@ -31,7 +31,7 @@
 #endif
 
 #if defined(MPIUsesItsOwnThread) && defined(SharedMemoryParallelisation)
-//#define DoubleHeapMPIUsesItsOwnThread
+#define DoubleHeapMPIUsesItsOwnThread
 #endif
 
 
