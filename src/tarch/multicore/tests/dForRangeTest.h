@@ -6,8 +6,8 @@
 
 #include "tarch/tests/TestCase.h"
 
-namespace peano {
-    namespace datatraversal {
+namespace tarch {
+    namespace multicore {
       namespace tests {
         class dForRangeTest;
       }
@@ -15,7 +15,7 @@ namespace peano {
 }
 
 
-class peano::datatraversal::tests::dForRangeTest: public tarch::tests::TestCase {
+class tarch::multicore::tests::dForRangeTest: public tarch::tests::TestCase {
   private:
     void test2D10x10Range1();
     void test2D10x10Range12();

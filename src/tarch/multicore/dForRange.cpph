@@ -1,32 +1,43 @@
-#include "peano/datatraversal/dForRange.h"
+template <int D>
+tarch::logging::Log tarch::multicore::dForRange<D>::_log( "tarch::multicore::dForRange" );
 
 
-tarch::logging::Log peano::datatraversal::dForRange::_log( "peano::datatraversal::dForRange" );
-
-
-peano::datatraversal::dForRange::dForRange(const dForRange& range):
+template <int D>
+tarch::multicore::dForRange<D>::dForRange(const dForRange<D>& range):
   _offset( range._offset),
   _range( range._range ),
-  _grainSize( range._grainSize ) {
+  _grainSize( range._grainSize ),
+  _interleaving( range._interleaving ) {
   logTraceInWith1Argument( "dForRange(dForRange)", range.toString() );
   assertion3( _grainSize>0, _offset, _range, _grainSize );
   logTraceOut( "dForRange(dForRange)" );
 }
 
 
-peano::datatraversal::dForRange::dForRange( const tarch::la::Vector<DIMENSIONS,int>&  range, int grainSize ):
+template <int D>
+tarch::multicore::dForRange<D>::dForRange( const tarch::la::Vector<D,int>&  range, int grainSize, int interleaving ):
   _offset(0),
   _range(range),
-  _grainSize(grainSize) {
+  _grainSize(grainSize),
+  _interleaving(interleaving) {
   logTraceInWith2Arguments( "dForRange(...)", range, grainSize );
-  for (int d=0; d<DIMENSIONS; d++) {
+  for (int d=0; d<D; d++) {
     assertion3( range(d)>=1, toString(), range, grainSize );
   }
+  assertion3( interleaving>=1, toString(), range, grainSize );
   logTraceOut( "dForRange(...)" );
 }
 
 
-peano::datatraversal::dForRange::dForRange( dForRange& range, Split ):
+template <int D>
+tarch::la::Vector<D,int> tarch::multicore::dForRange<D>::operator()(const tarch::la::Vector<D,int>& range) const {
+  return _offset + _range * _interleaving;
+}
+
+
+/*
+template <int D>
+tarch::multicore::dForRange<D>::dForRange( dForRange& range, Split ):
   _offset(range._offset),
   _range(range._range),
   _grainSize( range._grainSize) {
@@ -43,10 +54,11 @@ peano::datatraversal::dForRange::dForRange( dForRange& range, Split ):
   range._offset(splitAlongDimension) = range._offset(splitAlongDimension) + oldRangeSizeAlongDimension - range._range(splitAlongDimension);
 
   logTraceOutWith2Arguments( "dForRange(Range,Split)", toString(), range.toString() );
-}
+}*/
 
 
-bool peano::datatraversal::dForRange::empty() const {
+template <int D>
+bool tarch::multicore::dForRange<D>::empty() const {
   logTraceIn( "empty()" );
   bool result = tarch::la::volume(_range)==0;
   assertion( !is_divisible() || !result );
@@ -55,7 +67,8 @@ bool peano::datatraversal::dForRange::empty() const {
 }
 
 
-bool peano::datatraversal::dForRange::is_divisible() const {
+template <int D>
+bool tarch::multicore::dForRange<D>::is_divisible() const {
   logTraceInWith1Argument( "is_divisible()", toString() );
   bool result = tarch::la::volume(_range) > _grainSize;
   logTraceOutWith1Argument( "is_divisible()", result );
@@ -63,18 +76,21 @@ bool peano::datatraversal::dForRange::is_divisible() const {
 }
 
 
-std::string peano::datatraversal::dForRange::toString() const {
+template <int D>
+std::string tarch::multicore::dForRange<D>::toString() const {
   std::ostringstream msg;
   msg << "(range:" << _range << ",offset:" << _offset << ",grain-size:" << _grainSize << ")";
   return msg.str();
 }
 
 
-tarch::la::Vector<DIMENSIONS,int> peano::datatraversal::dForRange::getOffset() const {
+template <int D>
+tarch::la::Vector<D,int> tarch::multicore::dForRange<D>::getOffset() const {
   return _offset;
 }
 
 
-tarch::la::Vector<DIMENSIONS,int> peano::datatraversal::dForRange::getRange() const {
+template <int D>
+tarch::la::Vector<D,int> tarch::multicore::dForRange<D>::getRange() const {
   return _range;
 }

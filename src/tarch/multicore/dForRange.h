@@ -1,21 +1,16 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _PEANO_DATA_TRAVERSAL_DFOR_RANGE_H_
-#define _PEANO_DATA_TRAVERSAL_DFOR_RANGE_H_
+#ifndef _TARCH_MULTICORE_DFOR_RANGE_H_
+#define _TARCH_MULTICORE_DFOR_RANGE_H_
 
-
-#include "peano/utils/Globals.h"
 
 #include "tarch/la/Vector.h"
 #include "tarch/logging/Log.h"
 
 
-#if defined(SharedTBB) || defined(SharedTBBInvade)
-#include <tbb/tbb_stddef.h>
-#endif
-
-namespace peano {
-  namespace datatraversal {
+namespace tarch {
+  namespace multicore {
+    template <int D>
     class dForRange;
   }
 }
@@ -51,42 +46,39 @@ namespace peano {
  * @author Wolfgang Eckhardt
  * @author Tobias Weinzierl
  */
-class peano::datatraversal::dForRange {
+template <int D>
+class tarch::multicore::dForRange {
   private:
     static tarch::logging::Log _log;
 
-    tarch::la::Vector<DIMENSIONS,int>  _offset;
-    tarch::la::Vector<DIMENSIONS,int>  _range;
-    int                                _grainSize;
+    tarch::la::Vector<D,int>  _offset;
+    tarch::la::Vector<D,int>  _range;
+    const int                 _grainSize;
+    const int                 _interleaving;
 
   public:
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
-    typedef tbb::split Split;
-    #else
-    typedef std::string Split;
-    #endif
-
-    dForRange(const dForRange& range);
+    /**
+     * Copy constructor
+     */
+    dForRange(const dForRange<D>& range);
 
     /**
      * Construct a Complete Range
      */
-    dForRange( const tarch::la::Vector<DIMENSIONS,int>&  range, int grainSize );
+    dForRange( const tarch::la::Vector<D,int>&  range, int grainSize, int interleaving );
 
     /**
-     * Split Constructor
-     *
-     * According to the TBB documentation, the split argument ain't used but is
-     * only there do distinguish the operation from a copy constructor. The
-     * passed argument is the valid state from which the new range is to be
-     * constructed.
-     *
-     * Please note that the local range always is as equal as the forked new range
-     * or smaller.
+     * Split operator
      *
      * @param range Original range
      */
-    dForRange( dForRange& range, Split );
+    dForRange split();
+
+    /**
+     * Is given an entry from getRange() and translates it into an index, i.e.
+     * it adds the offset and takes the interleaving into account.
+     */
+    tarch::la::Vector<D,int> operator()(const tarch::la::Vector<D,int>& range) const;
 
     /**
      * Is the range empty?
@@ -102,12 +94,14 @@ class peano::datatraversal::dForRange {
      */
     bool is_divisible() const;
 
-    tarch::la::Vector<DIMENSIONS,int> getOffset() const;
-    tarch::la::Vector<DIMENSIONS,int> getRange() const;
+    tarch::la::Vector<D,int> getOffset() const;
+    tarch::la::Vector<D,int> getRange() const;
 
     std::string toString() const;
 };
 
+
+#include "tarch/multicore/dForRange.cpph"
 
 
 #endif
