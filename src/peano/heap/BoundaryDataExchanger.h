@@ -4,6 +4,30 @@
 #define _PEANO_HEAP_BOUNDARY_DATA_EXCHANGER_H_
 
 
+
+#include "tarch/multicore/BooleanSemaphore.h"
+
+
+
+
+/**
+ * With this ifdef, we can define whether the pool shall use a dedicated
+ * thread to receive data in the background.
+ */
+/*
+#if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
+#define MPIUsesItsOwnThread
+#endif
+*/
+
+/*
+#if defined(MPIUsesItsOwnThread) && defined(SharedMemoryParallelisation)
+//#define DoubleHeapMPIUsesItsOwnThread
+#endif
+*/
+
+
+
 namespace peano {
   namespace heap {
     template<class Data, class SendReceiveTaskType, class VectorContainer>
@@ -34,6 +58,37 @@ class peano::heap::BoundaryDataExchanger {
      * Logging device.
      */
     static tarch::logging::Log _log;
+/*
+
+    struct BackgroundThread {
+      public:
+        enum class State {
+          ReceiveDataInBackground,
+          Suspend
+        };
+
+        static std::string toString(State state);
+
+        *
+         * There is only one background thread object from the pool's point of
+         * view. However, we deploy the thread as a task of its own. Then, it
+         * is copied. However, as all copies of the thread shall share one state
+         * and one semaphore, I have to make all attributes static. As a
+         * consequence, any instance seems to be an object but indeed it is only
+         * a lightweight object wrapper around global data.
+
+        static tarch::multicore::BooleanSemaphore _semaphore;
+        static State                              _state;
+
+        void operator()();
+        std::string toString() const;
+        void switchState( State newState );
+    };
+
+    #ifdef MPIUsesItsOwnThread
+    BackgroundThread _backgroundThread;
+    #endif
+*/
 
   protected:
     const std::string    _identifier;
