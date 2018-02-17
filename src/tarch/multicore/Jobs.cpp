@@ -1,4 +1,4 @@
-#include "Jobs.h"
+#include "tarch/multicore/Jobs.h"
 #include "tarch/Assertions.h"
 
 
@@ -15,11 +15,7 @@ tarch::multicore::jobs::BackgroundJob::BackgroundJob( tarch::multicore::jobs::Ba
     (
       ( _maxNumberOfRunningBackgroundThreads==DontUseAnyBackgroundJobs )
       ||
-      (
-        (_maxNumberOfRunningBackgroundThreads==ProcessNormalBackgroundJobsImmediately)
-        &&
-        (jobType!=BackgroundJobType::PersistentBackgroundJob)
-      )
+      ( _maxNumberOfRunningBackgroundThreads==ProcessNormalBackgroundJobsImmediately)
 	)
 	? BackgroundJobType::ProcessImmediately : jobType
   ) {
@@ -97,14 +93,14 @@ tarch::multicore::jobs::GenericJobWithoutCopyOfFunctor::~GenericJobWithoutCopyOf
 }
 
 
-tarch::multicore::jobs::GenericBackgroundJobWithCopyOfFunctor::GenericBackgroundJobWithCopyOfFunctor(const std::function<void()>& functor, BackgroundJobType jobType ):
+tarch::multicore::jobs::GenericBackgroundJobWithCopyOfFunctor::GenericBackgroundJobWithCopyOfFunctor(const std::function<bool()>& functor, BackgroundJobType jobType ):
   BackgroundJob(jobType),
   _functor(functor)  {
 }
 
 
-void tarch::multicore::jobs::GenericBackgroundJobWithCopyOfFunctor::run() {
-  _functor();
+bool tarch::multicore::jobs::GenericBackgroundJobWithCopyOfFunctor::run() {
+  return _functor();
 }
 
 

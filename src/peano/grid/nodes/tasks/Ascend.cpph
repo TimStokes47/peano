@@ -271,7 +271,7 @@ bool peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::mayRunEve
 
 
 template <class Vertex, class Cell, class State, class EventHandle>
-void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator() () {
+bool peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator() () {
   _treeRemainsStatic = true;
 
   for (int level=_treeDepth+1; level>=1; level--) {
@@ -328,4 +328,6 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
     _gridContainer.getVertexEnumerator(_treeDepth).getCellSize()
   );
   #endif
+
+  return false;
 }

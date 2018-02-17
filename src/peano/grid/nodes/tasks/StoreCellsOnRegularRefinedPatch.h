@@ -82,7 +82,7 @@ class peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch {
       bool                                                              storeProcessRunsInParallelToOtherTasks
    );
 
-    void operator()();
+    bool operator()();
 };
 
 

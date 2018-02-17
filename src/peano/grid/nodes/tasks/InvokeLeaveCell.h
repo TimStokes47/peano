@@ -68,7 +68,7 @@ class peano::grid::nodes::tasks::InvokeLeaveCell {
 
     ~InvokeLeaveCell() = default;
 
-    void operator()();
+    bool operator()();
 };
 
 

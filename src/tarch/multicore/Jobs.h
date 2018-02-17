@@ -29,11 +29,6 @@ namespace tarch {
 		 IsTaskAndRunAsSoonAsPossible,
          LongRunningBackgroundJob,
 		 /**
-		  * A persistent background job's operator() is called over and over
-		  * again.
-		  */
-         PersistentBackgroundJob,
-		 /**
 		  * It does not really make sense to specify this flag by a user.
 		  * But it is used internally if background threads are disabled.
 		  */
@@ -61,7 +56,13 @@ namespace tarch {
            static int  _maxNumberOfRunningBackgroundThreads;
          public:
            BackgroundJob( BackgroundJobType jobType );
-           virtual void run() = 0;
+           /**
+            * Background jobs can interrupt if they want. They then should
+            * return true telling the job system that they need to be rerun.
+            *
+            * @return Shall be rescheduled again
+            */
+           virtual bool run() = 0;
            virtual ~BackgroundJob();
            bool isLongRunning() const;
            BackgroundJobType getJobType() const;
@@ -100,13 +101,36 @@ namespace tarch {
             * See the outer class description for an explanation why this is an
             * attribute, i.e. why we copy the functor here always.
             */
-    	   std::function<void()>   _functor;
+    	   std::function<bool()>   _functor;
          public:
-           GenericBackgroundJobWithCopyOfFunctor(const std::function<void()>& functor, BackgroundJobType jobType );
+           GenericBackgroundJobWithCopyOfFunctor(const std::function<bool()>& functor, BackgroundJobType jobType );
 
-           void run() override;
+           bool run() override;
 
            virtual ~GenericBackgroundJobWithCopyOfFunctor();
+       };
+
+       template <typename T>
+       class GenericBackgroundWithPointer: public BackgroundJob {
+         private:
+    	   /**
+            * See the outer class description for an explanation why this is an
+            * attribute, i.e. why we copy the functor here always.
+            */
+    	   T*   _functor;
+         public:
+    	   GenericBackgroundWithPointer(T* functor, BackgroundJobType jobType ):
+    		  BackgroundJob(jobType),
+    		  _functor(functor) {
+    	   }
+
+           bool run() override {
+             return (*_functor)();
+           }
+
+           virtual ~GenericBackgroundWithPointer() {
+             delete _functor;
+           }
        };
 
        /**
@@ -126,8 +150,6 @@ namespace tarch {
         * could, in theory, run the the background.
         */
        int getNumberOfWaitingBackgroundJobs();
-
-       void terminateAllPersistentBackgroundJobs();
 
        /**
         * Abstract super class for a job. Job class is an integer. A job may
@@ -187,6 +209,31 @@ namespace tarch {
            void run() override;
 
            virtual ~GenericJobWithoutCopyOfFunctor();
+       };
+
+
+       template <typename T>
+       class GenericJobWithPointer: public Job {
+         private:
+    	   /**
+            * See the outer class description for an explanation why this is an
+            * attribute, i.e. why we copy the functor here always.
+            */
+    	   T*   _functor;
+         public:
+    	   GenericJobWithPointer(T* functor, bool isTask, int jobClass  ):
+             Job(isTask,jobClass),
+             _functor(functor)  {
+    	   }
+
+
+           void run() override {
+             (*_functor)();
+           }
+
+           virtual ~GenericJobWithPointer() {
+        	 delete _functor;
+           }
        };
 
        /**

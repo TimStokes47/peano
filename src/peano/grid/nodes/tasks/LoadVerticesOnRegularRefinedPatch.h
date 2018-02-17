@@ -378,7 +378,7 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      * @see peano::grid::nodes::transformOracleResult() for the semantics of
      *                                                  _maxLevelToFork.
      */
-    void operator()();
+    bool operator()();
 };
 
 

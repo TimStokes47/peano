@@ -1,5 +1,8 @@
 #include "tarch/Assertions.h"
 #include "tarch/parallel/Node.h"
+
+#include "peano/datatraversal/TaskSet.h"
+
 #include "peano/parallel/SendReceiveBufferLIFO.h"
 #include "peano/parallel/SendReceiveBufferFIFO.h"
 
@@ -39,7 +42,11 @@ void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, co
   if (_map.count(toRank)==0) {
     logTraceInWith2Arguments( "createBufferManually(int,type)", toRank, bufferAccessType );
     #ifdef MPIUsesItsOwnThread
-    _backgroundThread.switchState(BackgroundThread::State::Suspend);
+    if (_backgroundThread==nullptr) {
+      _backgroundThread = new BackgroundThread();
+      peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::LongRunningBackground);
+    }
+    _backgroundThread->switchState(BackgroundThread::State::Suspend);
     #endif
 
     SendReceiveBuffer* newBuffer;
@@ -56,7 +63,7 @@ void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, co
     );
 
     #ifdef MPIUsesItsOwnThread
-    _backgroundThread.switchState(BackgroundThread::State::ReceiveDataInBackground);
+    _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
     #endif
 
     logTraceOut( "createBufferManually(int,type)" );

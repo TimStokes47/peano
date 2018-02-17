@@ -27,7 +27,7 @@ peano::grid::nodes::tasks::InvokeLeaveCell< Vertex, Cell, State, EventHandle >::
 
 
 template < class Vertex, class Cell, class State, class EventHandle>
-void peano::grid::nodes::tasks::InvokeLeaveCell< Vertex, Cell, State, EventHandle >::operator()() {
+bool peano::grid::nodes::tasks::InvokeLeaveCell< Vertex, Cell, State, EventHandle >::operator()() {
   #ifdef Parallel
   const bool invokeEvent = _fineGridCell.isInside() && !_fineGridCell.isRemote(_state,true,true);
   #else
@@ -52,4 +52,6 @@ void peano::grid::nodes::tasks::InvokeLeaveCell< Vertex, Cell, State, EventHandl
       _fineGridPositionOfCell
     );
   }
+
+  return false;
 }

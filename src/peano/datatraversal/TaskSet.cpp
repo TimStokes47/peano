@@ -32,7 +32,6 @@ int  peano::datatraversal::TaskSet::translateIntoJobClass( TaskType type ) {
  	  return 5;
     case TaskType::Background:
     case TaskType::LongRunningBackground:
-    case TaskType::PersistentBackground:
       assertion(false);
    	  return Default;
   }
@@ -53,7 +52,6 @@ bool peano::datatraversal::TaskSet::isTask( TaskType type ) {
    	  return false;
     case TaskType::Background:
     case TaskType::LongRunningBackground:
-    case TaskType::PersistentBackground:
       assertion(false);
    	  return false;
   }
@@ -253,7 +251,7 @@ peano::datatraversal::TaskSet::TaskSet(
 
 
 peano::datatraversal::TaskSet::TaskSet(
-  std::function<void ()>&&  myTask,
+  std::function<bool ()>&&  myTask,
   TaskType                  taskType
 ) {
   typedef tarch::multicore::jobs::GenericBackgroundJobWithCopyOfFunctor BackgroundJob;
@@ -275,9 +273,6 @@ peano::datatraversal::TaskSet::TaskSet(
       break;
     case TaskType::LongRunningBackground:
       tarch::multicore::jobs::spawnBackgroundJob( new BackgroundJob(myTask,tarch::multicore::jobs::BackgroundJobType::LongRunningBackgroundJob) );
-      break;
-    case TaskType::PersistentBackground:
-      tarch::multicore::jobs::spawnBackgroundJob( new BackgroundJob(myTask,tarch::multicore::jobs::BackgroundJobType::PersistentBackgroundJob) );
       break;
   }
 }

@@ -82,7 +82,7 @@ class peano::grid::nodes::tasks::Descend {
      */
     ~Descend() = default;
 
-    void operator() ();
+    bool operator() ();
 };
 
 

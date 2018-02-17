@@ -26,7 +26,7 @@ peano::grid::nodes::tasks::LoadSubCells< Cell, CellStack >::LoadSubCells(
 
 
 template < class Cell, class CellStack >
-void peano::grid::nodes::tasks::LoadSubCells< Cell, CellStack >::operator()() {
+bool peano::grid::nodes::tasks::LoadSubCells< Cell, CellStack >::operator()() {
   logTraceIn( "operator()" );
   zfor3( i, _loopDirection ) 
     const int cellIndex = peano::utils::dLinearised(i,3);
@@ -43,4 +43,5 @@ void peano::grid::nodes::tasks::LoadSubCells< Cell, CellStack >::operator()() {
     logDebug( "operator()", "loaded " << _subCells[cellIndex] << " into subcell position " << cellIndex << " (" << i << ")" );
   endzfor
   logTraceOut( "operator()" );
+  return false;
 }

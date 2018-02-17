@@ -21,7 +21,7 @@ peano::grid::nodes::tasks::StoreSubCells< Cell, CellStack >::StoreSubCells(
 
 
 template < class Cell, class CellStack >
-void peano::grid::nodes::tasks::StoreSubCells< Cell, CellStack >::operator()() {
+bool peano::grid::nodes::tasks::StoreSubCells< Cell, CellStack >::operator()() {
   logTraceIn( "operator()" );
   zfor3( i, _loopDirection ) 
     const int cellIndex = peano::utils::dLinearised(i,3);
@@ -34,4 +34,6 @@ void peano::grid::nodes::tasks::StoreSubCells< Cell, CellStack >::operator()() {
     _cellStack.push(peano::stacks::Constants::InOutStack, _subCells[cellIndex] );
   endzfor
   logTraceOut( "operator()" );
+
+  return false;
 }

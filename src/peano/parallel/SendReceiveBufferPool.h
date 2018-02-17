@@ -63,11 +63,12 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
       public:
         enum class State {
           ReceiveDataInBackground,
-          Suspend
+          Suspend,
+		  Terminate
         };
 
         static std::string toString(State state);
-
+      private:
         /**
          * There is only one background thread object from the pool's point of
          * view. However, we deploy the thread as a task of its own. Then, it
@@ -76,16 +77,25 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
          * consequence, any instance seems to be an object but indeed it is only
          * a lightweight object wrapper around global data.
          */
-        static tarch::multicore::BooleanSemaphore _semaphore;
-        static State                              _state;
-
-        void operator()();
+        tarch::multicore::BooleanSemaphore  _semaphore;
+        State                               _state;
+        BackgroundThread(const BackgroundThread&) = delete;
+      public:
+        BackgroundThread();
+        virtual ~BackgroundThread();
+        bool operator()();
         std::string toString() const;
         void switchState( State newState );
+        State getState() const;
     };
 
     #ifdef MPIUsesItsOwnThread
-    BackgroundThread _backgroundThread;
+    /**
+     * We hold a pointer to the background thread object, but we do not delete
+     * it as it is passed into Peano's job interface. This job interface has
+     * the responsibility to delete all job objects.
+     */
+    BackgroundThread* _backgroundThread;
     #endif
 
     static tarch::logging::Log _log;

@@ -29,7 +29,7 @@ class peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatc
       peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
     );
 
-    void operator()();
+    bool operator()();
 };
 
 

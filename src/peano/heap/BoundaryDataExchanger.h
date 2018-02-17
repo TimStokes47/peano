@@ -6,26 +6,21 @@
 
 
 #include "tarch/multicore/BooleanSemaphore.h"
-
-
+#include "tarch/compiler/CompilerSpecificSettings.h"
 
 
 /**
  * With this ifdef, we can define whether the pool shall use a dedicated
  * thread to receive data in the background.
  */
-/*
 #if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
 #define MPIUsesItsOwnThread
 #endif
-*/
 
-/*
-#if defined(MPIUsesItsOwnThread) && defined(SharedMemoryParallelisation)
-//#define DoubleHeapMPIUsesItsOwnThread
+
+#if defined(MPIUsesItsOwnThread)
+//#define MPIHeapUsesItsOwnThread
 #endif
-*/
-
 
 
 namespace peano {
@@ -58,37 +53,32 @@ class peano::heap::BoundaryDataExchanger {
      * Logging device.
      */
     static tarch::logging::Log _log;
-/*
 
     struct BackgroundThread {
       public:
         enum class State {
           ReceiveDataInBackground,
-          Suspend
+          Suspend,
+		  xxxx
         };
 
         static std::string toString(State state);
 
-        *
-         * There is only one background thread object from the pool's point of
-         * view. However, we deploy the thread as a task of its own. Then, it
-         * is copied. However, as all copies of the thread shall share one state
-         * and one semaphore, I have to make all attributes static. As a
-         * consequence, any instance seems to be an object but indeed it is only
-         * a lightweight object wrapper around global data.
+        BoundaryDataExchanger*             _boundaryDataExchanger;
 
-        static tarch::multicore::BooleanSemaphore _semaphore;
-        static State                              _state;
-
+        BackgroundThread(BoundaryDataExchanger*  boundaryDataExchanger);
         void operator()();
         std::string toString() const;
-        void switchState( State newState );
     };
 
-    #ifdef MPIUsesItsOwnThread
-    BackgroundThread _backgroundThread;
+    #ifdef MPIHeapUsesItsOwnThread
+    BackgroundThread  _backgroundThread;
+
+    tarch::multicore::BooleanSemaphore  _backgroundThreadSemaphore;
+    typename BackgroundThread::State    _backgroundThreadState;
+
+    void switchStateOfBackgroundThread( typename BackgroundThread::State newState );
     #endif
-*/
 
   protected:
     const std::string    _identifier;
@@ -347,7 +337,7 @@ class peano::heap::BoundaryDataExchanger {
      * waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()
      * or releaseSentMessages() at the begin/end of a traversal.
      */
-    void receiveDanglingMessages();
+    void receiveDanglingMessages(bool calledByBackgroundThread = false);
 
     void sendData(
       const Data * const                                   data,

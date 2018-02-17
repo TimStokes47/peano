@@ -47,7 +47,7 @@ class peano::grid::nodes::tasks::LoadSubCells {
       #endif
     );
 
-    void operator()();
+    bool operator()();
 };
 
 

@@ -793,7 +793,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
 
 template <class Vertex, class Cell, class VertexStack>
-void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::operator()() {
+bool peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::operator()() {
   logTraceInWith7Arguments( "operator()()", _isTraversalInverted, _loadProcessRunsInParallelToOtherTasks, _maxLevelToFork, _stackView.isEmpty(), _coarsestLevelOfThisTask, _coarsestCellsOffset, _regularGridContainer.getVertexEnumerator(0).getCellFlags() );
 
   #ifdef SharedMemoryParallelisation
@@ -841,4 +841,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   }
 
   logTraceOutWith2Arguments( "operator()()", _coarsestLevelOfThisTask, _coarsestCellsOffset );
+
+  return false;
 }

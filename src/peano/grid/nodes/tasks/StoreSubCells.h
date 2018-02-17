@@ -41,7 +41,7 @@ class peano::grid::nodes::tasks::StoreSubCells {
       const peano::utils::LoopDirection&  loopDirection
     );
 
-    void operator()();
+    bool operator()();
 };
 
 

@@ -57,7 +57,7 @@ class peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch {
       bool                                                              runsInParallelToOtherTasks
    );
 
-    void operator()();
+    bool operator()();
 };
 
 

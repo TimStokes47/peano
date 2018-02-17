@@ -5,6 +5,7 @@
 
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/logging/Log.h"
+#include "tarch/multicore/Jobs.h"
 
 
 #include <functional>
@@ -134,17 +135,6 @@ class peano::datatraversal::TaskSet {
        */
   	  LongRunningBackground,
       /**
-       * A background job that runs over a significant amount of the whole 
-       * runtime.
-       *
-       * Please note that job passed has to be a task. See class documentation
-       * on the difference between jobs and tasks.
-       *
-       * Background implies that the task's operator() is called over and over
-       * again. The passed task is not destroyed anymore.
-       */
-  	  PersistentBackground,
-      /**
        * Used by Peano's grid management.
        */
 	  LoadCells,
@@ -247,9 +237,43 @@ class peano::datatraversal::TaskSet {
      * terminates.
      */
     TaskSet(
-      std::function<void()>&& task,
-      TaskType                taskType
+      std::function<bool()>&&  task,
+      TaskType                 taskType
     );
+
+    /**
+     * Alternative to other TaskSet constructor. Ownership goes to TaskSet
+     * class, i.e. you don't have to delete it.
+     */
+    template <typename T>
+    TaskSet(
+      T*                      myTask,
+      TaskType                taskType
+    ) {
+    //  typedef tarch::multicore::jobs::GenericBackgroundJobWithCopyOfFunctor BackgroundJob;
+    //  typedef tarch::multicore::jobs::GenericJobWithCopyOfFunctor           Job;
+      switch (taskType) {
+        case peano::datatraversal::TaskSet::TaskType::IsTaskAndRunImmediately:
+          (*myTask)();
+          delete myTask;
+          break;
+        case peano::datatraversal::TaskSet::TaskType::IsTaskAndRunAsSoonAsPossible:
+        case peano::datatraversal::TaskSet::TaskType::LoadCells:
+        case peano::datatraversal::TaskSet::TaskType::LoadVertices:
+        case peano::datatraversal::TaskSet::TaskType::TriggerEvents:
+        case peano::datatraversal::TaskSet::TaskType::StoreCells:
+        case peano::datatraversal::TaskSet::TaskType::StoreVertices:
+          tarch::multicore::jobs::spawn( new tarch::multicore::jobs::GenericJobWithPointer<T>(myTask,false,translateIntoJobClass(taskType) ) );
+          break;
+        case peano::datatraversal::TaskSet::TaskType::Background:
+          tarch::multicore::jobs::spawnBackgroundJob( new tarch::multicore::jobs::GenericBackgroundWithPointer<T>(myTask,tarch::multicore::jobs::BackgroundJobType::BackgroundJob) );
+          break;
+        case peano::datatraversal::TaskSet::TaskType::LongRunningBackground:
+          tarch::multicore::jobs::spawnBackgroundJob( new tarch::multicore::jobs::GenericBackgroundWithPointer<T>(myTask,tarch::multicore::jobs::BackgroundJobType::LongRunningBackgroundJob) );
+         break;
+      }
+    }
+
 
     /**
      * Invoke operations in parallel. Works fine with lambda
@@ -320,6 +344,8 @@ class peano::datatraversal::TaskSet {
 	static void waitForStoreVerticesTask();
 
 };
+
+
 
 
 #endif

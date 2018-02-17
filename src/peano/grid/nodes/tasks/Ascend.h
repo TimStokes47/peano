@@ -107,7 +107,7 @@ class peano::grid::nodes::tasks::Ascend {
      * through all levels.
      *
      */
-    void operator() ();
+    bool operator() ();
 
     /**
      * Can be called after operator() has terminated. It reveals whether the

@@ -271,7 +271,7 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
      */
     ~StoreVerticesOnRegularRefinedPatch();
 
-    void operator()();
+    bool operator()();
 };
 
 

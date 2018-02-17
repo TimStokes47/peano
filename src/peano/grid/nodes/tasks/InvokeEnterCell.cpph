@@ -29,7 +29,7 @@ peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::
 }
 
 template < class Vertex, class Cell, class State, class EventHandle>
-void peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::operator() () {
+bool peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandle >::operator() () {
   logTraceInWith1Argument( "operator()", _fineGridCell.toString() );
 
   // According to the specification, only refined cells where all adjacent
@@ -83,4 +83,6 @@ void peano::grid::nodes::tasks::InvokeEnterCell< Vertex, Cell, State, EventHandl
   }
 
   logTraceOut( "operator()" );
+
+  return false;
 }

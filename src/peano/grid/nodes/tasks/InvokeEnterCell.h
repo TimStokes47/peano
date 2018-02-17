@@ -67,7 +67,7 @@ class peano::grid::nodes::tasks::InvokeEnterCell {
 
     ~InvokeEnterCell() = default;
 
-    void operator() ();
+    bool operator() ();
 };
 
 

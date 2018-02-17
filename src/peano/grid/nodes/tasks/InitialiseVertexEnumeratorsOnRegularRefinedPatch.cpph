@@ -13,7 +13,7 @@ peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatch<Vert
 
 
 template <class Vertex, class Cell>
-void peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatch<Vertex,Cell>::operator()() {
+bool peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatch<Vertex,Cell>::operator()() {
   logTraceInWith1Argument( "initialiseVertexEnumerators(...)", _fineGridVerticesEnumerator.toString() );
 
   const int TreeDepth = _fineGridVerticesEnumerator.getCellFlags();
@@ -31,4 +31,6 @@ void peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatch
   }
 
   logTraceOut( "initialiseVertexEnumerators(...)" );
+
+  return false;
 }

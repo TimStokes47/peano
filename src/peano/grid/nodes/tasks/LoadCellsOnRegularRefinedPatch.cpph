@@ -75,7 +75,7 @@ void peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch<Vertex,Cell,CellS
 
 
 template <class Vertex, class Cell, class CellStack>
-void peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch<Vertex,Cell,CellStack>::operator()() {
+bool peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch<Vertex,Cell,CellStack>::operator()() {
   _regularGridContainer.haveReadAllCells(0);
 
   loadCells( _topLevelLoopDirection, 1, 0 );
@@ -83,4 +83,6 @@ void peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch<Vertex,Cell,CellS
   if (!_runsInParallelToOtherTasks) {
     _regularGridContainer.haveReadAllCells(_treeDepth);
   }
+
+  return false;
 }

@@ -5,6 +5,8 @@
 
 #include "tarch/logging/Log.h"
 #include "tarch/Assertions.h"
+#include "tarch/multicore/tbb/Jobs.h"
+
 
 #include <vector>
 #include <tbb/task.h>
@@ -25,13 +27,6 @@ namespace {
    * @see BackgroundJobConsumerTask
    */
   tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks(0);
-
-  /**
-   * Number of persistent background tasks. I need this counter in
-   *
-   * @see terminateAllPersistentBackgroundJobs
-   */
-  tbb::atomic<int>         _numberOfRunningPersistentBackgroundTasks(0);
 
   /**
    * This queue holds jobs that should be processed in the background. Consumer
@@ -169,43 +164,6 @@ namespace {
   };
 
   /**
-   * Persistent background jobs should not be enqueued. Instead, they are
-   * mapped upon a tbb task which processes the operator. Once it has
-   * processed the job, it does not delete it as it is a persistent one.
-   * Instead, it re-enqueues itself. Enqueued tasks in TBB have a very low
-   * priority, so we know that we will be stolen at some point later again
-   * and then will rerun the job's operator() again.
-   *
-   * For enqueue, we have to ensure that we use the same task context again.
-   * There's one task context for all background tasks and we use this one
-   * later to cancel all persistent jobs.
-   *
-   * @see terminateAllPersistentBackgroundJobs()
-   */
-  class TBBPersistentBackgroundJobWrapper: public tbb::task {
-    private:
-      tarch::multicore::jobs::BackgroundJob*        _job;
-    public:
-      TBBPersistentBackgroundJobWrapper( tarch::multicore::jobs::BackgroundJob* job ):
-        _job(job) {
-        _numberOfRunningPersistentBackgroundTasks++;
-      }
-
-      virtual ~TBBPersistentBackgroundJobWrapper() {
-        _numberOfRunningPersistentBackgroundTasks--;
-      }
-
-      tbb::task* execute() {
-        _job->run();
-
-        TBBPersistentBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(*group())) TBBPersistentBackgroundJobWrapper(_job);
-        tbb::task::enqueue(*tbbTask);
-        return nullptr;
-      }
-  };
-    
-
-  /**
    * Helper function of the for loops and the parallel task invocations.
    *
    * Primarily invoked by the spawnAndWait routines. A spawn and wait routine always
@@ -278,9 +236,14 @@ namespace {
     bool result = false;
     while (gotOne && maxJobs>0) {
       logDebug( "processNumberOfBackgroundJobs()", "consumer task found job to do" );
-      myTask->run();
+      const bool reschedule = myTask->run();
       const bool taskHasBeenLongRunning = myTask->isLongRunning();
-      delete myTask;
+      if (reschedule) {
+        _backgroundJobs.push( myTask );
+      }
+      else {
+        delete myTask;
+      }
       maxJobs--;
       result = true;
       if ( maxJobs>0 && !taskHasBeenLongRunning ) {
@@ -308,8 +271,9 @@ namespace {
         _maxJobs(maxJobs) {
       }
     public:
+      static tbb::task_group_context  backgroundTaskContext;
+
       static void enqueue() {
-        static tbb::task_group_context  backgroundTaskContext;
         _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(1);
         BackgroundJobConsumerTask* tbbTask = new(tbb::task::allocate_root(backgroundTaskContext)) BackgroundJobConsumerTask(
           std::max( 1, static_cast<int>(_backgroundJobs.unsafe_size())/2 )
@@ -327,15 +291,15 @@ namespace {
         return nullptr;
       }
   };
+
+
+  tbb::task_group_context  BackgroundJobConsumerTask::backgroundTaskContext;
 }
 
 
-/**
- * I have no clue why I can't make this context global here and then use it
- * within spawn. But it seg faults without this pointer hack. The pointer is
- * set within spawnBackgroundJob() and used by terminateAllPersistentBackgroundJobs().
- */
-tbb::task_group_context*  globalBackgroundTaskContext(nullptr);
+void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
+  BackgroundJobConsumerTask::backgroundTaskContext.cancel_group_execution();
+}
 
 
 void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
@@ -369,15 +333,6 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
       {
         _backgroundJobs.push(job);
         BackgroundJobConsumerTask::enqueue();
-      }
-      break;
-    case BackgroundJobType::PersistentBackgroundJob:
-      {
-        static tbb::task_group_context  backgroundTaskContext;
-        TBBPersistentBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(backgroundTaskContext)) TBBPersistentBackgroundJobWrapper(job);
-        tbb::task::enqueue(*tbbTask);
-        backgroundTaskContext.set_priority(tbb::priority_low);
-        globalBackgroundTaskContext = &backgroundTaskContext;
       }
       break;
   }
@@ -772,26 +727,6 @@ void tarch::multicore::jobs::spawnAndWait(
         processJobs(jobClass5);
       }
     );
-  }
-}
-
-
-/**
- * Invoke the cancellation of the task group and then busy wait until all the
- * jobs are down. If we return immediately, the code might terminate even
- * though some tasks still are around.
- */
-void tarch::multicore::jobs::terminateAllPersistentBackgroundJobs() {
-  if (globalBackgroundTaskContext!=nullptr) {
-    logInfo( "terminateAllPersistentBackgroundJobs()", "wait for " << _numberOfRunningPersistentBackgroundTasks << " persistent background tasks to terminate" );
-
-    globalBackgroundTaskContext->cancel_group_execution();
-    globalBackgroundTaskContext = nullptr;
-
-    while (_numberOfRunningPersistentBackgroundTasks>0) {
-    }
-
-    logInfo( "terminateAllPersistentBackgroundJobs()", "all persistent background tasks are down" );
   }
 }
 
