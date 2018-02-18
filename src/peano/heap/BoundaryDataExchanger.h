@@ -19,7 +19,7 @@
 
 
 #if defined(MPIUsesItsOwnThread)
-//#define MPIHeapUsesItsOwnThread
+#define MPIHeapUsesItsOwnThread
 #endif
 
 
@@ -59,25 +59,27 @@ class peano::heap::BoundaryDataExchanger {
         enum class State {
           ReceiveDataInBackground,
           Suspend,
-		  xxxx
+		  Terminate
         };
 
         static std::string toString(State state);
+      private:
+        BoundaryDataExchanger*              _boundaryDataExchanger;
+        tarch::multicore::BooleanSemaphore  _semaphore;
+        State                               _state;
 
-        BoundaryDataExchanger*             _boundaryDataExchanger;
-
+        BackgroundThread(const BackgroundThread&) = delete;
+      public:
         BackgroundThread(BoundaryDataExchanger*  boundaryDataExchanger);
-        void operator()();
+        virtual ~BackgroundThread();
+        bool operator()();
         std::string toString() const;
+        void switchState( State newState );
+        State getState() const;
     };
 
     #ifdef MPIHeapUsesItsOwnThread
-    BackgroundThread  _backgroundThread;
-
-    tarch::multicore::BooleanSemaphore  _backgroundThreadSemaphore;
-    typename BackgroundThread::State    _backgroundThreadState;
-
-    void switchStateOfBackgroundThread( typename BackgroundThread::State newState );
+    BackgroundThread*  _backgroundThread;
     #endif
 
   protected:

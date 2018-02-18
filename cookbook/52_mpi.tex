@@ -928,30 +928,54 @@ where to add source code.
 
 \subsection{Multithreaded MPI}
 
-If you use MPI plus multithreading (we recommend Intel's TBB), Peano sacrifies 
-one thread to focus on the MPI data exchange. This thread polls MPI permanently
-and tries to receive data as soon as possible even though MPI might have decided
-that it requires rendezvous data exchange. If you want to disable this feature, 
-please compile your code with 
+Peano realises all boundary data exchange, both for data tied directly to the
+grid and administered through the heap, with non-blocking sends and receives.
+The idea is that the actual data transfer is realised behind the computation. 
+We realise that this is not supported by all MPI libraries and notably not for
+all message sizes.
+
+
+Some codes thus sacrifice
+one thread for the MPI data exchange. This thread polls MPI permanently
+and tries to receive data as soon as possible. Peano picks up this pattern but
+actually does not spend a whole thread. 
+Instead, it enqueues some persistent background tasks into Peano's underlying
+task system, i.e.~tasks that are ran over and over again whenever one thread
+starts to idle.
+This way, no thread is ``lost'' though the system permanently polls MPI in the
+background.
+
+
+By default, the background feature is enabled. There are cases however where it
+does not pay off and the code performs faster without this feature. The whole
+background businesss is enabled/disabled through the following compiler flags:
 
 \begin{code}
  -DMPIUsesItsOwnThread
+ -DnoMPIUsesItsOwnThread
+ -DMPIHeapUsesItsOwnThread
+ -DnoMPIHeapUsesItsOwnThread
 \end{code}
 
-
 \noindent
-The thread deployed to handle MPI is not totally lost to the application. If 
-no MPI messages are dropping in, it processes background tasks left over 
-(cmp.~Section \ref{section:51_shared-memory:tasks}).
+The allow to switch the feature on and off for Peano's grid management and its
+heaps.
 We found those Peano applications benefit the most from the MPI data exchange
 in a separate thread that
 \begin{itemize}
   \item exchange boundary data in every grid sweep (as they use lots of dynamic AMR, e.g.),
   \item exchange a lot of data through the heap,
-  \item spawn plenty of background tasks.
+  \item spawn plenty of tasks where some of them are not perfectly balanced.
 \end{itemize}
 
 
+\noindent
+Peano allows users to change the buffer size for all data exchange, i.e.~how
+many grid messages are concatenated into one message.
+The idea is to allow codes to diminish message send/receive overhead.
+Obviously, it has to be studied carefully (and empirically) what good buffer
+sizes are if a code either switches to these background tasks or eliminates
+them.
 
 
 \subsection{Further MPI remarks}

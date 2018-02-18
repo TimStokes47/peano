@@ -275,8 +275,6 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
 }
 
 
-
-
 std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString() const {
   return toString(_state);
 }
