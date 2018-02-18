@@ -12,6 +12,17 @@ namespace tarch {
     #else
     constexpr double NUMERICAL_ZERO_DIFFERENCE = 1.0e-12;
     #endif
+
+    double absoluteWeight(
+      double value,
+	  double relativeError
+    );
+
+    double absoluteWeight(
+      double value0,
+      double value1,
+	  double relativeError
+    );
   }
 }
 

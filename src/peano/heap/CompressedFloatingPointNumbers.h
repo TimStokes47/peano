@@ -83,6 +83,16 @@ namespace peano {
      * use this index and reduce it by one, you find the right entry in
      * decomposeIntoFourVariants().
      *
+     * <h2> Usage </h2>
+     *
+     * This operation often is combined with
+     *
+     * peano::heap::tarch::la::absoluteWeight
+     *
+     * to use a relative max error.
+     *
+     *
+     *
      * @return Value between 1 and 7
      */
     int findMostAgressiveCompression(
