@@ -34,6 +34,7 @@ int __attribute__((optimize("O0"))) peano::heap::findMostAgressiveCompression(
 ) {
   assertion(value==value);
   assertion1( sizeof(long int)*8>=64, sizeof(long int) );
+  assertion(maxError>=0.0);
 
   // We may not use 7 though we use seven out of eight bits for the first byte.
   // If we shift by seven, we can end up with the highest byte set for
@@ -153,7 +154,7 @@ void __attribute__((optimize("O0"))) peano::heap::decompose(
   // We may not use 7 though we use seven out of eight bits for the first byte.
   // If we shift by seven, we can end up with the highest byte set for
   // 0.0155759, e.g.
-  int shiftExponent = 6;
+  int shiftExponent = 6 + (bytesForMantissa-1)*8;
 
   const long int sign = value < 0.0 ? -1 : 1;
 
@@ -164,22 +165,26 @@ void __attribute__((optimize("O0"))) peano::heap::decompose(
   int           integerExponent;
   const double  significand          = std::frexp(value , &integerExponent);
 
-  for (int i=0; i<bytesForMantissa-1; i++) {
-    shiftExponent+=8;
+  int exponentAsInteger  = integerExponent-shiftExponent;
+
+  if (exponentAsInteger <= std::numeric_limits<char>::min()) {
+    exponent  = 0;
+    mantissa  = 0;
   }
+  else {
+    exponent  = static_cast<char>( exponentAsInteger );
 
-  const double shiftMantissa    = std::pow( 2.0,shiftExponent );
+    const double shiftMantissa    = std::pow( 2.0,shiftExponent );
+    mantissa  = static_cast<long int>( std::round(significand*shiftMantissa) );
 
-  exponent  = static_cast<char>( integerExponent-shiftExponent );
-  mantissa  = static_cast<long int>( std::round(significand*shiftMantissa) );
+    assertion4( mantissa>=0, value, mantissa, exponent, sign );
 
-  assertion4( mantissa>=0, value, mantissa, exponent, sign );
+    std::bitset<64>*  mantissaAsBitset = reinterpret_cast<std::bitset<64>*>( &(mantissa) );
 
-  std::bitset<64>*  mantissaAsBitset = reinterpret_cast<std::bitset<64>*>( &(mantissa) );
-
-  if (sign<0) {
-    assertion ( (*mantissaAsBitset)[ (bytesForMantissa)*8-1 ]==false );
-    mantissaAsBitset->flip( (bytesForMantissa)*8-1 );
+    if (sign<0) {
+      assertion ( (*mantissaAsBitset)[ (bytesForMantissa)*8-1 ]==false );
+      mantissaAsBitset->flip( (bytesForMantissa)*8-1 );
+    }
   }
 }
 

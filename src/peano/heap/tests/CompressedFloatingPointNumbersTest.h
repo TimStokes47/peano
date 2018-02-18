@@ -39,6 +39,8 @@ class peano::heap::tests::CompressedFloatingPointNumbersTest: public tarch::test
     void testBatchDecompositionWithArrayOfFour();
     void testErrorComputation();
 
+    void testTinyValues();
+
     /**
      * Something taken from the ParCo presentation
      */

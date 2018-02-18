@@ -35,7 +35,50 @@ void peano::heap::tests::CompressedFloatingPointNumbersTest::run() {
   testMethod( testDecompose );
   testMethod( testErrorComputation );
   testMethod( testComposeDecompose );
+
+  testMethod( testTinyValues );
   #endif
+}
+
+
+void peano::heap::tests::CompressedFloatingPointNumbersTest::testTinyValues() {
+  const double value =  3.02873817476661532299e-29;
+
+  int compression = peano::heap::findMostAgressiveCompression( value, 1e-8 );
+  validateEquals( compression, 1 );
+
+  double       reconstructedValue;
+  char         exponent;
+  long int     mantissa;
+
+  peano::heap::decompose( value, exponent, mantissa );
+  int    integerExponent;
+  std::frexp(value , &integerExponent);
+  validateEqualsWithParams8(
+	mantissa, 0, static_cast<int>(exponent), value, static_cast<int>(exponent), mantissa,
+	std::frexp(value , &integerExponent), integerExponent,
+	std::numeric_limits<double>::digits-1,
+	static_cast<int>(std::numeric_limits<char>::min())
+  );
+  validateNumericalEqualsWithParams4( exponent, 0.0, static_cast<int>(exponent), value, static_cast<int>(exponent), mantissa  );
+
+  reconstructedValue = peano::heap::compose(exponent,mantissa);
+
+  validateEqualsWithParams2( reconstructedValue, 0.0, static_cast<int>(exponent),mantissa );
+
+  peano::heap::decompose( value, exponent, mantissa, 5 );
+  reconstructedValue = peano::heap::compose(exponent,mantissa);
+
+  validateEqualsWithParams2( reconstructedValue, 0.0, static_cast<int>(exponent),mantissa );
+  validateNumericalEqualsWithParams2( static_cast<int>(exponent), 0, value, mantissa  );
+  /*
+    validateEqualsWithParams8(
+  	mantissa, 0, static_cast<int>(exponent), value, static_cast<int>(exponent), mantissa,
+  	std::frexp(value , &integerExponent), integerExponent,
+  	std::numeric_limits<double>::digits-1,
+  	static_cast<int>(std::numeric_limits<char>::min())
+    );
+  */
 }
 
 

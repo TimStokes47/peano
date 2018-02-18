@@ -208,6 +208,55 @@
     return;\
   }
 
+#define validateEqualsWithParams6(actualValue, validValue, param0, param1, param2, param3, param4, param5) if (!(actualValue == validValue)) { \
+    _errors++; \
+    _error = true; \
+    std::cerr << "  equality test failed: " << actualValue << " instead of " << validValue << std::endl \
+              << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
+              << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
+              << "  parameter " << #param0 << "=" << param0 << ", parameter " << #param1 << "=" << param1 << ", parameter " << #param2 << "=" << param2 << ", parameter " << #param3 << "=" << param3 << ", parameter " << #param4 << "=" << param4 << ", parameter " << #param5 << "=" << param5 << std::endl; \
+    return;\
+  }
+
+#define validateEqualsWithParams7(actualValue, validValue, param0, param1, param2, param3, param4, param5, param6) if (!(actualValue == validValue)) { \
+    _errors++; \
+    _error = true; \
+    std::cerr << "  equality test failed: " << actualValue << " instead of " << validValue << std::endl \
+              << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
+              << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
+              << "  parameter " << #param0 << "=" << param0 << ", parameter " << #param1 << "=" << param1 \
+              << ", parameter " << #param2 << "=" << param2 << ", parameter " << #param3 << "=" << param3 \
+			  << ", parameter " << #param4 << "=" << param4 << ", parameter " << #param5 << "=" << param5 \
+			  << ", parameter " << #param6 << "=" << param6 << std::endl; \
+    return;\
+  }
+
+#define validateEqualsWithParams8(actualValue, validValue, param0, param1, param2, param3, param4, param5, param6, param7) if (!(actualValue == validValue)) { \
+    _errors++; \
+    _error = true; \
+    std::cerr << "  equality test failed: " << actualValue << " instead of " << validValue << std::endl \
+              << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
+              << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
+              << "  parameter " << #param0 << "=" << param0 << ", parameter " << #param1 << "=" << param1 \
+              << ", parameter " << #param2 << "=" << param2 << ", parameter " << #param3 << "=" << param3 \
+			  << ", parameter " << #param4 << "=" << param4 << ", parameter " << #param5 << "=" << param5 \
+			  << ", parameter " << #param6 << "=" << param6 << ", parameter " << #param7 << "=" << param7 << std::endl; \
+    return;\
+  }
+
+#define validateEqualsWithParams9(actualValue, validValue, param0, param1, param2, param3, param4, param5, param6, param7, param8) if (!(actualValue == validValue)) { \
+    _errors++; \
+    _error = true; \
+    std::cerr << "  equality test failed: " << actualValue << " instead of " << validValue << std::endl \
+              << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
+              << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
+              << "  parameter " << #param0 << "=" << param0 << ", parameter " << #param1 << "=" << param1 \
+              << ", parameter " << #param2 << "=" << param2 << ", parameter " << #param3 << "=" << param3 \
+			  << ", parameter " << #param4 << "=" << param4 << ", parameter " << #param5 << "=" << param5 \
+			  << ", parameter " << #param6 << "=" << param6 << ", parameter " << #param7 << "=" << param7 \
+			  << ", parameter " << #param8 << "=" << param8 << std::endl; \
+    return;\
+  }
 
 #define validateNotEqual(actualValue, validValue) if ((actualValue == validValue)) { \
     _errors++; \

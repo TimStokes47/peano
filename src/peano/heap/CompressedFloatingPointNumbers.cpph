@@ -14,11 +14,17 @@ void peano::heap::decompose(
   int    integerExponent;
   double significant = std::frexp(value , &integerExponent);
 
-  const double shiftExponent    = std::numeric_limits<T>::digits-1;
+  const int    shiftExponent    = std::numeric_limits<T>::digits-1;
   const double shiftMantissa    = std::pow( 2.0,shiftExponent );
 
-  exponent  = static_cast<char>( integerExponent-shiftExponent );
-  mantissa  = static_cast<T>( std::round(significant*shiftMantissa) );
+  if (integerExponent-shiftExponent <= std::numeric_limits<char>::min()) {
+    exponent  = 0;
+    mantissa  = 0;
+  }
+  else {
+    exponent  = static_cast<char>( integerExponent-shiftExponent );
+    mantissa  = static_cast<T>( std::round(significant*shiftMantissa) );
+  }
 }
 
 
