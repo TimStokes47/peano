@@ -341,16 +341,18 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
 
 /**
  * This routine is typically invoked by user codes to ensure that all
- * background jobs have finished before the user code continues.
+ * background jobs have finished before the user code continues. We have however
+ * to take into account that some background jobs might reschedule themselves
+ * again as they are persistent. Therefore, we quickly check how many jobs are
+ * still pending. Then we add the number of running background jobs (as those
+ * guys might reschedule themselves again, so we try to be on the same side).
+ * Finally, we process that many jobs that are in the queue and tell the
+ * calling routine whether we've done any.
  */
 bool tarch::multicore::jobs::processBackgroundJobs() {
-  bool result = false;
+  const int numberOfBackgroundJobs = _backgroundJobs.unsafe_size() + _numberOfRunningBackgroundJobConsumerTasks + 1;
 
-  while (_numberOfRunningBackgroundJobConsumerTasks>0) {
-	result |= processNumberOfBackgroundJobs(std::numeric_limits<int>::max());
-  }
-
-  return result;
+  return processNumberOfBackgroundJobs(numberOfBackgroundJobs);
 }
 
 
