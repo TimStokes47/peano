@@ -352,6 +352,14 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
 bool tarch::multicore::jobs::processBackgroundJobs() {
   const int numberOfBackgroundJobs = _backgroundJobs.unsafe_size() + _numberOfRunningBackgroundJobConsumerTasks + 1;
 
+/*
+  #ifdef Asserts
+  logInfo( "processBackgroundJobs()", "process " << numberOfBackgroundJobs << " job(s) as there are " << _backgroundJobs.unsafe_size()
+    << " jobs pending and " << _numberOfRunningBackgroundJobConsumerTasks << " consumer tasks running right now"
+  );
+  #endif
+*/
+
   return processNumberOfBackgroundJobs(numberOfBackgroundJobs);
 }
 
