@@ -23,6 +23,12 @@ namespace tarch {
       double value1,
 	  double relativeError
     );
+
+    double absoluteWeight(
+      double   values[],
+	  int      count,
+	  double   relativeError
+    );
   }
 }
 

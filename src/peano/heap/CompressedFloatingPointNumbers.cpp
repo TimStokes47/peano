@@ -1,7 +1,7 @@
 #include "peano/heap/CompressedFloatingPointNumbers.h"
 #include "tarch/Assertions.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
-
+#include "tarch/la/Scalar.h"
 
 #include <bitset>
 
@@ -9,15 +9,35 @@
 int peano::heap::findMostAgressiveCompression(
   double        values[],
   int           count,
-  double        maxError
+  double        maxError,
+  bool          useRelativeError
 ) {
   assertion(count>0);
+
+  if (useRelativeError) {
+	maxError = tarch::la::absoluteWeight(values,count,maxError);
+  }
+
   int result = 0;
   for (int i=0; i<count; i++) {
-    result = std::max(result, findMostAgressiveCompression(values[i],maxError));
+    result = std::max(result, findMostAgressiveCompression(values[i],maxError,false));
   }
   assertion(result>0);
   return result;
+}
+
+
+int peano::heap::findMostAgressiveCompression(
+  double        value,
+  double        maxError,
+  bool          useRelativeError
+) {
+  if (useRelativeError) {
+    return findMostAgressiveCompression(value, tarch::la::absoluteWeight( value,maxError ) );
+  }
+  else {
+    return findMostAgressiveCompression(value, maxError);
+  }
 }
 
 

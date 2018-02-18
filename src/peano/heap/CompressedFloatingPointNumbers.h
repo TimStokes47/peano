@@ -97,7 +97,13 @@ namespace peano {
      */
     int findMostAgressiveCompression(
       double        value,
-      double        maxError
+	  double        maxError,
+	  bool          useRelativeError
+    );
+
+    int findMostAgressiveCompression(
+      double        value,
+	  double        maxAsoluteError
     );
 
     /**
@@ -107,7 +113,8 @@ namespace peano {
     int findMostAgressiveCompression(
       double        values[],
       int           count,
-      double        maxError
+	  double        maxError,
+	  bool          useRelativeError
     );
 
 

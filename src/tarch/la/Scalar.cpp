@@ -28,3 +28,19 @@ double tarch::la::absoluteWeight(
   return relativeError * weight;
 }
 
+
+double tarch::la::absoluteWeight(
+  double   values[],
+  int      count,
+  double   relativeError
+) {
+  double weight = std::numeric_limits<double>::max();
+
+  for (int i=0; i<count; i++) {
+	 weight = std::min( weight, std::abs(values[i]) );
+  }
+
+  weight = std::max(1.0,weight);
+
+  return relativeError * weight;
+}
