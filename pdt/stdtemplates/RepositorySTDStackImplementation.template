@@ -173,8 +173,6 @@ void __NAMESPACE__::repositories::RepositorySTDStack::iterate(int numberOfIterat
   #endif
   
   for (int i=0; i<numberOfIterations; i++) {
-
-    #ifdef Parallel
     if (_repositoryState.getNumberOfIterations()==1) {
       _solverState.currentlyRunsMultipleIterations(State::BatchState::NoBatch);
     }
@@ -187,7 +185,6 @@ void __NAMESPACE__::repositories::RepositorySTDStack::iterate(int numberOfIterat
     else {
       _solverState.currentlyRunsMultipleIterations(State::BatchState::IntermediateIterationOfBatch);
     }
-    #endif
 
     switch ( _repositoryState.getAction()) {
   __x__NONQUALIFIED_ADAPTER_TYPE__    case __NAMESPACE__::records::RepositoryState::UseAdapter__NONQUALIFIED_ADAPTER_TYPE__: watch.startTimer(); _gridWith__NONQUALIFIED_ADAPTER_TYPE__.iterate(); watch.stopTimer(); _measure__NONQUALIFIED_ADAPTER_TYPE__CPUTime.setValue( watch.getCPUTime() ); _measure__NONQUALIFIED_ADAPTER_TYPE__CalendarTime.setValue( watch.getCalendarTime() ); break;
