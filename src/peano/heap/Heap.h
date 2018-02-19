@@ -142,8 +142,8 @@ namespace peano {
      * data sets where lots of messages are exchanged. In that case, I
      * recommend to use the RLEHeap below.
      */
-    typedef PlainHeap<peano::heap::records::CharHeapData>    PlainCharHeap;
-    typedef RLEHeap<peano::heap::records::CharHeapData>      RLECharHeap;
+    typedef PlainHeap<peano::heap::records::CharHeapData>    PlainCharHeapWithDaStGenRecords;
+    typedef RLEHeap<peano::heap::records::CharHeapData>      RLECharHeapWithDaStGenRecords;
 
 
     /**
