@@ -343,6 +343,11 @@ class peano::datatraversal::TaskSet {
 	static void waitForStoreCellsTask();
 	static void waitForStoreVerticesTask();
 
+	/**
+	 * There is such a routine in Peano's tarch as well. This essentially is a
+	 * wrapper which however also keeps track of the statistics.
+	 */
+	static bool processBackgroundJobs();
 };
 
 

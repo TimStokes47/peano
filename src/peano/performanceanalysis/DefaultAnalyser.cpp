@@ -395,5 +395,9 @@ void peano::performanceanalysis::DefaultAnalyser::terminatedBackgroundTask(int t
     tarch::multicore::Lock lock(_concurrencyReportSemaphore);
 
     _numberOfSpawnedBackgroundTask -= taskCount;
+
+    if ( _numberOfSpawnedBackgroundTask < 0 ) {
+       _numberOfSpawnedBackgroundTask = 0;
+    }
   }
 }

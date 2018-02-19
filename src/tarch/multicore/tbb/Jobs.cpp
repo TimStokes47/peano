@@ -463,7 +463,6 @@ bool tarch::multicore::jobs::processJobs() {
   for (auto& p: _pendingJobs) {
 	result |= processJobs(p.first);
   }
-  result |= processBackgroundJobs();
   
   return result;
 }

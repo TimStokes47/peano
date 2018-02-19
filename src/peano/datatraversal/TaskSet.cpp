@@ -278,3 +278,9 @@ peano::datatraversal::TaskSet::TaskSet(
 }
 
 
+bool peano::datatraversal::TaskSet::processBackgroundJobs() {
+  peano::performanceanalysis::Analysis::getInstance().terminatedBackgroundTask(
+    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()/2
+  );
+  return tarch::multicore::jobs::processBackgroundJobs();
+}
