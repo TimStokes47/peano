@@ -26,6 +26,9 @@ namespace peano {
      */
     template<>
     struct peano::heap::SendReceiveTask<double>;
+
+    template<>
+    struct peano::heap::SendReceiveTask<char>;
   }
 }
 
