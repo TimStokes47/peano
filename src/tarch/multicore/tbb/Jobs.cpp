@@ -249,6 +249,9 @@ namespace {
       if ( maxJobs>0 && !taskHasBeenLongRunning ) {
         gotOne = _backgroundJobs.try_pop(myTask);
       }
+      else {
+    	gotOne = false;
+      }
     }
 
     logDebug( "processNumberOfBackgroundJobs()", "background task consumer is done and kills itself" );
