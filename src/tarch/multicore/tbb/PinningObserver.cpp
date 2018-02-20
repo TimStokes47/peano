@@ -26,7 +26,6 @@ tarch::multicore::PinningObserver::PinningObserver(int pinningStep):
   if ( !_mask ) {
     logWarning( "PinningObserver()","Failed to obtain process affinity mask");
   }
-//  observe(true); // activate the observer
 }
 
 /*
@@ -58,16 +57,6 @@ std::bitset<sizeof(long int)*8> tarch::multicore::getCPUSet() {
 
   return result;
 }
-
-int tarch::multicore::getCPUId() {
-  #ifdef CompilerHasSysinfo
-  return sched_getcpu();
-  #else
-  //  https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
-  return 1;
-  #endif
-}
-
 
 
  */

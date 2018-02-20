@@ -88,7 +88,7 @@ void peano::heap::AlignedCharSendReceiveTask<Alignment>::wrapData(const char* co
     logError( "wrapData(DataVectorType)", "memory allocation failed. Terminate" );
     exit(-1);
   }
-  _data = static_cast<double*>(p);
+  _data = static_cast<char*>(p);
   p = nullptr;
 
   for (int i=0; i<_metaInformation.getLength(); i++) {
@@ -136,7 +136,7 @@ void peano::heap::AlignedCharSendReceiveTask<Alignment>::triggerReceive(int tag)
     logError( "triggerReceive(int)", "memory allocation failed. Terminate" );
     exit(-1);
   }
-  _data = static_cast<double*>(p);
+  _data = static_cast<char*>(p);
   p = nullptr;
 
   const int  result = MPI_Irecv(

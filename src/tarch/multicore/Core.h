@@ -3,6 +3,21 @@
 #ifndef _TARCH_MULTICORE_CORE_H_
 #define _TARCH_MULTICORE_CORE_H_
 
+
+namespace tarch {
+  namespace multicore {
+    class Core;
+
+    /**
+     * Gives you the CPU number on which your current execution is running.
+     * This is a wrapper around a UNIX operation and thus might not be
+     * available on all machines - notably not on MAC.
+     */
+    int getCPUNumber();
+  }
+}
+
+
 #if defined(SharedTBBInvade)
 #include "tarch/multicore/invasivetbb/Core.h"
 #elif defined(SharedTBB)
@@ -10,12 +25,6 @@
 #elif SharedOMP
 #include "tarch/multicore/omp/Core.h"
 #else
-
-namespace tarch {
-  namespace multicore {
-    class Core;
-  }
-}
 
 
 /**

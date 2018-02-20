@@ -82,12 +82,13 @@ namespace tarch {
             *   unless the user instructs the component that this background task is a
             *   very long running task. If a long-lasting task is issued, the component
             *   launches a task for it specifically.
-            * @param maxNumberOfRunningBackgroundThreads >0 Enable the code to use up
-            *   to a certain number of background tasks. Usually, 1 or any small
-            *   number should be sufficient, where small is to be read relative to the
+            * @param maxNumberOfRunningBackgroundThreads Usually, 1 or any small
+            *   number should be sufficient. Small is to be read relative to the
             *   threads available. You don't want your system to spend all of its tasks
-            *   onto background activities at any time.
-            * @see MaxNumberOfRunningBackgroundThreads
+            *   onto background activities at any time. You can also use the constants.
+            *
+            * @see DontUseAnyBackgroundJobs
+            * @see ProcessNormalBackgroundJobsImmediately
             */
            static void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
        };

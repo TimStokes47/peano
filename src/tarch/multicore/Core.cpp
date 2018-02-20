@@ -1,4 +1,18 @@
-#include "MulticoreDefinitions.h"
+#include "tarch/multicore/Core.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
+
+
+int tarch::multicore::getCPUNumber() {
+  #ifdef CompilerHasSysinfo
+  return sched_getcpu();
+  #else
+  //  https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
+  return 1;
+  #endif
+}
+
 
 #ifndef SharedMemoryParallelisation
 
