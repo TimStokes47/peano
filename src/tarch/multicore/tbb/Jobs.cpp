@@ -21,6 +21,68 @@ tarch::multicore::jobs::internal::JobMap                       tarch::multicore:
 tbb::task_group_context                                        tarch::multicore::jobs::internal::BackgroundJobConsumerTask::backgroundTaskContext;
 
 
+tarch::multicore::jobs::internal::JobQueue& tarch::multicore::jobs::internal::getJobQueue( int jobClass ) {
+	if ( _pendingJobs.count(jobClass)==0 ) {
+    JobMap::accessor    a;
+    _pendingJobs.insert( a, jobClass );
+	}
+  JobMap::accessor c;
+  _pendingJobs.find( c, jobClass );
+  return c->second;
+}
+
+
+void tarch::multicore::jobs::internal::spawnBlockingJob(
+  std::function<void()>&  job,
+  tbb::atomic<int>&       semaphore,
+  bool                    isTask,
+  int                     jobClass
+) {
+  if ( isTask ) {
+    job();
+    semaphore.fetch_and_add(-1);
+  }
+  else {
+    getJobQueue(jobClass).jobs.push(
+      new JobWithoutCopyOfFunctorAndSemaphore(job, semaphore, isTask, jobClass )
+    );
+
+    logDebug( "spawnBlockingJob(...)", "enqueued job. tasks in this queue of class " << jobClass << "=" << getJobQueue(jobClass).jobs.unsafe_size() );
+  }
+}
+
+
+bool tarch::multicore::jobs::internal::processNumberOfBackgroundJobs(int maxJobs) {
+  logDebug( "processNumberOfBackgroundJobs()", "background consumer task becomes awake" );
+
+  tarch::multicore::jobs::BackgroundJob* myTask = nullptr;
+  bool gotOne = _backgroundJobs.try_pop(myTask);
+  bool result = false;
+  while (gotOne && maxJobs>0) {
+    logDebug( "processNumberOfBackgroundJobs()", "consumer task found job to do" );
+    const bool reschedule = myTask->run();
+    const bool taskHasBeenLongRunning = myTask->isLongRunning();
+    if (reschedule) {
+      _backgroundJobs.push( myTask );
+    }
+    else {
+      delete myTask;
+    }
+    maxJobs--;
+    result = true;
+    if ( maxJobs>0 && !taskHasBeenLongRunning ) {
+      gotOne = _backgroundJobs.try_pop(myTask);
+    }
+    else {
+  	gotOne = false;
+    }
+  }
+
+  logDebug( "processNumberOfBackgroundJobs()", "background task consumer is done and kills itself" );
+
+  return result;
+}
+
 
 void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
   internal::BackgroundJobConsumerTask::backgroundTaskContext.cancel_group_execution();
