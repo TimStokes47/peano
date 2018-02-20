@@ -2,6 +2,10 @@
 
 <a href="_IMAGE_DIRECTORY_/topology.pdf"><img src="_IMAGE_DIRECTORY_/topology.png" /></a>
 
+<p>
+  This plot is trivial/empty if you run without MPI or only one MPI rank.
+</p>
+
 <h2>Walltimes</h2>
 <a href="_IMAGE_DIRECTORY_/walltime.pdf"><img src="_IMAGE_DIRECTORY_/walltime.png" /></a>
 <a href="_IMAGE_DIRECTORY_/walltime.symlog.pdf"><img src="_IMAGE_DIRECTORY_/walltime.symlog.png" /></a>
@@ -59,6 +63,10 @@
   load on these ranks or to make them benefit from multiple cores significiantly.
 </p>
 
+<p>
+  This plot is trivial/empty if you run without MPI or only one MPI rank.
+</p>
+
 
 <h3>Workload per node</h3>
 
@@ -71,6 +79,9 @@
  it suggests that we quickly might run into out of memory problems.
 </p>
 
+<p>
+  This plot is trivial/empty if you run without MPI or only one MPI rank.
+</p>
 
 <h2>Domain decomposition</h2>
 
@@ -80,7 +91,7 @@
 
 
 <p>
- This view is not available for d=3.
+ This view is not available for d=3. It is trivial/empty if you run without MPI or only one MPI rank.
 </p>
 
 <h3> Level-wisely </h3>
@@ -98,6 +109,9 @@
   resolution. If finer levels are split up, too, you find further plots in the output directory.
 </p>
 
+<p>
+  This plot is trivial/empty if you run without MPI or only one MPI rank.
+</p>
 
 
 <h3>MPI communication trace</h3>
@@ -161,6 +175,10 @@ Two two plots have different zoom factors. The more detailed plot might not be a
   if the local matplotlib plotter supports reasonably big images.
 </p>
 
+<p>
+  This plot is trivial/empty if you run without MPI or only one MPI rank.
+</p>
+
 
 <h3>Late workers</h3>
 
@@ -168,6 +186,9 @@ Two two plots have different zoom factors. The more detailed plot might not be a
 <a href="_IMAGE_DIRECTORY_/late-workers.plain.pdf"><img src="_IMAGE_DIRECTORY_/late-workers.average.png" /></a>
 <a href="_IMAGE_DIRECTORY_/late-workers.plain.pdf"><img src="_IMAGE_DIRECTORY_/late-workers.max.png" /></a>
 
+<p>
+  This plot is trivial/empty if you run without MPI or only one MPI rank.
+</p>
 
 
 <h3>Late masters</h3>
@@ -176,12 +197,48 @@ Two two plots have different zoom factors. The more detailed plot might not be a
 <a href="_IMAGE_DIRECTORY_/late-masters.plain.pdf"><img src="_IMAGE_DIRECTORY_/late-masters.average.png" /></a>
 <a href="_IMAGE_DIRECTORY_/late-masters.plain.pdf"><img src="_IMAGE_DIRECTORY_/late-masters.max.png" /></a>
 
+<p>
+  This plot is trivial/empty if you run without MPI or only one MPI rank.
+</p>
 
 
 <h3>Late boundary exchanges</h3>
 
 <a href="_IMAGE_DIRECTORY_/late-boundaries.pdf"><img src="_IMAGE_DIRECTORY_/late-boundaries.png" /></a>
 
+<p>
+  This plot is trivial/empty if you run without MPI or only one MPI rank.
+</p>
 
 
 <h2>Rank-specific analyses</h2>
+
+<p>
+ The concurrency plots below are available if and only if you have translated with shared memory features.
+ All data results from sampling, i.e. is coarsened in time.
+</p>
+<ul>
+ <li>
+  The <b>max concurrency level</b> denotes which concurrency was exposed to the Peano job system, i.e. how many 
+  tasks/jobs are available at a certain time. The potential max concurrency level denotes how many tasks
+  would have been available had the grain size been one for all algorithmic phases. Basically, it denotes
+  how many cores could have been used efficiently if the multithreading were without any overhead.
+ </li>
+ <li>
+  The concurrency analysis does not take into account the <b>number of background tasks</b>. Background tasks are
+  supposed to slip into idle thread time. If there is a sufficient number of background tasks, the actual potential
+  concurrency level is way higher than the denoted level. How big this gain is however depends on the number of 
+  background threads you do permit and it depends on the arithmetic weight of the tasks.
+ </li>
+ <li>
+  As we use sampling, all concurrency data are snapshots. The <b>time averaged</b> plot weights the samples with 
+  the time in-between two samples. It thus gives a fairer estimate of the actual core usage or the potential core
+  usage.
+ </li> 
+ <li>
+  The plot <b>cpu time vs. real time</b> finally results from real system measurements and thus illustrates how 
+  busy the system has been at any point. This is the only metric that actually comprises real system overheads.
+ </li>
+</ul>
+
+

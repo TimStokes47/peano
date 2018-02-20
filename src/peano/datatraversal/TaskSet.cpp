@@ -1,5 +1,4 @@
 #include "peano/datatraversal/TaskSet.h"
-#include "peano/performanceanalysis/Analysis.h"
 
 
 #include <chrono>
@@ -269,9 +268,15 @@ peano::datatraversal::TaskSet::TaskSet(
       tarch::multicore::jobs::spawn( new Job(myTask,false,translateIntoJobClass(taskType) ) );
       break;
     case TaskType::Background:
+   	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
+   	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
+   	  );
       tarch::multicore::jobs::spawnBackgroundJob( new BackgroundJob(myTask,tarch::multicore::jobs::BackgroundJobType::BackgroundJob) );
       break;
     case TaskType::LongRunningBackground:
+   	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
+   	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
+   	  );
       tarch::multicore::jobs::spawnBackgroundJob( new BackgroundJob(myTask,tarch::multicore::jobs::BackgroundJobType::LongRunningBackgroundJob) );
       break;
   }
@@ -279,8 +284,9 @@ peano::datatraversal::TaskSet::TaskSet(
 
 
 bool peano::datatraversal::TaskSet::processBackgroundJobs() {
-  peano::performanceanalysis::Analysis::getInstance().terminatedBackgroundTask(
-    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()/2
+  bool result = tarch::multicore::jobs::processBackgroundJobs();
+  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
+    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
   );
-  return tarch::multicore::jobs::processBackgroundJobs();
+  return result;
 }

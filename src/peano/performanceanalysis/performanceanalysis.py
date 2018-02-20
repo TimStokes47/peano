@@ -58,31 +58,32 @@ performanceanalysis_output.writeHeader(outFile,args.file,numberOfRanks,numberOfT
 (parents,levels,offset,volume,nodes) = performanceanalysis_parser.getLogicalTopology(numberOfRanks,dim,args.file,".");
 (volumes,overlaps,work)              = performanceanalysis_analysis.computeVolumesOverlapsWork(numberOfRanks,parents,offset,volume,dim,args.domainoffset,args.domainsize)
 
-performanceanalysis_global_plotter.plotLogicalTopology(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/topology",parents,levels,offset,volume);
+if numberOfRanks>1:
+  performanceanalysis_global_plotter.plotLogicalTopology(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/topology",parents,levels,offset,volume);
 
-performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistributionPerRank(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/workload-per-rank",volumes,overlaps,work);
-performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistributionPerNode(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/workload-per-node",work,nodes);
+  performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistributionPerRank(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/workload-per-rank",volumes,overlaps,work);
+  performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistributionPerNode(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/workload-per-node",work,nodes);
 
-performanceanalysis_mpicommunication.plotLateWorkers(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/late-workers") 
-performanceanalysis_mpicommunication.plotLateMasters(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/late-masters") 
-performanceanalysis_mpicommunication.plotLateBoundaries(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/late-boundaries") 
+  performanceanalysis_mpicommunication.plotLateWorkers(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/late-workers") 
+  performanceanalysis_mpicommunication.plotLateMasters(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/late-masters") 
+  performanceanalysis_mpicommunication.plotLateBoundaries(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/late-boundaries") 
 
-for l in range(1,max(levels)+1):
- if dim==2:
-  performanceanalysis_dd.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
- if dim==3:
-  performanceanalysis_dd.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
+  for l in range(1,max(levels)+1):
+    if dim==2:
+      performanceanalysis_dd.plot2dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
+    if dim==3:
+      performanceanalysis_dd.plot3dDomainDecompositionOnLevel(l,numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
 
-if dim==2:
-  performanceanalysis_dd.plot2dDomainDecomposition(numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
-#if dim==3:
-#  performanceanalysis_dd.plot3dDomainDecomposition(numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
+  if dim==2:
+    performanceanalysis_dd.plot2dDomainDecomposition(numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
+  #if dim==3:
+  #  performanceanalysis_dd.plot3dDomainDecomposition(numberOfRanks,args.domainoffset,args.domainsize,offset,volume,levels,nodes,performanceanalysis_output.getOutputDirectory(args.file)+"/dd")
 
 
-performanceanalysis_dd.printNodeTable(outFile,numberOfRanks,parents,nodes)
+  performanceanalysis_dd.printNodeTable(outFile,numberOfRanks,parents,nodes)
 
-outFile.write( "<h2>Fork history</h2>" )
-performanceanalysis_dd.extractForkHistory(outFile,args.file,numberOfRanks)
+  outFile.write( "<h2>Fork history</h2>" )
+  performanceanalysis_dd.extractForkHistory(outFile,args.file,numberOfRanks)
 
 
 beginIterations = performanceanalysis_parser.getBeginIterations(args.file,numberOfRanks>1)
@@ -128,8 +129,9 @@ performanceanalysis_griddata.plotGridEntities(
   numberOfLocalCells,
   tTotal)
 
-performanceanalysis_mpicommunication.plotMPIPhases(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/mpi-trace",1) 
-performanceanalysis_mpicommunication.plotMPIPhases(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/mpi-trace-detailed",16) 
+if numberOfRanks>1:
+  performanceanalysis_mpicommunication.plotMPIPhases(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/mpi-trace",1) 
+  performanceanalysis_mpicommunication.plotMPIPhases(numberOfRanks,args.file,performanceanalysis_output.getOutputDirectory(args.file)+"/mpi-trace-detailed",16) 
 
 performanceanalysis_output.processTemplateFile(
  scriptLocation + "/performanceanalysis.template",outFile,
@@ -146,6 +148,13 @@ if numberOfRanks<=1:
     timeStamps,measuredConcurrencyLevels,obtainedConcurrencyLevels,maxConcurrencyLevels,
     maxPotentialConcurrencyLevels,numberOfBackgroundTasks,timeAveragedConcurrencyLevels,
     timeAveragedPotentialConcurrencyLevels,beginIterations)
+
+  fileName = performanceanalysis_output.getOutputDirectory(args.file)+"/concurrency"
+
+  outFile.write( "<a href=\"" + fileName + ".pdf\" >" )
+  outFile.write( "<img src=\"" + fileName + ".png\" />" )
+  outFile.write( "</a>" )
+
 else:
   for i in range(0,numberOfRanks):
     outFile.write( "<h2>Rank " + str(i) + "</h2>" )

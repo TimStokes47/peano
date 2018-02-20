@@ -8,6 +8,9 @@
 #include "tarch/multicore/Jobs.h"
 
 
+#include "peano/performanceanalysis/Analysis.h"
+
+
 #include <functional>
 
 
@@ -266,9 +269,15 @@ class peano::datatraversal::TaskSet {
           tarch::multicore::jobs::spawn( new tarch::multicore::jobs::GenericJobWithPointer<T>(myTask,false,translateIntoJobClass(taskType) ) );
           break;
         case peano::datatraversal::TaskSet::TaskType::Background:
+       	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
+       	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
+       	  );
           tarch::multicore::jobs::spawnBackgroundJob( new tarch::multicore::jobs::GenericBackgroundWithPointer<T>(myTask,tarch::multicore::jobs::BackgroundJobType::BackgroundJob) );
           break;
         case peano::datatraversal::TaskSet::TaskType::LongRunningBackground:
+       	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
+       	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
+       	  );
           tarch::multicore::jobs::spawnBackgroundJob( new tarch::multicore::jobs::GenericBackgroundWithPointer<T>(myTask,tarch::multicore::jobs::BackgroundJobType::LongRunningBackgroundJob) );
          break;
       }

@@ -164,15 +164,9 @@ void peano::performanceanalysis::Analysis::changeConcurrencyLevel(int actualChan
 }
 
 
-void peano::performanceanalysis::Analysis::fireAndForgetBackgroundTask(int taskCount) {
+void peano::performanceanalysis::Analysis::minuteNumberOfBackgroundTasks(int taskCount) {
   assertion( _device!=0 );
-  _device->fireAndForgetBackgroundTask(taskCount);
-}
-
-
-void peano::performanceanalysis::Analysis::terminatedBackgroundTask(int taskCount) {
-  assertion( _device!=0 );
-  _device->terminatedBackgroundTask(taskCount);
+  _device->minuteNumberOfBackgroundTasks(taskCount);
 }
 
 

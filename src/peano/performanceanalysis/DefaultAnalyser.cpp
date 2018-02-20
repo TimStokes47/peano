@@ -381,23 +381,10 @@ void peano::performanceanalysis::DefaultAnalyser::changeConcurrencyLevel(int act
 }
 
 
-void peano::performanceanalysis::DefaultAnalyser::fireAndForgetBackgroundTask(int taskCount) {
+void peano::performanceanalysis::DefaultAnalyser::minuteNumberOfBackgroundTasks(int taskCount) {
   if (_isSwitchedOn) {
     tarch::multicore::Lock lock(_concurrencyReportSemaphore);
 
-    _numberOfSpawnedBackgroundTask += taskCount;
-  }
-}
-
-
-void peano::performanceanalysis::DefaultAnalyser::terminatedBackgroundTask(int taskCount) {
-  if (_isSwitchedOn) {
-    tarch::multicore::Lock lock(_concurrencyReportSemaphore);
-
-    _numberOfSpawnedBackgroundTask -= taskCount;
-
-    if ( _numberOfSpawnedBackgroundTask < 0 ) {
-       _numberOfSpawnedBackgroundTask = 0;
-    }
+    _numberOfSpawnedBackgroundTask = taskCount;
   }
 }
