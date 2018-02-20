@@ -52,7 +52,7 @@ namespace tarch {
      * into input class. Therefore, the input has to have a functor
      * which accepts an integer vector, and it has to have an operation
      *
-     * mergeIntoMasterThread
+     * mergeIntoMasterThread().
      *
      * <h2> Serial case </h2>
      *

@@ -26,6 +26,8 @@ void tarch::multicore::tests::dForRangeTest::run() {
   testMethod( test2D10x10Range23 );
   testMethod( test2D10x10Range40 );
   testMethod( test2D10x10Range80 );
+
+  testMethod( test2DgetMinimalRanges );
 }
 
 
@@ -34,66 +36,52 @@ void tarch::multicore::tests::dForRangeTest::setUp() {
 
 
 void tarch::multicore::tests::dForRangeTest::test2D10x10Range1() {
-/*
-  #ifdef Dim2
-  tarch::la::Vector<DIMENSIONS,int>  range(10);
+  tarch::la::Vector<2,int>  range(10);
 
-  tarch::multicore::dForRange testRange1(range,1);
+  tarch::multicore::dForRange<2> testRange1(range,1,1);
 
-  validate( testRange1.is_divisible() );
+  validate( testRange1.isDivisible() );
 
-  tarch::multicore::dForRange::Split split;
+  tarch::multicore::dForRange<2> testRange1_1 = testRange1.split();
 
-  tarch::multicore::dForRange testRange1_1(testRange1, split);
-
-  validateWithParams2( testRange1.is_divisible(), testRange1.toString(), testRange1_1.toString() );
-  validateWithParams2( !testRange1.empty(), testRange1.toString(), testRange1_1.toString() );
-  validateEqualsWithParams2( testRange1.getOffset()(0), 5, testRange1.toString(), testRange1_1.toString() );
-  validateEqualsWithParams2( testRange1.getOffset()(1), 0, testRange1.toString(), testRange1_1.toString() );
-  validateEqualsWithParams2( testRange1.getRange()(0),  5, testRange1.toString(), testRange1_1.toString() );
-  validateEqualsWithParams2( testRange1.getRange()(1), 10, testRange1.toString(), testRange1_1.toString() );
-
-  validateWithParams2( testRange1_1.is_divisible(), testRange1.toString(), testRange1_1.toString() );
+  validateWithParams2( testRange1_1.isDivisible(), testRange1.toString(), testRange1_1.toString() );
   validateWithParams2( !testRange1_1.empty(), testRange1.toString(), testRange1_1.toString() );
-  validateEqualsWithParams2( testRange1_1.getOffset()(0), 0, testRange1.toString(), testRange1_1.toString() );
+  validateEqualsWithParams2( testRange1_1.getOffset()(0), 5, testRange1.toString(), testRange1_1.toString() );
   validateEqualsWithParams2( testRange1_1.getOffset()(1), 0, testRange1.toString(), testRange1_1.toString() );
   validateEqualsWithParams2( testRange1_1.getRange()(0),  5, testRange1.toString(), testRange1_1.toString() );
   validateEqualsWithParams2( testRange1_1.getRange()(1), 10, testRange1.toString(), testRange1_1.toString() );
 
-  #endif
-*/
+  validateWithParams2( testRange1.isDivisible(), testRange1.toString(), testRange1_1.toString() );
+  validateWithParams2( !testRange1.empty(), testRange1.toString(), testRange1_1.toString() );
+  validateEqualsWithParams2( testRange1.getOffset()(0), 0, testRange1.toString(), testRange1_1.toString() );
+  validateEqualsWithParams2( testRange1.getOffset()(1), 0, testRange1.toString(), testRange1_1.toString() );
+  validateEqualsWithParams2( testRange1.getRange()(0),  5, testRange1.toString(), testRange1_1.toString() );
+  validateEqualsWithParams2( testRange1.getRange()(1), 10, testRange1.toString(), testRange1_1.toString() );
 }
 
 
 void tarch::multicore::tests::dForRangeTest::test2D10x10Range12() {
-/*
-  #ifdef Dim2
-  tarch::la::Vector<DIMENSIONS,int>  range(10);
+  tarch::la::Vector<2,int>  range(10);
 
-  tarch::multicore::dForRange testRange12(range,12);
+  tarch::multicore::dForRange<2> testRange12(range,12,1);
 
-  validate( testRange12.is_divisible() );
+  validate( testRange12.isDivisible() );
 
-  tarch::multicore::dForRange::Split split;
+  tarch::multicore::dForRange<2> testRange12_1 = testRange12.split();
 
-  tarch::multicore::dForRange testRange12_1(testRange12, split);
-
-  validateWithParams2( testRange12.is_divisible(), testRange12.toString(), testRange12_1.toString() );
-  validateWithParams2( !testRange12.empty(), testRange12.toString(), testRange12_1.toString() );
-  validateEqualsWithParams2( testRange12.getOffset()(0), 5, testRange12.toString(), testRange12_1.toString() );
-  validateEqualsWithParams2( testRange12.getOffset()(1), 0, testRange12.toString(), testRange12_1.toString() );
-  validateEqualsWithParams2( testRange12.getRange()(0),  5, testRange12.toString(), testRange12_1.toString() );
-  validateEqualsWithParams2( testRange12.getRange()(1), 10, testRange12.toString(), testRange12_1.toString() );
-
-  validateWithParams2( testRange12_1.is_divisible(), testRange12.toString(), testRange12_1.toString() );
+  validateWithParams2( testRange12_1.isDivisible(), testRange12.toString(), testRange12_1.toString() );
   validateWithParams2( !testRange12_1.empty(), testRange12.toString(), testRange12_1.toString() );
-  validateEqualsWithParams2( testRange12_1.getOffset()(0), 0, testRange12.toString(), testRange12_1.toString() );
+  validateEqualsWithParams2( testRange12_1.getOffset()(0), 5, testRange12.toString(), testRange12_1.toString() );
   validateEqualsWithParams2( testRange12_1.getOffset()(1), 0, testRange12.toString(), testRange12_1.toString() );
   validateEqualsWithParams2( testRange12_1.getRange()(0),  5, testRange12.toString(), testRange12_1.toString() );
   validateEqualsWithParams2( testRange12_1.getRange()(1), 10, testRange12.toString(), testRange12_1.toString() );
 
-  #endif
-*/
+  validateWithParams2( testRange12.isDivisible(), testRange12.toString(), testRange12_1.toString() );
+  validateWithParams2( !testRange12.empty(), testRange12.toString(), testRange12_1.toString() );
+  validateEqualsWithParams2( testRange12.getOffset()(0), 0, testRange12.toString(), testRange12_1.toString() );
+  validateEqualsWithParams2( testRange12.getOffset()(1), 0, testRange12.toString(), testRange12_1.toString() );
+  validateEqualsWithParams2( testRange12.getRange()(0),  5, testRange12.toString(), testRange12_1.toString() );
+  validateEqualsWithParams2( testRange12.getRange()(1), 10, testRange12.toString(), testRange12_1.toString() );
 }
 
 
@@ -130,51 +118,51 @@ void tarch::multicore::tests::dForRangeTest::test2D10x10Range23() {
 
 
 void tarch::multicore::tests::dForRangeTest::test2D10x10Range40() {
-/*
-  #ifdef Dim2
-  tarch::la::Vector<DIMENSIONS,int>  range(10);
+  tarch::la::Vector<2,int>  range(10);
 
-  tarch::multicore::dForRange testRange40(range,40);
+  tarch::multicore::dForRange<2> testRange40(range,40,1);
 
-  validate( testRange40.is_divisible() );
+  validate( testRange40.isDivisible() );
 
-  tarch::multicore::dForRange::Split split;
+  tarch::multicore::dForRange<2> testRange40_1 = testRange40.split();
 
-  tarch::multicore::dForRange testRange40_1(testRange40, split);
-
-  validateWithParams2( testRange40.is_divisible(), testRange40.toString(), testRange40_1.toString() );
-  validateWithParams2( !testRange40.empty(), testRange40.toString(), testRange40_1.toString() );
-  validateEqualsWithParams2( testRange40.getOffset()(0), 5, testRange40.toString(), testRange40_1.toString() );
-  validateEqualsWithParams2( testRange40.getOffset()(1), 0, testRange40.toString(), testRange40_1.toString() );
-  validateEqualsWithParams2( testRange40.getRange()(0),  5, testRange40.toString(), testRange40_1.toString() );
-  validateEqualsWithParams2( testRange40.getRange()(1), 10, testRange40.toString(), testRange40_1.toString() );
-
-  validateWithParams2( testRange40_1.is_divisible(), testRange40.toString(), testRange40_1.toString() );
+  validateWithParams2( testRange40_1.isDivisible(), testRange40.toString(), testRange40_1.toString() );
   validateWithParams2( !testRange40_1.empty(), testRange40.toString(), testRange40_1.toString() );
-  validateEqualsWithParams2( testRange40_1.getOffset()(0), 0, testRange40.toString(), testRange40_1.toString() );
+  validateEqualsWithParams2( testRange40_1.getOffset()(0), 5, testRange40.toString(), testRange40_1.toString() );
   validateEqualsWithParams2( testRange40_1.getOffset()(1), 0, testRange40.toString(), testRange40_1.toString() );
   validateEqualsWithParams2( testRange40_1.getRange()(0),  5, testRange40.toString(), testRange40_1.toString() );
   validateEqualsWithParams2( testRange40_1.getRange()(1), 10, testRange40.toString(), testRange40_1.toString() );
 
-  tarch::multicore::dForRange testRange40_2(testRange40, split);
-  tarch::multicore::dForRange testRange40_3(testRange40_1, split);
-
-  validateWithParams2( !testRange40_2.is_divisible(), testRange40.toString(), testRange40_1.toString() );
-  validateWithParams2( !testRange40_2.empty(), testRange40.toString(), testRange40_1.toString() );
-  validateEqualsWithParams2( testRange40_2.getOffset()(0), 5, testRange40.toString(), testRange40_2.toString() );
-  validateEqualsWithParams2( testRange40_2.getOffset()(1), 0, testRange40.toString(), testRange40_2.toString() );
-  validateEqualsWithParams2( testRange40_2.getRange()(0),  5, testRange40.toString(), testRange40_2.toString() );
-  validateEqualsWithParams2( testRange40_2.getRange()(1),  5, testRange40.toString(), testRange40_2.toString() );
-
-  validateWithParams2( !testRange40.is_divisible(), testRange40.toString(), testRange40_1.toString() );
+  validateWithParams2( testRange40.isDivisible(), testRange40.toString(), testRange40_1.toString() );
   validateWithParams2( !testRange40.empty(), testRange40.toString(), testRange40_1.toString() );
-  validateEqualsWithParams2( testRange40.getOffset()(0), 5, testRange40.toString(), testRange40_2.toString() );
-  validateEqualsWithParams2( testRange40.getOffset()(1), 5, testRange40.toString(), testRange40_2.toString() );
-  validateEqualsWithParams2( testRange40.getRange()(0),  5, testRange40.toString(), testRange40_2.toString() );
-  validateEqualsWithParams2( testRange40.getRange()(1),  5, testRange40.toString(), testRange40_2.toString() );
-  #endif
-*/
+  validateEqualsWithParams2( testRange40.getOffset()(0), 0, testRange40.toString(), testRange40_1.toString() );
+  validateEqualsWithParams2( testRange40.getOffset()(1), 0, testRange40.toString(), testRange40_1.toString() );
+  validateEqualsWithParams2( testRange40.getRange()(0),  5, testRange40.toString(), testRange40_1.toString() );
+  validateEqualsWithParams2( testRange40.getRange()(1), 10, testRange40.toString(), testRange40_1.toString() );
+
+  tarch::multicore::dForRange<2> testRange40_2 = testRange40_1.split();
+  //  tarch::multicore::dForRange<2> testRange40_3 = testRange40_1.split();
+
+  validateWithParams3( !testRange40_2.isDivisible(), testRange40_1.toString(), testRange40.toString(), testRange40_1.toString() );
+  validateWithParams3( !testRange40_2.empty(), testRange40_1.toString(), testRange40.toString(), testRange40_1.toString() );
+  validateEqualsWithParams3( testRange40_2.getOffset()(0), 5, testRange40_1.toString(), testRange40.toString(), testRange40_2.toString() );
+  validateEqualsWithParams3( testRange40_2.getOffset()(1), 5, testRange40_1.toString(), testRange40.toString(), testRange40_2.toString() );
+  validateEqualsWithParams3( testRange40_2.getRange()(0),  5, testRange40_1.toString(), testRange40.toString(), testRange40_2.toString() );
+  validateEqualsWithParams3( testRange40_2.getRange()(1),  5, testRange40_1.toString(), testRange40.toString(), testRange40_2.toString() );
 }
+
+
+void tarch::multicore::tests::dForRangeTest::test2DgetMinimalRanges() {
+  tarch::la::Vector<2,int>  range(10);
+
+  tarch::multicore::dForRange<2> testRange40(range,40,1);
+
+  std::vector< tarch::multicore::dForRange<2> > ranges = testRange40.getMinimalRanges();
+
+  validateEquals( ranges.size(), 4 );
+  validateWithParams4( !ranges[0].isDivisible(), ranges[0].toString(), ranges[1].toString(), ranges[2].toString(), ranges[3].toString() );
+}
+
 
 
 void tarch::multicore::tests::dForRangeTest::test2D10x10Range80() {

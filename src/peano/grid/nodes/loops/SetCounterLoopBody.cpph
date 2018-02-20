@@ -18,10 +18,6 @@ peano::grid::nodes::loops::SetCounterLoopBody<Vertex>::SetCounterLoopBody(
 
 
 template <class Vertex>
-void peano::grid::nodes::loops::SetCounterLoopBody<Vertex>::mergeWithWorkerThread( const SetCounterLoopBody& worker) {}
-
-
-template <class Vertex>
 void peano::grid::nodes::loops::SetCounterLoopBody<Vertex>::mergeIntoMasterThread(SetCounterLoopBody&  master) const {}
 
 

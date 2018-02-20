@@ -8,6 +8,9 @@
 #include "tarch/logging/Log.h"
 
 
+#include <vector>
+
+
 namespace tarch {
   namespace multicore {
     template <int D>
@@ -58,6 +61,13 @@ class tarch::multicore::dForRange {
 
   public:
     /**
+     * I internally create vectors of ranges and to initialise those guys
+     * properly, I need a default constructor. Does not make sense to use
+     * otherwise
+     */
+    dForRange();
+
+    /**
      * Copy constructor
      */
     dForRange(const dForRange<D>& range);
@@ -92,12 +102,14 @@ class tarch::multicore::dForRange {
      * A range is divisible, if the volume of the corresponding range
      * hyperhexahedron is bigger than the grain size.
      */
-    bool is_divisible() const;
+    bool isDivisible() const;
 
     tarch::la::Vector<D,int> getOffset() const;
     tarch::la::Vector<D,int> getRange() const;
 
     std::string toString() const;
+
+    std::vector< dForRange<D> >  getMinimalRanges() const;
 };
 
 

@@ -76,24 +76,6 @@ class peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch {
     );
 
     /**
-     * Destructor
-     *
-     * <h2> Multithreading </h2>
-     *
-     * We may not use a semaphore of our own, as there's always two different
-     * classes involved on regular patches (besides the fact that these classes
-     * themselves might be forked among multiple threads): For cells and for
-     * vertices. Furthermore, there is also an ascend loop and we do not know
-     * when this type's destructor is called.
-     *
-     * Therefore, these three loop bodies have to share one semaphore. I could
-     * assign it to one of these classes but decided to move it do the overall
-     * task, i.e. to ascend/descend.
-     */
-    void mergeWithWorkerThread( const CallDescendLoopBodyOnRegularRefinedPatch&  worker);
-
-
-    /**
      * The Ascend/Descend tasks do copy around events indirectly
      * through the loop objects. Each of the loop objects can fork
      * further through parallel loops. These sets of loops do merge

@@ -17,11 +17,16 @@ namespace tarch {
 
 class tarch::multicore::tests::dForRangeTest: public tarch::tests::TestCase {
   private:
+	/**
+	 * The last digit is the grain size.
+	 */
     void test2D10x10Range1();
     void test2D10x10Range12();
     void test2D10x10Range23();
     void test2D10x10Range40();
     void test2D10x10Range80();
+
+    void test2DgetMinimalRanges();
   public:
     dForRangeTest();
     virtual ~dForRangeTest();

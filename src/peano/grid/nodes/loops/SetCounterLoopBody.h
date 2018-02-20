@@ -103,7 +103,6 @@ class peano::grid::nodes::loops::SetCounterLoopBody {
      */
     void operator() (const tarch::la::Vector<DIMENSIONS,int>& i) const;
 
-    void mergeWithWorkerThread( const SetCounterLoopBody& worker);
     void mergeIntoMasterThread(SetCounterLoopBody&  master) const;
 };
 

@@ -1,7 +1,95 @@
+#include <tbb/spin_mutex.h>
+
+
 template <typename F>
 void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<2>&  range,
   F&                                     function
 ) {
-  parallelFor(range, function);
+  std::vector< dForRange<2> > ranges = range.getMinimalRanges();
+  tbb::spin_mutex mutex;
+
+  tbb::parallel_for(
+    tbb::blocked_range<size_t>(0,ranges.size()),
+    [&](const tbb::blocked_range<size_t>& r) {
+	  F copyOfFunction(function);
+      for(size_t i=r.begin(); i!=r.end(); ++i) {
+        for (int i0=ranges[i].getOffset()(0); i0<ranges[i].getOffset()(0)+ranges[i].getRange()(0); i0++)
+        for (int i1=ranges[i].getOffset()(1); i1<ranges[i].getOffset()(1)+ranges[i].getRange()(1); i1++) {
+       	  tarch::la::Vector<2,int> loc;
+          loc(0) = i0;
+          loc(1) = i1;
+          copyOfFunction(range(loc));
+        }
+      }
+
+      tbb::spin_mutex::scoped_lock lock(mutex);
+      copyOfFunction.mergeIntoMasterThread();
+    }
+  );
 }
+
+
+template <typename F>
+void tarch::multicore::parallelReduce(
+  const tarch::multicore::dForRange<3>&  range,
+  F&                                     function
+) {
+  std::vector< dForRange<3> > ranges = range.getMinimalRanges();
+  tbb::spin_mutex mutex;
+
+  tbb::parallel_for(
+    tbb::blocked_range<size_t>(0,ranges.size()),
+    [&](const tbb::blocked_range<size_t>& r) {
+	  F copyOfFunction(function);
+      for(size_t i=r.begin(); i!=r.end(); ++i) {
+        for (int i0=ranges[i].getOffset()(0); i0<ranges[i].getOffset()(0)+ranges[i].getRange()(0); i0++)
+        for (int i1=ranges[i].getOffset()(1); i1<ranges[i].getOffset()(1)+ranges[i].getRange()(1); i1++)
+        for (int i2=ranges[i].getOffset()(2); i2<ranges[i].getOffset()(2)+ranges[i].getRange()(2); i2++) {
+       	  tarch::la::Vector<3,int> loc;
+          loc(0) = i0;
+          loc(1) = i1;
+          loc(2) = i2;
+          copyOfFunction(range(loc));
+        }
+      }
+
+      tbb::spin_mutex::scoped_lock lock(mutex);
+      copyOfFunction.mergeIntoMasterThread();
+    }
+  );
+}
+
+
+template <typename F>
+void tarch::multicore::parallelReduce(
+  const tarch::multicore::dForRange<4>&  range,
+  F&                                     function
+) {
+  std::vector< dForRange<4> > ranges = range.getMinimalRanges();
+  tbb::spin_mutex mutex;
+
+  tbb::parallel_for(
+    tbb::blocked_range<size_t>(0,ranges.size()),
+    [&](const tbb::blocked_range<size_t>& r) {
+	  F copyOfFunction(function);
+      for(size_t i=r.begin(); i!=r.end(); ++i) {
+        for (int i0=ranges[i].getOffset()(0); i0<ranges[i].getOffset()(0)+ranges[i].getRange()(0); i0++)
+        for (int i1=ranges[i].getOffset()(1); i1<ranges[i].getOffset()(1)+ranges[i].getRange()(1); i1++)
+        for (int i2=ranges[i].getOffset()(2); i2<ranges[i].getOffset()(2)+ranges[i].getRange()(2); i2++)
+        for (int i3=ranges[i].getOffset()(3); i3<ranges[i].getOffset()(3)+ranges[i].getRange()(3); i3++) {
+       	  tarch::la::Vector<4,int> loc;
+          loc(0) = i0;
+          loc(1) = i1;
+          loc(2) = i2;
+          loc(3) = i3;
+          copyOfFunction(range(loc));
+        }
+      }
+
+      tbb::spin_mutex::scoped_lock lock(mutex);
+      copyOfFunction.mergeIntoMasterThread();
+    }
+  );
+}
+

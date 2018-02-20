@@ -3,6 +3,13 @@ tarch::logging::Log tarch::multicore::dForRange<D>::_log( "tarch::multicore::dFo
 
 
 template <int D>
+tarch::multicore::dForRange<D>::dForRange():
+  _grainSize(-1),
+  _interleaving(-1) {
+}
+
+
+template <int D>
 tarch::multicore::dForRange<D>::dForRange(const dForRange<D>& range):
   _offset( range._offset),
   _range( range._range ),
@@ -35,43 +42,54 @@ tarch::la::Vector<D,int> tarch::multicore::dForRange<D>::operator()(const tarch:
 }
 
 
-/*
 template <int D>
-tarch::multicore::dForRange<D>::dForRange( dForRange& range, Split ):
-  _offset(range._offset),
-  _range(range._range),
-  _grainSize( range._grainSize) {
-  logTraceInWith1Argument( "dForRange(Range,Split)", range.toString() );
+std::vector< tarch::multicore::dForRange<D> >  tarch::multicore::dForRange<D>::getMinimalRanges() const {
+  std::vector< dForRange<D> > result( tarch::la::volume(_range)/_grainSize+1);
+  result.clear();
+  result.push_back(*this);
 
-  assertion(range.is_divisible());
+  int i=0;
+  while (i<static_cast<int>(result.size())) {
+	while ( result[i].isDivisible() ) {
+      result.push_back( result[i].split() );
+	}
+    i++;
+  }
+
+  return result;
+}
+
+
+template <int D>
+tarch::multicore::dForRange<D>   tarch::multicore::dForRange<D>::split() {
+  tarch::multicore::dForRange<D> result(*this);
 
   int splitAlongDimension = tarch::la::indexMax(_range);
-
   int oldRangeSizeAlongDimension = _range(splitAlongDimension);
   _range(splitAlongDimension) =  oldRangeSizeAlongDimension / 2;
 
-  range._range(splitAlongDimension)  = oldRangeSizeAlongDimension - _range(splitAlongDimension);
-  range._offset(splitAlongDimension) = range._offset(splitAlongDimension) + oldRangeSizeAlongDimension - range._range(splitAlongDimension);
+  result._range(splitAlongDimension)  = oldRangeSizeAlongDimension - _range(splitAlongDimension);
+  result._offset(splitAlongDimension) = result._offset(splitAlongDimension) + oldRangeSizeAlongDimension - result._range(splitAlongDimension);
 
-  logTraceOutWith2Arguments( "dForRange(Range,Split)", toString(), range.toString() );
-}*/
+  return result;
+}
 
 
 template <int D>
 bool tarch::multicore::dForRange<D>::empty() const {
   logTraceIn( "empty()" );
   bool result = tarch::la::volume(_range)==0;
-  assertion( !is_divisible() || !result );
+  assertion( !isDivisible() || !result );
   logTraceOutWith1Argument( "empty()", result );
   return result;
 }
 
 
 template <int D>
-bool tarch::multicore::dForRange<D>::is_divisible() const {
-  logTraceInWith1Argument( "is_divisible()", toString() );
+bool tarch::multicore::dForRange<D>::isDivisible() const {
+  logTraceInWith1Argument( "isDivisible()", toString() );
   bool result = tarch::la::volume(_range) > _grainSize;
-  logTraceOutWith1Argument( "is_divisible()", result );
+  logTraceOutWith1Argument( "isDivisible()", result );
   return result;
 }
 
