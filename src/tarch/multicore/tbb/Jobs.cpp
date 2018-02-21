@@ -29,7 +29,7 @@ tarch::multicore::jobs::internal::JobMap                       tarch::multicore:
 //tbb::task_group_context                                        tarch::multicore::jobs::internal::BackgroundJobConsumerTask::backgroundTaskContext;
 static tbb::task_group_context  backgroundTaskContext;
 //static tbb::task_group  backgroundTaskContext;
-//https://software.intel.com/en-us/forums/intel-threading-building-blocks/topic/703652
+
 
 tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsumerTask(int maxJobs):
   _maxJobs(maxJobs) {
@@ -300,6 +300,12 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass0,
   int                     jobClass1
 ) {
+  job0();
+  job1();
+
+  return;
+
+
   tbb::atomic<int>  semaphore(2);
   
   tbb::parallel_invoke(
@@ -340,8 +346,20 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass1,
   int                     jobClass2
 ) {
+  job0();
+  job1();
+  job2();
+
+  return;
+
   tbb::atomic<int>  semaphore(3);
 
+  internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 );
+  internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 );
+  internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 );
+
+
+/*
   tbb::parallel_invoke(
     [&] () -> void {
 	  internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 );
@@ -353,8 +371,18 @@ void tarch::multicore::jobs::spawnAndWait(
     	internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 );
     }
   );
+*/
+
+
+  // @todo  Does it work without Lambda expressions
+  //        Is job class always positive
+  //        Would it work with class TBB constructs?
 
   while (semaphore>0) {
+    processJobs(jobClass0);
+    processJobs(jobClass1);
+    processJobs(jobClass2);
+/*
     tbb::parallel_invoke(
       [&] () -> void {
         processJobs(jobClass0);
@@ -366,6 +394,7 @@ void tarch::multicore::jobs::spawnAndWait(
         processJobs(jobClass2);
       }
     );
+*/
   }
 }
 
@@ -387,6 +416,14 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass2,
   int                     jobClass3
 ) {
+  job0();
+  job1();
+  job2();
+  job3();
+
+  return;
+
+
   tbb::atomic<int>  semaphore(4);
   
   tbb::parallel_invoke(
@@ -444,6 +481,15 @@ void tarch::multicore::jobs::spawnAndWait(
 	 int                     jobClass3,
 	 int                     jobClass4
 ) {
+  job0();
+  job1();
+  job2();
+  job3();
+  job4();
+
+  return;
+
+
   tbb::atomic<int>  semaphore(5);
   
   tbb::parallel_invoke(
@@ -511,6 +557,16 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass4,
   int                     jobClass5
 ) {
+  job0();
+  job1();
+  job2();
+  job3();
+  job4();
+  job5();
+
+  return;
+
+
   tbb::atomic<int>  semaphore(6);
   
   tbb::parallel_invoke(

@@ -2,6 +2,11 @@
 #include <tbb/parallel_reduce.h>
 
 
+#include "../Loop.cpph"
+
+/*
+
+
 template <typename F>
 void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<1>&  range,
@@ -123,7 +128,7 @@ void tarch::multicore::parallelReduce(
 
 
 
-/**
+*
  * Per default, TBB versions greater than TBB 2.2 do use the auto partitioner.
  * An auto partitioner is similar to OpenMP's guided: It splits up the problem
  * such that every thread is busy. Whenever work is stolen, the algorithm tries
@@ -141,7 +146,7 @@ void tarch::multicore::parallelReduce(
  * The optimal strategy however seems to be the simple_partitioner which splits
  * up each range until ranges cannot be divided further. As a result, work is
  * stolen, but no further range subdivision is happening.
- */
+
 template <typename F>
 void tarch::multicore::parallelFor(
   const tarch::multicore::dForRange<1>&  range,
@@ -244,4 +249,7 @@ void tarch::multicore::parallelFor(
 	tbb::simple_partitioner()
   );
 }
+
+*/
+
 

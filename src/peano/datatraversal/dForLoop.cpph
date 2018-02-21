@@ -31,7 +31,7 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
   assertion( grainSize >= 0 );
   assertion( grainSize < tarch::la::volume(range) );
 
-  #if defined(SharedMemoryParallelisation) && defined(TODO)
+  #if defined(SharedMemoryParallelisation)
   if (grainSize==0) {
     colouring = Serial;
   }
