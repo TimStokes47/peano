@@ -1,5 +1,9 @@
 #ifdef SharedTBB
 
+
+#include "tarch/Assertions.h"
+
+
 #include <tbb/task.h>
 #include <tbb/concurrent_queue.h>
 #include <tbb/parallel_invoke.h>

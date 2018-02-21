@@ -75,7 +75,7 @@ class tarch::multicore::dForRange {
     /**
      * Construct a Complete Range
      */
-    dForRange( const tarch::la::Vector<D,int>&  range, int grainSize, int interleaving );
+    dForRange( const tarch::la::Vector<D,int>&  offset, const tarch::la::Vector<D,int>&  range, int grainSize, int interleaving );
 
     /**
      * Split operator

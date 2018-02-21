@@ -3,8 +3,12 @@
 #ifndef _TARCH_MULTICORE_DEFINITIONS_H_
 #define _TARCH_MULTICORE_DEFINITIONS_H_
 
-#if defined(SharedOMP) || defined(SharedTBB) || defined(SharedTBBInvade)
+#if defined(SharedOMP) || defined(SharedTBB)
   #define SharedMemoryParallelisation
+#endif
+
+#if defined(TBBInvade) && !defined(SharedTBB)
+#error TBBInvade used without SharedTBB
 #endif
 
 #endif

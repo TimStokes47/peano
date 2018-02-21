@@ -76,12 +76,30 @@ namespace tarch {
       const tarch::multicore::dForRange<4>&  range,
       F&                                     function
     );
+
+    template <typename F>
+    void parallelFor(
+      const tarch::multicore::dForRange<2>&  range,
+      F&                                     function
+    );
+
+    template <typename F>
+    void parallelFor(
+      const tarch::multicore::dForRange<3>&  range,
+      F&                                     function
+    );
+
+    template <typename F>
+    void parallelFor(
+      const tarch::multicore::dForRange<4>&  range,
+      F&                                     function
+    );
   }
 }
 
 
 
-#if defined(SharedTBB) || defined(SharedTBBInvade)
+#if defined(SharedTBB)
 #include "tarch/multicore/tbb/Loop.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Loop.h"
@@ -153,6 +171,59 @@ void tarch::multicore::parallelReduce(
   F&                                     function
 ) {
   parallelFor(range, function);
+}
+
+
+
+
+template <typename F>
+void tarch::multicore::parallelFor(
+  const tarch::multicore::dForRange<2>&  range,
+  F&                                     function
+) {
+  tarch::la::Vector<2,int> loc;
+  for (int i0=0; i0<range.getRange()(0); i0++)
+  for (int i1=0; i1<range.getRange()(1); i1++) {
+    loc(0) = i0;
+    loc(1) = i1;
+    function(range(loc));
+  }
+}
+
+
+template <typename F>
+void tarch::multicore::parallelFor(
+  const tarch::multicore::dForRange<3>&  range,
+  F&                                     function
+) {
+  tarch::la::Vector<3,int> loc;
+  for (int i0=0; i0<range.getRange()(0); i0++)
+  for (int i1=0; i1<range.getRange()(1); i1++)
+  for (int i2=0; i2<range.getRange()(2); i2++) {
+    loc(0) = i0;
+    loc(1) = i1;
+    loc(2) = i2;
+    function(range(loc));
+  }
+}
+
+
+template <typename F>
+void tarch::multicore::parallelFor(
+  const tarch::multicore::dForRange<4>&  range,
+  F&                                     function
+) {
+  tarch::la::Vector<4,int> loc;
+  for (int i0=0; i0<range.getRange()(0); i0++)
+  for (int i1=0; i1<range.getRange()(1); i1++)
+  for (int i2=0; i2<range.getRange()(2); i2++)
+  for (int i3=0; i3<range.getRange()(3); i3++) {
+    loc(0) = i0;
+    loc(1) = i1;
+    loc(2) = i2;
+    loc(3) = i3;
+    function(range(loc));
+  }
 }
 #endif
 

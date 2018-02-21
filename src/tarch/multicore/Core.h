@@ -18,9 +18,7 @@ namespace tarch {
 }
 
 
-#if defined(SharedTBBInvade)
-#include "tarch/multicore/invasivetbb/Core.h"
-#elif defined(SharedTBB)
+#if defined(SharedTBB)
 #include "tarch/multicore/tbb/Core.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Core.h"

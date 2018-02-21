@@ -301,7 +301,7 @@ VectorContainer& peano::heap::CharHeap<MasterWorkerExchanger, JoinForkExchanger,
 
   assertion4(_heapData.count(index)==1, _name, message, index, _heapData.size());
 
-  #if defined(SharedTBB) || defined(SharedTBBInvade)
+  #if defined(SharedTBB)
   typename HeapContainer::accessor result;
   _heapData.find(result,index);
   return *(result->second);

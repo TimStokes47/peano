@@ -11,9 +11,7 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
-#ifdef SharedTBBInvade
-#include "tarch/multicore/tbb/Core.h"
-#elif SharedTBB
+#if SharedTBB
 #include "tarch/multicore/tbb/Core.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Core.h"
@@ -195,7 +193,7 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
 
   std::ostringstream buildString;
   buildString << "build: ";
-  #if defined(SharedTBB) || defined(SharedTBBInvade)
+  #if defined(SharedTBB)
   buildString << "multicore=tbb ";
   #elif defined(SharedOMP)
   buildString << "multicore=openMP ";
@@ -235,7 +233,7 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
   }
   if (numberOfThreads>0) {
     msg << "threads: " << numberOfThreads;
-    #ifdef SharedTBBInvade
+    #ifdef TBBInvade
     msg << "+x";
     #endif
   }

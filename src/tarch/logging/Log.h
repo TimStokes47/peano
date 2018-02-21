@@ -19,7 +19,7 @@
 
 #ifdef SharedOMP
 #include <omp.h>
-#elif defined(SharedTBB) || defined(SharedTBBInvade)
+#elif defined(SharedTBB)
 #include <tbb/tick_count.h>
 #endif
 
@@ -454,7 +454,7 @@ class tarch::logging::Log {
      */
     std::string _className;
 
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
+    #if defined(SharedTBB) || defined(TBBInvade)
     static tbb::tick_count  _startupTime;
     #else
     static double _startupTime;

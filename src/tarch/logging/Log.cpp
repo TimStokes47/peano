@@ -21,7 +21,7 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
-#if defined(SharedTBB) || defined(SharedTBBInvade)
+#if defined(SharedTBB)
 tbb::tick_count tarch::logging::Log::_startupTime( tbb::tick_count::now() );
 #else
 double tarch::logging::Log::_startupTime(0.0);
@@ -31,11 +31,11 @@ double tarch::logging::Log::_startupTime(0.0);
 tarch::logging::Log::Log(const std::string& className):
   _className( className ) {
 
-  #if !defined(SharedTBB) && !defined(SharedTBBInvade)
+  #if !defined(SharedTBB)
   if (_startupTime==0.0) {
   #if defined(SharedOMP)
     _startupTime       = omp_get_wtime();
-  #elif defined(SharedTBB) || defined(SharedTBBInvade)
+  #elif defined(SharedTBB)
     _startupTime       = tbb::tick_count::now();
   #elif defined(__APPLE__)
     static mach_timebase_info_data_t s_timebase_info;
@@ -120,7 +120,7 @@ double tarch::logging::Log::getTimeStampSeconds() const {
   #ifdef SharedOMP
     double currentTS       = omp_get_wtime();
     return currentTS - _startupTime;
-  #elif defined(SharedTBB) || defined(SharedTBBInvade)
+  #elif defined(SharedTBB)
     tbb::tick_count currentTS       = tbb::tick_count::now();
     return (currentTS - _startupTime).seconds();
   #elif defined(__APPLE__)

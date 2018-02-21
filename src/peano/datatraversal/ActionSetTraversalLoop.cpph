@@ -7,6 +7,10 @@
 #include "tarch/multicore/Loop.h"
 
 
+#if defined(TBBInvade)
+#include "shminvade/SHMInvade.h"
+#endif
+
 
 template <class LoopBody>
 tarch::logging::Log peano::datatraversal::ActionSetTraversalLoop<LoopBody>::_log( "peano::datatraversal::ActionSetTraversalLoop" );
@@ -18,7 +22,7 @@ peano::datatraversal::ActionSetTraversalLoop<LoopBody>::ActionSetTraversalLoop(
   LoopBody&                                loopBody,
   int                                      grainSize
 ) {
-  #if defined(SharedMemoryParallelisation) && defined(Todo)
+  #if defined(SharedMemoryParallelisation)
   if (grainSize>0) {
     loopParallel(traversal, loopBody, grainSize);
   }
@@ -61,7 +65,7 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
   for (int currentStepInPath=0; currentStepInPath<maximumPath; currentStepInPath++ ) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions()/grainSize,traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
 
-    #if defined(SharedTBBInvade)
+    #if defined(TBBInvade)
     shminvade::SHMInvade invade(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
     #endif
 
@@ -72,7 +76,7 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
       }
     );
 
-    #if defined(SharedTBBInvade)
+    #if defined(TBBInvade)
     invade.retreat();
     #endif
 

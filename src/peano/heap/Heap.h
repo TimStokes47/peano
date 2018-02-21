@@ -3,7 +3,7 @@
 #ifndef _PEANO_HEAP_HEAP_H_
 #define _PEANO_HEAP_HEAP_H_
 
-#if defined(SharedTBB) || defined(SharedTBBInvade)
+#if defined(SharedTBB)
 #include <tbb/concurrent_hash_map.h>
 #endif
 
@@ -354,7 +354,7 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
 
     static tarch::multicore::BooleanSemaphore _recycleAndDeleteSemaphore;
 
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
+    #if defined(SharedTBB)
     typedef tbb::concurrent_hash_map<int, std::vector<Data>*>  HeapContainer;
     #else
     typedef std::map<int, std::vector<Data>*>  HeapContainer;

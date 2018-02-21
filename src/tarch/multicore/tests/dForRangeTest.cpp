@@ -38,7 +38,7 @@ void tarch::multicore::tests::dForRangeTest::setUp() {
 void tarch::multicore::tests::dForRangeTest::test2D10x10Range1() {
   tarch::la::Vector<2,int>  range(10);
 
-  tarch::multicore::dForRange<2> testRange1(range,1,1);
+  tarch::multicore::dForRange<2> testRange1(0,range,1,1);
 
   validate( testRange1.isDivisible() );
 
@@ -63,7 +63,7 @@ void tarch::multicore::tests::dForRangeTest::test2D10x10Range1() {
 void tarch::multicore::tests::dForRangeTest::test2D10x10Range12() {
   tarch::la::Vector<2,int>  range(10);
 
-  tarch::multicore::dForRange<2> testRange12(range,12,1);
+  tarch::multicore::dForRange<2> testRange12(0,range,12,1);
 
   validate( testRange12.isDivisible() );
 
@@ -120,7 +120,7 @@ void tarch::multicore::tests::dForRangeTest::test2D10x10Range23() {
 void tarch::multicore::tests::dForRangeTest::test2D10x10Range40() {
   tarch::la::Vector<2,int>  range(10);
 
-  tarch::multicore::dForRange<2> testRange40(range,40,1);
+  tarch::multicore::dForRange<2> testRange40(0,range,40,1);
 
   validate( testRange40.isDivisible() );
 
@@ -155,7 +155,7 @@ void tarch::multicore::tests::dForRangeTest::test2D10x10Range40() {
 void tarch::multicore::tests::dForRangeTest::test2DgetMinimalRanges() {
   tarch::la::Vector<2,int>  range(10);
 
-  tarch::multicore::dForRange<2> testRange40(range,40,1);
+  tarch::multicore::dForRange<2> testRange40(0,range,40,1);
 
   std::vector< tarch::multicore::dForRange<2> > ranges = testRange40.getMinimalRanges();
 

@@ -4,7 +4,7 @@
 #define _PEANO_HEAP_DOUBLE_HEAP_H_
 
 
-#if defined(SharedTBB) || defined(SharedTBBInvade)
+#if defined(SharedTBB)
 #include <tbb/cache_aligned_allocator.h>
 #include <tbb/concurrent_hash_map.h>
 #else
@@ -146,7 +146,7 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
 
     static tarch::multicore::BooleanSemaphore _recycleAndDeleteSemaphore;
 
-    #if defined(SharedTBB) || defined(SharedTBBInvade)
+    #if defined(SharedTBB)
     typedef tbb::concurrent_hash_map<int, VectorContainer*>  HeapContainer;
     #else
     typedef std::map<int, VectorContainer*>  HeapContainer;

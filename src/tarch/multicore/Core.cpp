@@ -3,6 +3,11 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
+#ifdef CompilerHasSysinfo
+#include <sched.h>
+#endif
+
+
 
 int tarch::multicore::getCPUNumber() {
   #ifdef CompilerHasSysinfo

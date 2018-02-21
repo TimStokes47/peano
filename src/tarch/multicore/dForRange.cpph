@@ -22,8 +22,8 @@ tarch::multicore::dForRange<D>::dForRange(const dForRange<D>& range):
 
 
 template <int D>
-tarch::multicore::dForRange<D>::dForRange( const tarch::la::Vector<D,int>&  range, int grainSize, int interleaving ):
-  _offset(0),
+tarch::multicore::dForRange<D>::dForRange( const tarch::la::Vector<D,int>&  offset, const tarch::la::Vector<D,int>&  range, int grainSize, int interleaving ):
+  _offset(offset),
   _range(range),
   _grainSize(grainSize),
   _interleaving(interleaving) {

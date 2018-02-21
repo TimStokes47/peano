@@ -1,14 +1,16 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "peano/utils/Loop.h"
+#include "peano/utils/Globals.h"
 #include "peano/utils/PeanoOptimisations.h"
 #include "peano/performanceanalysis/Analysis.h"
+
 #include <iostream>
 
 
 #include "tarch/multicore/Loop.h"
 
 
-#if defined(SharedTBBInvade)
+#if defined(TBBInvade)
 #include "shminvade/SHMInvade.h"
 #endif
 
@@ -29,7 +31,7 @@ peano::datatraversal::dForLoop<LoopBody>::dForLoop(
   assertion( grainSize >= 0 );
   assertion( grainSize < tarch::la::volume(range) );
 
-  #if defined(SharedMemoryParallelisation) && defined(Todo)
+  #if defined(SharedMemoryParallelisation)
   if (grainSize==0) {
     colouring = Serial;
   }
@@ -78,30 +80,30 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(tarch::la::volume(range)/grainSize,tarch::la::volume(range));
 
   if (altersState) {
-    #if defined(SharedTBBInvade)
+    #if defined(TBBInvade)
     shminvade::SHMInvade invade( grainSize>0 ? tarch::la::volume(range)/grainSize : 0 );
     #endif
 
     tarch::multicore::parallelFor(
-      tarch::multicore::dForRange<DIMENSIONS>( range, grainSize ),
+      tarch::multicore::dForRange<DIMENSIONS>( 0, range, grainSize, 1 ),
 	  loopBody
     );
 
-    #if defined(SharedTBBInvade)
+    #if defined(TBBInvade)
     invade.retreat();
     #endif
   }
   else {
-    #if defined(SharedTBBInvade)
+    #if defined(TBBInvade)
     shminvade::SHMInvade invade( grainSize > 0 ? tarch::la::volume(range)/grainSize : 0 );
     #endif
 
     tarch::multicore::parallelReduce(
-      tarch::multicore::dForRange<DIMENSIONS>( range, grainSize ),
+      tarch::multicore::dForRange<DIMENSIONS>( 0, range, grainSize ),
 	  loopBody
     );
 
-    #if defined(SharedTBBInvade)
+    #if defined(TBBInvade)
     invade.retreat();
     #endif
   }
@@ -135,24 +137,24 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithColouring(
       assertion4( localRange(d)>=1, range, localRange, k, grainSize );
     }
 
-    #if defined(SharedTBBInvade)
+    #if defined(TBBInvade)
     shminvade::SHMInvade invade( grainSize>0 ? tarch::la::volume(localRange)/grainSize : 0 );
     #endif
 
     if (altersState) {
       tarch::multicore::parallelReduce(
-    	tarch::multicore::dForRange<DIMENSIONS>( localRange, grainSize, k, colouring ),
+    	tarch::multicore::dForRange<DIMENSIONS>( k, localRange, grainSize, colouring ),
 		loopBody
       );
     }
     else {
       tarch::multicore::parallelFor(
-    	tarch::multicore::dForRange<DIMENSIONS>( localRange, grainSize, k, colouring ),
+    	tarch::multicore::dForRange<DIMENSIONS>( k, localRange, grainSize, colouring ),
 		loopBody
       );
     }
       
-    #if defined(SharedTBBInvade)
+    #if defined(TBBInvade)
     invade.retreat();
     #endif
   }
