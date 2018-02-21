@@ -22,7 +22,7 @@ peano::datatraversal::ActionSetTraversalLoop<LoopBody>::ActionSetTraversalLoop(
   LoopBody&                                loopBody,
   int                                      grainSize
 ) {
-  #if defined(SharedMemoryParallelisation)
+  #if defined(SharedMemoryParallelisation) && defined(TODO)
   if (grainSize>0) {
     loopParallel(traversal, loopBody, grainSize);
   }
@@ -69,11 +69,13 @@ void peano::datatraversal::ActionSetTraversalLoop<LoopBody>::loopParallel(
     shminvade::SHMInvade invade(traversal.getActionSet(currentStepInPath).getNumberOfParallelActions());
     #endif
 
+    auto func = [&loopBody,traversal,currentStepInPath] (const tarch::la::Vector<1,int>& i) -> void {
+        loopBody(traversal.getActionSet(currentStepInPath).getAction(i(0)));
+      };
+
     tarch::multicore::parallelFor(
-      tarch::multicore::dForRange<1>( traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(), grainSize ),
-  	  [&] (int i) {
-        loopBody(traversal.getActionSet(currentStepInPath).getAction(i));
-      }
+      tarch::multicore::dForRange<1>( 0, traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(), grainSize, 1 ),
+	  func
     );
 
     #if defined(TBBInvade)

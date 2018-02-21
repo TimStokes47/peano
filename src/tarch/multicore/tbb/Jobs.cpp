@@ -18,7 +18,49 @@ tarch::logging::Log tarch::multicore::jobs::internal::_log( "tarch::multicore::j
 tbb::atomic<int>                                               tarch::multicore::jobs::internal::_numberOfRunningBackgroundJobConsumerTasks(0);
 tbb::concurrent_queue<tarch::multicore::jobs::BackgroundJob*>  tarch::multicore::jobs::internal::_backgroundJobs;
 tarch::multicore::jobs::internal::JobMap                       tarch::multicore::jobs::internal::_pendingJobs;
-tbb::task_group_context                                        tarch::multicore::jobs::internal::BackgroundJobConsumerTask::backgroundTaskContext;
+
+//
+// This is a bug in Intel's TBB as documented on
+//
+// https://software.intel.com/en-us/forums/intel-threading-building-blocks/topic/700057
+//
+// These task groups have to be static inside a cpp file.
+//
+//tbb::task_group_context                                        tarch::multicore::jobs::internal::BackgroundJobConsumerTask::backgroundTaskContext;
+static tbb::task_group_context  backgroundTaskContext;
+//static tbb::task_group  backgroundTaskContext;
+//https://software.intel.com/en-us/forums/intel-threading-building-blocks/topic/703652
+
+tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsumerTask(int maxJobs):
+  _maxJobs(maxJobs) {
+}
+
+
+tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsumerTask(const BackgroundJobConsumerTask& copy):
+  _maxJobs(copy._maxJobs) {
+}
+
+
+void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
+  _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(1);
+  BackgroundJobConsumerTask* tbbTask = new (tbb::task::allocate_root(backgroundTaskContext)) BackgroundJobConsumerTask(
+    std::max( 1, static_cast<int>(_backgroundJobs.unsafe_size())/2 )
+  );
+  tbb::task::enqueue(*tbbTask);
+  backgroundTaskContext.set_priority(tbb::priority_low);
+  logDebug( "enqueue()", "spawned new background consumer task" );
+}
+
+
+tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute() {
+  processNumberOfBackgroundJobs(_maxJobs);
+  _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
+  if (!_backgroundJobs.empty()) {
+    enqueue();
+	//recycle_as_continuation();
+  }
+  return nullptr;
+}
 
 
 tarch::multicore::jobs::internal::JobQueue& tarch::multicore::jobs::internal::getJobQueue( int jobClass ) {
@@ -85,7 +127,7 @@ bool tarch::multicore::jobs::internal::processNumberOfBackgroundJobs(int maxJobs
 
 
 void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
-  internal::BackgroundJobConsumerTask::backgroundTaskContext.cancel_group_execution();
+  backgroundTaskContext.cancel_group_execution();
 }
 
 
@@ -111,7 +153,6 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
         if (
           currentlyRunningBackgroundThreads<BackgroundJob::_maxNumberOfRunningBackgroundThreads
         ) {
-          logDebug( "kickOffBackgroundTask(BackgroundTask*)", "no consumer task running yet or long-running task dropped in; kick off" );
           internal::BackgroundJobConsumerTask::enqueue();
         }
       }

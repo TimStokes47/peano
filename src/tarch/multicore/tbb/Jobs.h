@@ -221,30 +221,13 @@ namespace tarch {
          */
         class BackgroundJobConsumerTask: public tbb::task {
           private:
-      	  const int _maxJobs;
-            BackgroundJobConsumerTask(int maxJobs):
-              _maxJobs(maxJobs) {
-            }
+            const int _maxJobs;
+            BackgroundJobConsumerTask(int maxJobs);
           public:
-            static tbb::task_group_context  backgroundTaskContext;
+            static void enqueue();
 
-            static void enqueue() {
-              _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(1);
-              BackgroundJobConsumerTask* tbbTask = new(tbb::task::allocate_root(backgroundTaskContext)) BackgroundJobConsumerTask(
-                std::max( 1, static_cast<int>(_backgroundJobs.unsafe_size())/2 )
-              );
-              tbb::task::enqueue(*tbbTask);
-              backgroundTaskContext.set_priority(tbb::priority_low);
-            }
-
-            tbb::task* execute() {
-              processNumberOfBackgroundJobs(_maxJobs);
-              _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
-              if (!_backgroundJobs.empty()) {
-                enqueue();
-              }
-              return nullptr;
-            }
+            BackgroundJobConsumerTask(const BackgroundJobConsumerTask& copy);
+            tbb::task* execute();
         };
       }
     }

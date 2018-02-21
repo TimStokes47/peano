@@ -18,36 +18,6 @@
 namespace tarch {
   namespace multicore {
     /**
-     * Peano's parallel fors may alter the state (so they are different to TBB
-     * where we distinguish fors from reduces). It is up to the user to ensure
-     * that nothing bad is happening.
-     */
-    void parallelFor(
-      const tarch::multicore::dForRange<1>&  range,
-	  std::function< void( int ) >&          function
-    );
-
-    void parallelFor(
-      const tarch::multicore::dForRange<1>& range,
-      std::function< void( const tarch::la::Vector<1,int>& ) >&  function
-    );
-
-    void parallelFor(
-      const tarch::multicore::dForRange<2>& range,
-	  std::function< void( const tarch::la::Vector<2,int>& ) >&  function
-    );
-
-    void parallelFor(
-      const tarch::multicore::dForRange<3>& range,
-	  std::function< void( const tarch::la::Vector<3,int>& ) >&  function
-    );
-
-    void parallelFor(
-      const tarch::multicore::dForRange<4>& range,
-	  std::function< void( const tarch::la::Vector<4,int>& ) >&  function
-    );
-
-    /**
      * Loop over range but ensure that any copy made is merged again
      * into input class. Therefore, the input has to have a functor
      * which accepts an integer vector, and it has to have an operation
@@ -56,9 +26,45 @@ namespace tarch {
      *
      * <h2> Serial case </h2>
      *
-     * If you compile without TBB or OpenMP, then the parallel reduce is a
-     * parallel for basically.
+     * If you compile without TBB or OpenMP, then the parallel reduce becomes
+     * parallel for.
+     *
+     * <h2> Use it with lambda calculus </h2>
+     *
+     * In some cases, I did struggle to get the code compile with lambda
+     * calculus, where I wanted to plug in a lambda functor directly. In this
+     * case, the following explicit functor creation did help:
+     *
+     * <pre>
+    auto func = [&loopBody,traversal,currentStepInPath] (const tarch::la::Vector<1,int>& i) -> void {
+        loopBody(traversal.getActionSet(currentStepInPath).getAction(i(0)));
+      };
+
+    tarch::multicore::parallelFor(
+      tarch::multicore::dForRange<1>( 0, traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(), grainSize, 1 ),
+	  func
+    );
+       </pre>
+     *
+     *  while the direct variant
+     *
+     * <pre>
+    tarch::multicore::parallelFor(
+      tarch::multicore::dForRange<1>( 0, traversal.getActionSet(currentStepInPath).getNumberOfParallelActions(), grainSize, 1 ),
+	  [&loopBody,traversal,currentStepInPath] (const tarch::la::Vector<1,int>& i) -> void {
+        loopBody(traversal.getActionSet(currentStepInPath).getAction(i(0)));
+      }
+    );
+       </pre>
+     *
+     * did not compile.
      */
+    template <typename F>
+    void parallelReduce(
+      const tarch::multicore::dForRange<1>&  range,
+      F&                                     function
+    );
+
     template <typename F>
     void parallelReduce(
       const tarch::multicore::dForRange<2>&  range,
@@ -74,6 +80,12 @@ namespace tarch {
     template <typename F>
     void parallelReduce(
       const tarch::multicore::dForRange<4>&  range,
+      F&                                     function
+    );
+
+    template <typename F>
+    void parallelFor(
+      const tarch::multicore::dForRange<1>&  range,
       F&                                     function
     );
 
@@ -147,84 +159,9 @@ ProblemSize/tarch::multicore::Core::getInstance().getNumberOfThreads()
 #define endpfor }
 
 
-template <typename F>
-void tarch::multicore::parallelReduce(
-  const tarch::multicore::dForRange<2>&  range,
-  F&                                     function
-) {
-  parallelFor(range, function);
-}
+#include "tarch/multicore/Loop.cpph"
 
 
-template <typename F>
-void tarch::multicore::parallelReduce(
-  const tarch::multicore::dForRange<3>&  range,
-  F&                                     function
-) {
-  parallelFor(range, function);
-}
-
-
-template <typename F>
-void tarch::multicore::parallelReduce(
-  const tarch::multicore::dForRange<4>&  range,
-  F&                                     function
-) {
-  parallelFor(range, function);
-}
-
-
-
-
-template <typename F>
-void tarch::multicore::parallelFor(
-  const tarch::multicore::dForRange<2>&  range,
-  F&                                     function
-) {
-  tarch::la::Vector<2,int> loc;
-  for (int i0=0; i0<range.getRange()(0); i0++)
-  for (int i1=0; i1<range.getRange()(1); i1++) {
-    loc(0) = i0;
-    loc(1) = i1;
-    function(range(loc));
-  }
-}
-
-
-template <typename F>
-void tarch::multicore::parallelFor(
-  const tarch::multicore::dForRange<3>&  range,
-  F&                                     function
-) {
-  tarch::la::Vector<3,int> loc;
-  for (int i0=0; i0<range.getRange()(0); i0++)
-  for (int i1=0; i1<range.getRange()(1); i1++)
-  for (int i2=0; i2<range.getRange()(2); i2++) {
-    loc(0) = i0;
-    loc(1) = i1;
-    loc(2) = i2;
-    function(range(loc));
-  }
-}
-
-
-template <typename F>
-void tarch::multicore::parallelFor(
-  const tarch::multicore::dForRange<4>&  range,
-  F&                                     function
-) {
-  tarch::la::Vector<4,int> loc;
-  for (int i0=0; i0<range.getRange()(0); i0++)
-  for (int i1=0; i1<range.getRange()(1); i1++)
-  for (int i2=0; i2<range.getRange()(2); i2++)
-  for (int i3=0; i3<range.getRange()(3); i3++) {
-    loc(0) = i0;
-    loc(1) = i1;
-    loc(2) = i2;
-    loc(3) = i3;
-    function(range(loc));
-  }
-}
 #endif
 
 
