@@ -27,22 +27,6 @@
  * stolen, but no further range subdivision is happening.
  */
 
-template <typename F>
-void tarch::multicore::parallelReduce(
-  const tarch::multicore::dForRange<3>&  range,
-  F&                                     function
-) {
-  parallelFor(range, function);
-}
-
-
-template <typename F>
-void tarch::multicore::parallelReduce(
-  const tarch::multicore::dForRange<4>&  range,
-  F&                                     function
-) {
-  parallelFor(range, function);
-}
 
 
 template <typename F>
@@ -99,38 +83,29 @@ void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<1>&  range,
   F&                                     function
 ) {
-  parallelFor(range, function);
-}
-
-
-/*
-template <typename F>
-void tarch::multicore::parallelReduce(
-  const tarch::multicore::dForRange<1>&  range,
-  F&                                     function
-) {
   std::vector< dForRange<1> > ranges = range.getMinimalRanges();
   tbb::spin_mutex mutex;
 
+  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
+
   tbb::parallel_for(
-    tbb::blocked_range<size_t>(0,ranges.size()),
+    tbb::blocked_range<size_t>(0,ranges.size(),1),
     [&](const tbb::blocked_range<size_t>& r) {
-	  F copyOfFunction(function);
+      F copyOfFunction(function);
       for(size_t i=r.begin(); i!=r.end(); ++i) {
         for (int i0=0; i0<ranges[i].getRange()(0); i0++) {
        	  tarch::la::Vector<1,int> loc;
-          loc(0) = i0;
+          loc = i0;
           copyOfFunction(ranges[i](loc));
         }
       }
 
       tbb::spin_mutex::scoped_lock lock(mutex);
       copyOfFunction.mergeIntoMasterThread();
-    }
+    },
+	tbb::simple_partitioner()
   );
 }
-*/
-
 
 
 template <typename F>
@@ -178,7 +153,7 @@ void tarch::multicore::parallelReduce(
 
 
 
-/*
+
 template <typename F>
 void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<3>&  range,
@@ -187,25 +162,26 @@ void tarch::multicore::parallelReduce(
   std::vector< dForRange<3> > ranges = range.getMinimalRanges();
   tbb::spin_mutex mutex;
 
+  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
+
   tbb::parallel_for(
-    tbb::blocked_range<size_t>(0,ranges.size()),
+    tbb::blocked_range<size_t>(0,ranges.size(),1),
     [&](const tbb::blocked_range<size_t>& r) {
-	  F copyOfFunction(function);
+      F copyOfFunction(function);
       for(size_t i=r.begin(); i!=r.end(); ++i) {
         for (int i0=0; i0<ranges[i].getRange()(0); i0++)
         for (int i1=0; i1<ranges[i].getRange()(1); i1++)
         for (int i2=0; i2<ranges[i].getRange()(2); i2++) {
        	  tarch::la::Vector<3,int> loc;
-          loc(0) = i0;
-          loc(1) = i1;
-          loc(2) = i2;
+          loc = i0, i1, i2;
           copyOfFunction(ranges[i](loc));
         }
       }
 
       tbb::spin_mutex::scoped_lock lock(mutex);
       copyOfFunction.mergeIntoMasterThread();
-    }
+    },
+	tbb::simple_partitioner()
   );
 }
 
@@ -218,30 +194,29 @@ void tarch::multicore::parallelReduce(
   std::vector< dForRange<4> > ranges = range.getMinimalRanges();
   tbb::spin_mutex mutex;
 
+  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
+
   tbb::parallel_for(
-    tbb::blocked_range<size_t>(0,ranges.size()),
+    tbb::blocked_range<size_t>(0,ranges.size(),1),
     [&](const tbb::blocked_range<size_t>& r) {
-	  F copyOfFunction(function);
+      F copyOfFunction(function);
       for(size_t i=r.begin(); i!=r.end(); ++i) {
         for (int i0=0; i0<ranges[i].getRange()(0); i0++)
         for (int i1=0; i1<ranges[i].getRange()(1); i1++)
         for (int i2=0; i2<ranges[i].getRange()(2); i2++)
         for (int i3=0; i3<ranges[i].getRange()(3); i3++) {
        	  tarch::la::Vector<4,int> loc;
-          loc(0) = i0;
-          loc(1) = i1;
-          loc(2) = i2;
-          loc(3) = i3;
+          loc = i0, i1, i2, i3;
           copyOfFunction(ranges[i](loc));
         }
       }
 
       tbb::spin_mutex::scoped_lock lock(mutex);
       copyOfFunction.mergeIntoMasterThread();
-    }
+    },
+	tbb::simple_partitioner()
   );
 }
-*/
 
 
 /*
