@@ -115,6 +115,8 @@ namespace tarch {
 #include "tarch/multicore/tbb/Loop.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Loop.h"
+#elif SharedCPP
+#include "tarch/multicore/cpp/Loop.h"
 #else
 /**
  * Basically is a for loop that can be parallelised.

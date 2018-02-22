@@ -22,6 +22,8 @@ namespace tarch {
 #include "tarch/multicore/tbb/Core.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Core.h"
+#elif SharedCPP
+#include "tarch/multicore/cpp/Core.h"
 #else
 
 

@@ -3,7 +3,7 @@
 #ifndef _TARCH_MULTICORE_DEFINITIONS_H_
 #define _TARCH_MULTICORE_DEFINITIONS_H_
 
-#if defined(SharedOMP) || defined(SharedTBB)
+#if defined(SharedOMP) || defined(SharedTBB) || defined(SharedCPP)
   #define SharedMemoryParallelisation
 #endif
 

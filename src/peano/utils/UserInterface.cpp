@@ -15,6 +15,8 @@
 #include "tarch/multicore/tbb/Core.h"
 #elif SharedOMP
 #include "tarch/multicore/omp/Core.h"
+#elif SharedCPP
+#include "tarch/multicore/omp/Core.h"
 #endif
 
 
@@ -185,7 +187,7 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
   int numberOfProcesses = 1;
   #endif
 
-  #if defined(SharedTBB) || defined(SharedOMP)
+  #if defined(SharedMemoryParallelisation)
   int numberOfThreads = tarch::multicore::Core::getInstance().getNumberOfThreads();
   #else
   int numberOfThreads = 1;
@@ -195,6 +197,8 @@ void peano::utils::UserInterface::writeHeader(const std::string& experimentName)
   buildString << "build: ";
   #if defined(SharedTBB)
   buildString << "multicore=tbb ";
+  #elif defined(SharedCPP)
+  buildString << "multicore=c++14 ";
   #elif defined(SharedOMP)
   buildString << "multicore=openMP ";
   #endif

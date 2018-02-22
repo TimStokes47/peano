@@ -91,9 +91,7 @@ void peano::datatraversal::tests::dForLoopTest::testCreateRangesVectorGrainSize1
 
 
 void peano::datatraversal::tests::dForLoopTest::testParallelReduction() {
-  //#if defined(Dim2)  && (defined(SharedTBB) || defined(SharedOMP))
 /*
-  #if defined(Dim2)  && (defined(SharedTBB) || defined(TBBInvade))
   tarch::la::Vector<DIMENSIONS,int> range;
   range(0) = 4;
   range(1) = 4;
