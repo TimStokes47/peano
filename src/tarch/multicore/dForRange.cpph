@@ -50,19 +50,41 @@ tarch::la::Vector<D,int> tarch::multicore::dForRange<D>::operator()(const tarch:
 
 template <int D>
 std::vector< tarch::multicore::dForRange<D> >  tarch::multicore::dForRange<D>::getMinimalRanges() const {
-  std::vector< dForRange<D> > result( tarch::la::volume(_range)/_grainSize+1);
-  result.clear();
-  result.push_back(*this);
-
-  int i=0;
-  while (i<static_cast<int>(result.size())) {
-	while ( result[i].isDivisible() ) {
-      result.push_back( result[i].split() );
-	}
-    i++;
+  //if ( (_grainSize==1) and (D==1) ) {
+/*
+    std::vector< dForRange<1> > result( tarch::la::volume(_range) );
+    for (int i=0; i<tarch::la::volume(_range); i++) {
+      result[i] = dForRange<1>(i,1,1,_interleaving);
+    }
+    return result;
   }
+  else {
+*/
+    std::vector< dForRange<D> > result( tarch::la::volume(_range)/_grainSize+1);
+    result.clear();
+    result.push_back(*this);
+    int i=0;
+    while (i<static_cast<int>(result.size())) {
+      while ( result[i].isDivisible() ) {
+        result.push_back( result[i].split() );
+      }
+      i++;
+    }
 
-  return result;
+    return result;
+//  }
+}
+
+
+template <int D>
+std::string tarch::multicore::dForRange<D>::toString( const std::vector< dForRange<D> >& ranges ) {
+  std::ostringstream msg;
+  msg << "(";
+  for (auto p: ranges) {
+    msg << p.toString();
+  }
+  msg << ")";
+  return msg.str();
 }
 
 
@@ -70,12 +92,14 @@ template <int D>
 tarch::multicore::dForRange<D>   tarch::multicore::dForRange<D>::split() {
   tarch::multicore::dForRange<D> result(*this);
 
+  // actual shrink
   int splitAlongDimension = tarch::la::indexMax(_range);
   int oldRangeSizeAlongDimension = _range(splitAlongDimension);
   _range(splitAlongDimension) =  oldRangeSizeAlongDimension / 2;
 
-  result._range(splitAlongDimension)  = oldRangeSizeAlongDimension - _range(splitAlongDimension);
-  result._offset(splitAlongDimension) = result._offset(splitAlongDimension) + oldRangeSizeAlongDimension - result._range(splitAlongDimension);
+  // move
+  result._range(splitAlongDimension)  = oldRangeSizeAlongDimension   - _range(splitAlongDimension);
+  result._offset(splitAlongDimension) = _offset(splitAlongDimension) + _range(splitAlongDimension) * _interleaving;
 
   return result;
 }
@@ -103,7 +127,7 @@ bool tarch::multicore::dForRange<D>::isDivisible() const {
 template <int D>
 std::string tarch::multicore::dForRange<D>::toString() const {
   std::ostringstream msg;
-  msg << "(range:" << _range << ",offset:" << _offset << ",grain-size:" << _grainSize << ")";
+  msg << "(range:" << _range << ",offset:" << _offset << ",grain-size:" << _grainSize << ",interleaving=" << _interleaving << ")";
   return msg.str();
 }
 

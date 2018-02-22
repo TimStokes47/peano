@@ -14,8 +14,12 @@
 
 \noindent
 Prior to any parallelisation or tuning discussion, I want to emphasise that it
-usually makes sense first of all to have a how Peano is performing from a grid
-point of view. For this, the framework comes along with a rather useful script.
+usually makes sense first of all to have an idea how Peano is performing from a
+grid point of view. For this, the framework comes along with a rather useful script.
+From hereon, I recommend to use some state-of-the-art performance analysis tool
+to translate the application point of view into a more technical context.
+
+\subsection*{Peano's built-in performance analysis tools}
 
 \begin{itemize}
   \item Recompile your code with \texttt{-DPerformanceAnalysis}. For the
@@ -82,7 +86,7 @@ Most generated graphs also are available in an increased resolution.
 These files have a \texttt{.large.} inserted into their extension.
 
 
-\subsection*{Study phases of your code}
+\subsection*{Study only particular phases of your code}
 
 If you run the whole performance analysis over a longer Peano simultion, the
 amount of data produced quickly becomes massive and hard to handle, and the generation of
@@ -140,5 +144,22 @@ code, please use
 scorep --noonline-access --nocompiler --mpp=mpi  --thread=none --user mpicxx
 scorep --noonline-access --nocompiler --mpp=none  --thread=none --user icpc
 \end{code}
+
+
+\subsection*{Intel's VTune Amplifier}
+
+Intel's VTune Amplifier sometimes yields data that is very hard to interpret if
+you use TBB, our preferred multithreading code base. 
+It is convenient to translate the code with \linebreak
+\texttt{-DTBB\_USE\_THREADING\_TOOLS} and thus to enrich the executable (also
+ensure \texttt{-g} is enabled such that the profiler can map insight onto code
+fragments.
+
+
+TBB's work stealing traditionally results in enormous spin times. To clarify
+where these guys are coming from, you should recompile with \texttt{-debug all}.
+However, this effectively switches off the optimisation. It is therefore only to
+be used to dive into performance issues you have identified with your optimised
+code.
 
 

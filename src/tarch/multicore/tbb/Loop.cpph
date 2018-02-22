@@ -2,11 +2,108 @@
 #include <tbb/parallel_reduce.h>
 
 
-#include "../Loop.cpph"
+
+#include <bitset>
+
+
 
 /*
+ * Per default, TBB versions greater than TBB 2.2 do use the auto partitioner.
+ * An auto partitioner is similar to OpenMP's guided: It splits up the problem
+ * such that every thread is busy. Whenever work is stolen, the algorithm tries
+ * to subdivide is further.
+ *
+ * We found that this is inefficient for Peano's applications - notably as we
+ * deploy the responsibility to find good grain sizes (and thus minimalistic
+ * overheads with good balancing) to the oracles.
+ *
+ * A static_partitioner() divides, if possible, all ranges such that all
+ * threads are busy. As a consequence, work stealing is indirectly disabled. We
+ * found this variant to scale better than the auto strategy once we have found
+ * proper grain sizes.
+ *
+ * The optimal strategy however seems to be the simple_partitioner which splits
+ * up each range until ranges cannot be divided further. As a result, work is
+ * stolen, but no further range subdivision is happening.
+ */
+
+template <typename F>
+void tarch::multicore::parallelReduce(
+  const tarch::multicore::dForRange<3>&  range,
+  F&                                     function
+) {
+  parallelFor(range, function);
+}
 
 
+template <typename F>
+void tarch::multicore::parallelReduce(
+  const tarch::multicore::dForRange<4>&  range,
+  F&                                     function
+) {
+  parallelFor(range, function);
+}
+
+
+template <typename F>
+void tarch::multicore::parallelFor(
+  const tarch::multicore::dForRange<1>&  range,
+  F&                                     function
+) {
+  tarch::la::Vector<1,int> loc;
+  for (int i0=0; i0<range.getRange()(0); i0++) {
+    loc(0) = i0;
+    function(range(loc));
+  }
+}
+
+
+template <typename F>
+void tarch::multicore::parallelFor(
+  const tarch::multicore::dForRange<3>&  range,
+  F&                                     function
+) {
+  tarch::la::Vector<3,int> loc;
+  for (int i0=0; i0<range.getRange()(0); i0++)
+  for (int i1=0; i1<range.getRange()(1); i1++)
+  for (int i2=0; i2<range.getRange()(2); i2++) {
+    loc(0) = i0;
+    loc(1) = i1;
+    loc(2) = i2;
+    function(range(loc));
+  }
+}
+
+
+template <typename F>
+void tarch::multicore::parallelFor(
+  const tarch::multicore::dForRange<4>&  range,
+  F&                                     function
+) {
+  tarch::la::Vector<4,int> loc;
+  for (int i0=0; i0<range.getRange()(0); i0++)
+  for (int i1=0; i1<range.getRange()(1); i1++)
+  for (int i2=0; i2<range.getRange()(2); i2++)
+  for (int i3=0; i3<range.getRange()(3); i3++) {
+    loc(0) = i0;
+    loc(1) = i1;
+    loc(2) = i2;
+    loc(3) = i3;
+    function(range(loc));
+  }
+}
+
+
+template <typename F>
+void tarch::multicore::parallelReduce(
+  const tarch::multicore::dForRange<1>&  range,
+  F&                                     function
+) {
+  parallelFor(range, function);
+}
+
+
+/*
 template <typename F>
 void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<1>&  range,
@@ -32,6 +129,8 @@ void tarch::multicore::parallelReduce(
     }
   );
 }
+*/
+
 
 
 template <typename F>
@@ -42,27 +141,44 @@ void tarch::multicore::parallelReduce(
   std::vector< dForRange<2> > ranges = range.getMinimalRanges();
   tbb::spin_mutex mutex;
 
+  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
+
+  #if defined(Asserts)
+  std::bitset<256> hits[256];
+  for (int i0=0; i0<range.getRange()(0); i0++)
+  for (int i1=range.getRange()(1)-1; i1>=0; i1--) {
+    hits[i0][i1] = false;
+  }
+  #endif
+
   tbb::parallel_for(
-    tbb::blocked_range<size_t>(0,ranges.size()),
+    tbb::blocked_range<size_t>(0,ranges.size(),1),
     [&](const tbb::blocked_range<size_t>& r) {
-	  F copyOfFunction(function);
+      F copyOfFunction(function);
       for(size_t i=r.begin(); i!=r.end(); ++i) {
         for (int i0=0; i0<ranges[i].getRange()(0); i0++)
         for (int i1=0; i1<ranges[i].getRange()(1); i1++) {
        	  tarch::la::Vector<2,int> loc;
-          loc(0) = i0;
-          loc(1) = i1;
+          loc = i0, i1;
           copyOfFunction(ranges[i](loc));
+
+          #if defined(Asserts)
+          assertion4( !hits[ranges[i](loc)(0)][ranges[i](loc)(1)], i0, i1, loc, ranges[i].toString() );
+          hits[ranges[i](loc)(0)][ranges[i](loc)(1)] = true;
+          #endif
         }
       }
 
       tbb::spin_mutex::scoped_lock lock(mutex);
       copyOfFunction.mergeIntoMasterThread();
-    }
+    },
+	tbb::simple_partitioner()
   );
 }
 
 
+
+/*
 template <typename F>
 void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<3>&  range,
@@ -125,27 +241,10 @@ void tarch::multicore::parallelReduce(
     }
   );
 }
+*/
 
 
-
-*
- * Per default, TBB versions greater than TBB 2.2 do use the auto partitioner.
- * An auto partitioner is similar to OpenMP's guided: It splits up the problem
- * such that every thread is busy. Whenever work is stolen, the algorithm tries
- * to subdivide is further.
- *
- * We found that this is inefficient for Peano's applications - notably as we
- * deploy the responsibility to find good grain sizes (and thus minimalistic
- * overheads with good balancing) to the oracles.
- *
- * A static_partitioner() divides, if possible, all ranges such that all
- * threads are busy. As a consequence, work stealing is indirectly disabled. We
- * found this variant to scale better than the auto strategy once we have found
- * proper grain sizes.
- *
- * The optimal strategy however seems to be the simple_partitioner which splits
- * up each range until ranges cannot be divided further. As a result, work is
- * stolen, but no further range subdivision is happening.
+/*
 
 template <typename F>
 void tarch::multicore::parallelFor(
@@ -168,6 +267,7 @@ void tarch::multicore::parallelFor(
 	tbb::simple_partitioner()
   );
 }
+*/
 
 
 template <typename F>
@@ -175,10 +275,11 @@ void tarch::multicore::parallelFor(
   const tarch::multicore::dForRange<2>&  range,
   F&                                     function
 ) {
+/*
   std::vector< dForRange<2> > ranges = range.getMinimalRanges();
 
   tbb::parallel_for(
-    tbb::blocked_range<size_t>(0,ranges.size()),
+    tbb::blocked_range<size_t>(0,ranges.size(),1),
     [&](const tbb::blocked_range<size_t>& r) {
       for(size_t i=r.begin(); i!=r.end(); ++i) {
         for (int i0=0; i0<ranges[i].getRange()(0); i0++)
@@ -192,8 +293,21 @@ void tarch::multicore::parallelFor(
     },
 	tbb::simple_partitioner()
   );
+*/
+
+
+  tarch::la::Vector<2,int> loc;
+  for (int i0=0; i0<range.getRange()(0); i0++)
+  for (int i1=0; i1<range.getRange()(1); i1++) {
+    loc(0) = i0;
+    loc(1) = i1;
+    function(range(loc));
+  }
 }
 
+
+
+/*
 
 template <typename F>
 void tarch::multicore::parallelFor(

@@ -352,6 +352,8 @@ void tarch::multicore::jobs::spawnAndWait(
 
   return;
 
+  // @todo Das geht schon mal schief
+
   tbb::atomic<int>  semaphore(3);
 
   internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 );

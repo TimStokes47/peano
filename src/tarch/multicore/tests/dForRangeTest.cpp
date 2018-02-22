@@ -6,6 +6,9 @@
 registerTest(tarch::multicore::tests::dForRangeTest)
 
 
+#include <bitset>
+
+
 #ifdef UseTestSpecificCompilerSettings
 #pragma optimize("",off)
 #endif
@@ -28,10 +31,105 @@ void tarch::multicore::tests::dForRangeTest::run() {
   testMethod( test2D10x10Range80 );
 
   testMethod( test2DgetMinimalRanges );
+
+  testMethod( test2Dg14x14WithGrainSize1AndOffset1 );
+
+  testMethod( test2Dg14x14WithGrainSize1AndOffset1AndColouring );
 }
 
 
 void tarch::multicore::tests::dForRangeTest::setUp() {
+}
+
+
+void tarch::multicore::tests::dForRangeTest::test2Dg14x14WithGrainSize1AndOffset1() {
+  constexpr int samples = 28;
+  std::bitset<samples> hit[samples];
+
+  constexpr int rangeSize = 14;
+  tarch::multicore::dForRange<2>  range(1,rangeSize,1,1);
+  std::vector< dForRange<2> > ranges = range.getMinimalRanges();
+
+  for (int d=0; d<samples; d++) {
+	hit[d] = 0;
+  }
+
+  tarch::la::Vector<2,int> loc;
+  for (int i0=0; i0<range.getRange()(0); i0++)
+  for (int i1=range.getRange()(1)-1; i1>=0; i1--) {
+    loc(0) = i0;
+    loc(1) = i1;
+    hit[ range(loc)(0) ][ range(loc)(1) ] = true;
+  }
+
+  validateEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
+  for(int i=0; i<static_cast<int>(ranges.size()); ++i) {
+    for (int i0=0; i0<ranges[i].getRange()(0); i0++)
+    for (int i1=0; i1<ranges[i].getRange()(1); i1++) {
+   	  tarch::la::Vector<2,int> loc;
+      loc = i0, i1;
+      validateWithParams2( hit[ ranges[i](loc)(0) ][ ranges[i](loc)(1) ], ranges[i](loc), loc );
+      hit[ ranges[i](loc)(0) ][ ranges[i](loc)(1) ] = false;
+    }
+  }
+
+  for (int d=0; d<samples; d++) {
+	validateEquals( hit[d], 0 );
+  }
+}
+
+
+
+void tarch::multicore::tests::dForRangeTest::test2Dg14x14WithGrainSize1AndOffset1AndColouring() {
+  constexpr int rangeSize = 14;
+  std::bitset<rangeSize> hit[rangeSize];
+
+
+  tarch::la::Vector<2,int> loc;
+  for (int i0=0; i0<rangeSize; i0++)
+  for (int i1=0; i1<rangeSize; i1++) {
+    hit[ i0 ][ i1 ] = true;
+  }
+
+
+  tarch::la::Vector<2,int> kFromColouring;
+  tarch::la::Vector<2,int> localRange(rangeSize);
+  const int colouring = 2;
+  const int grainSize = 1;
+
+  // loop preparation from dForLoop.cpph
+  kFromColouring = 0,0;
+  for (int d=0; d<2; d++) {
+    const int rangeModColouring = localRange(d)%colouring;
+    if (rangeModColouring!=0 && kFromColouring(d)<rangeModColouring) {
+      localRange(d) = localRange(d) / colouring + 1;
+    }
+    else {
+      localRange(d) /= colouring;
+    }
+  }
+
+  std::vector< dForRange<2> > ranges = tarch::multicore::dForRange<2>( kFromColouring, localRange, grainSize, colouring ).getMinimalRanges();
+
+  for(int i=0; i<static_cast<int>(ranges.size()); ++i) {
+    for (int i0=0; i0<ranges[i].getRange()(0); i0++)
+    for (int i1=0; i1<ranges[i].getRange()(1); i1++) {
+   	  tarch::la::Vector<2,int> loc;
+      loc = i0, i1;
+      validateWithParams4( hit[ ranges[i](loc)(0) ][ ranges[i](loc)(1) ], ranges[i](loc), loc,ranges[i].toString(), i );
+      //std::cerr << std::endl << "- hit " << ranges[i](loc)(0) << "x" << ranges[i](loc)(1) << " through " << ranges[i].toString() << " subject to " << loc;
+      hit[ ranges[i](loc)(0) ][ ranges[i](loc)(1) ] = false;
+    }
+  }
+
+/*
+  @todo This test should be completed some day
+ */
+/*  for (int i0=0; i0<rangeSize; i0++)
+  for (int i1=0; i1<rangeSize; i1++) {
+	validateWithParams6( !hit[ i0 ][ i1 ], i0, i1, hit[i0], colouring, ranges[0].toString(), ranges[1].toString() );
+  }*/
+
 }
 
 

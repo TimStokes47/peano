@@ -107,9 +107,24 @@ class tarch::multicore::dForRange {
     tarch::la::Vector<D,int> getOffset() const;
     tarch::la::Vector<D,int> getRange() const;
 
+    /**
+     * Tuple representation of attributes.
+     */
     std::string toString() const;
 
+    /**
+     * Takes the minimum grain size and splits up the current range into a set
+     * of ranges that all are as small as possible without harming the
+     * grain size (cmp to isDivisible()). The result is a vector, as a vector
+     * is essentially an array and thus can easily be traversed in parallel.
+     */
     std::vector< dForRange<D> >  getMinimalRanges() const;
+
+    /**
+     * Simple concatenation of dForRange toString() outputs with surrounding
+     * brackets. Often used to dump the output of getMinimalRanges().
+     */
+    static std::string toString( const std::vector< dForRange<D> >& ranges );
 };
 
 

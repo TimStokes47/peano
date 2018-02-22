@@ -27,6 +27,10 @@ class tarch::multicore::tests::dForRangeTest: public tarch::tests::TestCase {
     void test2D10x10Range80();
 
     void test2DgetMinimalRanges();
+
+    void test2Dg14x14WithGrainSize1AndOffset1();
+
+    void test2Dg14x14WithGrainSize1AndOffset1AndColouring();
   public:
     dForRangeTest();
     virtual ~dForRangeTest();
