@@ -381,6 +381,7 @@ void tarch::multicore::jobs::spawnAndWait(
   //        Would it work with class TBB constructs?
 
   while (semaphore>0) {
+	  // @todo nur einen bitte
     processJobs(jobClass0);
     processJobs(jobClass1);
     processJobs(jobClass2);
