@@ -414,12 +414,34 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass2,
   int                     jobClass3
 ) {
-	  job0();
-	  job1();
-	  job2();
-	  job3();
+  tbb::atomic<int>  semaphore(3);
+  tbb::task_group g;
 
-	  return;
+  g.run( [&]() { internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job3, semaphore, isTask3, jobClass3 ); });
+  g.wait();
+
+  #ifdef Asserts
+  int deadlockCounter = 0;
+  #endif
+  while (semaphore>0) {
+    g.run( [&]() { processJobs(jobClass0); });
+    g.run( [&]() { processJobs(jobClass1); });
+    g.run( [&]() { processJobs(jobClass2); });
+    g.run( [&]() { processJobs(jobClass3); });
+    g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    #ifdef Asserts
+    deadlockCounter++;
+    if (deadlockCounter>std::numeric_limits<int>::max()/2) {
+      static tarch::logging::Log _log( "tarch::multicore::jobs" );
+      logInfo( "spawnAndWait(...)", internal::report() );
+      deadlockCounter = 0;
+    }
+    #endif
+  }
+  g.wait();
 }
 
 
@@ -444,14 +466,36 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass3,
   int                     jobClass4
 ) {
-  job0();
-  job1();
-  job2();
-  job3();
-  job4();
+  tbb::atomic<int>  semaphore(3);
+  tbb::task_group g;
 
-  return;
+  g.run( [&]() { internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job3, semaphore, isTask3, jobClass3 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job4, semaphore, isTask4, jobClass4 ); });
+  g.wait();
 
+  #ifdef Asserts
+  int deadlockCounter = 0;
+  #endif
+  while (semaphore>0) {
+    g.run( [&]() { processJobs(jobClass0); });
+    g.run( [&]() { processJobs(jobClass1); });
+    g.run( [&]() { processJobs(jobClass2); });
+    g.run( [&]() { processJobs(jobClass3); });
+    g.run( [&]() { processJobs(jobClass4); });
+    g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    #ifdef Asserts
+    deadlockCounter++;
+    if (deadlockCounter>std::numeric_limits<int>::max()/2) {
+      static tarch::logging::Log _log( "tarch::multicore::jobs" );
+      logInfo( "spawnAndWait(...)", internal::report() );
+      deadlockCounter = 0;
+    }
+    #endif
+  }
+  g.wait();
 }
 
 
@@ -479,15 +523,38 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass4,
   int                     jobClass5
 ) {
-  job0();
-  job1();
-  job2();
-  job3();
-  job4();
-  job5();
+  tbb::atomic<int>  semaphore(3);
+  tbb::task_group g;
 
-  return;
+  g.run( [&]() { internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job3, semaphore, isTask3, jobClass3 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job4, semaphore, isTask4, jobClass4 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job5, semaphore, isTask5, jobClass5 ); });
+  g.wait();
 
+  #ifdef Asserts
+  int deadlockCounter = 0;
+  #endif
+  while (semaphore>0) {
+    g.run( [&]() { processJobs(jobClass0); });
+    g.run( [&]() { processJobs(jobClass1); });
+    g.run( [&]() { processJobs(jobClass2); });
+    g.run( [&]() { processJobs(jobClass3); });
+    g.run( [&]() { processJobs(jobClass4); });
+    g.run( [&]() { processJobs(jobClass5); });
+    g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    #ifdef Asserts
+    deadlockCounter++;
+    if (deadlockCounter>std::numeric_limits<int>::max()/2) {
+      static tarch::logging::Log _log( "tarch::multicore::jobs" );
+      logInfo( "spawnAndWait(...)", internal::report() );
+      deadlockCounter = 0;
+    }
+    #endif
+  }
+  g.wait();
 }
 
 
