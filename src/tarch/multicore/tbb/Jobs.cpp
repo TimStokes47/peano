@@ -182,7 +182,19 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
  */
 bool tarch::multicore::jobs::processBackgroundJobs() {
   const int numberOfBackgroundJobs = internal::_backgroundJobs.unsafe_size() + internal::_numberOfRunningBackgroundJobConsumerTasks + 1;
-  return internal::processNumberOfBackgroundJobs(numberOfBackgroundJobs);
+  const int jobsPerThread          = std::max(
+    16, numberOfBackgroundJobs / tarch::multicore::Core::getInstance().getNumberOfThreads()
+  );
+
+  tbb::task_group g;
+  bool            result=false;
+  for (int i=0; i<tarch::multicore::Core::getInstance().getNumberOfThreads(); i++) {
+    g.run( [&]() { result|=internal::processNumberOfBackgroundJobs(jobsPerThread); });
+  }
+  g.wait();
+
+  return result;
+//  return internal::processNumberOfBackgroundJobs(numberOfBackgroundJobs);
 }
 
 
@@ -383,7 +395,7 @@ void tarch::multicore::jobs::spawnAndWait(
     g.run( [&]() { processJobs(jobClass0); });
     g.run( [&]() { processJobs(jobClass1); });
     g.run( [&]() { processJobs(jobClass2); });
-    g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    //g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>std::numeric_limits<int>::max()/2) {
@@ -431,7 +443,7 @@ void tarch::multicore::jobs::spawnAndWait(
     g.run( [&]() { processJobs(jobClass1); });
     g.run( [&]() { processJobs(jobClass2); });
     g.run( [&]() { processJobs(jobClass3); });
-    g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    //g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>std::numeric_limits<int>::max()/2) {
@@ -485,7 +497,7 @@ void tarch::multicore::jobs::spawnAndWait(
     g.run( [&]() { processJobs(jobClass2); });
     g.run( [&]() { processJobs(jobClass3); });
     g.run( [&]() { processJobs(jobClass4); });
-    g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    //g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>std::numeric_limits<int>::max()/2) {
@@ -544,7 +556,7 @@ void tarch::multicore::jobs::spawnAndWait(
     g.run( [&]() { processJobs(jobClass3); });
     g.run( [&]() { processJobs(jobClass4); });
     g.run( [&]() { processJobs(jobClass5); });
-    g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    //g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>std::numeric_limits<int>::max()/2) {
