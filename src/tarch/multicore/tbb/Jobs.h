@@ -229,6 +229,12 @@ namespace tarch {
             BackgroundJobConsumerTask(const BackgroundJobConsumerTask& copy);
             tbb::task* execute();
         };
+
+        /**
+         * Implementation details: The queue seems to need an & traversal
+         * operator, otherwise I have experienced deadlocks.
+         */
+        std::string report();
       }
     }
   }

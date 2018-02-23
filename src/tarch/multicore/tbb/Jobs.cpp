@@ -29,6 +29,7 @@ tarch::multicore::jobs::internal::JobMap                       tarch::multicore:
 //tbb::task_group_context                                        tarch::multicore::jobs::internal::BackgroundJobConsumerTask::backgroundTaskContext;
 static tbb::task_group_context  backgroundTaskContext;
 //static tbb::task_group  backgroundTaskContext;
+static tbb::task_group_context  importantTaskContext;
 
 
 tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsumerTask(int maxJobs):
@@ -44,7 +45,7 @@ tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsum
 void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
   _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(1);
   BackgroundJobConsumerTask* tbbTask = new (tbb::task::allocate_root(backgroundTaskContext)) BackgroundJobConsumerTask(
-    std::max( 1, static_cast<int>(_backgroundJobs.unsafe_size())/2 )
+    std::max( 1, static_cast<int>(_backgroundJobs.unsafe_size())/tarch::multicore::Core::getInstance().getNumberOfThreads() )
   );
   tbb::task::enqueue(*tbbTask);
   backgroundTaskContext.set_priority(tbb::priority_low);
@@ -57,7 +58,6 @@ tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute(
   _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
   if (!_backgroundJobs.empty()) {
     enqueue();
-	//recycle_as_continuation();
   }
   return nullptr;
 }
@@ -141,8 +141,11 @@ void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* job) {
       break;
     case BackgroundJobType::IsTaskAndRunAsSoonAsPossible:
       {
-        internal::TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root()) internal::TBBBackgroundJobWrapper(job);
-        tbb::task::spawn(*tbbTask);
+        internal::TBBBackgroundJobWrapper* tbbTask = new(tbb::task::allocate_root(importantTaskContext)) internal::TBBBackgroundJobWrapper(job);
+        // we may not use spawn as spawn relies on the current context and thus kills us if this context is already freed
+        //        tbb::task::spawn(*tbbTask);
+        tbb::task::enqueue(*tbbTask);
+        importantTaskContext.set_priority(tbb::priority_high);
       }
       break;
     case BackgroundJobType::BackgroundJob:
@@ -206,8 +209,8 @@ int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
 void tarch::multicore::jobs::spawn(Job*  job) {
   if ( job->isTask() ) {
     logDebug( "spawn(Job*)", "job is a task, so issue TBB task immediately that handles job" );
-    internal::TBBJobWrapper* tbbTask = new(tbb::task::allocate_root()) internal::TBBJobWrapper(job);
-    tbb::task::spawn(*tbbTask);
+    internal::TBBJobWrapper* tbbTask = new(tbb::task::allocate_root(importantTaskContext)) internal::TBBJobWrapper(job);
+    tbb::task::enqueue(*tbbTask);
   }
   else {
     internal::getJobQueue(job->getClass()).jobs.push(job);
@@ -300,13 +303,21 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass0,
   int                     jobClass1
 ) {
+
+/*
+  This version is serial and works
+  --------------------------------
+
   job0();
   job1();
+*/
 
-  return;
 
+/*
+   This version is parallel and makes TBB crash
+  ---------------------------------------------
 
-  tbb::atomic<int>  semaphore(2);
+   tbb::atomic<int>  semaphore(2);
   
   tbb::parallel_invoke(
     [&] () -> void {
@@ -316,8 +327,6 @@ void tarch::multicore::jobs::spawnAndWait(
     	internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 );
     }
   );
-
-
   while (semaphore>0) {
     tbb::parallel_invoke(
       [&] () -> void {
@@ -327,6 +336,19 @@ void tarch::multicore::jobs::spawnAndWait(
         processJobs(jobClass1);
       }
     );
+  }*/
+
+  tbb::atomic<int>  semaphore(2);
+  tbb::task_group g;
+
+  g.run( [&]() { internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 ); });
+  g.wait();
+
+  while (semaphore>0) {
+    g.run( [&]() { processJobs(jobClass0); });
+    g.run( [&]() { processJobs(jobClass1); });
+    g.wait();
   }
 }
 
@@ -346,59 +368,32 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass1,
   int                     jobClass2
 ) {
-  job0();
-  job1();
-  job2();
-
-  return;
-
-  // @todo Das geht schon mal schief
-
   tbb::atomic<int>  semaphore(3);
+  tbb::task_group g;
 
-  internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 );
-  internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 );
-  internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 );
+  g.run( [&]() { internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 ); });
+  g.run( [&]() { internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 ); });
+  g.wait();
 
-
-/*
-  tbb::parallel_invoke(
-    [&] () -> void {
-	  internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 );
-    }
-  );
-*/
-
-
-  // @todo  Does it work without Lambda expressions
-  //        Is job class always positive
-  //        Would it work with class TBB constructs?
-
+  #ifdef Asserts
+  int deadlockCounter = 0;
+  #endif
   while (semaphore>0) {
-	  // @todo nur einen bitte
-    processJobs(jobClass0);
-    processJobs(jobClass1);
-    processJobs(jobClass2);
-/*
-    tbb::parallel_invoke(
-      [&] () -> void {
-        processJobs(jobClass0);
-      },
-      [&] () -> void {
-        processJobs(jobClass1);
-      },
-      [&] () -> void {
-        processJobs(jobClass2);
-      }
-    );
-*/
+    g.run( [&]() { processJobs(jobClass0); });
+    g.run( [&]() { processJobs(jobClass1); });
+    g.run( [&]() { processJobs(jobClass2); });
+    g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    #ifdef Asserts
+    deadlockCounter++;
+    if (deadlockCounter>std::numeric_limits<int>::max()/2) {
+      static tarch::logging::Log _log( "tarch::multicore::jobs" );
+      logInfo( "spawnAndWait(...)", internal::report() );
+      deadlockCounter = 0;
+    }
+    #endif
   }
+  g.wait();
 }
 
 
@@ -419,47 +414,12 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass2,
   int                     jobClass3
 ) {
-  job0();
-  job1();
-  job2();
-  job3();
+	  job0();
+	  job1();
+	  job2();
+	  job3();
 
-  return;
-
-
-  tbb::atomic<int>  semaphore(4);
-  
-  tbb::parallel_invoke(
-    [&] () -> void {
-	  internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job3, semaphore, isTask3, jobClass3 );
-    }
-  );
-  
-  while (semaphore>0) {
-    tbb::parallel_invoke(
-      [&] () -> void {
-        processJobs(jobClass0);
-      },
-      [&] () -> void {
-        processJobs(jobClass1);
-      },
-      [&] () -> void {
-        processJobs(jobClass2);
-      },
-      [&] () -> void {
-        processJobs(jobClass3);
-      }
-    );
-  }
+	  return;
 }
 
 
@@ -468,21 +428,21 @@ void tarch::multicore::jobs::spawnAndWait(
  * @see spawnBlockingJob
  */
 void tarch::multicore::jobs::spawnAndWait(
-  std::function<void()>& job0,
-  std::function<void()>& job1,
-  std::function<void()>& job2,
-  std::function<void()>& job3,
-  std::function<void()>& job4,
-	 bool                    isTask0,
-	 bool                    isTask1,
-	 bool                    isTask2,
-	 bool                    isTask3,
-	 bool                    isTask4,
-	 int                     jobClass0,
-	 int                     jobClass1,
-	 int                     jobClass2,
-	 int                     jobClass3,
-	 int                     jobClass4
+  std::function<void()>&  job0,
+  std::function<void()>&  job1,
+  std::function<void()>&  job2,
+  std::function<void()>&  job3,
+  std::function<void()>&  job4,
+  bool                    isTask0,
+  bool                    isTask1,
+  bool                    isTask2,
+  bool                    isTask3,
+  bool                    isTask4,
+  int                     jobClass0,
+  int                     jobClass1,
+  int                     jobClass2,
+  int                     jobClass3,
+  int                     jobClass4
 ) {
   job0();
   job1();
@@ -492,47 +452,6 @@ void tarch::multicore::jobs::spawnAndWait(
 
   return;
 
-
-  tbb::atomic<int>  semaphore(5);
-  
-  tbb::parallel_invoke(
-    [&] () -> void {
-	  internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job3, semaphore, isTask3, jobClass3 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job4, semaphore, isTask4, jobClass4 );
-    }
-  );
-  
-
-  while (semaphore>0) {
-    tbb::parallel_invoke(
-      [&] () -> void {
-        processJobs(jobClass0);
-      },
-      [&] () -> void {
-        processJobs(jobClass1);
-      },
-      [&] () -> void {
-        processJobs(jobClass2);
-      },
-      [&] () -> void {
-        processJobs(jobClass3);
-      },
-      [&] () -> void {
-        processJobs(jobClass4);
-      }
-    );
-  }
 }
 
 
@@ -569,53 +488,21 @@ void tarch::multicore::jobs::spawnAndWait(
 
   return;
 
-
-  tbb::atomic<int>  semaphore(6);
-  
-  tbb::parallel_invoke(
-    [&] () -> void {
-	  internal::spawnBlockingJob( job0, semaphore, isTask0, jobClass0 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job1, semaphore, isTask1, jobClass1 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job2, semaphore, isTask2, jobClass2 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job3, semaphore, isTask3, jobClass3 );
-    },
-    [&] () -> void {
-    	internal::spawnBlockingJob( job4, semaphore, isTask4, jobClass4 );
-    },
-    [&] () -> void {
-      internal::spawnBlockingJob( job5, semaphore, isTask5, jobClass5 );
-    }
-  );
-  
-  while (semaphore>0) {
-    tbb::parallel_invoke(
-      [&] () -> void {
-        processJobs(jobClass0);
-      },
-      [&] () -> void {
-        processJobs(jobClass1);
-      },
-      [&] () -> void {
-        processJobs(jobClass2);
-      },
-      [&] () -> void {
-        processJobs(jobClass3);
-      },
-      [&] () -> void {
-        processJobs(jobClass4);
-      },
-      [&] () -> void {
-        processJobs(jobClass5);
-      }
-    );
-  }
 }
 
+
+std::string tarch::multicore::jobs::internal::report() {
+  std::ostringstream msg;
+  msg << "job-system-status: queued-background-jobs=" << _backgroundJobs.unsafe_size()
+	  << ", no-of-running-bg-consumer-tasks=" << _numberOfRunningBackgroundJobConsumerTasks;
+  for (auto& p: _pendingJobs) {
+	msg << ",queue[" << p.first
+        << "]=" << p.second.jobs.unsafe_size() << " job(s)";
+  }
+  typedef tbb::concurrent_hash_map< int, JobQueue >  JobMap;
+  extern JobMap     _pendingJobs;
+
+  return msg.str();
+}
 
 #endif
