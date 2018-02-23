@@ -27,9 +27,9 @@ tarch::multicore::jobs::internal::JobMap                       tarch::multicore:
 // These task groups have to be static inside a cpp file.
 //
 //tbb::task_group_context                                        tarch::multicore::jobs::internal::BackgroundJobConsumerTask::backgroundTaskContext;
-static tbb::task_group_context  backgroundTaskContext;
+static tbb::task_group_context  backgroundTaskContext(tbb::task_group_context::isolated);
 //static tbb::task_group  backgroundTaskContext;
-static tbb::task_group_context  importantTaskContext;
+static tbb::task_group_context  importantTaskContext(tbb::task_group_context::isolated);
 
 
 tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsumerTask(int maxJobs):
