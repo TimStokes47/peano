@@ -43,7 +43,7 @@ namespace tarch {
         extern JobMap     _pendingJobs;
 
         constexpr int BackgroundJobsJobClassNumber = -1;
-        constexpr int MinimalNumberOfJobsPerBackgroundConsumerRun = 16;
+        constexpr int MinimalNumberOfJobsPerBackgroundConsumerRun = 4;
 
         extern tarch::logging::Log _log;
 

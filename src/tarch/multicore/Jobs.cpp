@@ -11,7 +11,7 @@ int tarch::multicore::jobs::Job::_maxNumberOfRunningBackgroundThreads( std::thre
 
 
 void tarch::multicore::jobs::Job::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {
-  assertion(maxNumberOfRunningBackgroundThreads>=ProcessNormalBackgroundJobsImmediately);
+  assertion(maxNumberOfRunningBackgroundThreads==DontUseAnyBackgroundJobs || maxNumberOfRunningBackgroundThreads>=1);
   _maxNumberOfRunningBackgroundThreads = maxNumberOfRunningBackgroundThreads;
 }
 
