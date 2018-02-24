@@ -28,12 +28,6 @@ namespace tarch {
         extern tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks;
 
         /**
-         * This queue holds jobs that should be processed in the background. Consumer
-         * tasks then read jobs from this queue and process them.
-         */
-        extern tbb::concurrent_queue<tarch::multicore::jobs::BackgroundJob*>  _backgroundJobs;
-
-        /**
          * Work around for future versions where I might want to augment each
          * individual job queue.
          */
@@ -48,6 +42,8 @@ namespace tarch {
         typedef tbb::concurrent_hash_map< int, JobQueue >  JobMap;
         extern JobMap     _pendingJobs;
 
+        constexpr int BackgroundJobsJobClassNumber = -1;
+        constexpr int MinimalNumberOfJobsPerBackgroundConsumerRun = 16;
 
         extern tarch::logging::Log _log;
 
@@ -60,58 +56,62 @@ namespace tarch {
         JobQueue& getJobQueue( int jobClass );
 
         /**
-         * This is a task which consumes background jobs, as it invokes
-         * processJobs(). It is tied to one particular job
-         * class.
-         */
-        class JobConsumerTask: public tbb::task {
-          private:
-            const int   _jobClass;
-            const bool  _checkOtherJobClassesToo;
-          public:
-            JobConsumerTask(int jobClass, bool checkOtherJobClassesToo):
-              _jobClass(jobClass),
-              _checkOtherJobClassesToo(checkOtherJobClassesToo) {
-            }
-
-
-            tbb::task* execute() {
-              tarch::multicore::jobs::processJobs(_jobClass);
-              return nullptr;
-            }
-        };
-
-        /**
          * The spawn and wait routines fire their job and then have to wait for all
          * jobs to be processed. They do this through an integer atomic that they
          * count down to zero, i.e. the atomic stores how many jobs are still
          * pending.
          */
-        class JobWithoutCopyOfFunctorAndSemaphore: public tarch::multicore::jobs::Job {
+       class JobWithoutCopyOfFunctorAndSemaphore: public tarch::multicore::jobs::Job {
           private:
-            std::function<void()>&   _functor;
+            std::function<bool()>&   _functor;
             tbb::atomic<int>&        _semaphore;
           public:
-            JobWithoutCopyOfFunctorAndSemaphore(std::function<void()>& functor, tbb::atomic<int>& semaphore, bool isTask, int jobClass ):
-             Job(isTask,jobClass),
+            JobWithoutCopyOfFunctorAndSemaphore(std::function<bool()>& functor, JobType jobType, int jobClass, tbb::atomic<int>& semaphore ):
+             Job(jobType,jobClass),
              _functor(functor),
              _semaphore(semaphore) {
             }
 
-            void run() override {
-              _functor();
+            bool run() override {
+              bool result = _functor();
               #ifdef Asserts
-              int result = _semaphore.fetch_and_add(-1);
-              assertion( result>=1 );
+              int semaphoreValue = _semaphore.fetch_and_add(-1);
+              assertion( semaphoreValue>=1 );
               #else
               _semaphore.fetch_and_add(-1);
               #endif
+              return result;
             }
 
             virtual ~JobWithoutCopyOfFunctorAndSemaphore() {}
         };
 
-        /**
+       class JobWithCopyOfFunctorAndSemaphore: public tarch::multicore::jobs::Job {
+          private:
+            std::function<bool()>   _functor;
+            tbb::atomic<int>&       _semaphore;
+          public:
+            JobWithCopyOfFunctorAndSemaphore(std::function<bool()>& functor, JobType jobType, int jobClass, tbb::atomic<int>& semaphore ):
+             Job(jobType,jobClass),
+             _functor(functor),
+             _semaphore(semaphore) {
+            }
+
+            bool run() override {
+              bool result = _functor();
+              #ifdef Asserts
+              int semaphoreValue = _semaphore.fetch_and_add(-1);
+              assertion( semaphoreValue>=1 );
+              #else
+              _semaphore.fetch_and_add(-1);
+              #endif
+              return result;
+            }
+
+            virtual ~JobWithCopyOfFunctorAndSemaphore() {}
+        };
+
+       /**
          * Maps one job onto a TBB task. Is used if Peano's job component is asked
          * to process a job and this job is a task, i.e. has no incoming and outgoing
          * dependencies. In this case, it wraps a TBB task around the job and spawns
@@ -127,28 +127,7 @@ namespace tarch {
             }
 
             tbb::task* execute() {
-              _job->run();
-              delete _job;
-              return nullptr;
-            }
-        };
-
-        /**
-         * Same as TBBJobWrapper but for background jobs. Usually, background jobs
-         * are enqueued and then processed one by one by a background job consumer.
-         * There are however background jobs which should be done asap. Those guys
-         * are directly mapped onto a TBB task.
-         */
-        class TBBBackgroundJobWrapper: public tbb::task {
-          private:
-            tarch::multicore::jobs::BackgroundJob*        _job;
-          public:
-       	  TBBBackgroundJobWrapper( tarch::multicore::jobs::BackgroundJob* job ):
-              _job(job) {
-            }
-
-            tbb::task* execute() {
-              _job->run();
+              while ( _job->run() ) {};
               delete _job;
               return nullptr;
             }
@@ -190,25 +169,11 @@ namespace tarch {
          * if one of these guys finds its queues empty, it terminates immediately.
          */
         void spawnBlockingJob(
-          std::function<void()>&  job,
-          tbb::atomic<int>&       semaphore,
-          bool                    isTask,
-          int                     jobClass
+          std::function<bool()>&  job,
+          JobType                 isTask,
+          int                     jobClass,
+          tbb::atomic<int>&       semaphore
         );
-
-
-        /**
-         * Process background tasks. If there is a large number of background tasks
-         * pending, we do not process all of them but only up to maxJobs. The reason
-         * is simple: background job consumer tasks are enqueued with low priority.
-         * Whenever TBB threads become idle, they steal those consumer tasks and thus
-         * start to process the jobs. However, these consumer tasks now should not do
-         * all of the jobs, as we otherwise run risk that the (more importan) actual
-         * implementation has to wait for the background jobs to be finished. Thus,
-         * this routine does only up to a certain number of jobs.
-         */
-        bool processNumberOfBackgroundJobs(int maxJobs);
-
 
 
         /**
@@ -224,9 +189,25 @@ namespace tarch {
             const int _maxJobs;
             BackgroundJobConsumerTask(int maxJobs);
           public:
+            static tbb::task_group_context  backgroundTaskContext;
+            
             static void enqueue();
 
             BackgroundJobConsumerTask(const BackgroundJobConsumerTask& copy);
+
+            /**
+             * Process _maxJobs from the background job queue. There are a few
+             * situations that can arise from this processing:
+             *
+             * - This has been the only background job, or we have been able to
+             *   reduce the number of background changes. This suggests that
+             *   there has been a large number of background jobs and we thus
+             *   immediately reschedule the consumer task again. It does not
+             *   make sense to use TBB's recycling mechanism as we want the
+             *   background consumption to be very low priority.
+             * - There have been lots of background consumer jobs. We termiante
+             *   this one.
+             */
             tbb::task* execute();
         };
 

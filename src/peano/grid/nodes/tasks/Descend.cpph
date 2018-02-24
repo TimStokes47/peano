@@ -277,12 +277,14 @@ bool peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::operator
       );
 
       peano::datatraversal::TaskSet runParallelTasks(
-        [&]() -> void {
+        [&]() -> bool {
           enterCells( level );
+          return false;
         },
-        [&]() -> void {
+        [&]() -> bool {
           touchVerticesFirstTime( level+1 );
           descend(level+1);
+          return false;
         },
 		peano::datatraversal::TaskSet::TaskType::TriggerEvents,
 		peano::datatraversal::TaskSet::TaskType::TriggerEvents,

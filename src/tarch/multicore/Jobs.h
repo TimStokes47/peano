@@ -5,6 +5,7 @@
 
 
 #include <functional>
+#include <limits>
 
 
 namespace tarch {
@@ -21,13 +22,13 @@ namespace tarch {
      * a task.
      */
     namespace jobs {
-       enum class BackgroundJobType {
-         BackgroundJob,
+       enum class JobType {
+         Job,
+         Task,
 		 /**
 		  * Task implies that there are no dependencies.
 		  */
-		 IsTaskAndRunAsSoonAsPossible,
-         LongRunningBackgroundJob,
+		 RunTaskAsSoonAsPossible,
 		 /**
 		  * It does not really make sense to specify this flag by a user.
 		  * But it is used internally if background threads are disabled.
@@ -40,32 +41,36 @@ namespace tarch {
         * deadlocks!
         */
        constexpr int DontUseAnyBackgroundJobs            = -1;
-       /*
-        * Standard background tasks are never enqueued. Instead, we process them
-        * immediately.
-        */
-       constexpr int ProcessNormalBackgroundJobsImmediately = -2;
 
        /**
-        * Abstract superclass of background jobs.
+        * Abstract super class for a job. Job class is an integer. A job may
+        * depend on input data from other jobs and may write out data to
+        * another job as well (through a shared memory region protected by
+        * a semaphore). However, it should never exchange information with
+        * another job of the same class.
         */
-       class BackgroundJob {
-         public:
-           const BackgroundJobType _jobType;
+       class Job {
+         private:
+           const JobType  _jobType;
+    	   const int      _jobClass;
 
-           static int  _maxNumberOfRunningBackgroundThreads;
+    	   friend void spawnBackgroundJob(Job* job);
+    	   friend bool processBackgroundJobs();
+
+    	   static int _maxNumberOfRunningBackgroundThreads;
          public:
-           BackgroundJob( BackgroundJobType jobType );
-           /**
-            * Background jobs can interrupt if they want. They then should
-            * return true telling the job system that they need to be rerun.
-            *
-            * @return Shall be rescheduled again
-            */
+    	   /**
+    	    * A task is a job without any dependencies on other jobs though it
+    	    * might have children. Tasks form a tree structure. Jobs may form
+    	    * a DAG.
+    	    */
+    	   Job( JobType jobType, int jobClass );
+
            virtual bool run() = 0;
-           virtual ~BackgroundJob();
-           bool isLongRunning() const;
-           BackgroundJobType getJobType() const;
+           virtual ~Job();
+           bool jobType() const;
+           int getClass() const;
+           JobType getJobType() const;
 
            /**
             * If jobs are enqueued, they are typically not processed
@@ -94,89 +99,6 @@ namespace tarch {
        };
 
        /**
-        * Frequently used helper class to write background jobs for functors.
-        */
-       class GenericBackgroundJobWithCopyOfFunctor: public BackgroundJob {
-         private:
-    	   /**
-            * See the outer class description for an explanation why this is an
-            * attribute, i.e. why we copy the functor here always.
-            */
-    	   std::function<bool()>   _functor;
-         public:
-           GenericBackgroundJobWithCopyOfFunctor(const std::function<bool()>& functor, BackgroundJobType jobType );
-
-           bool run() override;
-
-           virtual ~GenericBackgroundJobWithCopyOfFunctor();
-       };
-
-       template <typename T>
-       class GenericBackgroundWithPointer: public BackgroundJob {
-         private:
-    	   /**
-            * See the outer class description for an explanation why this is an
-            * attribute, i.e. why we copy the functor here always.
-            */
-    	   T*   _functor;
-         public:
-    	   GenericBackgroundWithPointer(T* functor, BackgroundJobType jobType ):
-    		  BackgroundJob(jobType),
-    		  _functor(functor) {
-    	   }
-
-           bool run() override {
-             return (*_functor)();
-           }
-
-           virtual ~GenericBackgroundWithPointer() {
-             delete _functor;
-           }
-       };
-
-       /**
-        * Ownership for pointer goes to multicore component, i.e. the multicore
-        * component deletes the task once it has finished.
-        */
-       void spawnBackgroundJob(BackgroundJob* task);
-
-       /**
-        * Work through the background tasks and let the caller know whether some
-        * tasks have been processed.
-        */
-       bool processBackgroundJobs();
-
-       /**
-        * This is the logical number of background tasks, i.e. how many things
-        * could, in theory, run the the background.
-        */
-       int getNumberOfWaitingBackgroundJobs();
-
-       /**
-        * Abstract super class for a job. Job class is an integer. A job may
-        * depend on input data from other jobs and may write out data to
-        * another job as well (through a shared memory region protected by
-        * a semaphore). However, it should never exchange information with
-        * another job of the same class.
-        */
-       class Job {
-         private:
-    	   const bool _isTask;
-    	   const int  _jobClass;
-         public:
-    	   /**
-    	    * A task is a job without any dependencies on other jobs though it
-    	    * might have children. Tasks form a tree structure. Jobs may form
-    	    * a DAG.
-    	    */
-    	   Job( bool isTask, int jobClass );
-           virtual void run() = 0;
-           virtual ~Job();
-           bool isTask() const;
-           int getClass() const;
-       };
-
-       /**
         * Frequently used implementation for job with a functor.
         */
        class GenericJobWithCopyOfFunctor: public Job {
@@ -185,11 +107,11 @@ namespace tarch {
             * See the outer class description for an explanation why this is an
             * attribute, i.e. why we copy the functor here always.
             */
-    	   std::function<void()>   _functor;
+    	   std::function<bool()>   _functor;
          public:
-           GenericJobWithCopyOfFunctor(const std::function<void()>& functor, bool isTask, int jobClass  );
+           GenericJobWithCopyOfFunctor( const std::function<bool()>& functor, JobType jobType, int jobClass );
 
-           void run() override;
+           bool run() override;
 
            virtual ~GenericJobWithCopyOfFunctor();
        };
@@ -203,11 +125,11 @@ namespace tarch {
             * See the outer class description for an explanation why this is an
             * attribute, i.e. why we copy the functor here always.
             */
-    	   std::function<void()>&   _functor;
+    	   std::function<bool()>&   _functor;
          public:
-           GenericJobWithoutCopyOfFunctor(std::function<void()>& functor, bool isTask, int jobClass );
+           GenericJobWithoutCopyOfFunctor(std::function<bool()>& functor, JobType jobType, int jobClass );
 
-           void run() override;
+           bool run() override;
 
            virtual ~GenericJobWithoutCopyOfFunctor();
        };
@@ -222,8 +144,8 @@ namespace tarch {
             */
     	   T*   _functor;
          public:
-    	   GenericJobWithPointer(T* functor, bool isTask, int jobClass  ):
-             Job(isTask,jobClass),
+    	   GenericJobWithPointer(T* functor, bool jobType, int jobClass  ):
+             Job(jobType,jobClass),
              _functor(functor)  {
     	   }
 
@@ -236,6 +158,24 @@ namespace tarch {
         	 delete _functor;
            }
        };
+
+       /**
+        * Ownership for pointer goes to multicore component, i.e. the multicore
+        * component deletes the task once it has finished.
+        */
+       void spawnBackgroundJob(Job* task);
+
+       /**
+        * Work through the background tasks and let the caller know whether some
+        * tasks have been processed.
+        */
+       bool processBackgroundJobs();
+
+       /**
+        * This is the logical number of background tasks, i.e. how many things
+        * could, in theory, run the the background.
+        */
+       int getNumberOfWaitingBackgroundJobs();
 
        /**
         * Kick out a new job. The job's type has to be set properly: It
@@ -251,38 +191,38 @@ namespace tarch {
        /**
         * Wrapper around other spawn operation.
         */
-       void spawn(std::function<void()>& job, bool isTask, int jobClass);
+       void spawn(std::function<bool()>& job, JobType jobType, int jobClass);
 
        void spawnAndWait(
-         std::function<void()>&  job0,
-         std::function<void()>&  job1,
-		 bool                    isTask0,
-		 bool                    isTask1,
+         std::function<bool()>&  job0,
+         std::function<bool()>&  job1,
+		 JobType                    jobType0,
+		 JobType                    jobType1,
 		 int                     jobClass0,
 		 int                     jobClass1
        );
 
        void spawnAndWait(
-         std::function<void()>& job0,
-         std::function<void()>& job1,
-         std::function<void()>& job2,
-		 bool                    isTask0,
-		 bool                    isTask1,
-		 bool                    isTask2,
+         std::function<bool()>& job0,
+         std::function<bool()>& job1,
+         std::function<bool()>& job2,
+		 JobType                    jobType0,
+		 JobType                    jobType1,
+		 JobType                    jobType2,
 		 int                     jobClass0,
 		 int                     jobClass1,
 		 int                     jobClass2
        );
 
        void spawnAndWait(
-         std::function<void()>& job0,
-         std::function<void()>& job1,
-         std::function<void()>& job2,
-         std::function<void()>& job3,
-		 bool                    isTask0,
-		 bool                    isTask1,
-		 bool                    isTask2,
-		 bool                    isTask3,
+         std::function<bool()>& job0,
+         std::function<bool()>& job1,
+         std::function<bool()>& job2,
+         std::function<bool()>& job3,
+		 JobType                    jobType0,
+		 JobType                    jobType1,
+		 JobType                    jobType2,
+		 JobType                    jobType3,
 		 int                     jobClass0,
 		 int                     jobClass1,
 		 int                     jobClass2,
@@ -290,16 +230,16 @@ namespace tarch {
        );
 
        void spawnAndWait(
-         std::function<void()>& job0,
-         std::function<void()>& job1,
-         std::function<void()>& job2,
-         std::function<void()>& job3,
-         std::function<void()>& job4,
-		 bool                    isTask0,
-		 bool                    isTask1,
-		 bool                    isTask2,
-		 bool                    isTask3,
-		 bool                    isTask4,
+         std::function<bool()>& job0,
+         std::function<bool()>& job1,
+         std::function<bool()>& job2,
+         std::function<bool()>& job3,
+         std::function<bool()>& job4,
+		 JobType                    jobType0,
+		 JobType                    jobType1,
+		 JobType                    jobType2,
+		 JobType                    jobType3,
+		 JobType                    jobType4,
 		 int                     jobClass0,
 		 int                     jobClass1,
 		 int                     jobClass2,
@@ -308,18 +248,18 @@ namespace tarch {
        );
 
        void spawnAndWait(
-         std::function<void()>& job0,
-         std::function<void()>& job1,
-         std::function<void()>& job2,
-         std::function<void()>& job3,
-         std::function<void()>& job4,
-         std::function<void()>& job5,
-		 bool                    isTask0,
-		 bool                    isTask1,
-		 bool                    isTask2,
-		 bool                    isTask3,
-		 bool                    isTask4,
-		 bool                    isTask5,
+         std::function<bool()>& job0,
+         std::function<bool()>& job1,
+         std::function<bool()>& job2,
+         std::function<bool()>& job3,
+         std::function<bool()>& job4,
+         std::function<bool()>& job5,
+		 JobType                    jobType0,
+		 JobType                    jobType1,
+		 JobType                    jobType2,
+		 JobType                    jobType3,
+		 JobType                    jobType4,
+		 JobType                    jobType5,
 		 int                     jobClass0,
 		 int                     jobClass1,
 		 int                     jobClass2,
@@ -333,12 +273,7 @@ namespace tarch {
        /**
         * Handle only jobs of one job class.
         */
-       bool processJobs(int jobClass);
-
-       /**
-        * Process any pending job. This includes background jobs.
-        */
-       bool processJobs();
+       bool processJobs(int jobClass, int maxNumberOfJobs = std::numeric_limits<int>::max() );
     }
   }
 }

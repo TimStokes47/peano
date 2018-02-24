@@ -289,12 +289,14 @@ bool peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::operator(
       );
 
       peano::datatraversal::TaskSet runParallelTasks(
-        [&]() -> void {
+        [&]() -> bool {
           ascend(level);
           touchVerticesLastTime( level );
+          return false;
         },
-        [&]() -> void {
+        [&]() -> bool {
           leaveCells(level-1);
+          return false;
         },
 		peano::datatraversal::TaskSet::TaskType::TriggerEvents,
 		peano::datatraversal::TaskSet::TaskType::TriggerEvents,

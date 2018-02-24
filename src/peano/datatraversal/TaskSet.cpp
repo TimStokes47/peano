@@ -13,7 +13,7 @@ tarch::logging::Log  peano::datatraversal::TaskSet::_log( "peano::datatraversal:
 
 
 int  peano::datatraversal::TaskSet::translateIntoJobClass( TaskType type ) {
-  const int Default = 32;
+  const int Default = 8;
   switch ( type ) {
     case TaskType::IsTaskAndRunAsSoonAsPossible:
    	  return 0;
@@ -30,31 +30,28 @@ int  peano::datatraversal::TaskSet::translateIntoJobClass( TaskType type ) {
     case TaskType::StoreVertices:
  	  return 5;
     case TaskType::Background:
-    case TaskType::LongRunningBackground:
-      assertion(false);
    	  return Default;
   }
   return Default;
 }
 
 
-bool peano::datatraversal::TaskSet::isTask( TaskType type ) {
+tarch::multicore::jobs::JobType peano::datatraversal::TaskSet::translateIntoJobType( TaskType type ) {
   switch ( type ) {
     case TaskType::IsTaskAndRunAsSoonAsPossible:
+      return tarch::multicore::jobs::JobType::RunTaskAsSoonAsPossible;
     case TaskType::IsTaskAndRunImmediately:
-   	  return true;
+   	  return tarch::multicore::jobs::JobType::ProcessImmediately;
     case TaskType::LoadCells:
     case TaskType::LoadVertices:
     case TaskType::TriggerEvents:
     case TaskType::StoreCells:
     case TaskType::StoreVertices:
-   	  return false;
+   	  return tarch::multicore::jobs::JobType::Job;
     case TaskType::Background:
-    case TaskType::LongRunningBackground:
-      assertion(false);
-   	  return false;
+   	  return tarch::multicore::jobs::JobType::Task;
   }
-  return false;
+  return tarch::multicore::jobs::JobType::ProcessImmediately;
 }
 
 
@@ -94,8 +91,8 @@ void peano::datatraversal::TaskSet::waitForStoreVerticesTask() {
 
 
 peano::datatraversal::TaskSet::TaskSet(
-  std::function<void ()>&& function1,
-  std::function<void ()>&& function2,
+  std::function<bool ()>&& function1,
+  std::function<bool ()>&& function2,
   TaskType                 type1,
   TaskType                 type2,
   bool                     parallelise
@@ -106,8 +103,8 @@ peano::datatraversal::TaskSet::TaskSet(
     tarch::multicore::jobs::spawnAndWait(
       function1,
 	  function2,
-      isTask(type1),
-	  isTask(type2),
+	  translateIntoJobType(type1),
+	  translateIntoJobType(type2),
 	  translateIntoJobClass(type1),
 	  translateIntoJobClass(type2)
     );
@@ -124,9 +121,9 @@ peano::datatraversal::TaskSet::TaskSet(
 
 
 peano::datatraversal::TaskSet::TaskSet(
-  std::function<void ()>&& function1,
-  std::function<void ()>&& function2,
-  std::function<void ()>&& function3,
+  std::function<bool ()>&& function1,
+  std::function<bool ()>&& function2,
+  std::function<bool ()>&& function3,
   TaskType                 type1,
   TaskType                 type2,
   TaskType                 type3,
@@ -139,9 +136,9 @@ peano::datatraversal::TaskSet::TaskSet(
       function1,
 	  function2,
 	  function3,
-      isTask(type1),
-	  isTask(type2),
-	  isTask(type3),
+	  translateIntoJobType(type1),
+	  translateIntoJobType(type2),
+	  translateIntoJobType(type3),
 	  translateIntoJobClass(type1),
 	  translateIntoJobClass(type2),
 	  translateIntoJobClass(type3)
@@ -160,10 +157,10 @@ peano::datatraversal::TaskSet::TaskSet(
 
 
 peano::datatraversal::TaskSet::TaskSet(
-  std::function<void ()>&& function1,
-  std::function<void ()>&& function2,
-  std::function<void ()>&& function3,
-  std::function<void ()>&& function4,
+  std::function<bool ()>&& function1,
+  std::function<bool ()>&& function2,
+  std::function<bool ()>&& function3,
+  std::function<bool ()>&& function4,
   TaskType                 type1,
   TaskType                 type2,
   TaskType                 type3,
@@ -178,10 +175,10 @@ peano::datatraversal::TaskSet::TaskSet(
 	  function2,
 	  function3,
 	  function4,
-      isTask(type1),
-	  isTask(type2),
-	  isTask(type3),
-	  isTask(type4),
+	  translateIntoJobType(type1),
+	  translateIntoJobType(type2),
+	  translateIntoJobType(type3),
+	  translateIntoJobType(type4),
 	  translateIntoJobClass(type1),
 	  translateIntoJobClass(type2),
 	  translateIntoJobClass(type3),
@@ -202,11 +199,11 @@ peano::datatraversal::TaskSet::TaskSet(
 
 
 peano::datatraversal::TaskSet::TaskSet(
-  std::function<void ()>&& function1,
-  std::function<void ()>&& function2,
-  std::function<void ()>&& function3,
-  std::function<void ()>&& function4,
-  std::function<void ()>&& function5,
+  std::function<bool ()>&& function1,
+  std::function<bool ()>&& function2,
+  std::function<bool ()>&& function3,
+  std::function<bool ()>&& function4,
+  std::function<bool ()>&& function5,
   TaskType                 type1,
   TaskType                 type2,
   TaskType                 type3,
@@ -223,11 +220,11 @@ peano::datatraversal::TaskSet::TaskSet(
 	  function3,
 	  function4,
 	  function5,
-      isTask(type1),
-	  isTask(type2),
-	  isTask(type3),
-	  isTask(type4),
-	  isTask(type5),
+	  translateIntoJobType(type1),
+	  translateIntoJobType(type2),
+	  translateIntoJobType(type3),
+	  translateIntoJobType(type4),
+	  translateIntoJobType(type5),
 	  translateIntoJobClass(type1),
 	  translateIntoJobClass(type2),
 	  translateIntoJobClass(type3),
@@ -253,7 +250,6 @@ peano::datatraversal::TaskSet::TaskSet(
   std::function<bool ()>&&  myTask,
   TaskType                  taskType
 ) {
-  typedef tarch::multicore::jobs::GenericBackgroundJobWithCopyOfFunctor BackgroundJob;
   typedef tarch::multicore::jobs::GenericJobWithCopyOfFunctor           Job;
   switch (taskType) {
     case TaskType::IsTaskAndRunImmediately:
@@ -265,19 +261,14 @@ peano::datatraversal::TaskSet::TaskSet(
     case TaskType::TriggerEvents:
     case TaskType::StoreCells:
     case TaskType::StoreVertices:
-      tarch::multicore::jobs::spawn( new Job(myTask,false,translateIntoJobClass(taskType) ) );
+      tarch::multicore::jobs::spawn( new Job(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
       break;
     case TaskType::Background:
    	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
    	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
    	  );
-      tarch::multicore::jobs::spawnBackgroundJob( new BackgroundJob(myTask,tarch::multicore::jobs::BackgroundJobType::BackgroundJob) );
+      tarch::multicore::jobs::spawnBackgroundJob( new Job(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
       break;
-    case TaskType::LongRunningBackground:
-   	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
-   	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
-   	  );
-      tarch::multicore::jobs::spawnBackgroundJob( new BackgroundJob(myTask,tarch::multicore::jobs::BackgroundJobType::LongRunningBackgroundJob) );
       break;
   }
 }

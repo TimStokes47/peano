@@ -43,12 +43,7 @@ int tarch::multicore::jobs::getNumberOfPendingJobs() {
 
 
 
-bool tarch::multicore::jobs::processJobs(int jobClass) {
-  return false;
-}
-
-
-bool tarch::multicore::jobs::processJobs() {
+bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
   return false;
 }
 
