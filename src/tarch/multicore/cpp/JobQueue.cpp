@@ -58,7 +58,6 @@ bool tarch::multicore::internal::JobQueue::processJobs( int maxNumberOfJobs ) {
   return result;
   #else
   _mutex.lock();
-
   maxNumberOfJobs = std::min( maxNumberOfJobs, static_cast<int>( _jobs.size() ));
 
   if (maxNumberOfJobs==0) {

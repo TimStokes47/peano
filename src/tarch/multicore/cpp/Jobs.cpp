@@ -99,7 +99,10 @@ int tarch::multicore::jobs::getNumberOfPendingJobs() {
 
 
 bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
-  return internal::JobQueue::getStandardQueue(jobClass).processJobs(maxNumberOfJobs);
+  if (internal::JobQueue::getStandardQueue(jobClass).getNumberOfPendingJobs()>0) {
+    return internal::JobQueue::getStandardQueue(jobClass).processJobs(maxNumberOfJobs);
+  }
+  else return false;
 }
 
 
@@ -124,19 +127,27 @@ void tarch::multicore::jobs::spawnAndWait(
 
 
 void tarch::multicore::jobs::spawnAndWait(
-  std::function<bool()>& job0,
-  std::function<bool()>& job1,
-  std::function<bool()>& job2,
-  JobType                    jobType0,
-  JobType                    jobType1,
-  JobType                    jobType2,
-	 int                     jobClass0,
-	 int                     jobClass1,
-	 int                     jobClass2
+  std::function<bool()>&  job0,
+  std::function<bool()>&  job1,
+  std::function<bool()>&  job2,
+  JobType                 jobType0,
+  JobType                 jobType1,
+  JobType                 jobType2,
+  int                     jobClass0,
+  int                     jobClass1,
+  int                     jobClass2
 ) {
-  job0();
-  job1();
-  job2();
+  std::atomic<int>  semaphore(3);
+
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job0, jobType0, jobClass0, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job1, jobType1, jobClass1, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job2, jobType2, jobClass2, semaphore ) );
+
+  while (semaphore>0) {
+    processJobs(jobClass0,1);
+    processJobs(jobClass1,1);
+    processJobs(jobClass2,1);
+  }
 }
 
 
@@ -149,15 +160,24 @@ void tarch::multicore::jobs::spawnAndWait(
   JobType                    jobType1,
   JobType                    jobType2,
   JobType                    jobType3,
-	 int                     jobClass0,
-	 int                     jobClass1,
-	 int                     jobClass2,
-	 int                     jobClass3
+  int                        jobClass0,
+  int                        jobClass1,
+  int                        jobClass2,
+  int                        jobClass3
 ) {
-  job0();
-  job1();
-  job2();
-  job3();
+  std::atomic<int>  semaphore(4);
+
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job0, jobType0, jobClass0, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job1, jobType1, jobClass1, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job2, jobType2, jobClass2, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job3, jobType3, jobClass3, semaphore ) );
+
+  while (semaphore>0) {
+    processJobs(jobClass0,1);
+    processJobs(jobClass1,1);
+    processJobs(jobClass2,1);
+    processJobs(jobClass3,1);
+  }
 }
 
 
@@ -178,11 +198,21 @@ void tarch::multicore::jobs::spawnAndWait(
 	 int                     jobClass3,
 	 int                     jobClass4
 ) {
-  job0();
-  job1();
-  job2();
-  job3();
-  job4();
+  std::atomic<int>  semaphore(5);
+
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job0, jobType0, jobClass0, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job1, jobType1, jobClass1, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job2, jobType2, jobClass2, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job3, jobType3, jobClass3, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job4, jobType4, jobClass4, semaphore ) );
+
+  while (semaphore>0) {
+    processJobs(jobClass0,1);
+    processJobs(jobClass1,1);
+    processJobs(jobClass2,1);
+    processJobs(jobClass3,1);
+    processJobs(jobClass4,1);
+  }
 }
 
 
@@ -206,12 +236,23 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass4,
   int                     jobClass5
 ) {
-  job0();
-  job1();
-  job2();
-  job3();
-  job4();
-  job5();
+  std::atomic<int>  semaphore(6);
+
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job0, jobType0, jobClass0, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job1, jobType1, jobClass1, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job2, jobType2, jobClass2, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job3, jobType3, jobClass3, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job4, jobType4, jobClass4, semaphore ) );
+  internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job5, jobType5, jobClass5, semaphore ) );
+
+  while (semaphore>0) {
+    processJobs(jobClass0,1);
+    processJobs(jobClass1,1);
+    processJobs(jobClass2,1);
+    processJobs(jobClass3,1);
+    processJobs(jobClass4,1);
+    processJobs(jobClass5,1);
+  }
 }
 
 

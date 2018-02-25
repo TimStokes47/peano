@@ -626,7 +626,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     !_regularGridContainer.areCellsOfLevelLoaded(currentFineGridLevel)
   ) {
     peano::datatraversal::TaskSet::waitForLoadCellsTask();
-    peano::datatraversal::TaskSet::waitForLoadVerticesTask();
   };
 
   zfor3(k,loopDirection1)
@@ -704,7 +703,6 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     !_regularGridContainer.areCellsOfLevelLoaded(currentFineGridLevel)
   ) {
     peano::datatraversal::TaskSet::waitForLoadCellsTask();
-    peano::datatraversal::TaskSet::waitForLoadVerticesTask();
   };
 
 

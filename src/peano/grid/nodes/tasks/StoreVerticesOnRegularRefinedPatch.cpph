@@ -540,7 +540,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel)) {
     peano::datatraversal::TaskSet::waitForEventTask();
-    peano::datatraversal::TaskSet::waitForStoreVerticesTask();
   }
   #endif
 
@@ -664,7 +663,6 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
   assertion( _storeProcessRunsInParallelToOtherTasks || _regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel) );
   while (_storeProcessRunsInParallelToOtherTasks && !_regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel)) {
     peano::datatraversal::TaskSet::waitForEventTask();
-    peano::datatraversal::TaskSet::waitForStoreVerticesTask();
   }
 
   // handle the first level, i.e. the level that has not been handled yet. At
