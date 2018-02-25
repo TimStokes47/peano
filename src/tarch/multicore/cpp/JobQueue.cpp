@@ -4,6 +4,9 @@
 #include "tarch/multicore/Jobs.h"
 
 
+#include <sstream>
+
+
 tarch::logging::Log tarch::multicore::internal::JobQueue::_log( "tarch::multicore::internal::JobQueue" );
 
 
@@ -20,6 +23,17 @@ tarch::multicore::internal::JobQueue::~JobQueue() {
 tarch::multicore::internal::JobQueue&  tarch::multicore::internal::JobQueue::getBackgroundQueue() {
   static tarch::multicore::internal::JobQueue queue;
   return queue;
+}
+
+
+std::string tarch::multicore::internal::JobQueue::toString() {
+  std::ostringstream msg;
+  msg << "(no-of-background-tasks:" << getBackgroundQueue().getNumberOfPendingJobs();
+  for (int i=0; i<MaxNormalJobQueues; i++) {
+	msg << ",queue[" << i << "]:" << getStandardQueue(i).getNumberOfPendingJobs();
+  }
+  msg << ")";
+  return msg.str();
 }
 
 
@@ -59,9 +73,7 @@ bool tarch::multicore::internal::JobQueue::processJobs( int maxNumberOfJobs ) {
     std::list< jobs::Job* > localList;
     localList.splice( localList.begin(), _jobs, _jobs.begin(), lastElementToBeProcessed );
 
-    //#ifdef Asserts
-    //logInfo( "processJobs(int)", "spliced " << maxNumberOfJobs << " job(s) from job queue and will process those now" );
-    //#endif
+    logDebug( "processJobs(int)", "spliced " << maxNumberOfJobs << " job(s) from job queue and will process those now" );
 
     _numberOfPendingJobs-=maxNumberOfJobs;
     _mutex.unlock();
@@ -101,6 +113,13 @@ void tarch::multicore::internal::JobQueue::addJobWithHighPriority( jobs::Job* jo
 int tarch::multicore::internal::JobQueue::getNumberOfPendingJobs() const {
   return _numberOfPendingJobs;
 }
+
+
+tarch::multicore::internal::JobQueue& tarch::multicore::internal::JobQueue::getStandardQueue(int jobClass) {
+  static JobQueue queues[MaxNormalJobQueues];
+  return queues[ jobClass%MaxNormalJobQueues ];
+}
+
 
 
 #endif

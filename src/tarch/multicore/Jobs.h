@@ -68,7 +68,7 @@ namespace tarch {
 
            virtual bool run() = 0;
            virtual ~Job();
-           bool jobType() const;
+           bool isTask() const;
            int getClass() const;
            JobType getJobType() const;
 

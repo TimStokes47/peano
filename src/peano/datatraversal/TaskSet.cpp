@@ -13,7 +13,7 @@ tarch::logging::Log  peano::datatraversal::TaskSet::_log( "peano::datatraversal:
 
 
 int  peano::datatraversal::TaskSet::translateIntoJobClass( TaskType type ) {
-  const int Default = 8;
+  const int Default = 7;
   switch ( type ) {
     case TaskType::IsTaskAndRunAsSoonAsPossible:
    	  return 0;

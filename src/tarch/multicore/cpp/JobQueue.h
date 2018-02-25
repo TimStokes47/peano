@@ -40,10 +40,14 @@ class tarch::multicore::internal::JobQueue {
 	std::mutex        _mutex;
 
 	JobQueue();
+
   public:
+	static constexpr int MaxNormalJobQueues = 8;
+
 	~JobQueue();
 
 	static JobQueue& getBackgroundQueue();
+	static JobQueue& getStandardQueue(int jobClass);
 
 	bool processJobs( int maxNumberOfJobs );
 
@@ -51,6 +55,8 @@ class tarch::multicore::internal::JobQueue {
 	void addJobWithHighPriority( jobs::Job* job );
 
 	int getNumberOfPendingJobs() const;
+
+	static std::string toString();
 };
 
 #endif

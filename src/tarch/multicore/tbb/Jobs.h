@@ -74,12 +74,7 @@ namespace tarch {
 
             bool run() override {
               bool result = _functor();
-              #ifdef Asserts
-              int semaphoreValue = _semaphore.fetch_and_add(-1);
-              assertion( semaphoreValue>=1 );
-              #else
-              _semaphore.fetch_and_add(-1);
-              #endif
+              if (!result) _semaphore.fetch_and_add(-1);
               return result;
             }
 
@@ -99,12 +94,7 @@ namespace tarch {
 
             bool run() override {
               bool result = _functor();
-              #ifdef Asserts
-              int semaphoreValue = _semaphore.fetch_and_add(-1);
-              assertion( semaphoreValue>=1 );
-              #else
-              _semaphore.fetch_and_add(-1);
-              #endif
+              if (!result) _semaphore.fetch_and_add(-1);
               return result;
             }
 

@@ -160,7 +160,7 @@ int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
  * calling thread immediately.
  */
 void tarch::multicore::jobs::spawn(Job*  job) {
-  if ( job->jobType() ) {
+  if ( job->isTask() ) {
     logDebug( "spawn(Job*)", "job is a task, so issue TBB task immediately that handles job" );
     internal::TBBJobWrapper* tbbTask = new(tbb::task::allocate_root(importantTaskContext)) internal::TBBJobWrapper(job);
     tbb::task::enqueue(*tbbTask);

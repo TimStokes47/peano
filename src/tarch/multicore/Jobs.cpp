@@ -31,7 +31,7 @@ tarch::multicore::jobs::Job::~Job() {
 }
 
 
-bool tarch::multicore::jobs::Job::jobType() const {
+bool tarch::multicore::jobs::Job::isTask() const {
   return _jobType!=JobType::Job;
 }
 
