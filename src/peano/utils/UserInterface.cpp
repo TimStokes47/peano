@@ -11,13 +11,7 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
-#if SharedTBB
-#include "tarch/multicore/tbb/Core.h"
-#elif SharedOMP
-#include "tarch/multicore/omp/Core.h"
-#elif SharedCPP
-#include "tarch/multicore/omp/Core.h"
-#endif
+#include "tarch/multicore/Core.h"
 
 
 #ifdef Parallel

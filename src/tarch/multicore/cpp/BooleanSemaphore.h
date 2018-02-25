@@ -1,9 +1,11 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#if !defined( _TARCH_MULTICORE_BOOLEAN_SEMAPHORE_H_ ) && defined(SharedCPP)
-#define _TARCH_MULTICORE_BOOLEAN_SEMAPHORE_H_
+#if !defined( _TARCH_MULTICORE_CPP_BOOLEAN_SEMAPHORE_H_ ) && defined(SharedCPP)
+#define _TARCH_MULTICORE_CPP_BOOLEAN_SEMAPHORE_H_
+
 
 #include <string>
+#include <mutex>
 
 
 namespace tarch {
@@ -45,4 +47,3 @@ class tarch::multicore::BooleanSemaphore {
 #endif
 
 
-#endif

@@ -1,5 +1,3 @@
-#include "tarch/multicore/Loop.h"
-
 
 template <typename F>
 void tarch::multicore::parallelReduce(

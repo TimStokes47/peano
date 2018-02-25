@@ -10,30 +10,48 @@
 
 #if defined(SharedCPP)
 
-void tarch::multicore::jobs::spawnBackgroundJob(BackgroundJob* task) {
-  task->run();
-  delete task;
+
+#include "JobQueue.h"
+
+
+void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
+  switch (job->getJobType()) {
+     case JobType::ProcessImmediately:
+       while (job->run()) {};
+       delete job;
+       break;
+     case JobType::RunTaskAsSoonAsPossible:
+       internal::JobQueue::getBackgroundQueue().addJobWithHighPriority(job);
+       break;
+     case JobType::Task:
+     case JobType::Job:
+       internal::JobQueue::getBackgroundQueue().addJob(job);
+       break;
+   }
 }
 
 
 bool tarch::multicore::jobs::processBackgroundJobs() {
-  return false;
+  return internal::JobQueue::getBackgroundQueue().processJobs( std::max(1,getNumberOfWaitingBackgroundJobs()/2) );
 }
 
 
 int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
-  return 0;
+  return internal::JobQueue::getBackgroundQueue().getNumberOfPendingJobs();
 }
 
 
+//
+// @todo
+//
 void tarch::multicore::jobs::spawn(Job*  job) {
-  job->run();
+  while ( job->run() ) {};
   delete job;
 }
 
 
-void tarch::multicore::jobs::spawn(std::function<void()>& job, bool isTask, int jobClass) {
-  job();
+void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, int jobClass) {
+  while ( job() ) {};
 }
 
 
@@ -49,10 +67,10 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
 
 
 void tarch::multicore::jobs::spawnAndWait(
-  std::function<void()>& job0,
-  std::function<void()>& job1,
-	 bool                    isTask0,
-	 bool                    isTask1,
+  std::function<bool()>& job0,
+  std::function<bool()>& job1,
+  JobType                    isTask0,
+	 JobType                    isTask1,
 	 int                     jobClass0,
 	 int                     jobClass1
 ) {
@@ -62,12 +80,12 @@ void tarch::multicore::jobs::spawnAndWait(
 
 
 void tarch::multicore::jobs::spawnAndWait(
-  std::function<void()>& job0,
-  std::function<void()>& job1,
-  std::function<void()>& job2,
-	 bool                    isTask0,
-	 bool                    isTask1,
-	 bool                    isTask2,
+  std::function<bool()>& job0,
+  std::function<bool()>& job1,
+  std::function<bool()>& job2,
+  JobType                    isTask0,
+  JobType                    isTask1,
+  JobType                    isTask2,
 	 int                     jobClass0,
 	 int                     jobClass1,
 	 int                     jobClass2
@@ -79,14 +97,14 @@ void tarch::multicore::jobs::spawnAndWait(
 
 
 void tarch::multicore::jobs::spawnAndWait(
-  std::function<void()>& job0,
-  std::function<void()>& job1,
-  std::function<void()>& job2,
-  std::function<void()>& job3,
-	 bool                    isTask0,
-	 bool                    isTask1,
-	 bool                    isTask2,
-	 bool                    isTask3,
+  std::function<bool()>& job0,
+  std::function<bool()>& job1,
+  std::function<bool()>& job2,
+  std::function<bool()>& job3,
+  JobType                    isTask0,
+  JobType                    isTask1,
+  JobType                    isTask2,
+  JobType                    isTask3,
 	 int                     jobClass0,
 	 int                     jobClass1,
 	 int                     jobClass2,
@@ -100,16 +118,16 @@ void tarch::multicore::jobs::spawnAndWait(
 
 
 void tarch::multicore::jobs::spawnAndWait(
-  std::function<void()>& job0,
-  std::function<void()>& job1,
-  std::function<void()>& job2,
-  std::function<void()>& job3,
-  std::function<void()>& job4,
-	 bool                    isTask0,
-	 bool                    isTask1,
-	 bool                    isTask2,
-	 bool                    isTask3,
-	 bool                    isTask4,
+  std::function<bool()>& job0,
+  std::function<bool()>& job1,
+  std::function<bool()>& job2,
+  std::function<bool()>& job3,
+  std::function<bool()>& job4,
+  JobType                    isTask0,
+	 JobType                    isTask1,
+	 JobType                    isTask2,
+	 JobType                    isTask3,
+	 JobType                    isTask4,
 	 int                     jobClass0,
 	 int                     jobClass1,
 	 int                     jobClass2,
@@ -125,24 +143,24 @@ void tarch::multicore::jobs::spawnAndWait(
 
 
 void tarch::multicore::jobs::spawnAndWait(
-  std::function<void()>& job0,
-  std::function<void()>& job1,
-  std::function<void()>& job2,
-  std::function<void()>& job3,
-  std::function<void()>& job4,
-  std::function<void()>& job5,
-	 bool                    isTask0,
-	 bool                    isTask1,
-	 bool                    isTask2,
-	 bool                    isTask3,
-	 bool                    isTask4,
-	 bool                    isTask5,
-	 int                     jobClass0,
-	 int                     jobClass1,
-	 int                     jobClass2,
-	 int                     jobClass3,
-	 int                     jobClass4,
-	 int                     jobClass5
+  std::function<bool()>& job0,
+  std::function<bool()>& job1,
+  std::function<bool()>& job2,
+  std::function<bool()>& job3,
+  std::function<bool()>& job4,
+  std::function<bool()>& job5,
+  JobType                    isTask0,
+  JobType                    isTask1,
+  JobType                    isTask2,
+  JobType                    isTask3,
+  JobType                    isTask4,
+  JobType                    isTask5,
+  int                     jobClass0,
+  int                     jobClass1,
+  int                     jobClass2,
+  int                     jobClass3,
+  int                     jobClass4,
+  int                     jobClass5
 ) {
   job0();
   job1();
