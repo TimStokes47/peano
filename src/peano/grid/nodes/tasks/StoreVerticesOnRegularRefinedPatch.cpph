@@ -19,6 +19,16 @@ int peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
 
 template <class Vertex, class Cell, class VertexStack>
+bool peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::haveAllStoreVerticesTasksTerminated() {
+  bool result = false;
+  tarch::multicore::Lock leaveOperatorlock( _semaphore );
+  result = _activeStoreTasks == 0;
+  leaveOperatorlock.free();
+  return result;
+}
+
+
+template <class Vertex, class Cell, class VertexStack>
 peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::StoreVerticesOnRegularRefinedPatch(
   const bool                                         isTraversalInverted,
   peano::grid::RegularGridContainer<Vertex,Cell>&    regularGridContainer,
@@ -725,23 +735,12 @@ bool peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
   if (_coarsestLevelOfThisTask==0) {
     #ifdef SharedMemoryParallelisation
-
     #ifdef Asserts
     leaveOperatorlock.lock();
     // We have to protect the assertion - at least for Thread Inspector
     assertion3(_activeStoreTasks>=1,_activeStoreTasks,_coarsestLevelOfThisTask,_coarsestCellsOffset);
     leaveOperatorlock.free();
     #endif
-
-    bool allTasksHaveTerminated = false;
-    logDebug( "operator()()", "wait until all store processes have terminated. active-tasks=" << _activeStoreTasks );
-    while (!allTasksHaveTerminated) {
-      peano::datatraversal::TaskSet::waitForStoreVerticesTask();
-
-      leaveOperatorlock.lock();
-      allTasksHaveTerminated = _activeStoreTasks == 1;
-      leaveOperatorlock.free();
-    }
     #else
     assertionEquals2(_activeStoreTasks,1,_coarsestLevelOfThisTask,_coarsestCellsOffset);
     #endif

@@ -326,6 +326,23 @@ class peano::datatraversal::TaskSet {
       bool                     parallelise
     );
 
+    /**
+     * <h2> Use waitFor within busy waiting loop </h2>
+     *
+     * waitForXXX is often used within while loops actually implementing busy
+     * waiting. In principle, that's what the waits have been designed for.
+     * However, there's one pitfall: If a job from class K splits up into many
+     * other jobs of class K, none of these jobs may wait for the other class
+     * K jobs to complete. In general, no job shall ever wait for jobs of the
+     * same class.
+     *
+     * The reason is that we allow Peano's tasking systems to grab multiple
+     * jobs of one class in one rush and process them en block. If jobs wait
+     * for their own class, it might happen that one hardware thread graps
+     * 10 jobs of class K, removes them from the job queue, starts to run the
+     * first job, and then deadlocks as the first one is waiting for the
+     * other nine guys.
+     */
     static void waitForLoadCellsTask();
 	static void waitForLoadVerticesTask();
 	static void waitForEventTask();

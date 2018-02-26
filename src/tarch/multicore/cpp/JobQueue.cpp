@@ -51,7 +51,7 @@ bool tarch::multicore::internal::JobQueue::processJobs( int maxNumberOfJobs ) {
     }
     else {
       delete job;
-      _numberOfPendingJobs--;
+      _numberOfPendingJobs.fetch_sub(1);
     }
   }
   _mutex.unlock();
@@ -74,7 +74,7 @@ bool tarch::multicore::internal::JobQueue::processJobs( int maxNumberOfJobs ) {
 
     logDebug( "processJobs(int)", "spliced " << maxNumberOfJobs << " job(s) from job queue and will process those now" );
 
-    _numberOfPendingJobs-=maxNumberOfJobs;
+    _numberOfPendingJobs.fetch_sub(maxNumberOfJobs);
     _mutex.unlock();
 
     for (auto& p: localList) {
@@ -94,23 +94,23 @@ bool tarch::multicore::internal::JobQueue::processJobs( int maxNumberOfJobs ) {
 
 
 void tarch::multicore::internal::JobQueue::addJob( jobs::Job* job ) {
-  _numberOfPendingJobs++;
   _mutex.lock();
   _jobs.push_back(job);
   _mutex.unlock();
+  _numberOfPendingJobs.fetch_add(1);
 }
 
 
 void tarch::multicore::internal::JobQueue::addJobWithHighPriority( jobs::Job* job ) {
-  _numberOfPendingJobs++;
   _mutex.lock();
   _jobs.push_front(job);
   _mutex.unlock();
+  _numberOfPendingJobs.fetch_add(1);
 }
 
 
 int tarch::multicore::internal::JobQueue::getNumberOfPendingJobs() const {
-  return _numberOfPendingJobs;
+  return _numberOfPendingJobs.load();
 }
 
 

@@ -324,6 +324,13 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       );
       storeVerticesTask();
 
+      #ifdef SharedMemoryParallelisation
+      logDebug( "operator()()", "wait until all store processes have terminated" );
+      while (!StoreVerticesTask::haveAllStoreVerticesTasksTerminated()) {
+        peano::datatraversal::TaskSet::waitForStoreVerticesTask();
+      }
+      #endif
+
       _regularGridContainer.copyRootNodeDataFromRegularPatch(fineGridCell,fineGridVertices,fineGridVerticesEnumerator);
       fineGridCell.updatePersistentRegularSubtreeIndex( _regularGridContainer.keepCurrentRegularSubgrid() );
 
@@ -342,6 +349,13 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         StoreVerticesTask::PersistentSubtreeIsDrained
       );
       storeVerticesTask();
+
+      #ifdef SharedMemoryParallelisation
+      logDebug( "operator()()", "wait until all store processes have terminated" );
+      while (!StoreVerticesTask::haveAllStoreVerticesTasksTerminated()) {
+        peano::datatraversal::TaskSet::waitForStoreVerticesTask();
+      }
+      #endif
 
       StoreCellsTask      storeCellsTask( TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, pipelineTasks );
       storeCellsTask();
@@ -390,6 +404,13 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         PipelineTasks.runsParallel() 
       );
 
+      #ifdef SharedMemoryParallelisation
+      logDebug( "operator()()", "wait until all store processes have terminated" );
+      while (!StoreVerticesTask::haveAllStoreVerticesTasksTerminated()) {
+        peano::datatraversal::TaskSet::waitForStoreVerticesTask();
+      }
+      #endif
+
       SplitStoreVerticesTask.parallelSectionHasTerminated();
     }
     else {
@@ -406,6 +427,14 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         transformOracleResult( SplitStoreVerticesTask.getGrainSize(), TreeDepth, numberOfVerticesInRegularSubtree )
       );
       storeVerticesTask();
+
+      #ifdef SharedMemoryParallelisation
+      logDebug( "operator()()", "wait until all store processes have terminated" );
+      while (!StoreVerticesTask::haveAllStoreVerticesTasksTerminated()) {
+        peano::datatraversal::TaskSet::waitForStoreVerticesTask();
+      }
+      #endif
+
       SplitStoreVerticesTask.parallelSectionHasTerminated();
 
       StoreCellsTask      storeCellsTask( TopLevelLoopDirection, TreeDepth, state.isTraversalInverted(), _regularGridContainer, Base::_cellStack, PipelineTasks.runsParallel() );

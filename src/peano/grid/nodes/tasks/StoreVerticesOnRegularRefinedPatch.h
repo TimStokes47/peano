@@ -184,6 +184,8 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
    );
 
   public:
+    static bool haveAllStoreVerticesTasksTerminated();
+
     /**
      * Can be handed in as max fork level. As the value -1 is already used by
      * peano::grid::nodes::transformOracleResult() to ensure that absolutely
