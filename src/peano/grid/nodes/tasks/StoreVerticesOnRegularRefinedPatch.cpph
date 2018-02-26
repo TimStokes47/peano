@@ -701,12 +701,7 @@ bool peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
   #ifdef Asserts
   tarch::multicore::Lock enterOperatorlock( _semaphore );
-  if (_coarsestLevelOfThisTask==0) {
-    assertion3( _activeStoreTasks==1, _activeStoreTasks, _coarsestLevelOfThisTask, _coarsestCellsOffset );
-  }
-  else {
-    assertion3( _activeStoreTasks>1, _activeStoreTasks, _coarsestLevelOfThisTask, _coarsestCellsOffset );
-  }
+  assertion3( _activeStoreTasks>=1, _activeStoreTasks, _coarsestLevelOfThisTask, _coarsestCellsOffset );
   enterOperatorlock.free();
   #endif
 
