@@ -1,3 +1,4 @@
+
 #include "tarch/multicore/Jobs.h"
 #include "tarch/Assertions.h"
 
@@ -56,6 +57,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
      case JobType::RunTaskAsSoonAsPossible:
        internal::JobQueue::getBackgroundQueue().addJobWithHighPriority(job);
        break;
+     case JobType::MPIReceiveTask:
      case JobType::Task:
      case JobType::Job:
        internal::JobQueue::getBackgroundQueue().addJob(job);
@@ -104,17 +106,6 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
   }
   else return false;
 }
-
-
-/*
-void processAllJobs() {
-  for( int i=0; i<tarch::multicore::internal::JobQueue::MaxNormalJobQueues; i++) {
-    if (tarch::multicore::internal::JobQueue::getStandardQueue(i).getNumberOfPendingJobs()>0) {
-      tarch::multicore::internal::JobQueue::getStandardQueue(i).processJobs(1);
-    }
-  }
-}
-*/
 
 
 void tarch::multicore::jobs::spawnAndWait(

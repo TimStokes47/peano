@@ -25,6 +25,7 @@ namespace tarch {
        enum class JobType {
          Job,
          Task,
+		 MPIReceiveTask,
 		 /**
 		  * Task implies that there are no dependencies.
 		  */

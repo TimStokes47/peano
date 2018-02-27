@@ -31,6 +31,8 @@ int  peano::datatraversal::TaskSet::translateIntoJobClass( TaskType type ) {
  	  return 5;
     case TaskType::Background:
    	  return Default;
+    case TaskType::BackgroundMPIReceiveTask:
+   	  return Default;
   }
   return Default;
 }
@@ -50,6 +52,8 @@ tarch::multicore::jobs::JobType peano::datatraversal::TaskSet::translateIntoJobT
    	  return tarch::multicore::jobs::JobType::Job;
     case TaskType::Background:
    	  return tarch::multicore::jobs::JobType::Task;
+    case TaskType::BackgroundMPIReceiveTask:
+      return tarch::multicore::jobs::JobType::MPIReceiveTask;
   }
   return tarch::multicore::jobs::JobType::ProcessImmediately;
 }
@@ -264,11 +268,11 @@ peano::datatraversal::TaskSet::TaskSet(
       tarch::multicore::jobs::spawn( new Job(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
       break;
     case TaskType::Background:
+    case TaskType::BackgroundMPIReceiveTask:
    	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
    	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
    	  );
       tarch::multicore::jobs::spawnBackgroundJob( new Job(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
-      break;
       break;
   }
 }

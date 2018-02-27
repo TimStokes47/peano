@@ -120,7 +120,7 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
   #else
   if (_backgroundThread==nullptr) {
     _backgroundThread = new BackgroundThread();
-    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::Background);
+    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
   }
 
   if (_backgroundThread->getState()==BackgroundThread::State::Suspend) {
@@ -170,7 +170,7 @@ void peano::parallel::SendReceiveBufferPool::restart() {
   #ifdef MPIUsesItsOwnThread
   if (_backgroundThread==nullptr) {
     _backgroundThread = new BackgroundThread();
-    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::Background);
+    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
   }
   #endif
 }
@@ -207,7 +207,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   #if defined(MPIUsesItsOwnThread)
   if (_backgroundThread==nullptr) {
     _backgroundThread = new BackgroundThread();
-    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::Background);
+    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
   }
   assertion(_backgroundThread!=nullptr);
   _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);

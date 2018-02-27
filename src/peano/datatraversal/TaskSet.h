@@ -128,6 +128,7 @@ class peano::datatraversal::TaskSet {
        * on the difference between jobs and tasks.
        */
   	  Background,
+  	  BackgroundMPIReceiveTask,
       /**
        * Used by Peano's grid management.
        */

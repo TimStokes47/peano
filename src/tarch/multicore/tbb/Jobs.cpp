@@ -121,6 +121,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
         importantTaskContext.set_priority(tbb::priority_high);
       }
       break;
+    case JobType::MPIReceiveTask:
     case JobType::Task:
     case JobType::Job:
       {
