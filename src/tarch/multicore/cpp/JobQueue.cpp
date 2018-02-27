@@ -20,6 +20,12 @@ tarch::multicore::internal::JobQueue::~JobQueue() {
 }
 
 
+tarch::multicore::internal::JobQueue&  tarch::multicore::internal::JobQueue::getMPIReceiveQueue() {
+  static tarch::multicore::internal::JobQueue queue;
+  return queue;
+}
+
+
 tarch::multicore::internal::JobQueue&  tarch::multicore::internal::JobQueue::getBackgroundQueue() {
   static tarch::multicore::internal::JobQueue queue;
   return queue;

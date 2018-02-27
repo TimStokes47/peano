@@ -40,6 +40,30 @@ bool tarch::multicore::internal::JobConsumer::processBackgroundJobs() {
 }
 
 
+bool tarch::multicore::internal::JobConsumer::processMPIReceiveJobs() {
+  #ifdef Parallel
+  const int  numberOfJobs  = internal::JobQueue::getBackgroundQueue().getNumberOfPendingJobs();
+
+  if (numberOfJobs>=MinNumberOfBackgroundJobs) {
+    int result = 0;
+    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &result, MPI_STATUS_IGNORE);
+
+    if (result) {
+      #ifdef Asserts
+      logInfo( "processMPIReceiveJobs()", "consumer task (pin=" << _pinCore << ") processes MPI receive background jobs" );
+      #endif
+      internal::JobQueue::getBackgroundQueue().processJobs( numberOfJobs );
+      return true;
+    }
+  }
+
+  return false;
+  #else
+  return false;
+  #endif
+}
+
+
 void tarch::multicore::internal::JobConsumer::operator()() {
   if (_pinCore!=NoPinning) {
 	addMask(_pinCore,_mask);
@@ -62,6 +86,7 @@ void tarch::multicore::internal::JobConsumer::operator()() {
               }
             }
           }
+          processMPIReceiveJobs();
           processBackgroundJobs();
         }
     	break;

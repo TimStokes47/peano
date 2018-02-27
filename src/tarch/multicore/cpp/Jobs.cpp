@@ -58,6 +58,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
        internal::JobQueue::getBackgroundQueue().addJobWithHighPriority(job);
        break;
      case JobType::MPIReceiveTask:
+       internal::JobQueue::getMPIReceiveQueue().addJob(job);
      case JobType::Task:
      case JobType::Job:
        internal::JobQueue::getBackgroundQueue().addJob(job);

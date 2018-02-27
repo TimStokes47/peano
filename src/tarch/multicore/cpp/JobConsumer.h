@@ -61,6 +61,7 @@ class tarch::multicore::internal::JobConsumer {
 	cpu_set_t*               _mask;
 
 	bool processBackgroundJobs();
+	bool processMPIReceiveJobs();
 
 	static const int MinNumberOfBackgroundJobs;
   public:

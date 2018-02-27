@@ -47,6 +47,7 @@ class tarch::multicore::internal::JobQueue {
 	~JobQueue();
 
 	static JobQueue& getBackgroundQueue();
+	static JobQueue& getMPIReceiveQueue();
 	static JobQueue& getStandardQueue(int jobClass);
 
 	bool processJobs( int maxNumberOfJobs );
