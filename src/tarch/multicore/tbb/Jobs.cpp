@@ -91,11 +91,11 @@ void tarch::multicore::jobs::internal::spawnBlockingJob(
     semaphore.fetch_and_add(-1);
   }
   else {
-    getJobQueue(jobClass).jobs.push(
+    internal::getJobQueue(jobClass).jobs.push(
       new JobWithoutCopyOfFunctorAndSemaphore(job, jobType, jobClass, semaphore )
     );
 
-    logDebug( "spawnBlockingJob(...)", "enqueued job. tasks in this queue of class " << jobClass << "=" << getJobQueue(jobClass).jobs.unsafe_size() );
+    logDebug( "spawnBlockingJob(...)", "enqueued job. tasks in this queue of class " << jobClass << "=" << internal::getJobQueue(jobClass).jobs.unsafe_size() );
   }
 }
 
@@ -196,7 +196,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
     result   = true;
     logDebug(
       "processJob(int)", "job of class " << jobClass << " complete, there are still " <<
-	  getJobQueue(jobClass).jobs.unsafe_size() <<
+	  internal::getJobQueue(jobClass).jobs.unsafe_size() <<
 	  " jobs of this class pending"
 	);
     if ( maxNumberOfJobs>0 ) {
