@@ -255,6 +255,7 @@ class peano::datatraversal::TaskSet {
         case peano::datatraversal::TaskSet::TaskType::StoreVertices:
           tarch::multicore::jobs::spawn( new tarch::multicore::jobs::GenericJobWithPointer<T>(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
           break;
+        case peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask:
         case peano::datatraversal::TaskSet::TaskType::Background:
        	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
        	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()

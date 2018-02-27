@@ -3,7 +3,7 @@
 #include "tarch/Assertions.h"
 #include "tarch/multicore/cpp/JobConsumer.h"
 #include "tarch/multicore/cpp/JobQueue.h"
-
+#include "tarch/multicore/Core.h"
 
 #include <thread>
 #include <sched.h>
@@ -29,10 +29,11 @@ tarch::multicore::internal::JobConsumer::~JobConsumer() {
 
 
 bool tarch::multicore::internal::JobConsumer::processBackgroundJobs() {
-  const int numberOfJobs = internal::JobQueue::getBackgroundQueue().getNumberOfPendingJobs();
+  const int  numberOfJobs  = internal::JobQueue::getBackgroundQueue().getNumberOfPendingJobs();
+  static int numberOfCores = std::max(2,tarch::multicore::Core::getInstance().getNumberOfThreads());
   if (numberOfJobs>=MinNumberOfBackgroundJobs) {
     logDebug( "operator()", "consumer task (pin=" << _pinCore << ") processes " << numberOfJobs << " background jobs" );
-    internal::JobQueue::getBackgroundQueue().processJobs( std::max(MinNumberOfBackgroundJobs,numberOfJobs/2) );
+    internal::JobQueue::getBackgroundQueue().processJobs( std::max(MinNumberOfBackgroundJobs,numberOfJobs/numberOfCores) );
     return true;
   }
   else return false;
