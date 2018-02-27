@@ -79,7 +79,7 @@ void peano::datatraversal::dForLoop<LoopBody>::runParallelWithoutColouring(
 ) {
   peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(tarch::la::volume(range)/grainSize,tarch::la::volume(range));
 
-  if (altersState) {
+  if (!altersState) {
     #if defined(TBBInvade)
     shminvade::SHMInvade invade( grainSize>0 ? tarch::la::volume(range)/grainSize : 0 );
     #endif
