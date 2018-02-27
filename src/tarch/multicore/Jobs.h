@@ -144,14 +144,14 @@ namespace tarch {
             */
     	   T*   _functor;
          public:
-    	   GenericJobWithPointer(T* functor, bool jobType, int jobClass  ):
+    	   GenericJobWithPointer(T* functor, JobType jobType, int jobClass  ):
              Job(jobType,jobClass),
              _functor(functor)  {
     	   }
 
 
-           void run() override {
-             (*_functor)();
+           bool run() override {
+             return (*_functor)();
            }
 
            virtual ~GenericJobWithPointer() {
