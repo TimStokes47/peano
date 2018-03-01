@@ -20,7 +20,8 @@ const int tarch::multicore::internal::JobConsumer::MinNumberOfBackgroundJobs = 1
 tarch::multicore::internal::JobConsumer::JobConsumer(int pinCore, JobConsumerController* controller, cpu_set_t*  mask):
   _pinCore(pinCore),
   _controller(controller),
-  _mask(mask) {
+  _mask(mask),
+  _numberOfLastJobQueue(0) {
 }
 
 
@@ -78,11 +79,13 @@ void tarch::multicore::internal::JobConsumer::operator()() {
           while (foundJob) {
             foundJob = false;
             for (int i=0; i<internal::JobQueue::MaxNormalJobQueues; i++) {
-              const int jobs = internal::JobQueue::getStandardQueue(i).getNumberOfPendingJobs();
-              foundJob |= jobs>0;
+              const int queueNumber = (i + _numberOfLastJobQueue);
+              const int jobs = internal::JobQueue::getStandardQueue(queueNumber).getNumberOfPendingJobs();
               if (jobs>0) {
-              	logDebug( "operator()", "consumer task (pin=" << _pinCore << ") grabbed " << jobs << " job(s) from class " << i );
-                internal::JobQueue::getStandardQueue(i).processJobs( std::numeric_limits<int>::max() );
+              	logDebug( "operator()", "consumer task (pin=" << _pinCore << ") grabbed " << jobs << " job(s) from class " <<  queueNumber );
+                internal::JobQueue::getStandardQueue(queueNumber).processJobs( std::numeric_limits<int>::max() );
+                _numberOfLastJobQueue = queueNumber;
+                foundJob = true;
               }
             }
           }
@@ -165,7 +168,7 @@ void tarch::multicore::internal::JobConsumer::removeMask() {
 
 
 tarch::multicore::internal::JobConsumerController::JobConsumerController():
-  spinLock( ATOMIC_FLAG_INIT ) {
+  _spinLock( ATOMIC_FLAG_INIT ) {
   lock();
   state = State::Running;
   unlock();
@@ -178,12 +181,12 @@ tarch::multicore::internal::JobConsumerController::~JobConsumerController() {
 
 
 void tarch::multicore::internal::JobConsumerController::lock() {
-  while (spinLock.test_and_set(std::memory_order_acquire)); // spin
+  while (_spinLock.test_and_set(std::memory_order_acquire)); // spin
 }
 
 
 void tarch::multicore::internal::JobConsumerController::unlock() {
-  spinLock.clear(std::memory_order_release);
+  _spinLock.clear(std::memory_order_release);
 }
 
 #endif

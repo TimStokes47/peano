@@ -26,7 +26,7 @@ struct tarch::multicore::internal::JobConsumerController {
     /**
      * Boolean semaphore.
      */
-    std::atomic_flag    spinLock;
+    std::atomic_flag    _spinLock;
   public:
     enum class State {
       Running,
@@ -59,6 +59,7 @@ class tarch::multicore::internal::JobConsumer {
 	const int                _pinCore;
 	JobConsumerController*   _controller;
 	cpu_set_t*               _mask;
+    int                      _numberOfLastJobQueue;
 
 	bool processBackgroundJobs();
 	bool processMPIReceiveJobs();
