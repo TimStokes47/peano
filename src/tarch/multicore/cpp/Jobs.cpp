@@ -123,8 +123,8 @@ void tarch::multicore::jobs::spawnAndWait(
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job1, jobType1, jobClass1, semaphore ) );
 
   while (semaphore.load()!=0) {
-    processJobs(jobClass0,1);
-    processJobs(jobClass1,1);
+    processJobs(jobClass0);
+    processJobs(jobClass1);
   }
 }
 
@@ -147,9 +147,9 @@ void tarch::multicore::jobs::spawnAndWait(
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job2, jobType2, jobClass2, semaphore ) );
 
   while (semaphore.load()!=0) {
-    processJobs(jobClass0,1);
-    processJobs(jobClass1,1);
-    processJobs(jobClass2,1);
+    processJobs(jobClass0);
+    processJobs(jobClass1);
+    processJobs(jobClass2);
   }
 }
 
@@ -176,10 +176,10 @@ void tarch::multicore::jobs::spawnAndWait(
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job3, jobType3, jobClass3, semaphore ) );
 
   while (semaphore.load()!=0) {
-    processJobs(jobClass0,1);
-    processJobs(jobClass1,1);
-    processJobs(jobClass2,1);
-    processJobs(jobClass3,1);
+    processJobs(jobClass0);
+    processJobs(jobClass1);
+    processJobs(jobClass2);
+    processJobs(jobClass3);
   }
 }
 
@@ -210,11 +210,11 @@ void tarch::multicore::jobs::spawnAndWait(
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job4, jobType4, jobClass4, semaphore ) );
 
   while (semaphore.load()!=0) {
-    processJobs(jobClass0,1);
-    processJobs(jobClass1,1);
-    processJobs(jobClass2,1);
-    processJobs(jobClass3,1);
-    processJobs(jobClass4,1);
+    processJobs(jobClass0);
+    processJobs(jobClass1);
+    processJobs(jobClass2);
+    processJobs(jobClass3);
+    processJobs(jobClass4);
   }
 }
 
@@ -249,12 +249,12 @@ void tarch::multicore::jobs::spawnAndWait(
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job5, jobType5, jobClass5, semaphore ) );
 
   while (semaphore.load()!=0) {
-    processJobs(jobClass0,1);
-    processJobs(jobClass1,1);
-    processJobs(jobClass2,1);
-    processJobs(jobClass3,1);
-    processJobs(jobClass4,1);
-    processJobs(jobClass5,1);
+    processJobs(jobClass0);
+    processJobs(jobClass1);
+    processJobs(jobClass2);
+    processJobs(jobClass3);
+    processJobs(jobClass4);
+    processJobs(jobClass5);
   }
 }
 
