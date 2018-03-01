@@ -1,9 +1,15 @@
 #include <atomic>
 #include "../Jobs.h"
-
+#include "JobQueue.h"
 
 namespace {
   constexpr int LoopJobClass = 0;
+
+  /**
+   * There's a similar tuning parameter in
+   * tarch::multicore::internal::JobConsumer::MinNumberOfBackgroundJobs.
+   */
+  const int MinNumberOfJobs = 16;
 
 
   template <int D, typename F>
@@ -77,7 +83,7 @@ namespace {
       void loop() override {
         for (int i0=0; i0<ReductionJob<3,F>::_range.getRange()(0); i0++)
         for (int i1=0; i1<ReductionJob<3,F>::_range.getRange()(1); i1++)
-        for (int i2=0; i1<ReductionJob<3,F>::_range.getRange()(2); i2++) {
+        for (int i2=0; i2<ReductionJob<3,F>::_range.getRange()(2); i2++) {
           tarch::la::Vector<3,int> loc;
           loc = i0, i1, i2;
           ReductionJob<3,F>::_functorCopy(ReductionJob<3,F>::_range(loc));
@@ -218,7 +224,9 @@ void tarch::multicore::parallelReduce(
   }
 
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
+	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
+    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
   }
 }
 
@@ -240,7 +248,9 @@ void tarch::multicore::parallelReduce(
   }
 
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
+	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
+    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
   }
 }
 
@@ -262,7 +272,9 @@ void tarch::multicore::parallelReduce(
   }
 
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
+	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
+    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
   }
 }
 
@@ -284,7 +296,9 @@ void tarch::multicore::parallelReduce(
   }
 
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
+	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
+    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
   }
 }
 
@@ -305,7 +319,9 @@ void tarch::multicore::parallelFor(
   }
 
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
+	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
+    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
   }
 }
 
@@ -326,7 +342,9 @@ void tarch::multicore::parallelFor(
   }
 
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
+	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
+    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
   }
 }
 
@@ -347,7 +365,9 @@ void tarch::multicore::parallelFor(
   }
 
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
+	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
+    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
   }
 }
 
@@ -368,6 +388,8 @@ void tarch::multicore::parallelFor(
   }
 
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
+	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
+    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
   }
 }
