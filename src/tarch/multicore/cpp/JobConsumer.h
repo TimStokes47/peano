@@ -61,9 +61,6 @@ class tarch::multicore::internal::JobConsumer {
 	cpu_set_t*               _mask;
     int                      _numberOfLastJobQueue;
 
-	bool processBackgroundJobs();
-	bool processMPIReceiveJobs();
-
 	/**
 	 * There are two different application areas of this constant.
 	 *
@@ -73,8 +70,6 @@ class tarch::multicore::internal::JobConsumer {
 	 */
 	static const int MinNumberOfJobs;
 	static std::atomic<int> idleJobConsumers;
-
-	static int getNumberOfJobsToBeProcessed( int jobs );
   public:
 	static void addMask(int core, cpu_set_t* mask);
 	static void removeMask();

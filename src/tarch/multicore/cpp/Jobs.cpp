@@ -67,8 +67,35 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
 }
 
 
+/**
+ * MPI jobs are background jobs, too.
+ */
 bool tarch::multicore::jobs::processBackgroundJobs() {
-  return internal::JobQueue::getBackgroundQueue().processJobs( std::max(1,getNumberOfWaitingBackgroundJobs()/2) );
+  bool result = false;
+  int  numberOfJobs = 0;
+  numberOfJobs  = internal::JobQueue::getBackgroundQueue().getNumberOfPendingJobs();
+  if (numberOfJobs>0) {
+    internal::JobQueue::getBackgroundQueue().processJobs( std::max(1,numberOfJobs/2) );
+  }
+
+
+  #ifdef Parallel
+  numberOfJobs  = internal::JobQueue::getMPIReceiveQueue().getNumberOfPendingJobs();
+  if (numberOfJobs>0) {
+    int result = 0;
+    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &result, MPI_STATUS_IGNORE);
+
+    if (result) {
+      #ifdef Asserts
+      logInfo( "processMPIReceiveJobs()", "consumer task (pin=" << _pinCore << ") processes MPI receive background jobs" );
+      #endif
+      internal::JobQueue::getMPIReceiveQueue().processJobs( numberOfJobs );
+      result = true;
+    }
+  }
+  #endif
+
+  return result;
 }
 
 
