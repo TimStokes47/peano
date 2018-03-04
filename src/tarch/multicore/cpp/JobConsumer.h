@@ -64,10 +64,21 @@ class tarch::multicore::internal::JobConsumer {
 	bool processBackgroundJobs();
 	bool processMPIReceiveJobs();
 
-	static const int MinNumberOfBackgroundJobs;
+	/**
+	 * There are two different application areas of this constant.
+	 *
+	 * If we process background tasks, we always either process this many jobs
+	 * or we process, if there are more than those, the number of jobs divided
+	 * by the core count.
+	 */
+	static const int MinNumberOfJobs;
+	static std::atomic<int> idleJobConsumers;
+
+	static int getNumberOfJobsToBeProcessed( int jobs );
   public:
 	static void addMask(int core, cpu_set_t* mask);
 	static void removeMask();
+	static bool isOneConsumerIdle();
 
 	constexpr static int NoPinning = -1;
 
@@ -80,6 +91,17 @@ class tarch::multicore::internal::JobConsumer {
 
 	~JobConsumer();
 
+	/**
+	 * <h2> Sleep behaviour </h2>
+	 *
+	 * I frequently ran into the situation that some threads did starve as idle
+	 * consumer threads (notably throughout grid constructor when not that much
+	 * concurrency does exist) did block all semaphores. I thus found it useful
+	 * if threads sleep from time to time. It is very hard to find a reasonable
+	 * sleep time, so I usually use only one nanosecond, and I increase it
+	 * whenever a consumer finds itself not doing anything. In turn, it decreases
+	 * it if there are jobs around.
+	 */
 	void operator()();
 };
 

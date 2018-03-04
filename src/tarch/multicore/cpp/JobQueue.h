@@ -42,20 +42,34 @@ class tarch::multicore::internal::JobQueue {
 	JobQueue();
 
   public:
-	static constexpr int MaxNormalJobQueues = 8;
+	static std::atomic<int>  LatestQueueBefilled;
+	static constexpr int     MaxNormalJobQueues = 8;
 
 	~JobQueue();
 
-	static JobQueue& getBackgroundQueue();
-	static JobQueue& getMPIReceiveQueue();
-	static JobQueue& getStandardQueue(int jobClass);
+	static inline JobQueue& getBackgroundQueue() __attribute__((always_inline)) {
+      static tarch::multicore::internal::JobQueue queue;
+      return queue;
+    }
+
+	static inline JobQueue& getMPIReceiveQueue() __attribute__((always_inline)) {
+	  static tarch::multicore::internal::JobQueue queue;
+	  return queue;
+	}
+
+	static inline JobQueue& getStandardQueue(int jobClass) __attribute__((always_inline)) {
+	  static JobQueue queues[MaxNormalJobQueues];
+	  return queues[ jobClass%MaxNormalJobQueues ];
+	}
 
 	bool processJobs( int maxNumberOfJobs );
 
 	void addJob( jobs::Job* job );
 	void addJobWithHighPriority( jobs::Job* job );
 
-	int getNumberOfPendingJobs() const;
+	int inline getNumberOfPendingJobs() const __attribute__((always_inline)) {
+	  return _numberOfPendingJobs.load();
+	}
 
 	static std::string toString();
 };

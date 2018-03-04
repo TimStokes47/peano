@@ -8,6 +8,7 @@
 
 
 tarch::logging::Log tarch::multicore::internal::JobQueue::_log( "tarch::multicore::internal::JobQueue" );
+std::atomic<int>    tarch::multicore::internal::JobQueue::LatestQueueBefilled(0);
 
 
 tarch::multicore::internal::JobQueue::JobQueue() {
@@ -16,20 +17,10 @@ tarch::multicore::internal::JobQueue::JobQueue() {
 
 
 tarch::multicore::internal::JobQueue::~JobQueue() {
-
 }
 
 
-tarch::multicore::internal::JobQueue&  tarch::multicore::internal::JobQueue::getMPIReceiveQueue() {
-  static tarch::multicore::internal::JobQueue queue;
-  return queue;
-}
 
-
-tarch::multicore::internal::JobQueue&  tarch::multicore::internal::JobQueue::getBackgroundQueue() {
-  static tarch::multicore::internal::JobQueue queue;
-  return queue;
-}
 
 
 std::string tarch::multicore::internal::JobQueue::toString() {
@@ -63,38 +54,47 @@ bool tarch::multicore::internal::JobQueue::processJobs( int maxNumberOfJobs ) {
   _mutex.unlock();
   return result;
   #else
-  _mutex.lock();
-  maxNumberOfJobs = std::min( maxNumberOfJobs, static_cast<int>( _jobs.size() ));
 
-  if (maxNumberOfJobs==0) {
-    _mutex.unlock();
-    return false;
-  }
-  else {
-    std::list< jobs::Job* >::iterator lastElementToBeProcessed  = _jobs.begin();
-    for (int i=0; i<maxNumberOfJobs; i++) {
-      lastElementToBeProcessed++;
+  if (_numberOfPendingJobs.load()>0) {
+    _mutex.lock();
+
+    // might have changed meanwhile
+    maxNumberOfJobs = std::min( maxNumberOfJobs, static_cast<int>( _jobs.size() ));
+
+    if (maxNumberOfJobs==0) {
+      _mutex.unlock();
+      return false;
     }
-    std::list< jobs::Job* > localList;
-    localList.splice( localList.begin(), _jobs, _jobs.begin(), lastElementToBeProcessed );
+    else {
+      // This is the first thing we do to avoid that others try to read from
+      // the queue even if we are about to take all elements out.
+      _numberOfPendingJobs.fetch_sub(maxNumberOfJobs);
 
-    logDebug( "processJobs(int)", "spliced " << maxNumberOfJobs << " job(s) from job queue and will process those now" );
+      std::list< jobs::Job* >::iterator lastElementToBeProcessed  = _jobs.begin();
+      for (int i=0; i<maxNumberOfJobs; i++) {
+        lastElementToBeProcessed++;
+      }
+      std::list< jobs::Job* > localList;
+      localList.splice( localList.begin(), _jobs, _jobs.begin(), lastElementToBeProcessed );
 
-    _numberOfPendingJobs.fetch_sub(maxNumberOfJobs);
-    _mutex.unlock();
+      logDebug( "processJobs(int)", "spliced " << maxNumberOfJobs << " job(s) from job queue and will process those now" );
 
-    for (auto& p: localList) {
-      bool reenqueue = p->run();
-      if (reenqueue) {
+      _mutex.unlock();
+
+      for (auto& p: localList) {
+        bool reenqueue = p->run();
+        if (reenqueue) {
         addJob( p );
+        }
+        else {
+          delete p;
+        }
       }
-      else {
-        delete p;
-      }
-    }
 
-    return true;
+      return true;
+    }
   }
+  else return false;
   #endif
 }
 
@@ -113,18 +113,6 @@ void tarch::multicore::internal::JobQueue::addJobWithHighPriority( jobs::Job* jo
   _mutex.unlock();
   _numberOfPendingJobs.fetch_add(1);
 }
-
-
-int tarch::multicore::internal::JobQueue::getNumberOfPendingJobs() const {
-  return _numberOfPendingJobs.load();
-}
-
-
-tarch::multicore::internal::JobQueue& tarch::multicore::internal::JobQueue::getStandardQueue(int jobClass) {
-  static JobQueue queues[MaxNormalJobQueues];
-  return queues[ jobClass%MaxNormalJobQueues ];
-}
-
 
 
 #endif

@@ -301,7 +301,10 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       _regularGridContainer.getVertex(currentLevel,positionInArray).clearCounterOfAdjacentRefinedCells();
       _regularGridContainer.getVertex(currentLevel,positionInArray).saveAndClearAdjacentCellsInformation();
       _regularGridContainer.setIsReadFromTemporaryStack(currentLevel,positionInArray,false);
+
+      tarch::multicore::Lock lock(_vertexCounterSemaphore);
       _trackNumberOfReadsPerLevel[currentLevel]++;
+      lock.free();
 
       assertionNumericalEquals8(
         _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),

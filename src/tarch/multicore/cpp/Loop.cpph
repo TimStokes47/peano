@@ -1,24 +1,19 @@
 #include <atomic>
 #include "../Jobs.h"
 #include "JobQueue.h"
+#include "JobConsumer.h"
+
 
 namespace {
   constexpr int LoopJobClass = 0;
 
-  /**
-   * There's a similar tuning parameter in
-   * tarch::multicore::internal::JobConsumer::MinNumberOfBackgroundJobs.
-   */
-  const int MinNumberOfJobs = 16;
-
-
   template <int D, typename F>
   class ReductionJob: public tarch::multicore::jobs::Job {
     protected:
-      const tarch::multicore::dForRange<D>  _range;
-      F                                     _functorCopy;
-      std::atomic_flag&                     _spinLock;
-      std::atomic<int>&                     _pendingLoopJobInstances;
+      tarch::multicore::dForRange<D>  _range;
+      F                               _functorCopy;
+      std::atomic_flag&               _spinLock;
+      std::atomic<int>&               _pendingLoopJobInstances;
 
       virtual void loop() = 0;
     public:
@@ -31,17 +26,27 @@ namespace {
       }
 
       bool run() override {
-        loop();
+        if ( tarch::multicore::internal::JobConsumer::isOneConsumerIdle() and _range.isDivisible()) {
+          tarch::multicore::dForRange<D>  newRange = _range.split();
+          _pendingLoopJobInstances.fetch_add(1);
+          tarch::multicore::jobs::spawn( clone(newRange,_functorCopy,_spinLock,_pendingLoopJobInstances) );
+          return true;
+        }
+        else {
+          loop();
 
-        while (_spinLock.test_and_set(std::memory_order_acquire)); // spin
-        _functorCopy.mergeIntoMasterThread();
-        _spinLock.clear(std::memory_order_release);
+          while (_spinLock.test_and_set(std::memory_order_acquire)); // spin
+          _functorCopy.mergeIntoMasterThread();
+          _spinLock.clear(std::memory_order_release);
 
-        assertion( _pendingLoopJobInstances.load()>=1 );
-        _pendingLoopJobInstances.fetch_sub(1);
+          assertion( _pendingLoopJobInstances.load()>=1 );
+          _pendingLoopJobInstances.fetch_sub(1);
 
-        return false;
+          return false;
+        }
       }
+
+      virtual Job*  clone(const tarch::multicore::dForRange<D>&  range, F& functor, std::atomic_flag& spinLock, std::atomic<int>& pendingLoopJobInstances) const = 0;
 
       virtual ~ReductionJob() {}
   };
@@ -59,6 +64,10 @@ namespace {
     public:
       ReductionJob1d(const tarch::multicore::dForRange<1>&  range, F& functor, std::atomic_flag& spinLock, std::atomic<int>& pendingLoopJobInstances):
     	ReductionJob<1,F>(range,functor,spinLock,pendingLoopJobInstances){}
+
+      virtual tarch::multicore::jobs::Job*  clone(const tarch::multicore::dForRange<1>&  range, F& functor, std::atomic_flag& spinLock, std::atomic<int>& pendingLoopJobInstances) const {
+        return new ReductionJob1d(range, functor, spinLock, pendingLoopJobInstances);
+      }
   };
 
   template <typename F>
@@ -75,6 +84,10 @@ namespace {
     public:
       ReductionJob2d(const tarch::multicore::dForRange<2>&  range, F& functor, std::atomic_flag& spinLock, std::atomic<int>& pendingLoopJobInstances):
     	ReductionJob<2,F>(range,functor,spinLock,pendingLoopJobInstances){}
+
+      virtual tarch::multicore::jobs::Job*  clone(const tarch::multicore::dForRange<2>&  range, F& functor, std::atomic_flag& spinLock, std::atomic<int>& pendingLoopJobInstances) const {
+        return new ReductionJob2d(range, functor, spinLock, pendingLoopJobInstances);
+      }
   };
 
   template <typename F>
@@ -92,6 +105,10 @@ namespace {
     public:
       ReductionJob3d(const tarch::multicore::dForRange<3>&  range, F& functor, std::atomic_flag& spinLock, std::atomic<int>& pendingLoopJobInstances):
     	ReductionJob<3,F>(range,functor,spinLock,pendingLoopJobInstances){}
+
+      virtual tarch::multicore::jobs::Job*  clone(const tarch::multicore::dForRange<3>&  range, F& functor, std::atomic_flag& spinLock, std::atomic<int>& pendingLoopJobInstances) const {
+        return new ReductionJob3d(range, functor, spinLock, pendingLoopJobInstances);
+      }
   };
 
   template <typename F>
@@ -110,15 +127,19 @@ namespace {
     public:
       ReductionJob4d(const tarch::multicore::dForRange<4>&  range, F& functor, std::atomic_flag& spinLock, std::atomic<int>& pendingLoopJobInstances):
     	ReductionJob<4,F>(range,functor,spinLock,pendingLoopJobInstances){}
+
+      virtual tarch::multicore::jobs::Job*  clone(const tarch::multicore::dForRange<4>&  range, F& functor, std::atomic_flag& spinLock, std::atomic<int>& pendingLoopJobInstances) const {
+        return new ReductionJob4d(range, functor, spinLock, pendingLoopJobInstances);
+      }
   };
 
 
   template <int D, typename F>
   class LoopJob: public tarch::multicore::jobs::Job {
     protected:
-      const tarch::multicore::dForRange<D>  _range;
-      F&                                    _functor;
-      std::atomic<int>&                     _pendingLoopJobInstances;
+      tarch::multicore::dForRange<D>  _range;
+      F&                              _functor;
+      std::atomic<int>&               _pendingLoopJobInstances;
 
       virtual void loop() = 0;
     public:
@@ -130,11 +151,21 @@ namespace {
       }
 
       bool run() override {
-        loop();
-        assertion( _pendingLoopJobInstances.load()>=1 );
-        _pendingLoopJobInstances.fetch_sub(1);
-        return false;
+        if ( tarch::multicore::internal::JobConsumer::isOneConsumerIdle() and _range.isDivisible()) {
+          tarch::multicore::dForRange<D>  newRange = _range.split();
+          _pendingLoopJobInstances.fetch_add(1);
+          tarch::multicore::jobs::spawn( clone(newRange,_functor,_pendingLoopJobInstances) );
+          return true;
+        }
+        else {
+          loop();
+          assertion( _pendingLoopJobInstances.load()>=1 );
+          _pendingLoopJobInstances.fetch_sub(1);
+          return false;
+        }
       }
+
+      virtual Job*  clone(const tarch::multicore::dForRange<D>&  range, F& functor, std::atomic<int>& pendingLoopJobInstances) const = 0;
 
       virtual ~LoopJob() {}
   };
@@ -151,7 +182,11 @@ namespace {
       }
     public:
       LoopJob1d(const tarch::multicore::dForRange<1>&  range, F& functor, std::atomic<int>& pendingLoopJobInstances):
-    	LoopJob<1,F>(range,functor,pendingLoopJobInstances){}
+    	LoopJob<1,F>(range,functor,pendingLoopJobInstances) {}
+
+      virtual tarch::multicore::jobs::Job*  clone(const tarch::multicore::dForRange<1>&  range, F& functor, std::atomic<int>& pendingLoopJobInstances) const {
+        return new LoopJob1d(range,functor,pendingLoopJobInstances);
+      }
   };
 
   template <typename F>
@@ -168,6 +203,10 @@ namespace {
     public:
       LoopJob2d(const tarch::multicore::dForRange<2>&  range, F& functor, std::atomic<int>& pendingLoopJobInstances):
     	LoopJob<2,F>(range,functor,pendingLoopJobInstances){}
+
+      virtual tarch::multicore::jobs::Job*  clone(const tarch::multicore::dForRange<2>&  range, F& functor, std::atomic<int>& pendingLoopJobInstances) const {
+        return new LoopJob2d(range,functor,pendingLoopJobInstances);
+      }
   };
 
   template <typename F>
@@ -185,6 +224,10 @@ namespace {
     public:
       LoopJob3d(const tarch::multicore::dForRange<3>&  range, F& functor, std::atomic<int>& pendingLoopJobInstances):
     	LoopJob<3,F>(range,functor,pendingLoopJobInstances){}
+
+      virtual tarch::multicore::jobs::Job*  clone(const tarch::multicore::dForRange<3>&  range, F& functor, std::atomic<int>& pendingLoopJobInstances) const {
+        return new LoopJob3d(range,functor,pendingLoopJobInstances);
+      }
   };
 
   template <typename F>
@@ -203,6 +246,10 @@ namespace {
     public:
       LoopJob4d(const tarch::multicore::dForRange<4>&  range, F& functor, std::atomic<int>& pendingLoopJobInstances):
     	LoopJob<4,F>(range,functor,pendingLoopJobInstances){}
+
+      virtual tarch::multicore::jobs::Job*  clone(const tarch::multicore::dForRange<4>&  range, F& functor, std::atomic<int>& pendingLoopJobInstances) const {
+        return new LoopJob4d(range,functor,pendingLoopJobInstances);
+      }
   };
 }
 
@@ -212,21 +259,16 @@ void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<1>&  range,
   F&                                     function
 ) {
-  std::vector< dForRange<1> > ranges = range.getMinimalRanges();
-  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
-
   std::atomic_flag    spinLock = ATOMIC_FLAG_INIT;
-  std::atomic<int>    pendingLoopJobInstances( static_cast<int>(ranges.size()) );
+  std::atomic<int>    pendingLoopJobInstances(1);
 
-  for(size_t i=0; i!=ranges.size(); ++i) {
-	ReductionJob1d<F>* job = new ReductionJob1d<F>(ranges[i], function, spinLock, pendingLoopJobInstances);
-    tarch::multicore::jobs::spawn( job );
-  }
+  tarch::multicore::jobs::spawn( new ReductionJob1d<F>(range,function, spinLock, pendingLoopJobInstances) );
+
+  internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
   while (pendingLoopJobInstances.load()>0) {
-	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
-	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
-    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
+	  // @todo nachdenken und dokumentieren
+    if (internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()>0)  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   }
 }
 
@@ -236,21 +278,15 @@ void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<2>&  range,
   F&                                     function
 ) {
-  std::vector< dForRange<2> > ranges = range.getMinimalRanges();
-  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
-
   std::atomic_flag    spinLock = ATOMIC_FLAG_INIT;
-  std::atomic<int>    pendingLoopJobInstances( static_cast<int>(ranges.size()) );
+  std::atomic<int>    pendingLoopJobInstances(1);
 
-  for(size_t i=0; i!=ranges.size(); ++i) {
-	ReductionJob2d<F>* job = new ReductionJob2d<F>(ranges[i], function, spinLock, pendingLoopJobInstances);
-    tarch::multicore::jobs::spawn( job );
-  }
+  tarch::multicore::jobs::spawn( new ReductionJob2d<F>(range,function, spinLock, pendingLoopJobInstances) );
+
+  internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
   while (pendingLoopJobInstances.load()>0) {
-	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
-	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
-    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
+    if (internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()>0)  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   }
 }
 
@@ -260,21 +296,15 @@ void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<3>&  range,
   F&                                     function
 ) {
-  std::vector< dForRange<3> > ranges = range.getMinimalRanges();
-  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
-
   std::atomic_flag    spinLock = ATOMIC_FLAG_INIT;
-  std::atomic<int>    pendingLoopJobInstances( static_cast<int>(ranges.size()) );
+  std::atomic<int>    pendingLoopJobInstances(1);
 
-  for(size_t i=0; i!=ranges.size(); ++i) {
-	ReductionJob3d<F>* job = new ReductionJob3d<F>(ranges[i], function, spinLock, pendingLoopJobInstances);
-    tarch::multicore::jobs::spawn( job );
-  }
+  tarch::multicore::jobs::spawn( new ReductionJob3d<F>(range,function, spinLock, pendingLoopJobInstances) );
+
+  internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
   while (pendingLoopJobInstances.load()>0) {
-	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
-	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
-    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
+    if (internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()>0)  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   }
 }
 
@@ -284,21 +314,15 @@ void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<4>&  range,
   F&                                     function
 ) {
-  std::vector< dForRange<4> > ranges = range.getMinimalRanges();
-  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
-
   std::atomic_flag    spinLock = ATOMIC_FLAG_INIT;
-  std::atomic<int>    pendingLoopJobInstances( static_cast<int>(ranges.size()) );
+  std::atomic<int>    pendingLoopJobInstances(1);
 
-  for(size_t i=0; i!=ranges.size(); ++i) {
-    ReductionJob4d<F>* job = new ReductionJob4d<F>(ranges[i], function, spinLock, pendingLoopJobInstances);
-    tarch::multicore::jobs::spawn( job );
-  }
+  tarch::multicore::jobs::spawn( new ReductionJob4d<F>(range,function, spinLock, pendingLoopJobInstances) );
+
+  internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
   while (pendingLoopJobInstances.load()>0) {
-	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
-	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
-    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
+    if (internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()>0)  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   }
 }
 
@@ -308,20 +332,14 @@ void tarch::multicore::parallelFor(
   const tarch::multicore::dForRange<1>&  range,
   F&                                     function
 ) {
-  std::vector< dForRange<1> > ranges = range.getMinimalRanges();
-  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
+  std::atomic<int>    pendingLoopJobInstances(1);
 
-  std::atomic<int>    pendingLoopJobInstances( static_cast<int>(ranges.size()) );
+  tarch::multicore::jobs::spawn( new LoopJob1d<F>(range,function,pendingLoopJobInstances) );
 
-  for(size_t i=0; i!=ranges.size(); ++i) {
-	LoopJob1d<F>* job = new LoopJob1d<F>(ranges[i],function,pendingLoopJobInstances);
-    tarch::multicore::jobs::spawn(job);
-  }
+  internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
   while (pendingLoopJobInstances.load()>0) {
-	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
-	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
-    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
+    if (internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()>0)  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   }
 }
 
@@ -331,20 +349,14 @@ void tarch::multicore::parallelFor(
   const tarch::multicore::dForRange<2>&  range,
   F&                                     function
 ) {
-  std::vector< dForRange<2> > ranges = range.getMinimalRanges();
-  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
+  std::atomic<int>    pendingLoopJobInstances(1);
 
-  std::atomic<int>    pendingLoopJobInstances( static_cast<int>(ranges.size()) );
+  tarch::multicore::jobs::spawn( new LoopJob2d<F>(range,function,pendingLoopJobInstances) );
 
-  for(size_t i=0; i!=ranges.size(); ++i) {
-    LoopJob2d<F>* job = new LoopJob2d<F>(ranges[i],function,pendingLoopJobInstances);
-    tarch::multicore::jobs::spawn(job);
-  }
+  internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
   while (pendingLoopJobInstances.load()>0) {
-	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
-	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
-    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
+    if (internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()>0)  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   }
 }
 
@@ -354,20 +366,14 @@ void tarch::multicore::parallelFor(
   const tarch::multicore::dForRange<3>&  range,
   F&                                     function
 ) {
-  std::vector< dForRange<3> > ranges = range.getMinimalRanges();
-  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
+  std::atomic<int>    pendingLoopJobInstances(1);
 
-  std::atomic<int>    pendingLoopJobInstances( static_cast<int>(ranges.size()) );
+  tarch::multicore::jobs::spawn( new LoopJob3d<F>(range,function,pendingLoopJobInstances) );
 
-  for(size_t i=0; i!=ranges.size(); ++i) {
-	LoopJob3d<F>* job = new LoopJob3d<F>(ranges[i],function,pendingLoopJobInstances);
-    tarch::multicore::jobs::spawn(job);
-  }
+  internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
   while (pendingLoopJobInstances.load()>0) {
-	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
-	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
-    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
+    if (internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()>0)  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   }
 }
 
@@ -377,19 +383,13 @@ void tarch::multicore::parallelFor(
   const tarch::multicore::dForRange<4>&  range,
   F&                                     function
 ) {
-  std::vector< dForRange<4> > ranges = range.getMinimalRanges();
-  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
+  std::atomic<int>    pendingLoopJobInstances(1);
 
-  std::atomic<int>    pendingLoopJobInstances( static_cast<int>(ranges.size()) );
+  tarch::multicore::jobs::spawn( new LoopJob4d<F>(range,function,pendingLoopJobInstances) );
 
-  for(size_t i=0; i!=ranges.size(); ++i) {
-	LoopJob4d<F>* job = new LoopJob4d<F>(ranges[i],function,pendingLoopJobInstances);
-    tarch::multicore::jobs::spawn(job);
-  }
+  internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
   while (pendingLoopJobInstances.load()>0) {
-	//const int maxNumberOfJobs = static_cast<int>(ranges.size())/2;
-	const int maxNumberOfJobs = std::max(tarch::multicore::internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()/2,MinNumberOfJobs);
-    tarch::multicore::jobs::processJobs(LoopJobClass,maxNumberOfJobs);
+    if (internal::JobQueue::getStandardQueue(LoopJobClass).getNumberOfPendingJobs()>0)  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   }
 }

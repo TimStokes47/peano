@@ -70,6 +70,14 @@ class peano::datatraversal::autotuning::OracleForOnePhaseDummy: public peano::da
 
     /**
      * Dummy oracle
+     *
+     * @param useMultithreading               Allows users to switch multithreading completely on/off
+     * @param grainSizeOfUserDefinedRegions   Value used as grain size in user-defined regions by default. 0 (switching off) works if there are no user-defined parallel regions
+     * @param splitTheTree                    See enumeration SplitVertexReadsOnRegularSubtree
+     * @param pipelineDescendProcessing       Enable pipelining, i.e. the overlapping of data loads and processing
+     * @param pipelineDescendProcessing       Enable pipelining, i.e. the overlapping of data processing and stores
+     * @param smallestProblemSizeForAscendDescend  If a problem size is small than this threshold, no parallelisation is used
+     * @param grainSizeForAscendDescend            If a problem is bigger than the threshold, then this grain size is used
      */
     OracleForOnePhaseDummy(
       bool useMultithreading                  = true,

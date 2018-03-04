@@ -14,14 +14,17 @@
 #include <climits>
 
 tarch::logging::Log   tarch::multicore::internal::JobConsumer::_log( "tarch::multicore::internal::JobConsumer" );
-const int tarch::multicore::internal::JobConsumer::MinNumberOfBackgroundJobs = 16;
+const int             tarch::multicore::internal::JobConsumer::MinNumberOfJobs = 16;
+
+
+std::atomic<int> tarch::multicore::internal::JobConsumer::idleJobConsumers(0);
 
 
 tarch::multicore::internal::JobConsumer::JobConsumer(int pinCore, JobConsumerController* controller, cpu_set_t*  mask):
   _pinCore(pinCore),
   _controller(controller),
   _mask(mask),
-  _numberOfLastJobQueue(0) {
+  _numberOfLastJobQueue(-1) {
 }
 
 
@@ -29,12 +32,22 @@ tarch::multicore::internal::JobConsumer::~JobConsumer() {
 }
 
 
+bool tarch::multicore::internal::JobConsumer::isOneConsumerIdle() {
+  return idleJobConsumers.load()>0;
+}
+
+
+int tarch::multicore::internal::JobConsumer::getNumberOfJobsToBeProcessed( int numberOfJobs ) {
+  static int numberOfCores = std::max(2,tarch::multicore::Core::getInstance().getNumberOfThreads());
+  return std::max(MinNumberOfJobs,numberOfJobs/numberOfCores);
+}
+
+
 bool tarch::multicore::internal::JobConsumer::processBackgroundJobs() {
   const int  numberOfJobs  = internal::JobQueue::getBackgroundQueue().getNumberOfPendingJobs();
-  static int numberOfCores = std::max(2,tarch::multicore::Core::getInstance().getNumberOfThreads());
-  if (numberOfJobs>=MinNumberOfBackgroundJobs) {
+  if (numberOfJobs>0) {
     logDebug( "operator()", "consumer task (pin=" << _pinCore << ") processes " << numberOfJobs << " background jobs" );
-    internal::JobQueue::getBackgroundQueue().processJobs( std::max(MinNumberOfBackgroundJobs,numberOfJobs/numberOfCores) );
+    internal::JobQueue::getBackgroundQueue().processJobs( getNumberOfJobsToBeProcessed(numberOfJobs) );
     return true;
   }
   else return false;
@@ -45,7 +58,7 @@ bool tarch::multicore::internal::JobConsumer::processMPIReceiveJobs() {
   #ifdef Parallel
   const int  numberOfJobs  = internal::JobQueue::getBackgroundQueue().getNumberOfPendingJobs();
 
-  if (numberOfJobs>=MinNumberOfBackgroundJobs) {
+  if (numberOfJobs>0) {
     int result = 0;
     MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &result, MPI_STATUS_IGNORE);
 
@@ -70,6 +83,10 @@ void tarch::multicore::internal::JobConsumer::operator()() {
 	addMask(_pinCore,_mask);
   }
 
+  idleJobConsumers.fetch_add(1);
+
+  std::chrono::nanoseconds sleepTime(1);
+
   JobConsumerController::State state = JobConsumerController::State::Running;
   while (state!=JobConsumerController::State::TerminateTriggered) {
 	switch (state) {
@@ -77,17 +94,39 @@ void tarch::multicore::internal::JobConsumer::operator()() {
         {
           bool foundJob = true;
           while (foundJob) {
-            foundJob = false;
-            for (int i=0; i<internal::JobQueue::MaxNormalJobQueues; i++) {
-              const int queueNumber = (i + _numberOfLastJobQueue);
+            if (sleepTime>std::chrono::nanoseconds(1)) {
+              sleepTime/=2;
+            }
+        	if (_numberOfLastJobQueue>=0) {
+              const int queueNumber = _numberOfLastJobQueue;
               const int jobs = internal::JobQueue::getStandardQueue(queueNumber).getNumberOfPendingJobs();
               if (jobs>0) {
-              	logDebug( "operator()", "consumer task (pin=" << _pinCore << ") grabbed " << jobs << " job(s) from class " <<  queueNumber );
-                internal::JobQueue::getStandardQueue(queueNumber).processJobs( std::numeric_limits<int>::max() );
+                idleJobConsumers.fetch_add(-1);
+                internal::JobQueue::getStandardQueue(queueNumber).processJobs( getNumberOfJobsToBeProcessed(jobs) );
                 _numberOfLastJobQueue = queueNumber;
                 foundJob = true;
+                idleJobConsumers.fetch_add(1);
               }
-            }
+              else {
+                _numberOfLastJobQueue = -1;
+                foundJob = true; // either to poll all queues
+              }
+         	}
+        	else {
+              foundJob = false;
+              for (int i=0; i<internal::JobQueue::MaxNormalJobQueues; i++) {
+                const int queueNumber = (i + internal::JobQueue::LatestQueueBefilled.load());
+                const int jobs = internal::JobQueue::getStandardQueue(queueNumber).getNumberOfPendingJobs();
+                if (jobs>0) {
+                  idleJobConsumers.fetch_add(-1);
+                  logDebug( "operator()", "consumer task (pin=" << _pinCore << ") grabbed " << jobs << " job(s) from class " <<  queueNumber );
+                  internal::JobQueue::getStandardQueue(queueNumber).processJobs( getNumberOfJobsToBeProcessed(jobs) );
+                  _numberOfLastJobQueue = queueNumber;
+                  foundJob = true;
+                  idleJobConsumers.fetch_add(1);
+                }
+              }
+        	}
           }
           processMPIReceiveJobs();
           processBackgroundJobs();
@@ -104,10 +143,15 @@ void tarch::multicore::internal::JobConsumer::operator()() {
     	break;
 	}
 
+    sleepTime++;
+	std::this_thread::sleep_for (sleepTime);
+
     _controller->lock();
 	state = _controller->state;
 	_controller->unlock();
   }
+
+  idleJobConsumers.fetch_add(-1);
 
   if (_pinCore!=NoPinning) {
     removeMask();
