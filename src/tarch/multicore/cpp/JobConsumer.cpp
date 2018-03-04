@@ -85,8 +85,6 @@ void tarch::multicore::internal::JobConsumer::operator()() {
 
   idleJobConsumers.fetch_add(1);
 
-  std::chrono::nanoseconds sleepTime(1);
-
   JobConsumerController::State state = JobConsumerController::State::Running;
   while (state!=JobConsumerController::State::TerminateTriggered) {
 	switch (state) {
@@ -102,7 +100,6 @@ void tarch::multicore::internal::JobConsumer::operator()() {
                 internal::JobQueue::getStandardQueue(queueNumber).processJobs( getNumberOfJobsToBeProcessed(jobs) );
                 _numberOfLastJobQueue = queueNumber;
                 foundJob = true;
-                sleepTime/=2;
                 idleJobConsumers.fetch_add(1);
               }
               else {
@@ -121,14 +118,14 @@ void tarch::multicore::internal::JobConsumer::operator()() {
                   internal::JobQueue::getStandardQueue(queueNumber).processJobs( getNumberOfJobsToBeProcessed(jobs) );
                   _numberOfLastJobQueue = queueNumber;
                   foundJob = true;
-                  sleepTime/=2;
                   idleJobConsumers.fetch_add(1);
                 }
               }
         	}
           }
-          processMPIReceiveJobs();
-          processBackgroundJobs();
+          foundJob |= processMPIReceiveJobs();
+          foundJob |= processBackgroundJobs();
+          if (!foundJob) std::this_thread::yield();
         }
     	break;
       case JobConsumerController::State::TerminateTriggered:
@@ -141,9 +138,6 @@ void tarch::multicore::internal::JobConsumer::operator()() {
     	assertionMsg(false, "not supported yet" );
     	break;
 	}
-
-	if (sleepTime>std::chrono::nanoseconds(0)) std::this_thread::sleep_for (sleepTime);
-    sleepTime++;
 
     _controller->lock();
 	state = _controller->state;

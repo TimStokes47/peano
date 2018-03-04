@@ -97,10 +97,9 @@ class tarch::multicore::internal::JobConsumer {
 	 * I frequently ran into the situation that some threads did starve as idle
 	 * consumer threads (notably throughout grid constructor when not that much
 	 * concurrency does exist) did block all semaphores. I thus found it useful
-	 * if threads sleep from time to time. It is very hard to find a reasonable
-	 * sleep time, so I usually use only one nanosecond, and I increase it
-	 * whenever a consumer finds itself not doing anything. In turn, it decreases
-	 * it if there are jobs around.
+	 * to make consumers yield their thread if no work is available. We could
+	 * also send them to sleep, but then getting the sleep time right is kind of
+	 * black magic. So we stick to the yield.
 	 */
 	void operator()();
 };
