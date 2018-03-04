@@ -59,7 +59,6 @@ class tarch::multicore::internal::JobConsumer {
 	const int                _pinCore;
 	JobConsumerController*   _controller;
 	cpu_set_t*               _mask;
-    int                      _numberOfLastJobQueue;
 
 	/**
 	 * There are two different application areas of this constant.
@@ -95,6 +94,12 @@ class tarch::multicore::internal::JobConsumer {
 	 * to make consumers yield their thread if no work is available. We could
 	 * also send them to sleep, but then getting the sleep time right is kind of
 	 * black magic. So we stick to the yield.
+	 *
+	 * <h2> Idle consumers </h2>
+	 *
+	 * Technically, a consumer is idle if and only if it processes real jobs.
+	 * If we do background jobs, we are indeed idle, as the job could actually
+	 * do something else (something more meaningful).
 	 */
 	void operator()();
 };

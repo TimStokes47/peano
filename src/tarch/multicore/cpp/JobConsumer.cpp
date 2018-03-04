@@ -24,8 +24,7 @@ std::atomic<int> tarch::multicore::internal::JobConsumer::idleJobConsumers(0);
 tarch::multicore::internal::JobConsumer::JobConsumer(int pinCore, JobConsumerController* controller, cpu_set_t*  mask):
   _pinCore(pinCore),
   _controller(controller),
-  _mask(mask),
-  _numberOfLastJobQueue(-1) {
+  _mask(mask) {
 }
 
 
@@ -51,42 +50,28 @@ void tarch::multicore::internal::JobConsumer::operator()() {
       case JobConsumerController::State::Running:
         {
           bool foundJob = true;
+          bool processedJob = false;
           while (foundJob) {
-        	if (_numberOfLastJobQueue>=0) {
-              const int queueNumber = _numberOfLastJobQueue;
+            foundJob = false;
+            for (int i=0; i<internal::JobQueue::MaxNormalJobQueues; i++) {
+              const int queueNumber = (i + internal::JobQueue::LatestQueueBefilled.load());
               const int jobs = internal::JobQueue::getStandardQueue(queueNumber).getNumberOfPendingJobs();
               if (jobs>0) {
                 idleJobConsumers.fetch_add(-1);
+                logDebug( "operator()", "consumer task (pin=" << _pinCore << ") grabbed " << jobs << " job(s) from class " <<  queueNumber );
                 internal::JobQueue::getStandardQueue(queueNumber).processJobs( MinNumberOfJobs );
-                _numberOfLastJobQueue = queueNumber;
-                foundJob = true;
                 idleJobConsumers.fetch_add(1);
-              }
-              else {
-                _numberOfLastJobQueue = -1;
-                foundJob = true; // either to poll all queues
-              }
-         	}
-        	else {
-              foundJob = false;
-              for (int i=0; i<internal::JobQueue::MaxNormalJobQueues; i++) {
-                const int queueNumber = (i + internal::JobQueue::LatestQueueBefilled.load());
-                const int jobs = internal::JobQueue::getStandardQueue(queueNumber).getNumberOfPendingJobs();
-                if (jobs>0) {
-                  idleJobConsumers.fetch_add(-1);
-                  logDebug( "operator()", "consumer task (pin=" << _pinCore << ") grabbed " << jobs << " job(s) from class " <<  queueNumber );
-                  internal::JobQueue::getStandardQueue(queueNumber).processJobs( MinNumberOfJobs );
-                  _numberOfLastJobQueue = queueNumber;
-                  foundJob = true;
-                  idleJobConsumers.fetch_add(1);
-                }
+                foundJob = true;
+                processedJob = true;
+                i--;
               }
         	}
           }
 
-          foundJob |= tarch::multicore::jobs::processBackgroundJobs();
-
-          if (!foundJob) std::this_thread::yield();
+          processedJob |= tarch::multicore::jobs::processBackgroundJobs();
+          if (!processedJob) {
+          	std::this_thread::yield();
+          }
         }
     	break;
       case JobConsumerController::State::TerminateTriggered:

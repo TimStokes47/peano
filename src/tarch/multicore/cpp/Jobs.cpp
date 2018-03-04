@@ -73,11 +73,11 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
 bool tarch::multicore::jobs::processBackgroundJobs() {
   bool result = false;
   int  numberOfJobs = 0;
+  const int MinNumberOfBackgroundJobs = 1;
   numberOfJobs  = internal::JobQueue::getBackgroundQueue().getNumberOfPendingJobs();
   if (numberOfJobs>0) {
-    internal::JobQueue::getBackgroundQueue().processJobs( std::max(1,numberOfJobs/2) );
+    internal::JobQueue::getBackgroundQueue().processJobs( std::max(MinNumberOfBackgroundJobs,numberOfJobs/2) );
   }
-
 
   #ifdef Parallel
   numberOfJobs  = internal::JobQueue::getMPIReceiveQueue().getNumberOfPendingJobs();
