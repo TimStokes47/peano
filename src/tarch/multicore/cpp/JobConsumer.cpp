@@ -94,9 +94,6 @@ void tarch::multicore::internal::JobConsumer::operator()() {
         {
           bool foundJob = true;
           while (foundJob) {
-            if (sleepTime>std::chrono::nanoseconds(1)) {
-              sleepTime/=2;
-            }
         	if (_numberOfLastJobQueue>=0) {
               const int queueNumber = _numberOfLastJobQueue;
               const int jobs = internal::JobQueue::getStandardQueue(queueNumber).getNumberOfPendingJobs();
@@ -105,6 +102,7 @@ void tarch::multicore::internal::JobConsumer::operator()() {
                 internal::JobQueue::getStandardQueue(queueNumber).processJobs( getNumberOfJobsToBeProcessed(jobs) );
                 _numberOfLastJobQueue = queueNumber;
                 foundJob = true;
+                sleepTime/=2;
                 idleJobConsumers.fetch_add(1);
               }
               else {
@@ -123,6 +121,7 @@ void tarch::multicore::internal::JobConsumer::operator()() {
                   internal::JobQueue::getStandardQueue(queueNumber).processJobs( getNumberOfJobsToBeProcessed(jobs) );
                   _numberOfLastJobQueue = queueNumber;
                   foundJob = true;
+                  sleepTime/=2;
                   idleJobConsumers.fetch_add(1);
                 }
               }
@@ -143,8 +142,8 @@ void tarch::multicore::internal::JobConsumer::operator()() {
     	break;
 	}
 
+	if (sleepTime>std::chrono::nanoseconds(0)) std::this_thread::sleep_for (sleepTime);
     sleepTime++;
-	std::this_thread::sleep_for (sleepTime);
 
     _controller->lock();
 	state = _controller->state;

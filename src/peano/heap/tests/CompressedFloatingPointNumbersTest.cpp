@@ -54,9 +54,9 @@ void peano::heap::tests::CompressedFloatingPointNumbersTest::testTinyValues() {
   peano::heap::decompose( value, exponent, mantissa );
   int    integerExponent;
   std::frexp(value , &integerExponent);
-  validateEqualsWithParams8(
+  validateEqualsWithParams7(
 	mantissa, 0, static_cast<int>(exponent), value, static_cast<int>(exponent), mantissa,
-	std::frexp(value , &integerExponent), integerExponent,
+	integerExponent,
 	std::numeric_limits<double>::digits-1,
 	static_cast<int>(std::numeric_limits<char>::min())
   );
