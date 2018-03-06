@@ -255,7 +255,10 @@ namespace {
 
 
 /**
- * The processing here is only one job at a time. This is maybe not optimal yet.
+ * The first process call does only one job. The idea is that this one then
+ * spawns at least two jobs and thus allows other threads to step in. From
+ * hereon, our goal is to finish all jobs asap, and therefore we do a busy
+ * loop which processes as many jobs as possible per step.
  */
 template <typename F>
 void tarch::multicore::parallelReduce(
@@ -269,8 +272,9 @@ void tarch::multicore::parallelReduce(
 
   internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
+  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+    tarch::multicore::jobs::processJobs(LoopJobClass);
   }
 }
 
@@ -287,8 +291,9 @@ void tarch::multicore::parallelReduce(
 
   internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
+  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+    tarch::multicore::jobs::processJobs(LoopJobClass);
   }
 }
 
@@ -305,8 +310,9 @@ void tarch::multicore::parallelReduce(
 
   internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
+  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+    tarch::multicore::jobs::processJobs(LoopJobClass);
   }
 }
 
@@ -323,8 +329,9 @@ void tarch::multicore::parallelReduce(
 
   internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
+  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+    tarch::multicore::jobs::processJobs(LoopJobClass);
   }
 }
 
@@ -357,8 +364,9 @@ void tarch::multicore::parallelFor(
 
   internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
+  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+    tarch::multicore::jobs::processJobs(LoopJobClass);
   }
 }
 
@@ -374,8 +382,9 @@ void tarch::multicore::parallelFor(
 
   internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
+  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+    tarch::multicore::jobs::processJobs(LoopJobClass);
   }
 }
 
@@ -391,7 +400,8 @@ void tarch::multicore::parallelFor(
 
   internal::JobQueue::LatestQueueBefilled = LoopJobClass; // use biggest class as I'll myself start with lowest
 
+  tarch::multicore::jobs::processJobs(LoopJobClass,1);
   while (pendingLoopJobInstances.load()>0) {
-    tarch::multicore::jobs::processJobs(LoopJobClass,1);
+    tarch::multicore::jobs::processJobs(LoopJobClass);
   }
 }
