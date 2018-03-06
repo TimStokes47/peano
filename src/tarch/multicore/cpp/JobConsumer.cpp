@@ -14,15 +14,14 @@
 #include <cstdint>
 #include <climits>
 
+
 tarch::logging::Log   tarch::multicore::internal::JobConsumer::_log( "tarch::multicore::internal::JobConsumer" );
 const int             tarch::multicore::internal::JobConsumer::MinNumberOfJobs = 32;
 
 
-std::atomic<int> tarch::multicore::internal::JobConsumer::idleJobConsumers(0);
-
-
-tarch::multicore::internal::JobConsumer::JobConsumer(int pinCore, JobConsumerController* controller, cpu_set_t*  mask):
+tarch::multicore::internal::JobConsumer::JobConsumer(int pinCore, bool hyperthreading, JobConsumerController* controller, cpu_set_t*  mask):
   _pinCore(pinCore),
+  _hyperthreading(hyperthreading),
   _controller(controller),
   _mask(mask) {
 }
@@ -32,17 +31,10 @@ tarch::multicore::internal::JobConsumer::~JobConsumer() {
 }
 
 
-bool tarch::multicore::internal::JobConsumer::isOneConsumerIdle() {
-  return idleJobConsumers.load()>0;
-}
-
-
 void tarch::multicore::internal::JobConsumer::operator()() {
   if (_pinCore!=NoPinning) {
 	addMask(_pinCore,_mask);
   }
-
-  idleJobConsumers.fetch_add(1);
 
   JobConsumerController::State state = JobConsumerController::State::Running;
   while (state!=JobConsumerController::State::TerminateTriggered) {
@@ -57,10 +49,8 @@ void tarch::multicore::internal::JobConsumer::operator()() {
               const int queueNumber = (i + internal::JobQueue::LatestQueueBefilled.load());
               const int jobs = internal::JobQueue::getStandardQueue(queueNumber).getNumberOfPendingJobs();
               if (jobs>0) {
-                idleJobConsumers.fetch_add(-1);
                 logDebug( "operator()", "consumer task (pin=" << _pinCore << ") grabbed " << jobs << " job(s) from class " <<  queueNumber );
                 internal::JobQueue::getStandardQueue(queueNumber).processJobs( MinNumberOfJobs );
-                idleJobConsumers.fetch_add(1);
                 foundJob = true;
                 processedJob = true;
                 i--;
@@ -69,8 +59,12 @@ void tarch::multicore::internal::JobConsumer::operator()() {
           }
 
           processedJob |= tarch::multicore::jobs::processBackgroundJobs();
+
           if (!processedJob) {
           	std::this_thread::yield();
+            if (_hyperthreading) {
+              std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+            }
           }
         }
     	break;
@@ -89,8 +83,6 @@ void tarch::multicore::internal::JobConsumer::operator()() {
 	state = _controller->state;
 	_controller->unlock();
   }
-
-  idleJobConsumers.fetch_add(-1);
 
   if (_pinCore!=NoPinning) {
     removeMask();

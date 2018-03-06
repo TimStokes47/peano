@@ -57,7 +57,13 @@ class tarch::multicore::internal::JobConsumer {
 	 * -1 if no pinning is required
 	 */
 	const int                _pinCore;
-	JobConsumerController*   _controller;
+
+	/**
+	 * @see operator()()
+	 */
+	const bool               _hyperthreading;
+
+    JobConsumerController*   _controller;
 	cpu_set_t*               _mask;
 
 	/**
@@ -68,11 +74,9 @@ class tarch::multicore::internal::JobConsumer {
 	 * by the core count.
 	 */
 	static const int MinNumberOfJobs;
-	static std::atomic<int> idleJobConsumers;
   public:
 	static void addMask(int core, cpu_set_t* mask);
 	static void removeMask();
-	static bool isOneConsumerIdle();
 
 	constexpr static int NoPinning = -1;
 
@@ -80,8 +84,11 @@ class tarch::multicore::internal::JobConsumer {
 	 * Determine the primary queue this job is responsible for. We just take the
 	 * pin core modulo the job classes minus one, as the biggest job class is
 	 * reserved for background tasks.
+	 *
+	 * @param pinCore         Number of core to pin to or NoPinning if no pinning is required
+	 * @param hyperthreading  Tells the consumer if hyperthreading is active
 	 */
-	JobConsumer(int pinCore, JobConsumerController* controller, cpu_set_t*  mask);
+	JobConsumer(int pinCore, bool hyperthreading, JobConsumerController* controller, cpu_set_t*  mask);
 
 	~JobConsumer();
 
@@ -91,9 +98,9 @@ class tarch::multicore::internal::JobConsumer {
 	 * I frequently ran into the situation that some threads did starve as idle
 	 * consumer threads (notably throughout grid constructor when not that much
 	 * concurrency does exist) did block all semaphores. I thus found it useful
-	 * to make consumers yield their thread if no work is available. We could
-	 * also send them to sleep, but then getting the sleep time right is kind of
-	 * black magic. So we stick to the yield.
+	 * to make consumers yield their thread if no work is available. This still
+	 * seems not to be enough if we use hyperthreading, so I also send the
+	 * consumer to sleep if it is about to idle.
 	 *
 	 * <h2> Idle consumers </h2>
 	 *

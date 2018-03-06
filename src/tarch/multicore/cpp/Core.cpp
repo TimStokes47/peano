@@ -72,6 +72,7 @@ void tarch::multicore::Core::createOneJobConsumerPerThread() {
     std::thread t(
       tarch::multicore::internal::JobConsumer(
         _pin ? i : tarch::multicore::internal::JobConsumer::NoPinning,
+        _numberOfThreads > static_cast<int>(std::thread::hardware_concurrency())/2,
         newController,
 		_mask
       )
