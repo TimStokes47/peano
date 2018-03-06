@@ -43,10 +43,11 @@ void tarch::multicore::internal::JobConsumer::operator()() {
         {
           bool foundJob = true;
           bool processedJob = false;
+          int  lastRecentlyBefilledQueue = internal::JobQueue::LatestQueueBefilled.load();
           while (foundJob) {
             foundJob = false;
             for (int i=0; i<internal::JobQueue::MaxNormalJobQueues; i++) {
-              const int queueNumber = (i + internal::JobQueue::LatestQueueBefilled.load());
+              const int queueNumber = (i + lastRecentlyBefilledQueue);
               const int jobs = internal::JobQueue::getStandardQueue(queueNumber).getNumberOfPendingJobs();
               if (jobs>0) {
                 logDebug( "operator()", "consumer task (pin=" << _pinCore << ") grabbed " << jobs << " job(s) from class " <<  queueNumber );
@@ -54,6 +55,11 @@ void tarch::multicore::internal::JobConsumer::operator()() {
                 foundJob = true;
                 processedJob = true;
                 i--;
+              }
+              else if (lastRecentlyBefilledQueue != internal::JobQueue::LatestQueueBefilled.load()) {
+                logDebug( "operator()", "another queue is befilled, so restart" );
+                lastRecentlyBefilledQueue = internal::JobQueue::LatestQueueBefilled.load();
+                i = 0;
               }
         	}
           }

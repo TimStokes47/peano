@@ -111,7 +111,9 @@ struct peano::CommunicationSpecification {
        * - The statistics held by the state (such as "have vertices refined") might
        *   be corumpted as we lose the information of these boundary vertices.
        * - The semantics beginIteration() changes: It might be called after lots
-       *   of touchVertexFirstTime() events have been triggered.
+       *   of touchVertexFirstTime() events have been triggered. Please note that
+       *   touchVertexFirstTime() are for MPI directly followed by mergeWithNeighbour()
+       *   calls which consequently also might prelude beginIteration().
        */
       SendDataAndStateBeforeDescendIntoLocalSubtree,
       /**
