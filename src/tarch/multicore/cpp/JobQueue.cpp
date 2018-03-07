@@ -9,9 +9,12 @@
 
 tarch::logging::Log tarch::multicore::internal::JobQueue::_log( "tarch::multicore::internal::JobQueue" );
 std::atomic<int>    tarch::multicore::internal::JobQueue::LatestQueueBefilled(0);
+//std::stack<int>    tarch::multicore::internal::JobQueue::LatestQueuesBefilled;
+//std::mutex         tarch::multicore::internal::JobQueue::LatestQueuesBefilled;
 
 
-tarch::multicore::internal::JobQueue::JobQueue() {
+tarch::multicore::internal::JobQueue::JobQueue():
+  _spinLock( ATOMIC_FLAG_INIT ) {
   _numberOfPendingJobs = 0;
 }
 
@@ -56,13 +59,22 @@ bool tarch::multicore::internal::JobQueue::processJobs( int maxNumberOfJobs ) {
   #else
 
   if (_numberOfPendingJobs.load()>0) {
+    #ifdef JobQueueUsesSpinLockInsteadOfMutex
+    while (_spinLock.test_and_set(std::memory_order_acquire)); // spin
+    #else
     _mutex.lock();
+    #endif
 
     // might have changed meanwhile
     maxNumberOfJobs = std::min( maxNumberOfJobs, static_cast<int>( _jobs.size() ));
 
     if (maxNumberOfJobs==0) {
+      #ifdef JobQueueUsesSpinLockInsteadOfMutex
+      _spinLock.clear(std::memory_order_release);
+      #else
       _mutex.unlock();
+      #endif
+
       return false;
     }
     else {
@@ -79,7 +91,11 @@ bool tarch::multicore::internal::JobQueue::processJobs( int maxNumberOfJobs ) {
 
       logDebug( "processJobs(int)", "spliced " << maxNumberOfJobs << " job(s) from job queue and will process those now" );
 
+      #ifdef JobQueueUsesSpinLockInsteadOfMutex
+      _spinLock.clear(std::memory_order_release);
+      #else
       _mutex.unlock();
+      #endif
 
       for (auto& p: localList) {
         bool reenqueue = p->run();
@@ -100,17 +116,39 @@ bool tarch::multicore::internal::JobQueue::processJobs( int maxNumberOfJobs ) {
 
 
 void tarch::multicore::internal::JobQueue::addJob( jobs::Job* job ) {
+  #ifdef JobQueueUsesSpinLockInsteadOfMutex
+  while (_spinLock.test_and_set(std::memory_order_acquire)); // spin
+  #else
   _mutex.lock();
+  #endif
+
   _jobs.push_back(job);
+
+  #ifdef JobQueueUsesSpinLockInsteadOfMutex
+  _spinLock.clear(std::memory_order_release);
+  #else
   _mutex.unlock();
+  #endif
+
   _numberOfPendingJobs.fetch_add(1);
 }
 
 
 void tarch::multicore::internal::JobQueue::addJobWithHighPriority( jobs::Job* job ) {
+  #ifdef JobQueueUsesSpinLockInsteadOfMutex
+  while (_spinLock.test_and_set(std::memory_order_acquire)); // spin
+  #else
   _mutex.lock();
+  #endif
+
   _jobs.push_front(job);
+
+  #ifdef JobQueueUsesSpinLockInsteadOfMutex
+  _spinLock.clear(std::memory_order_release);
+  #else
   _mutex.unlock();
+  #endif
+
   _numberOfPendingJobs.fetch_add(1);
 }
 

@@ -149,7 +149,7 @@ void tarch::multicore::jobs::spawnAndWait(
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job0, jobType0, jobClass0, semaphore ) );
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job1, jobType1, jobClass1, semaphore ) );
 
-  internal::JobQueue::LatestQueueBefilled = jobClass1; // use biggest class as I'll myself start with lowest
+  internal::JobQueue::setLatestQueueBefilled (jobClass1 );
 
   while (semaphore.load()!=0) {
     processJobs(jobClass0);
@@ -175,7 +175,7 @@ void tarch::multicore::jobs::spawnAndWait(
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job1, jobType1, jobClass1, semaphore ) );
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job2, jobType2, jobClass2, semaphore ) );
 
-  internal::JobQueue::LatestQueueBefilled = jobClass2; // use biggest class as I'll myself start with lowest
+  internal::JobQueue::setLatestQueueBefilled (jobClass2 );
 
   while (semaphore.load()!=0) {
     processJobs(jobClass0);
@@ -206,7 +206,7 @@ void tarch::multicore::jobs::spawnAndWait(
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job2, jobType2, jobClass2, semaphore ) );
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job3, jobType3, jobClass3, semaphore ) );
 
-  internal::JobQueue::LatestQueueBefilled = jobClass3; // use biggest class as I'll myself start with lowest
+  internal::JobQueue::setLatestQueueBefilled (jobClass3 );
 
   while (semaphore.load()!=0) {
     processJobs(jobClass0);
@@ -242,7 +242,7 @@ void tarch::multicore::jobs::spawnAndWait(
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job3, jobType3, jobClass3, semaphore ) );
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job4, jobType4, jobClass4, semaphore ) );
 
-  internal::JobQueue::LatestQueueBefilled = jobClass4; // use biggest class as I'll myself start with lowest
+  internal::JobQueue::setLatestQueueBefilled (jobClass4 );
 
   while (semaphore.load()!=0) {
     processJobs(jobClass0);
@@ -283,7 +283,7 @@ void tarch::multicore::jobs::spawnAndWait(
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job4, jobType4, jobClass4, semaphore ) );
   internal::JobQueue::getStandardQueue(jobClass0).addJob( new JobWithoutCopyOfFunctorAndSemaphore(job5, jobType5, jobClass5, semaphore ) );
 
-  internal::JobQueue::LatestQueueBefilled = jobClass5; // use biggest class as I'll myself start with lowest
+  internal::JobQueue::setLatestQueueBefilled (jobClass5 );
 
   while (semaphore.load()!=0) {
     processJobs(jobClass0);

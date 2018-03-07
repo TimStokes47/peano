@@ -43,7 +43,7 @@ void tarch::multicore::internal::JobConsumer::operator()() {
         {
           bool foundJob = true;
           bool processedJob = false;
-          int  lastRecentlyBefilledQueue = internal::JobQueue::LatestQueueBefilled.load();
+          int  lastRecentlyBefilledQueue = tarch::multicore::internal::JobQueue::getLatestQueueBefilled();
           while (foundJob) {
             foundJob = false;
             for (int i=0; i<internal::JobQueue::MaxNormalJobQueues; i++) {
@@ -56,9 +56,13 @@ void tarch::multicore::internal::JobConsumer::operator()() {
                 processedJob = true;
                 i--;
               }
-              else if (lastRecentlyBefilledQueue != internal::JobQueue::LatestQueueBefilled.load()) {
+              else if (i==0) {
+                tarch::multicore::internal::JobQueue::latestQueueBefilledIsEmpty();
+              }
+
+              if (lastRecentlyBefilledQueue != tarch::multicore::internal::JobQueue::getLatestQueueBefilled()) {
                 logDebug( "operator()", "another queue is befilled, so restart" );
-                lastRecentlyBefilledQueue = internal::JobQueue::LatestQueueBefilled.load();
+                lastRecentlyBefilledQueue = tarch::multicore::internal::JobQueue::getLatestQueueBefilled();
                 i = 0;
               }
         	}

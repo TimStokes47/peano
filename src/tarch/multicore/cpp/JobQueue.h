@@ -7,6 +7,7 @@
 #include <list>
 #include <atomic>
 #include <mutex>
+#include <stack>
 
 
 #include "tarch/logging/Log.h"
@@ -28,6 +29,8 @@ namespace tarch {
 }
 
 
+#define JobQueueUsesSpinLockInsteadOfMutex
+
 
 class tarch::multicore::internal::JobQueue {
   private:
@@ -37,13 +40,30 @@ class tarch::multicore::internal::JobQueue {
 
 	std::atomic<int>  _numberOfPendingJobs;
 
-	std::mutex        _mutex;
+    #ifdef JobQueueUsesSpinLockInsteadOfMutex
+    std::atomic_flag    _spinLock;
+    #else
+    std::mutex        _mutex;
+    #endif
 
 	JobQueue();
 
-  public:
 	static std::atomic<int>  LatestQueueBefilled;
+
+//	static std::stack<int>   latestQueuesBefilled;
+//	static std::mutex        latestQueueMutex;
+  public:
 	static constexpr int     MaxNormalJobQueues = 8;
+
+	static inline void setLatestQueueBefilled(int jobClass) {
+	  LatestQueueBefilled = jobClass;
+	}
+
+	static inline int  getLatestQueueBefilled() {
+	  return internal::JobQueue::LatestQueueBefilled.load();
+	}
+
+	static inline void latestQueueBefilledIsEmpty() {}
 
 	~JobQueue();
 
