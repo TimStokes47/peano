@@ -8,9 +8,12 @@
 
 
 tarch::logging::Log tarch::multicore::internal::JobQueue::_log( "tarch::multicore::internal::JobQueue" );
+#ifdef JobQueueUsesStackOfBefilledQueues
+std::stack<int>    tarch::multicore::internal::JobQueue::latestQueuesBefilled;
+std::atomic_flag   tarch::multicore::internal::JobQueue::latestQueueSpinLock;
+#else
 std::atomic<int>    tarch::multicore::internal::JobQueue::LatestQueueBefilled(0);
-//std::stack<int>    tarch::multicore::internal::JobQueue::LatestQueuesBefilled;
-//std::mutex         tarch::multicore::internal::JobQueue::LatestQueuesBefilled;
+#endif
 
 
 tarch::multicore::internal::JobQueue::JobQueue():

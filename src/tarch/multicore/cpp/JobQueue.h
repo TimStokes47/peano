@@ -30,6 +30,7 @@ namespace tarch {
 
 
 #define JobQueueUsesSpinLockInsteadOfMutex
+#define JobQueueUsesStackOfBefilledQueues
 
 
 class tarch::multicore::internal::JobQueue {
@@ -48,22 +49,51 @@ class tarch::multicore::internal::JobQueue {
 
 	JobQueue();
 
+    #ifdef JobQueueUsesStackOfBefilledQueues
+	static std::stack<int>   latestQueuesBefilled;
+	static std::atomic_flag  latestQueueSpinLock;
+    #else
 	static std::atomic<int>  LatestQueueBefilled;
-
-//	static std::stack<int>   latestQueuesBefilled;
-//	static std::mutex        latestQueueMutex;
+    #endif
   public:
 	static constexpr int     MaxNormalJobQueues = 8;
 
 	static inline void setLatestQueueBefilled(int jobClass) {
+      #ifdef JobQueueUsesStackOfBefilledQueues
+      while (latestQueueSpinLock.test_and_set(std::memory_order_acquire)); // spin
+      latestQueuesBefilled.push(jobClass);
+      latestQueueSpinLock.clear(std::memory_order_release);
+      #else
 	  LatestQueueBefilled = jobClass;
+      #endif
 	}
 
 	static inline int  getLatestQueueBefilled() {
+      #ifdef JobQueueUsesStackOfBefilledQueues
+      int result;
+      while (latestQueueSpinLock.test_and_set(std::memory_order_acquire)); // spin
+      if (latestQueuesBefilled.empty()) {
+    	result = 0;
+      }
+      else {
+        result = latestQueuesBefilled.top();
+      }
+      latestQueueSpinLock.clear(std::memory_order_release);
+      return result;
+      #else
 	  return internal::JobQueue::LatestQueueBefilled.load();
+      #endif
 	}
 
-	static inline void latestQueueBefilledIsEmpty() {}
+	static inline void latestQueueBefilledIsEmpty() {
+      #ifdef JobQueueUsesStackOfBefilledQueues
+      while (latestQueueSpinLock.test_and_set(std::memory_order_acquire)); // spin
+      if (!latestQueuesBefilled.empty()) {
+    	  latestQueuesBefilled.pop();
+      }
+      latestQueueSpinLock.clear(std::memory_order_release);
+      #endif
+	}
 
 	~JobQueue();
 
