@@ -397,17 +397,5 @@ void tarch::parallel::Node::setCommunicator( MPI_Comm communicator ) {
 
 
 void tarch::parallel::Node::receiveDanglingMessages() {
-  #ifdef Parallel
-  MPI_Status status;
-  int        flag   = 0;
-  MPI_Iprobe(
-     MPI_ANY_SOURCE, MPI_ANY_TAG,
-     getCommunicator(), &flag, &status
-  );
-  if (flag) {
-    tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
-  }
-  #else
   tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
-  #endif
 }
