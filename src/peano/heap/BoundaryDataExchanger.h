@@ -309,6 +309,11 @@ class peano::heap::BoundaryDataExchanger {
      *
      * <h2> Behaviour </h2>
      *
+     * This operation consists of two parts. It allows the MPI engine to
+     * progress and it looks out whether there are new messages arriving.
+     *
+     * <h3> Progress </h3>
+     *
      * While MPI messages with the heap's tag are in the MPI queue (we check
      * through an iprobe on the meta data tag), the routine receives the meta
      * data. We work on the meta data as the heap can also be used to send out
@@ -331,8 +336,13 @@ class peano::heap::BoundaryDataExchanger {
      * operations which map logically blocking routines on their non-blocking
      * variants with busy polling.
      *
+     * <h3> Progress </h3>
      *
-     * <h2> Call points </h2>
+     * Most MPI implementations cannot exchange data really  in the background.
+     * They only do so if we call MPI_Test from time to time.
+     *
+     *
+     * <h3> Call points </h3>
      *
      * This operation is either called by any send or receive in Peano that is
      * logically blocking but does not return, or it is invoked through

@@ -45,3 +45,5 @@
 
 
 #define LittleEndian
+
+#define MPIProgressionReliesOnMPITest
