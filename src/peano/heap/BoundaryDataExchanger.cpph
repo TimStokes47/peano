@@ -213,6 +213,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
     }
 
     i->freeMemory();
+    i->_metaInformation.setLength(0);
   }
 
   _sendTasks.clear();
