@@ -73,7 +73,6 @@ void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRe
   logTraceIn( "handleAndQueueSendTask(...)" );
 
   Base::_sendTasks.push_back(sendTask);
-  Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
 
   if(Base::_sendTasks.back()._metaInformation.getLength() > 0) {
     if (CreateCopiesOfSentData) {
@@ -82,6 +81,8 @@ void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRe
     else {
       Base::_sendTasks.back().sendDataDirectlyFromBuffer(data);
     }
+
+    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
     Base::_sendTasks.back().triggerSend(Base::_dataTag);
   }
 

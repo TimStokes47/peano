@@ -212,8 +212,8 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
     }
 
-    i->freeMemory();
     i->_metaInformation.setLength(0);
+    i->freeMemory();
   }
 
   _sendTasks.clear();

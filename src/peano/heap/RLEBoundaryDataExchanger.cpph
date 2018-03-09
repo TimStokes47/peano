@@ -119,7 +119,6 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
 
     Base::_sendTasks.push_back(sendTask);
 
-    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
     if (CreateCopiesOfSentData) {
       Base::_sendTasks.back().wrapData(data);
     }
@@ -127,6 +126,7 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
       Base::_sendTasks.back().sendDataDirectlyFromBuffer(data);
     }
 
+    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
     Base::_sendTasks.back().triggerSend(Base::_dataTag);
   }
   logTraceOut( "handleAndQueueSendTask(...)" );
