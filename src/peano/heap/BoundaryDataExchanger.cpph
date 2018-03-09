@@ -249,10 +249,14 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   #ifdef MPIProgressionReliesOnMPITest
   int progressFlag;
   for(auto& p: _sendTasks) {
-    MPI_Test(&(p._request), &progressFlag, MPI_STATUS_IGNORE);
+    if(p._metaInformation.getLength() > 0) {
+      MPI_Test(&(p._request), &progressFlag, MPI_STATUS_IGNORE);
+    }
   }
   for(auto& p: _receiveTasks[_currentReceiveBuffer]) {
-    MPI_Test(&(p._request), &progressFlag, MPI_STATUS_IGNORE);
+    if(p._metaInformation.getLength() > 0) {
+      MPI_Test(&(p._request), &progressFlag, MPI_STATUS_IGNORE);
+    }
   }
   #endif
 
