@@ -314,6 +314,10 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 ) {
   assertion5( _isCurrentlySending, _identifier, count, position, level, "forgot to call startToSendBoundaryData on heap?" );
 
+  #if defined(MPIHeapUsesItsOwnThread)
+  _backgroundThread->switchState(BackgroundThread::State::Suspend);
+  #endif
+
   SendReceiveTaskType sendTask;
   sendTask._rank = _rank;
   #ifdef Asserts
@@ -330,6 +334,10 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
   _numberOfSentMessages += 1;
   _numberOfSentRecords  += count;
+
+  #if defined(MPIHeapUsesItsOwnThread)
+  _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
+  #endif
 }
 
 
