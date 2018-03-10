@@ -276,6 +276,16 @@ class peano::heap::BoundaryDataExchanger {
      */
     virtual bool dataExchangerCommunicatesInBackground() const = 0;
   public:
+    /**
+     * <h2> Background threads </h2>
+     *
+     * If I want to have a background threads constantly polling the MPI
+     * queues, I may not spawn it here. The thread/job uses the boundary
+     * data exchanger through a callback. Yet, the exchanger is not
+     * completely constructed at this point. So we spawn it later.
+     *
+     * @see startToSendData()
+     */
     BoundaryDataExchanger();
 
     /**

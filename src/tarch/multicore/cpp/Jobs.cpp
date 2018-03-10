@@ -86,9 +86,6 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
     MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &result, MPI_STATUS_IGNORE);
 
     if (result) {
-      #ifdef Asserts
-      logInfo( "processMPIReceiveJobs()", "consumer task (pin=" << _pinCore << ") processes MPI receive background jobs" );
-      #endif
       internal::JobQueue::getMPIReceiveQueue().processJobs( numberOfJobs );
       result = true;
     }

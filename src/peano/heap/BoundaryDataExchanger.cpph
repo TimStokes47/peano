@@ -314,7 +314,8 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 ) {
   assertion5( _isCurrentlySending, _identifier, count, position, level, "forgot to call startToSendBoundaryData on heap?" );
 
-  #if defined(MPIHeapUsesItsOwnThread)
+  #if defined(MPIHeapUsesItsOwnThread) && defined(MPIProgressionReliesOnMPITest)
+  assertionMsg( _backgroundThread!=nullptr, "has startToSendData() been called before?" );
   _backgroundThread->switchState(BackgroundThread::State::Suspend);
   #endif
 
@@ -335,7 +336,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   _numberOfSentMessages += 1;
   _numberOfSentRecords  += count;
 
-  #if defined(MPIHeapUsesItsOwnThread)
+  #if defined(MPIHeapUsesItsOwnThread) && defined(MPIProgressionReliesOnMPITest)
   _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
   #endif
 }
