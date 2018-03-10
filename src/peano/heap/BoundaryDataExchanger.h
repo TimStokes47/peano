@@ -14,7 +14,7 @@
  * thread to receive data in the background.
  */
 #if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
-#define MPIHeapUsesItsOwnThread
+//#define MPIHeapUsesItsOwnThread
 #endif
 
 
@@ -276,6 +276,7 @@ class peano::heap::BoundaryDataExchanger {
      */
     virtual bool dataExchangerCommunicatesInBackground() const = 0;
 
+    void runOperationsOfReceiveDanglingMessages();
   public:
     /**
      * <h2> Background threads </h2>
@@ -371,7 +372,7 @@ class peano::heap::BoundaryDataExchanger {
      * in MPI data). So we may not switch ourself - this would otherwise
      * introduce a deadlock.
      */
-    void receiveDanglingMessages( bool calledByBackgroundThread = false );
+    void receiveDanglingMessages();
 
     /**
      *
