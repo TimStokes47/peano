@@ -103,7 +103,7 @@ bool tarch::multicore::internal::JobQueue::processJobs( int maxNumberOfJobs ) {
       for (auto& p: localList) {
         bool reenqueue = p->run();
         if (reenqueue) {
-        addJob( p );
+          addJob( p );
         }
         else {
           delete p;

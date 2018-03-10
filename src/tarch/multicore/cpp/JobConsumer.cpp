@@ -165,6 +165,26 @@ tarch::multicore::internal::JobConsumerController::~JobConsumerController() {
 }
 
 
+
+std::string tarch::multicore::internal::JobConsumerController::toString() const {
+  switch (state) {
+    case State::Running:
+      return "(running)";
+      break;
+    case State::TerminateTriggered:
+      return "(terminate-triggered)";
+      break;
+    case State::Terminated:
+      return "(terminated)";
+      break;
+    case State::Suspended:
+      return "(suspended)";
+      break;
+  }
+  return "<undef>";
+}
+
+
 void tarch::multicore::internal::JobConsumerController::lock() {
   while (_spinLock.test_and_set(std::memory_order_acquire)); // spin
 }

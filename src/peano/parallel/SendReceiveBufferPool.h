@@ -21,6 +21,7 @@
 #endif
 
 
+
 #include <map>
 
 namespace peano {
@@ -69,14 +70,6 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
 
         static std::string toString(State state);
       private:
-        /**
-         * There is only one background thread object from the pool's point of
-         * view. However, we deploy the thread as a task of its own. Then, it
-         * is copied. However, as all copies of the thread shall share one state
-         * and one semaphore, I have to make all attributes static. As a
-         * consequence, any instance seems to be an object but indeed it is only
-         * a lightweight object wrapper around global data.
-         */
         tarch::multicore::BooleanSemaphore  _semaphore;
         State                               _state;
         BackgroundThread(const BackgroundThread&) = delete;

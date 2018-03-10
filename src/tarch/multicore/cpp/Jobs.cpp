@@ -82,13 +82,7 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
   #ifdef Parallel
   numberOfJobs  = internal::JobQueue::getMPIReceiveQueue().getNumberOfPendingJobs();
   if (numberOfJobs>0) {
-    int result = 0;
-    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &result, MPI_STATUS_IGNORE);
-
-    if (result) {
-      internal::JobQueue::getMPIReceiveQueue().processJobs( numberOfJobs );
-      result = true;
-    }
+    result |= internal::JobQueue::getMPIReceiveQueue().processJobs( numberOfJobs );
   }
   #endif
 

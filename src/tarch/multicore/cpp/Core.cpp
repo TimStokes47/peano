@@ -80,18 +80,13 @@ void tarch::multicore::Core::createOneJobConsumerPerThread() {
     t.detach();
 
     #ifdef Asserts
-    logInfo( "createOneJobConsumerPerThread()", "spawn consumer for hardware thread " << i );
+    logInfo( "createOneJobConsumerPerThread()", "spawn consumer for hardware thread " << i << " (" << _numberOfThreads << " threads in total)");
     #endif
-
   }
 }
 
 
 void tarch::multicore::Core::shutdownRunningJobConsumers() {
-  #ifdef Asserts
-  logInfo( "createOneJobConsumerPerThread()", "tell all existing threads to shut down" );
-  #endif
-
   for (auto& p: _jobConsumerControllers) {
     p->lock();
     if (p->state != internal::JobConsumerController::State::Terminated ) {
@@ -120,18 +115,23 @@ void tarch::multicore::Core::shutDown() {
   shutdownRunningJobConsumers();
 
   #ifdef Asserts
-  logInfo( "createOneJobConsumerPerThread()", "wait for all job consumer threads to go down" );
+  logInfo( "createOneJobConsumerPerThread()", "wait for all " << _jobConsumerControllers.size() << " job consumer threads to go down" );
   #endif
 
   bool allConsumersHaveTerminated = false;
   while (!allConsumersHaveTerminated) {
     allConsumersHaveTerminated = true;
+
     for (auto& p: _jobConsumerControllers) {
       p->lock();
-      allConsumersHaveTerminated &= p->state == internal::JobConsumerController::State::Terminated;
+      allConsumersHaveTerminated &= (p->state == internal::JobConsumerController::State::Terminated);
       p->unlock();
     }
   }
+
+  #ifdef Asserts
+  logInfo( "createOneJobConsumerPerThread()", "all job consumer threads are down" );
+  #endif
 }
 
 
@@ -147,6 +147,10 @@ int tarch::multicore::Core::getNumberOfThreads() const {
 
 void tarch::multicore::Core::pinThreads(bool value) {
   _pin = value;
+
+  #ifdef Asserts
+  logInfo( "createOneJobConsumerPerThread()", "shut down and restart with pinning" );
+  #endif
 
   shutdownRunningJobConsumers();
 

@@ -136,13 +136,14 @@ namespace tarch {
        };
 
 
+       /**
+        * Standard job that accepts a pointer to a functor object. After
+        * construction, the ownership of the pointer goes over to the job
+        * which eventually destroys it.
+        */
        template <typename T>
        class GenericJobWithPointer: public Job {
          private:
-    	   /**
-            * See the outer class description for an explanation why this is an
-            * attribute, i.e. why we copy the functor here always.
-            */
     	   T*   _functor;
          public:
     	   GenericJobWithPointer(T* functor, JobType jobType, int jobClass  ):

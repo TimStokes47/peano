@@ -14,13 +14,9 @@
  * thread to receive data in the background.
  */
 #if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
-#define MPIUsesItsOwnThread
-#endif
-
-
-#if defined(MPIUsesItsOwnThread)
 #define MPIHeapUsesItsOwnThread
 #endif
+
 
 
 namespace peano {

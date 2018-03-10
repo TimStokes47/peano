@@ -42,6 +42,8 @@ struct tarch::multicore::internal::JobConsumerController {
 
     void lock();
     void unlock();
+
+    std::string toString() const;
 };
 
 
