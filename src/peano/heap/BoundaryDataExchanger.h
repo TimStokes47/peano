@@ -66,7 +66,11 @@ class peano::heap::BoundaryDataExchanger {
       private:
         BoundaryDataExchanger*              _boundaryDataExchanger;
         tarch::multicore::BooleanSemaphore  _semaphore;
+
+      #ifdef Asserts
+      public:
         State                               _state;
+      #endif
 
         BackgroundThread(const BackgroundThread&) = delete;
       public:
@@ -275,6 +279,7 @@ class peano::heap::BoundaryDataExchanger {
      * request handles otherwise yields a seg fault.
      */
     virtual bool dataExchangerCommunicatesInBackground() const = 0;
+
   public:
     /**
      * <h2> Background threads </h2>
@@ -351,16 +356,44 @@ class peano::heap::BoundaryDataExchanger {
      * Most MPI implementations cannot exchange data really  in the background.
      * They only do so if we call MPI_Test from time to time.
      *
-     *
      * <h3> Call points </h3>
      *
      * This operation is either called by any send or receive in Peano that is
      * logically blocking but does not return, or it is invoked through
      * waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages()
      * or releaseSentMessages() at the begin/end of a traversal.
+     *
+     * <h3> Background tasks </h3>
+     *
+     * While we do receive, we have to switch of the background tasks. Once we
+     * are done, we should enable them if they had been enabled before. The
+     * routine also is used in some release data phases where the background
+     * tasks are suspended anyway. So we may not always switch background tasks
+     * on again. We have to memorize the value and then restore this one. If we
+     * are called by the background tasks, the whole thing is already protected
+     * by a mutex (we ensure that noone changes the task's state while we get
+     * in MPI data). So we may not switch ourself - this would otherwise
+     * introduce a deadlock.
      */
-    void receiveDanglingMessages(bool calledByBackgroundThread = false);
+    void receiveDanglingMessages( bool calledByBackgroundThread = false );
 
+    /**
+     *
+     *
+     * <h2> MPI data exchange through background threads </h2>
+     *
+     * We have to switch off the background thread while we send out data. The
+     * background threads run over the MPI requests and test them to allow MPI
+     * to progress the data transfer. We however insert into exactly this data
+     * structure. In return, we may not send out data while the background
+     * thread is trying to finish MPI data.
+     *
+     * Background threads offer a switch statement. It uses an mutex to avoid
+     * two concurrent switches. While the task calls receiveDanglingMessages()
+     * the exactly same mutex is set to avoid that anybody changes the state.
+     * So literally switching off the background threads before sending out
+     * stuff is sufficient.
+     */
     void sendData(
       const Data * const                                   data,
       int                                                  count,

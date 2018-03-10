@@ -114,9 +114,11 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   _readDeployBufferInReverseOrder = _wasTraversalInvertedThroughoutLastSendReceiveTraversal != isTraversalInverted;
 
   switchReceiveAndDeployBuffer(numberOfSentMessages);
+
   postprocessStartToSendData();
 
   #if defined(MPIHeapUsesItsOwnThread)
+  assertion( _backgroundThread->_state == BackgroundThread::State::Suspend );
   _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
   #endif
 
@@ -241,6 +243,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::receiveDanglingMessages(bool calledByBackgroundThread) {
   #if defined(MPIHeapUsesItsOwnThread)
+  typename BackgroundThread::State previousState = _backgroundThread->getState();
   if (!calledByBackgroundThread) {
     _backgroundThread->switchState(BackgroundThread::State::Suspend);
   }
@@ -299,7 +302,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
   #if defined(MPIHeapUsesItsOwnThread)
   if (!calledByBackgroundThread) {
-    _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
+    _backgroundThread->switchState(previousState);
   }
   #endif
 }
@@ -315,7 +318,6 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   assertion5( _isCurrentlySending, _identifier, count, position, level, "forgot to call startToSendBoundaryData on heap?" );
 
   #if defined(MPIHeapUsesItsOwnThread) && defined(MPIProgressionReliesOnMPITest)
-  assertionMsg( _backgroundThread!=nullptr, "has startToSendData() been called before?" );
   _backgroundThread->switchState(BackgroundThread::State::Suspend);
   #endif
 
@@ -620,6 +622,11 @@ template <class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::switchState( State newState ) {
   tarch::multicore::Lock lock(_semaphore);
   _state = newState;
+  lock.free();
 }
 
 
+template <class Data, class SendReceiveTaskType, class VectorContainer>
+typename peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::State peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::getState() const {
+  return _state;
+}
