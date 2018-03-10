@@ -59,6 +59,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
        break;
      case JobType::MPIReceiveTask:
        internal::JobQueue::getMPIReceiveQueue().addJob(job);
+       break;
      case JobType::Task:
      case JobType::Job:
        internal::JobQueue::getBackgroundQueue().addJob(job);
@@ -82,7 +83,9 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
   #ifdef Parallel
   numberOfJobs  = internal::JobQueue::getMPIReceiveQueue().getNumberOfPendingJobs();
   if (numberOfJobs>0) {
-    result |= internal::JobQueue::getMPIReceiveQueue().processJobs( numberOfJobs );
+    // we may not add an or to the result if we process MPI background tasks.
+    // They are always there even if no messages have dropped in
+    internal::JobQueue::getMPIReceiveQueue().processJobs( numberOfJobs );
   }
   #endif
 

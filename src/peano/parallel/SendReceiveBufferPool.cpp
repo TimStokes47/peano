@@ -148,6 +148,9 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesFromAllBuffe
 void peano::parallel::SendReceiveBufferPool::terminate() {
   #if defined(MPIUsesItsOwnThread)
   if (_backgroundThread != nullptr) {
+    #ifdef Asserts
+	logInfo( "terminate()", "tell background thread to terminate" );
+    #endif
     _backgroundThread->switchState(BackgroundThread::State::Terminate);
     _backgroundThread = nullptr;
   }
@@ -265,6 +268,9 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
     case State::Suspend:
       break;
     case State::Terminate:
+      #ifdef Asserts
+      logInfo( "BackgroundThread::operator()", "terminating" );
+      #endif
       result = false;
       break;
   }
