@@ -405,12 +405,14 @@ class peano::heap::Heap: public tarch::services::Service, peano::heap::AbstractH
      * create a new exchanger. For the synchronous data exchangers, we may
      * create tags on-the-fly.
      */
-    int                                    _neighbourDataExchangerMetaDataTag;
-    int                                    _neighbourDataExchangerDataTag;
+    int                                     _neighbourDataExchangerMetaDataTag;
+    int                                     _neighbourDataExchangerDataTag;
 
-    MasterWorkerExchanger                  _masterWorkerExchanger;
-    JoinForkExchanger                      _joinForkExchanger;
-    std::map<int, NeighbourDataExchanger>  _neighbourDataExchanger;
+    MasterWorkerExchanger                   _masterWorkerExchanger;
+    JoinForkExchanger                       _joinForkExchanger;
+    std::map<int, NeighbourDataExchanger*>  _neighbourDataExchanger;
+
+    tarch::multicore::BooleanSemaphore      _neighbourDataMapSemaphore;
     #endif
 
     /**

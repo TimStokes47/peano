@@ -348,10 +348,10 @@ class peano::parallel::SendReceiveBufferAbstractImplementation: public peano::pa
      */
     int getSizeOfReceiveBuffer() const;
 
-    virtual void receivePageIfAvailable();
-    virtual int getNumberOfReceivedMessages() const;
-    virtual void releaseSentMessages();
-    virtual void releaseReceivedMessages(bool);
+    void receivePageIfAvailable() override;
+    int getNumberOfReceivedMessages() const override;
+    void releaseSentMessages() override;
+    void releaseReceivedMessages(bool) override;
 };
 
 #ifdef ParallelExchangePackedRecordsAtBoundary

@@ -6,6 +6,7 @@
 
 
 #include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/multicore/RecursiveSemaphore.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
@@ -13,7 +14,7 @@
  * With this ifdef, we can define whether the pool shall use a dedicated
  * thread to receive data in the background.
  */
-#if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
+#if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread) && !defined(noMPIHeapUsesItsOwnThread)
 //#define MPIHeapUsesItsOwnThread
 #endif
 
@@ -53,15 +54,13 @@ class peano::heap::BoundaryDataExchanger {
     struct BackgroundThread {
       public:
         enum class State {
-          ReceiveDataInBackground,
-          Suspend,
+          Running,
 		  Terminate
         };
 
         static std::string toString(State state);
       private:
         BoundaryDataExchanger*              _boundaryDataExchanger;
-        tarch::multicore::BooleanSemaphore  _semaphore;
 
       #ifdef Asserts
       public:
@@ -74,8 +73,7 @@ class peano::heap::BoundaryDataExchanger {
         virtual ~BackgroundThread();
         bool operator()();
         std::string toString() const;
-        void switchState( State newState );
-        State getState() const;
+        void terminate();
     };
 
     #ifdef MPIHeapUsesItsOwnThread
@@ -87,6 +85,8 @@ class peano::heap::BoundaryDataExchanger {
     const int            _metaDataTag;
     const int            _dataTag;
     const int            _rank;
+
+    tarch::multicore::RecursiveSemaphore  _semaphore;
 
     std::list<SendReceiveTaskType >   _sendTasks;
     std::list<SendReceiveTaskType >   _receiveTasks[2];
@@ -276,7 +276,8 @@ class peano::heap::BoundaryDataExchanger {
      */
     virtual bool dataExchangerCommunicatesInBackground() const = 0;
 
-    void runOperationsOfReceiveDanglingMessages();
+    BoundaryDataExchanger(const BoundaryDataExchanger&) = delete;
+
   public:
     /**
      * <h2> Background threads </h2>
@@ -433,6 +434,8 @@ class peano::heap::BoundaryDataExchanger {
 
     void plotStatistics() const;
     void clearStatistics();
+
+    void shutdown();
 };
 
 

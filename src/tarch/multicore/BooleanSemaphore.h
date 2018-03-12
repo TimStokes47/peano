@@ -138,6 +138,7 @@ namespace tarch {
 class tarch::multicore::BooleanSemaphore {
   private:
     friend class tarch::multicore::Lock;
+    friend class RecursiveSemaphore;
 
     /**
      * Waits until I can enter the critical section.

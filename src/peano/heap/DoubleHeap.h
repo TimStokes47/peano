@@ -163,12 +163,14 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
     int _nextIndex;
 
     #ifdef Parallel
-    int                                    _neighbourDataExchangerMetaDataTag;
-    int                                    _neighbourDataExchangerDataTag;
+    int                                     _neighbourDataExchangerMetaDataTag;
+    int                                     _neighbourDataExchangerDataTag;
 
-    MasterWorkerExchanger                  _masterWorkerExchanger;
-    JoinForkExchanger                      _joinForkExchanger;
-    std::map<int, NeighbourDataExchanger>  _neighbourDataExchanger;
+    MasterWorkerExchanger                   _masterWorkerExchanger;
+    JoinForkExchanger                       _joinForkExchanger;
+    std::map<int, NeighbourDataExchanger*>  _neighbourDataExchanger;
+
+    tarch::multicore::BooleanSemaphore      _neighbourDataMapSemaphore;
     #endif
 
     int _maximumNumberOfHeapEntries;

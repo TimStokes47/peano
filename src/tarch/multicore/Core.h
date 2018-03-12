@@ -4,6 +4,9 @@
 #define _TARCH_MULTICORE_CORE_H_
 
 
+#include <thread>
+
+
 namespace tarch {
   namespace multicore {
     class Core;
@@ -14,6 +17,7 @@ namespace tarch {
      * available on all machines - notably not on MAC.
      */
     int getCPUNumber();
+    std::thread::id getThreadNumber();
   }
 }
 

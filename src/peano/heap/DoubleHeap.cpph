@@ -86,6 +86,12 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   _heapData.clear();
 
   #ifdef Parallel
+  tarch::multicore::Lock lock(_neighbourDataMapSemaphore);
+  for (auto& p: _neighbourDataExchanger) {
+    p.second->shutdown();
+    delete p.second;
+  }
+
   _neighbourDataExchanger.clear();
   #endif
 }
@@ -110,12 +116,8 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   _masterWorkerExchanger.plotStatistics();
   _joinForkExchanger.plotStatistics();
 
-  for (
-    typename std::map<int, NeighbourDataExchanger>::const_iterator p = _neighbourDataExchanger.begin();
-    p != _neighbourDataExchanger.end();
-    p++
-  ) {
-    p->second.plotStatistics();
+  for (auto& p: _neighbourDataExchanger) {
+    p.second->plotStatistics();
   }
   #endif
   
@@ -133,12 +135,9 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   _masterWorkerExchanger.clearStatistics();
   _joinForkExchanger.clearStatistics();
 
-  for (
-    typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
-    p != _neighbourDataExchanger.end();
-    p++
-  ) {
-    p->second.clearStatistics();
+  tarch::multicore::Lock lock(_neighbourDataMapSemaphore);
+  for (auto& p: _neighbourDataExchanger) {
+    p.second->clearStatistics();
   }
   #endif
 }
@@ -414,7 +413,8 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::createBuffersManually( int communicationRank ) {
   #ifdef Parallel
-  _neighbourDataExchanger.insert(
+  tarch::multicore::Lock lock(_neighbourDataMapSemaphore);
+  _neighbourDataExchanger.emplace(
     std::pair<int, NeighbourDataExchanger>(
       communicationRank,
       NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,communicationRank)
@@ -441,16 +441,16 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   switch (messageType) {
     case MessageType::NeighbourCommunication:
       if (_neighbourDataExchanger.count(toRank)==0) {
-        _neighbourDataExchanger.insert(
-          std::pair<int, NeighbourDataExchanger>(
+        tarch::multicore::Lock lock(_neighbourDataMapSemaphore);
+        _neighbourDataExchanger.emplace(
+          std::pair<int, NeighbourDataExchanger*>(
             toRank,
-            NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,toRank)
+            new NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,toRank)
           )
         );
-
-        _neighbourDataExchanger[toRank].startToSendData(false);
+        _neighbourDataExchanger.at(toRank)->startToSendData(false);
       }
-      _neighbourDataExchanger[toRank].sendData(data,size,position,level);
+      _neighbourDataExchanger.at(toRank)->sendData(data,size,position,level);
       break;
     case MessageType::ForkOrJoinCommunication:
       _joinForkExchanger.sendData(data,size,toRank,position,level);
@@ -508,7 +508,7 @@ VectorContainer peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger
   switch (messageType) {
     case MessageType::NeighbourCommunication:
       assertion5( _neighbourDataExchanger.count(fromRank)==1, fromRank, position, level, "tried to receive heap data from neighbour but never sent heap data to this neighbour", toString() );
-      return _neighbourDataExchanger[fromRank].receiveData(position,level);
+      return _neighbourDataExchanger.at(fromRank)->receiveData(position,level);
       break;
     case MessageType::ForkOrJoinCommunication:
       return _joinForkExchanger.receiveData(fromRank,position,level);
@@ -559,13 +559,11 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
 void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::receiveDanglingMessages() {
   #ifdef Parallel
-  for (
-    typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
-    p != _neighbourDataExchanger.end();
-    p++
-  ) {
-    p->second.receiveDanglingMessages();
+  tarch::multicore::Lock lock(_neighbourDataMapSemaphore);
+  for (auto& p: _neighbourDataExchanger) {
+    p.second->receiveDanglingMessages();
   }
+  lock.free();
 
   _masterWorkerExchanger.receiveDanglingMessages();
   _joinForkExchanger.receiveDanglingMessages();
@@ -624,12 +622,8 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   #ifdef Parallel
   peano::performanceanalysis::Analysis::getInstance().beginToPrepareAsynchronousHeapDataExchange();
 
-  for (
-    typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
-    p != _neighbourDataExchanger.end();
-    p++
-  ) {
-    p->second.startToSendData(isTraversalInverted);
+  for (auto& p: _neighbourDataExchanger) {
+    p.second->startToSendData(isTraversalInverted);
   }
 
   peano::performanceanalysis::Analysis::getInstance().endToPrepareAsynchronousHeapDataExchange();
@@ -665,14 +659,9 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
   SCOREP_USER_REGION("peano::heap::DoubleHeap::finishedToSendBoundaryData()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
   #ifdef Parallel
-  for (
-    typename std::map<int, NeighbourDataExchanger>::iterator p = _neighbourDataExchanger.begin();
-    p != _neighbourDataExchanger.end();
-    p++
-  ) {
-    p->second.finishedToSendData(isTraversalInverted);
+  for (auto& p: _neighbourDataExchanger) {
+    p.second->finishedToSendData(isTraversalInverted);
   }
-
   #endif
 
   logTraceOut( "finishedToSendBoundaryData()" );

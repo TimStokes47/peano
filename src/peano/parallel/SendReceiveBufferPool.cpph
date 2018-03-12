@@ -9,6 +9,8 @@
 #include "peano/performanceanalysis/ScorePMacros.h"
 
 
+#include "tarch/multicore/RecursiveLock.h"
+
 
 template <class Vertex>
 Vertex peano::parallel::SendReceiveBufferPool::getVertex(int fromRank ) {
@@ -41,13 +43,6 @@ template <class Vertex>
 void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, const BufferAccessType& bufferAccessType ) {
   if (_map.count(toRank)==0) {
     logTraceInWith2Arguments( "createBufferManually(int,type)", toRank, bufferAccessType );
-    #ifdef MPIUsesItsOwnThread
-    if (_backgroundThread==nullptr) {
-      _backgroundThread = new BackgroundThread();
-      peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
-    }
-    _backgroundThread->switchState(BackgroundThread::State::Suspend);
-    #endif
 
     SendReceiveBuffer* newBuffer;
     if (bufferAccessType == FIFO ) {
@@ -58,13 +53,11 @@ void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, co
       typedef SendReceiveBufferLIFO<Vertex> BufferType;
       newBuffer = new BufferType( toRank, _bufferSize );
     }
+
+    tarch::multicore::RecursiveLock lock(_semaphore);
     _map.insert(
       std::pair<int,SendReceiveBuffer*>( toRank,newBuffer )
     );
-
-    #ifdef MPIUsesItsOwnThread
-    _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
-    #endif
 
     logTraceOut( "createBufferManually(int,type)" );
   }

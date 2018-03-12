@@ -2,12 +2,11 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "peano/datatraversal/TaskSet.h"
 #include "peano/performanceanalysis/ScorePMacros.h"
-#include "tarch/multicore/Lock.h"
+#include "tarch/multicore/RecursiveLock.h"
 
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 tarch::logging::Log  peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::_log( "peano::heap::BoundaryDataExchanger" );
-
 
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
@@ -30,6 +29,10 @@ peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::Bo
   #if defined(MPIHeapUsesItsOwnThread)
   _backgroundThread = nullptr;
   #endif
+
+  assertion5( _sendTasks.empty(),       _sendTasks.size(),       _identifier, _metaDataTag, _dataTag, _rank );
+  assertion5( _receiveTasks[0].empty(), _receiveTasks[0].size(), _identifier, _metaDataTag, _dataTag, _rank );
+  assertion5( _receiveTasks[1].empty(), _receiveTasks[1].size(), _identifier, _metaDataTag, _dataTag, _rank );
 }
 
 
@@ -58,21 +61,31 @@ peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::Bo
   #if defined(MPIHeapUsesItsOwnThread)
   _backgroundThread = nullptr;
   #endif
+
+  assertion5( _sendTasks.empty(),       _sendTasks.size(),       _identifier, _metaDataTag, _dataTag, _rank );
+  assertion5( _receiveTasks[0].empty(), _receiveTasks[0].size(), _identifier, _metaDataTag, _dataTag, _rank );
+  assertion5( _receiveTasks[1].empty(), _receiveTasks[1].size(), _identifier, _metaDataTag, _dataTag, _rank );
+}
+
+
+template<class Data, class SendReceiveTaskType, class VectorContainer>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::shutdown() {
+  #if defined(MPIHeapUsesItsOwnThread)
+  if (_backgroundThread != nullptr) {
+    _backgroundThread->terminate();
+    _backgroundThread = nullptr;
+  }
+  #endif
+
+  assertion5( _sendTasks.empty(),       _sendTasks.size(),       _identifier, _metaDataTag, _dataTag, _rank );
+  assertion5( _receiveTasks[0].empty(), _receiveTasks[0].size(), _identifier, _metaDataTag, _dataTag, _rank );
+  assertion5( _receiveTasks[1].empty(), _receiveTasks[1].size(), _identifier, _metaDataTag, _dataTag, _rank );
 }
 
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::~BoundaryDataExchanger() {
-  #if defined(MPIHeapUsesItsOwnThread)
-  //
-  // It might happen that the destructor is invoked on an exchanger object
-  // which has been constructed through a default constructor.
-  //
-  if (_backgroundThread!=nullptr) {
-    _backgroundThread->switchState(BackgroundThread::State::Terminate);
-    _backgroundThread = nullptr;
-  }
-  #endif
+  shutdown();
 }
 
 
@@ -80,20 +93,13 @@ template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::startToSendData(bool isTraversalInverted) {
   logTraceInWith1Argument( "startToSendData(bool)", isTraversalInverted );
 
+  tarch::multicore::RecursiveLock lock(_semaphore);
+
   assertion(_currentReceiveBuffer>=0);
   assertion(_currentReceiveBuffer<=1);
-  assertionMsg(_receiveTasks[1-_currentReceiveBuffer].empty(), "finishedToSendData() has not been called before. Check whether allHeapsFinishedToSendBoundaryData() on AbstractHeap has been invoked or your mappings delegate heap management to kernel. If finish is called, this error pops up if we you don't pick up messages sent to a rank in the iteration before");
+  assertionMsg(_receiveTasks[1-_currentReceiveBuffer].empty(), "finishedToSendData() has not been called before and deploy buffer thus is not empty. Check whether allHeapsFinishedToSendBoundaryData() on AbstractHeap has been invoked or your mappings delegate heap management to kernel. If finish is called, this error pops up if we you don't pick up messages sent to a rank in the iteration before");
 
   assertion3(!_isCurrentlySending, _identifier, _rank, "call once per traversal" );
-
-  #if defined(MPIHeapUsesItsOwnThread)
-  if (_backgroundThread==nullptr) {
-    _backgroundThread = new BackgroundThread(this);
-    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
-  }
-
-  _backgroundThread->switchState(BackgroundThread::State::Suspend);
-  #endif
 
   #ifdef Asserts
   _isCurrentlySending = true;
@@ -119,12 +125,6 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   switchReceiveAndDeployBuffer(numberOfSentMessages);
 
   postprocessStartToSendData();
-
-  #if defined(MPIHeapUsesItsOwnThread)
-  assertion( _backgroundThread!=nullptr );
-  assertion( _backgroundThread->_state == BackgroundThread::State::Suspend );
-  _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
-  #endif
 
   logTraceOut( "startToSendData(bool)" );
 }
@@ -239,32 +239,28 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
   _wasTraversalInvertedThroughoutLastSendReceiveTraversal = isTraversalInverted;
 
+  tarch::multicore::RecursiveLock lock(_semaphore);
   postprocessFinishedToSendData();
+
   logTraceOut( "finishedToSendData(bool)" );
 }
 
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::receiveDanglingMessages() {
-  SCOREP_USER_REGION("peano::heap::BoundaryDataExchanger::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
+  tarch::multicore::RecursiveLock lock(_semaphore);
 
-  #if !defined(MPIHeapUsesItsOwnThread)
-  runOperationsOfReceiveDanglingMessages();
-  #else
-  if (_backgroundThread==nullptr or _backgroundThread->getState()==BackgroundThread::State::Suspend) {
-    runOperationsOfReceiveDanglingMessages();
-  }
-  else {
-    _backgroundThread->switchState(BackgroundThread::State::Suspend);
-    runOperationsOfReceiveDanglingMessages();
-    _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
+  #if defined(MPIHeapUsesItsOwnThread)
+  if (_backgroundThread==nullptr) {
+/*
+    _backgroundThread = new BackgroundThread(this);
+    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
+*/
   }
   #endif
-}
 
+  SCOREP_USER_REGION("peano::heap::BoundaryDataExchanger::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
-template<class Data, class SendReceiveTaskType, class VectorContainer>
-void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::runOperationsOfReceiveDanglingMessages() {
   #ifdef MPIProgressionReliesOnMPITest
   int progressFlag;
   for(auto& p: _sendTasks) {
@@ -326,12 +322,6 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 ) {
   assertion5( _isCurrentlySending, _identifier, count, position, level, "forgot to call startToSendBoundaryData on heap?" );
 
-  #if defined(MPIHeapUsesItsOwnThread) && defined(MPIProgressionReliesOnMPITest)
-  if (_backgroundThread==nullptr) {
-    _backgroundThread->switchState(BackgroundThread::State::Suspend);
-  }
-  #endif
-
   SendReceiveTaskType sendTask;
   sendTask._rank = _rank;
   #ifdef Asserts
@@ -344,16 +334,11 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
   sendTask._metaInformation.setLength(count);
 
+  tarch::multicore::RecursiveLock lock(_semaphore);
   handleAndQueueSendTask( sendTask, data );
 
   _numberOfSentMessages += 1;
   _numberOfSentRecords  += count;
-
-  #if defined(MPIHeapUsesItsOwnThread) && defined(MPIProgressionReliesOnMPITest)
-  if (_backgroundThread==nullptr) {
-    _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
-  }
-  #endif
 }
 
 
@@ -514,6 +499,8 @@ template <class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::switchReceiveAndDeployBuffer(int numberOfMessagesSentThisIteration) {
   assertion(_receiveTasks[1-_currentReceiveBuffer].empty());
 
+  tarch::multicore::RecursiveLock lock(_semaphore);
+
   _currentReceiveBuffer = 1-_currentReceiveBuffer;
 
   const int sizeOfNewDeployBuffer = static_cast<int>(_receiveTasks[1-_currentReceiveBuffer].size());
@@ -571,8 +558,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 template <class Data, class SendReceiveTaskType, class VectorContainer>
 peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::BackgroundThread(BoundaryDataExchanger*  boundaryDataExchanger):
   _boundaryDataExchanger(boundaryDataExchanger),
-  _semaphore(),
-  _state(State::ReceiveDataInBackground) {
+  _state(State::Running) {
 }
 
 
@@ -584,10 +570,8 @@ peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::Ba
 template <class Data, class SendReceiveTaskType, class VectorContainer>
 std::string peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::toString(State state) {
   switch (state) {
-    case State::ReceiveDataInBackground:
-      return "receive-data-in-background";
-    case State::Suspend:
-      return "suspend";
+    case State::Running:
+      return "running";
     case State::Terminate:
       return "terminate";
   }
@@ -602,18 +586,16 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   assertionMsg( false, "not never enter this operator" );
   #endif
 
-  tarch::multicore::Lock lock(_semaphore);
+  tarch::multicore::RecursiveLock lock(_boundaryDataExchanger->_semaphore);
   bool result = true;
 
   switch (_state) {
-    case State::ReceiveDataInBackground:
+    case State::Running:
       {
-        _boundaryDataExchanger->runOperationsOfReceiveDanglingMessages();
+        _boundaryDataExchanger->receiveDanglingMessages();
         // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
         //std::atomic_thread_fence(std::memory_order_release);
       }
-      break;
-    case State::Suspend:
       break;
     case State::Terminate:
       result = false;
@@ -632,14 +614,7 @@ std::string peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorCo
 
 
 template <class Data, class SendReceiveTaskType, class VectorContainer>
-void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::switchState( State newState ) {
-  tarch::multicore::Lock lock(_semaphore);
-  _state = newState;
-  lock.free();
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::terminate() {
+  _state = State::Terminate;
 }
 
-
-template <class Data, class SendReceiveTaskType, class VectorContainer>
-typename peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::State peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::getState() const {
-  return _state;
-}

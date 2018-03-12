@@ -6,6 +6,7 @@
 #include "tarch/Assertions.h"
 #include "tarch/timing/Watch.h"
 #include "tarch/multicore/Lock.h"
+#include "tarch/multicore/RecursiveLock.h"
 
 
 #include "tarch/multicore/Jobs.h"
@@ -30,6 +31,7 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
   #ifdef MPIUsesItsOwnThread
   _backgroundThread(nullptr),
   #endif
+  _semaphore(),
   _iterationManagementTag(MPI_ANY_TAG),
   _iterationDataTag(MPI_ANY_TAG),
   _bufferSize(0),
@@ -40,7 +42,7 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
   // I originally wanted to spawn a thread immediately here. However, that
   // seems not to work as the job environment might not have been up (it
   // seems some stuff here's initialised statically). Therefore, I lazy
-  // kick off the thread in releaseMessages().
+  // kick off the thread in receiveDanglingMessages().
 /*
   #ifdef MPIUsesItsOwnThread
   _backgroundThread = new BackgroundThread();
@@ -61,11 +63,12 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
 peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
   #if defined(MPIUsesItsOwnThread)
   if (_backgroundThread != nullptr) {
-    _backgroundThread->switchState(BackgroundThread::State::Terminate);
+    _backgroundThread->terminate();
     _backgroundThread = nullptr;
   }
   #endif
 
+  tarch::multicore::RecursiveLock lock(SendReceiveBufferPool::getInstance()._semaphore);
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     std::cerr << "encountered open buffer for destination " << p->first << " on rank " << tarch::parallel::Node::getInstance().getRank() <<  ". Would be nicer to call terminate() on SendReceiveBufferPool." << std::endl;
     delete p->second;
@@ -113,31 +116,17 @@ int peano::parallel::SendReceiveBufferPool::getIterationDataTag() const {
 
 
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
-  SCOREP_USER_REGION("peano::parallel::SendReceiveBufferPool::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
+  tarch::multicore::RecursiveLock lock(SendReceiveBufferPool::getInstance()._semaphore);
 
-  #if !defined(MPIUsesItsOwnThread)
-  receiveDanglingMessagesFromAllBuffersInPool();
-  #else
+  #if defined(MPIUsesItsOwnThread)
   if (_backgroundThread==nullptr) {
     _backgroundThread = new BackgroundThread();
     peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
   }
-
-  if (_backgroundThread->getState()==BackgroundThread::State::Suspend) {
-    receiveDanglingMessagesFromAllBuffersInPool();
-  }
-  else {
-    _backgroundThread->switchState(BackgroundThread::State::Suspend);
-
-    receiveDanglingMessagesFromAllBuffersInPool();
-
-    _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
-  }
   #endif
-}
 
+  SCOREP_USER_REGION("peano::parallel::SendReceiveBufferPool::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
-void peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesFromAllBuffersInPool() {
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     logDebug( "receiveDanglingMessagesFromAllBuffersInPool()", "receive data from rank " << p->first << " in mode " << toString(_mode) );
     p->second->receivePageIfAvailable();
@@ -148,14 +137,12 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesFromAllBuffe
 void peano::parallel::SendReceiveBufferPool::terminate() {
   #if defined(MPIUsesItsOwnThread)
   if (_backgroundThread != nullptr) {
-    #ifdef Asserts
-	logInfo( "terminate()", "tell background thread to terminate" );
-    #endif
-    _backgroundThread->switchState(BackgroundThread::State::Terminate);
+    _backgroundThread->terminate();
     _backgroundThread = nullptr;
   }
   #endif
 
+  tarch::multicore::RecursiveLock lock(SendReceiveBufferPool::getInstance()._semaphore);
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     assertion1(  p->first >= 0, tarch::parallel::Node::getInstance().getRank() );
     assertion1( _map.count(p->first) == 1, tarch::parallel::Node::getInstance().getRank() );
@@ -171,9 +158,9 @@ void peano::parallel::SendReceiveBufferPool::restart() {
   assertion1( _map.empty(), tarch::parallel::Node::getInstance().getRank() );
 
   #ifdef MPIUsesItsOwnThread
-  if (_backgroundThread==nullptr) {
-    _backgroundThread = new BackgroundThread();
-    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
+  if (_backgroundThread!=nullptr) {
+    _backgroundThread->terminate();
+    _backgroundThread = nullptr;
   }
   #endif
 }
@@ -184,13 +171,9 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
   logTraceInWith1Argument( "releaseMessages()", toString(_mode) );
 
-  #if defined(MPIUsesItsOwnThread)
-  if (_backgroundThread!=nullptr) {
-    _backgroundThread->switchState(BackgroundThread::State::Suspend);
-  }
-  #endif
+  tarch::multicore::RecursiveLock lock(SendReceiveBufferPool::getInstance()._semaphore);
 
-
+  logInfo( "releaseMessages()", "release the sent messages" );
   std::map<int,SendReceiveBuffer*>::iterator p = _map.begin();
   while (  p != _map.end() ) {
     p->second->releaseSentMessages();
@@ -203,18 +186,12 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
     }
   }
 
+  logInfo( "releaseMessages()", "all sent messages released, release the received messages" );
+
   for ( std::map<int,SendReceiveBuffer*>::const_reverse_iterator p = _map.rbegin(); p != _map.rend(); p++ ) {
     p->second->releaseReceivedMessages(true);
   }
-
-  #if defined(MPIUsesItsOwnThread)
-  if (_backgroundThread==nullptr) {
-    _backgroundThread = new BackgroundThread();
-    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
-  }
-  assertion(_backgroundThread!=nullptr);
-  _backgroundThread->switchState(BackgroundThread::State::ReceiveDataInBackground);
-  #endif
+  lock.free();
 
   switch (_mode) {
     case SendAndDeploy:
@@ -244,8 +221,7 @@ void peano::parallel::SendReceiveBufferPool::setBufferSize( int bufferSize ) {
 
 
 peano::parallel::SendReceiveBufferPool::BackgroundThread::BackgroundThread():
-  _semaphore(),
-  _state(peano::parallel::SendReceiveBufferPool::BackgroundThread::State::Suspend) {
+  _state(peano::parallel::SendReceiveBufferPool::BackgroundThread::State::Running) {
 }
 
 
@@ -254,18 +230,15 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
   assertionMsg( false, "not never enter this operator" );
   #endif
 
-  tarch::multicore::Lock lock(_semaphore);
   bool result = true;
 
   switch (_state) {
-    case State::ReceiveDataInBackground:
+    case State::Running:
       {
-        SendReceiveBufferPool::getInstance().receiveDanglingMessagesFromAllBuffersInPool();
+        SendReceiveBufferPool::getInstance().receiveDanglingMessages();
         // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
         //std::atomic_thread_fence(std::memory_order_release);
       }
-      break;
-    case State::Suspend:
       break;
     case State::Terminate:
       #ifdef Asserts
@@ -274,8 +247,6 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
       result = false;
       break;
   }
-
-  lock.free();
 
   return result;
 }
@@ -288,10 +259,8 @@ std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString()
 
 std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString(State state) {
   switch (state) {
-    case State::ReceiveDataInBackground:
-      return "receive-data-in-background";
-    case State::Suspend:
-      return "suspend";
+    case State::Running:
+      return "running";
     case State::Terminate:
 	  return "terminate";
   }
@@ -300,11 +269,10 @@ std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString(S
 }
 
 
-void peano::parallel::SendReceiveBufferPool::BackgroundThread::switchState(State newState ) {
+void peano::parallel::SendReceiveBufferPool::BackgroundThread::terminate() {
   logTraceInWith1Argument( "switchState(State)", toString() );
 
-  tarch::multicore::Lock lock(_semaphore);
-  _state = newState;
+  _state = State::Terminate;
 
   logTraceOutWith1Argument( "switchState(State)", toString() );
 }
@@ -346,11 +314,6 @@ void peano::parallel::SendReceiveBufferPool::exchangeBoundaryVertices(bool value
 
 bool peano::parallel::SendReceiveBufferPool::deploysValidData() const {
   return _mode==SendAndDeploy || _mode==DeployButDoNotSend;
-}
-
-
-peano::parallel::SendReceiveBufferPool::BackgroundThread::State peano::parallel::SendReceiveBufferPool::BackgroundThread::getState() const {
-  return _state;
 }
 
 

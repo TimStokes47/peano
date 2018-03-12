@@ -8,6 +8,7 @@
 #include "tarch/services/Service.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/multicore/RecursiveSemaphore.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 #include "peano/parallel/SendReceiveBuffer.h"
@@ -60,26 +61,25 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
       NeitherDeployNorSend
     };
 
+
     struct BackgroundThread {
       public:
         enum class State {
-          ReceiveDataInBackground,
-          Suspend,
+          Running,
 		  Terminate
         };
 
         static std::string toString(State state);
       private:
-        tarch::multicore::BooleanSemaphore  _semaphore;
-        State                               _state;
+        State                                _state;
+
         BackgroundThread(const BackgroundThread&) = delete;
       public:
         BackgroundThread();
         virtual ~BackgroundThread();
         bool operator()();
         std::string toString() const;
-        void switchState( State newState );
-        State getState() const;
+        void terminate();
     };
 
     #ifdef MPIUsesItsOwnThread
@@ -92,6 +92,8 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
     #endif
 
     static tarch::logging::Log _log;
+
+    tarch::multicore::RecursiveSemaphore  _semaphore;
 
     /**
      * Set by the constructor and then never changed again.
@@ -249,13 +251,6 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
      * code fragment and hope that the code does not run into a deadlock.
      */
     virtual void receiveDanglingMessages();
-
-    /**
-     * This operation is directly called from receiveDanglingMessages(). The reason
-     * I split it up is to enable a background thread permanently polling incoming
-     * data.
-     */
-    void receiveDanglingMessagesFromAllBuffersInPool();
 
     /**
      * Releases all the messages. Should be called after every iteration. The
