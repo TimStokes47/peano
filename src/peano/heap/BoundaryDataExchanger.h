@@ -62,10 +62,12 @@ class peano::heap::BoundaryDataExchanger {
       private:
         BoundaryDataExchanger*              _boundaryDataExchanger;
 
+/*
       #ifdef Asserts
       public:
-        State                               _state;
       #endif
+*/
+        State                               _state;
 
         BackgroundThread(const BackgroundThread&) = delete;
       public:
