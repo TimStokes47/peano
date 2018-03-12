@@ -15,7 +15,7 @@
  * thread to receive data in the background.
  */
 #if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread) && !defined(noMPIHeapUsesItsOwnThread)
-//#define MPIHeapUsesItsOwnThread
+#define MPIHeapUsesItsOwnThread
 #endif
 
 

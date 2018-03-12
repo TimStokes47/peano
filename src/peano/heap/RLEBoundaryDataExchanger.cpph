@@ -57,11 +57,13 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
     zeroLengthReceiveTask._data = 0;
 
 
+/*
     #ifdef MPIProgressionReliesOnMPITest
     zeroLengthReceiveTask._metaInformation.send(Base::_rank, Base::_metaDataTag, true, -1);
     #else
+*/
     zeroLengthReceiveTask._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
-    #endif
+//    #endif
 
     _numberOfEmptyMessagesSinceLastNonEmptySendCall = 0;
     logTraceOut( "sendAllCompressedEmptyMessages()" );

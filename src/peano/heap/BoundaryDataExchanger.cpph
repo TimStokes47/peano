@@ -75,6 +75,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
     _backgroundThread->terminate();
     _backgroundThread = nullptr;
   }
+  assertion( _backgroundThread == nullptr );
   #endif
 
   assertion5( _sendTasks.empty(),       _sendTasks.size(),       _identifier, _metaDataTag, _dataTag, _rank );
@@ -257,6 +258,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
     peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
 */
   }
+  assertion( _backgroundThread == nullptr );
   #endif
 
   SCOREP_USER_REGION("peano::heap::BoundaryDataExchanger::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)

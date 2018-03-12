@@ -21,18 +21,14 @@ tarch::multicore::Lock::~Lock() {
 
 void tarch::multicore::Lock::lock() {
   assertion( !_lockIsAquired );
-
   _semaphore.enterCriticalSection();
-
   _lockIsAquired = true;
 }
 
 
 void tarch::multicore::Lock::free() {
   assertion( _lockIsAquired );
-
   _semaphore.leaveCriticalSection();
-
   _lockIsAquired = false;
 }
 

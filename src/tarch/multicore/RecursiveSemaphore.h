@@ -1,13 +1,19 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_
+#include "tarch/multicore/MulticoreDefinitions.h"
+
+#include "tarch/multicore/cpp/RecursiveSemaphore.h"
+#include "tarch/multicore/tbb/RecursiveSemaphore.h"
+
+
+#if !defined(_TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_) && !defined(SharedMemoryParallelisation)
 #define _TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_
 
 #include <string>
 #include <thread>
 
-#include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/logging/Log.h"
 
 
 namespace tarch {
@@ -16,6 +22,7 @@ namespace tarch {
     class RecursiveLock;
   }
 }
+
 
 
 /**
@@ -31,14 +38,10 @@ class tarch::multicore::RecursiveSemaphore {
   private:
     friend class tarch::multicore::RecursiveLock;
 
-    BooleanSemaphore  _threadIdSemaphore;
-    BooleanSemaphore  _dataSemaphore;
-    std::thread::id   _threadId;
-
     /**
      * Waits until I can enter the critical section.
      */
-    bool enterCriticalSection();
+    void enterCriticalSection();
 
     /**
      * Tells the semaphore that it is about to leave.

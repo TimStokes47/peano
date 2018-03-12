@@ -21,16 +21,14 @@ tarch::multicore::RecursiveLock::~RecursiveLock() {
 
 void tarch::multicore::RecursiveLock::lock() {
   assertion( !_lockIsAquired );
-
-  _lockIsAquired = _semaphore.enterCriticalSection();
+  _semaphore.enterCriticalSection();
+  _lockIsAquired = true;
 }
 
 
 void tarch::multicore::RecursiveLock::free() {
   assertion( _lockIsAquired );
-
   _semaphore.leaveCriticalSection();
-
   _lockIsAquired = false;
 }
 
