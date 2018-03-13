@@ -187,6 +187,10 @@ the directory.
 \begin{itemize}
   \item \textbf{The Intel tools yield invalid or messed up results}. Ensure 
     you have built your code with \texttt{-DTBB\_USE\_ASSERT -DTBB\_USE\_THREADING\_TOOLS}.
+  \item \textbf{I need to find data races in my MPI code}. Run your code with
+    \begin{code}
+    /opt/mpi/mpirun -n 3 valgrind --tool=helgrind ./MyExec My-Args 2> myoutputfile.txt
+    \end{code} 
   \item To be continued \dots
 \end{itemize}
 

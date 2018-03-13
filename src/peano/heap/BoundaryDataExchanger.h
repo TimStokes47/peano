@@ -63,6 +63,8 @@ class peano::heap::BoundaryDataExchanger {
         BoundaryDataExchanger*              _boundaryDataExchanger;
 
 /*
+      // @todo Remove stuff not just comment it out.
+
       #ifdef Asserts
       public:
       #endif
