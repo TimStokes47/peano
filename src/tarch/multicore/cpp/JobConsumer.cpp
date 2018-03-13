@@ -70,11 +70,9 @@ void tarch::multicore::internal::JobConsumer::operator()() {
 
           processedJob |= tarch::multicore::jobs::processBackgroundJobs();
 
-          if (!processedJob) {
-          	std::this_thread::yield();
-            if (_hyperthreading) {
-              std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-            }
+          if (!processedJob and _hyperthreading) {
+            std::this_thread::yield();
+            std::this_thread::sleep_for(std::chrono::nanoseconds(1));
           }
         }
     	break;

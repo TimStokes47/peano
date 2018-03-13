@@ -1,8 +1,7 @@
 
 #include "tarch/multicore/Jobs.h"
 #include "tarch/Assertions.h"
-
-
+#include "tarch/multicore/Core.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 #include <thread>
@@ -75,9 +74,10 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
   bool result = false;
   int  numberOfJobs = 0;
   const int MinNumberOfBackgroundJobs = 1;
+  static int Divide = std::max( 2, tarch::multicore::Core::getInstance().getNumberOfThreads() );
   numberOfJobs  = internal::JobQueue::getBackgroundQueue().getNumberOfPendingJobs();
   if (numberOfJobs>0) {
-    internal::JobQueue::getBackgroundQueue().processJobs( std::max(MinNumberOfBackgroundJobs,numberOfJobs/2) );
+    internal::JobQueue::getBackgroundQueue().processJobs( std::max(MinNumberOfBackgroundJobs,numberOfJobs/Divide) );
   }
 
   #ifdef Parallel

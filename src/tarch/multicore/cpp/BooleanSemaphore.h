@@ -6,6 +6,7 @@
 
 #include <string>
 #include <mutex>
+#include <atomic>
 
 
 namespace tarch {
@@ -16,9 +17,16 @@ namespace tarch {
 }
 
 
+#define BooleanSemaphoreUsesASpinLock
+
+
 class tarch::multicore::BooleanSemaphore {
   private:
+    #ifdef BooleanSemaphoreUsesASpinLock
+    std::atomic_flag    _spinLock;
+    #else
 	std::mutex   _mutex;
+    #endif
 
     friend class tarch::multicore::Lock;
     friend class RecursiveSemaphore;
