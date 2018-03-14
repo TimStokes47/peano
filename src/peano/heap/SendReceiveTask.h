@@ -206,6 +206,9 @@ struct peano::heap::SendReceiveTask<double> {
   void sendDataDirectlyFromBuffer(const double* const  data);
 
   /**
+   * This is a sole trigger of a send, i.e. an Isend. There's not a
+   * receive/test/dangling messages thing in there.
+   *
    * @see triggerReceive() for implementation remarks.
    */
   void triggerSend(int tag);

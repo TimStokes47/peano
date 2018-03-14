@@ -267,6 +267,18 @@ class peano::heap::BoundaryDataExchanger {
      * necessary), but first insert sendTask into the send data structure if
      * the buffer shall later check for completition. Each call increases the
      * result of getNumberOfSentMessages().
+     *
+     * <h2> Implementation advices </h2>
+     *
+     * It is very important that all data that is sent out via triggerSend is
+     * sent before we send out the meta data. As soon as the meta data is in
+     * place, any receiveDanglingMessages will try to query the MPIReceive
+     * objects. So if we do a triggerSend() prior to the sendData, it can
+     * happen that a receiveDanglingMessages() squeezes in-between the meta
+     * data send and the actual data send. The actual data send (see
+     * SendReceiveTask::triggerSend()) does not trigger any receiveDanglingMessages().
+     * We furthermore forbid background messages retrieval. Therefore, if we
+     * get out the real data asap, then we should be fine overall.
      */
     virtual void handleAndQueueSendTask(
       const SendReceiveTaskType&  sendTask,
