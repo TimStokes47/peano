@@ -78,7 +78,6 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::finishOng
   if ( _sendBufferRequestHandle != nullptr ) {
     logDebug( "finishOngoingSendTask()", "start to finish ongoing send task" );
 
-    MPI_Status  status;
     int         flag = 0;
     clock_t     timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
     clock_t     timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
@@ -86,7 +85,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::finishOng
     bool        triggeredTimeoutWarning = false;
 
     while (!flag) {
-      int result = MPI_Test( _sendBufferRequestHandle, &flag, &status );
+      int result = MPI_Test( _sendBufferRequestHandle, &flag, MPI_STATUS_IGNORE );
       if (result!=MPI_SUCCESS) {
         std::ostringstream msg;
         msg << "testing for finished send task on node "
@@ -158,8 +157,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePa
   #ifdef Parallel
   if ( _receiveBufferRequestHandle != 0 ) {
     int        flag   = 0;
-    MPI_Status status;
-    int        result = MPI_Test(_receiveBufferRequestHandle, &flag, &status);
+    int        result = MPI_Test(_receiveBufferRequestHandle, &flag, MPI_STATUS_IGNORE);
     if (result!=MPI_SUCCESS) {
       std::ostringstream msg;
       msg << "test for messages on node " << _destinationNodeNumber

@@ -92,7 +92,7 @@ void peano::parallel::JoinDataBufferImplementation<DataType>::receivePageIfAvail
     const int result = MPI_Recv(
       receiveBuffer, messages, _mpiDatatype, _rank, _tag,
       tarch::parallel::Node::getInstance().getCommunicator(),
-      &status
+	  MPI_STATUS_IGNORE
     );
     if (result!=MPI_SUCCESS) {
       logError(

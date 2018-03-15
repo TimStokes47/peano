@@ -63,9 +63,8 @@ bool tarch::parallel::Node::isInitialised() const {
 
 void tarch::parallel::Node::ensureThatMessageQueuesAreEmpty( int fromRank, int tag ) {
   #ifdef Parallel
-  MPI_Status   status;
   int          flag;
-  MPI_Iprobe(fromRank, tag, _communicator, &flag, &status);
+  MPI_Iprobe(fromRank, tag, _communicator, &flag, MPI_STATUS_IGNORE);
   if (flag!=0) {
     plotMessageQueues();
   }
@@ -76,9 +75,8 @@ void tarch::parallel::Node::ensureThatMessageQueuesAreEmpty( int fromRank, int t
 
 void tarch::parallel::Node::plotMessageQueues() {
   #ifdef Parallel
-  MPI_Status   status;
   int          flag;
-
+  MPI_Status   status;
   MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, _communicator, &flag, &status);
   if (flag==0) {
     _log.error("plotMessageQueues()", "there are no messages from any sender in MPI queue");

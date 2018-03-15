@@ -49,15 +49,13 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
   #endif
 
   for(typename std::list<SendReceiveTaskType >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
-    MPI_Status status;
-
     const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
     const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
     bool           triggeredTimeoutWarning = false;
     int            finishedWait            = i->_metaInformation.getLength()==0;
 
     while (!finishedWait) {
-      MPI_Test(&(i->_request), &finishedWait, &status);
+      MPI_Test(&(i->_request), &finishedWait, MPI_STATUS_IGNORE);
 
       // deadlock aspect
       if (
@@ -283,10 +281,9 @@ template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, cla
 typename std::list< SendReceiveTaskType >::iterator peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendReceiveTaskType,VectorContainer>::findMessageFromRankInReceiveBuffer( int ofRank ) {
   for (typename std::list<SendReceiveTaskType >::iterator i = _receiveTasks.begin(); i != _receiveTasks.end(); i++) {
     if (i->_rank==ofRank) {
-      MPI_Status status;
       int        finishedWait = false;
       if (i->_metaInformation.getLength() > 0) {
-        const int mpiTestResult = MPI_Test(&(i->_request), &finishedWait, &status);
+        const int mpiTestResult = MPI_Test(&(i->_request), &finishedWait, MPI_STATUS_IGNORE);
         if (mpiTestResult!=MPI_SUCCESS) {
           logError(
             "findMessageFromRankInReceiveBuffer()",
@@ -364,14 +361,11 @@ template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, cla
 bool peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendReceiveTaskType,VectorContainer>::validateThatIncomingJoinBuffersAreEmpty() {
   if ( _receiveTasks.empty() ) {
     int        flag   = 0;
-    MPI_Status status;
-
     int        result = MPI_Iprobe(
       MPI_ANY_SOURCE,
       _metaDataTag,
       tarch::parallel::Node::getInstance().getCommunicator(),
-      &flag,
-      &status
+      &flag, MPI_STATUS_IGNORE
     );
     if (result!=MPI_SUCCESS) {
       logError(
@@ -391,8 +385,7 @@ bool peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
       MPI_ANY_SOURCE,
       _dataTag,
       tarch::parallel::Node::getInstance().getCommunicator(),
-      &flag,
-      &status
+      &flag, MPI_STATUS_IGNORE
     );
     if (result!=MPI_SUCCESS) {
       logError(

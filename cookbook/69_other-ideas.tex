@@ -86,44 +86,37 @@ All of these settings however can be overwritten no the command line.
 
 
 \noindent
-No following variables are by default set to 0. 
-  
-  
-%            /**
-%           * @param communicateSleep -1 Data exchange through blocking mpi
-%           * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-%           * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-%           */
-  
-  
-%   #ifndef SendWorkerMasterMessagesBlocking
-%  #define SendWorkerMasterMessagesBlocking     0
-% #endif
-% #ifndef SendMasterWorkerMessagesBlocking
-%  #define SendMasterWorkerMessagesBlocking     0
-% #endif
-% #ifndef ReceiveMasterMessagesBlocking
-%  #define ReceiveMasterMessagesBlocking        0
-% #endif
-% #ifndef SendAndReceiveLoadBalancingMessagesBlocking
-%  #define SendAndReceiveLoadBalancingMessagesBlocking    0
-% #endif
-% #ifndef ReceiveIterationControlMessagesBlocking
-%  #define ReceiveIterationControlMessagesBlocking        0
-% #endif
-% #ifndef BroadcastToIdleNodesBlocking
-%  #define BroadcastToIdleNodesBlocking                   0
-% #endif
-% #ifndef BroadcastToWorkingNodesBlocking
-%  #define BroadcastToWorkingNodesBlocking                0
-% #endif
-% #ifndef SendHeapMetaDataBlocking
-%  #define SendHeapMetaDataBlocking                       0
-% #endif
-% #ifndef SendAndReceiveHeapSynchronousDataBlocking
-%  #define SendAndReceiveHeapSynchronousDataBlocking      0
-% #endif
-%   
+The following variables allow users to tailor the treatment of (logically)
+blocking sends and receives.
+Their default value always is 0. 
+0 means that each blocking operation is mapped onto a non-blocking operation
+followed by a while loop over \texttt{MPI\_Test}. 
+This seems to be inefficient, but actually these tests are intermixed with calls
+to routines of the type \texttt{receiveDanglingMessages} which receive MPI
+messages which should be transferred in the background and might congest the MPI
+buffers at the moment.
+If you set the variables to -1, then Peano replaces this non-blocking
+``pattern'' with real blocking sends and receives.
+If you set them to something greater than 0, then each non-successful test from
+the pattern above is follows by a \texttt{usleep} of the given value. 
+This pattern pays off, if too many ranks poll the MPI subsystem or you use
+hyperthreading and some code parts that want to do MPI calls too suffer
+from starvation.
+
+\begin{itemize}
+  \item SendWorkerMasterMessagesBlocking
+  \item SendMasterWorkerMessagesBlocking
+  \item ReceiveMasterMessagesBlocking
+  \item SendAndReceiveLoadBalancingMessagesBlocking
+  \item ReceiveIterationControlMessagesBlocking
+  \item BroadcastToIdleNodesBlocking
+  \item BroadcastToWorkingNodesBlocking
+  \item SendHeapMetaDataBlocking
+  \item SendAndReceiveHeapSynchronousDataBlocking
+\end{itemize}  
+
+
+
 \subsection*{MPI+X}
 
 \begin{center}

@@ -180,8 +180,6 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   logTraceInWith1Argument( "releaseSentMessages()", _sendTasks.size() );
 
   for(typename std::list<SendReceiveTaskType >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
-    MPI_Status status;
-
     const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
     const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
     bool           triggeredTimeoutWarning = false;
@@ -189,7 +187,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
     while (!finishedWait) {
       assertion1(i->_data!=nullptr, i->toString() );
-      MPI_Test(&(i->_request), &finishedWait, &status);
+      MPI_Test(&(i->_request), &finishedWait, MPI_STATUS_IGNORE);
 
       // deadlock aspect
       if (
@@ -278,15 +276,12 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
 
   int        flag   = 1;
-  MPI_Status status;
-  
   while (flag) {
     int  result = MPI_Iprobe(
       _rank,
       _metaDataTag,
       tarch::parallel::Node::getInstance().getCommunicator(),
-      &flag,
-      &status
+      &flag, MPI_STATUS_IGNORE
     );
     if (result!=MPI_SUCCESS) {
       logError(
@@ -457,8 +452,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
       i++
     ) {
       if(i->_metaInformation.getLength() > 0) {
-        MPI_Status status;
-        MPI_Test(&(i->_request), &finishedWait, &status);
+        MPI_Test(&(i->_request), &finishedWait, MPI_STATUS_IGNORE);
         allMessageCommunicationsAreFinished &= (finishedWait!=0);
       }
     }
