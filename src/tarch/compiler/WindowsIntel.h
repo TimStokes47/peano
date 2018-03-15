@@ -24,9 +24,11 @@
 // #define DaStGenPackedPadding 2   // 64 bit version
 //#define SpecialiseVectorTemplatesForIntegers
 
-#ifndef noMultipleThreadsMayTriggerMPICalls
+
+#if !defined(noMultipleThreadsMayTriggerMPICalls) && !defined(MultipleThreadsMayTriggerMPICalls)
 #define MultipleThreadsMayTriggerMPICalls
 #endif
+
 
 #ifndef SendWorkerMasterMessagesBlocking
  #define SendWorkerMasterMessagesBlocking     0

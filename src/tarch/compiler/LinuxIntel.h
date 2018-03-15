@@ -26,7 +26,8 @@
 
 //#define SpecialiseVectorTemplatesForIntegers
 
-#ifndef noMultipleThreadsMayTriggerMPICalls
+
+#if !defined(noMultipleThreadsMayTriggerMPICalls) && !defined(MultipleThreadsMayTriggerMPICalls)
 #define MultipleThreadsMayTriggerMPICalls
 #endif
 

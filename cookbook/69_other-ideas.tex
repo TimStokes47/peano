@@ -119,23 +119,21 @@ from starvation.
 
 \subsection*{MPI+X}
 
+
+
+
+
 \begin{center}
  \begin{tabular}{p{2cm}p{2cm}p{8cm}l}
   Compile flag (default) & Alternative & Description & Target \\
   \hline
-%   {\footnotesize MPI\-Progression\-Relies\-On\-MPI\-Test} 
-%   & 
-%   {\footnotesize noMPI\-Progression\-Relies\-On\-MPI\-Test} 
-%   &
-%   Some MPI implementations struggle to transfer data in the background of the
-%   simulation run. In this case, one has to call \texttt{MPI\_Test} over an over
-%   again. Each test call allows MPI to progress some messages. Obviously,
-%   these calls do not come for free and impose some overhead, too. The flag
-%   allows users to disable/enable this test polling. Unless not pinned
-%   explicitly to one thread (see below), Peano's hybrid implementation
-%   distributes the tests to the cores, i.e.~hardware threads call 
-%   \texttt{MPI\_Test} whenever they become idle.
-%   & MPI
+   {\footnotesize Multiple\-Threads\-May\-Trigger\-MPI\-Calls} 
+   & 
+   {\footnotesize noMultiple\-Threads\-May\-Trigger\-MPI\-Calls} 
+   &
+   Allow multiple threads to trigger MPI messages. This notably allows Peano to
+   ask idle threads to poll MPI data.
+   & MPI+X
   \\
   \hline
  \end{tabular}

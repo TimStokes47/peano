@@ -25,9 +25,11 @@
 // #define DaStGenPackedPadding 2   // 64 bit version
 //#define CompilerHasSysinfo
 
-#ifndef noMultipleThreadsMayTriggerMPICalls
+
+#if !defined(noMultipleThreadsMayTriggerMPICalls) && !defined(MultipleThreadsMayTriggerMPICalls)
 #define MultipleThreadsMayTriggerMPICalls
 #endif
+
 
 #ifndef SendWorkerMasterMessagesBlocking
  #define SendWorkerMasterMessagesBlocking     0
