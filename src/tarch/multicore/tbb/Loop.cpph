@@ -12,6 +12,14 @@
 
 
 namespace {
+  /**
+   * Wrapper around my partitioner to suit TBB's signature requirements. The
+   * code results from
+   *
+   * https://www.threadingbuildingblocks.org/docs/help/reference/algorithms/partitioners.html
+   *
+   *
+   */
   template <int D>
   class TBBRange: public tarch::multicore::dForRange<D> {
     public:
@@ -24,7 +32,7 @@ namespace {
 	   * basically wrap a constructor around the base class' split()
 	   * operation.
 	   */
-	  TBBRange( tarch::multicore::dForRange<D>& arg, tbb::simple_partitioner::split_type& ):
+	  TBBRange( tarch::multicore::dForRange<D>& arg, tbb::split& ):
         tarch::multicore::dForRange<D>(arg.split()) {
 	  }
 
