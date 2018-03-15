@@ -166,13 +166,20 @@
       
       void peano::heap::records::MetaInformation::initDatatype() {
          {
-            MetaInformation dummyMetaInformation;
+            MetaInformation dummyMetaInformation[2];
             
+            #ifdef MPI2
             const int Attributes = 3;
+            #else
+            const int Attributes = 4;
+            #endif
             MPI_Datatype subtypes[Attributes] = {
                  MPI_INT		 //length
                , MPI_DOUBLE		 //position
                , MPI_INT		 //level
+               #ifndef MPI2
+               , MPI_UB
+               #endif
                
             };
             
@@ -180,38 +187,82 @@
                  1		 //length
                , DIMENSIONS		 //position
                , 1		 //level
+               #ifndef MPI2
+               , 1
+               #endif
                
             };
             
-            MPI_Aint     disp[Attributes];
-            
-            MPI_Aint base;
+            MPI_Aint  disp[Attributes];
+            MPI_Aint  base;
+            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._length))), 		&disp[0] );
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._position[0]))), 		&disp[1] );
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._level))), 		&disp[2] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._position[0]))), 		&disp[1] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._position[0]))), 		&disp[1] );
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._level))), 		&disp[2] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._level))), 		&disp[2] );
+            #endif
+            #ifdef MPI2
             for (int i=1; i<Attributes; i++) {
+            #else
+            for (int i=1; i<Attributes-1; i++) {
+            #endif
                assertion1( disp[i] > disp[i-1], i );
             }
+            #ifdef MPI2
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+            #else
+            for (int i=0; i<Attributes-1; i++) {
+            #endif
+               disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+               assertion4(disp[i]<static_cast<int>(sizeof(MetaInformation)), i, disp[i], Attributes, sizeof(MetaInformation));
             }
+            #ifndef MPI2
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[1]))), 		&disp[3] );
+            disp[3] -= base;
+            disp[3] += disp[0];
+            #endif
+            #ifdef MPI2
             MPI_Datatype tmpType; 
             MPI_Aint lowerBound, typeExtent; 
             MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
             MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformation::Datatype );
             MPI_Type_commit( &MetaInformation::Datatype );
+            #else
+            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformation::Datatype);
+            MPI_Type_commit( &MetaInformation::Datatype );
+            #endif
             
          }
          {
-            MetaInformation dummyMetaInformation;
+            MetaInformation dummyMetaInformation[2];
             
+            #ifdef MPI2
             const int Attributes = 3;
+            #else
+            const int Attributes = 4;
+            #endif
             MPI_Datatype subtypes[Attributes] = {
                  MPI_INT		 //length
                , MPI_DOUBLE		 //position
                , MPI_INT		 //level
+               #ifndef MPI2
+               , MPI_UB
+               #endif
                
             };
             
@@ -219,28 +270,65 @@
                  1		 //length
                , DIMENSIONS		 //position
                , 1		 //level
+               #ifndef MPI2
+               , 1
+               #endif
                
             };
             
-            MPI_Aint     disp[Attributes];
-            
-            MPI_Aint base;
+            MPI_Aint  disp[Attributes];
+            MPI_Aint  base;
+            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._length))), 		&disp[0] );
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._position[0]))), 		&disp[1] );
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._level))), 		&disp[2] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._position[0]))), 		&disp[1] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._position[0]))), 		&disp[1] );
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._level))), 		&disp[2] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._level))), 		&disp[2] );
+            #endif
+            #ifdef MPI2
             for (int i=1; i<Attributes; i++) {
+            #else
+            for (int i=1; i<Attributes-1; i++) {
+            #endif
                assertion1( disp[i] > disp[i-1], i );
             }
+            #ifdef MPI2
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+            #else
+            for (int i=0; i<Attributes-1; i++) {
+            #endif
+               disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+               assertion4(disp[i]<static_cast<int>(sizeof(MetaInformation)), i, disp[i], Attributes, sizeof(MetaInformation));
             }
+            #ifndef MPI2
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[1]))), 		&disp[3] );
+            disp[3] -= base;
+            disp[3] += disp[0];
+            #endif
+            #ifdef MPI2
             MPI_Datatype tmpType; 
             MPI_Aint lowerBound, typeExtent; 
             MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
             MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformation::FullDatatype );
             MPI_Type_commit( &MetaInformation::FullDatatype );
+            #else
+            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformation::FullDatatype);
+            MPI_Type_commit( &MetaInformation::FullDatatype );
+            #endif
             
          }
          
@@ -270,7 +358,6 @@
          else {
          
             MPI_Request* sendRequestHandle = new MPI_Request();
-            MPI_Status   status;
             int          flag = 0;
             int          result;
             
@@ -302,11 +389,11 @@
                << ": " << tarch::parallel::MPIReturnValueToString(result);
                _log.error( "send(int)",msg.str() );
             }
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             while (!flag) {
                if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
                if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-               result = MPI_Test( sendRequestHandle, &flag, &status );
+               result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
                if (result!=MPI_SUCCESS) {
                   std::ostringstream msg;
                   msg << "testing for finished send task for peano::heap::records::MetaInformation "
@@ -337,9 +424,9 @@
                   "send(int)", destination,tag,1
                   );
                }
-               tarch::parallel::Node::getInstance().receiveDanglingMessages();
-               usleep(communicateSleep);
                
+            tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
             }
             
             delete sendRequestHandle;
@@ -356,8 +443,7 @@
       void peano::heap::records::MetaInformation::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
          if (communicateSleep<0) {
          
-            MPI_Status  status;
-            const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+            const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
             if ( result != MPI_SUCCESS ) {
                std::ostringstream msg;
                msg << "failed to start to receive peano::heap::records::MetaInformation from node "
@@ -369,7 +455,6 @@
          else {
          
             MPI_Request* sendRequestHandle = new MPI_Request();
-            MPI_Status   status;
             int          flag = 0;
             int          result;
             
@@ -398,11 +483,11 @@
                _log.error( "receive(int)", msg.str() );
             }
             
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             while (!flag) {
                if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
                if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-               result = MPI_Test( sendRequestHandle, &flag, &status );
+               result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
                if (result!=MPI_SUCCESS) {
                   std::ostringstream msg;
                   msg << "testing for finished receive task for peano::heap::records::MetaInformation failed: "
@@ -638,13 +723,20 @@
       
       void peano::heap::records::MetaInformationPacked::initDatatype() {
          {
-            MetaInformationPacked dummyMetaInformationPacked;
+            MetaInformationPacked dummyMetaInformationPacked[2];
             
+            #ifdef MPI2
             const int Attributes = 3;
+            #else
+            const int Attributes = 4;
+            #endif
             MPI_Datatype subtypes[Attributes] = {
                  MPI_INT		 //length
                , MPI_DOUBLE		 //position
                , MPI_INT		 //level
+               #ifndef MPI2
+               , MPI_UB
+               #endif
                
             };
             
@@ -652,38 +744,82 @@
                  1		 //length
                , DIMENSIONS		 //position
                , 1		 //level
+               #ifndef MPI2
+               , 1
+               #endif
                
             };
             
-            MPI_Aint     disp[Attributes];
-            
-            MPI_Aint base;
+            MPI_Aint  disp[Attributes];
+            MPI_Aint  base;
+            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._length))), 		&disp[0] );
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._position[0]))), 		&disp[1] );
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._level))), 		&disp[2] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._position[0]))), 		&disp[1] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._position[0]))), 		&disp[1] );
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._level))), 		&disp[2] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._level))), 		&disp[2] );
+            #endif
+            #ifdef MPI2
             for (int i=1; i<Attributes; i++) {
+            #else
+            for (int i=1; i<Attributes-1; i++) {
+            #endif
                assertion1( disp[i] > disp[i-1], i );
             }
+            #ifdef MPI2
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+            #else
+            for (int i=0; i<Attributes-1; i++) {
+            #endif
+               disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+               assertion4(disp[i]<static_cast<int>(sizeof(MetaInformationPacked)), i, disp[i], Attributes, sizeof(MetaInformationPacked));
             }
+            #ifndef MPI2
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[1]))), 		&disp[3] );
+            disp[3] -= base;
+            disp[3] += disp[0];
+            #endif
+            #ifdef MPI2
             MPI_Datatype tmpType; 
             MPI_Aint lowerBound, typeExtent; 
             MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
             MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformationPacked::Datatype );
             MPI_Type_commit( &MetaInformationPacked::Datatype );
+            #else
+            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformationPacked::Datatype);
+            MPI_Type_commit( &MetaInformationPacked::Datatype );
+            #endif
             
          }
          {
-            MetaInformationPacked dummyMetaInformationPacked;
+            MetaInformationPacked dummyMetaInformationPacked[2];
             
+            #ifdef MPI2
             const int Attributes = 3;
+            #else
+            const int Attributes = 4;
+            #endif
             MPI_Datatype subtypes[Attributes] = {
                  MPI_INT		 //length
                , MPI_DOUBLE		 //position
                , MPI_INT		 //level
+               #ifndef MPI2
+               , MPI_UB
+               #endif
                
             };
             
@@ -691,28 +827,65 @@
                  1		 //length
                , DIMENSIONS		 //position
                , 1		 //level
+               #ifndef MPI2
+               , 1
+               #endif
                
             };
             
-            MPI_Aint     disp[Attributes];
-            
-            MPI_Aint base;
+            MPI_Aint  disp[Attributes];
+            MPI_Aint  base;
+            #ifdef MPI2
             MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._length))), 		&disp[0] );
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._position[0]))), 		&disp[1] );
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._level))), 		&disp[2] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._position[0]))), 		&disp[1] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._position[0]))), 		&disp[1] );
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._level))), 		&disp[2] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._level))), 		&disp[2] );
+            #endif
+            #ifdef MPI2
             for (int i=1; i<Attributes; i++) {
+            #else
+            for (int i=1; i<Attributes-1; i++) {
+            #endif
                assertion1( disp[i] > disp[i-1], i );
             }
+            #ifdef MPI2
             for (int i=0; i<Attributes; i++) {
-               disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+            #else
+            for (int i=0; i<Attributes-1; i++) {
+            #endif
+               disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+               assertion4(disp[i]<static_cast<int>(sizeof(MetaInformationPacked)), i, disp[i], Attributes, sizeof(MetaInformationPacked));
             }
+            #ifndef MPI2
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[1]))), 		&disp[3] );
+            disp[3] -= base;
+            disp[3] += disp[0];
+            #endif
+            #ifdef MPI2
             MPI_Datatype tmpType; 
             MPI_Aint lowerBound, typeExtent; 
             MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
             MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
             MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformationPacked::FullDatatype );
             MPI_Type_commit( &MetaInformationPacked::FullDatatype );
+            #else
+            MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformationPacked::FullDatatype);
+            MPI_Type_commit( &MetaInformationPacked::FullDatatype );
+            #endif
             
          }
          
@@ -742,7 +915,6 @@
          else {
          
             MPI_Request* sendRequestHandle = new MPI_Request();
-            MPI_Status   status;
             int          flag = 0;
             int          result;
             
@@ -774,11 +946,11 @@
                << ": " << tarch::parallel::MPIReturnValueToString(result);
                _log.error( "send(int)",msg.str() );
             }
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             while (!flag) {
                if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
                if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-               result = MPI_Test( sendRequestHandle, &flag, &status );
+               result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
                if (result!=MPI_SUCCESS) {
                   std::ostringstream msg;
                   msg << "testing for finished send task for peano::heap::records::MetaInformationPacked "
@@ -809,9 +981,9 @@
                   "send(int)", destination,tag,1
                   );
                }
-               tarch::parallel::Node::getInstance().receiveDanglingMessages();
-               usleep(communicateSleep);
                
+            tarch::parallel::Node::getInstance().receiveDanglingMessages();
+            usleep(communicateSleep);
             }
             
             delete sendRequestHandle;
@@ -828,8 +1000,7 @@
       void peano::heap::records::MetaInformationPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
          if (communicateSleep<0) {
          
-            MPI_Status  status;
-            const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+            const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
             if ( result != MPI_SUCCESS ) {
                std::ostringstream msg;
                msg << "failed to start to receive peano::heap::records::MetaInformationPacked from node "
@@ -841,7 +1012,6 @@
          else {
          
             MPI_Request* sendRequestHandle = new MPI_Request();
-            MPI_Status   status;
             int          flag = 0;
             int          result;
             
@@ -870,11 +1040,11 @@
                _log.error( "receive(int)", msg.str() );
             }
             
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             while (!flag) {
                if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
                if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-               result = MPI_Test( sendRequestHandle, &flag, &status );
+               result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
                if (result!=MPI_SUCCESS) {
                   std::ostringstream msg;
                   msg << "testing for finished receive task for peano::heap::records::MetaInformationPacked failed: "
@@ -945,774 +1115,911 @@
    #endif
    
    
-   
-#elif !defined(Asserts)
-   peano::heap::records::MetaInformation::PersistentRecords::PersistentRecords() {
-      
-   }
-   
-   
-   peano::heap::records::MetaInformation::PersistentRecords::PersistentRecords(const int& length):
-   _length(length) {
-      
-   }
-   
-   
-    int peano::heap::records::MetaInformation::PersistentRecords::getLength() const  {
-      return _length;
-   }
-   
-   
-   
-    void peano::heap::records::MetaInformation::PersistentRecords::setLength(const int& length)  {
-      _length = length;
-   }
-   
-   
-   peano::heap::records::MetaInformation::MetaInformation() {
-      
-   }
-   
-   
-   peano::heap::records::MetaInformation::MetaInformation(const PersistentRecords& persistentRecords):
-   _persistentRecords(persistentRecords._length) {
-      
-   }
-   
-   
-   peano::heap::records::MetaInformation::MetaInformation(const int& length):
-   _persistentRecords(length) {
-      
-   }
-   
-   
-   peano::heap::records::MetaInformation::~MetaInformation() { }
-   
-   
-    int peano::heap::records::MetaInformation::getLength() const  {
-      return _persistentRecords._length;
-   }
-   
-   
-   
-    void peano::heap::records::MetaInformation::setLength(const int& length)  {
-      _persistentRecords._length = length;
-   }
-   
-   
-   
-   
-   std::string peano::heap::records::MetaInformation::toString() const {
-      std::ostringstream stringstr;
-      toString(stringstr);
-      return stringstr.str();
-   }
-   
-   void peano::heap::records::MetaInformation::toString (std::ostream& out) const {
-      out << "("; 
-      out << "length:" << getLength();
-      out <<  ")";
-   }
-   
-   
-   peano::heap::records::MetaInformation::PersistentRecords peano::heap::records::MetaInformation::getPersistentRecords() const {
-      return _persistentRecords;
-   }
-   
-   peano::heap::records::MetaInformationPacked peano::heap::records::MetaInformation::convert() const{
-      return MetaInformationPacked(
-         getLength()
-      );
-   }
-   
-   #ifdef Parallel
-      tarch::logging::Log peano::heap::records::MetaInformation::_log( "peano::heap::records::MetaInformation" );
-      
-      MPI_Datatype peano::heap::records::MetaInformation::Datatype = 0;
-      MPI_Datatype peano::heap::records::MetaInformation::FullDatatype = 0;
-      
-      
-      void peano::heap::records::MetaInformation::initDatatype() {
-         {
-            MetaInformation dummyMetaInformation;
-            
-            const int Attributes = 1;
-            MPI_Datatype subtypes[Attributes] = {
-                 MPI_INT		 //length
-               
-            };
-            
-            int blocklen[Attributes] = {
-                 1		 //length
-               
-            };
-            
-            MPI_Aint     disp[Attributes];
-            
-            MPI_Aint base;
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._length))), 		&disp[0] );
-            for (int i=1; i<Attributes; i++) {
-               assertion1( disp[i] > disp[i-1], i );
-            }
-            for (int i=0; i<Attributes; i++) {
-               disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
-            }
-            MPI_Datatype tmpType; 
-            MPI_Aint lowerBound, typeExtent; 
-            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformation::Datatype );
-            MPI_Type_commit( &MetaInformation::Datatype );
-            
-         }
-         {
-            MetaInformation dummyMetaInformation;
-            
-            const int Attributes = 1;
-            MPI_Datatype subtypes[Attributes] = {
-                 MPI_INT		 //length
-               
-            };
-            
-            int blocklen[Attributes] = {
-                 1		 //length
-               
-            };
-            
-            MPI_Aint     disp[Attributes];
-            
-            MPI_Aint base;
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation._persistentRecords._length))), 		&disp[0] );
-            for (int i=1; i<Attributes; i++) {
-               assertion1( disp[i] > disp[i-1], i );
-            }
-            for (int i=0; i<Attributes; i++) {
-               disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
-            }
-            MPI_Datatype tmpType; 
-            MPI_Aint lowerBound, typeExtent; 
-            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformation::FullDatatype );
-            MPI_Type_commit( &MetaInformation::FullDatatype );
-            
-         }
+   #elif !defined(Asserts)
+      peano::heap::records::MetaInformation::PersistentRecords::PersistentRecords() {
          
       }
       
       
-      void peano::heap::records::MetaInformation::shutdownDatatype() {
-         MPI_Type_free( &MetaInformation::Datatype );
-         MPI_Type_free( &MetaInformation::FullDatatype );
-         
-      }
-      
-      void peano::heap::records::MetaInformation::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
-         if (communicateSleep<0) {
-         
-            const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
-            if  (result!=MPI_SUCCESS) {
-               std::ostringstream msg;
-               msg << "was not able to send message peano::heap::records::MetaInformation "
-               << toString()
-               << " to node " << destination
-               << ": " << tarch::parallel::MPIReturnValueToString(result);
-               _log.error( "send(int)",msg.str() );
-            }
-            
-         }
-         else {
-         
-            MPI_Request* sendRequestHandle = new MPI_Request();
-            MPI_Status   status;
-            int          flag = 0;
-            int          result;
-            
-            clock_t      timeOutWarning   = -1;
-            clock_t      timeOutShutdown  = -1;
-            bool         triggeredTimeoutWarning = false;
-            
-            if (exchangeOnlyAttributesMarkedWithParallelise) {
-               result = MPI_Isend(
-                  this, 1, Datatype, destination,
-                  tag, tarch::parallel::Node::getInstance().getCommunicator(),
-                  sendRequestHandle
-               );
-               
-            }
-            else {
-               result = MPI_Isend(
-                  this, 1, FullDatatype, destination,
-                  tag, tarch::parallel::Node::getInstance().getCommunicator(),
-                  sendRequestHandle
-               );
-               
-            }
-            if  (result!=MPI_SUCCESS) {
-               std::ostringstream msg;
-               msg << "was not able to send message peano::heap::records::MetaInformation "
-               << toString()
-               << " to node " << destination
-               << ": " << tarch::parallel::MPIReturnValueToString(result);
-               _log.error( "send(int)",msg.str() );
-            }
-            result = MPI_Test( sendRequestHandle, &flag, &status );
-            while (!flag) {
-               if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-               if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-               result = MPI_Test( sendRequestHandle, &flag, &status );
-               if (result!=MPI_SUCCESS) {
-                  std::ostringstream msg;
-                  msg << "testing for finished send task for peano::heap::records::MetaInformation "
-                  << toString()
-                  << " sent to node " << destination
-                  << " failed: " << tarch::parallel::MPIReturnValueToString(result);
-                  _log.error("send(int)", msg.str() );
-               }
-               
-               // deadlock aspect
-               if (
-                  tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
-                  (clock()>timeOutWarning) &&
-                  (!triggeredTimeoutWarning)
-               ) {
-                  tarch::parallel::Node::getInstance().writeTimeOutWarning(
-                  "peano::heap::records::MetaInformation",
-                  "send(int)", destination,tag,1
-                  );
-                  triggeredTimeoutWarning = true;
-               }
-               if (
-                  tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
-                  (clock()>timeOutShutdown)
-               ) {
-                  tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-                  "peano::heap::records::MetaInformation",
-                  "send(int)", destination,tag,1
-                  );
-               }
-               tarch::parallel::Node::getInstance().receiveDanglingMessages();
-               usleep(communicateSleep);
-               
-            }
-            
-            delete sendRequestHandle;
-            #ifdef Debug
-            _log.debug("send(int,int)", "sent " + toString() );
-            #endif
-            
-         }
+      peano::heap::records::MetaInformation::PersistentRecords::PersistentRecords(const int& length):
+      _length(length) {
          
       }
       
       
-      
-      void peano::heap::records::MetaInformation::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
-         if (communicateSleep<0) {
-         
-            MPI_Status  status;
-            const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
-            if ( result != MPI_SUCCESS ) {
-               std::ostringstream msg;
-               msg << "failed to start to receive peano::heap::records::MetaInformation from node "
-               << source << ": " << tarch::parallel::MPIReturnValueToString(result);
-               _log.error( "receive(int)", msg.str() );
-            }
-            
-         }
-         else {
-         
-            MPI_Request* sendRequestHandle = new MPI_Request();
-            MPI_Status   status;
-            int          flag = 0;
-            int          result;
-            
-            clock_t      timeOutWarning   = -1;
-            clock_t      timeOutShutdown  = -1;
-            bool         triggeredTimeoutWarning = false;
-            
-            if (exchangeOnlyAttributesMarkedWithParallelise) {
-               result = MPI_Irecv(
-                  this, 1, Datatype, source, tag,
-                  tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
-               );
-               
-            }
-            else {
-               result = MPI_Irecv(
-                  this, 1, FullDatatype, source, tag,
-                  tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
-               );
-               
-            }
-            if ( result != MPI_SUCCESS ) {
-               std::ostringstream msg;
-               msg << "failed to start to receive peano::heap::records::MetaInformation from node "
-               << source << ": " << tarch::parallel::MPIReturnValueToString(result);
-               _log.error( "receive(int)", msg.str() );
-            }
-            
-            result = MPI_Test( sendRequestHandle, &flag, &status );
-            while (!flag) {
-               if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-               if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-               result = MPI_Test( sendRequestHandle, &flag, &status );
-               if (result!=MPI_SUCCESS) {
-                  std::ostringstream msg;
-                  msg << "testing for finished receive task for peano::heap::records::MetaInformation failed: "
-                  << tarch::parallel::MPIReturnValueToString(result);
-                  _log.error("receive(int)", msg.str() );
-               }
-               
-               // deadlock aspect
-               if (
-                  tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
-                  (clock()>timeOutWarning) &&
-                  (!triggeredTimeoutWarning)
-               ) {
-                  tarch::parallel::Node::getInstance().writeTimeOutWarning(
-                  "peano::heap::records::MetaInformation",
-                  "receive(int)", source,tag,1
-                  );
-                  triggeredTimeoutWarning = true;
-               }
-               if (
-                  tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
-                  (clock()>timeOutShutdown)
-               ) {
-                  tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-                  "peano::heap::records::MetaInformation",
-                  "receive(int)", source,tag,1
-                  );
-               }
-               tarch::parallel::Node::getInstance().receiveDanglingMessages();
-               usleep(communicateSleep);
-               
-            }
-            
-            delete sendRequestHandle;
-            
-            #ifdef Debug
-            _log.debug("receive(int,int)", "received " + toString() ); 
-            #endif
-            
-         }
-         
+       int peano::heap::records::MetaInformation::PersistentRecords::getLength() const  {
+         return _length;
       }
       
       
       
-      bool peano::heap::records::MetaInformation::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
-         MPI_Status status;
-         int  flag        = 0;
-         MPI_Iprobe(
-            MPI_ANY_SOURCE, tag,
-            tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
+       void peano::heap::records::MetaInformation::PersistentRecords::setLength(const int& length)  {
+         _length = length;
+      }
+      
+      
+      peano::heap::records::MetaInformation::MetaInformation() {
+         
+      }
+      
+      
+      peano::heap::records::MetaInformation::MetaInformation(const PersistentRecords& persistentRecords):
+      _persistentRecords(persistentRecords._length) {
+         
+      }
+      
+      
+      peano::heap::records::MetaInformation::MetaInformation(const int& length):
+      _persistentRecords(length) {
+         
+      }
+      
+      
+      peano::heap::records::MetaInformation::~MetaInformation() { }
+      
+      
+       int peano::heap::records::MetaInformation::getLength() const  {
+         return _persistentRecords._length;
+      }
+      
+      
+      
+       void peano::heap::records::MetaInformation::setLength(const int& length)  {
+         _persistentRecords._length = length;
+      }
+      
+      
+      
+      
+      std::string peano::heap::records::MetaInformation::toString() const {
+         std::ostringstream stringstr;
+         toString(stringstr);
+         return stringstr.str();
+      }
+      
+      void peano::heap::records::MetaInformation::toString (std::ostream& out) const {
+         out << "("; 
+         out << "length:" << getLength();
+         out <<  ")";
+      }
+      
+      
+      peano::heap::records::MetaInformation::PersistentRecords peano::heap::records::MetaInformation::getPersistentRecords() const {
+         return _persistentRecords;
+      }
+      
+      peano::heap::records::MetaInformationPacked peano::heap::records::MetaInformation::convert() const{
+         return MetaInformationPacked(
+            getLength()
          );
-         if (flag) {
-            int  messageCounter;
-            if (exchangeOnlyAttributesMarkedWithParallelise) {
-               MPI_Get_count(&status, Datatype, &messageCounter);
-            }
-            else {
-               MPI_Get_count(&status, FullDatatype, &messageCounter);
-            }
-            return messageCounter > 0;
-         }
-         else return false;
-         
       }
       
-      
-   #endif
-   
-   
-   peano::heap::records::MetaInformationPacked::PersistentRecords::PersistentRecords() {
-      
-   }
-   
-   
-   peano::heap::records::MetaInformationPacked::PersistentRecords::PersistentRecords(const int& length):
-   _length(length) {
-      
-   }
-   
-   
-    int peano::heap::records::MetaInformationPacked::PersistentRecords::getLength() const  {
-      return _length;
-   }
-   
-   
-   
-    void peano::heap::records::MetaInformationPacked::PersistentRecords::setLength(const int& length)  {
-      _length = length;
-   }
-   
-   
-   peano::heap::records::MetaInformationPacked::MetaInformationPacked() {
-      
-   }
-   
-   
-   peano::heap::records::MetaInformationPacked::MetaInformationPacked(const PersistentRecords& persistentRecords):
-   _persistentRecords(persistentRecords._length) {
-      
-   }
-   
-   
-   peano::heap::records::MetaInformationPacked::MetaInformationPacked(const int& length):
-   _persistentRecords(length) {
-      
-   }
-   
-   
-   peano::heap::records::MetaInformationPacked::~MetaInformationPacked() { }
-   
-   
-    int peano::heap::records::MetaInformationPacked::getLength() const  {
-      return _persistentRecords._length;
-   }
-   
-   
-   
-    void peano::heap::records::MetaInformationPacked::setLength(const int& length)  {
-      _persistentRecords._length = length;
-   }
-   
-   
-   
-   
-   std::string peano::heap::records::MetaInformationPacked::toString() const {
-      std::ostringstream stringstr;
-      toString(stringstr);
-      return stringstr.str();
-   }
-   
-   void peano::heap::records::MetaInformationPacked::toString (std::ostream& out) const {
-      out << "("; 
-      out << "length:" << getLength();
-      out <<  ")";
-   }
-   
-   
-   peano::heap::records::MetaInformationPacked::PersistentRecords peano::heap::records::MetaInformationPacked::getPersistentRecords() const {
-      return _persistentRecords;
-   }
-   
-   peano::heap::records::MetaInformation peano::heap::records::MetaInformationPacked::convert() const{
-      return MetaInformation(
-         getLength()
-      );
-   }
-   
-   #ifdef Parallel
-      tarch::logging::Log peano::heap::records::MetaInformationPacked::_log( "peano::heap::records::MetaInformationPacked" );
-      
-      MPI_Datatype peano::heap::records::MetaInformationPacked::Datatype = 0;
-      MPI_Datatype peano::heap::records::MetaInformationPacked::FullDatatype = 0;
-      
-      
-      void peano::heap::records::MetaInformationPacked::initDatatype() {
-         {
-            MetaInformationPacked dummyMetaInformationPacked;
-            
-            const int Attributes = 1;
-            MPI_Datatype subtypes[Attributes] = {
-                 MPI_INT		 //length
+      #ifdef Parallel
+         tarch::logging::Log peano::heap::records::MetaInformation::_log( "peano::heap::records::MetaInformation" );
+         
+         MPI_Datatype peano::heap::records::MetaInformation::Datatype = 0;
+         MPI_Datatype peano::heap::records::MetaInformation::FullDatatype = 0;
+         
+         
+         void peano::heap::records::MetaInformation::initDatatype() {
+            {
+               MetaInformation dummyMetaInformation[2];
                
-            };
-            
-            int blocklen[Attributes] = {
-                 1		 //length
+               #ifdef MPI2
+               const int Attributes = 1;
+               #else
+               const int Attributes = 2;
+               #endif
+               MPI_Datatype subtypes[Attributes] = {
+                    MPI_INT		 //length
+                  #ifndef MPI2
+                  , MPI_UB
+                  #endif
+                  
+               };
                
-            };
-            
-            MPI_Aint     disp[Attributes];
-            
-            MPI_Aint base;
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._length))), 		&disp[0] );
-            for (int i=1; i<Attributes; i++) {
-               assertion1( disp[i] > disp[i-1], i );
-            }
-            for (int i=0; i<Attributes; i++) {
-               disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
-            }
-            MPI_Datatype tmpType; 
-            MPI_Aint lowerBound, typeExtent; 
-            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformationPacked::Datatype );
-            MPI_Type_commit( &MetaInformationPacked::Datatype );
-            
-         }
-         {
-            MetaInformationPacked dummyMetaInformationPacked;
-            
-            const int Attributes = 1;
-            MPI_Datatype subtypes[Attributes] = {
-                 MPI_INT		 //length
+               int blocklen[Attributes] = {
+                    1		 //length
+                  #ifndef MPI2
+                  , 1
+                  #endif
+                  
+               };
                
-            };
-            
-            int blocklen[Attributes] = {
-                 1		 //length
+               MPI_Aint  disp[Attributes];
+               MPI_Aint  base;
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
+               #endif
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
+               #endif
+               #ifdef MPI2
+               for (int i=1; i<Attributes; i++) {
+               #else
+               for (int i=1; i<Attributes-1; i++) {
+               #endif
+                  assertion1( disp[i] > disp[i-1], i );
+               }
+               #ifdef MPI2
+               for (int i=0; i<Attributes; i++) {
+               #else
+               for (int i=0; i<Attributes-1; i++) {
+               #endif
+                  disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+                  assertion4(disp[i]<static_cast<int>(sizeof(MetaInformation)), i, disp[i], Attributes, sizeof(MetaInformation));
+               }
+               #ifndef MPI2
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[1]))), 		&disp[1] );
+               disp[1] -= base;
+               disp[1] += disp[0];
+               #endif
+               #ifdef MPI2
+               MPI_Datatype tmpType; 
+               MPI_Aint lowerBound, typeExtent; 
+               MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+               MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+               MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformation::Datatype );
+               MPI_Type_commit( &MetaInformation::Datatype );
+               #else
+               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformation::Datatype);
+               MPI_Type_commit( &MetaInformation::Datatype );
+               #endif
                
-            };
-            
-            MPI_Aint     disp[Attributes];
-            
-            MPI_Aint base;
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked._persistentRecords._length))), 		&disp[0] );
-            for (int i=1; i<Attributes; i++) {
-               assertion1( disp[i] > disp[i-1], i );
             }
-            for (int i=0; i<Attributes; i++) {
-               disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+            {
+               MetaInformation dummyMetaInformation[2];
+               
+               #ifdef MPI2
+               const int Attributes = 1;
+               #else
+               const int Attributes = 2;
+               #endif
+               MPI_Datatype subtypes[Attributes] = {
+                    MPI_INT		 //length
+                  #ifndef MPI2
+                  , MPI_UB
+                  #endif
+                  
+               };
+               
+               int blocklen[Attributes] = {
+                    1		 //length
+                  #ifndef MPI2
+                  , 1
+                  #endif
+                  
+               };
+               
+               MPI_Aint  disp[Attributes];
+               MPI_Aint  base;
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation))), &base);
+               #endif
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[0]._persistentRecords._length))), 		&disp[0] );
+               #endif
+               #ifdef MPI2
+               for (int i=1; i<Attributes; i++) {
+               #else
+               for (int i=1; i<Attributes-1; i++) {
+               #endif
+                  assertion1( disp[i] > disp[i-1], i );
+               }
+               #ifdef MPI2
+               for (int i=0; i<Attributes; i++) {
+               #else
+               for (int i=0; i<Attributes-1; i++) {
+               #endif
+                  disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+                  assertion4(disp[i]<static_cast<int>(sizeof(MetaInformation)), i, disp[i], Attributes, sizeof(MetaInformation));
+               }
+               #ifndef MPI2
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformation[1]))), 		&disp[1] );
+               disp[1] -= base;
+               disp[1] += disp[0];
+               #endif
+               #ifdef MPI2
+               MPI_Datatype tmpType; 
+               MPI_Aint lowerBound, typeExtent; 
+               MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+               MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+               MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformation::FullDatatype );
+               MPI_Type_commit( &MetaInformation::FullDatatype );
+               #else
+               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformation::FullDatatype);
+               MPI_Type_commit( &MetaInformation::FullDatatype );
+               #endif
+               
             }
-            MPI_Datatype tmpType; 
-            MPI_Aint lowerBound, typeExtent; 
-            MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-            MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-            MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformationPacked::FullDatatype );
-            MPI_Type_commit( &MetaInformationPacked::FullDatatype );
             
          }
          
-      }
-      
-      
-      void peano::heap::records::MetaInformationPacked::shutdownDatatype() {
-         MPI_Type_free( &MetaInformationPacked::Datatype );
-         MPI_Type_free( &MetaInformationPacked::FullDatatype );
          
-      }
-      
-      void peano::heap::records::MetaInformationPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
-         if (communicateSleep<0) {
-         
-            const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
-            if  (result!=MPI_SUCCESS) {
-               std::ostringstream msg;
-               msg << "was not able to send message peano::heap::records::MetaInformationPacked "
-               << toString()
-               << " to node " << destination
-               << ": " << tarch::parallel::MPIReturnValueToString(result);
-               _log.error( "send(int)",msg.str() );
-            }
+         void peano::heap::records::MetaInformation::shutdownDatatype() {
+            MPI_Type_free( &MetaInformation::Datatype );
+            MPI_Type_free( &MetaInformation::FullDatatype );
             
          }
-         else {
          
-            MPI_Request* sendRequestHandle = new MPI_Request();
-            MPI_Status   status;
-            int          flag = 0;
-            int          result;
+         void peano::heap::records::MetaInformation::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+            if (communicateSleep<0) {
             
-            clock_t      timeOutWarning   = -1;
-            clock_t      timeOutShutdown  = -1;
-            bool         triggeredTimeoutWarning = false;
-            
-            if (exchangeOnlyAttributesMarkedWithParallelise) {
-               result = MPI_Isend(
-                  this, 1, Datatype, destination,
-                  tag, tarch::parallel::Node::getInstance().getCommunicator(),
-                  sendRequestHandle
-               );
-               
-            }
-            else {
-               result = MPI_Isend(
-                  this, 1, FullDatatype, destination,
-                  tag, tarch::parallel::Node::getInstance().getCommunicator(),
-                  sendRequestHandle
-               );
-               
-            }
-            if  (result!=MPI_SUCCESS) {
-               std::ostringstream msg;
-               msg << "was not able to send message peano::heap::records::MetaInformationPacked "
-               << toString()
-               << " to node " << destination
-               << ": " << tarch::parallel::MPIReturnValueToString(result);
-               _log.error( "send(int)",msg.str() );
-            }
-            result = MPI_Test( sendRequestHandle, &flag, &status );
-            while (!flag) {
-               if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-               if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-               result = MPI_Test( sendRequestHandle, &flag, &status );
-               if (result!=MPI_SUCCESS) {
+               const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
+               if  (result!=MPI_SUCCESS) {
                   std::ostringstream msg;
-                  msg << "testing for finished send task for peano::heap::records::MetaInformationPacked "
+                  msg << "was not able to send message peano::heap::records::MetaInformation "
                   << toString()
-                  << " sent to node " << destination
-                  << " failed: " << tarch::parallel::MPIReturnValueToString(result);
-                  _log.error("send(int)", msg.str() );
+                  << " to node " << destination
+                  << ": " << tarch::parallel::MPIReturnValueToString(result);
+                  _log.error( "send(int)",msg.str() );
                }
-               
-               // deadlock aspect
-               if (
-                  tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
-                  (clock()>timeOutWarning) &&
-                  (!triggeredTimeoutWarning)
-               ) {
-                  tarch::parallel::Node::getInstance().writeTimeOutWarning(
-                  "peano::heap::records::MetaInformationPacked",
-                  "send(int)", destination,tag,1
-                  );
-                  triggeredTimeoutWarning = true;
-               }
-               if (
-                  tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
-                  (clock()>timeOutShutdown)
-               ) {
-                  tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-                  "peano::heap::records::MetaInformationPacked",
-                  "send(int)", destination,tag,1
-                  );
-               }
-               tarch::parallel::Node::getInstance().receiveDanglingMessages();
-               usleep(communicateSleep);
-               
-            }
-            
-            delete sendRequestHandle;
-            #ifdef Debug
-            _log.debug("send(int,int)", "sent " + toString() );
-            #endif
-            
-         }
-         
-      }
-      
-      
-      
-      void peano::heap::records::MetaInformationPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
-         if (communicateSleep<0) {
-         
-            MPI_Status  status;
-            const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
-            if ( result != MPI_SUCCESS ) {
-               std::ostringstream msg;
-               msg << "failed to start to receive peano::heap::records::MetaInformationPacked from node "
-               << source << ": " << tarch::parallel::MPIReturnValueToString(result);
-               _log.error( "receive(int)", msg.str() );
-            }
-            
-         }
-         else {
-         
-            MPI_Request* sendRequestHandle = new MPI_Request();
-            MPI_Status   status;
-            int          flag = 0;
-            int          result;
-            
-            clock_t      timeOutWarning   = -1;
-            clock_t      timeOutShutdown  = -1;
-            bool         triggeredTimeoutWarning = false;
-            
-            if (exchangeOnlyAttributesMarkedWithParallelise) {
-               result = MPI_Irecv(
-                  this, 1, Datatype, source, tag,
-                  tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
-               );
                
             }
             else {
-               result = MPI_Irecv(
-                  this, 1, FullDatatype, source, tag,
-                  tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
-               );
-               
-            }
-            if ( result != MPI_SUCCESS ) {
-               std::ostringstream msg;
-               msg << "failed to start to receive peano::heap::records::MetaInformationPacked from node "
-               << source << ": " << tarch::parallel::MPIReturnValueToString(result);
-               _log.error( "receive(int)", msg.str() );
-            }
             
-            result = MPI_Test( sendRequestHandle, &flag, &status );
-            while (!flag) {
-               if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
-               if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-               result = MPI_Test( sendRequestHandle, &flag, &status );
-               if (result!=MPI_SUCCESS) {
+               MPI_Request* sendRequestHandle = new MPI_Request();
+               int          flag = 0;
+               int          result;
+               
+               clock_t      timeOutWarning   = -1;
+               clock_t      timeOutShutdown  = -1;
+               bool         triggeredTimeoutWarning = false;
+               
+               if (exchangeOnlyAttributesMarkedWithParallelise) {
+                  result = MPI_Isend(
+                     this, 1, Datatype, destination,
+                     tag, tarch::parallel::Node::getInstance().getCommunicator(),
+                     sendRequestHandle
+                  );
+                  
+               }
+               else {
+                  result = MPI_Isend(
+                     this, 1, FullDatatype, destination,
+                     tag, tarch::parallel::Node::getInstance().getCommunicator(),
+                     sendRequestHandle
+                  );
+                  
+               }
+               if  (result!=MPI_SUCCESS) {
                   std::ostringstream msg;
-                  msg << "testing for finished receive task for peano::heap::records::MetaInformationPacked failed: "
-                  << tarch::parallel::MPIReturnValueToString(result);
-                  _log.error("receive(int)", msg.str() );
+                  msg << "was not able to send message peano::heap::records::MetaInformation "
+                  << toString()
+                  << " to node " << destination
+                  << ": " << tarch::parallel::MPIReturnValueToString(result);
+                  _log.error( "send(int)",msg.str() );
                }
-               
-               // deadlock aspect
-               if (
-                  tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
-                  (clock()>timeOutWarning) &&
-                  (!triggeredTimeoutWarning)
-               ) {
-                  tarch::parallel::Node::getInstance().writeTimeOutWarning(
-                  "peano::heap::records::MetaInformationPacked",
-                  "receive(int)", source,tag,1
-                  );
-                  triggeredTimeoutWarning = true;
-               }
-               if (
-                  tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
-                  (clock()>timeOutShutdown)
-               ) {
-                  tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
-                  "peano::heap::records::MetaInformationPacked",
-                  "receive(int)", source,tag,1
-                  );
-               }
+               result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
+               while (!flag) {
+                  if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+                  if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+                  result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
+                  if (result!=MPI_SUCCESS) {
+                     std::ostringstream msg;
+                     msg << "testing for finished send task for peano::heap::records::MetaInformation "
+                     << toString()
+                     << " sent to node " << destination
+                     << " failed: " << tarch::parallel::MPIReturnValueToString(result);
+                     _log.error("send(int)", msg.str() );
+                  }
+                  
+                  // deadlock aspect
+                  if (
+                     tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+                     (clock()>timeOutWarning) &&
+                     (!triggeredTimeoutWarning)
+                  ) {
+                     tarch::parallel::Node::getInstance().writeTimeOutWarning(
+                     "peano::heap::records::MetaInformation",
+                     "send(int)", destination,tag,1
+                     );
+                     triggeredTimeoutWarning = true;
+                  }
+                  if (
+                     tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+                     (clock()>timeOutShutdown)
+                  ) {
+                     tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+                     "peano::heap::records::MetaInformation",
+                     "send(int)", destination,tag,1
+                     );
+                  }
+                  
                tarch::parallel::Node::getInstance().receiveDanglingMessages();
                usleep(communicateSleep);
+               }
+               
+               delete sendRequestHandle;
+               #ifdef Debug
+               _log.debug("send(int,int)", "sent " + toString() );
+               #endif
                
             }
             
-            delete sendRequestHandle;
-            
-            #ifdef Debug
-            _log.debug("receive(int,int)", "received " + toString() ); 
-            #endif
-            
          }
          
-      }
-      
-      
-      
-      bool peano::heap::records::MetaInformationPacked::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
-         MPI_Status status;
-         int  flag        = 0;
-         MPI_Iprobe(
-            MPI_ANY_SOURCE, tag,
-            tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
-         );
-         if (flag) {
-            int  messageCounter;
-            if (exchangeOnlyAttributesMarkedWithParallelise) {
-               MPI_Get_count(&status, Datatype, &messageCounter);
+         
+         
+         void peano::heap::records::MetaInformation::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+            if (communicateSleep<0) {
+            
+               const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
+               if ( result != MPI_SUCCESS ) {
+                  std::ostringstream msg;
+                  msg << "failed to start to receive peano::heap::records::MetaInformation from node "
+                  << source << ": " << tarch::parallel::MPIReturnValueToString(result);
+                  _log.error( "receive(int)", msg.str() );
+               }
+               
             }
             else {
-               MPI_Get_count(&status, FullDatatype, &messageCounter);
+            
+               MPI_Request* sendRequestHandle = new MPI_Request();
+               int          flag = 0;
+               int          result;
+               
+               clock_t      timeOutWarning   = -1;
+               clock_t      timeOutShutdown  = -1;
+               bool         triggeredTimeoutWarning = false;
+               
+               if (exchangeOnlyAttributesMarkedWithParallelise) {
+                  result = MPI_Irecv(
+                     this, 1, Datatype, source, tag,
+                     tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
+                  );
+                  
+               }
+               else {
+                  result = MPI_Irecv(
+                     this, 1, FullDatatype, source, tag,
+                     tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
+                  );
+                  
+               }
+               if ( result != MPI_SUCCESS ) {
+                  std::ostringstream msg;
+                  msg << "failed to start to receive peano::heap::records::MetaInformation from node "
+                  << source << ": " << tarch::parallel::MPIReturnValueToString(result);
+                  _log.error( "receive(int)", msg.str() );
+               }
+               
+               result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
+               while (!flag) {
+                  if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+                  if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+                  result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
+                  if (result!=MPI_SUCCESS) {
+                     std::ostringstream msg;
+                     msg << "testing for finished receive task for peano::heap::records::MetaInformation failed: "
+                     << tarch::parallel::MPIReturnValueToString(result);
+                     _log.error("receive(int)", msg.str() );
+                  }
+                  
+                  // deadlock aspect
+                  if (
+                     tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+                     (clock()>timeOutWarning) &&
+                     (!triggeredTimeoutWarning)
+                  ) {
+                     tarch::parallel::Node::getInstance().writeTimeOutWarning(
+                     "peano::heap::records::MetaInformation",
+                     "receive(int)", source,tag,1
+                     );
+                     triggeredTimeoutWarning = true;
+                  }
+                  if (
+                     tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+                     (clock()>timeOutShutdown)
+                  ) {
+                     tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+                     "peano::heap::records::MetaInformation",
+                     "receive(int)", source,tag,1
+                     );
+                  }
+                  tarch::parallel::Node::getInstance().receiveDanglingMessages();
+                  usleep(communicateSleep);
+                  
+               }
+               
+               delete sendRequestHandle;
+               
+               #ifdef Debug
+               _log.debug("receive(int,int)", "received " + toString() ); 
+               #endif
+               
             }
-            return messageCounter > 0;
+            
          }
-         else return false;
+         
+         
+         
+         bool peano::heap::records::MetaInformation::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
+            MPI_Status status;
+            int  flag        = 0;
+            MPI_Iprobe(
+               MPI_ANY_SOURCE, tag,
+               tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
+            );
+            if (flag) {
+               int  messageCounter;
+               if (exchangeOnlyAttributesMarkedWithParallelise) {
+                  MPI_Get_count(&status, Datatype, &messageCounter);
+               }
+               else {
+                  MPI_Get_count(&status, FullDatatype, &messageCounter);
+               }
+               return messageCounter > 0;
+            }
+            else return false;
+            
+         }
+         
+         
+      #endif
+      
+      
+      peano::heap::records::MetaInformationPacked::PersistentRecords::PersistentRecords() {
          
       }
       
       
-   #endif
+      peano::heap::records::MetaInformationPacked::PersistentRecords::PersistentRecords(const int& length):
+      _length(length) {
+         
+      }
+      
+      
+       int peano::heap::records::MetaInformationPacked::PersistentRecords::getLength() const  {
+         return _length;
+      }
+      
+      
+      
+       void peano::heap::records::MetaInformationPacked::PersistentRecords::setLength(const int& length)  {
+         _length = length;
+      }
+      
+      
+      peano::heap::records::MetaInformationPacked::MetaInformationPacked() {
+         
+      }
+      
+      
+      peano::heap::records::MetaInformationPacked::MetaInformationPacked(const PersistentRecords& persistentRecords):
+      _persistentRecords(persistentRecords._length) {
+         
+      }
+      
+      
+      peano::heap::records::MetaInformationPacked::MetaInformationPacked(const int& length):
+      _persistentRecords(length) {
+         
+      }
+      
+      
+      peano::heap::records::MetaInformationPacked::~MetaInformationPacked() { }
+      
+      
+       int peano::heap::records::MetaInformationPacked::getLength() const  {
+         return _persistentRecords._length;
+      }
+      
+      
+      
+       void peano::heap::records::MetaInformationPacked::setLength(const int& length)  {
+         _persistentRecords._length = length;
+      }
+      
+      
+      
+      
+      std::string peano::heap::records::MetaInformationPacked::toString() const {
+         std::ostringstream stringstr;
+         toString(stringstr);
+         return stringstr.str();
+      }
+      
+      void peano::heap::records::MetaInformationPacked::toString (std::ostream& out) const {
+         out << "("; 
+         out << "length:" << getLength();
+         out <<  ")";
+      }
+      
+      
+      peano::heap::records::MetaInformationPacked::PersistentRecords peano::heap::records::MetaInformationPacked::getPersistentRecords() const {
+         return _persistentRecords;
+      }
+      
+      peano::heap::records::MetaInformation peano::heap::records::MetaInformationPacked::convert() const{
+         return MetaInformation(
+            getLength()
+         );
+      }
+      
+      #ifdef Parallel
+         tarch::logging::Log peano::heap::records::MetaInformationPacked::_log( "peano::heap::records::MetaInformationPacked" );
+         
+         MPI_Datatype peano::heap::records::MetaInformationPacked::Datatype = 0;
+         MPI_Datatype peano::heap::records::MetaInformationPacked::FullDatatype = 0;
+         
+         
+         void peano::heap::records::MetaInformationPacked::initDatatype() {
+            {
+               MetaInformationPacked dummyMetaInformationPacked[2];
+               
+               #ifdef MPI2
+               const int Attributes = 1;
+               #else
+               const int Attributes = 2;
+               #endif
+               MPI_Datatype subtypes[Attributes] = {
+                    MPI_INT		 //length
+                  #ifndef MPI2
+                  , MPI_UB
+                  #endif
+                  
+               };
+               
+               int blocklen[Attributes] = {
+                    1		 //length
+                  #ifndef MPI2
+                  , 1
+                  #endif
+                  
+               };
+               
+               MPI_Aint  disp[Attributes];
+               MPI_Aint  base;
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
+               #endif
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
+               #endif
+               #ifdef MPI2
+               for (int i=1; i<Attributes; i++) {
+               #else
+               for (int i=1; i<Attributes-1; i++) {
+               #endif
+                  assertion1( disp[i] > disp[i-1], i );
+               }
+               #ifdef MPI2
+               for (int i=0; i<Attributes; i++) {
+               #else
+               for (int i=0; i<Attributes-1; i++) {
+               #endif
+                  disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+                  assertion4(disp[i]<static_cast<int>(sizeof(MetaInformationPacked)), i, disp[i], Attributes, sizeof(MetaInformationPacked));
+               }
+               #ifndef MPI2
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[1]))), 		&disp[1] );
+               disp[1] -= base;
+               disp[1] += disp[0];
+               #endif
+               #ifdef MPI2
+               MPI_Datatype tmpType; 
+               MPI_Aint lowerBound, typeExtent; 
+               MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+               MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+               MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformationPacked::Datatype );
+               MPI_Type_commit( &MetaInformationPacked::Datatype );
+               #else
+               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformationPacked::Datatype);
+               MPI_Type_commit( &MetaInformationPacked::Datatype );
+               #endif
+               
+            }
+            {
+               MetaInformationPacked dummyMetaInformationPacked[2];
+               
+               #ifdef MPI2
+               const int Attributes = 1;
+               #else
+               const int Attributes = 2;
+               #endif
+               MPI_Datatype subtypes[Attributes] = {
+                    MPI_INT		 //length
+                  #ifndef MPI2
+                  , MPI_UB
+                  #endif
+                  
+               };
+               
+               int blocklen[Attributes] = {
+                    1		 //length
+                  #ifndef MPI2
+                  , 1
+                  #endif
+                  
+               };
+               
+               MPI_Aint  disp[Attributes];
+               MPI_Aint  base;
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked))), &base);
+               #endif
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[0]._persistentRecords._length))), 		&disp[0] );
+               #endif
+               #ifdef MPI2
+               for (int i=1; i<Attributes; i++) {
+               #else
+               for (int i=1; i<Attributes-1; i++) {
+               #endif
+                  assertion1( disp[i] > disp[i-1], i );
+               }
+               #ifdef MPI2
+               for (int i=0; i<Attributes; i++) {
+               #else
+               for (int i=0; i<Attributes-1; i++) {
+               #endif
+                  disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+                  assertion4(disp[i]<static_cast<int>(sizeof(MetaInformationPacked)), i, disp[i], Attributes, sizeof(MetaInformationPacked));
+               }
+               #ifndef MPI2
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyMetaInformationPacked[1]))), 		&disp[1] );
+               disp[1] -= base;
+               disp[1] += disp[0];
+               #endif
+               #ifdef MPI2
+               MPI_Datatype tmpType; 
+               MPI_Aint lowerBound, typeExtent; 
+               MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
+               MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+               MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &MetaInformationPacked::FullDatatype );
+               MPI_Type_commit( &MetaInformationPacked::FullDatatype );
+               #else
+               MPI_Type_struct( Attributes, blocklen, disp, subtypes, &MetaInformationPacked::FullDatatype);
+               MPI_Type_commit( &MetaInformationPacked::FullDatatype );
+               #endif
+               
+            }
+            
+         }
+         
+         
+         void peano::heap::records::MetaInformationPacked::shutdownDatatype() {
+            MPI_Type_free( &MetaInformationPacked::Datatype );
+            MPI_Type_free( &MetaInformationPacked::FullDatatype );
+            
+         }
+         
+         void peano::heap::records::MetaInformationPacked::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+            if (communicateSleep<0) {
+            
+               const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator());
+               if  (result!=MPI_SUCCESS) {
+                  std::ostringstream msg;
+                  msg << "was not able to send message peano::heap::records::MetaInformationPacked "
+                  << toString()
+                  << " to node " << destination
+                  << ": " << tarch::parallel::MPIReturnValueToString(result);
+                  _log.error( "send(int)",msg.str() );
+               }
+               
+            }
+            else {
+            
+               MPI_Request* sendRequestHandle = new MPI_Request();
+               int          flag = 0;
+               int          result;
+               
+               clock_t      timeOutWarning   = -1;
+               clock_t      timeOutShutdown  = -1;
+               bool         triggeredTimeoutWarning = false;
+               
+               if (exchangeOnlyAttributesMarkedWithParallelise) {
+                  result = MPI_Isend(
+                     this, 1, Datatype, destination,
+                     tag, tarch::parallel::Node::getInstance().getCommunicator(),
+                     sendRequestHandle
+                  );
+                  
+               }
+               else {
+                  result = MPI_Isend(
+                     this, 1, FullDatatype, destination,
+                     tag, tarch::parallel::Node::getInstance().getCommunicator(),
+                     sendRequestHandle
+                  );
+                  
+               }
+               if  (result!=MPI_SUCCESS) {
+                  std::ostringstream msg;
+                  msg << "was not able to send message peano::heap::records::MetaInformationPacked "
+                  << toString()
+                  << " to node " << destination
+                  << ": " << tarch::parallel::MPIReturnValueToString(result);
+                  _log.error( "send(int)",msg.str() );
+               }
+               result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
+               while (!flag) {
+                  if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+                  if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+                  result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
+                  if (result!=MPI_SUCCESS) {
+                     std::ostringstream msg;
+                     msg << "testing for finished send task for peano::heap::records::MetaInformationPacked "
+                     << toString()
+                     << " sent to node " << destination
+                     << " failed: " << tarch::parallel::MPIReturnValueToString(result);
+                     _log.error("send(int)", msg.str() );
+                  }
+                  
+                  // deadlock aspect
+                  if (
+                     tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+                     (clock()>timeOutWarning) &&
+                     (!triggeredTimeoutWarning)
+                  ) {
+                     tarch::parallel::Node::getInstance().writeTimeOutWarning(
+                     "peano::heap::records::MetaInformationPacked",
+                     "send(int)", destination,tag,1
+                     );
+                     triggeredTimeoutWarning = true;
+                  }
+                  if (
+                     tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+                     (clock()>timeOutShutdown)
+                  ) {
+                     tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+                     "peano::heap::records::MetaInformationPacked",
+                     "send(int)", destination,tag,1
+                     );
+                  }
+                  
+               tarch::parallel::Node::getInstance().receiveDanglingMessages();
+               usleep(communicateSleep);
+               }
+               
+               delete sendRequestHandle;
+               #ifdef Debug
+               _log.debug("send(int,int)", "sent " + toString() );
+               #endif
+               
+            }
+            
+         }
+         
+         
+         
+         void peano::heap::records::MetaInformationPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
+            if (communicateSleep<0) {
+            
+               const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
+               if ( result != MPI_SUCCESS ) {
+                  std::ostringstream msg;
+                  msg << "failed to start to receive peano::heap::records::MetaInformationPacked from node "
+                  << source << ": " << tarch::parallel::MPIReturnValueToString(result);
+                  _log.error( "receive(int)", msg.str() );
+               }
+               
+            }
+            else {
+            
+               MPI_Request* sendRequestHandle = new MPI_Request();
+               int          flag = 0;
+               int          result;
+               
+               clock_t      timeOutWarning   = -1;
+               clock_t      timeOutShutdown  = -1;
+               bool         triggeredTimeoutWarning = false;
+               
+               if (exchangeOnlyAttributesMarkedWithParallelise) {
+                  result = MPI_Irecv(
+                     this, 1, Datatype, source, tag,
+                     tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
+                  );
+                  
+               }
+               else {
+                  result = MPI_Irecv(
+                     this, 1, FullDatatype, source, tag,
+                     tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
+                  );
+                  
+               }
+               if ( result != MPI_SUCCESS ) {
+                  std::ostringstream msg;
+                  msg << "failed to start to receive peano::heap::records::MetaInformationPacked from node "
+                  << source << ": " << tarch::parallel::MPIReturnValueToString(result);
+                  _log.error( "receive(int)", msg.str() );
+               }
+               
+               result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
+               while (!flag) {
+                  if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
+                  if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
+                  result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
+                  if (result!=MPI_SUCCESS) {
+                     std::ostringstream msg;
+                     msg << "testing for finished receive task for peano::heap::records::MetaInformationPacked failed: "
+                     << tarch::parallel::MPIReturnValueToString(result);
+                     _log.error("receive(int)", msg.str() );
+                  }
+                  
+                  // deadlock aspect
+                  if (
+                     tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
+                     (clock()>timeOutWarning) &&
+                     (!triggeredTimeoutWarning)
+                  ) {
+                     tarch::parallel::Node::getInstance().writeTimeOutWarning(
+                     "peano::heap::records::MetaInformationPacked",
+                     "receive(int)", source,tag,1
+                     );
+                     triggeredTimeoutWarning = true;
+                  }
+                  if (
+                     tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() &&
+                     (clock()>timeOutShutdown)
+                  ) {
+                     tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
+                     "peano::heap::records::MetaInformationPacked",
+                     "receive(int)", source,tag,1
+                     );
+                  }
+                  tarch::parallel::Node::getInstance().receiveDanglingMessages();
+                  usleep(communicateSleep);
+                  
+               }
+               
+               delete sendRequestHandle;
+               
+               #ifdef Debug
+               _log.debug("receive(int,int)", "received " + toString() ); 
+               #endif
+               
+            }
+            
+         }
+         
+         
+         
+         bool peano::heap::records::MetaInformationPacked::isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise) {
+            MPI_Status status;
+            int  flag        = 0;
+            MPI_Iprobe(
+               MPI_ANY_SOURCE, tag,
+               tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
+            );
+            if (flag) {
+               int  messageCounter;
+               if (exchangeOnlyAttributesMarkedWithParallelise) {
+                  MPI_Get_count(&status, Datatype, &messageCounter);
+               }
+               else {
+                  MPI_Get_count(&status, FullDatatype, &messageCounter);
+               }
+               return messageCounter > 0;
+            }
+            else return false;
+            
+         }
+         
+         
+      #endif
+      
+      
+      
    
-   
-   
-
 #endif
 
 

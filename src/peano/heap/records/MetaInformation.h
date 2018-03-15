@@ -35,7 +35,7 @@ namespace peano {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   21/03/2017 02:51
+    * @date   15/03/2018 11:44
     */
    class peano::heap::records::MetaInformation { 
       
@@ -83,539 +83,534 @@ namespace peano {
             
             
          };
-         
-      private: 
-         PersistentRecords _persistentRecords;
-         
-      public:
-         /**
-          * Generated
-          */
-         MetaInformation();
-         
-         /**
-          * Generated
-          */
-         MetaInformation(const PersistentRecords& persistentRecords);
-         
-         /**
-          * Generated
-          */
-         MetaInformation(const int& length, const tarch::la::Vector<DIMENSIONS,double>& position, const int& level);
-         
-         /**
-          * Generated
-          */
-         ~MetaInformation();
-         
-         /**
-          * Generated
-          */
-          int getLength() const ;
-         
-         /**
-          * Generated
-          */
-          void setLength(const int& length) ;
-         
-          tarch::la::Vector<DIMENSIONS,double> getPosition() const ;
-         
-          void setPosition(const tarch::la::Vector<DIMENSIONS,double>& position) ;
-         
-          double getPosition(int elementIndex) const ;
-         
-          void setPosition(int elementIndex, const double& position) ;
-         
-         /**
-          * Generated
-          */
-          int getLevel() const ;
-         
-         /**
-          * Generated
-          */
-          void setLevel(const int& level) ;
-         
-         /**
-          * Generated
-          */
-         std::string toString() const;
-         
-         /**
-          * Generated
-          */
-         void toString(std::ostream& out) const;
-         
-         
-         PersistentRecords getPersistentRecords() const;
-         /**
-          * Generated
-          */
-         MetaInformationPacked convert() const;
-         
-         
-      #ifdef Parallel
-         protected:
-            static tarch::logging::Log _log;
+         private: 
+            PersistentRecords _persistentRecords;
             
          public:
+            /**
+             * Generated
+             */
+            MetaInformation();
             
             /**
-             * Global that represents the mpi datatype.
-             * There are two variants: Datatype identifies only those attributes marked with
-             * parallelise. FullDatatype instead identifies the whole record with all fields.
+             * Generated
              */
-            static MPI_Datatype Datatype;
-            static MPI_Datatype FullDatatype;
+            MetaInformation(const PersistentRecords& persistentRecords);
             
             /**
-             * Initializes the data type for the mpi operations. Has to be called
-             * before the very first send or receive operation is called.
+             * Generated
              */
-            static void initDatatype();
-            
-            static void shutdownDatatype();
+            MetaInformation(const int& length, const tarch::la::Vector<DIMENSIONS,double>& position, const int& level);
             
             /**
-             * @param communicateSleep -1 Data exchange through blocking mpi
-             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+             * Generated
              */
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            ~MetaInformation();
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            /**
+             * Generated
+             */
+             int getLength() const ;
             
-            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            /**
+             * Generated
+             */
+             void setLength(const int& length) ;
             
-            #endif
+             tarch::la::Vector<DIMENSIONS,double> getPosition() const ;
+            
+             void setPosition(const tarch::la::Vector<DIMENSIONS,double>& position) ;
+            
+             double getPosition(int elementIndex) const ;
+            
+             void setPosition(int elementIndex, const double& position) ;
+            
+            /**
+             * Generated
+             */
+             int getLevel() const ;
+            
+            /**
+             * Generated
+             */
+             void setLevel(const int& level) ;
+            
+            /**
+             * Generated
+             */
+            std::string toString() const;
+            
+            /**
+             * Generated
+             */
+            void toString(std::ostream& out) const;
+            
+            
+            PersistentRecords getPersistentRecords() const;
+            /**
+             * Generated
+             */
+            MetaInformationPacked convert() const;
+            
+            
+         #ifdef Parallel
+            protected:
+               static tarch::logging::Log _log;
+               
+            public:
+               
+               /**
+                * Global that represents the mpi datatype.
+                * There are two variants: Datatype identifies only those attributes marked with
+                * parallelise. FullDatatype instead identifies the whole record with all fields.
+                */
+               static MPI_Datatype Datatype;
+               static MPI_Datatype FullDatatype;
+               
+               /**
+                * Initializes the data type for the mpi operations. Has to be called
+                * before the very first send or receive operation is called.
+                */
+               static void initDatatype();
+               
+               static void shutdownDatatype();
+               
+               /**
+                * @param communicateSleep -1 Data exchange through blocking mpi
+                * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                */
+               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+               
+               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+               
+               static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+               
+               #endif
+      
+   };
+   
+   /**
+    * @author This class is generated by DaStGen
+    * 		   DataStructureGenerator (DaStGen)
+    * 		   2007-2009 Wolfgang Eckhardt
+    * 		   2012      Tobias Weinzierl
+    *
+    * 		   build date: 09-02-2014 14:40
+    *
+    * @date   15/03/2018 11:44
+    */
+   class peano::heap::records::MetaInformationPacked { 
+      
+      public:
+         
+         struct PersistentRecords {
+            int _length;
+            tarch::la::Vector<DIMENSIONS,double> _position;
+            int _level;
+            /**
+             * Generated
+             */
+            PersistentRecords();
+            
+            /**
+             * Generated
+             */
+            PersistentRecords(const int& length, const tarch::la::Vector<DIMENSIONS,double>& position, const int& level);
+            
+            /**
+             * Generated
+             */
+             int getLength() const ;
+            
+            /**
+             * Generated
+             */
+             void setLength(const int& length) ;
+            
+             tarch::la::Vector<DIMENSIONS,double> getPosition() const ;
+            
+             void setPosition(const tarch::la::Vector<DIMENSIONS,double>& position) ;
+            
+            /**
+             * Generated
+             */
+             int getLevel() const ;
+            
+            /**
+             * Generated
+             */
+             void setLevel(const int& level) ;
+            
+            
+         };
+         private: 
+            PersistentRecords _persistentRecords;
+            
+         public:
+            /**
+             * Generated
+             */
+            MetaInformationPacked();
+            
+            /**
+             * Generated
+             */
+            MetaInformationPacked(const PersistentRecords& persistentRecords);
+            
+            /**
+             * Generated
+             */
+            MetaInformationPacked(const int& length, const tarch::la::Vector<DIMENSIONS,double>& position, const int& level);
+            
+            /**
+             * Generated
+             */
+            ~MetaInformationPacked();
+            
+            /**
+             * Generated
+             */
+             int getLength() const ;
+            
+            /**
+             * Generated
+             */
+             void setLength(const int& length) ;
+            
+             tarch::la::Vector<DIMENSIONS,double> getPosition() const ;
+            
+             void setPosition(const tarch::la::Vector<DIMENSIONS,double>& position) ;
+            
+             double getPosition(int elementIndex) const ;
+            
+             void setPosition(int elementIndex, const double& position) ;
+            
+            /**
+             * Generated
+             */
+             int getLevel() const ;
+            
+            /**
+             * Generated
+             */
+             void setLevel(const int& level) ;
+            
+            /**
+             * Generated
+             */
+            std::string toString() const;
+            
+            /**
+             * Generated
+             */
+            void toString(std::ostream& out) const;
+            
+            
+            PersistentRecords getPersistentRecords() const;
+            /**
+             * Generated
+             */
+            MetaInformation convert() const;
+            
+            
+         #ifdef Parallel
+            protected:
+               static tarch::logging::Log _log;
+               
+            public:
+               
+               /**
+                * Global that represents the mpi datatype.
+                * There are two variants: Datatype identifies only those attributes marked with
+                * parallelise. FullDatatype instead identifies the whole record with all fields.
+                */
+               static MPI_Datatype Datatype;
+               static MPI_Datatype FullDatatype;
+               
+               /**
+                * Initializes the data type for the mpi operations. Has to be called
+                * before the very first send or receive operation is called.
+                */
+               static void initDatatype();
+               
+               static void shutdownDatatype();
+               
+               /**
+                * @param communicateSleep -1 Data exchange through blocking mpi
+                * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                */
+               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+               
+               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+               
+               static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+               
+               #endif
+      
+   };
+   
+   #elif !defined(Asserts)
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   15/03/2018 11:44
+       */
+      class peano::heap::records::MetaInformation { 
+         
+         public:
+            
+            typedef peano::heap::records::MetaInformationPacked Packed;
+            
+            struct PersistentRecords {
+               int _length;
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const int& length);
+               
+               /**
+                * Generated
+                */
+                int getLength() const ;
+               
+               /**
+                * Generated
+                */
+                void setLength(const int& length) ;
+               
                
             };
-            
-            /**
-             * @author This class is generated by DaStGen
-             * 		   DataStructureGenerator (DaStGen)
-             * 		   2007-2009 Wolfgang Eckhardt
-             * 		   2012      Tobias Weinzierl
-             *
-             * 		   build date: 09-02-2014 14:40
-             *
-             * @date   21/03/2017 02:51
-             */
-            class peano::heap::records::MetaInformationPacked { 
+            private: 
+               PersistentRecords _persistentRecords;
                
+            public:
+               /**
+                * Generated
+                */
+               MetaInformation();
+               
+               /**
+                * Generated
+                */
+               MetaInformation(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               MetaInformation(const int& length);
+               
+               /**
+                * Generated
+                */
+               ~MetaInformation();
+               
+               /**
+                * Generated
+                */
+                int getLength() const ;
+               
+               /**
+                * Generated
+                */
+                void setLength(const int& length) ;
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               MetaInformationPacked convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
                public:
                   
-                  struct PersistentRecords {
-                     int _length;
-                     tarch::la::Vector<DIMENSIONS,double> _position;
-                     int _level;
-                     /**
-                      * Generated
-                      */
-                     PersistentRecords();
-                     
-                     /**
-                      * Generated
-                      */
-                     PersistentRecords(const int& length, const tarch::la::Vector<DIMENSIONS,double>& position, const int& level);
-                     
-                     /**
-                      * Generated
-                      */
-                      int getLength() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setLength(const int& length) ;
-                     
-                      tarch::la::Vector<DIMENSIONS,double> getPosition() const ;
-                     
-                      void setPosition(const tarch::la::Vector<DIMENSIONS,double>& position) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getLevel() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setLevel(const int& level) ;
-                     
-                     
-                  };
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
                   
-               private: 
-                  PersistentRecords _persistentRecords;
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  /**
+                   * @param communicateSleep -1 Data exchange through blocking mpi
+                   * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                   * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+                   */
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  #endif
+         
+      };
+      
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   15/03/2018 11:44
+       */
+      class peano::heap::records::MetaInformationPacked { 
+         
+         public:
+            
+            struct PersistentRecords {
+               int _length;
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const int& length);
+               
+               /**
+                * Generated
+                */
+                int getLength() const ;
+               
+               /**
+                * Generated
+                */
+                void setLength(const int& length) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               
+            public:
+               /**
+                * Generated
+                */
+               MetaInformationPacked();
+               
+               /**
+                * Generated
+                */
+               MetaInformationPacked(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               MetaInformationPacked(const int& length);
+               
+               /**
+                * Generated
+                */
+               ~MetaInformationPacked();
+               
+               /**
+                * Generated
+                */
+                int getLength() const ;
+               
+               /**
+                * Generated
+                */
+                void setLength(const int& length) ;
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               MetaInformation convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
                   
                public:
-                  /**
-                   * Generated
-                   */
-                  MetaInformationPacked();
                   
                   /**
-                   * Generated
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
                    */
-                  MetaInformationPacked(const PersistentRecords& persistentRecords);
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
                   
                   /**
-                   * Generated
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
                    */
-                  MetaInformationPacked(const int& length, const tarch::la::Vector<DIMENSIONS,double>& position, const int& level);
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
                   
                   /**
-                   * Generated
+                   * @param communicateSleep -1 Data exchange through blocking mpi
+                   * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+                   * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
                    */
-                  ~MetaInformationPacked();
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                   
-                  /**
-                   * Generated
-                   */
-                   int getLength() const ;
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
                   
-                  /**
-                   * Generated
-                   */
-                   void setLength(const int& length) ;
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                   
-                   tarch::la::Vector<DIMENSIONS,double> getPosition() const ;
-                  
-                   void setPosition(const tarch::la::Vector<DIMENSIONS,double>& position) ;
-                  
-                   double getPosition(int elementIndex) const ;
-                  
-                   void setPosition(int elementIndex, const double& position) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getLevel() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setLevel(const int& level) ;
-                  
-                  /**
-                   * Generated
-                   */
-                  std::string toString() const;
-                  
-                  /**
-                   * Generated
-                   */
-                  void toString(std::ostream& out) const;
-                  
-                  
-                  PersistentRecords getPersistentRecords() const;
-                  /**
-                   * Generated
-                   */
-                  MetaInformation convert() const;
-                  
-                  
-               #ifdef Parallel
-                  protected:
-                     static tarch::logging::Log _log;
-                     
-                  public:
-                     
-                     /**
-                      * Global that represents the mpi datatype.
-                      * There are two variants: Datatype identifies only those attributes marked with
-                      * parallelise. FullDatatype instead identifies the whole record with all fields.
-                      */
-                     static MPI_Datatype Datatype;
-                     static MPI_Datatype FullDatatype;
-                     
-                     /**
-                      * Initializes the data type for the mpi operations. Has to be called
-                      * before the very first send or receive operation is called.
-                      */
-                     static void initDatatype();
-                     
-                     static void shutdownDatatype();
-                     
-                     /**
-                      * @param communicateSleep -1 Data exchange through blocking mpi
-                      * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                      * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                      */
-                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                     
-                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                     
-                     static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                     
-                     #endif
-                        
-                     };
-                     
-                     
-                  #elif !defined(Asserts)
-                     /**
-                      * @author This class is generated by DaStGen
-                      * 		   DataStructureGenerator (DaStGen)
-                      * 		   2007-2009 Wolfgang Eckhardt
-                      * 		   2012      Tobias Weinzierl
-                      *
-                      * 		   build date: 09-02-2014 14:40
-                      *
-                      * @date   21/03/2017 02:51
-                      */
-                     class peano::heap::records::MetaInformation { 
-                        
-                        public:
-                           
-                           typedef peano::heap::records::MetaInformationPacked Packed;
-                           
-                           struct PersistentRecords {
-                              int _length;
-                              /**
-                               * Generated
-                               */
-                              PersistentRecords();
-                              
-                              /**
-                               * Generated
-                               */
-                              PersistentRecords(const int& length);
-                              
-                              /**
-                               * Generated
-                               */
-                               int getLength() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setLength(const int& length) ;
-                              
-                              
-                           };
-                           
-                        private: 
-                           PersistentRecords _persistentRecords;
-                           
-                        public:
-                           /**
-                            * Generated
-                            */
-                           MetaInformation();
-                           
-                           /**
-                            * Generated
-                            */
-                           MetaInformation(const PersistentRecords& persistentRecords);
-                           
-                           /**
-                            * Generated
-                            */
-                           MetaInformation(const int& length);
-                           
-                           /**
-                            * Generated
-                            */
-                           ~MetaInformation();
-                           
-                           /**
-                            * Generated
-                            */
-                            int getLength() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setLength(const int& length) ;
-                           
-                           /**
-                            * Generated
-                            */
-                           std::string toString() const;
-                           
-                           /**
-                            * Generated
-                            */
-                           void toString(std::ostream& out) const;
-                           
-                           
-                           PersistentRecords getPersistentRecords() const;
-                           /**
-                            * Generated
-                            */
-                           MetaInformationPacked convert() const;
-                           
-                           
-                        #ifdef Parallel
-                           protected:
-                              static tarch::logging::Log _log;
-                              
-                           public:
-                              
-                              /**
-                               * Global that represents the mpi datatype.
-                               * There are two variants: Datatype identifies only those attributes marked with
-                               * parallelise. FullDatatype instead identifies the whole record with all fields.
-                               */
-                              static MPI_Datatype Datatype;
-                              static MPI_Datatype FullDatatype;
-                              
-                              /**
-                               * Initializes the data type for the mpi operations. Has to be called
-                               * before the very first send or receive operation is called.
-                               */
-                              static void initDatatype();
-                              
-                              static void shutdownDatatype();
-                              
-                              /**
-                               * @param communicateSleep -1 Data exchange through blocking mpi
-                               * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                               * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                               */
-                              void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                              
-                              void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                              
-                              static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                              
-                              #endif
-                                 
-                              };
-                              
-                              /**
-                               * @author This class is generated by DaStGen
-                               * 		   DataStructureGenerator (DaStGen)
-                               * 		   2007-2009 Wolfgang Eckhardt
-                               * 		   2012      Tobias Weinzierl
-                               *
-                               * 		   build date: 09-02-2014 14:40
-                               *
-                               * @date   21/03/2017 02:51
-                               */
-                              class peano::heap::records::MetaInformationPacked { 
-                                 
-                                 public:
-                                    
-                                    struct PersistentRecords {
-                                       int _length;
-                                       /**
-                                        * Generated
-                                        */
-                                       PersistentRecords();
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                       PersistentRecords(const int& length);
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                        int getLength() const ;
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                        void setLength(const int& length) ;
-                                       
-                                       
-                                    };
-                                    
-                                 private: 
-                                    PersistentRecords _persistentRecords;
-                                    
-                                 public:
-                                    /**
-                                     * Generated
-                                     */
-                                    MetaInformationPacked();
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    MetaInformationPacked(const PersistentRecords& persistentRecords);
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    MetaInformationPacked(const int& length);
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    ~MetaInformationPacked();
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     int getLength() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setLength(const int& length) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    std::string toString() const;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    void toString(std::ostream& out) const;
-                                    
-                                    
-                                    PersistentRecords getPersistentRecords() const;
-                                    /**
-                                     * Generated
-                                     */
-                                    MetaInformation convert() const;
-                                    
-                                    
-                                 #ifdef Parallel
-                                    protected:
-                                       static tarch::logging::Log _log;
-                                       
-                                    public:
-                                       
-                                       /**
-                                        * Global that represents the mpi datatype.
-                                        * There are two variants: Datatype identifies only those attributes marked with
-                                        * parallelise. FullDatatype instead identifies the whole record with all fields.
-                                        */
-                                       static MPI_Datatype Datatype;
-                                       static MPI_Datatype FullDatatype;
-                                       
-                                       /**
-                                        * Initializes the data type for the mpi operations. Has to be called
-                                        * before the very first send or receive operation is called.
-                                        */
-                                       static void initDatatype();
-                                       
-                                       static void shutdownDatatype();
-                                       
-                                       /**
-                                        * @param communicateSleep -1 Data exchange through blocking mpi
-                                        * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                                        * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                                        */
-                                       void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                       
-                                       void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                       
-                                       static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                                       
-                                       #endif
-                                          
-                                       };
-                                       
-                                       
-                                    
-                                 #endif
-                                 
-                                 #endif
-                                 
+                  #endif
+         
+      };
+      
+      
+   
+#endif
+
+#endif
+

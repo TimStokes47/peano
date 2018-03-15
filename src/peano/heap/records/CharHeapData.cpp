@@ -87,69 +87,141 @@ peano::heap::records::CharHeapDataPacked peano::heap::records::CharHeapData::con
    
    void peano::heap::records::CharHeapData::initDatatype() {
       {
-         CharHeapData dummyCharHeapData;
+         CharHeapData dummyCharHeapData[2];
          
+         #ifdef MPI2
          const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
          MPI_Datatype subtypes[Attributes] = {
               MPI_BYTE		 //u
+            #ifndef MPI2
+            , MPI_UB
+            #endif
             
          };
          
          int blocklen[Attributes] = {
               1		 //u
+            #ifndef MPI2
+            , 1
+            #endif
             
          };
          
-         MPI_Aint     disp[Attributes];
-         
-         MPI_Aint base;
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData))), &base);
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData[0]._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData[0]._persistentRecords._u))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
+         #ifdef MPI2
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(CharHeapData)), i, disp[i], Attributes, sizeof(CharHeapData));
          }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
          MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &CharHeapData::Datatype );
          MPI_Type_commit( &CharHeapData::Datatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &CharHeapData::Datatype);
+         MPI_Type_commit( &CharHeapData::Datatype );
+         #endif
          
       }
       {
-         CharHeapData dummyCharHeapData;
+         CharHeapData dummyCharHeapData[2];
          
+         #ifdef MPI2
          const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
          MPI_Datatype subtypes[Attributes] = {
               MPI_BYTE		 //u
+            #ifndef MPI2
+            , MPI_UB
+            #endif
             
          };
          
          int blocklen[Attributes] = {
               1		 //u
+            #ifndef MPI2
+            , 1
+            #endif
             
          };
          
-         MPI_Aint     disp[Attributes];
-         
-         MPI_Aint base;
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData))), &base);
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData[0]._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData[0]._persistentRecords._u))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
+         #ifdef MPI2
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(CharHeapData)), i, disp[i], Attributes, sizeof(CharHeapData));
          }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapData[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
          MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &CharHeapData::FullDatatype );
          MPI_Type_commit( &CharHeapData::FullDatatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &CharHeapData::FullDatatype);
+         MPI_Type_commit( &CharHeapData::FullDatatype );
+         #endif
          
       }
       
@@ -179,7 +251,6 @@ peano::heap::records::CharHeapDataPacked peano::heap::records::CharHeapData::con
       else {
       
          MPI_Request* sendRequestHandle = new MPI_Request();
-         MPI_Status   status;
          int          flag = 0;
          int          result;
          
@@ -211,11 +282,11 @@ peano::heap::records::CharHeapDataPacked peano::heap::records::CharHeapData::con
             << ": " << tarch::parallel::MPIReturnValueToString(result);
             _log.error( "send(int)",msg.str() );
          }
-         result = MPI_Test( sendRequestHandle, &flag, &status );
+         result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
          while (!flag) {
             if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
             if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
                msg << "testing for finished send task for peano::heap::records::CharHeapData "
@@ -246,9 +317,9 @@ peano::heap::records::CharHeapDataPacked peano::heap::records::CharHeapData::con
                "send(int)", destination,tag,1
                );
             }
-            tarch::parallel::Node::getInstance().receiveDanglingMessages();
-            usleep(communicateSleep);
             
+         tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
          }
          
          delete sendRequestHandle;
@@ -265,8 +336,7 @@ peano::heap::records::CharHeapDataPacked peano::heap::records::CharHeapData::con
    void peano::heap::records::CharHeapData::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
       if (communicateSleep<0) {
       
-         MPI_Status  status;
-         const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+         const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
          if ( result != MPI_SUCCESS ) {
             std::ostringstream msg;
             msg << "failed to start to receive peano::heap::records::CharHeapData from node "
@@ -278,7 +348,6 @@ peano::heap::records::CharHeapDataPacked peano::heap::records::CharHeapData::con
       else {
       
          MPI_Request* sendRequestHandle = new MPI_Request();
-         MPI_Status   status;
          int          flag = 0;
          int          result;
          
@@ -307,11 +376,11 @@ peano::heap::records::CharHeapDataPacked peano::heap::records::CharHeapData::con
             _log.error( "receive(int)", msg.str() );
          }
          
-         result = MPI_Test( sendRequestHandle, &flag, &status );
+         result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
          while (!flag) {
             if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
             if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
                msg << "testing for finished receive task for peano::heap::records::CharHeapData failed: "
@@ -469,69 +538,141 @@ peano::heap::records::CharHeapData peano::heap::records::CharHeapDataPacked::con
    
    void peano::heap::records::CharHeapDataPacked::initDatatype() {
       {
-         CharHeapDataPacked dummyCharHeapDataPacked;
+         CharHeapDataPacked dummyCharHeapDataPacked[2];
          
+         #ifdef MPI2
          const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
          MPI_Datatype subtypes[Attributes] = {
               MPI_BYTE		 //u
+            #ifndef MPI2
+            , MPI_UB
+            #endif
             
          };
          
          int blocklen[Attributes] = {
               1		 //u
+            #ifndef MPI2
+            , 1
+            #endif
             
          };
          
-         MPI_Aint     disp[Attributes];
-         
-         MPI_Aint base;
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked))), &base);
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
+         #ifdef MPI2
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(CharHeapDataPacked)), i, disp[i], Attributes, sizeof(CharHeapDataPacked));
          }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
          MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &CharHeapDataPacked::Datatype );
          MPI_Type_commit( &CharHeapDataPacked::Datatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &CharHeapDataPacked::Datatype);
+         MPI_Type_commit( &CharHeapDataPacked::Datatype );
+         #endif
          
       }
       {
-         CharHeapDataPacked dummyCharHeapDataPacked;
+         CharHeapDataPacked dummyCharHeapDataPacked[2];
          
+         #ifdef MPI2
          const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
          MPI_Datatype subtypes[Attributes] = {
               MPI_BYTE		 //u
+            #ifndef MPI2
+            , MPI_UB
+            #endif
             
          };
          
          int blocklen[Attributes] = {
               1		 //u
+            #ifndef MPI2
+            , 1
+            #endif
             
          };
          
-         MPI_Aint     disp[Attributes];
-         
-         MPI_Aint base;
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked))), &base);
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
+         #ifdef MPI2
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(CharHeapDataPacked)), i, disp[i], Attributes, sizeof(CharHeapDataPacked));
          }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyCharHeapDataPacked[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
          MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &CharHeapDataPacked::FullDatatype );
          MPI_Type_commit( &CharHeapDataPacked::FullDatatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &CharHeapDataPacked::FullDatatype);
+         MPI_Type_commit( &CharHeapDataPacked::FullDatatype );
+         #endif
          
       }
       
@@ -561,7 +702,6 @@ peano::heap::records::CharHeapData peano::heap::records::CharHeapDataPacked::con
       else {
       
          MPI_Request* sendRequestHandle = new MPI_Request();
-         MPI_Status   status;
          int          flag = 0;
          int          result;
          
@@ -593,11 +733,11 @@ peano::heap::records::CharHeapData peano::heap::records::CharHeapDataPacked::con
             << ": " << tarch::parallel::MPIReturnValueToString(result);
             _log.error( "send(int)",msg.str() );
          }
-         result = MPI_Test( sendRequestHandle, &flag, &status );
+         result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
          while (!flag) {
             if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
             if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
                msg << "testing for finished send task for peano::heap::records::CharHeapDataPacked "
@@ -628,9 +768,9 @@ peano::heap::records::CharHeapData peano::heap::records::CharHeapDataPacked::con
                "send(int)", destination,tag,1
                );
             }
-            tarch::parallel::Node::getInstance().receiveDanglingMessages();
-            usleep(communicateSleep);
             
+         tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
          }
          
          delete sendRequestHandle;
@@ -647,8 +787,7 @@ peano::heap::records::CharHeapData peano::heap::records::CharHeapDataPacked::con
    void peano::heap::records::CharHeapDataPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
       if (communicateSleep<0) {
       
-         MPI_Status  status;
-         const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+         const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
          if ( result != MPI_SUCCESS ) {
             std::ostringstream msg;
             msg << "failed to start to receive peano::heap::records::CharHeapDataPacked from node "
@@ -660,7 +799,6 @@ peano::heap::records::CharHeapData peano::heap::records::CharHeapDataPacked::con
       else {
       
          MPI_Request* sendRequestHandle = new MPI_Request();
-         MPI_Status   status;
          int          flag = 0;
          int          result;
          
@@ -689,11 +827,11 @@ peano::heap::records::CharHeapData peano::heap::records::CharHeapDataPacked::con
             _log.error( "receive(int)", msg.str() );
          }
          
-         result = MPI_Test( sendRequestHandle, &flag, &status );
+         result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
          while (!flag) {
             if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
             if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
                msg << "testing for finished receive task for peano::heap::records::CharHeapDataPacked failed: "

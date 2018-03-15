@@ -87,69 +87,141 @@ peano::heap::records::BooleanHeapDataPacked peano::heap::records::BooleanHeapDat
    
    void peano::heap::records::BooleanHeapData::initDatatype() {
       {
-         BooleanHeapData dummyBooleanHeapData;
+         BooleanHeapData dummyBooleanHeapData[2];
          
+         #ifdef MPI2
          const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
          MPI_Datatype subtypes[Attributes] = {
-              MPI_CHAR		 //u
+              MPI_CXX_BOOL		 //u
+            #ifndef MPI2
+            , MPI_UB
+            #endif
             
          };
          
          int blocklen[Attributes] = {
               1		 //u
+            #ifndef MPI2
+            , 1
+            #endif
             
          };
          
-         MPI_Aint     disp[Attributes];
-         
-         MPI_Aint base;
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData))), &base);
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[0]._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[0]._persistentRecords._u))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
+         #ifdef MPI2
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(BooleanHeapData)), i, disp[i], Attributes, sizeof(BooleanHeapData));
          }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
          MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &BooleanHeapData::Datatype );
          MPI_Type_commit( &BooleanHeapData::Datatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &BooleanHeapData::Datatype);
+         MPI_Type_commit( &BooleanHeapData::Datatype );
+         #endif
          
       }
       {
-         BooleanHeapData dummyBooleanHeapData;
+         BooleanHeapData dummyBooleanHeapData[2];
          
+         #ifdef MPI2
          const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
          MPI_Datatype subtypes[Attributes] = {
-              MPI_CHAR		 //u
+              MPI_CXX_BOOL		 //u
+            #ifndef MPI2
+            , MPI_UB
+            #endif
             
          };
          
          int blocklen[Attributes] = {
               1		 //u
+            #ifndef MPI2
+            , 1
+            #endif
             
          };
          
-         MPI_Aint     disp[Attributes];
-         
-         MPI_Aint base;
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData))), &base);
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[0]._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[0]._persistentRecords._u))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
+         #ifdef MPI2
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(BooleanHeapData)), i, disp[i], Attributes, sizeof(BooleanHeapData));
          }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapData[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
          MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &BooleanHeapData::FullDatatype );
          MPI_Type_commit( &BooleanHeapData::FullDatatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &BooleanHeapData::FullDatatype);
+         MPI_Type_commit( &BooleanHeapData::FullDatatype );
+         #endif
          
       }
       
@@ -179,7 +251,6 @@ peano::heap::records::BooleanHeapDataPacked peano::heap::records::BooleanHeapDat
       else {
       
          MPI_Request* sendRequestHandle = new MPI_Request();
-         MPI_Status   status;
          int          flag = 0;
          int          result;
          
@@ -211,11 +282,11 @@ peano::heap::records::BooleanHeapDataPacked peano::heap::records::BooleanHeapDat
             << ": " << tarch::parallel::MPIReturnValueToString(result);
             _log.error( "send(int)",msg.str() );
          }
-         result = MPI_Test( sendRequestHandle, &flag, &status );
+         result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
          while (!flag) {
             if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
             if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
                msg << "testing for finished send task for peano::heap::records::BooleanHeapData "
@@ -246,9 +317,9 @@ peano::heap::records::BooleanHeapDataPacked peano::heap::records::BooleanHeapDat
                "send(int)", destination,tag,1
                );
             }
-            tarch::parallel::Node::getInstance().receiveDanglingMessages();
-            usleep(communicateSleep);
             
+         tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
          }
          
          delete sendRequestHandle;
@@ -265,8 +336,7 @@ peano::heap::records::BooleanHeapDataPacked peano::heap::records::BooleanHeapDat
    void peano::heap::records::BooleanHeapData::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
       if (communicateSleep<0) {
       
-         MPI_Status  status;
-         const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+         const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
          if ( result != MPI_SUCCESS ) {
             std::ostringstream msg;
             msg << "failed to start to receive peano::heap::records::BooleanHeapData from node "
@@ -278,7 +348,6 @@ peano::heap::records::BooleanHeapDataPacked peano::heap::records::BooleanHeapDat
       else {
       
          MPI_Request* sendRequestHandle = new MPI_Request();
-         MPI_Status   status;
          int          flag = 0;
          int          result;
          
@@ -307,11 +376,11 @@ peano::heap::records::BooleanHeapDataPacked peano::heap::records::BooleanHeapDat
             _log.error( "receive(int)", msg.str() );
          }
          
-         result = MPI_Test( sendRequestHandle, &flag, &status );
+         result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
          while (!flag) {
             if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
             if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
                msg << "testing for finished receive task for peano::heap::records::BooleanHeapData failed: "
@@ -469,69 +538,141 @@ peano::heap::records::BooleanHeapData peano::heap::records::BooleanHeapDataPacke
    
    void peano::heap::records::BooleanHeapDataPacked::initDatatype() {
       {
-         BooleanHeapDataPacked dummyBooleanHeapDataPacked;
+         BooleanHeapDataPacked dummyBooleanHeapDataPacked[2];
          
+         #ifdef MPI2
          const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
          MPI_Datatype subtypes[Attributes] = {
-              MPI_CHAR		 //u
+              MPI_CXX_BOOL		 //u
+            #ifndef MPI2
+            , MPI_UB
+            #endif
             
          };
          
          int blocklen[Attributes] = {
               1		 //u
+            #ifndef MPI2
+            , 1
+            #endif
             
          };
          
-         MPI_Aint     disp[Attributes];
-         
-         MPI_Aint base;
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked))), &base);
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
+         #ifdef MPI2
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(BooleanHeapDataPacked)), i, disp[i], Attributes, sizeof(BooleanHeapDataPacked));
          }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
          MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &BooleanHeapDataPacked::Datatype );
          MPI_Type_commit( &BooleanHeapDataPacked::Datatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &BooleanHeapDataPacked::Datatype);
+         MPI_Type_commit( &BooleanHeapDataPacked::Datatype );
+         #endif
          
       }
       {
-         BooleanHeapDataPacked dummyBooleanHeapDataPacked;
+         BooleanHeapDataPacked dummyBooleanHeapDataPacked[2];
          
+         #ifdef MPI2
          const int Attributes = 1;
+         #else
+         const int Attributes = 2;
+         #endif
          MPI_Datatype subtypes[Attributes] = {
-              MPI_CHAR		 //u
+              MPI_CXX_BOOL		 //u
+            #ifndef MPI2
+            , MPI_UB
+            #endif
             
          };
          
          int blocklen[Attributes] = {
               1		 //u
+            #ifndef MPI2
+            , 1
+            #endif
             
          };
          
-         MPI_Aint     disp[Attributes];
-         
-         MPI_Aint base;
+         MPI_Aint  disp[Attributes];
+         MPI_Aint  base;
+         #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked))), &base);
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked))), &base);
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[0]._persistentRecords._u))), 		&disp[0] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
+         #else
+         for (int i=1; i<Attributes-1; i++) {
+         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
+         #ifdef MPI2
          for (int i=0; i<Attributes; i++) {
-            disp[i] -= base; // disp[i] -= base; // disp[i] -= base; // disp[i] = MPI_Aint_diff(disp[i], base);
+         #else
+         for (int i=0; i<Attributes-1; i++) {
+         #endif
+            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
+            assertion4(disp[i]<static_cast<int>(sizeof(BooleanHeapDataPacked)), i, disp[i], Attributes, sizeof(BooleanHeapDataPacked));
          }
+         #ifndef MPI2
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyBooleanHeapDataPacked[1]))), 		&disp[1] );
+         disp[1] -= base;
+         disp[1] += disp[0];
+         #endif
+         #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
          MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
          MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &BooleanHeapDataPacked::FullDatatype );
          MPI_Type_commit( &BooleanHeapDataPacked::FullDatatype );
+         #else
+         MPI_Type_struct( Attributes, blocklen, disp, subtypes, &BooleanHeapDataPacked::FullDatatype);
+         MPI_Type_commit( &BooleanHeapDataPacked::FullDatatype );
+         #endif
          
       }
       
@@ -561,7 +702,6 @@ peano::heap::records::BooleanHeapData peano::heap::records::BooleanHeapDataPacke
       else {
       
          MPI_Request* sendRequestHandle = new MPI_Request();
-         MPI_Status   status;
          int          flag = 0;
          int          result;
          
@@ -593,11 +733,11 @@ peano::heap::records::BooleanHeapData peano::heap::records::BooleanHeapDataPacke
             << ": " << tarch::parallel::MPIReturnValueToString(result);
             _log.error( "send(int)",msg.str() );
          }
-         result = MPI_Test( sendRequestHandle, &flag, &status );
+         result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
          while (!flag) {
             if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
             if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
                msg << "testing for finished send task for peano::heap::records::BooleanHeapDataPacked "
@@ -628,9 +768,9 @@ peano::heap::records::BooleanHeapData peano::heap::records::BooleanHeapDataPacke
                "send(int)", destination,tag,1
                );
             }
-            tarch::parallel::Node::getInstance().receiveDanglingMessages();
-            usleep(communicateSleep);
             
+         tarch::parallel::Node::getInstance().receiveDanglingMessages();
+         usleep(communicateSleep);
          }
          
          delete sendRequestHandle;
@@ -647,8 +787,7 @@ peano::heap::records::BooleanHeapData peano::heap::records::BooleanHeapDataPacke
    void peano::heap::records::BooleanHeapDataPacked::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep) {
       if (communicateSleep<0) {
       
-         MPI_Status  status;
-         const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &status);
+         const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), MPI_STATUS_IGNORE);
          if ( result != MPI_SUCCESS ) {
             std::ostringstream msg;
             msg << "failed to start to receive peano::heap::records::BooleanHeapDataPacked from node "
@@ -660,7 +799,6 @@ peano::heap::records::BooleanHeapData peano::heap::records::BooleanHeapDataPacke
       else {
       
          MPI_Request* sendRequestHandle = new MPI_Request();
-         MPI_Status   status;
          int          flag = 0;
          int          result;
          
@@ -689,11 +827,11 @@ peano::heap::records::BooleanHeapData peano::heap::records::BooleanHeapDataPacke
             _log.error( "receive(int)", msg.str() );
          }
          
-         result = MPI_Test( sendRequestHandle, &flag, &status );
+         result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
          while (!flag) {
             if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
             if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-            result = MPI_Test( sendRequestHandle, &flag, &status );
+            result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
             if (result!=MPI_SUCCESS) {
                std::ostringstream msg;
                msg << "testing for finished receive task for peano::heap::records::BooleanHeapDataPacked failed: "

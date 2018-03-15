@@ -34,7 +34,7 @@ namespace peano {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   21/03/2017 02:03
+ * @date   15/03/2018 11:38
  */
 class peano::parallel::messages::LoadBalancingMessage { 
    
@@ -66,139 +66,136 @@ class peano::parallel::messages::LoadBalancingMessage {
          
          
       };
-      
-   private: 
-      PersistentRecords _persistentRecords;
-      
-   public:
-      /**
-       * Generated
-       */
-      LoadBalancingMessage();
-      
-      /**
-       * Generated
-       */
-      LoadBalancingMessage(const PersistentRecords& persistentRecords);
-      
-      /**
-       * Generated
-       */
-      LoadBalancingMessage(const int& loadBalancingFlag);
-      
-      /**
-       * Generated
-       */
-      virtual ~LoadBalancingMessage();
-      
-      /**
-       * Generated
-       */
-       int getLoadBalancingFlag() const ;
-      
-      /**
-       * Generated
-       */
-       void setLoadBalancingFlag(const int& loadBalancingFlag) ;
-      
-      /**
-       * Generated
-       */
-      std::string toString() const;
-      
-      /**
-       * Generated
-       */
-      void toString(std::ostream& out) const;
-      
-      
-      PersistentRecords getPersistentRecords() const;
-      /**
-       * Generated
-       */
-      LoadBalancingMessagePacked convert() const;
-      
-      
-   #ifdef Parallel
-      protected:
-         static tarch::logging::Log _log;
-         
-         int _senderDestinationRank;
+      private: 
+         PersistentRecords _persistentRecords;
          
       public:
+         /**
+          * Generated
+          */
+         LoadBalancingMessage();
          
          /**
-          * Global that represents the mpi datatype.
-          * There are two variants: Datatype identifies only those attributes marked with
-          * parallelise. FullDatatype instead identifies the whole record with all fields.
+          * Generated
           */
-         static MPI_Datatype Datatype;
-         static MPI_Datatype FullDatatype;
+         LoadBalancingMessage(const PersistentRecords& persistentRecords);
          
          /**
-          * Initializes the data type for the mpi operations. Has to be called
-          * before the very first send or receive operation is called.
+          * Generated
           */
-         static void initDatatype();
-         
-         static void shutdownDatatype();
+         LoadBalancingMessage(const int& loadBalancingFlag);
          
          /**
-          * @param communicateSleep -1 Data exchange through blocking mpi
-          * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-          * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+          * Generated
           */
-         void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+         virtual ~LoadBalancingMessage();
          
-         void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+         /**
+          * Generated
+          */
+          int getLoadBalancingFlag() const ;
          
-         static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+         /**
+          * Generated
+          */
+          void setLoadBalancingFlag(const int& loadBalancingFlag) ;
          
-         int getSenderRank() const;
+         /**
+          * Generated
+          */
+         std::string toString() const;
          
-   #endif
-      
-   };
+         /**
+          * Generated
+          */
+         void toString(std::ostream& out) const;
+         
+         
+         PersistentRecords getPersistentRecords() const;
+         /**
+          * Generated
+          */
+         LoadBalancingMessagePacked convert() const;
+         
+         
+      #ifdef Parallel
+         protected:
+            static tarch::logging::Log _log;
+            
+            int _senderDestinationRank;
+            
+         public:
+            
+            /**
+             * Global that represents the mpi datatype.
+             * There are two variants: Datatype identifies only those attributes marked with
+             * parallelise. FullDatatype instead identifies the whole record with all fields.
+             */
+            static MPI_Datatype Datatype;
+            static MPI_Datatype FullDatatype;
+            
+            /**
+             * Initializes the data type for the mpi operations. Has to be called
+             * before the very first send or receive operation is called.
+             */
+            static void initDatatype();
+            
+            static void shutdownDatatype();
+            
+            /**
+             * @param communicateSleep -1 Data exchange through blocking mpi
+             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+             */
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            
+            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            
+            int getSenderRank() const;
+            #endif
    
-   /**
-    * @author This class is generated by DaStGen
-    * 		   DataStructureGenerator (DaStGen)
-    * 		   2007-2009 Wolfgang Eckhardt
-    * 		   2012      Tobias Weinzierl
-    *
-    * 		   build date: 09-02-2014 14:40
-    *
-    * @date   21/03/2017 02:03
-    */
-   class peano::parallel::messages::LoadBalancingMessagePacked { 
+};
+
+/**
+ * @author This class is generated by DaStGen
+ * 		   DataStructureGenerator (DaStGen)
+ * 		   2007-2009 Wolfgang Eckhardt
+ * 		   2012      Tobias Weinzierl
+ *
+ * 		   build date: 09-02-2014 14:40
+ *
+ * @date   15/03/2018 11:38
+ */
+class peano::parallel::messages::LoadBalancingMessagePacked { 
+   
+   public:
       
-      public:
+      struct PersistentRecords {
+         int _loadBalancingFlag;
+         /**
+          * Generated
+          */
+         PersistentRecords();
          
-         struct PersistentRecords {
-            int _loadBalancingFlag;
-            /**
-             * Generated
-             */
-            PersistentRecords();
-            
-            /**
-             * Generated
-             */
-            PersistentRecords(const int& loadBalancingFlag);
-            
-            /**
-             * Generated
-             */
-             int getLoadBalancingFlag() const ;
-            
-            /**
-             * Generated
-             */
-             void setLoadBalancingFlag(const int& loadBalancingFlag) ;
-            
-            
-         };
+         /**
+          * Generated
+          */
+         PersistentRecords(const int& loadBalancingFlag);
          
+         /**
+          * Generated
+          */
+          int getLoadBalancingFlag() const ;
+         
+         /**
+          * Generated
+          */
+          void setLoadBalancingFlag(const int& loadBalancingFlag) ;
+         
+         
+      };
       private: 
          PersistentRecords _persistentRecords;
          
@@ -287,10 +284,9 @@ class peano::parallel::messages::LoadBalancingMessage {
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             
             int getSenderRank() const;
-            
-      #endif
-         
-      };
-      
-      #endif
-      
+            #endif
+   
+};
+
+#endif
+
