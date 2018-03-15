@@ -26,6 +26,8 @@ namespace tarch {
 }
 
 
+
+
 namespace mpibalancing {
   namespace tests {
     class SFCDiffusionNodePoolStrategyTest;
@@ -41,15 +43,16 @@ namespace mpibalancing {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   29/05/2017 17:00
+ * @date   15/03/2018 11:31
  */
 class tarch::parallel::messages::WorkerRequestMessage { 
    
    public:
-      friend class mpibalancing::tests::SFCDiffusionNodePoolStrategyTest;
-
+      
       typedef tarch::parallel::messages::WorkerRequestMessagePacked Packed;
       
+      
+      friend class mpibalancing::tests::SFCDiffusionNodePoolStrategyTest;
       struct PersistentRecords {
          int _numberOfRequestedWorkers;
          /**
@@ -174,12 +177,14 @@ class tarch::parallel::messages::WorkerRequestMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   29/05/2017 17:00
+ * @date   15/03/2018 11:31
  */
 class tarch::parallel::messages::WorkerRequestMessagePacked { 
    
    public:
       
+      
+      friend class mpibalancing::tests::SFCDiffusionNodePoolStrategyTest;
       struct PersistentRecords {
          int _numberOfRequestedWorkers;
          /**
