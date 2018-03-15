@@ -7,8 +7,6 @@
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
-#include "tarch/multicore/BooleanSemaphore.h"
-#include "tarch/multicore/RecursiveSemaphore.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 #include "peano/parallel/SendReceiveBuffer.h"
@@ -18,7 +16,7 @@
  * thread to receive data in the background.
  */
 #if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
-#define MPIUsesItsOwnThread
+//#define MPIUsesItsOwnThread
 #endif
 
 
@@ -92,8 +90,6 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
     #endif
 
     static tarch::logging::Log _log;
-
-    tarch::multicore::RecursiveSemaphore  _semaphore;
 
     /**
      * Set by the constructor and then never changed again.

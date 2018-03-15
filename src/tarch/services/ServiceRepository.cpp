@@ -1,5 +1,7 @@
 #include "tarch/services/ServiceRepository.h"
 #include "tarch/Assertions.h"
+#include "tarch/multicore/RecursiveLock.h"
+
 
 #include <sstream>
 
@@ -47,6 +49,8 @@ bool tarch::services::ServiceRepository::hasService( Service* service ) const {
 
 
 void tarch::services::ServiceRepository::receiveDanglingMessages() {
+  tarch::multicore::RecursiveLock lock(Service::receiveDanglingMessagesSemaphore);
+
   for (
       ServiceContainer::iterator p = _services.begin();
       p != _services.end();

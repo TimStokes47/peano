@@ -31,7 +31,6 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
   #ifdef MPIUsesItsOwnThread
   _backgroundThread(nullptr),
   #endif
-  _semaphore(),
   _iterationManagementTag(MPI_ANY_TAG),
   _iterationDataTag(MPI_ANY_TAG),
   _bufferSize(0),
@@ -68,7 +67,11 @@ peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
   }
   #endif
 
-  tarch::multicore::RecursiveLock lock(SendReceiveBufferPool::getInstance()._semaphore);
+  // Don't use the semaphore here as the pool is static and thus might be shut
+  // down after the shared memory environment is already down
+  //
+  // tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
+
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     std::cerr << "encountered open buffer for destination " << p->first << " on rank " << tarch::parallel::Node::getInstance().getRank() <<  ". Would be nicer to call terminate() on SendReceiveBufferPool." << std::endl;
     delete p->second;
@@ -116,8 +119,6 @@ int peano::parallel::SendReceiveBufferPool::getIterationDataTag() const {
 
 
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
-  tarch::multicore::RecursiveLock lock(SendReceiveBufferPool::getInstance()._semaphore);
-
   #if defined(MPIUsesItsOwnThread)
   if (_backgroundThread==nullptr) {
     _backgroundThread = new BackgroundThread();
@@ -142,7 +143,8 @@ void peano::parallel::SendReceiveBufferPool::terminate() {
   }
   #endif
 
-  tarch::multicore::RecursiveLock lock(SendReceiveBufferPool::getInstance()._semaphore);
+  tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
+
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     assertion1(  p->first >= 0, tarch::parallel::Node::getInstance().getRank() );
     assertion1( _map.count(p->first) == 1, tarch::parallel::Node::getInstance().getRank() );
@@ -171,7 +173,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
   logTraceInWith1Argument( "releaseMessages()", toString(_mode) );
 
-  tarch::multicore::RecursiveLock lock(SendReceiveBufferPool::getInstance()._semaphore);
+  tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
 
   logInfo( "releaseMessages()", "release the sent messages" );
   std::map<int,SendReceiveBuffer*>::iterator p = _map.begin();

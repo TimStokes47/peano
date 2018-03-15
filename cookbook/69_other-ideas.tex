@@ -1,82 +1,161 @@
-\section{Alignment, vectorisation, \ldots}
+\section{Compiler-based optimisation}
 
 \chapterDescription
   {
-    5 minutes.
+    5 minutes
   }
   {
-    A working code heavily using Peano's heaps.
   }
 
 
-In this section, we discuss various aspects tied to alignment and vectorisation. 
+Peano's implementation can be tailed by tons of different compile options. 
+At the end of the day, one might have to tailor them on a per-project base. 
+As the settings first of all are tied to a particular machine (besides an
+application), Peano collects all magic variables within a file called
+{\em CompilerSpecificSettings.h}.
+For some default platforms, we provide meaningful results.
+All of these settings however can be overwritten no the command line.
 
 
-\subsection{Vectorisation of basic linear algebra}
+\subsection*{Single core}
 
-Peano does come along with its own small technical architecture (\texttt{tarch})
-that holds some basic linear algebra routines. These routines currently are
-vectorised via Intel's SIMD pragmas. The pragmas are active if and only if the
-define \texttt{CompilerICC} is set. 
+\begin{center}
+ \begin{tabular}{p{2cm}p{2cm}p{9.5cm}}
+  Compile flag (default) & Alternative & Description \\
+  \hline
+  {\footnotesize Use\-Manual\-Inlining} 
+  & 
+  {\footnotesize noUse\-Manual\-Inlining} 
+  &
+  Compilers are known to implement good heuristics which routines to inline and
+  which not to inline. We however found that some compiler struggle with some
+  parts of Peano. For these parts, we have added compiler-specific annotations
+  that force the compiler to inline. Obviously, the identification of critical
+  code parts has been done for few benchmarks only and it might happen that they 
+  are invalid or even contra-productive for some applications. 
+  \\
+  \hline
+ \end{tabular}
+\end{center}
+  
 
-All linear algebra routines (and various other parts of the code) include the
-file \linebreak
-\texttt{tarch/compiler/CompilerSpecificSettings.h}.
-This header evaluates various compiler predefines and tries to identify on which
-machine you compile.
-It then includes a compiler-specific include file which sets flags alike 
-\texttt{CompilerICC} if an Intel compiler is found.
+\subsection*{Shared memory}
 
-For cross-compilation or tuning of your settings, it might be reasonable to
-either adopt the spec file or to write your own header file which
-defines/undefines certain compiler settings.
+\begin{center}
+ \begin{tabular}{p{2cm}p{2cm}p{8cm}l}
+  Compile flag (default) & Alternative & Description & Target \\
+  \hline
+  {\footnotesize UseTBBs\-Parallel\-For\-And\-Reduce} 
+  & 
+  {\footnotesize noUse\-TBBs\-Parallel\-For\-And\-Reduce} 
+  &
+  Different to TBB, Peano's internal task/job system literally is based on
+  tasks only. That is, also parallel loops are mapped onto job spawning. For
+  TBB-based codes, we found that such a realisation is sometimes disadvantageous
+  for larger core counts. The flag allows us to toggle the implementation. 
+  & TBB
+  \\
+  \hline
+ \end{tabular}
+\end{center}
+  
+  
+  
+\subsection*{Distributed memory}
+
+\begin{center}
+ \begin{tabular}{p{2cm}p{2cm}p{9.5cm}l}
+  Compile flag (default) & Alternative & Description \\
+  \hline
+  {\footnotesize MPI\-Progression\-Relies\-On\-MPI\-Test} 
+  & 
+  {\footnotesize noMPI\-Progression\-Relies\-On\-MPI\-Test} 
+  &
+  Some MPI implementations struggle to transfer data in the background of the
+  simulation run. In this case, one has to call \texttt{MPI\_Test} over an over
+  again. Each test call allows MPI to progress some messages. Obviously,
+  these calls do not come for free and impose some overhead, too. The flag
+  allows users to disable/enable this test polling. Unless not pinned
+  explicitly to one thread (see below), Peano's hybrid implementation
+  distributes the tests to the cores, i.e.~hardware threads call 
+  \texttt{MPI\_Test} whenever they become idle.
+  \\
+  \hline
+ \end{tabular}
+\end{center}
 
 
-\subsection{Alignment of heap data}
+\noindent
+No following variables are by default set to 0. 
+  
+  
+%            /**
+%           * @param communicateSleep -1 Data exchange through blocking mpi
+%           * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
+%           * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+%           */
+  
+  
+%   #ifndef SendWorkerMasterMessagesBlocking
+%  #define SendWorkerMasterMessagesBlocking     0
+% #endif
+% #ifndef SendMasterWorkerMessagesBlocking
+%  #define SendMasterWorkerMessagesBlocking     0
+% #endif
+% #ifndef ReceiveMasterMessagesBlocking
+%  #define ReceiveMasterMessagesBlocking        0
+% #endif
+% #ifndef SendAndReceiveLoadBalancingMessagesBlocking
+%  #define SendAndReceiveLoadBalancingMessagesBlocking    0
+% #endif
+% #ifndef ReceiveIterationControlMessagesBlocking
+%  #define ReceiveIterationControlMessagesBlocking        0
+% #endif
+% #ifndef BroadcastToIdleNodesBlocking
+%  #define BroadcastToIdleNodesBlocking                   0
+% #endif
+% #ifndef BroadcastToWorkingNodesBlocking
+%  #define BroadcastToWorkingNodesBlocking                0
+% #endif
+% #ifndef SendHeapMetaDataBlocking
+%  #define SendHeapMetaDataBlocking                       0
+% #endif
+% #ifndef SendAndReceiveHeapSynchronousDataBlocking
+%  #define SendAndReceiveHeapSynchronousDataBlocking      0
+% #endif
+%   
+\subsection*{MPI+X}
 
-Most codes managing larger double arrays within Peano use Peano's heap to do so. 
-By default, the heap relies on the \texttt{std::vector} class and its embedded 
-plain C++ array. 
-By default, heap data is not aligned.
+\begin{center}
+ \begin{tabular}{p{2cm}p{2cm}p{8cm}l}
+  Compile flag (default) & Alternative & Description & Target \\
+  \hline
+%   {\footnotesize MPI\-Progression\-Relies\-On\-MPI\-Test} 
+%   & 
+%   {\footnotesize noMPI\-Progression\-Relies\-On\-MPI\-Test} 
+%   &
+%   Some MPI implementations struggle to transfer data in the background of the
+%   simulation run. In this case, one has to call \texttt{MPI\_Test} over an over
+%   again. Each test call allows MPI to progress some messages. Obviously,
+%   these calls do not come for free and impose some overhead, too. The flag
+%   allows users to disable/enable this test polling. Unless not pinned
+%   explicitly to one thread (see below), Peano's hybrid implementation
+%   distributes the tests to the cores, i.e.~hardware threads call 
+%   \texttt{MPI\_Test} whenever they become idle.
+%   & MPI
+  \\
+  \hline
+ \end{tabular}
+\end{center}
 
-
-For the heaps hosting doubles, Peano however offers aligned variants. See the
-file \linebreak
-\texttt{peano/heap/DoubleHeap.h} for examples. 
-There are a few predefined (typedefs) heaps, but you might want to define your
-own.
-
-
-Once you use the aligned heaps for your \texttt{double} data, its interface
-provides you access to standard C++ \texttt{std::vector<double>} objects.
-These objects have a \texttt{data()} operation through which you can get a 
-pointer to an aligned double array.
-
-\begin{code}
-typedef peano::heap::RLEDoubleHeapAlignment64  MyDoubleHeap;
-
-double* x = MyDoubleHeap::getInstance().getData(myIndex).data();
-
-// x is now aligned to 64 bytes.
-\end{code}
-
-
-% Alle Optionen von PeanoOptimisations.h durchgehen
 %
-%
 
-%Become topology-aware
+\noindent
+Please note that all parameters are written without hyphens, i.e.~a parameter
+alike \texttt{noTrippleX} which is written as no-Tripple-X in the table above is
+switched on on the compiler level through \texttt{-DTrippleX} and disabled
+through \texttt{-DnoTrippleX}.
 
 
-% Throughout the bottom-up traversal, each mpi traversal first receives data from 
-% all its children, i.e. data deployed to remote traversals, and afterward sends 
-% data to its master in turn. Unfortunately, Peano has to do quite some 
-% algorithmic work after the last children record has been received if and only 
-% if some subtrees are also to be traversed locally. It hence might make sense to
-% introduce pure administrative ranks that do not take over any computation on the finest grid level. 
-% Again, we do a brief 1d toy case study:
-% 
-% foobar
-% 
-% In the upper case, the blue rank triggers the red one to traverse its subtree. The red one in turn tiggers 3 and 4. Afterward, it continues with 2 and then waits for 3 and 4 to finish. After the records from 3 and 4 have been received, it has to send its data to 0 to allow 0 to terminate the global traversal. However, between the last receive and the send, some administrative work has to be done, as the red node also holds local work (it has to run through the embedding cells to get the ordering of the boundary data exchange right, but that's irrelevant from a user point of view). This way, we've introduced an algorithmic latency: Some time elaps between 3 and 4 sending their data and the red one continuing with the data flow up the tree. This latency becomes severe for deep Splittings.
+
 

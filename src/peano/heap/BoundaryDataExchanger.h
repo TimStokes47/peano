@@ -5,8 +5,6 @@
 
 
 
-#include "tarch/multicore/BooleanSemaphore.h"
-#include "tarch/multicore/RecursiveSemaphore.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
@@ -15,7 +13,7 @@
  * thread to receive data in the background.
  */
 #if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread) && !defined(noMPIHeapUsesItsOwnThread)
-#define MPIHeapUsesItsOwnThread
+//#define MPIHeapUsesItsOwnThread
 #endif
 
 
@@ -61,14 +59,6 @@ class peano::heap::BoundaryDataExchanger {
         static std::string toString(State state);
       private:
         BoundaryDataExchanger*              _boundaryDataExchanger;
-
-/*
-      // @todo Remove stuff not just comment it out.
-
-      #ifdef Asserts
-      public:
-      #endif
-*/
         State                               _state;
 
         BackgroundThread(const BackgroundThread&) = delete;
@@ -89,8 +79,6 @@ class peano::heap::BoundaryDataExchanger {
     const int            _metaDataTag;
     const int            _dataTag;
     const int            _rank;
-
-    tarch::multicore::RecursiveSemaphore  _semaphore;
 
     std::list<SendReceiveTaskType >   _sendTasks;
     std::list<SendReceiveTaskType >   _receiveTasks[2];

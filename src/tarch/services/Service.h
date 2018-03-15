@@ -7,6 +7,8 @@
   static tarch::services::ServiceFactory<name> thisServiceFactoryInstance( #name );
 
 
+#include "tarch/multicore/RecursiveSemaphore.h"
+
 
 namespace tarch {
   namespace services {
@@ -48,6 +50,16 @@ class tarch::services::Service {
     virtual ~Service() {};
 
     virtual void receiveDanglingMessages() = 0;
+
+    /**
+     * Sometimes it is possible to ensure that receiveDanglingMessages is not
+     * ran in parallel with other operations on one rank. This notably holds
+     * for MPI updates or updates of lists of MPIRequests. Use this semaphore
+     * to ensure your data protection. The ServiceRepository does already lock
+     * it, so receiveDanglingMessages() invoked through the factory should be
+     * fine. You might however want to lock it yourself, too.
+     */
+	static tarch::multicore::RecursiveSemaphore  receiveDanglingMessagesSemaphore;
 };
 
 #endif

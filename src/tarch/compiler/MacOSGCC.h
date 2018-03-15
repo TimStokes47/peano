@@ -29,23 +29,46 @@
 #define MultipleThreadsMayTriggerMPICalls
 #endif
 
-#define SendWorkerMasterMessagesBlocking     0
-#define SendMasterWorkerMessagesBlocking     0
-#define ReceiveMasterMessagesBlocking        0
-#define SendAndReceiveLoadBalancingMessagesBlocking    0
-#define ReceiveIterationControlMessagesBlocking        0
-#define BroadcastToIdleNodesBlocking                   0
-#define BroadcastToWorkingNodesBlocking                0
-#define SendHeapMetaDataBlocking                       0
-#define SendAndReceiveHeapSynchronousDataBlocking      0
+#ifndef SendWorkerMasterMessagesBlocking
+ #define SendWorkerMasterMessagesBlocking     0
+#endif
+#ifndef SendMasterWorkerMessagesBlocking
+ #define SendMasterWorkerMessagesBlocking     0
+#endif
+#ifndef ReceiveMasterMessagesBlocking
+ #define ReceiveMasterMessagesBlocking        0
+#endif
+#ifndef SendAndReceiveLoadBalancingMessagesBlocking
+ #define SendAndReceiveLoadBalancingMessagesBlocking    0
+#endif
+#ifndef ReceiveIterationControlMessagesBlocking
+ #define ReceiveIterationControlMessagesBlocking        0
+#endif
+#ifndef BroadcastToIdleNodesBlocking
+ #define BroadcastToIdleNodesBlocking                   0
+#endif
+#ifndef BroadcastToWorkingNodesBlocking
+ #define BroadcastToWorkingNodesBlocking                0
+#endif
+#ifndef SendHeapMetaDataBlocking
+ #define SendHeapMetaDataBlocking                       0
+#endif
+#ifndef SendAndReceiveHeapSynchronousDataBlocking
+ #define SendAndReceiveHeapSynchronousDataBlocking      0
+#endif
 
 
 
-#ifndef noManualInlining
+#if !defined(UseManualInlining) &&  !defined(noUseManualInlining)
 #define UseManualInlining
 #endif
 
 #define LittleEndian
 
+#if !defined(MPIProgressionReliesOnMPITest) &&  !defined(noMPIProgressionReliesOnMPITest)
 #define MPIProgressionReliesOnMPITest
+#endif
 
+#if !defined(UseTBBsParallelForAndReduce) &&  !defined(noUseTBBsParallelForAndReduce)
+#define UseTBBsParallelForAndReduce
+#endif

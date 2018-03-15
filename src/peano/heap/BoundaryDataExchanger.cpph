@@ -3,6 +3,7 @@
 #include "peano/datatraversal/TaskSet.h"
 #include "peano/performanceanalysis/ScorePMacros.h"
 #include "tarch/multicore/RecursiveLock.h"
+#include "tarch/services/Service.h"
 
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
@@ -94,7 +95,7 @@ template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::startToSendData(bool isTraversalInverted) {
   logTraceInWith1Argument( "startToSendData(bool)", isTraversalInverted );
 
-  tarch::multicore::RecursiveLock lock(_semaphore);
+  tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
 
   assertion(_currentReceiveBuffer>=0);
   assertion(_currentReceiveBuffer<=1);
@@ -240,7 +241,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
   _wasTraversalInvertedThroughoutLastSendReceiveTraversal = isTraversalInverted;
 
-  tarch::multicore::RecursiveLock lock(_semaphore);
+  tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
   postprocessFinishedToSendData();
 
   logTraceOut( "finishedToSendData(bool)" );
@@ -249,8 +250,6 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::receiveDanglingMessages() {
-  tarch::multicore::RecursiveLock lock(_semaphore);
-
   #if defined(MPIHeapUsesItsOwnThread)
   if (_backgroundThread==nullptr) {
 /*
@@ -336,7 +335,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
   sendTask._metaInformation.setLength(count);
 
-  tarch::multicore::RecursiveLock lock(_semaphore);
+  tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
   handleAndQueueSendTask( sendTask, data );
 
   _numberOfSentMessages += 1;
@@ -501,7 +500,7 @@ template <class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::switchReceiveAndDeployBuffer(int numberOfMessagesSentThisIteration) {
   assertion(_receiveTasks[1-_currentReceiveBuffer].empty());
 
-  tarch::multicore::RecursiveLock lock(_semaphore);
+  tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
 
   _currentReceiveBuffer = 1-_currentReceiveBuffer;
 
@@ -588,7 +587,7 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   assertionMsg( false, "not never enter this operator" );
   #endif
 
-  tarch::multicore::RecursiveLock lock(_boundaryDataExchanger->_semaphore);
+  tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
   bool result = true;
 
   switch (_state) {

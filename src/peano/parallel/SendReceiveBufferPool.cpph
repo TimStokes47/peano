@@ -10,6 +10,7 @@
 
 
 #include "tarch/multicore/RecursiveLock.h"
+#include "tarch/services/Service.h"
 
 
 template <class Vertex>
@@ -54,7 +55,7 @@ void peano::parallel::SendReceiveBufferPool::createBufferManually(int toRank, co
       newBuffer = new BufferType( toRank, _bufferSize );
     }
 
-    tarch::multicore::RecursiveLock lock(_semaphore);
+    tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
     _map.insert(
       std::pair<int,SendReceiveBuffer*>( toRank,newBuffer )
     );
