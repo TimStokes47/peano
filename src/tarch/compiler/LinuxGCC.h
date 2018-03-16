@@ -49,10 +49,10 @@
 #endif
 
 
-
 #if !defined(UseManualInlining) &&  !defined(noUseManualInlining)
 #define UseManualInlining
 #endif
+
 
 #define LittleEndian
 
@@ -67,3 +67,26 @@
 #endif
 
 
+#if defined(MultipleThreadsMayTriggerMPICalls) && !defined(noMPIHeapUsesItsOwnThread) && !defined(MPIHeapUsesItsOwnThread)
+#define MPIHeapUsesItsOwnThread
+#endif
+
+
+#if defined(MultipleThreadsMayTriggerMPICalls) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
+#define MPIUsesItsOwnThread
+#endif
+
+
+#if !defined(BooleanSemaphoreUsesASpinLock) && !defined(noBooleanSemaphoreUsesASpinLock)
+#define BooleanSemaphoreUsesASpinLock
+#endif
+
+
+#if !defined(JobQueueUsesSpinLockInsteadOfMutex) && !defined(noJobQueueUsesSpinLockInsteadOfMutex)
+#define JobQueueUsesSpinLockInsteadOfMutex
+#endif
+
+
+#if !defined(JobQueueUsesStackOfBefilledQueues) && !defined(noJobQueueUsesStackOfBefilledQueues)
+#define JobQueueUsesStackOfBefilledQueues
+#endif

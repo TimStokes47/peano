@@ -56,9 +56,39 @@ All of these settings however can be overwritten no the command line.
   & TBB
   \\
   \hline
+  {\footnotesize Boolean\-Semaphore\-Uses\-A\-Spin\-Lock} 
+  & 
+  {\footnotesize noBoolean\-Semaphore\-Uses\-A\-Spin\-Lock} 
+  &
+  The boolean semaphore is either implemented as C++14 \texttt{mutex} or as spin
+  lock. The choice of the implementation is made through this compile option.
+  &
+  C++14
+  \\
+  \hline
+  {\footnotesize Job\-Queue\-Uses\-Spin\-Lock\-Instead\-Of\-Mutex} 
+  & 
+  {\footnotesize noJob\-Queue\-Uses\-Spin\-Lock\-Instead\-Of\-Mutex} 
+  &
+  Job queue modifications typically last longer and thus are by default
+  protected by a mutex. Howeveer, you may also prefer spin locks.
+  &
+  C++14
+  \\ 
+  \hline
+  {\footnotesize Job\-Queue\-Uses\-Stack\-Of\-Befilled\-Queues} 
+  & 
+  {\footnotesize noJob\-Queue\-Uses\-Stack\-Of\-Befilled\-Queues} 
+  &
+  By default, the job queue memorises only which queue saw the last insert. Any
+  job stealing then targets first of all the queue with the last insert.
+  Alternatively, one can ask the queues/runtime system to hold a stack of recent
+  inserts and to work through this stack.
+  & C++14
+  \\
+  \hline
  \end{tabular}
 \end{center}
-  
   
   
 \subsection*{Distributed memory}
@@ -136,10 +166,32 @@ from starvation.
    & MPI+X
   \\
   \hline
+   {\footnotesize MPI\-Uses\-Its\-Own\-Thread} 
+   & 
+   {\footnotesize noMPI\-Uses\-Its\-Own\-Thread} 
+   &
+   The sends and receives along the domain boundary are now pulled by tasks of
+   its own. Whenever a core starts to idle, it invokes \texttt{MPI\_Test} or
+   probes whether there are new messages. This helps to progress MPI messages in
+   the background of the actual simulation.   
+   & MPI+X
+  \\
+  \hline
+   {\footnotesize MPI\-Heap\-Uses\-Its\-Own\-Thread} 
+   & 
+   {\footnotesize noMPI\-Heap\-Uses\-Its\-Own\-Thread} 
+   &
+   Counterpart of flag above which applies to heap data only whereas the above
+   flag affects boundary, i.e.~grid, data only. Please note that Peano creates
+   one job per heap type. If you have many heaps, then many background tasks for
+   the MPI processing are used.
+   & MPI+X
+  \\
+  \hline
  \end{tabular}
 \end{center}
 
-%
+
 
 \noindent
 Please note that all parameters are written without hyphens, i.e.~a parameter

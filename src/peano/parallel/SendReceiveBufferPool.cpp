@@ -128,6 +128,8 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
 
   SCOREP_USER_REGION("peano::parallel::SendReceiveBufferPool::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
+  tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
+
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
     logDebug( "receiveDanglingMessagesFromAllBuffersInPool()", "receive data from rank " << p->first << " in mode " << toString(_mode) );
     p->second->receivePageIfAvailable();

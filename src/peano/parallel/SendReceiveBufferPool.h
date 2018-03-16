@@ -11,13 +11,6 @@
 
 #include "peano/parallel/SendReceiveBuffer.h"
 
-/**
- * With this ifdef, we can define whether the pool shall use a dedicated
- * thread to receive data in the background.
- */
-#if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
-//#define MPIUsesItsOwnThread
-#endif
 
 
 

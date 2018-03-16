@@ -8,16 +8,6 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
-/**
- * With this ifdef, we can define whether the pool shall use a dedicated
- * thread to receive data in the background.
- */
-#if defined(SharedMemoryParallelisation) && defined(MultipleThreadsMayTriggerMPICalls) && defined(Parallel) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread) && !defined(noMPIHeapUsesItsOwnThread)
-//#define MPIHeapUsesItsOwnThread
-#endif
-
-
-
 namespace peano {
   namespace heap {
     template<class Data, class SendReceiveTaskType, class VectorContainer>

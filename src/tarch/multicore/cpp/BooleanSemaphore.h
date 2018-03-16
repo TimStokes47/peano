@@ -9,6 +9,9 @@
 #include <atomic>
 
 
+#include "tarch/compiler/CompilerSpecificSettings.h"
+
+
 namespace tarch {
   namespace multicore {
     class BooleanSemaphore;
@@ -16,8 +19,6 @@ namespace tarch {
   }
 }
 
-
-#define BooleanSemaphoreUsesASpinLock
 
 
 class tarch::multicore::BooleanSemaphore {

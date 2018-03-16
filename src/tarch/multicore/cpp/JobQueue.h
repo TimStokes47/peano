@@ -11,6 +11,7 @@
 
 
 #include "tarch/logging/Log.h"
+#include "tarch/compiler/CompilerSpecificSettings.h"
 
 
 namespace tarch {
@@ -28,9 +29,6 @@ namespace tarch {
   }
 }
 
-
-#define JobQueueUsesSpinLockInsteadOfMutex
-#define JobQueueUsesStackOfBefilledQueues
 
 
 class tarch::multicore::internal::JobQueue {
