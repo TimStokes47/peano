@@ -55,19 +55,24 @@ void tarch::multicore::parallelReduce(
   #ifdef UseTBBsParallelForAndReduce
   tbb::spin_mutex mutex;
 
-  tbb::parallel_for(
+  tbb::parallel_reduce(
  	TBBRange<1>(range),
-      [&](const TBBRange<1>& r) {
-        F copyOfFunction(function);
-        for (int i0=0; i0<r.getRange()(0); i0++) {
-          tarch::la::Vector<1,int> loc;
-          loc = i0;
-          copyOfFunction(r(loc));
-        }
+	0,
+    [&](const TBBRange<1>& r, int a)->int {
+      F copyOfFunction(function);
+      for (int i0=0; i0<r.getRange()(0); i0++) {
+        tarch::la::Vector<1,int> loc;
+        loc = i0;
+        copyOfFunction(r(loc));
+      }
 
       tbb::spin_mutex::scoped_lock lock(mutex);
       copyOfFunction.mergeIntoMasterThread();
-     },
+      return 0;
+    },
+    [](int a, int b)->int {
+	  return 0;
+	},
   	tbb::simple_partitioner()
   );
   #else
@@ -104,28 +109,24 @@ void tarch::multicore::parallelReduce(
 
 //  assertionEquals( static_cast<int>(ranges.size()), tarch::la::volume(range.getRange()) );
 
-  tbb::parallel_for(
-//    tbb::blocked_range<size_t>(0,ranges.size(),1),
+  tbb::parallel_reduce(
 	TBBRange<2>(range),
-//    [&](const tbb::blocked_range<size_t>& r) {
-    [&](const TBBRange<2>& r) {
+	0,
+    [&](const TBBRange<2>& r, int a)->int {
       F copyOfFunction(function);
-//      for(size_t i=r.begin(); i!=r.end(); ++i) {
-//        for (int i0=0; i0<ranges[i].getRange()(0); i0++)
-//        for (int i1=0; i1<ranges[i].getRange()(1); i1++)
-//        for (int i2=0; i2<ranges[i].getRange()(2); i2++)
-//        for (int i3=0; i3<ranges[i].getRange()(3); i3++) {
         for (int i0=0; i0<r.getRange()(0); i0++)
         for (int i1=0; i1<r.getRange()(1); i1++) {
      	  tarch::la::Vector<2,int> loc;
           loc = i0, i1;
-//          copyOfFunction(ranges[i](loc));
           copyOfFunction(r(loc));
         }
-//      }
 
-     tbb::spin_mutex::scoped_lock lock(mutex);
+      tbb::spin_mutex::scoped_lock lock(mutex);
       copyOfFunction.mergeIntoMasterThread();
+      return 0;
+    },
+	[](int a, int b)->int {
+      return 0;
     },
   	tbb::simple_partitioner()
   );
@@ -161,9 +162,10 @@ void tarch::multicore::parallelReduce(
   #ifdef UseTBBsParallelForAndReduce
   tbb::spin_mutex mutex;
 
-  tbb::parallel_for(
+  tbb::parallel_reduce(
 	TBBRange<3>(range),
-    [&](const TBBRange<3>& r) {
+	0,
+    [&](const TBBRange<3>& r, int a)->int {
       F copyOfFunction(function);
         for (int i0=0; i0<r.getRange()(0); i0++)
         for (int i1=0; i1<r.getRange()(1); i1++)
@@ -175,6 +177,10 @@ void tarch::multicore::parallelReduce(
 
       tbb::spin_mutex::scoped_lock lock(mutex);
       copyOfFunction.mergeIntoMasterThread();
+      return 0;
+    },
+	[](int a, int b)->int {
+      return 0;
     },
   	tbb::simple_partitioner()
   );
@@ -211,9 +217,10 @@ void tarch::multicore::parallelReduce(
   #ifdef UseTBBsParallelForAndReduce
   tbb::spin_mutex mutex;
 
-  tbb::parallel_for(
+  tbb::parallel_reduce(
 	TBBRange<4>(range),
-    [&](const TBBRange<4>& r) {
+	0,
+    [&](const TBBRange<4>& r, int a)->int {
       F copyOfFunction(function);
         for (int i0=0; i0<r.getRange()(0); i0++)
         for (int i1=0; i1<r.getRange()(1); i1++)
@@ -226,6 +233,10 @@ void tarch::multicore::parallelReduce(
 
       tbb::spin_mutex::scoped_lock lock(mutex);
       copyOfFunction.mergeIntoMasterThread();
+      return 0;
+    },
+	[](int a, int b)->int {
+      return 0;
     },
 	tbb::simple_partitioner()
   );
@@ -261,14 +272,19 @@ void tarch::multicore::parallelFor(
   F&                                     function
 ) {
   #ifdef UseTBBsParallelForAndReduce
-  tbb::parallel_for(
+  tbb::parallel_reduce(
 	 TBBRange<1>(range),
-     [&](const TBBRange<1>& r) {
+     0,
+	 [&](const TBBRange<1>& r, int a)->int {
      for (int i0=0; i0<r.getRange()(0); i0++) {
         tarch::la::Vector<1,int> loc;
         loc = i0;
         function(r(loc));
       }
+      return 0;
+    },
+	[](int a, int b)->int {
+      return 0;
     },
 	tbb::simple_partitioner()
   );
@@ -346,15 +362,20 @@ void tarch::multicore::parallelFor(
 */
 
  #ifdef UseTBBsParallelForAndReduce
-  tbb::parallel_for(
+  tbb::parallel_reduce(
 	TBBRange<2>(range),
-    [&](const TBBRange<2>& r) {
+	0,
+    [&](const TBBRange<2>& r, int a)->int {
       for (int i0=0; i0<r.getRange()(0); i0++)
       for (int i1=0; i1<r.getRange()(1); i1++) {
         tarch::la::Vector<2,int> loc;
         loc = i0, i1;
         function(r(loc));
       }
+      return 0;
+    },
+	[](int a, int b)->int {
+      return 0;
     },
 	tbb::simple_partitioner()
   );
@@ -386,9 +407,10 @@ void tarch::multicore::parallelFor(
   F&                                     function
 ) {
   #ifdef UseTBBsParallelForAndReduce
-  tbb::parallel_for(
+  tbb::parallel_reduce(
 	TBBRange<3>(range),
-    [&](const TBBRange<3>& r) {
+	0,
+    [&](const TBBRange<3>& r, int a)->int {
       for (int i0=0; i0<r.getRange()(0); i0++)
       for (int i1=0; i1<r.getRange()(1); i1++)
       for (int i2=0; i2<r.getRange()(2); i2++) {
@@ -396,6 +418,10 @@ void tarch::multicore::parallelFor(
         loc = i0, i1, i2;
         function(r(loc));
       }
+      return 0;
+    },
+	[](int a, int b)->int {
+      return 0;
     },
 	tbb::simple_partitioner()
   );
@@ -426,9 +452,10 @@ void tarch::multicore::parallelFor(
   F&                                     function
 ) {
   #ifdef UseTBBsParallelForAndReduce
-  tbb::parallel_for(
+  tbb::parallel_reduce(
 	TBBRange<4>(range),
-    [&](const TBBRange<4>& r) {
+	0,
+    [&](const TBBRange<4>& r, int a)->int {
       for (int i0=0; i0<r.getRange()(0); i0++)
       for (int i1=0; i1<r.getRange()(1); i1++)
       for (int i2=0; i2<r.getRange()(2); i2++)
@@ -437,6 +464,10 @@ void tarch::multicore::parallelFor(
         loc = i0, i1, i2, i3;
         function(r(loc));
       }
+      return 0;
+    },
+	[](int a, int b)->int {
+      return 0;
     },
 	tbb::simple_partitioner()
   );
