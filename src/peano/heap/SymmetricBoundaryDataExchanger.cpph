@@ -49,7 +49,7 @@ template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, cla
 void peano::heap::SymmetricBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType,VectorContainer>::handleEmptyMessagesInBetweenTwoRealSends() {
   logTraceInWith1Argument( "handleEmptyMessagesInBetweenTwoRealSends()", _numberOfEmptyMessagesSinceLastNonEmptySendCall );
 
-  logWarning( "handleEmptyMessagesInBetweenTwoRealSends()", "insert " << _numberOfEmptyMessagesSinceLastNonEmptySendCall << " empty task(s) into receive queue");
+  logDebug( "handleEmptyMessagesInBetweenTwoRealSends()", "insert " << _numberOfEmptyMessagesSinceLastNonEmptySendCall << " empty task(s) into receive queue");
 
   assertion( _numberOfEmptyMessagesSinceLastNonEmptySendCall>=0 );
 
@@ -93,13 +93,13 @@ void peano::heap::SymmetricBoundaryDataExchanger<Data,CreateCopiesOfSentData, Se
   _totalNumberOfSentMessagesThisTraversal++;
 
   if (sendTask._metaInformation.getLength()==0) {
-    logWarning( "handleAndQueueSendTask(...)", "was told to send out empty message, so only memorise this data" );
+    logDebug( "handleAndQueueSendTask(...)", "was told to send out empty message, so only memorise this data" );
     _numberOfEmptyMessagesSinceLastNonEmptySendCall++;
   }
   else {
     handleEmptyMessagesInBetweenTwoRealSends();
 
-    logWarning( "handleAndQueueSendTask(...)", "push back send task, skip meta data send, but trigger data send" );
+    logDebug( "handleAndQueueSendTask(...)", "push back send task, skip meta data send, but trigger data send" );
     Base::_sendTasks.push_back(sendTask);
 
     if (CreateCopiesOfSentData) {
@@ -110,9 +110,8 @@ void peano::heap::SymmetricBoundaryDataExchanger<Data,CreateCopiesOfSentData, Se
     }
 
     Base::_sendTasks.back().triggerSend(Base::_dataTag);
-    //Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
 
-    logWarning( "handleAndQueueSendTask(...)", "enqueue new receive task for tag " << sendTask._rank );
+    logDebug( "handleAndQueueSendTask(...)", "enqueue new receive task for rank " << sendTask._rank );
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( SendReceiveTaskType() );
     Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setLength( sendTask._metaInformation.getLength() );
     Base::_receiveTasks[Base::_currentReceiveBuffer].back()._rank = sendTask._rank;
