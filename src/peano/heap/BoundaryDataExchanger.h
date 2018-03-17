@@ -6,6 +6,7 @@
 
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
 
 
 namespace peano {
@@ -60,7 +61,7 @@ class peano::heap::BoundaryDataExchanger {
         void terminate();
     };
 
-    #ifdef MPIHeapUsesItsOwnThread
+    #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
     BackgroundThread*  _backgroundThread;
     #endif
 
