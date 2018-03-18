@@ -363,23 +363,25 @@ VectorContainer  peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,Vec
 
   assertion2( _receiveTasks[currentDeployBuffer].size()>0, tarch::parallel::Node::getInstance().getRank(), "if the neighbour data buffer is empty, you have perhaps forgotten to call releaseMessages() on the heap in the traversal before" );
 
-  assertion10(
-    readElement->fits(position,level) | !dataExchangerCommunicatesInBackground(),
-    _readDeployBufferInReverseOrder,
-    level,  position,
-    _receiveTasks[currentDeployBuffer].front()._metaInformation.toString(),
-    _receiveTasks[currentDeployBuffer].back()._metaInformation.toString(),
-    tarch::parallel::Node::getInstance().getRank(),
-    _rank,
-    _identifier,
-    dataExchangerCommunicatesInBackground(),
-    "if _readDeployBufferInReverseOrder: take back() element"
-  );
-
   #ifdef Asserts
-  const int numberOfElementsOfThisEntry = readElement->_metaInformation.getLength();
-  assertion2(numberOfElementsOfThisEntry >= 0, position, level);
-  assertion(readElement->_data!=0 || numberOfElementsOfThisEntry==0);
+  if ( heapStoresVertexSpatialDataForValidation() ) {
+    assertion10(
+      readElement->fits(position,level) | !dataExchangerCommunicatesInBackground(),
+      _readDeployBufferInReverseOrder,
+      level,  position,
+      _receiveTasks[currentDeployBuffer].front()._metaInformation.toString(),
+      _receiveTasks[currentDeployBuffer].back()._metaInformation.toString(),
+      tarch::parallel::Node::getInstance().getRank(),
+      _rank,
+      _identifier,
+      dataExchangerCommunicatesInBackground(),
+      "if _readDeployBufferInReverseOrder: take back() element"
+    );
+
+    const int numberOfElementsOfThisEntry = readElement->_metaInformation.getLength();
+    assertion3(numberOfElementsOfThisEntry >= 0, position, level, numberOfElementsOfThisEntry);
+    assertion3(readElement->_data!=0 || numberOfElementsOfThisEntry==0, position, level, numberOfElementsOfThisEntry);
+  }
   #endif
 
   const VectorContainer result(readElement->_data, readElement->_data+readElement->_metaInformation.getLength());

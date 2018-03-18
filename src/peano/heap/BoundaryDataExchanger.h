@@ -225,8 +225,8 @@ class peano::heap::BoundaryDataExchanger {
     virtual int getNumberOfSentMessages() const = 0;
 
     /**
-     * Hook in for finishToSendData(). Is called when the abstract superclass
-     * has finished its operations. If you use
+     * Hook in for finishToSendData(). The heaps typically wait for all
+     * messages to go out until the next traversal starts again.
      */
     virtual void postprocessFinishedToSendData() = 0;
 
@@ -431,6 +431,22 @@ class peano::heap::BoundaryDataExchanger {
     void clearStatistics();
 
     void shutdown();
+
+    #ifdef Asserts
+    /**
+     * The standard boundary exchangers do augment their messages with
+     * auxiliary data from which vertex this data stems. This allows us
+     * to run assertions whether the right data has dropped in. While this is
+     * the default, there are specialised boundary data exchangers that do not
+     * store this auxiliary validation data and thus can't allow the superclass
+     * to run its validation. By overloading this operation, they can
+     * effectively switch those spatial assertions off.
+     */
+    virtual bool heapStoresVertexSpatialDataForValidation() const {
+      return true;
+    }
+    #endif
+
 };
 
 

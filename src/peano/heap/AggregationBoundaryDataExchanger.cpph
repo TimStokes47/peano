@@ -56,45 +56,61 @@ template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, cla
 void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType,VectorContainer>::postprocessFinishedToSendData() {
   assertion( Base::_sendTasks.empty() );
 
+  logInfo( "postprocessFinishedToSendData()",
+    "send out one big message to rank " << Base::_rank << " which aggregates " << _numberOfSentMessages <<
+	" message(s) and has " << _aggregatedSendData.size() << " entries in total"
+  );
+
   Base::_sendTasks.push_back( SendReceiveTaskType() );
 
   Base::_sendTasks.back()._metaInformation.setLength( _aggregatedSendData.size() );
   Base::_sendTasks.back()._rank = Base::_rank;
-  Base::_sendTasks.back().sendDataDirectlyFromBuffer( _aggregatedSendData.data() );
 
   if (!_aggregatedSendData.empty()) {
+    Base::_sendTasks.back().sendDataDirectlyFromBuffer( _aggregatedSendData.data() );
     Base::_sendTasks.back().triggerSend(Base::_dataTag);
   }
   Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
-
-  logInfo( "postprocessFinishedToSendData()", "sent out one big message of size " << _aggregatedSendData.data() << " which aggregates " << _numberOfSentMessages << " message(s)");
 }
 
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType,VectorContainer>::handleAndQueueReceivedTask( const SendReceiveTaskType&  receivedTask ) {
   SendReceiveTaskType localTask( receivedTask );
+
+  logInfo( "handleAndQueueReceivedTask(...)",
+    "received one big message of size " << localTask._metaInformation.getLength() << " from rank " << Base::_rank <<
+	". There are " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() << " messages already in the queue"
+  );
+
   localTask.triggerReceive(Base::_dataTag);
   if (localTask._metaInformation.getLength() > 0) {
-    MPI_Wait(&(localTask._request), MPI_STATUS_IGNORE);
+	int flag = 0;
+	while (!flag) {
+      MPI_Test(&(localTask._request), &flag, MPI_STATUS_IGNORE);
+      tarch::parallel::Node::getInstance().receiveDanglingMessages();
+	}
+    // MPI_Wait(&(localTask._request), MPI_STATUS_IGNORE);
   }
-  logInfo( "handleAndQueueReceivedTask(...)", "received out one big message of size " << localTask._metaInformation.getLength() );
 
   int index = 0;
   while (index<receivedTask._metaInformation.getLength()) {
-	int sizeOfNextMessage = localTask._data[index];
+	int sizeOfNextMessage = static_cast<int>(localTask._data[index]);
 	index++;
 	assertion(sizeOfNextMessage>=0);
 
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( SendReceiveTaskType() );
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setLength(sizeOfNextMessage);
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setLength(0);
     if (sizeOfNextMessage>0) {
-      Base::_receiveTasks[Base::_currentReceiveBuffer].back().data = new Data[sizeOfNextMessage];
-      for (int i=0; i<sizeOfNextMessage; i++) {
-   		Base::_receiveTasks[Base::_currentReceiveBuffer].back().data[i] = localTask._data[index];
+      Base::_receiveTasks[Base::_currentReceiveBuffer].back()._data = new Data[sizeOfNextMessage];
+      for (int i=0; i<static_cast<int>(sizeOfNextMessage); i++) {
+   		Base::_receiveTasks[Base::_currentReceiveBuffer].back()._data[i] = localTask._data[index];
    		index++;
       }
     }
+    logDebug( "handleAndQueueReceivedTask(...)", "message terminating after " <<
+      index << " entries did contain " << sizeOfNextMessage << " data entries"
+    );
   }
 
   logInfo( "handleAndQueueReceivedTask(...)", "decomposed message into " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() << " message(s)" );
@@ -112,9 +128,15 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, 
 
   _numberOfSentMessages++;
 
-  _aggregatedSendData.push_back(Base::_sendTasks.back()._metaInformation.getLength());
+  assertion( Base::_sendTasks.empty() );
 
-  for (int i=0; i<Base::_sendTasks.back()._metaInformation.getLength(); i++) {
+  logDebug(
+     "handleAndQueueReceivedTask(...)", "attach " << _numberOfSentMessages << "th message to aggregated data. Message carries " <<
+	 sendTask._metaInformation.getLength() << " entries. Aggregated message so far has " << _aggregatedSendData.size() << " entries");
+
+  _aggregatedSendData.push_back(static_cast<Data>(sendTask._metaInformation.getLength()));
+
+  for (int i=0; i<sendTask._metaInformation.getLength(); i++) {
     _aggregatedSendData.push_back(data[i]);
   }
 

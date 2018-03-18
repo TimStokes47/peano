@@ -47,7 +47,11 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
     virtual int getNumberOfSentMessages() const;
 
     /**
-     * nop
+     * All messages now have gone out, so we have actually aggregated all
+     * output data into our local buffer _aggregatedSendData. Now we can
+     * wrap this data into a send task, enqueue it locally into the set
+     * of send tasks (which always has at most cardinality one with this
+     * boundary exchanger) and trigger the MPI commands.
      */
     virtual void postprocessFinishedToSendData();
 
@@ -57,8 +61,11 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
     virtual void postprocessStartToSendData();
 
     /**
-     * A meta data message came in. Insert into local queue and then trigger
-     * receive is necessary.
+     * A meta data message came in. We receive it into a temporary task message
+     * and then decompose the incoming messages into the many messages it did
+     * stem from in the first place. While we do so, we have to ensure that all
+     * these reconstructed messages are marked to have length 0. Otherwise,
+     * receiveDanglingMessages() would try to invoke MPI_Test on them.
      *
      * @see BoundaryDataExchanger::handleAndQueueReceivedTask()
      */
@@ -76,6 +83,17 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
     AggregationBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
 
     virtual ~AggregationBoundaryDataExchanger();
+
+    #ifdef Asserts
+    /**
+     * We concatenate all data in one buffer but kick out any validation data
+     * such as the level from which the data comes from. So the abstract
+     * superclass cannot validate whether data matches to grid entities.
+     */
+    bool heapStoresVertexSpatialDataForValidation() const override {
+      return false;
+    }
+    #endif
 };
 
 
