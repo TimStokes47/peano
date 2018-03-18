@@ -17,6 +17,7 @@
 #include "peano/heap/PlainBoundaryDataExchanger.h"
 #include "peano/heap/RLEBoundaryDataExchanger.h"
 #include "peano/heap/SymmetricBoundaryDataExchanger.h"
+#include "peano/heap/AggregationBoundaryDataExchanger.h"
 
 #include "peano/heap/HeapAllocator.h"
 #include "peano/heap/records/FloatHeapData.h"

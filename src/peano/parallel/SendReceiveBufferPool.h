@@ -10,6 +10,7 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 #include "peano/parallel/SendReceiveBuffer.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
 
 
 
@@ -73,7 +74,7 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
         void terminate();
     };
 
-    #ifdef MPIUsesItsOwnThread
+    #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
     /**
      * We hold a pointer to the background thread object, but we do not delete
      * it as it is passed into Peano's job interface. This job interface has

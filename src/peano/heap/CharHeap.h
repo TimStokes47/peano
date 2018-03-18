@@ -318,6 +318,8 @@ class peano::heap::CharHeap: public tarch::services::Service, peano::heap::Abstr
     void clearStatistics();
 
     void logContentToWarningDevice();
+
+    bool validateThatIncomingJoinBuffersAreEmpty();
 };
 
 

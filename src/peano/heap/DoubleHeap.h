@@ -318,6 +318,8 @@ class peano::heap::DoubleHeap: public tarch::services::Service, peano::heap::Abs
     void clearStatistics();
 
     void logContentToWarningDevice();
+
+    bool validateThatIncomingJoinBuffersAreEmpty();
 };
 
 

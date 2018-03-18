@@ -28,7 +28,7 @@ tarch::logging::Log                                                             
 
 #ifdef Parallel
 peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
-  #ifdef MPIUsesItsOwnThread
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   _backgroundThread(nullptr),
   #endif
   _iterationManagementTag(MPI_ANY_TAG),
@@ -60,7 +60,7 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
 
 
 peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
-  #if defined(MPIUsesItsOwnThread)
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
   if (_backgroundThread != nullptr) {
     _backgroundThread->terminate();
     _backgroundThread = nullptr;
@@ -119,7 +119,7 @@ int peano::parallel::SendReceiveBufferPool::getIterationDataTag() const {
 
 
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
-  #if defined(MPIUsesItsOwnThread)
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
   if (_backgroundThread==nullptr) {
     _backgroundThread = new BackgroundThread();
     peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
@@ -138,7 +138,7 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
 
 
 void peano::parallel::SendReceiveBufferPool::terminate() {
-  #if defined(MPIUsesItsOwnThread)
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
   if (_backgroundThread != nullptr) {
     _backgroundThread->terminate();
     _backgroundThread = nullptr;
@@ -161,7 +161,7 @@ void peano::parallel::SendReceiveBufferPool::terminate() {
 void peano::parallel::SendReceiveBufferPool::restart() {
   assertion1( _map.empty(), tarch::parallel::Node::getInstance().getRank() );
 
-  #ifdef MPIUsesItsOwnThread
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread!=nullptr) {
     _backgroundThread->terminate();
     _backgroundThread = nullptr;
@@ -230,7 +230,7 @@ peano::parallel::SendReceiveBufferPool::BackgroundThread::BackgroundThread():
 
 
 bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
-  #if !defined(MPIUsesItsOwnThread)
+  #if !defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
   assertionMsg( false, "not never enter this operator" );
   #endif
 

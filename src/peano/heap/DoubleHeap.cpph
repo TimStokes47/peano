@@ -668,3 +668,12 @@ void peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, Neighbour
 }
 
 
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+bool peano::heap::DoubleHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::validateThatIncomingJoinBuffersAreEmpty() {
+  #ifdef Parallel
+  return _joinForkExchanger.validateThatIncomingJoinBuffersAreEmpty();
+  #else
+  return true;
+  #endif
+}
+

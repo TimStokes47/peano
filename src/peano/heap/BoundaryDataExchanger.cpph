@@ -28,7 +28,7 @@ peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::Bo
   ,_isCurrentlySending(false)
   #endif
 {
-  #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
+  #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   _backgroundThread = nullptr;
   #endif
 
@@ -60,7 +60,7 @@ peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::Bo
   ,_isCurrentlySending(false)
   #endif
   {
-  #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
+  #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   _backgroundThread = nullptr;
   #endif
 
@@ -72,7 +72,7 @@ peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::Bo
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::shutdown() {
-  #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
+  #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread != nullptr) {
     _backgroundThread->terminate();
     _backgroundThread = nullptr;
@@ -251,7 +251,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::receiveDanglingMessages() {
-  #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
+  #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread==nullptr) {
     _backgroundThread = new BackgroundThread(this);
     peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);

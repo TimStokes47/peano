@@ -443,9 +443,9 @@ void peano::heap::CharHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDa
       if (_neighbourDataExchanger.count(toRank)==0) {
         tarch::multicore::Lock lock(_neighbourDataMapSemaphore);
         _neighbourDataExchanger.emplace(
-          std::pair<int, NeighbourDataExchanger>(
+          std::pair<int, NeighbourDataExchanger*>(
             toRank,
-            NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,toRank)
+            new NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,toRank)
           )
         );
         _neighbourDataExchanger.at(toRank)->startToSendData(false);
@@ -668,3 +668,11 @@ void peano::heap::CharHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDa
 }
 
 
+template <class MasterWorkerExchanger, class JoinForkExchanger, class NeighbourDataExchanger, class VectorContainer>
+bool peano::heap::CharHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDataExchanger, VectorContainer>::validateThatIncomingJoinBuffersAreEmpty() {
+  #ifdef Parallel
+  return _joinForkExchanger.validateThatIncomingJoinBuffersAreEmpty();
+  #else
+  return true;
+  #endif
+}
