@@ -180,7 +180,8 @@ template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::releaseSentMessages() {
   logTraceInWith1Argument( "releaseSentMessages()", _sendTasks.size() );
 
-  logInfo( "releaseSentMessages()", "release the " << _sendTasks.size() << " send task(s)" );
+  logInfo( "releaseSentMessages()", "release the " << _sendTasks.size() << " send task(s) for rank " << _rank <<
+	" on exchanger " << _identifier );
 
   for(typename std::list<SendReceiveTaskType >::iterator i = _sendTasks.begin(); i != _sendTasks.end(); ++i) {
     const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
@@ -455,7 +456,8 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
   logInfo(
     "releaseReceivedNeighbourMessagesRequests()",
-	"check all " << _receiveTasks[_currentReceiveBuffer].size() << " messages to be received from rank " << _rank
+	"check all " << _receiveTasks[_currentReceiveBuffer].size() << " messages to be received from rank " << _rank <<
+	" though exchanger " << _identifier
   );
   while (!allMessageCommunicationsAreFinished) {
     allMessageCommunicationsAreFinished = true;

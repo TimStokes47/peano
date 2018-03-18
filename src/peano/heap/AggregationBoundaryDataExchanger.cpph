@@ -38,7 +38,7 @@ bool peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, 
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer>
 int peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType,VectorContainer>::getNumberOfSentMessages() const {
-  return _numberOfSentMessages;
+  return _numberOfSentMessages>0 ? 1 : 0;
 }
 
 
@@ -49,6 +49,69 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, 
   assertion( Base::_sendTasks.empty() );
 
   _aggregatedSendData.clear();
+  // Create place holder. Will later be set to number of encoded messages
+  _aggregatedSendData.push_back(0);
+
+  const int BufferToBeUnpacked = 1-Base::_currentReceiveBuffer;
+
+  assertion( Base::_receiveTasks[BufferToBeUnpacked].size()<=1 );
+
+  if (Base::_receiveTasks[BufferToBeUnpacked].size()>0) {
+	// Take the single (aggregated) message, store it in a local variable
+	// and then clear the deploy buffer, as we'll put the messages as torn
+	// apart into this one.
+    SendReceiveTaskType localTask = Base::_receiveTasks[BufferToBeUnpacked].front();
+    Base::_receiveTasks[BufferToBeUnpacked].clear();
+
+    int index = 0;
+    int totalNumberOfMessages = static_cast<int>(localTask._data[index]);
+	index++;
+
+    #ifdef Asserts
+    logInfo( "postprocessStartToSendData(...)",
+      "found one big message(s) from rank " << Base::_rank << " in local deploy queue which encodes " <<
+	  totalNumberOfMessages << " message(s). There's " << Base::_receiveTasks[1-BufferToBeUnpacked].size() << " big message(s) remaining in the receive queue"
+    );
+    #endif
+
+    for (int j=0; j<totalNumberOfMessages; j++) {
+      int sizeOfNextMessage = static_cast<int>(localTask._data[index]);
+  	  index++;
+  	  assertion(sizeOfNextMessage>=0);
+
+      Base::_receiveTasks[BufferToBeUnpacked].push_back( SendReceiveTaskType() );
+      Base::_receiveTasks[BufferToBeUnpacked].back()._metaInformation.setLength(0);
+      if (sizeOfNextMessage>0) {
+        Base::_receiveTasks[BufferToBeUnpacked].back()._data = new Data[sizeOfNextMessage];
+        for (int i=0; i<static_cast<int>(sizeOfNextMessage); i++) {
+     		Base::_receiveTasks[BufferToBeUnpacked].back()._data[i] = localTask._data[index];
+     		index++;
+        }
+      }
+      logDebug( "postprocessStartToSendData(...)", "message terminating after " <<
+        index << " entries did contain " << sizeOfNextMessage << " data entries"
+      );
+    }
+
+    #ifdef Asserts
+    logInfo( "postprocessStartToSendData(...)", "decomposed message into " << Base::_receiveTasks[BufferToBeUnpacked].size() << " deploy message(s)" );
+    #endif
+
+    // Ensure that we have got exactly the right number of messages in the
+    // deploy queue
+    assertionEquals(static_cast<int>(Base::_receiveTasks[BufferToBeUnpacked].size()), totalNumberOfMessages);
+
+    // We are done, so free the memory of the aggregated message. It is now
+    // extracted/torn apart completely.
+    localTask.freeMemory();
+  }
+  else {
+    #ifdef Asserts
+    logInfo( "postprocessStartToSendData(...)",
+      "no received data has been found in deploy queue"
+    );
+    #endif
+  }
 }
 
 
@@ -60,6 +123,8 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, 
     "send out one big message to rank " << Base::_rank << " which aggregates " << _numberOfSentMessages <<
 	" message(s) and has " << _aggregatedSendData.size() << " entries in total"
   );
+
+  _aggregatedSendData[0] = _numberOfSentMessages;
 
   Base::_sendTasks.push_back( SendReceiveTaskType() );
 
@@ -76,46 +141,16 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, 
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType,VectorContainer>::handleAndQueueReceivedTask( const SendReceiveTaskType&  receivedTask ) {
-  SendReceiveTaskType localTask( receivedTask );
-
-  logInfo( "handleAndQueueReceivedTask(...)",
-    "received one big message of size " << localTask._metaInformation.getLength() << " from rank " << Base::_rank <<
-	". There are " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() << " messages already in the queue"
+  #ifdef Asserts
+  logInfo( "handleAndQueueReceivedTask()",
+    "received message from rank " << Base::_rank << " which contains " << receivedTask._metaInformation.getLength() << " entries in total. Enqueue to receive actual data behind envelope"
   );
+  #endif
 
-  localTask.triggerReceive(Base::_dataTag);
-  if (localTask._metaInformation.getLength() > 0) {
-	int flag = 0;
-	while (!flag) {
-      MPI_Test(&(localTask._request), &flag, MPI_STATUS_IGNORE);
-      tarch::parallel::Node::getInstance().receiveDanglingMessages();
-	}
-    // MPI_Wait(&(localTask._request), MPI_STATUS_IGNORE);
+  Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
+  if (Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.getLength() > 0) {
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_dataTag);
   }
-
-  int index = 0;
-  while (index<receivedTask._metaInformation.getLength()) {
-	int sizeOfNextMessage = static_cast<int>(localTask._data[index]);
-	index++;
-	assertion(sizeOfNextMessage>=0);
-
-    Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( SendReceiveTaskType() );
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setLength(0);
-    if (sizeOfNextMessage>0) {
-      Base::_receiveTasks[Base::_currentReceiveBuffer].back()._data = new Data[sizeOfNextMessage];
-      for (int i=0; i<static_cast<int>(sizeOfNextMessage); i++) {
-   		Base::_receiveTasks[Base::_currentReceiveBuffer].back()._data[i] = localTask._data[index];
-   		index++;
-      }
-    }
-    logDebug( "handleAndQueueReceivedTask(...)", "message terminating after " <<
-      index << " entries did contain " << sizeOfNextMessage << " data entries"
-    );
-  }
-
-  logInfo( "handleAndQueueReceivedTask(...)", "decomposed message into " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() << " message(s)" );
-
-  localTask.freeMemory();
 }
 
 

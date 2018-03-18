@@ -230,6 +230,10 @@ class peano::heap::BoundaryDataExchanger {
      */
     virtual void postprocessFinishedToSendData() = 0;
 
+    /**
+     * When this operation is called, already all receives have passed through
+     * completely, and also the release and deploy buffers are switched
+     */
     virtual void postprocessStartToSendData() = 0;
 
     /**
