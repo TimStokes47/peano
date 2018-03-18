@@ -108,7 +108,7 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, 
   else {
     #ifdef Asserts
     logInfo( "postprocessStartToSendData(...)",
-      "no received data has been found in deploy queue"
+      "no received data has been found in deploy queue. There are " << Base::_receiveTasks[1-BufferToBeUnpacked].size() << " big message(s) remaining in the receive queue"
     );
     #endif
   }

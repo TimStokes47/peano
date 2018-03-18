@@ -417,7 +417,7 @@ void peano::heap::CharHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDa
   _neighbourDataExchanger.emplace(
     std::pair<int, NeighbourDataExchanger>(
       communicationRank,
-      NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,communicationRank)
+      NeighbourDataExchanger("char-heap-neighbour-"+_name,_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,communicationRank)
     )
   );
   #endif
@@ -445,7 +445,7 @@ void peano::heap::CharHeap<MasterWorkerExchanger, JoinForkExchanger, NeighbourDa
         _neighbourDataExchanger.emplace(
           std::pair<int, NeighbourDataExchanger*>(
             toRank,
-            new NeighbourDataExchanger("heap-neighbour",_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,toRank)
+            new NeighbourDataExchanger("char-heap-neighbour-"+_name,_neighbourDataExchangerMetaDataTag,_neighbourDataExchangerDataTag,toRank)
           )
         );
         _neighbourDataExchanger.at(toRank)->startToSendData(false);
