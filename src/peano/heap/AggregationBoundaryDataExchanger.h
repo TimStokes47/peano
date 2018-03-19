@@ -8,7 +8,7 @@
 
 namespace peano {
   namespace heap {
-    template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer = std::vector<Data> >
+    template<class Data, class SendReceiveTaskType, class VectorContainer = std::vector<Data> >
     class AggregationBoundaryDataExchanger;
   }
 }
@@ -24,8 +24,14 @@ namespace peano {
  * As we rely a lot on quite manual data modifications, this particular data
  * exchanger works only with the specialised heaps such as the CharHeap and the
  * DoubleHeap.
+ *
+ * <h2> Internal data format </h2>
+ *
+ * The very first entry in the array sent out is the number of (encoded)
+ * messages. Per message we then have one entry which describes the number of
+ * entries for this message, and then the actual message data.
  */
-template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer>
+template<class Data, class SendReceiveTaskType, class VectorContainer>
 class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer> {
   private:
     /**

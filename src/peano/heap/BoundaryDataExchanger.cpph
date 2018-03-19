@@ -595,7 +595,7 @@ std::string peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorCo
 
 template <class Data, class SendReceiveTaskType, class VectorContainer>
 bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::operator()() {
-  #if !defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
+  #if !defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   assertionMsg( false, "not never enter this operator" );
   #endif
 
