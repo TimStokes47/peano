@@ -314,6 +314,29 @@ class peano::heap::BoundaryDataExchanger {
 
     virtual ~BoundaryDataExchanger();
 
+    /**
+     * This is called just before a new traversal, and it rolls over all
+     * messages from the previous traversal. We communicate in a Jacobi-type
+     * fashion, i.e. all data sent out in iteration n are actually used in
+     * iteration n+1. Technically, we realise this as follows:
+     *
+     * - Send requests are enqueued into something we call send buffer and
+     *   the boundary data exchanger issues MPI_ISends on these guys.
+     * - When we call startToSendData(), i.e. before we start the subsequent
+     *   traversal, this routine invokes releaseSentMessages() which
+     *   effectively tests that MPI has delivered all data and then erases
+     *   the send buffer.
+     * - When we receive something (how this is done depends on the type of
+     *   the boundary exchanger), we enqueue a task object into the receiver
+     *   queue and trigger MPI_IRecv. This is done in iteration n or n+1.
+     * - Once all send messages have left the system, startToSendData()
+     *   invokes waitUntilNumberOfReceivedNeighbourMessagesEqualsNumberOfSentMessages().
+     *   So we wait until at least all the messages from iteration n have
+     *   arrived (releaseReceivedNeighbourMessagesRequests()). There might already be some messages dropping in from iteration
+     *   n+1 if the neighbour rank is ahead, be we don't care here.
+     * - Then we roll over the buffers, i.e. we make the old receive buffer a
+     *   deploy buffer and continue.
+     */
     void startToSendData(bool isTraversalInverted);
     void finishedToSendData(bool isTraversalInverted);
 
