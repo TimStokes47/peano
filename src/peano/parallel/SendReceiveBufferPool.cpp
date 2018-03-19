@@ -60,7 +60,7 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
 
 
 peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
-  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread != nullptr) {
     _backgroundThread->terminate();
     _backgroundThread = nullptr;
@@ -119,7 +119,7 @@ int peano::parallel::SendReceiveBufferPool::getIterationDataTag() const {
 
 
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
-  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread==nullptr) {
     _backgroundThread = new BackgroundThread();
     peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
@@ -138,7 +138,7 @@ void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
 
 
 void peano::parallel::SendReceiveBufferPool::terminate() {
-  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread != nullptr) {
     _backgroundThread->terminate();
     _backgroundThread = nullptr;
