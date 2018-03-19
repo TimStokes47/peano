@@ -70,6 +70,10 @@ class peano::heap::PlainBoundaryDataExchanger: public peano::heap::BoundaryDataE
     PlainBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
 
     virtual ~PlainBoundaryDataExchanger();
+
+    bool probeMPIQueues() const override {
+      return true;
+    };
 };
 
 

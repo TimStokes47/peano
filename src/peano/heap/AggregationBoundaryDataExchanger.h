@@ -100,6 +100,10 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
       return false;
     }
     #endif
+
+    bool probeMPIQueues() const override {
+      return true;
+    };
 };
 
 

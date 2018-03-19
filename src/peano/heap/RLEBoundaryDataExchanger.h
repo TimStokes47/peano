@@ -103,6 +103,10 @@ class peano::heap::RLEBoundaryDataExchanger: public peano::heap::BoundaryDataExc
     RLEBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
 
     virtual ~RLEBoundaryDataExchanger();
+
+    bool probeMPIQueues() const override {
+      return true;
+    };
 };
 
 

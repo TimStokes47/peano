@@ -92,6 +92,10 @@ class peano::heap::SymmetricBoundaryDataExchanger: public peano::heap::BoundaryD
     SymmetricBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
 
     virtual ~SymmetricBoundaryDataExchanger();
+
+    bool probeMPIQueues() const override {
+      return false;
+    };
 };
 
 

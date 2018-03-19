@@ -474,6 +474,19 @@ class peano::heap::BoundaryDataExchanger {
     }
     #endif
 
+    /**
+     * There are boundary exchangers that do poll the MPI queues as they do
+     * not know how many messages drop in a priori. Others know exactly which
+     * and where to receive messages and thus switch of the polling which
+     * means that the receiveDanglingMessages() operation only has to test
+     * existing queries but doesn't have to poll for additional messages.
+     *
+     * The operation is const. Usually you either want the boundary exchanger
+     * to do everything with polling or you insert your receive tasks manually.
+     * In the latter case, you don't want the exchanger to interfere with your
+     * operations.
+     */
+    virtual bool probeMPIQueues() const = 0;
 };
 
 
