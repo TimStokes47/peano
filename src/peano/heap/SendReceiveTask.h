@@ -117,7 +117,8 @@ struct peano::heap::SendReceiveTask {
 
   /**
    * Frees local memory. Is safe to call even if the message might be empty. Is
-   * not safe to call if you don't work with copies.
+   * not safe to call if you don't work with copies and the message length is
+   * bigger than 0.
    */
   void freeMemory();
 

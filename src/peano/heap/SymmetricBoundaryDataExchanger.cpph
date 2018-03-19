@@ -99,6 +99,12 @@ void peano::heap::SymmetricBoundaryDataExchanger<Data,CreateCopiesOfSentData, Se
   else {
     handleEmptyMessagesInBetweenTwoRealSends();
 
+    logDebug( "handleAndQueueSendTask(...)", "enqueue new receive task for rank " << sendTask._rank );
+    Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( SendReceiveTaskType() );
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setLength( sendTask._metaInformation.getLength() );
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._rank = sendTask._rank;
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_dataTag);
+
     logDebug( "handleAndQueueSendTask(...)", "push back send task, skip meta data send, but trigger data send" );
     Base::_sendTasks.push_back(sendTask);
 
@@ -110,12 +116,6 @@ void peano::heap::SymmetricBoundaryDataExchanger<Data,CreateCopiesOfSentData, Se
     }
 
     Base::_sendTasks.back().triggerSend(Base::_dataTag);
-
-    logDebug( "handleAndQueueSendTask(...)", "enqueue new receive task for rank " << sendTask._rank );
-    Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( SendReceiveTaskType() );
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setLength( sendTask._metaInformation.getLength() );
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._rank = sendTask._rank;
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_dataTag);
   }
   logTraceOut( "handleAndQueueSendTask(...)" );
 }

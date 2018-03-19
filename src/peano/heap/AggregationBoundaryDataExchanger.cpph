@@ -114,6 +114,7 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, 
   }
 }
 
+//Es gibt keine Copies
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType,VectorContainer>::postprocessFinishedToSendData() {
@@ -125,6 +126,8 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,CreateCopiesOfSentData, 
   );
 
   _aggregatedSendData[0] = _numberOfSentMessages;
+
+// too late
 
   Base::_sendTasks.push_back( SendReceiveTaskType() );
 

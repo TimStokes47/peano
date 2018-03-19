@@ -230,7 +230,7 @@ peano::parallel::SendReceiveBufferPool::BackgroundThread::BackgroundThread():
 
 
 bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
-  #if !defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and (SharedMemoryParallelisation)
+  #if !defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   assertionMsg( false, "not never enter this operator" );
   #endif
 
