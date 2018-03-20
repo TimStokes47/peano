@@ -278,9 +278,12 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   for(auto& p: _receiveTasks[_currentReceiveBuffer]) {
     if(p._metaInformation.getLength() > 0) {
       MPI_Test(&(p._request), &progressFlag, MPI_STATUS_IGNORE);
-      if (progressFlag) {
-        p._metaInformation.setLength(0);
-      }
+      // It is absolute catastrophic to set the lenght to 0 here manually as
+      // the RLE exchanger will evaluate exactly this lenght later on.
+      //
+      //if (progressFlag) {
+      //  p._metaInformation.setLength(0);
+      //}
     }
   }
   #endif
