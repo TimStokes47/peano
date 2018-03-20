@@ -103,6 +103,11 @@ void peano::heap::SymmetricBoundaryDataExchanger<Data,CreateCopiesOfSentData, Se
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( SendReceiveTaskType() );
     Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setLength( sendTask._metaInformation.getLength() );
     Base::_receiveTasks[Base::_currentReceiveBuffer].back()._rank = sendTask._rank;
+    #ifdef Asserts
+    //Set debug information
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setPosition(sendTask._metaInformation.getPosition());
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setLevel(sendTask._metaInformation.getLevel());
+    #endif
     Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_dataTag);
 
     logDebug( "handleAndQueueSendTask(...)", "push back send task, skip meta data send, but trigger data send" );
