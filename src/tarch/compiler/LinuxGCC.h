@@ -35,9 +35,6 @@
 #ifndef ReceiveIterationControlMessagesBlocking
  #define ReceiveIterationControlMessagesBlocking        0
 #endif
-#ifndef BroadcastToIdleNodesBlocking
- #define BroadcastToIdleNodesBlocking                   0
-#endif
 #ifndef BroadcastToWorkingNodesBlocking
  #define BroadcastToWorkingNodesBlocking                0
 #endif
