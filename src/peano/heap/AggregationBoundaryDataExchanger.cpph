@@ -49,8 +49,9 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
   assertion( Base::_sendTasks.empty() );
 
   _aggregatedSendData.clear();
-  // Create place holder. Will later be set to number of encoded messages
-  _aggregatedSendData.push_back(0);
+  for (int i=0; i<NumberOfCharsToEncodeTotalMessageCount; i++) {
+    _aggregatedSendData.push_back(0);
+  }
 
   const int BufferToBeUnpacked = 1-Base::_currentReceiveBuffer;
 
@@ -63,9 +64,25 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
     SendReceiveTaskType localTask = Base::_receiveTasks[BufferToBeUnpacked].front();
     Base::_receiveTasks[BufferToBeUnpacked].clear();
 
-    int index = 0;
-    int totalNumberOfMessages = static_cast<int>(localTask._data[index]);
-	index++;
+    int totalNumberOfMessages = 0;
+    for (int i=0; i<NumberOfCharsToEncodeTotalMessageCount; i++) {
+      int extractedData = localTask._data[i];
+      totalNumberOfMessages += extractedData << (i*8);
+      logDebug(
+        "postprocessStartToSendData()",
+		"header-byte[" << i << "]=" << static_cast<int>(localTask._data[i]) << " added and obtained message count " <<
+		totalNumberOfMessages << " for input from rank " << Base::_rank
+	  );
+    }
+
+    assertion5(
+      totalNumberOfMessages>0,
+	  totalNumberOfMessages,Base::_receiveTasks[BufferToBeUnpacked].size(),Base::_receiveTasks[1-BufferToBeUnpacked].size(),
+	  localTask.toString(),
+	  localTask._metaInformation.getLength()
+	);
+
+    int index = 4;
 
     #ifdef Asserts
     logInfo( "postprocessStartToSendData(...)",
@@ -119,7 +136,7 @@ template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,VectorContainer>::postprocessFinishedToSendData() {
   assertion( Base::_sendTasks.empty() );
 
-  if (_aggregatedSendData.size()==1) {
+  if (_aggregatedSendData.size()<=NumberOfCharsToEncodeTotalMessageCount) {
     logInfo( "postprocessFinishedToSendData()",
       "do not sent out any aggregated message as no sends had been triggered"
     );
@@ -130,7 +147,11 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
 	  " message(s) and has " << _aggregatedSendData.size() << " entries in total"
     );
 
-    _aggregatedSendData[0] = _numberOfSentMessages;
+    assertion(_numberOfSentMessages>=0);
+    for (int i=0; i<NumberOfCharsToEncodeTotalMessageCount; i++) {
+      _aggregatedSendData[i] = static_cast< Data >( (_numberOfSentMessages >> (i*8)) & 0xFF );
+      logDebug( "postprocessFinishedToSendData()", "header-byte[" << i << "]=" << static_cast<int>(_aggregatedSendData[i]) << " for rank " << Base::_rank);
+    }
 
     Base::_sendTasks.push_back( SendReceiveTaskType() );
 

@@ -44,6 +44,8 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
     int _numberOfSentMessages;
 
     std::vector<Data>    _aggregatedSendData;
+
+    static constexpr int NumberOfCharsToEncodeTotalMessageCount = 4;
   protected:
     /**
      * As each message immediately is sent, the internal field
@@ -58,6 +60,19 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
      * wrap this data into a send task, enqueue it locally into the set
      * of send tasks (which always has at most cardinality one with this
      * boundary exchanger) and trigger the MPI commands.
+     *
+     * The routine sends out data if and only if the send buffer is not
+     * empty. That means, the number of elements in the aggregated buffer
+     * has to be bigger than NumberOfCharsToEncodeTotalMessageCount.
+     * Otherwise, nothing is sent out. The first
+     * NumberOfCharsToEncodeTotalMessageCount chars are used to encode the
+     * number of messages. For this, we need a little bit of bit shuffling.
+     * Originally, I used only the first element of the buffer to store the
+     * number of messages. This is a poor idea if we work with chars. There are
+     * obviously many situations, where a buffer holds more than 255 messages.
+     *
+     * To make the whole bit encoding work, we interpret the input data all
+     * as bitfields.
      */
     virtual void postprocessFinishedToSendData();
 
