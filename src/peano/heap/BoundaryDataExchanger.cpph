@@ -5,6 +5,7 @@
 #include "tarch/multicore/RecursiveLock.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/services/Service.h"
+#include "tarch/parallel/Node.h"
 
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>

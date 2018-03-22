@@ -6,10 +6,17 @@
 #include "peano/heap/BoundaryDataExchanger.h"
 
 
+#include <vector>
+
+
 namespace peano {
   namespace heap {
     template<class Data, class SendReceiveTaskType, class VectorContainer = std::vector<Data> >
     class AggregationBoundaryDataExchanger;
+
+    namespace tests {
+      class AggregationBoundaryDataExchangerTest;
+    }
   }
 }
 
@@ -46,6 +53,12 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
     std::vector<Data>    _aggregatedSendData;
 
     static constexpr int NumberOfCharsToEncodeTotalMessageCount = 4;
+
+    friend class tests::AggregationBoundaryDataExchangerTest;
+
+    void setAggregatedMessageHeader();
+    int  getNumberOfMessages( const SendReceiveTaskType& receivedTask );
+
   protected:
     /**
      * As each message immediately is sent, the internal field

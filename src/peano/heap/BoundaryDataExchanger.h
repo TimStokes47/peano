@@ -7,6 +7,13 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/la/Vector.h"
+
+
+#include "peano/utils/Globals.h"
+
+
+#include <list>
 
 
 namespace peano {

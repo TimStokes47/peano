@@ -43,6 +43,31 @@ int peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Vec
 
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
+void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,VectorContainer>::setAggregatedMessageHeader() {
+  for (int i=0; i<NumberOfCharsToEncodeTotalMessageCount; i++) {
+    _aggregatedSendData[i] = static_cast< Data >( (_numberOfSentMessages >> (i*8)) & static_cast<unsigned int>(0xFF) );
+    logDebug( "postprocessFinishedToSendData()", "header-byte[" << i << "]=" << static_cast<int>(_aggregatedSendData[i]) << " for rank " << Base::_rank);
+  }
+}
+
+
+template<class Data, class SendReceiveTaskType, class VectorContainer>
+int  peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,VectorContainer>::getNumberOfMessages( const SendReceiveTaskType& receivedTask ) {
+  int result = 0;
+  for (int i=0; i<NumberOfCharsToEncodeTotalMessageCount; i++) {
+    unsigned int extractedData = receivedTask._data[i];
+    result += extractedData << (i*8);
+    logDebug(
+      "postprocessStartToSendData()",
+      "header-byte[" << i << "]=" << static_cast<int>(localTask._data[i]) << " added and obtained message count " <<
+	  totalNumberOfMessages << " for input from rank " << Base::_rank
+	);
+  }
+  return result;
+}
+
+
+template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,VectorContainer>::postprocessStartToSendData() {
   _numberOfSentMessages = 0;
 
@@ -55,7 +80,7 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
 
   const int BufferToBeUnpacked = 1-Base::_currentReceiveBuffer;
 
-  assertion( Base::_receiveTasks[BufferToBeUnpacked].size()<=1 );
+  assertion2( Base::_receiveTasks[BufferToBeUnpacked].size()<=1, Base::_receiveTasks[BufferToBeUnpacked].size(), Base::_currentReceiveBuffer );
 
   if (Base::_receiveTasks[BufferToBeUnpacked].size()>0) {
 	// Take the single (aggregated) message, store it in a local variable
@@ -64,22 +89,17 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
     SendReceiveTaskType localTask = Base::_receiveTasks[BufferToBeUnpacked].front();
     Base::_receiveTasks[BufferToBeUnpacked].clear();
 
-    int totalNumberOfMessages = 0;
-    for (int i=0; i<NumberOfCharsToEncodeTotalMessageCount; i++) {
-      int extractedData = localTask._data[i];
-      totalNumberOfMessages += extractedData << (i*8);
-      logDebug(
-        "postprocessStartToSendData()",
-		"header-byte[" << i << "]=" << static_cast<int>(localTask._data[i]) << " added and obtained message count " <<
-		totalNumberOfMessages << " for input from rank " << Base::_rank
-	  );
-    }
+    const int totalNumberOfMessages = getNumberOfMessages( localTask );
 
-    assertion5(
+    assertion9(
       totalNumberOfMessages>0,
 	  totalNumberOfMessages,Base::_receiveTasks[BufferToBeUnpacked].size(),Base::_receiveTasks[1-BufferToBeUnpacked].size(),
 	  localTask.toString(),
-	  localTask._metaInformation.getLength()
+	  localTask._metaInformation.getLength(),
+	  static_cast<int>( localTask._data[0] ),
+	  static_cast<int>( localTask._data[1] ),
+	  static_cast<int>( localTask._data[2] ),
+	  static_cast<int>( localTask._data[3] )
 	);
 
     int index = 4;
@@ -148,10 +168,7 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
     );
 
     assertion(_numberOfSentMessages>=0);
-    for (int i=0; i<NumberOfCharsToEncodeTotalMessageCount; i++) {
-      _aggregatedSendData[i] = static_cast< Data >( (_numberOfSentMessages >> (i*8)) & 0xFF );
-      logDebug( "postprocessFinishedToSendData()", "header-byte[" << i << "]=" << static_cast<int>(_aggregatedSendData[i]) << " for rank " << Base::_rank);
-    }
+    setAggregatedMessageHeader();
 
     Base::_sendTasks.push_back( SendReceiveTaskType() );
 
