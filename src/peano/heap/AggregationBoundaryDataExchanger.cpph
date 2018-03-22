@@ -44,8 +44,14 @@ int peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Vec
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,VectorContainer>::setAggregatedMessageHeader() {
+  int base = 1;
+  int numberOfSentMessages = _numberOfSentMessages;
   for (int i=0; i<NumberOfCharsToEncodeTotalMessageCount; i++) {
-    _aggregatedSendData[i] = static_cast< Data >( (_numberOfSentMessages >> (i*8)) & static_cast<unsigned int>(0xFF) );
+    base *= std::numeric_limits<Data>::max();
+    int value = numberOfSentMessages % base;
+    numberOfSentMessages -= value;
+    value /= (base/std::numeric_limits<Data>::max());
+    _aggregatedSendData[i] = static_cast< Data >( value );
     logDebug( "postprocessFinishedToSendData()", "header-byte[" << i << "]=" << static_cast<int>(_aggregatedSendData[i]) << " for rank " << Base::_rank);
   }
 }
@@ -54,9 +60,11 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 int  peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,VectorContainer>::getNumberOfMessages( const SendReceiveTaskType& receivedTask ) {
   int result = 0;
+  int base   = 1;
   for (int i=0; i<NumberOfCharsToEncodeTotalMessageCount; i++) {
-    unsigned int extractedData = receivedTask._data[i];
-    result += extractedData << (i*8);
+    int extractedData = receivedTask._data[i];
+    result += extractedData * base;
+    base *= std::numeric_limits<Data>::max();
     logDebug(
       "postprocessStartToSendData()",
       "header-byte[" << i << "]=" << static_cast<int>(localTask._data[i]) << " added and obtained message count " <<

@@ -54,7 +54,15 @@ void peano::heap::tests::AggregationBoundaryDataExchangerTest::testComposeDecomp
 
     int sentNumberOfMessgaes = exchanger.getNumberOfMessages( receivedTask );
 
-    validateEquals(i,sentNumberOfMessgaes);
+    validateEqualsWithParams6(
+      sentNumberOfMessgaes,i,
+	  exchanger._numberOfSentMessages,
+	  (int)(std::numeric_limits<char>::max()),
+	  (int)(exchanger._aggregatedSendData[0]),
+	  (int)(exchanger._aggregatedSendData[1]),
+	  (int)(exchanger._aggregatedSendData[2]),
+	  (int)(exchanger._aggregatedSendData[3])
+	);
 
     receivedTask.freeMemory();
 
