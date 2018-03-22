@@ -5,6 +5,7 @@
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 #include <thread>
+#include <queue>
 
 
 int tarch::multicore::jobs::Job::_maxNumberOfRunningBackgroundThreads( std::thread::hardware_concurrency() );
@@ -74,14 +75,32 @@ tarch::multicore::jobs::GenericJobWithoutCopyOfFunctor::~GenericJobWithoutCopyOf
 
 #ifndef SharedMemoryParallelisation
 
+namespace {
+  std::queue<tarch::multicore::jobs::Job* > backgroundJobs;
+}
+
 void tarch::multicore::jobs::spawnBackgroundJob(Job* task) {
+  backgroundJobs.push( task );
+/*
   while (task->run()) {};
   delete task;
+*/
 }
 
 
 bool tarch::multicore::jobs::processBackgroundJobs() {
-  return false;
+  if (backgroundJobs.empty()) {
+    return false;
+  }
+  else {
+    while ( !backgroundJobs.empty() ) {
+      Job* p = backgroundJobs.front();
+      backgroundJobs.pop();
+      while (p->run()) {};
+      delete p;
+    }
+    return true;
+  }
 }
 
 
