@@ -231,10 +231,9 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
   const int additionalBackgroundThreads =
     std::min(
       Job::_maxNumberOfRunningBackgroundThreads - internal::_numberOfRunningBackgroundJobConsumerTasks,
-	  internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.unsafe_size()
+	  static_cast<int>( internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.unsafe_size() )
 	);
 
-  if ( !internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.empty() ) {
   #ifdef Asserts
   if (additionalBackgroundThreads>0) {
     static tarch::logging::Log _log( "tarch::multicore::jobs" );
@@ -252,7 +251,7 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
 
   const int numberOfBackgroundJobs =
     std::max(
-      1, internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.unsafe_size() - internal::_numberOfRunningBackgroundJobConsumerTasks
+      1, static_cast<int>( internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.unsafe_size() - internal::_numberOfRunningBackgroundJobConsumerTasks )
     );
 
   return processJobs(internal::BackgroundJobsJobClassNumber,numberOfBackgroundJobs);
