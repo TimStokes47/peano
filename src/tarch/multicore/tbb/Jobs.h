@@ -181,6 +181,18 @@ namespace tarch {
           public:
             static tbb::task_group_context  backgroundTaskContext;
             
+            /**
+             * Schedule a new background job consumer task. We have to tell
+             * each consumer how many jobs it may process at most. By default,
+             * I have a look into the background queue and divide this number
+             * by the number of existing threads. If it is smaller than the
+             * magic constant MinimalNumberOfJobsPerBackgroundConsumerRun,
+             * then I use this one instead. So this approach balanced between
+             * a reasonable distribution of jobs among all available threads
+             * and a reasonable overhead (materialising in queue locking, e.g.).
+             *
+             * @see MinimalNumberOfJobsPerBackgroundConsumerRun
+             */
             static void enqueue();
 
             BackgroundJobConsumerTask(const BackgroundJobConsumerTask& copy);
@@ -189,14 +201,18 @@ namespace tarch {
              * Process _maxJobs from the background job queue. There are a few
              * situations that can arise from this processing:
              *
-             * - This has been the only background job, or we have been able to
-             *   reduce the number of background changes. This suggests that
-             *   there has been a large number of background jobs and we thus
-             *   immediately reschedule the consumer task again. It does not
+             * - This has been the only background job and there had been
+             *   background jobs to handle. Then is does make sense to
+             *   immediately reschedule the consumer task again - just to be
+             *   sure that all background jobs are handled eventually. It does not
              *   make sense to use TBB's recycling mechanism as we want the
              *   background consumption to be very low priority.
-             * - There have been lots of background consumer jobs. We termiante
+             * - There have been lots of other background consumer jobs. We terminate
              *   this one.
+             * - We found the queue of background jobs to be empty when we launched
+             *   this thread. We terminate this consumer task.
+             *
+             * @see enqueue()
              */
             tbb::task* execute();
         };

@@ -81,14 +81,13 @@ namespace {
 
 void tarch::multicore::jobs::spawnBackgroundJob(Job* task) {
   backgroundJobs.push( task );
-/*
-  while (task->run()) {};
-  delete task;
-*/
 }
 
 
 bool tarch::multicore::jobs::processBackgroundJobs() {
+  // Note: Only invoked if no shared memory parallelisation activated. If
+  // TBB/C++/OpenMP are enabled, the routine of the respective subfolder is
+  // invoked
   if (backgroundJobs.empty()) {
     return false;
   }
