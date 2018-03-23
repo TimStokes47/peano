@@ -214,41 +214,42 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
 
 /**
  * This routine is typically invoked by user codes to ensure that all
- * background jobs have finished before the user code continues. We have however
- * to take into account that some background jobs might reschedule themselves
- * again as they are persistent. Therefore, we quickly check how many jobs are
- * still pending. Then we add the number of running background jobs (as those
- * guys might reschedule themselves again, so we try to be on the same side).
- * Finally, we process that many jobs that are in the queue and tell the
- * calling routine whether we've done any.
+ * background jobs have finished before the user code continues. It is not
+ * modelling what happens throughout the computation.
  *
+ * As some background jobs might reschedule themselves
+ * again - see their operator() - we quickly check how many jobs are
+ * still pending. The code is given an upper bound how many consumer tasks to
+ * use, to we issue the difference. But obviously if and only if there are still
+ * jobs pending.
  *
- *
- * Process background tasks. If there is a large number of background tasks
- * pending, we do not process all of them but only up to maxJobs. The reason
- * is simple: background job consumer tasks are enqueued with low priority.
- * Whenever TBB threads become idle, they steal those consumer tasks and thus
- * start to process the jobs. However, these consumer tasks now should not do
- * all of the jobs, as we otherwise run risk that the (more importan) actual
- * implementation has to wait for the background jobs to be finished. Thus,
- * this routine does only up to a certain number of jobs.
+ * In a next step, we check whether there's still a number of background tasks
+ * pending, and we handle those. Yet, we leave a few for the still pending
+ * background tasks.
  */
 bool tarch::multicore::jobs::processBackgroundJobs() {
   const int numberOfBackgroundJobs =
     internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.unsafe_size() + internal::_numberOfRunningBackgroundJobConsumerTasks + 1;
 
-  const int additionalBackgroundThreads = (Job::_maxNumberOfRunningBackgroundThreads - internal::_numberOfRunningBackgroundJobConsumerTasks);
-  #ifdef Asserts
-  static tarch::logging::Log _log( "tarch::multicore::jobs" );
-  logInfo(
-    "processBackgroundJobs()",
-	"spawn another " << additionalBackgroundThreads << " background job consumer tasks ("
-	<< internal::_numberOfRunningBackgroundJobConsumerTasks << " task(s) already running)"
-  );
-  #endif
-  for (int i=0; i<additionalBackgroundThreads; i++) {
-    internal::BackgroundJobConsumerTask::enqueue();
+  if ( !internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.empty() ) {
+    const int additionalBackgroundThreads = (Job::_maxNumberOfRunningBackgroundThreads - internal::_numberOfRunningBackgroundJobConsumerTasks);
+    #ifdef Asserts
+    static tarch::logging::Log _log( "tarch::multicore::jobs" );
+    logInfo(
+      "processBackgroundJobs()",
+	  "spawn another " << additionalBackgroundThreads << " background job consumer tasks ("
+	  << internal::_numberOfRunningBackgroundJobConsumerTasks << " task(s) already running)"
+    );
+    #endif
+    for (int i=0; i<additionalBackgroundThreads; i++) {
+      internal::BackgroundJobConsumerTask::enqueue();
+    }
   }
+
+  const int numberOfBackgroundJobs =
+    std::max(
+      1, internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.unsafe_size() - internal::_numberOfRunningBackgroundJobConsumerTasks
+    );
 
   return processJobs(internal::BackgroundJobsJobClassNumber,numberOfBackgroundJobs);
 }
