@@ -135,8 +135,6 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
 };
 
 
-#ifdef Parallel
 #include "peano/heap/AggregationBoundaryDataExchanger.cpph"
-#endif
 
 #endif

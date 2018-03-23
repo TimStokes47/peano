@@ -249,12 +249,7 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
     internal::BackgroundJobConsumerTask::enqueue();
   }
 
-  const int numberOfBackgroundJobs =
-    std::max(
-      1, static_cast<int>( internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.unsafe_size() - internal::_numberOfRunningBackgroundJobConsumerTasks )
-    );
-
-  return processJobs(internal::BackgroundJobsJobClassNumber,numberOfBackgroundJobs);
+  return !internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.empty();
 }
 
 
