@@ -179,6 +179,9 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::releaseSentMessages() {
+  // I do compile the class even without Parallel as I've written some unit tests. In turn,
+  // I thus have to manually mask out routines that require -DParallel.
+  #ifdef Parallel
   logTraceInWith1Argument( "releaseSentMessages()", _sendTasks.size() );
 
   logInfo( "releaseSentMessages()", "release the " << _sendTasks.size() << " send task(s) for rank " << _rank <<
@@ -230,6 +233,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   _sendTasks.clear();
 
   logTraceOutWith2Arguments( "releaseSentMessages()", _numberOfSentMessages, _numberOfSentRecords );
+  #endif
 }
 
 
@@ -253,6 +257,11 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::receiveDanglingMessages() {
+  // I do compile the class even without Parallel as I've written some unit tests. In turn,
+  // I thus have to manually mask out routines that require -DParallel.
+  #ifdef Parallel
+
+
   #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread==nullptr) {
     _backgroundThread = new BackgroundThread(this);
@@ -323,6 +332,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
       }
     }
   }
+  #endif
 }
 
 
@@ -451,6 +461,9 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
 template <class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::releaseReceivedNeighbourMessagesRequests() {
+  // I do compile the class even without Parallel as I've written some unit tests. In turn,
+  // I thus have to manually mask out routines that require -DParallel.
+  #ifdef Parallel
   logTraceIn( "releaseReceivedNeighbourMessagesRequests()" );
 
   bool allMessageCommunicationsAreFinished = !dataExchangerCommunicatesInBackground();
@@ -511,6 +524,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   }
 
   logTraceOut( "releaseReceivedNeighbourMessagesRequests()" );
+  #endif
 }
 
 

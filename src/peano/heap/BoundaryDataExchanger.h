@@ -497,8 +497,8 @@ class peano::heap::BoundaryDataExchanger {
 };
 
 
-#ifdef Parallel
+//#ifdef Parallel
 #include "peano/heap/BoundaryDataExchanger.cpph"
-#endif
+//#endif
 
 #endif
