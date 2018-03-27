@@ -69,6 +69,12 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
       public:
         BackgroundThread();
         virtual ~BackgroundThread();
+
+        /**
+         * The operator returns true as long as the state equals Running. For
+         * TBB (for example) this means that the job is processed and afterward
+         * directly again enqueued into the job list.
+         */
         bool operator()();
         std::string toString() const;
         void terminate();

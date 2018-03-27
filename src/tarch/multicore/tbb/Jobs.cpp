@@ -181,6 +181,12 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
 bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
   logDebug( "processJobs()", "search for jobs of class " << jobClass );
 
+  // Ensure that we do not redo all re-enqueued jobs within the same while loop
+  maxNumberOfJobs = std::min(
+    maxNumberOfJobs,
+	static_cast<int>( internal::getJobQueue(jobClass).jobs.unsafe_size() )
+  );
+
   Job* myTask   = nullptr;
   bool gotOne   = internal::getJobQueue(jobClass).jobs.try_pop(myTask);
   bool result   = false;

@@ -130,6 +130,8 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
   postprocessStartToSendData();
 
+  lock.free();
+
   logTraceOut( "startToSendData(bool)" );
 }
 
@@ -476,7 +478,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   logInfo(
     "releaseReceivedNeighbourMessagesRequests()",
 	"check all " << _receiveTasks[_currentReceiveBuffer].size() << " messages that we started to receive from rank " << _rank <<
-	" though exchanger " << _identifier
+	" through exchanger " << _identifier
   );
   while (!allMessageCommunicationsAreFinished) {
     allMessageCommunicationsAreFinished = true;
