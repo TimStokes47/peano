@@ -2,6 +2,7 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "peano/datatraversal/TaskSet.h"
 #include "peano/performanceanalysis/ScorePMacros.h"
+#include "tarch/multicore/Lock.h"
 #include "tarch/multicore/RecursiveLock.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/services/Service.h"
@@ -290,8 +291,8 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   for(auto& p: _receiveTasks[_currentReceiveBuffer]) {
     if(p._metaInformation.getLength() > 0) {
       MPI_Test(&(p._request), &progressFlag, MPI_STATUS_IGNORE);
-      // It is absolute catastrophic to set the lenght to 0 here manually as
-      // the RLE exchanger will evaluate exactly this lenght later on.
+      // It is absolute catastrophic to set the length to 0 here manually as
+      // the RLE exchanger will evaluate exactly this length later on.
       //
       //if (progressFlag) {
       //  p._metaInformation.setLength(0);
@@ -621,9 +622,11 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   assertionMsg( false, "not never enter this operator" );
   #endif
 
-  tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
+  // The locking is done within receiveDangling Messages
+  //tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
   bool result = true;
 
+  tarch::multicore::Lock stateLock( _semaphore );
   switch (_state) {
     case State::Running:
       {
@@ -636,8 +639,8 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
       result = false;
       break;
   }
+  stateLock.free();
 
-  lock.free();
   return result;
 }
 
@@ -650,6 +653,7 @@ std::string peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorCo
 
 template <class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::terminate() {
+  tarch::multicore::Lock stateLock( _semaphore );
   _state = State::Terminate;
 }
 

@@ -7,6 +7,7 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
+#include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/la/Vector.h"
 
 
@@ -56,8 +57,17 @@ class peano::heap::BoundaryDataExchanger {
 
         static std::string toString(State state);
       private:
-        BoundaryDataExchanger*              _boundaryDataExchanger;
-        State                               _state;
+        BoundaryDataExchanger*               _boundaryDataExchanger;
+        State                                _state;
+
+        /**
+         * We have to protect the state. The main thread might ask the
+         * background thread to go down, but the background thread might be
+         * busy polling MPI messages at the same time. As a result, as long as
+         * the background thread is reacting to one of its states, the main
+         * thread is not allowed to alter this very state.
+         */
+        tarch::multicore::BooleanSemaphore   _semaphore;
 
         BackgroundThread(const BackgroundThread&) = delete;
       public:
@@ -65,6 +75,10 @@ class peano::heap::BoundaryDataExchanger {
         virtual ~BackgroundThread();
         bool operator()();
         std::string toString() const;
+
+        /**
+         * @see _semaphore
+         */
         void terminate();
     };
 

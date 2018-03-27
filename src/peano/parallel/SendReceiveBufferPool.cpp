@@ -236,6 +236,7 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
 
   bool result = true;
 
+  tarch::multicore::Lock stateLock( _semaphore );
   switch (_state) {
     case State::Running:
       {
@@ -251,6 +252,7 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
       result = false;
       break;
   }
+  stateLock.free();
 
   return result;
 }
@@ -276,6 +278,7 @@ std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString(S
 void peano::parallel::SendReceiveBufferPool::BackgroundThread::terminate() {
   logTraceInWith1Argument( "switchState(State)", toString() );
 
+  tarch::multicore::Lock stateLock( _semaphore );
   _state = State::Terminate;
 
   logTraceOutWith1Argument( "switchState(State)", toString() );
