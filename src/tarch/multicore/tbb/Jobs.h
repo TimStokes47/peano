@@ -43,8 +43,10 @@ namespace tarch {
         extern JobMap     _pendingJobs;
 
         constexpr int BackgroundJobsJobClassNumber = -1;
-        constexpr int MinimalNumberOfJobsPerBackgroundConsumerRun = 4;
 
+        #ifndef TBBMinimalNumberOfJobsPerBackgroundConsumerRun
+        #define TBBMinimalNumberOfJobsPerBackgroundConsumerRun 4
+        #endif
         extern tarch::logging::Log _log;
 
         /**
@@ -186,12 +188,12 @@ namespace tarch {
              * each consumer how many jobs it may process at most. By default,
              * I have a look into the background queue and divide this number
              * by the number of existing threads. If it is smaller than the
-             * magic constant MinimalNumberOfJobsPerBackgroundConsumerRun,
+             * magic constant TBBMinimalNumberOfJobsPerBackgroundConsumerRun,
              * then I use this one instead. So this approach balanced between
              * a reasonable distribution of jobs among all available threads
              * and a reasonable overhead (materialising in queue locking, e.g.).
              *
-             * @see MinimalNumberOfJobsPerBackgroundConsumerRun
+             * @see TBBMinimalNumberOfJobsPerBackgroundConsumerRun
              */
             static void enqueue();
 
