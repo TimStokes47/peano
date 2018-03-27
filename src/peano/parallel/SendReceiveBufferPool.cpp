@@ -195,7 +195,6 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   for ( std::map<int,SendReceiveBuffer*>::const_reverse_iterator p = _map.rbegin(); p != _map.rend(); p++ ) {
     p->second->releaseReceivedMessages(true);
   }
-  lock.free();
 
   switch (_mode) {
     case SendAndDeploy:
@@ -209,6 +208,8 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
     case NeitherDeployNorSend:
       break;
   }
+
+  lock.free();
 
   logTraceOutWith1Argument( "releaseMessages()", toString(_mode) );
 }
