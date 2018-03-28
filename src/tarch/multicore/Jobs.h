@@ -170,6 +170,22 @@ namespace tarch {
        /**
         * Work through the background tasks and let the caller know whether some
         * tasks have been processed.
+        *
+        * <h2> Hybrid runs </h2>
+        *
+        * Some hybrid codes use processBackgroundJobs at certain points as they
+        * have to wait for some low priority stuff to terminate. Such a method
+        * invocation then often is embedded into a while loop. If you do this,
+        * please ensure you receive dangling messages, i.e. that your while
+        * loop looks similar to
+        * <pre>
+bool terminate = false;
+while ( !terminate ) {
+  tarch::multicore::jobs::processBackgroundJobs();
+  tarch::parallel::Node::getInstance().receiveDanglingMessages();
+  terminate = data I'm waiting for is available;
+}
+        </pre>
         */
        bool processBackgroundJobs();
 

@@ -255,6 +255,9 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
     internal::BackgroundJobConsumerTask::enqueue();
   }
 
+  // New: Not used for SC
+  processJobs( internal::BackgroundJobsJobClassNumber, TBBMinimalNumberOfJobsPerBackgroundConsumerRun );
+
   return !internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.empty();
 }
 
