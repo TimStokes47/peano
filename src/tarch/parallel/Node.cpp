@@ -42,7 +42,9 @@ int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessag
   // grabbed before most applications initialise their log filters properly.
   //
   // We may not use isGlobalMaster() as this query checks whether the code is
-  // properly initialised.
+  // properly initialised. Please note rank is -1 as long as MPI is not properly
+  // initialised, i.e. any tag booking prior to the MPI initialisation is not
+  // logged properly.
   if ( getInstance()._rank==getGlobalMasterRank() ) {
     tarch::logging::Log _log("tarch::parallel::Node<static>");
     logInfo(

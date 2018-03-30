@@ -505,7 +505,7 @@ void tarch::parallel::NodePool::replyToRegistrationMessages() {
 
   while ( tarch::parallel::messages::RegisterAtNodePoolMessage::isMessageInQueue(_registrationTag, true) ) {
     tarch::parallel::messages::RegisterAtNodePoolMessage message;
-    message.receive( MPI_ANY_SOURCE, _registrationTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+    message.receive( MPI_ANY_SOURCE, _registrationTag, true, -1 );
     logDebug(  "replyToRegistrationMessages()", "got registration from rank " << message.getSenderRank() );
     _strategy->addNode( message );
     assertion1( !_strategy->isIdleNode(message.getSenderRank()), message.toString() );
@@ -523,7 +523,7 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
   #ifdef Parallel
   while ( tarch::parallel::messages::JobRequestMessage::isMessageInQueue(_jobManagementTag, true) ) {
     tarch::parallel::messages::JobRequestMessage queryMessage;
-    queryMessage.receive( MPI_ANY_SOURCE, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+    queryMessage.receive( MPI_ANY_SOURCE, _jobManagementTag, true, -1 );
 
     assertion1( queryMessage.getSenderRank() !=Node::getInstance().getGlobalMasterRank(), Node::getInstance().getRank() );
 
@@ -631,7 +631,7 @@ void tarch::parallel::NodePool::emptyRegisterMessageReceiveBuffer() {
   #ifdef Parallel
   while ( tarch::parallel::messages::RegisterAtNodePoolMessage::isMessageInQueue(_registrationTag, true) ) {
     tarch::parallel::messages::RegisterAtNodePoolMessage message;
-    message.receive( MPI_ANY_SOURCE, _registrationTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+    message.receive( MPI_ANY_SOURCE, _registrationTag, true, -1 );
   }
   #endif
 }
@@ -641,7 +641,7 @@ void tarch::parallel::NodePool::emptyJobRequestMessageBuffer() {
   #ifdef Parallel
   while ( tarch::parallel::messages::JobRequestMessage::isMessageInQueue(_jobManagementTag, true) ) {
     tarch::parallel::messages::JobRequestMessage message;
-    message.receive( MPI_ANY_SOURCE, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+    message.receive( MPI_ANY_SOURCE, _jobManagementTag, true, -1 );
   }
   #endif
 }
@@ -651,7 +651,7 @@ void tarch::parallel::NodePool::emptyWorkerRequestMessageBuffer() {
   #ifdef Parallel
   while ( tarch::parallel::messages::WorkerRequestMessage::isMessageInQueue(_jobServicesTag, true) ) {
     tarch::parallel::messages::WorkerRequestMessage message;
-    message.receive( MPI_ANY_SOURCE, _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+    message.receive( MPI_ANY_SOURCE, _jobServicesTag, true, -1 );
   }
   #endif
 }
