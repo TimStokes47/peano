@@ -118,7 +118,7 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
     SendReceiveTaskType receiveTask;
 
     // @todo Has to be -1 (we may not call receiveDangling in-between as this would mess up the order of the real data). Documentation!
-    receiveTask._metaInformation.receive(status.MPI_SOURCE, _metaDataTag, true, -1);
+    receiveTask._metaInformation.receive(status.MPI_SOURCE, _metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::Blocking);
     receiveTask._rank = status.MPI_SOURCE;
 
     _numberOfReceivedMessages += 1;
@@ -160,8 +160,8 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
   logDebug("sendData", "Sending data at " << position << " to Rank " << toRank << " with tag " << _metaDataTag  );
 
   sendTask._metaInformation.setLength(count);
-  // @todo See comment above on the -1
-  sendTask._metaInformation.send(toRank, _metaDataTag, true, -1 );
+  // @todo See comment above on the usage of sole blocking MPI
+  sendTask._metaInformation.send(toRank, _metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::Blocking );
   _sendTasks.push_back(sendTask);
 
   if(count>0) {
@@ -226,10 +226,6 @@ VectorContainer peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentDa
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
 
       resultTask = findMessageFromRankInReceiveBuffer(fromRank);
-
-      if (SendAndReceiveHeapSynchronousDataBlocking>0) {
-        usleep(SendAndReceiveHeapSynchronousDataBlocking);
-      }
     }
   }
 

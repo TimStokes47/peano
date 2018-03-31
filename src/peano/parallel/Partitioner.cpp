@@ -139,7 +139,7 @@ void peano::parallel::Partitioner::sendForkMessages(
       message.send(
         _ranks[assignedRemoteRanks],
         tarch::parallel::NodePool::getInstance().getTagForForkMessages(),
-        true, SendAndReceiveLoadBalancingMessagesBlocking
+        true, peano::parallel::messages::ForkMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
       );
       #endif
       _assignedNodes[CellIndex] = _ranks[assignedRemoteRanks];

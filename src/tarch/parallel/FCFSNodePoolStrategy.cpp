@@ -23,7 +23,7 @@ void tarch::parallel::FCFSNodePoolStrategy::fillWorkerRequestQueue(RequestQueue&
   assertion( _tag >= 0 );
   while ( tarch::parallel::messages::WorkerRequestMessage::isMessageInQueue(_tag, true) ) {
     tarch::parallel::messages::WorkerRequestMessage message;
-    message.receive(MPI_ANY_SOURCE,_tag, true, -1);
+    message.receive(MPI_ANY_SOURCE,_tag, true, tarch::parallel::messages::WorkerRequestMessage::ExchangeMode::Blocking );
     queue.push_back( message );
   }
   #endif

@@ -658,7 +658,7 @@ void peano::grid::State<StateData>::shutdownDatatype() {
 
 
 template <class StateData>
-void peano::grid::State<StateData>::send(int destination, int tag, bool exchangeDataBlocking) {
+void peano::grid::State<StateData>::send(int destination, int tag, typename MPIDatatypeContainer::ExchangeMode exchangeDataBlocking) {
   assertion(MPIDatatypeContainer::Datatype!=0);
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
@@ -670,7 +670,7 @@ void peano::grid::State<StateData>::send(int destination, int tag, bool exchange
 
 
 template <class StateData>
-void peano::grid::State<StateData>::receive(int source, int tag, bool exchangeDataBlocking) {
+void peano::grid::State<StateData>::receive(int source, int tag, typename MPIDatatypeContainer::ExchangeMode exchangeDataBlocking) {
   assertion(MPIDatatypeContainer::Datatype!=0);
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
@@ -924,7 +924,7 @@ void peano::grid::State<StateData>::receiveStartupDataFromMaster() {
       tarch::parallel::NodePool::getInstance().getMasterRank(),
       peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
       true,
-      ReceiveMasterMessagesBlocking
+	  peano::parallel::messages::LoadBalancingMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
     );
 
     assertion(
@@ -948,7 +948,7 @@ void peano::grid::State<StateData>::receiveStartupDataFromMaster() {
     receive(
       tarch::parallel::NodePool::getInstance().getMasterRank(),
       peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      ReceiveMasterMessagesBlocking
+      State::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
     );
 
     peano::performanceanalysis::Analysis::getInstance().endToReceiveDataFromMaster();
@@ -969,7 +969,7 @@ void peano::grid::State<StateData>::sendStateToMaster() const {
     stateCopy.send(
       tarch::parallel::NodePool::getInstance().getMasterRank(),
       peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-      SendWorkerMasterMessagesBlocking
+	  State::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
     );
     logDebug( "sendStateToMaster()", "sent state " << stateCopy.toString() );
   }

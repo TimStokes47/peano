@@ -189,7 +189,7 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
       Base::_sendTasks.back().sendDataDirectlyFromBuffer( _aggregatedSendData.data() );
       Base::_sendTasks.back().triggerSend(Base::_dataTag);
     }
-    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendHeapMetaDataBlocking);
+    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::NonblockingWithPollingLoopOverTests);
   }
   #endif
 }

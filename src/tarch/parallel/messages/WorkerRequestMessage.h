@@ -26,8 +26,6 @@ namespace tarch {
 }
 
 
-
-
 namespace mpibalancing {
   namespace tests {
     class SFCDiffusionNodePoolStrategyTest;
@@ -43,7 +41,7 @@ namespace mpibalancing {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/03/2018 11:31
+ * @date   31/03/2018 19:30
  */
 class tarch::parallel::messages::WorkerRequestMessage { 
    
@@ -153,14 +151,11 @@ class tarch::parallel::messages::WorkerRequestMessage {
             
             static void shutdownDatatype();
             
-            /**
-             * @param communicateSleep -1 Data exchange through blocking mpi
-             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-             */
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+            
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
             
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             
@@ -177,7 +172,7 @@ class tarch::parallel::messages::WorkerRequestMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/03/2018 11:31
+ * @date   31/03/2018 19:30
  */
 class tarch::parallel::messages::WorkerRequestMessagePacked { 
    
@@ -285,14 +280,11 @@ class tarch::parallel::messages::WorkerRequestMessagePacked {
             
             static void shutdownDatatype();
             
-            /**
-             * @param communicateSleep -1 Data exchange through blocking mpi
-             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-             */
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+            
+            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
             
             static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
             

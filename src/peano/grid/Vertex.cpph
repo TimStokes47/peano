@@ -603,7 +603,7 @@ void peano::grid::Vertex<VertexData>::shutdownDatatype() {
 
 
 template <class VertexData>
-void peano::grid::Vertex<VertexData>::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking) {
+void peano::grid::Vertex<VertexData>::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel, typename MPIDatatypeContainer::ExchangeMode exchangeDataBlocking) {
   assertion(MPIDatatypeContainer::Datatype!=0);
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
@@ -615,7 +615,7 @@ void peano::grid::Vertex<VertexData>::send(int destination, int tag, bool exchan
 
 
 template <class VertexData>
-void peano::grid::Vertex<VertexData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking) {
+void peano::grid::Vertex<VertexData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, typename MPIDatatypeContainer::ExchangeMode exchangeDataBlocking) {
   assertion(MPIDatatypeContainer::Datatype!=0);
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)

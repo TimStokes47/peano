@@ -133,7 +133,6 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     const int currentWorker = fineGridCell.getRankOfRemoteNode();
     logTraceInWith3Arguments( "updateCellsParallelStateBeforeStoreForRootOfDeployedSubtree(...)", state.toString(), fineGridCell.toString(), currentWorker );
 
-   
     Cell    receivedWorkerCell;
     Vertex  receivedWorkerVertices[TWO_POWER_D];
     State   workerState;
@@ -151,14 +150,14 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
           true,
-          0
+          Cell::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
         );
         for (int i=0; i<TWO_POWER_D; i++) {
           receivedWorkerVertices[i].receive(
             currentWorker,
             peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
             true,
-            0
+	        Vertex::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
           );
 
           #ifdef Debug
@@ -177,7 +176,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         workerState.receive(
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-          false
+          State::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
         );
 
         state.mergeWithWorkerState(workerState);
@@ -376,20 +375,20 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         currentWorker,
         peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
         true,
-        SendMasterWorkerMessagesBlocking
+		peano::parallel::messages::LoadBalancingMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
       );
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send state " << state.toString() << " to rank " << currentWorker );
       stateCopy.send(
         currentWorker,
         peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
-        SendMasterWorkerMessagesBlocking
+		State::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
       );
       logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send cell " << fineGridCell.toString() << " to rank " << currentWorker );
       coarseGridCell.send(
         currentWorker,
         peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
         true,
-        SendMasterWorkerMessagesBlocking
+		Cell::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
       );
       dfor2(k)
         logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
@@ -398,14 +397,14 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
           true,
-          SendMasterWorkerMessagesBlocking
+		  Vertex::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
         );
       enddforx
       fineGridCell.send(
         currentWorker,
         peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
         true,
-        SendMasterWorkerMessagesBlocking
+		Cell::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
       );
       dfor2(k)
         logDebug( "updateCellsParallelStateAfterLoadForRootOfDeployedSubtree()", "send vertex " << fineGridVertices[ fineGridVerticesEnumerator(k) ].toString() << " to rank " << currentWorker );
@@ -413,7 +412,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
           true,
-          SendMasterWorkerMessagesBlocking
+		  Vertex::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
         );
         fineGridVertices[ fineGridVerticesEnumerator(k) ].setAdjacentSubtreeForksIntoOtherRankFlag();
       enddforx

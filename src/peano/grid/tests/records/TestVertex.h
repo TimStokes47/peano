@@ -37,7 +37,7 @@ namespace peano {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   21/03/2017 02:50
+    * @date   31/03/2018 18:55
     */
    class peano::grid::tests::records::TestVertex { 
       
@@ -164,369 +164,363 @@ namespace peano {
             
             
          };
-         
-      private: 
-         PersistentRecords _persistentRecords;
-         int _adjacentCellsHeightOfPreviousIteration;
-         int _numberOfAdjacentRefinedCells;
-         
-      public:
-         /**
-          * Generated
-          */
-         TestVertex();
-         
-         /**
-          * Generated
-          */
-         TestVertex(const PersistentRecords& persistentRecords);
-         
-         /**
-          * Generated
-          */
-         TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-         
-         /**
-          * Generated
-          */
-         TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-         
-         /**
-          * Generated
-          */
-         virtual ~TestVertex();
-         
-         /**
-          * Generated
-          */
-          bool getIsHangingNode() const ;
-         
-         /**
-          * Generated
-          */
-          void setIsHangingNode(const bool& isHangingNode) ;
-         
-         /**
-          * Generated
-          */
-          RefinementControl getRefinementControl() const ;
-         
-         /**
-          * Generated
-          */
-          void setRefinementControl(const RefinementControl& refinementControl) ;
-         
-         /**
-          * Generated
-          */
-          int getAdjacentCellsHeight() const ;
-         
-         /**
-          * Generated
-          */
-          void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-         
-         /**
-          * Generated
-          */
-          int getAdjacentCellsHeightOfPreviousIteration() const ;
-         
-         /**
-          * Generated
-          */
-          void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-         
-         /**
-          * Generated
-          */
-          int getNumberOfAdjacentRefinedCells() const ;
-         
-         /**
-          * Generated
-          */
-          void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-         
-         /**
-          * Generated
-          */
-          InsideOutsideDomain getInsideOutsideDomain() const ;
-         
-         /**
-          * Generated
-          */
-          void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-         
-          tarch::la::Vector<DIMENSIONS,double> getX() const ;
-         
-          void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-         
-          double getX(int elementIndex) const ;
-         
-          void setX(int elementIndex, const double& x) ;
-         
-         /**
-          * Generated
-          */
-          int getLevel() const ;
-         
-         /**
-          * Generated
-          */
-          void setLevel(const int& level) ;
-         
-          tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-         
-          void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-         
-          int getAdjacentRanks(int elementIndex) const ;
-         
-          void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-         
-         /**
-          * Generated
-          */
-          bool getAdjacentSubtreeForksIntoOtherRank() const ;
-         
-         /**
-          * Generated
-          */
-          void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-         
-         /**
-          * Generated
-          */
-          bool getParentRegularPersistentSubgrid() const ;
-         
-         /**
-          * Generated
-          */
-          void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-         
-         /**
-          * Generated
-          */
-          bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-         
-         /**
-          * Generated
-          */
-          void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-         
-         /**
-          * Generated
-          */
-         static std::string toString(const InsideOutsideDomain& param);
-         
-         /**
-          * Generated
-          */
-         static std::string getInsideOutsideDomainMapping();
-         
-         /**
-          * Generated
-          */
-         static std::string toString(const RefinementControl& param);
-         
-         /**
-          * Generated
-          */
-         static std::string getRefinementControlMapping();
-         
-         /**
-          * Generated
-          */
-         std::string toString() const;
-         
-         /**
-          * Generated
-          */
-         void toString(std::ostream& out) const;
-         
-         
-         PersistentRecords getPersistentRecords() const;
-         /**
-          * Generated
-          */
-         TestVertexPacked convert() const;
-         
-         
-      #ifdef Parallel
-         protected:
-            static tarch::logging::Log _log;
-            
-            int _senderDestinationRank;
+         private: 
+            PersistentRecords _persistentRecords;
+            int _adjacentCellsHeightOfPreviousIteration;
+            int _numberOfAdjacentRefinedCells;
             
          public:
+            /**
+             * Generated
+             */
+            TestVertex();
             
             /**
-             * Global that represents the mpi datatype.
-             * There are two variants: Datatype identifies only those attributes marked with
-             * parallelise. FullDatatype instead identifies the whole record with all fields.
+             * Generated
              */
-            static MPI_Datatype Datatype;
-            static MPI_Datatype FullDatatype;
+            TestVertex(const PersistentRecords& persistentRecords);
             
             /**
-             * Initializes the data type for the mpi operations. Has to be called
-             * before the very first send or receive operation is called.
+             * Generated
              */
-            static void initDatatype();
-            
-            static void shutdownDatatype();
+            TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
             
             /**
-             * @param communicateSleep -1 Data exchange through blocking mpi
-             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+             * Generated
              */
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            /**
+             * Generated
+             */
+            virtual ~TestVertex();
             
-            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+            /**
+             * Generated
+             */
+             bool getIsHangingNode() const ;
             
-            int getSenderRank() const;
+            /**
+             * Generated
+             */
+             void setIsHangingNode(const bool& isHangingNode) ;
             
-      #endif
-         
-      };
+            /**
+             * Generated
+             */
+             RefinementControl getRefinementControl() const ;
+            
+            /**
+             * Generated
+             */
+             void setRefinementControl(const RefinementControl& refinementControl) ;
+            
+            /**
+             * Generated
+             */
+             int getAdjacentCellsHeight() const ;
+            
+            /**
+             * Generated
+             */
+             void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+            
+            /**
+             * Generated
+             */
+             int getAdjacentCellsHeightOfPreviousIteration() const ;
+            
+            /**
+             * Generated
+             */
+             void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+            
+            /**
+             * Generated
+             */
+             int getNumberOfAdjacentRefinedCells() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+            
+            /**
+             * Generated
+             */
+             InsideOutsideDomain getInsideOutsideDomain() const ;
+            
+            /**
+             * Generated
+             */
+             void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+            
+             tarch::la::Vector<DIMENSIONS,double> getX() const ;
+            
+             void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+            
+             double getX(int elementIndex) const ;
+            
+             void setX(int elementIndex, const double& x) ;
+            
+            /**
+             * Generated
+             */
+             int getLevel() const ;
+            
+            /**
+             * Generated
+             */
+             void setLevel(const int& level) ;
+            
+             tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+            
+             void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+            
+             int getAdjacentRanks(int elementIndex) const ;
+            
+             void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+            
+            /**
+             * Generated
+             */
+             bool getAdjacentSubtreeForksIntoOtherRank() const ;
+            
+            /**
+             * Generated
+             */
+             void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+            
+            /**
+             * Generated
+             */
+             bool getParentRegularPersistentSubgrid() const ;
+            
+            /**
+             * Generated
+             */
+             void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+            
+            /**
+             * Generated
+             */
+             bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+            
+            /**
+             * Generated
+             */
+             void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+            
+            /**
+             * Generated
+             */
+            static std::string toString(const InsideOutsideDomain& param);
+            
+            /**
+             * Generated
+             */
+            static std::string getInsideOutsideDomainMapping();
+            
+            /**
+             * Generated
+             */
+            static std::string toString(const RefinementControl& param);
+            
+            /**
+             * Generated
+             */
+            static std::string getRefinementControlMapping();
+            
+            /**
+             * Generated
+             */
+            std::string toString() const;
+            
+            /**
+             * Generated
+             */
+            void toString(std::ostream& out) const;
+            
+            
+            PersistentRecords getPersistentRecords() const;
+            /**
+             * Generated
+             */
+            TestVertexPacked convert() const;
+            
+            
+         #ifdef Parallel
+            protected:
+               static tarch::logging::Log _log;
+               
+               int _senderDestinationRank;
+               
+            public:
+               
+               /**
+                * Global that represents the mpi datatype.
+                * There are two variants: Datatype identifies only those attributes marked with
+                * parallelise. FullDatatype instead identifies the whole record with all fields.
+                */
+               static MPI_Datatype Datatype;
+               static MPI_Datatype FullDatatype;
+               
+               /**
+                * Initializes the data type for the mpi operations. Has to be called
+                * before the very first send or receive operation is called.
+                */
+               static void initDatatype();
+               
+               static void shutdownDatatype();
+               
+               enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+               
+               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+               
+               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+               
+               static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+               
+               int getSenderRank() const;
+               #endif
       
-      /**
-       * @author This class is generated by DaStGen
-       * 		   DataStructureGenerator (DaStGen)
-       * 		   2007-2009 Wolfgang Eckhardt
-       * 		   2012      Tobias Weinzierl
-       *
-       * 		   build date: 09-02-2014 14:40
-       *
-       * @date   21/03/2017 02:50
-       */
-      class peano::grid::tests::records::TestVertexPacked { 
+   };
+   
+   /**
+    * @author This class is generated by DaStGen
+    * 		   DataStructureGenerator (DaStGen)
+    * 		   2007-2009 Wolfgang Eckhardt
+    * 		   2012      Tobias Weinzierl
+    *
+    * 		   build date: 09-02-2014 14:40
+    *
+    * @date   31/03/2018 18:55
+    */
+   class peano::grid::tests::records::TestVertexPacked { 
+      
+      public:
          
-         public:
+         typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
+         
+         typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
+         
+         struct PersistentRecords {
+            int _adjacentCellsHeight;
+            tarch::la::Vector<DIMENSIONS,double> _x;
+            int _level;
+            tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+            bool _adjacentSubtreeForksIntoOtherRank;
+            bool _parentRegularPersistentSubgrid;
+            bool _parentRegularPersistentSubgridInPreviousIteration;
             
-            typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
+            /** mapping of records:
+            || Member 	|| startbit 	|| length
+             |  isHangingNode	| startbit 0	| #bits 1
+             |  refinementControl	| startbit 1	| #bits 3
+             |  insideOutsideDomain	| startbit 4	| #bits 2
+             */
+            int _packedRecords0;
             
-            typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
+            /**
+             * Generated
+             */
+            PersistentRecords();
             
-            struct PersistentRecords {
-               int _adjacentCellsHeight;
-               tarch::la::Vector<DIMENSIONS,double> _x;
-               int _level;
-               tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
-               bool _adjacentSubtreeForksIntoOtherRank;
-               bool _parentRegularPersistentSubgrid;
-               bool _parentRegularPersistentSubgridInPreviousIteration;
-               
-               /** mapping of records:
-               || Member 	|| startbit 	|| length
-                |  isHangingNode	| startbit 0	| #bits 1
-                |  refinementControl	| startbit 1	| #bits 3
-                |  insideOutsideDomain	| startbit 4	| #bits 2
-                */
-               int _packedRecords0;
-               
-               /**
-                * Generated
-                */
-               PersistentRecords();
-               
-               /**
-                * Generated
-                */
-               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-               
-               /**
-                * Generated
-                */
-                bool getIsHangingNode() const ;
-               
-               /**
-                * Generated
-                */
-                void setIsHangingNode(const bool& isHangingNode) ;
-               
-               /**
-                * Generated
-                */
-                RefinementControl getRefinementControl() const ;
-               
-               /**
-                * Generated
-                */
-                void setRefinementControl(const RefinementControl& refinementControl) ;
-               
-               /**
-                * Generated
-                */
-                int getAdjacentCellsHeight() const ;
-               
-               /**
-                * Generated
-                */
-                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-               
-               /**
-                * Generated
-                */
-                InsideOutsideDomain getInsideOutsideDomain() const ;
-               
-               /**
-                * Generated
-                */
-                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-               
-                tarch::la::Vector<DIMENSIONS,double> getX() const ;
-               
-                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-               
-               /**
-                * Generated
-                */
-                int getLevel() const ;
-               
-               /**
-                * Generated
-                */
-                void setLevel(const int& level) ;
-               
-                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-               
-                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-               
-               /**
-                * Generated
-                */
-                bool getAdjacentSubtreeForksIntoOtherRank() const ;
-               
-               /**
-                * Generated
-                */
-                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-               
-               /**
-                * Generated
-                */
-                bool getParentRegularPersistentSubgrid() const ;
-               
-               /**
-                * Generated
-                */
-                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-               
-               /**
-                * Generated
-                */
-                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-               
-               /**
-                * Generated
-                */
-                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-               
-               
-            };
+            /**
+             * Generated
+             */
+            PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
             
+            /**
+             * Generated
+             */
+             bool getIsHangingNode() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsHangingNode(const bool& isHangingNode) ;
+            
+            /**
+             * Generated
+             */
+             RefinementControl getRefinementControl() const ;
+            
+            /**
+             * Generated
+             */
+             void setRefinementControl(const RefinementControl& refinementControl) ;
+            
+            /**
+             * Generated
+             */
+             int getAdjacentCellsHeight() const ;
+            
+            /**
+             * Generated
+             */
+             void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+            
+            /**
+             * Generated
+             */
+             InsideOutsideDomain getInsideOutsideDomain() const ;
+            
+            /**
+             * Generated
+             */
+             void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+            
+             tarch::la::Vector<DIMENSIONS,double> getX() const ;
+            
+             void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+            
+            /**
+             * Generated
+             */
+             int getLevel() const ;
+            
+            /**
+             * Generated
+             */
+             void setLevel(const int& level) ;
+            
+             tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+            
+             void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+            
+            /**
+             * Generated
+             */
+             bool getAdjacentSubtreeForksIntoOtherRank() const ;
+            
+            /**
+             * Generated
+             */
+             void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+            
+            /**
+             * Generated
+             */
+             bool getParentRegularPersistentSubgrid() const ;
+            
+            /**
+             * Generated
+             */
+             void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+            
+            /**
+             * Generated
+             */
+             bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+            
+            /**
+             * Generated
+             */
+             void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+            
+            
+         };
          private: 
             PersistentRecords _persistentRecords;
             int _adjacentCellsHeightOfPreviousIteration;
@@ -736,145 +730,139 @@ namespace peano {
                
                static void shutdownDatatype();
                
-               /**
-                * @param communicateSleep -1 Data exchange through blocking mpi
-                * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                */
-               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+               enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
                
-               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+               
+               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
                
                static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                
                int getSenderRank() const;
-               
-         #endif
-            
-         };
+               #endif
+      
+   };
+   
+   #elif defined(PersistentRegularSubtrees) && defined(Asserts) && !defined(Parallel)
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertex { 
          
-         
-      #elif defined(PersistentRegularSubtrees) && defined(Asserts) && !defined(Parallel)
-         /**
-          * @author This class is generated by DaStGen
-          * 		   DataStructureGenerator (DaStGen)
-          * 		   2007-2009 Wolfgang Eckhardt
-          * 		   2012      Tobias Weinzierl
-          *
-          * 		   build date: 09-02-2014 14:40
-          *
-          * @date   21/03/2017 02:50
-          */
-         class peano::grid::tests::records::TestVertex { 
+         public:
             
-            public:
+            typedef peano::grid::tests::records::TestVertexPacked Packed;
+            
+            enum InsideOutsideDomain {
+               Inside = 0, Boundary = 1, Outside = 2
+            };
+            
+            enum RefinementControl {
+               Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
+            };
+            
+            struct PersistentRecords {
+               bool _isHangingNode;
+               RefinementControl _refinementControl;
+               int _adjacentCellsHeight;
+               InsideOutsideDomain _insideOutsideDomain;
+               tarch::la::Vector<DIMENSIONS,double> _x;
+               int _level;
+               bool _parentRegularPersistentSubgrid;
+               bool _parentRegularPersistentSubgridInPreviousIteration;
+               /**
+                * Generated
+                */
+               PersistentRecords();
                
-               typedef peano::grid::tests::records::TestVertexPacked Packed;
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
                
-               enum InsideOutsideDomain {
-                  Inside = 0, Boundary = 1, Outside = 2
-               };
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
                
-               enum RefinementControl {
-                  Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
-               };
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
                
-               struct PersistentRecords {
-                  bool _isHangingNode;
-                  RefinementControl _refinementControl;
-                  int _adjacentCellsHeight;
-                  InsideOutsideDomain _insideOutsideDomain;
-                  tarch::la::Vector<DIMENSIONS,double> _x;
-                  int _level;
-                  bool _parentRegularPersistentSubgrid;
-                  bool _parentRegularPersistentSubgridInPreviousIteration;
-                  /**
-                   * Generated
-                   */
-                  PersistentRecords();
-                  
-                  /**
-                   * Generated
-                   */
-                  PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getIsHangingNode() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setIsHangingNode(const bool& isHangingNode) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   RefinementControl getRefinementControl() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setRefinementControl(const RefinementControl& refinementControl) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getAdjacentCellsHeight() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   InsideOutsideDomain getInsideOutsideDomain() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                  
-                   tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                  
-                   void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getLevel() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setLevel(const int& level) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getParentRegularPersistentSubgrid() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                  
-                  
-               };
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
                
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
+               
+            };
             private: 
                PersistentRecords _persistentRecords;
                int _adjacentCellsHeightOfPreviousIteration;
@@ -1066,3904 +1054,3829 @@ namespace peano {
                   
                   static void shutdownDatatype();
                   
-                  /**
-                   * @param communicateSleep -1 Data exchange through blocking mpi
-                   * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                   * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                   */
-                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
                   
-                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
                   
                   static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                   
                   int getSenderRank() const;
-                  
-            #endif
+                  #endif
+         
+      };
+      
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertexPacked { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
+            
+            typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
+            
+            struct PersistentRecords {
+               int _adjacentCellsHeight;
+               tarch::la::Vector<DIMENSIONS,double> _x;
+               int _level;
+               bool _parentRegularPersistentSubgrid;
+               bool _parentRegularPersistentSubgridInPreviousIteration;
+               
+               /** mapping of records:
+               || Member 	|| startbit 	|| length
+                |  isHangingNode	| startbit 0	| #bits 1
+                |  refinementControl	| startbit 1	| #bits 3
+                |  insideOutsideDomain	| startbit 4	| #bits 2
+                */
+               int _packedRecords0;
+               
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
                
             };
-            
-            /**
-             * @author This class is generated by DaStGen
-             * 		   DataStructureGenerator (DaStGen)
-             * 		   2007-2009 Wolfgang Eckhardt
-             * 		   2012      Tobias Weinzierl
-             *
-             * 		   build date: 09-02-2014 14:40
-             *
-             * @date   21/03/2017 02:50
-             */
-            class peano::grid::tests::records::TestVertexPacked { 
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
                
-               public:
-                  
-                  typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
-                  
-                  typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
-                  
-                  struct PersistentRecords {
-                     int _adjacentCellsHeight;
-                     tarch::la::Vector<DIMENSIONS,double> _x;
-                     int _level;
-                     bool _parentRegularPersistentSubgrid;
-                     bool _parentRegularPersistentSubgridInPreviousIteration;
-                     
-                     /** mapping of records:
-                     || Member 	|| startbit 	|| length
-                      |  isHangingNode	| startbit 0	| #bits 1
-                      |  refinementControl	| startbit 1	| #bits 3
-                      |  insideOutsideDomain	| startbit 4	| #bits 2
-                      */
-                     int _packedRecords0;
-                     
-                     /**
-                      * Generated
-                      */
-                     PersistentRecords();
-                     
-                     /**
-                      * Generated
-                      */
-                     PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getIsHangingNode() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setIsHangingNode(const bool& isHangingNode) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      RefinementControl getRefinementControl() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setRefinementControl(const RefinementControl& refinementControl) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getAdjacentCellsHeight() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      InsideOutsideDomain getInsideOutsideDomain() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                     
-                      tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                     
-                      void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getLevel() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setLevel(const int& level) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getParentRegularPersistentSubgrid() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                     
-                     
-                  };
-                  
-               private: 
-                  PersistentRecords _persistentRecords;
-                  int _adjacentCellsHeightOfPreviousIteration;
-                  int _numberOfAdjacentRefinedCells;
-                  
-               public:
-                  /**
-                   * Generated
-                   */
-                  TestVertexPacked();
-                  
-                  /**
-                   * Generated
-                   */
-                  TestVertexPacked(const PersistentRecords& persistentRecords);
-                  
-                  /**
-                   * Generated
-                   */
-                  TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                  
-                  /**
-                   * Generated
-                   */
-                  TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                  
-                  /**
-                   * Generated
-                   */
-                  virtual ~TestVertexPacked();
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getIsHangingNode() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setIsHangingNode(const bool& isHangingNode) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   RefinementControl getRefinementControl() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setRefinementControl(const RefinementControl& refinementControl) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getAdjacentCellsHeight() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getAdjacentCellsHeightOfPreviousIteration() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getNumberOfAdjacentRefinedCells() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   InsideOutsideDomain getInsideOutsideDomain() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                  
-                   tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                  
-                   void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                  
-                   double getX(int elementIndex) const ;
-                  
-                   void setX(int elementIndex, const double& x) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getLevel() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setLevel(const int& level) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getParentRegularPersistentSubgrid() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                  
-                  /**
-                   * Generated
-                   */
-                  static std::string toString(const InsideOutsideDomain& param);
-                  
-                  /**
-                   * Generated
-                   */
-                  static std::string getInsideOutsideDomainMapping();
-                  
-                  /**
-                   * Generated
-                   */
-                  static std::string toString(const RefinementControl& param);
-                  
-                  /**
-                   * Generated
-                   */
-                  static std::string getRefinementControlMapping();
-                  
-                  /**
-                   * Generated
-                   */
-                  std::string toString() const;
-                  
-                  /**
-                   * Generated
-                   */
-                  void toString(std::ostream& out) const;
-                  
-                  
-                  PersistentRecords getPersistentRecords() const;
-                  /**
-                   * Generated
-                   */
-                  TestVertex convert() const;
-                  
-                  
-               #ifdef Parallel
-                  protected:
-                     static tarch::logging::Log _log;
-                     
-                     int _senderDestinationRank;
-                     
-                  public:
-                     
-                     /**
-                      * Global that represents the mpi datatype.
-                      * There are two variants: Datatype identifies only those attributes marked with
-                      * parallelise. FullDatatype instead identifies the whole record with all fields.
-                      */
-                     static MPI_Datatype Datatype;
-                     static MPI_Datatype FullDatatype;
-                     
-                     /**
-                      * Initializes the data type for the mpi operations. Has to be called
-                      * before the very first send or receive operation is called.
-                      */
-                     static void initDatatype();
-                     
-                     static void shutdownDatatype();
-                     
-                     /**
-                      * @param communicateSleep -1 Data exchange through blocking mpi
-                      * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                      * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                      */
-                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                     
-                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                     
-                     static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                     
-                     int getSenderRank() const;
-                     
-               #endif
-                  
-               };
-               
-               
-            
-         #elif defined(Parallel) && !defined(PersistentRegularSubtrees) && defined(Asserts)
-            /**
-             * @author This class is generated by DaStGen
-             * 		   DataStructureGenerator (DaStGen)
-             * 		   2007-2009 Wolfgang Eckhardt
-             * 		   2012      Tobias Weinzierl
-             *
-             * 		   build date: 09-02-2014 14:40
-             *
-             * @date   21/03/2017 02:50
-             */
-            class peano::grid::tests::records::TestVertex { 
-               
-               public:
-                  
-                  typedef peano::grid::tests::records::TestVertexPacked Packed;
-                  
-                  enum InsideOutsideDomain {
-                     Inside = 0, Boundary = 1, Outside = 2
-                  };
-                  
-                  enum RefinementControl {
-                     Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
-                  };
-                  
-                  struct PersistentRecords {
-                     bool _isHangingNode;
-                     RefinementControl _refinementControl;
-                     int _adjacentCellsHeight;
-                     InsideOutsideDomain _insideOutsideDomain;
-                     tarch::la::Vector<DIMENSIONS,double> _x;
-                     int _level;
-                     tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
-                     bool _adjacentSubtreeForksIntoOtherRank;
-                     /**
-                      * Generated
-                      */
-                     PersistentRecords();
-                     
-                     /**
-                      * Generated
-                      */
-                     PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getIsHangingNode() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setIsHangingNode(const bool& isHangingNode) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      RefinementControl getRefinementControl() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setRefinementControl(const RefinementControl& refinementControl) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getAdjacentCellsHeight() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      InsideOutsideDomain getInsideOutsideDomain() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                     
-                      tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                     
-                      void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getLevel() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setLevel(const int& level) ;
-                     
-                      tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                     
-                      void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                     
-                     
-                  };
-                  
-               private: 
-                  PersistentRecords _persistentRecords;
-                  int _adjacentCellsHeightOfPreviousIteration;
-                  int _numberOfAdjacentRefinedCells;
-                  
-               public:
-                  /**
-                   * Generated
-                   */
-                  TestVertex();
-                  
-                  /**
-                   * Generated
-                   */
-                  TestVertex(const PersistentRecords& persistentRecords);
-                  
-                  /**
-                   * Generated
-                   */
-                  TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                  
-                  /**
-                   * Generated
-                   */
-                  TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                  
-                  /**
-                   * Generated
-                   */
-                  virtual ~TestVertex();
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getIsHangingNode() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setIsHangingNode(const bool& isHangingNode) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   RefinementControl getRefinementControl() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setRefinementControl(const RefinementControl& refinementControl) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getAdjacentCellsHeight() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getAdjacentCellsHeightOfPreviousIteration() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getNumberOfAdjacentRefinedCells() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   InsideOutsideDomain getInsideOutsideDomain() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                  
-                   tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                  
-                   void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                  
-                   double getX(int elementIndex) const ;
-                  
-                   void setX(int elementIndex, const double& x) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getLevel() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setLevel(const int& level) ;
-                  
-                   tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                  
-                   void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                  
-                   int getAdjacentRanks(int elementIndex) const ;
-                  
-                   void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                  
-                  /**
-                   * Generated
-                   */
-                  static std::string toString(const InsideOutsideDomain& param);
-                  
-                  /**
-                   * Generated
-                   */
-                  static std::string getInsideOutsideDomainMapping();
-                  
-                  /**
-                   * Generated
-                   */
-                  static std::string toString(const RefinementControl& param);
-                  
-                  /**
-                   * Generated
-                   */
-                  static std::string getRefinementControlMapping();
-                  
-                  /**
-                   * Generated
-                   */
-                  std::string toString() const;
-                  
-                  /**
-                   * Generated
-                   */
-                  void toString(std::ostream& out) const;
-                  
-                  
-                  PersistentRecords getPersistentRecords() const;
-                  /**
-                   * Generated
-                   */
-                  TestVertexPacked convert() const;
-                  
-                  
-               #ifdef Parallel
-                  protected:
-                     static tarch::logging::Log _log;
-                     
-                     int _senderDestinationRank;
-                     
-                  public:
-                     
-                     /**
-                      * Global that represents the mpi datatype.
-                      * There are two variants: Datatype identifies only those attributes marked with
-                      * parallelise. FullDatatype instead identifies the whole record with all fields.
-                      */
-                     static MPI_Datatype Datatype;
-                     static MPI_Datatype FullDatatype;
-                     
-                     /**
-                      * Initializes the data type for the mpi operations. Has to be called
-                      * before the very first send or receive operation is called.
-                      */
-                     static void initDatatype();
-                     
-                     static void shutdownDatatype();
-                     
-                     /**
-                      * @param communicateSleep -1 Data exchange through blocking mpi
-                      * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                      * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                      */
-                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                     
-                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                     
-                     static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                     
-                     int getSenderRank() const;
-                     
-               #endif
-                  
-               };
+            public:
+               /**
+                * Generated
+                */
+               TestVertexPacked();
                
                /**
-                * @author This class is generated by DaStGen
-                * 		   DataStructureGenerator (DaStGen)
-                * 		   2007-2009 Wolfgang Eckhardt
-                * 		   2012      Tobias Weinzierl
-                *
-                * 		   build date: 09-02-2014 14:40
-                *
-                * @date   21/03/2017 02:50
+                * Generated
                 */
-               class peano::grid::tests::records::TestVertexPacked { 
-                  
-                  public:
-                     
-                     typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
-                     
-                     typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
-                     
-                     struct PersistentRecords {
-                        int _adjacentCellsHeight;
-                        tarch::la::Vector<DIMENSIONS,double> _x;
-                        int _level;
-                        tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
-                        bool _adjacentSubtreeForksIntoOtherRank;
-                        
-                        /** mapping of records:
-                        || Member 	|| startbit 	|| length
-                         |  isHangingNode	| startbit 0	| #bits 1
-                         |  refinementControl	| startbit 1	| #bits 3
-                         |  insideOutsideDomain	| startbit 4	| #bits 2
-                         */
-                        int _packedRecords0;
-                        
-                        /**
-                         * Generated
-                         */
-                        PersistentRecords();
-                        
-                        /**
-                         * Generated
-                         */
-                        PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getIsHangingNode() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setIsHangingNode(const bool& isHangingNode) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         RefinementControl getRefinementControl() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setRefinementControl(const RefinementControl& refinementControl) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         int getAdjacentCellsHeight() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         InsideOutsideDomain getInsideOutsideDomain() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                        
-                         tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                        
-                         void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         int getLevel() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setLevel(const int& level) ;
-                        
-                         tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                        
-                         void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                        
-                        
-                     };
-                     
-                  private: 
-                     PersistentRecords _persistentRecords;
-                     int _adjacentCellsHeightOfPreviousIteration;
-                     int _numberOfAdjacentRefinedCells;
-                     
-                  public:
-                     /**
-                      * Generated
-                      */
-                     TestVertexPacked();
-                     
-                     /**
-                      * Generated
-                      */
-                     TestVertexPacked(const PersistentRecords& persistentRecords);
-                     
-                     /**
-                      * Generated
-                      */
-                     TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                     
-                     /**
-                      * Generated
-                      */
-                     TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                     
-                     /**
-                      * Generated
-                      */
-                     virtual ~TestVertexPacked();
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getIsHangingNode() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setIsHangingNode(const bool& isHangingNode) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      RefinementControl getRefinementControl() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setRefinementControl(const RefinementControl& refinementControl) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getAdjacentCellsHeight() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getAdjacentCellsHeightOfPreviousIteration() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getNumberOfAdjacentRefinedCells() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      InsideOutsideDomain getInsideOutsideDomain() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                     
-                      tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                     
-                      void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                     
-                      double getX(int elementIndex) const ;
-                     
-                      void setX(int elementIndex, const double& x) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getLevel() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setLevel(const int& level) ;
-                     
-                      tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                     
-                      void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                     
-                      int getAdjacentRanks(int elementIndex) const ;
-                     
-                      void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                     
-                     /**
-                      * Generated
-                      */
-                     static std::string toString(const InsideOutsideDomain& param);
-                     
-                     /**
-                      * Generated
-                      */
-                     static std::string getInsideOutsideDomainMapping();
-                     
-                     /**
-                      * Generated
-                      */
-                     static std::string toString(const RefinementControl& param);
-                     
-                     /**
-                      * Generated
-                      */
-                     static std::string getRefinementControlMapping();
-                     
-                     /**
-                      * Generated
-                      */
-                     std::string toString() const;
-                     
-                     /**
-                      * Generated
-                      */
-                     void toString(std::ostream& out) const;
-                     
-                     
-                     PersistentRecords getPersistentRecords() const;
-                     /**
-                      * Generated
-                      */
-                     TestVertex convert() const;
-                     
-                     
-                  #ifdef Parallel
-                     protected:
-                        static tarch::logging::Log _log;
-                        
-                        int _senderDestinationRank;
-                        
-                     public:
-                        
-                        /**
-                         * Global that represents the mpi datatype.
-                         * There are two variants: Datatype identifies only those attributes marked with
-                         * parallelise. FullDatatype instead identifies the whole record with all fields.
-                         */
-                        static MPI_Datatype Datatype;
-                        static MPI_Datatype FullDatatype;
-                        
-                        /**
-                         * Initializes the data type for the mpi operations. Has to be called
-                         * before the very first send or receive operation is called.
-                         */
-                        static void initDatatype();
-                        
-                        static void shutdownDatatype();
-                        
-                        /**
-                         * @param communicateSleep -1 Data exchange through blocking mpi
-                         * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                         * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                         */
-                        void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                        
-                        void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                        
-                        static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                        
-                        int getSenderRank() const;
-                        
-                  #endif
-                     
-                  };
-                  
-                  
+               TestVertexPacked(const PersistentRecords& persistentRecords);
                
-            #elif defined(Parallel) && defined(PersistentRegularSubtrees) && !defined(Asserts)
                /**
-                * @author This class is generated by DaStGen
-                * 		   DataStructureGenerator (DaStGen)
-                * 		   2007-2009 Wolfgang Eckhardt
-                * 		   2012      Tobias Weinzierl
-                *
-                * 		   build date: 09-02-2014 14:40
-                *
-                * @date   21/03/2017 02:50
+                * Generated
                 */
-               class peano::grid::tests::records::TestVertex { 
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+                double getX(int elementIndex) const ;
+               
+                void setX(int elementIndex, const double& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertex convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
                   
-                  public:
-                     
-                     typedef peano::grid::tests::records::TestVertexPacked Packed;
-                     
-                     enum InsideOutsideDomain {
-                        Inside = 0, Boundary = 1, Outside = 2
-                     };
-                     
-                     enum RefinementControl {
-                        Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
-                     };
-                     
-                     struct PersistentRecords {
-                        bool _isHangingNode;
-                        RefinementControl _refinementControl;
-                        int _adjacentCellsHeight;
-                        InsideOutsideDomain _insideOutsideDomain;
-                        tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
-                        bool _adjacentSubtreeForksIntoOtherRank;
-                        bool _parentRegularPersistentSubgrid;
-                        bool _parentRegularPersistentSubgridInPreviousIteration;
-                        /**
-                         * Generated
-                         */
-                        PersistentRecords();
-                        
-                        /**
-                         * Generated
-                         */
-                        PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getIsHangingNode() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setIsHangingNode(const bool& isHangingNode) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         RefinementControl getRefinementControl() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setRefinementControl(const RefinementControl& refinementControl) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         int getAdjacentCellsHeight() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         InsideOutsideDomain getInsideOutsideDomain() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                        
-                         tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                        
-                         void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getParentRegularPersistentSubgrid() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                        
-                        
-                     };
-                     
-                  private: 
-                     PersistentRecords _persistentRecords;
-                     int _adjacentCellsHeightOfPreviousIteration;
-                     int _numberOfAdjacentRefinedCells;
-                     
-                  public:
-                     /**
-                      * Generated
-                      */
-                     TestVertex();
-                     
-                     /**
-                      * Generated
-                      */
-                     TestVertex(const PersistentRecords& persistentRecords);
-                     
-                     /**
-                      * Generated
-                      */
-                     TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                     
-                     /**
-                      * Generated
-                      */
-                     TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                     
-                     /**
-                      * Generated
-                      */
-                     virtual ~TestVertex();
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getIsHangingNode() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setIsHangingNode(const bool& isHangingNode) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      RefinementControl getRefinementControl() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setRefinementControl(const RefinementControl& refinementControl) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getAdjacentCellsHeight() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getAdjacentCellsHeightOfPreviousIteration() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getNumberOfAdjacentRefinedCells() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      InsideOutsideDomain getInsideOutsideDomain() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                     
-                      tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                     
-                      void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                     
-                      int getAdjacentRanks(int elementIndex) const ;
-                     
-                      void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getParentRegularPersistentSubgrid() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                     
-                     /**
-                      * Generated
-                      */
-                     static std::string toString(const InsideOutsideDomain& param);
-                     
-                     /**
-                      * Generated
-                      */
-                     static std::string getInsideOutsideDomainMapping();
-                     
-                     /**
-                      * Generated
-                      */
-                     static std::string toString(const RefinementControl& param);
-                     
-                     /**
-                      * Generated
-                      */
-                     static std::string getRefinementControlMapping();
-                     
-                     /**
-                      * Generated
-                      */
-                     std::string toString() const;
-                     
-                     /**
-                      * Generated
-                      */
-                     void toString(std::ostream& out) const;
-                     
-                     
-                     PersistentRecords getPersistentRecords() const;
-                     /**
-                      * Generated
-                      */
-                     TestVertexPacked convert() const;
-                     
-                     
-                  #ifdef Parallel
-                     protected:
-                        static tarch::logging::Log _log;
-                        
-                        int _senderDestinationRank;
-                        
-                     public:
-                        
-                        /**
-                         * Global that represents the mpi datatype.
-                         * There are two variants: Datatype identifies only those attributes marked with
-                         * parallelise. FullDatatype instead identifies the whole record with all fields.
-                         */
-                        static MPI_Datatype Datatype;
-                        static MPI_Datatype FullDatatype;
-                        
-                        /**
-                         * Initializes the data type for the mpi operations. Has to be called
-                         * before the very first send or receive operation is called.
-                         */
-                        static void initDatatype();
-                        
-                        static void shutdownDatatype();
-                        
-                        /**
-                         * @param communicateSleep -1 Data exchange through blocking mpi
-                         * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                         * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                         */
-                        void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                        
-                        void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                        
-                        static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                        
-                        int getSenderRank() const;
-                        
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
                   #endif
-                     
-                  };
+         
+      };
+      
+      
+   #elif defined(Parallel) && !defined(PersistentRegularSubtrees) && defined(Asserts)
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertex { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertexPacked Packed;
+            
+            enum InsideOutsideDomain {
+               Inside = 0, Boundary = 1, Outside = 2
+            };
+            
+            enum RefinementControl {
+               Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
+            };
+            
+            struct PersistentRecords {
+               bool _isHangingNode;
+               RefinementControl _refinementControl;
+               int _adjacentCellsHeight;
+               InsideOutsideDomain _insideOutsideDomain;
+               tarch::la::Vector<DIMENSIONS,double> _x;
+               int _level;
+               tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+               bool _adjacentSubtreeForksIntoOtherRank;
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertex();
+               
+               /**
+                * Generated
+                */
+               TestVertex(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertex();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+                double getX(int elementIndex) const ;
+               
+                void setX(int elementIndex, const double& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+                int getAdjacentRanks(int elementIndex) const ;
+               
+                void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertexPacked convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
                   
                   /**
-                   * @author This class is generated by DaStGen
-                   * 		   DataStructureGenerator (DaStGen)
-                   * 		   2007-2009 Wolfgang Eckhardt
-                   * 		   2012      Tobias Weinzierl
-                   *
-                   * 		   build date: 09-02-2014 14:40
-                   *
-                   * @date   21/03/2017 02:50
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
                    */
-                  class peano::grid::tests::records::TestVertexPacked { 
-                     
-                     public:
-                        
-                        typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
-                        
-                        typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
-                        
-                        struct PersistentRecords {
-                           int _adjacentCellsHeight;
-                           tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
-                           bool _adjacentSubtreeForksIntoOtherRank;
-                           bool _parentRegularPersistentSubgrid;
-                           bool _parentRegularPersistentSubgridInPreviousIteration;
-                           
-                           /** mapping of records:
-                           || Member 	|| startbit 	|| length
-                            |  isHangingNode	| startbit 0	| #bits 1
-                            |  refinementControl	| startbit 1	| #bits 3
-                            |  insideOutsideDomain	| startbit 4	| #bits 2
-                            */
-                           int _packedRecords0;
-                           
-                           /**
-                            * Generated
-                            */
-                           PersistentRecords();
-                           
-                           /**
-                            * Generated
-                            */
-                           PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getIsHangingNode() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setIsHangingNode(const bool& isHangingNode) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            RefinementControl getRefinementControl() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setRefinementControl(const RefinementControl& refinementControl) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            int getAdjacentCellsHeight() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            InsideOutsideDomain getInsideOutsideDomain() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                           
-                            tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                           
-                            void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getParentRegularPersistentSubgrid() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                           
-                           
-                        };
-                        
-                     private: 
-                        PersistentRecords _persistentRecords;
-                        int _adjacentCellsHeightOfPreviousIteration;
-                        int _numberOfAdjacentRefinedCells;
-                        
-                     public:
-                        /**
-                         * Generated
-                         */
-                        TestVertexPacked();
-                        
-                        /**
-                         * Generated
-                         */
-                        TestVertexPacked(const PersistentRecords& persistentRecords);
-                        
-                        /**
-                         * Generated
-                         */
-                        TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                        
-                        /**
-                         * Generated
-                         */
-                        TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                        
-                        /**
-                         * Generated
-                         */
-                        virtual ~TestVertexPacked();
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getIsHangingNode() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setIsHangingNode(const bool& isHangingNode) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         RefinementControl getRefinementControl() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setRefinementControl(const RefinementControl& refinementControl) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         int getAdjacentCellsHeight() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         int getAdjacentCellsHeightOfPreviousIteration() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         int getNumberOfAdjacentRefinedCells() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         InsideOutsideDomain getInsideOutsideDomain() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                        
-                         tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                        
-                         void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                        
-                         int getAdjacentRanks(int elementIndex) const ;
-                        
-                         void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getParentRegularPersistentSubgrid() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                        
-                        /**
-                         * Generated
-                         */
-                        static std::string toString(const InsideOutsideDomain& param);
-                        
-                        /**
-                         * Generated
-                         */
-                        static std::string getInsideOutsideDomainMapping();
-                        
-                        /**
-                         * Generated
-                         */
-                        static std::string toString(const RefinementControl& param);
-                        
-                        /**
-                         * Generated
-                         */
-                        static std::string getRefinementControlMapping();
-                        
-                        /**
-                         * Generated
-                         */
-                        std::string toString() const;
-                        
-                        /**
-                         * Generated
-                         */
-                        void toString(std::ostream& out) const;
-                        
-                        
-                        PersistentRecords getPersistentRecords() const;
-                        /**
-                         * Generated
-                         */
-                        TestVertex convert() const;
-                        
-                        
-                     #ifdef Parallel
-                        protected:
-                           static tarch::logging::Log _log;
-                           
-                           int _senderDestinationRank;
-                           
-                        public:
-                           
-                           /**
-                            * Global that represents the mpi datatype.
-                            * There are two variants: Datatype identifies only those attributes marked with
-                            * parallelise. FullDatatype instead identifies the whole record with all fields.
-                            */
-                           static MPI_Datatype Datatype;
-                           static MPI_Datatype FullDatatype;
-                           
-                           /**
-                            * Initializes the data type for the mpi operations. Has to be called
-                            * before the very first send or receive operation is called.
-                            */
-                           static void initDatatype();
-                           
-                           static void shutdownDatatype();
-                           
-                           /**
-                            * @param communicateSleep -1 Data exchange through blocking mpi
-                            * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                            * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                            */
-                           void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                           
-                           void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                           
-                           static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                           
-                           int getSenderRank() const;
-                           
-                     #endif
-                        
-                     };
-                     
-                     
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
                   
-               #elif defined(PersistentRegularSubtrees) && !defined(Asserts) && !defined(Parallel)
                   /**
-                   * @author This class is generated by DaStGen
-                   * 		   DataStructureGenerator (DaStGen)
-                   * 		   2007-2009 Wolfgang Eckhardt
-                   * 		   2012      Tobias Weinzierl
-                   *
-                   * 		   build date: 09-02-2014 14:40
-                   *
-                   * @date   21/03/2017 02:50
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
                    */
-                  class peano::grid::tests::records::TestVertex { 
-                     
-                     public:
-                        
-                        typedef peano::grid::tests::records::TestVertexPacked Packed;
-                        
-                        enum InsideOutsideDomain {
-                           Inside = 0, Boundary = 1, Outside = 2
-                        };
-                        
-                        enum RefinementControl {
-                           Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
-                        };
-                        
-                        struct PersistentRecords {
-                           bool _isHangingNode;
-                           RefinementControl _refinementControl;
-                           int _adjacentCellsHeight;
-                           InsideOutsideDomain _insideOutsideDomain;
-                           bool _parentRegularPersistentSubgrid;
-                           bool _parentRegularPersistentSubgridInPreviousIteration;
-                           /**
-                            * Generated
-                            */
-                           PersistentRecords();
-                           
-                           /**
-                            * Generated
-                            */
-                           PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getIsHangingNode() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setIsHangingNode(const bool& isHangingNode) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            RefinementControl getRefinementControl() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setRefinementControl(const RefinementControl& refinementControl) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            int getAdjacentCellsHeight() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            InsideOutsideDomain getInsideOutsideDomain() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getParentRegularPersistentSubgrid() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                           
-                           
-                        };
-                        
-                     private: 
-                        PersistentRecords _persistentRecords;
-                        int _adjacentCellsHeightOfPreviousIteration;
-                        int _numberOfAdjacentRefinedCells;
-                        
-                     public:
-                        /**
-                         * Generated
-                         */
-                        TestVertex();
-                        
-                        /**
-                         * Generated
-                         */
-                        TestVertex(const PersistentRecords& persistentRecords);
-                        
-                        /**
-                         * Generated
-                         */
-                        TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                        
-                        /**
-                         * Generated
-                         */
-                        TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                        
-                        /**
-                         * Generated
-                         */
-                        virtual ~TestVertex();
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getIsHangingNode() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setIsHangingNode(const bool& isHangingNode) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         RefinementControl getRefinementControl() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setRefinementControl(const RefinementControl& refinementControl) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         int getAdjacentCellsHeight() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         int getAdjacentCellsHeightOfPreviousIteration() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         int getNumberOfAdjacentRefinedCells() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         InsideOutsideDomain getInsideOutsideDomain() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getParentRegularPersistentSubgrid() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                        
-                        /**
-                         * Generated
-                         */
-                         bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                        
-                        /**
-                         * Generated
-                         */
-                         void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                        
-                        /**
-                         * Generated
-                         */
-                        static std::string toString(const InsideOutsideDomain& param);
-                        
-                        /**
-                         * Generated
-                         */
-                        static std::string getInsideOutsideDomainMapping();
-                        
-                        /**
-                         * Generated
-                         */
-                        static std::string toString(const RefinementControl& param);
-                        
-                        /**
-                         * Generated
-                         */
-                        static std::string getRefinementControlMapping();
-                        
-                        /**
-                         * Generated
-                         */
-                        std::string toString() const;
-                        
-                        /**
-                         * Generated
-                         */
-                        void toString(std::ostream& out) const;
-                        
-                        
-                        PersistentRecords getPersistentRecords() const;
-                        /**
-                         * Generated
-                         */
-                        TestVertexPacked convert() const;
-                        
-                        
-                     #ifdef Parallel
-                        protected:
-                           static tarch::logging::Log _log;
-                           
-                           int _senderDestinationRank;
-                           
-                        public:
-                           
-                           /**
-                            * Global that represents the mpi datatype.
-                            * There are two variants: Datatype identifies only those attributes marked with
-                            * parallelise. FullDatatype instead identifies the whole record with all fields.
-                            */
-                           static MPI_Datatype Datatype;
-                           static MPI_Datatype FullDatatype;
-                           
-                           /**
-                            * Initializes the data type for the mpi operations. Has to be called
-                            * before the very first send or receive operation is called.
-                            */
-                           static void initDatatype();
-                           
-                           static void shutdownDatatype();
-                           
-                           /**
-                            * @param communicateSleep -1 Data exchange through blocking mpi
-                            * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                            * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                            */
-                           void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                           
-                           void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                           
-                           static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                           
-                           int getSenderRank() const;
-                           
-                     #endif
-                        
-                     };
-                     
-                     /**
-                      * @author This class is generated by DaStGen
-                      * 		   DataStructureGenerator (DaStGen)
-                      * 		   2007-2009 Wolfgang Eckhardt
-                      * 		   2012      Tobias Weinzierl
-                      *
-                      * 		   build date: 09-02-2014 14:40
-                      *
-                      * @date   21/03/2017 02:50
-                      */
-                     class peano::grid::tests::records::TestVertexPacked { 
-                        
-                        public:
-                           
-                           typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
-                           
-                           typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
-                           
-                           struct PersistentRecords {
-                              int _adjacentCellsHeight;
-                              bool _parentRegularPersistentSubgrid;
-                              bool _parentRegularPersistentSubgridInPreviousIteration;
-                              
-                              /** mapping of records:
-                              || Member 	|| startbit 	|| length
-                               |  isHangingNode	| startbit 0	| #bits 1
-                               |  refinementControl	| startbit 1	| #bits 3
-                               |  insideOutsideDomain	| startbit 4	| #bits 2
-                               */
-                              int _packedRecords0;
-                              
-                              /**
-                               * Generated
-                               */
-                              PersistentRecords();
-                              
-                              /**
-                               * Generated
-                               */
-                              PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                              
-                              /**
-                               * Generated
-                               */
-                               bool getIsHangingNode() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setIsHangingNode(const bool& isHangingNode) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               RefinementControl getRefinementControl() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setRefinementControl(const RefinementControl& refinementControl) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               int getAdjacentCellsHeight() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               InsideOutsideDomain getInsideOutsideDomain() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               bool getParentRegularPersistentSubgrid() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                              
-                              
-                           };
-                           
-                        private: 
-                           PersistentRecords _persistentRecords;
-                           int _adjacentCellsHeightOfPreviousIteration;
-                           int _numberOfAdjacentRefinedCells;
-                           
-                        public:
-                           /**
-                            * Generated
-                            */
-                           TestVertexPacked();
-                           
-                           /**
-                            * Generated
-                            */
-                           TestVertexPacked(const PersistentRecords& persistentRecords);
-                           
-                           /**
-                            * Generated
-                            */
-                           TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                           
-                           /**
-                            * Generated
-                            */
-                           TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
-                           
-                           /**
-                            * Generated
-                            */
-                           virtual ~TestVertexPacked();
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getIsHangingNode() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setIsHangingNode(const bool& isHangingNode) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            RefinementControl getRefinementControl() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setRefinementControl(const RefinementControl& refinementControl) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            int getAdjacentCellsHeight() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            int getAdjacentCellsHeightOfPreviousIteration() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            int getNumberOfAdjacentRefinedCells() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            InsideOutsideDomain getInsideOutsideDomain() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getParentRegularPersistentSubgrid() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getParentRegularPersistentSubgridInPreviousIteration() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
-                           
-                           /**
-                            * Generated
-                            */
-                           static std::string toString(const InsideOutsideDomain& param);
-                           
-                           /**
-                            * Generated
-                            */
-                           static std::string getInsideOutsideDomainMapping();
-                           
-                           /**
-                            * Generated
-                            */
-                           static std::string toString(const RefinementControl& param);
-                           
-                           /**
-                            * Generated
-                            */
-                           static std::string getRefinementControlMapping();
-                           
-                           /**
-                            * Generated
-                            */
-                           std::string toString() const;
-                           
-                           /**
-                            * Generated
-                            */
-                           void toString(std::ostream& out) const;
-                           
-                           
-                           PersistentRecords getPersistentRecords() const;
-                           /**
-                            * Generated
-                            */
-                           TestVertex convert() const;
-                           
-                           
-                        #ifdef Parallel
-                           protected:
-                              static tarch::logging::Log _log;
-                              
-                              int _senderDestinationRank;
-                              
-                           public:
-                              
-                              /**
-                               * Global that represents the mpi datatype.
-                               * There are two variants: Datatype identifies only those attributes marked with
-                               * parallelise. FullDatatype instead identifies the whole record with all fields.
-                               */
-                              static MPI_Datatype Datatype;
-                              static MPI_Datatype FullDatatype;
-                              
-                              /**
-                               * Initializes the data type for the mpi operations. Has to be called
-                               * before the very first send or receive operation is called.
-                               */
-                              static void initDatatype();
-                              
-                              static void shutdownDatatype();
-                              
-                              /**
-                               * @param communicateSleep -1 Data exchange through blocking mpi
-                               * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                               * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                               */
-                              void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                              
-                              void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                              
-                              static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                              
-                              int getSenderRank() const;
-                              
-                        #endif
-                           
-                        };
-                        
-                        
-                     
-                  #elif !defined(PersistentRegularSubtrees) && defined(Asserts) && !defined(Parallel)
-                     /**
-                      * @author This class is generated by DaStGen
-                      * 		   DataStructureGenerator (DaStGen)
-                      * 		   2007-2009 Wolfgang Eckhardt
-                      * 		   2012      Tobias Weinzierl
-                      *
-                      * 		   build date: 09-02-2014 14:40
-                      *
-                      * @date   21/03/2017 02:50
-                      */
-                     class peano::grid::tests::records::TestVertex { 
-                        
-                        public:
-                           
-                           typedef peano::grid::tests::records::TestVertexPacked Packed;
-                           
-                           enum InsideOutsideDomain {
-                              Inside = 0, Boundary = 1, Outside = 2
-                           };
-                           
-                           enum RefinementControl {
-                              Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
-                           };
-                           
-                           struct PersistentRecords {
-                              bool _isHangingNode;
-                              RefinementControl _refinementControl;
-                              int _adjacentCellsHeight;
-                              InsideOutsideDomain _insideOutsideDomain;
-                              tarch::la::Vector<DIMENSIONS,double> _x;
-                              int _level;
-                              /**
-                               * Generated
-                               */
-                              PersistentRecords();
-                              
-                              /**
-                               * Generated
-                               */
-                              PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
-                              
-                              /**
-                               * Generated
-                               */
-                               bool getIsHangingNode() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setIsHangingNode(const bool& isHangingNode) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               RefinementControl getRefinementControl() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setRefinementControl(const RefinementControl& refinementControl) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               int getAdjacentCellsHeight() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               InsideOutsideDomain getInsideOutsideDomain() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                              
-                               tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                              
-                               void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               int getLevel() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setLevel(const int& level) ;
-                              
-                              
-                           };
-                           
-                        private: 
-                           PersistentRecords _persistentRecords;
-                           int _adjacentCellsHeightOfPreviousIteration;
-                           int _numberOfAdjacentRefinedCells;
-                           
-                        public:
-                           /**
-                            * Generated
-                            */
-                           TestVertex();
-                           
-                           /**
-                            * Generated
-                            */
-                           TestVertex(const PersistentRecords& persistentRecords);
-                           
-                           /**
-                            * Generated
-                            */
-                           TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
-                           
-                           /**
-                            * Generated
-                            */
-                           TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
-                           
-                           /**
-                            * Generated
-                            */
-                           virtual ~TestVertex();
-                           
-                           /**
-                            * Generated
-                            */
-                            bool getIsHangingNode() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setIsHangingNode(const bool& isHangingNode) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            RefinementControl getRefinementControl() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setRefinementControl(const RefinementControl& refinementControl) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            int getAdjacentCellsHeight() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            int getAdjacentCellsHeightOfPreviousIteration() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            int getNumberOfAdjacentRefinedCells() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            InsideOutsideDomain getInsideOutsideDomain() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                           
-                            tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                           
-                            void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                           
-                            double getX(int elementIndex) const ;
-                           
-                            void setX(int elementIndex, const double& x) ;
-                           
-                           /**
-                            * Generated
-                            */
-                            int getLevel() const ;
-                           
-                           /**
-                            * Generated
-                            */
-                            void setLevel(const int& level) ;
-                           
-                           /**
-                            * Generated
-                            */
-                           static std::string toString(const InsideOutsideDomain& param);
-                           
-                           /**
-                            * Generated
-                            */
-                           static std::string getInsideOutsideDomainMapping();
-                           
-                           /**
-                            * Generated
-                            */
-                           static std::string toString(const RefinementControl& param);
-                           
-                           /**
-                            * Generated
-                            */
-                           static std::string getRefinementControlMapping();
-                           
-                           /**
-                            * Generated
-                            */
-                           std::string toString() const;
-                           
-                           /**
-                            * Generated
-                            */
-                           void toString(std::ostream& out) const;
-                           
-                           
-                           PersistentRecords getPersistentRecords() const;
-                           /**
-                            * Generated
-                            */
-                           TestVertexPacked convert() const;
-                           
-                           
-                        #ifdef Parallel
-                           protected:
-                              static tarch::logging::Log _log;
-                              
-                              int _senderDestinationRank;
-                              
-                           public:
-                              
-                              /**
-                               * Global that represents the mpi datatype.
-                               * There are two variants: Datatype identifies only those attributes marked with
-                               * parallelise. FullDatatype instead identifies the whole record with all fields.
-                               */
-                              static MPI_Datatype Datatype;
-                              static MPI_Datatype FullDatatype;
-                              
-                              /**
-                               * Initializes the data type for the mpi operations. Has to be called
-                               * before the very first send or receive operation is called.
-                               */
-                              static void initDatatype();
-                              
-                              static void shutdownDatatype();
-                              
-                              /**
-                               * @param communicateSleep -1 Data exchange through blocking mpi
-                               * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                               * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                               */
-                              void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                              
-                              void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                              
-                              static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                              
-                              int getSenderRank() const;
-                              
-                        #endif
-                           
-                        };
-                        
-                        /**
-                         * @author This class is generated by DaStGen
-                         * 		   DataStructureGenerator (DaStGen)
-                         * 		   2007-2009 Wolfgang Eckhardt
-                         * 		   2012      Tobias Weinzierl
-                         *
-                         * 		   build date: 09-02-2014 14:40
-                         *
-                         * @date   21/03/2017 02:50
-                         */
-                        class peano::grid::tests::records::TestVertexPacked { 
-                           
-                           public:
-                              
-                              typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
-                              
-                              typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
-                              
-                              struct PersistentRecords {
-                                 int _adjacentCellsHeight;
-                                 tarch::la::Vector<DIMENSIONS,double> _x;
-                                 int _level;
-                                 
-                                 /** mapping of records:
-                                 || Member 	|| startbit 	|| length
-                                  |  isHangingNode	| startbit 0	| #bits 1
-                                  |  refinementControl	| startbit 1	| #bits 3
-                                  |  insideOutsideDomain	| startbit 4	| #bits 2
-                                  */
-                                 int _packedRecords0;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 PersistentRecords();
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  bool getIsHangingNode() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setIsHangingNode(const bool& isHangingNode) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  RefinementControl getRefinementControl() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setRefinementControl(const RefinementControl& refinementControl) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  int getAdjacentCellsHeight() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  InsideOutsideDomain getInsideOutsideDomain() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                                 
-                                  tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                                 
-                                  void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  int getLevel() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setLevel(const int& level) ;
-                                 
-                                 
-                              };
-                              
-                           private: 
-                              PersistentRecords _persistentRecords;
-                              int _adjacentCellsHeightOfPreviousIteration;
-                              int _numberOfAdjacentRefinedCells;
-                              
-                           public:
-                              /**
-                               * Generated
-                               */
-                              TestVertexPacked();
-                              
-                              /**
-                               * Generated
-                               */
-                              TestVertexPacked(const PersistentRecords& persistentRecords);
-                              
-                              /**
-                               * Generated
-                               */
-                              TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
-                              
-                              /**
-                               * Generated
-                               */
-                              TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
-                              
-                              /**
-                               * Generated
-                               */
-                              virtual ~TestVertexPacked();
-                              
-                              /**
-                               * Generated
-                               */
-                               bool getIsHangingNode() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setIsHangingNode(const bool& isHangingNode) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               RefinementControl getRefinementControl() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setRefinementControl(const RefinementControl& refinementControl) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               int getAdjacentCellsHeight() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               int getAdjacentCellsHeightOfPreviousIteration() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               int getNumberOfAdjacentRefinedCells() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               InsideOutsideDomain getInsideOutsideDomain() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                              
-                               tarch::la::Vector<DIMENSIONS,double> getX() const ;
-                              
-                               void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
-                              
-                               double getX(int elementIndex) const ;
-                              
-                               void setX(int elementIndex, const double& x) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               int getLevel() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setLevel(const int& level) ;
-                              
-                              /**
-                               * Generated
-                               */
-                              static std::string toString(const InsideOutsideDomain& param);
-                              
-                              /**
-                               * Generated
-                               */
-                              static std::string getInsideOutsideDomainMapping();
-                              
-                              /**
-                               * Generated
-                               */
-                              static std::string toString(const RefinementControl& param);
-                              
-                              /**
-                               * Generated
-                               */
-                              static std::string getRefinementControlMapping();
-                              
-                              /**
-                               * Generated
-                               */
-                              std::string toString() const;
-                              
-                              /**
-                               * Generated
-                               */
-                              void toString(std::ostream& out) const;
-                              
-                              
-                              PersistentRecords getPersistentRecords() const;
-                              /**
-                               * Generated
-                               */
-                              TestVertex convert() const;
-                              
-                              
-                           #ifdef Parallel
-                              protected:
-                                 static tarch::logging::Log _log;
-                                 
-                                 int _senderDestinationRank;
-                                 
-                              public:
-                                 
-                                 /**
-                                  * Global that represents the mpi datatype.
-                                  * There are two variants: Datatype identifies only those attributes marked with
-                                  * parallelise. FullDatatype instead identifies the whole record with all fields.
-                                  */
-                                 static MPI_Datatype Datatype;
-                                 static MPI_Datatype FullDatatype;
-                                 
-                                 /**
-                                  * Initializes the data type for the mpi operations. Has to be called
-                                  * before the very first send or receive operation is called.
-                                  */
-                                 static void initDatatype();
-                                 
-                                 static void shutdownDatatype();
-                                 
-                                 /**
-                                  * @param communicateSleep -1 Data exchange through blocking mpi
-                                  * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                                  * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                                  */
-                                 void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                 
-                                 void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                 
-                                 static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                                 
-                                 int getSenderRank() const;
-                                 
-                           #endif
-                              
-                           };
-                           
-                           
-                        
-                     #elif defined(Parallel) && !defined(PersistentRegularSubtrees) && !defined(Asserts)
-                        /**
-                         * @author This class is generated by DaStGen
-                         * 		   DataStructureGenerator (DaStGen)
-                         * 		   2007-2009 Wolfgang Eckhardt
-                         * 		   2012      Tobias Weinzierl
-                         *
-                         * 		   build date: 09-02-2014 14:40
-                         *
-                         * @date   21/03/2017 02:50
-                         */
-                        class peano::grid::tests::records::TestVertex { 
-                           
-                           public:
-                              
-                              typedef peano::grid::tests::records::TestVertexPacked Packed;
-                              
-                              enum InsideOutsideDomain {
-                                 Inside = 0, Boundary = 1, Outside = 2
-                              };
-                              
-                              enum RefinementControl {
-                                 Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
-                              };
-                              
-                              struct PersistentRecords {
-                                 bool _isHangingNode;
-                                 RefinementControl _refinementControl;
-                                 int _adjacentCellsHeight;
-                                 InsideOutsideDomain _insideOutsideDomain;
-                                 tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
-                                 bool _adjacentSubtreeForksIntoOtherRank;
-                                 /**
-                                  * Generated
-                                  */
-                                 PersistentRecords();
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  bool getIsHangingNode() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setIsHangingNode(const bool& isHangingNode) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  RefinementControl getRefinementControl() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setRefinementControl(const RefinementControl& refinementControl) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  int getAdjacentCellsHeight() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  InsideOutsideDomain getInsideOutsideDomain() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                                 
-                                  tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                                 
-                                  void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                                 
-                                 
-                              };
-                              
-                           private: 
-                              PersistentRecords _persistentRecords;
-                              int _adjacentCellsHeightOfPreviousIteration;
-                              int _numberOfAdjacentRefinedCells;
-                              
-                           public:
-                              /**
-                               * Generated
-                               */
-                              TestVertex();
-                              
-                              /**
-                               * Generated
-                               */
-                              TestVertex(const PersistentRecords& persistentRecords);
-                              
-                              /**
-                               * Generated
-                               */
-                              TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                              
-                              /**
-                               * Generated
-                               */
-                              TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                              
-                              /**
-                               * Generated
-                               */
-                              virtual ~TestVertex();
-                              
-                              /**
-                               * Generated
-                               */
-                               bool getIsHangingNode() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setIsHangingNode(const bool& isHangingNode) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               RefinementControl getRefinementControl() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setRefinementControl(const RefinementControl& refinementControl) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               int getAdjacentCellsHeight() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               int getAdjacentCellsHeightOfPreviousIteration() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               int getNumberOfAdjacentRefinedCells() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               InsideOutsideDomain getInsideOutsideDomain() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                              
-                               tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                              
-                               void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                              
-                               int getAdjacentRanks(int elementIndex) const ;
-                              
-                               void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-                              
-                              /**
-                               * Generated
-                               */
-                               bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                              
-                              /**
-                               * Generated
-                               */
-                               void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                              
-                              /**
-                               * Generated
-                               */
-                              static std::string toString(const InsideOutsideDomain& param);
-                              
-                              /**
-                               * Generated
-                               */
-                              static std::string getInsideOutsideDomainMapping();
-                              
-                              /**
-                               * Generated
-                               */
-                              static std::string toString(const RefinementControl& param);
-                              
-                              /**
-                               * Generated
-                               */
-                              static std::string getRefinementControlMapping();
-                              
-                              /**
-                               * Generated
-                               */
-                              std::string toString() const;
-                              
-                              /**
-                               * Generated
-                               */
-                              void toString(std::ostream& out) const;
-                              
-                              
-                              PersistentRecords getPersistentRecords() const;
-                              /**
-                               * Generated
-                               */
-                              TestVertexPacked convert() const;
-                              
-                              
-                           #ifdef Parallel
-                              protected:
-                                 static tarch::logging::Log _log;
-                                 
-                                 int _senderDestinationRank;
-                                 
-                              public:
-                                 
-                                 /**
-                                  * Global that represents the mpi datatype.
-                                  * There are two variants: Datatype identifies only those attributes marked with
-                                  * parallelise. FullDatatype instead identifies the whole record with all fields.
-                                  */
-                                 static MPI_Datatype Datatype;
-                                 static MPI_Datatype FullDatatype;
-                                 
-                                 /**
-                                  * Initializes the data type for the mpi operations. Has to be called
-                                  * before the very first send or receive operation is called.
-                                  */
-                                 static void initDatatype();
-                                 
-                                 static void shutdownDatatype();
-                                 
-                                 /**
-                                  * @param communicateSleep -1 Data exchange through blocking mpi
-                                  * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                                  * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                                  */
-                                 void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                 
-                                 void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                 
-                                 static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                                 
-                                 int getSenderRank() const;
-                                 
-                           #endif
-                              
-                           };
-                           
-                           /**
-                            * @author This class is generated by DaStGen
-                            * 		   DataStructureGenerator (DaStGen)
-                            * 		   2007-2009 Wolfgang Eckhardt
-                            * 		   2012      Tobias Weinzierl
-                            *
-                            * 		   build date: 09-02-2014 14:40
-                            *
-                            * @date   21/03/2017 02:50
-                            */
-                           class peano::grid::tests::records::TestVertexPacked { 
-                              
-                              public:
-                                 
-                                 typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
-                                 
-                                 typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
-                                 
-                                 struct PersistentRecords {
-                                    int _adjacentCellsHeight;
-                                    tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
-                                    bool _adjacentSubtreeForksIntoOtherRank;
-                                    
-                                    /** mapping of records:
-                                    || Member 	|| startbit 	|| length
-                                     |  isHangingNode	| startbit 0	| #bits 1
-                                     |  refinementControl	| startbit 1	| #bits 3
-                                     |  insideOutsideDomain	| startbit 4	| #bits 2
-                                     */
-                                    int _packedRecords0;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    PersistentRecords();
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     bool getIsHangingNode() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setIsHangingNode(const bool& isHangingNode) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     RefinementControl getRefinementControl() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setRefinementControl(const RefinementControl& refinementControl) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     int getAdjacentCellsHeight() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     InsideOutsideDomain getInsideOutsideDomain() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                                    
-                                     tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                                    
-                                     void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                                    
-                                    
-                                 };
-                                 
-                              private: 
-                                 PersistentRecords _persistentRecords;
-                                 int _adjacentCellsHeightOfPreviousIteration;
-                                 int _numberOfAdjacentRefinedCells;
-                                 
-                              public:
-                                 /**
-                                  * Generated
-                                  */
-                                 TestVertexPacked();
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 TestVertexPacked(const PersistentRecords& persistentRecords);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 virtual ~TestVertexPacked();
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  bool getIsHangingNode() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setIsHangingNode(const bool& isHangingNode) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  RefinementControl getRefinementControl() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setRefinementControl(const RefinementControl& refinementControl) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  int getAdjacentCellsHeight() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  int getAdjacentCellsHeightOfPreviousIteration() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  int getNumberOfAdjacentRefinedCells() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  InsideOutsideDomain getInsideOutsideDomain() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                                 
-                                  tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
-                                 
-                                  void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
-                                 
-                                  int getAdjacentRanks(int elementIndex) const ;
-                                 
-                                  void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  bool getAdjacentSubtreeForksIntoOtherRank() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 static std::string toString(const InsideOutsideDomain& param);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 static std::string getInsideOutsideDomainMapping();
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 static std::string toString(const RefinementControl& param);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 static std::string getRefinementControlMapping();
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 std::string toString() const;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 void toString(std::ostream& out) const;
-                                 
-                                 
-                                 PersistentRecords getPersistentRecords() const;
-                                 /**
-                                  * Generated
-                                  */
-                                 TestVertex convert() const;
-                                 
-                                 
-                              #ifdef Parallel
-                                 protected:
-                                    static tarch::logging::Log _log;
-                                    
-                                    int _senderDestinationRank;
-                                    
-                                 public:
-                                    
-                                    /**
-                                     * Global that represents the mpi datatype.
-                                     * There are two variants: Datatype identifies only those attributes marked with
-                                     * parallelise. FullDatatype instead identifies the whole record with all fields.
-                                     */
-                                    static MPI_Datatype Datatype;
-                                    static MPI_Datatype FullDatatype;
-                                    
-                                    /**
-                                     * Initializes the data type for the mpi operations. Has to be called
-                                     * before the very first send or receive operation is called.
-                                     */
-                                    static void initDatatype();
-                                    
-                                    static void shutdownDatatype();
-                                    
-                                    /**
-                                     * @param communicateSleep -1 Data exchange through blocking mpi
-                                     * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                                     * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                                     */
-                                    void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                    
-                                    void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                    
-                                    static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                                    
-                                    int getSenderRank() const;
-                                    
-                              #endif
-                                 
-                              };
-                              
-                              
-                           
-                        #elif !defined(PersistentRegularSubtrees) && !defined(Asserts) && !defined(Parallel)
-                           /**
-                            * @author This class is generated by DaStGen
-                            * 		   DataStructureGenerator (DaStGen)
-                            * 		   2007-2009 Wolfgang Eckhardt
-                            * 		   2012      Tobias Weinzierl
-                            *
-                            * 		   build date: 09-02-2014 14:40
-                            *
-                            * @date   21/03/2017 02:50
-                            */
-                           class peano::grid::tests::records::TestVertex { 
-                              
-                              public:
-                                 
-                                 typedef peano::grid::tests::records::TestVertexPacked Packed;
-                                 
-                                 enum InsideOutsideDomain {
-                                    Inside = 0, Boundary = 1, Outside = 2
-                                 };
-                                 
-                                 enum RefinementControl {
-                                    Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
-                                 };
-                                 
-                                 struct PersistentRecords {
-                                    bool _isHangingNode;
-                                    RefinementControl _refinementControl;
-                                    int _adjacentCellsHeight;
-                                    InsideOutsideDomain _insideOutsideDomain;
-                                    /**
-                                     * Generated
-                                     */
-                                    PersistentRecords();
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     bool getIsHangingNode() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setIsHangingNode(const bool& isHangingNode) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     RefinementControl getRefinementControl() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setRefinementControl(const RefinementControl& refinementControl) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     int getAdjacentCellsHeight() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     InsideOutsideDomain getInsideOutsideDomain() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                                    
-                                    
-                                 };
-                                 
-                              private: 
-                                 PersistentRecords _persistentRecords;
-                                 int _adjacentCellsHeightOfPreviousIteration;
-                                 int _numberOfAdjacentRefinedCells;
-                                 
-                              public:
-                                 /**
-                                  * Generated
-                                  */
-                                 TestVertex();
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 TestVertex(const PersistentRecords& persistentRecords);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 virtual ~TestVertex();
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  bool getIsHangingNode() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setIsHangingNode(const bool& isHangingNode) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  RefinementControl getRefinementControl() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setRefinementControl(const RefinementControl& refinementControl) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  int getAdjacentCellsHeight() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  int getAdjacentCellsHeightOfPreviousIteration() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  int getNumberOfAdjacentRefinedCells() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  InsideOutsideDomain getInsideOutsideDomain() const ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                  void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 static std::string toString(const InsideOutsideDomain& param);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 static std::string getInsideOutsideDomainMapping();
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 static std::string toString(const RefinementControl& param);
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 static std::string getRefinementControlMapping();
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 std::string toString() const;
-                                 
-                                 /**
-                                  * Generated
-                                  */
-                                 void toString(std::ostream& out) const;
-                                 
-                                 
-                                 PersistentRecords getPersistentRecords() const;
-                                 /**
-                                  * Generated
-                                  */
-                                 TestVertexPacked convert() const;
-                                 
-                                 
-                              #ifdef Parallel
-                                 protected:
-                                    static tarch::logging::Log _log;
-                                    
-                                    int _senderDestinationRank;
-                                    
-                                 public:
-                                    
-                                    /**
-                                     * Global that represents the mpi datatype.
-                                     * There are two variants: Datatype identifies only those attributes marked with
-                                     * parallelise. FullDatatype instead identifies the whole record with all fields.
-                                     */
-                                    static MPI_Datatype Datatype;
-                                    static MPI_Datatype FullDatatype;
-                                    
-                                    /**
-                                     * Initializes the data type for the mpi operations. Has to be called
-                                     * before the very first send or receive operation is called.
-                                     */
-                                    static void initDatatype();
-                                    
-                                    static void shutdownDatatype();
-                                    
-                                    /**
-                                     * @param communicateSleep -1 Data exchange through blocking mpi
-                                     * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                                     * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                                     */
-                                    void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                    
-                                    void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                    
-                                    static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                                    
-                                    int getSenderRank() const;
-                                    
-                              #endif
-                                 
-                              };
-                              
-                              /**
-                               * @author This class is generated by DaStGen
-                               * 		   DataStructureGenerator (DaStGen)
-                               * 		   2007-2009 Wolfgang Eckhardt
-                               * 		   2012      Tobias Weinzierl
-                               *
-                               * 		   build date: 09-02-2014 14:40
-                               *
-                               * @date   21/03/2017 02:50
-                               */
-                              class peano::grid::tests::records::TestVertexPacked { 
-                                 
-                                 public:
-                                    
-                                    typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
-                                    
-                                    typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
-                                    
-                                    struct PersistentRecords {
-                                       int _adjacentCellsHeight;
-                                       
-                                       /** mapping of records:
-                                       || Member 	|| startbit 	|| length
-                                        |  isHangingNode	| startbit 0	| #bits 1
-                                        |  refinementControl	| startbit 1	| #bits 3
-                                        |  insideOutsideDomain	| startbit 4	| #bits 2
-                                        */
-                                       int _packedRecords0;
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                       PersistentRecords();
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                       PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                        bool getIsHangingNode() const ;
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                        void setIsHangingNode(const bool& isHangingNode) ;
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                        RefinementControl getRefinementControl() const ;
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                        void setRefinementControl(const RefinementControl& refinementControl) ;
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                        int getAdjacentCellsHeight() const ;
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                        void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                        InsideOutsideDomain getInsideOutsideDomain() const ;
-                                       
-                                       /**
-                                        * Generated
-                                        */
-                                        void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                                       
-                                       
-                                    };
-                                    
-                                 private: 
-                                    PersistentRecords _persistentRecords;
-                                    int _adjacentCellsHeightOfPreviousIteration;
-                                    int _numberOfAdjacentRefinedCells;
-                                    
-                                 public:
-                                    /**
-                                     * Generated
-                                     */
-                                    TestVertexPacked();
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    TestVertexPacked(const PersistentRecords& persistentRecords);
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain);
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    virtual ~TestVertexPacked();
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     bool getIsHangingNode() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setIsHangingNode(const bool& isHangingNode) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     RefinementControl getRefinementControl() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setRefinementControl(const RefinementControl& refinementControl) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     int getAdjacentCellsHeight() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     int getAdjacentCellsHeightOfPreviousIteration() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     int getNumberOfAdjacentRefinedCells() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     InsideOutsideDomain getInsideOutsideDomain() const ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                     void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    static std::string toString(const InsideOutsideDomain& param);
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    static std::string getInsideOutsideDomainMapping();
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    static std::string toString(const RefinementControl& param);
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    static std::string getRefinementControlMapping();
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    std::string toString() const;
-                                    
-                                    /**
-                                     * Generated
-                                     */
-                                    void toString(std::ostream& out) const;
-                                    
-                                    
-                                    PersistentRecords getPersistentRecords() const;
-                                    /**
-                                     * Generated
-                                     */
-                                    TestVertex convert() const;
-                                    
-                                    
-                                 #ifdef Parallel
-                                    protected:
-                                       static tarch::logging::Log _log;
-                                       
-                                       int _senderDestinationRank;
-                                       
-                                    public:
-                                       
-                                       /**
-                                        * Global that represents the mpi datatype.
-                                        * There are two variants: Datatype identifies only those attributes marked with
-                                        * parallelise. FullDatatype instead identifies the whole record with all fields.
-                                        */
-                                       static MPI_Datatype Datatype;
-                                       static MPI_Datatype FullDatatype;
-                                       
-                                       /**
-                                        * Initializes the data type for the mpi operations. Has to be called
-                                        * before the very first send or receive operation is called.
-                                        */
-                                       static void initDatatype();
-                                       
-                                       static void shutdownDatatype();
-                                       
-                                       /**
-                                        * @param communicateSleep -1 Data exchange through blocking mpi
-                                        * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                                        * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                                        */
-                                       void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                       
-                                       void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                                       
-                                       static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                                       
-                                       int getSenderRank() const;
-                                       
-                                 #endif
-                                    
-                                 };
-                                 
-                                 
-                              
-                           #endif
-                           
-                           #endif
-                           
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertexPacked { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
+            
+            typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
+            
+            struct PersistentRecords {
+               int _adjacentCellsHeight;
+               tarch::la::Vector<DIMENSIONS,double> _x;
+               int _level;
+               tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+               bool _adjacentSubtreeForksIntoOtherRank;
+               
+               /** mapping of records:
+               || Member 	|| startbit 	|| length
+                |  isHangingNode	| startbit 0	| #bits 1
+                |  refinementControl	| startbit 1	| #bits 3
+                |  insideOutsideDomain	| startbit 4	| #bits 2
+                */
+               int _packedRecords0;
+               
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+                double getX(int elementIndex) const ;
+               
+                void setX(int elementIndex, const double& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+                int getAdjacentRanks(int elementIndex) const ;
+               
+                void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertex convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      
+   #elif defined(Parallel) && defined(PersistentRegularSubtrees) && !defined(Asserts)
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertex { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertexPacked Packed;
+            
+            enum InsideOutsideDomain {
+               Inside = 0, Boundary = 1, Outside = 2
+            };
+            
+            enum RefinementControl {
+               Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
+            };
+            
+            struct PersistentRecords {
+               bool _isHangingNode;
+               RefinementControl _refinementControl;
+               int _adjacentCellsHeight;
+               InsideOutsideDomain _insideOutsideDomain;
+               tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+               bool _adjacentSubtreeForksIntoOtherRank;
+               bool _parentRegularPersistentSubgrid;
+               bool _parentRegularPersistentSubgridInPreviousIteration;
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertex();
+               
+               /**
+                * Generated
+                */
+               TestVertex(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertex();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+                int getAdjacentRanks(int elementIndex) const ;
+               
+                void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertexPacked convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertexPacked { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
+            
+            typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
+            
+            struct PersistentRecords {
+               int _adjacentCellsHeight;
+               tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+               bool _adjacentSubtreeForksIntoOtherRank;
+               bool _parentRegularPersistentSubgrid;
+               bool _parentRegularPersistentSubgridInPreviousIteration;
+               
+               /** mapping of records:
+               || Member 	|| startbit 	|| length
+                |  isHangingNode	| startbit 0	| #bits 1
+                |  refinementControl	| startbit 1	| #bits 3
+                |  insideOutsideDomain	| startbit 4	| #bits 2
+                */
+               int _packedRecords0;
+               
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+                int getAdjacentRanks(int elementIndex) const ;
+               
+                void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertex convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      
+   #elif defined(PersistentRegularSubtrees) && !defined(Asserts) && !defined(Parallel)
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertex { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertexPacked Packed;
+            
+            enum InsideOutsideDomain {
+               Inside = 0, Boundary = 1, Outside = 2
+            };
+            
+            enum RefinementControl {
+               Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
+            };
+            
+            struct PersistentRecords {
+               bool _isHangingNode;
+               RefinementControl _refinementControl;
+               int _adjacentCellsHeight;
+               InsideOutsideDomain _insideOutsideDomain;
+               bool _parentRegularPersistentSubgrid;
+               bool _parentRegularPersistentSubgridInPreviousIteration;
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertex();
+               
+               /**
+                * Generated
+                */
+               TestVertex(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertex();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertexPacked convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertexPacked { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
+            
+            typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
+            
+            struct PersistentRecords {
+               int _adjacentCellsHeight;
+               bool _parentRegularPersistentSubgrid;
+               bool _parentRegularPersistentSubgridInPreviousIteration;
+               
+               /** mapping of records:
+               || Member 	|| startbit 	|| length
+                |  isHangingNode	| startbit 0	| #bits 1
+                |  refinementControl	| startbit 1	| #bits 3
+                |  insideOutsideDomain	| startbit 4	| #bits 2
+                */
+               int _packedRecords0;
+               
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const bool& parentRegularPersistentSubgrid, const bool& parentRegularPersistentSubgridInPreviousIteration);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgrid() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgrid(const bool& parentRegularPersistentSubgrid) ;
+               
+               /**
+                * Generated
+                */
+                bool getParentRegularPersistentSubgridInPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setParentRegularPersistentSubgridInPreviousIteration(const bool& parentRegularPersistentSubgridInPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertex convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      
+   #elif !defined(PersistentRegularSubtrees) && defined(Asserts) && !defined(Parallel)
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertex { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertexPacked Packed;
+            
+            enum InsideOutsideDomain {
+               Inside = 0, Boundary = 1, Outside = 2
+            };
+            
+            enum RefinementControl {
+               Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
+            };
+            
+            struct PersistentRecords {
+               bool _isHangingNode;
+               RefinementControl _refinementControl;
+               int _adjacentCellsHeight;
+               InsideOutsideDomain _insideOutsideDomain;
+               tarch::la::Vector<DIMENSIONS,double> _x;
+               int _level;
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertex();
+               
+               /**
+                * Generated
+                */
+               TestVertex(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertex();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+                double getX(int elementIndex) const ;
+               
+                void setX(int elementIndex, const double& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertexPacked convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertexPacked { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
+            
+            typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
+            
+            struct PersistentRecords {
+               int _adjacentCellsHeight;
+               tarch::la::Vector<DIMENSIONS,double> _x;
+               int _level;
+               
+               /** mapping of records:
+               || Member 	|| startbit 	|| length
+                |  isHangingNode	| startbit 0	| #bits 1
+                |  refinementControl	| startbit 1	| #bits 3
+                |  insideOutsideDomain	| startbit 4	| #bits 2
+                */
+               int _packedRecords0;
+               
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<DIMENSIONS,double>& x, const int& level);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getX() const ;
+               
+                void setX(const tarch::la::Vector<DIMENSIONS,double>& x) ;
+               
+                double getX(int elementIndex) const ;
+               
+                void setX(int elementIndex, const double& x) ;
+               
+               /**
+                * Generated
+                */
+                int getLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setLevel(const int& level) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertex convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      
+   #elif defined(Parallel) && !defined(PersistentRegularSubtrees) && !defined(Asserts)
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertex { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertexPacked Packed;
+            
+            enum InsideOutsideDomain {
+               Inside = 0, Boundary = 1, Outside = 2
+            };
+            
+            enum RefinementControl {
+               Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
+            };
+            
+            struct PersistentRecords {
+               bool _isHangingNode;
+               RefinementControl _refinementControl;
+               int _adjacentCellsHeight;
+               InsideOutsideDomain _insideOutsideDomain;
+               tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+               bool _adjacentSubtreeForksIntoOtherRank;
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertex();
+               
+               /**
+                * Generated
+                */
+               TestVertex(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertex();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+                int getAdjacentRanks(int elementIndex) const ;
+               
+                void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertexPacked convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertexPacked { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
+            
+            typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
+            
+            struct PersistentRecords {
+               int _adjacentCellsHeight;
+               tarch::la::Vector<TWO_POWER_D,int> _adjacentRanks;
+               bool _adjacentSubtreeForksIntoOtherRank;
+               
+               /** mapping of records:
+               || Member 	|| startbit 	|| length
+                |  isHangingNode	| startbit 0	| #bits 1
+                |  refinementControl	| startbit 1	| #bits 3
+                |  insideOutsideDomain	| startbit 4	| #bits 2
+                */
+               int _packedRecords0;
+               
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain, const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks, const bool& adjacentSubtreeForksIntoOtherRank);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+                tarch::la::Vector<TWO_POWER_D,int> getAdjacentRanks() const ;
+               
+                void setAdjacentRanks(const tarch::la::Vector<TWO_POWER_D,int>& adjacentRanks) ;
+               
+                int getAdjacentRanks(int elementIndex) const ;
+               
+                void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getAdjacentSubtreeForksIntoOtherRank() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentSubtreeForksIntoOtherRank(const bool& adjacentSubtreeForksIntoOtherRank) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertex convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      
+   #elif !defined(PersistentRegularSubtrees) && !defined(Asserts) && !defined(Parallel)
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertex { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertexPacked Packed;
+            
+            enum InsideOutsideDomain {
+               Inside = 0, Boundary = 1, Outside = 2
+            };
+            
+            enum RefinementControl {
+               Unrefined = 0, Refined = 1, RefinementTriggered = 2, Refining = 3, EraseTriggered = 4, Erasing = 5, RefineDueToJoinThoughWorkerIsAlreadyErasing = 6, EnforceRefinementTriggered = 7
+            };
+            
+            struct PersistentRecords {
+               bool _isHangingNode;
+               RefinementControl _refinementControl;
+               int _adjacentCellsHeight;
+               InsideOutsideDomain _insideOutsideDomain;
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertex();
+               
+               /**
+                * Generated
+                */
+               TestVertex(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
+               
+               /**
+                * Generated
+                */
+               TestVertex(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertex();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertexPacked convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestVertexPacked { 
+         
+         public:
+            
+            typedef peano::grid::tests::records::TestVertex::InsideOutsideDomain InsideOutsideDomain;
+            
+            typedef peano::grid::tests::records::TestVertex::RefinementControl RefinementControl;
+            
+            struct PersistentRecords {
+               int _adjacentCellsHeight;
+               
+               /** mapping of records:
+               || Member 	|| startbit 	|| length
+                |  isHangingNode	| startbit 0	| #bits 1
+                |  refinementControl	| startbit 1	| #bits 3
+                |  insideOutsideDomain	| startbit 4	| #bits 2
+                */
+               int _packedRecords0;
+               
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+               
+            };
+            private: 
+               PersistentRecords _persistentRecords;
+               int _adjacentCellsHeightOfPreviousIteration;
+               int _numberOfAdjacentRefinedCells;
+               
+            public:
+               /**
+                * Generated
+                */
+               TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const InsideOutsideDomain& insideOutsideDomain);
+               
+               /**
+                * Generated
+                */
+               TestVertexPacked(const bool& isHangingNode, const RefinementControl& refinementControl, const int& adjacentCellsHeight, const int& adjacentCellsHeightOfPreviousIteration, const int& numberOfAdjacentRefinedCells, const InsideOutsideDomain& insideOutsideDomain);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestVertexPacked();
+               
+               /**
+                * Generated
+                */
+                bool getIsHangingNode() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsHangingNode(const bool& isHangingNode) ;
+               
+               /**
+                * Generated
+                */
+                RefinementControl getRefinementControl() const ;
+               
+               /**
+                * Generated
+                */
+                void setRefinementControl(const RefinementControl& refinementControl) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeight() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeight(const int& adjacentCellsHeight) ;
+               
+               /**
+                * Generated
+                */
+                int getAdjacentCellsHeightOfPreviousIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setAdjacentCellsHeightOfPreviousIteration(const int& adjacentCellsHeightOfPreviousIteration) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedCells(const int& numberOfAdjacentRefinedCells) ;
+               
+               /**
+                * Generated
+                */
+                InsideOutsideDomain getInsideOutsideDomain() const ;
+               
+               /**
+                * Generated
+                */
+                void setInsideOutsideDomain(const InsideOutsideDomain& insideOutsideDomain) ;
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const InsideOutsideDomain& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getInsideOutsideDomainMapping();
+               
+               /**
+                * Generated
+                */
+               static std::string toString(const RefinementControl& param);
+               
+               /**
+                * Generated
+                */
+               static std::string getRefinementControlMapping();
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestVertex convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
+               public:
+                  
+                  /**
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
+                   */
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
+                  
+                  /**
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
+                   */
+                  static void initDatatype();
+                  
+                  static void shutdownDatatype();
+                  
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+                  
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+                  
+                  int getSenderRank() const;
+                  #endif
+         
+      };
+      
+      
+   
+#endif
+
+#endif
+

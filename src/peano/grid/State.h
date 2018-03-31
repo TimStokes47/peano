@@ -43,7 +43,7 @@ namespace peano {
  * master through mergeWithWorkerState(). This way, the master has the full
  * overview how many vertices have been processed, how many cells there are
  * in the domain, whether a refinement has been triggered and so forth. Again,
- * please study your communciation specification carefully to identify how
+ * please study your communication specification carefully to identify how
  * 'reliable' all these statistics are.
  *
  * Prior to the iteration, each worker calls resetStateAtBeginOfIteration().
@@ -487,7 +487,7 @@ class peano::grid::State {
      * bit-by-bit to the master. However, the WorkerHasWorkerFlag might be
      * changed throughout the call (not locally).
      */
-    void send(int destination, int tag, bool exchangeDataBlocking );
+    void send(int destination, int tag, typename MPIDatatypeContainer::ExchangeMode exchangeDataBlocking );
 
     /**
      * Blocking receive. initDatatype() has to be called before.
@@ -503,7 +503,7 @@ class peano::grid::State {
      * overwritten by the received state. As it shall be worker-local and shall
      * not be overwritten by the master's data, we restore it manually.
      */
-    void receive(int source, int tag, bool exchangeDataBlocking );
+    void receive(int source, int tag, typename MPIDatatypeContainer::ExchangeMode exchangeDataBlocking );
 
     /**
      * Notify state about join

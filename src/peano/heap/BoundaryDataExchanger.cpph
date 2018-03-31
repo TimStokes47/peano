@@ -322,8 +322,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
         SendReceiveTaskType receiveTask;
 
-        const int receiveMetaDataMode = -1;
-        receiveTask._metaInformation.receive(_rank, _metaDataTag, true, receiveMetaDataMode);
+        receiveTask._metaInformation.receive(_rank, _metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::Blocking);
         receiveTask._rank = _rank;
 
         _numberOfReceivedMessages += 1;

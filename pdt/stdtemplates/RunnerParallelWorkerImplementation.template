@@ -14,7 +14,7 @@ int __NAMESPACE__::runners::Runner::runAsWorker(__NAMESPACE__::repositories::Rep
   while ( newMasterNode != tarch::parallel::NodePool::JobRequestMessageAnswerValues::Terminate ) {
     if ( newMasterNode >= tarch::parallel::NodePool::JobRequestMessageAnswerValues::NewMaster ) {
       peano::parallel::messages::ForkMessage forkMessage;
-      forkMessage.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),tarch::parallel::NodePool::getInstance().getTagForForkMessages(), true, ReceiveIterationControlMessagesBlocking);
+      forkMessage.receive(tarch::parallel::NodePool::getInstance().getMasterRank(),tarch::parallel::NodePool::getInstance().getTagForForkMessages(), true, peano::parallel::messages::ForkMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
       repository.restart(
         forkMessage.getH(),

@@ -30,32 +30,6 @@
 #endif
 
 
-#ifndef SendWorkerMasterMessagesBlocking
- #define SendWorkerMasterMessagesBlocking     0
-#endif
-#ifndef SendMasterWorkerMessagesBlocking
- #define SendMasterWorkerMessagesBlocking     0
-#endif
-#ifndef ReceiveMasterMessagesBlocking
- #define ReceiveMasterMessagesBlocking        0
-#endif
-#ifndef SendAndReceiveLoadBalancingMessagesBlocking
- #define SendAndReceiveLoadBalancingMessagesBlocking    0
-#endif
-#ifndef ReceiveIterationControlMessagesBlocking
- #define ReceiveIterationControlMessagesBlocking        0
-#endif
-#ifndef BroadcastToWorkingNodesBlocking
- #define BroadcastToWorkingNodesBlocking                0
-#endif
-#ifndef SendHeapMetaDataBlocking
- #define SendHeapMetaDataBlocking                       0
-#endif
-#ifndef SendAndReceiveHeapSynchronousDataBlocking
- #define SendAndReceiveHeapSynchronousDataBlocking      0
-#endif
-
-
 #if !defined(UseManualInlining) &&  !defined(noUseManualInlining)
 #define UseManualInlining
 #endif

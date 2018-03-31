@@ -37,7 +37,7 @@ namespace peano {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   21/03/2017 02:50
+    * @date   31/03/2018 18:55
     */
    class peano::grid::tests::records::TestState { 
       
@@ -226,472 +226,466 @@ namespace peano {
             
             
          };
-         
-      private: 
-         PersistentRecords _persistentRecords;
-         bool _hasWorkerWithWorker;
-         
-      public:
-         /**
-          * Generated
-          */
-         TestState();
-         
-         /**
-          * Generated
-          */
-         TestState(const PersistentRecords& persistentRecords);
-         
-         /**
-          * Generated
-          */
-         TestState(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell);
-         
-         /**
-          * Generated
-          */
-         TestState(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell, const bool& hasWorkerWithWorker);
-         
-         /**
-          * Generated
-          */
-         virtual ~TestState();
-         
-          tarch::la::Vector<DIMENSIONS,double> getMinMeshWidth() const ;
-         
-          void setMinMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth) ;
-         
-          double getMinMeshWidth(int elementIndex) const ;
-         
-          void setMinMeshWidth(int elementIndex, const double& minMeshWidth) ;
-         
-          tarch::la::Vector<DIMENSIONS,double> getMaxMeshWidth() const ;
-         
-          void setMaxMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth) ;
-         
-          double getMaxMeshWidth(int elementIndex) const ;
-         
-          void setMaxMeshWidth(int elementIndex, const double& maxMeshWidth) ;
-         
-         /**
-          * Generated
-          */
-          double getNumberOfInnerVertices() const ;
-         
-         /**
-          * Generated
-          */
-          void setNumberOfInnerVertices(const double& numberOfInnerVertices) ;
-         
-         /**
-          * Generated
-          */
-          double getNumberOfBoundaryVertices() const ;
-         
-         /**
-          * Generated
-          */
-          void setNumberOfBoundaryVertices(const double& numberOfBoundaryVertices) ;
-         
-         /**
-          * Generated
-          */
-          double getNumberOfOuterVertices() const ;
-         
-         /**
-          * Generated
-          */
-          void setNumberOfOuterVertices(const double& numberOfOuterVertices) ;
-         
-         /**
-          * Generated
-          */
-          double getNumberOfInnerCells() const ;
-         
-         /**
-          * Generated
-          */
-          void setNumberOfInnerCells(const double& numberOfInnerCells) ;
-         
-         /**
-          * Generated
-          */
-          double getNumberOfOuterCells() const ;
-         
-         /**
-          * Generated
-          */
-          void setNumberOfOuterCells(const double& numberOfOuterCells) ;
-         
-         /**
-          * Generated
-          */
-          int getMaxLevel() const ;
-         
-         /**
-          * Generated
-          */
-          void setMaxLevel(const int& maxLevel) ;
-         
-         /**
-          * Generated
-          */
-          bool getHasRefined() const ;
-         
-         /**
-          * Generated
-          */
-          void setHasRefined(const bool& hasRefined) ;
-         
-         /**
-          * Generated
-          */
-          bool getHasTriggeredRefinementForNextIteration() const ;
-         
-         /**
-          * Generated
-          */
-          void setHasTriggeredRefinementForNextIteration(const bool& hasTriggeredRefinementForNextIteration) ;
-         
-         /**
-          * Generated
-          */
-          bool getHasErased() const ;
-         
-         /**
-          * Generated
-          */
-          void setHasErased(const bool& hasErased) ;
-         
-         /**
-          * Generated
-          */
-          bool getHasTriggeredEraseForNextIteration() const ;
-         
-         /**
-          * Generated
-          */
-          void setHasTriggeredEraseForNextIteration(const bool& hasTriggeredEraseForNextIteration) ;
-         
-         /**
-          * Generated
-          */
-          bool getHasChangedVertexOrCellState() const ;
-         
-         /**
-          * Generated
-          */
-          void setHasChangedVertexOrCellState(const bool& hasChangedVertexOrCellState) ;
-         
-         /**
-          * Generated
-          */
-          bool getIsTraversalInverted() const ;
-         
-         /**
-          * Generated
-          */
-          void setIsTraversalInverted(const bool& isTraversalInverted) ;
-         
-         /**
-          * Generated
-          */
-          LoadBalancingState getLoadRebalancingState() const ;
-         
-         /**
-          * Generated
-          */
-          void setLoadRebalancingState(const LoadBalancingState& loadRebalancingState) ;
-         
-         /**
-          * Generated
-          */
-          bool getReduceStateAndCell() const ;
-         
-         /**
-          * Generated
-          */
-          void setReduceStateAndCell(const bool& reduceStateAndCell) ;
-         
-         /**
-          * Generated
-          */
-          bool getHasWorkerWithWorker() const ;
-         
-         /**
-          * Generated
-          */
-          void setHasWorkerWithWorker(const bool& hasWorkerWithWorker) ;
-         
-         /**
-          * Generated
-          */
-         static std::string toString(const LoadBalancingState& param);
-         
-         /**
-          * Generated
-          */
-         static std::string getLoadBalancingStateMapping();
-         
-         /**
-          * Generated
-          */
-         std::string toString() const;
-         
-         /**
-          * Generated
-          */
-         void toString(std::ostream& out) const;
-         
-         
-         PersistentRecords getPersistentRecords() const;
-         /**
-          * Generated
-          */
-         TestStatePacked convert() const;
-         
-         
-      #ifdef Parallel
-         protected:
-            static tarch::logging::Log _log;
-            
-            int _senderDestinationRank;
+         private: 
+            PersistentRecords _persistentRecords;
+            bool _hasWorkerWithWorker;
             
          public:
+            /**
+             * Generated
+             */
+            TestState();
             
             /**
-             * Global that represents the mpi datatype.
-             * There are two variants: Datatype identifies only those attributes marked with
-             * parallelise. FullDatatype instead identifies the whole record with all fields.
+             * Generated
              */
-            static MPI_Datatype Datatype;
-            static MPI_Datatype FullDatatype;
+            TestState(const PersistentRecords& persistentRecords);
             
             /**
-             * Initializes the data type for the mpi operations. Has to be called
-             * before the very first send or receive operation is called.
+             * Generated
              */
-            static void initDatatype();
-            
-            static void shutdownDatatype();
+            TestState(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell);
             
             /**
-             * @param communicateSleep -1 Data exchange through blocking mpi
-             * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-             * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
+             * Generated
              */
-            void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            TestState(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell, const bool& hasWorkerWithWorker);
             
-            void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+            /**
+             * Generated
+             */
+            virtual ~TestState();
             
-            static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+             tarch::la::Vector<DIMENSIONS,double> getMinMeshWidth() const ;
             
-            int getSenderRank() const;
+             void setMinMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth) ;
             
-      #endif
-         
-      };
+             double getMinMeshWidth(int elementIndex) const ;
+            
+             void setMinMeshWidth(int elementIndex, const double& minMeshWidth) ;
+            
+             tarch::la::Vector<DIMENSIONS,double> getMaxMeshWidth() const ;
+            
+             void setMaxMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth) ;
+            
+             double getMaxMeshWidth(int elementIndex) const ;
+            
+             void setMaxMeshWidth(int elementIndex, const double& maxMeshWidth) ;
+            
+            /**
+             * Generated
+             */
+             double getNumberOfInnerVertices() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfInnerVertices(const double& numberOfInnerVertices) ;
+            
+            /**
+             * Generated
+             */
+             double getNumberOfBoundaryVertices() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfBoundaryVertices(const double& numberOfBoundaryVertices) ;
+            
+            /**
+             * Generated
+             */
+             double getNumberOfOuterVertices() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfOuterVertices(const double& numberOfOuterVertices) ;
+            
+            /**
+             * Generated
+             */
+             double getNumberOfInnerCells() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfInnerCells(const double& numberOfInnerCells) ;
+            
+            /**
+             * Generated
+             */
+             double getNumberOfOuterCells() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfOuterCells(const double& numberOfOuterCells) ;
+            
+            /**
+             * Generated
+             */
+             int getMaxLevel() const ;
+            
+            /**
+             * Generated
+             */
+             void setMaxLevel(const int& maxLevel) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasRefined() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasRefined(const bool& hasRefined) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasTriggeredRefinementForNextIteration() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasTriggeredRefinementForNextIteration(const bool& hasTriggeredRefinementForNextIteration) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasErased() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasErased(const bool& hasErased) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasTriggeredEraseForNextIteration() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasTriggeredEraseForNextIteration(const bool& hasTriggeredEraseForNextIteration) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasChangedVertexOrCellState() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasChangedVertexOrCellState(const bool& hasChangedVertexOrCellState) ;
+            
+            /**
+             * Generated
+             */
+             bool getIsTraversalInverted() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsTraversalInverted(const bool& isTraversalInverted) ;
+            
+            /**
+             * Generated
+             */
+             LoadBalancingState getLoadRebalancingState() const ;
+            
+            /**
+             * Generated
+             */
+             void setLoadRebalancingState(const LoadBalancingState& loadRebalancingState) ;
+            
+            /**
+             * Generated
+             */
+             bool getReduceStateAndCell() const ;
+            
+            /**
+             * Generated
+             */
+             void setReduceStateAndCell(const bool& reduceStateAndCell) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasWorkerWithWorker() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasWorkerWithWorker(const bool& hasWorkerWithWorker) ;
+            
+            /**
+             * Generated
+             */
+            static std::string toString(const LoadBalancingState& param);
+            
+            /**
+             * Generated
+             */
+            static std::string getLoadBalancingStateMapping();
+            
+            /**
+             * Generated
+             */
+            std::string toString() const;
+            
+            /**
+             * Generated
+             */
+            void toString(std::ostream& out) const;
+            
+            
+            PersistentRecords getPersistentRecords() const;
+            /**
+             * Generated
+             */
+            TestStatePacked convert() const;
+            
+            
+         #ifdef Parallel
+            protected:
+               static tarch::logging::Log _log;
+               
+               int _senderDestinationRank;
+               
+            public:
+               
+               /**
+                * Global that represents the mpi datatype.
+                * There are two variants: Datatype identifies only those attributes marked with
+                * parallelise. FullDatatype instead identifies the whole record with all fields.
+                */
+               static MPI_Datatype Datatype;
+               static MPI_Datatype FullDatatype;
+               
+               /**
+                * Initializes the data type for the mpi operations. Has to be called
+                * before the very first send or receive operation is called.
+                */
+               static void initDatatype();
+               
+               static void shutdownDatatype();
+               
+               enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
+               
+               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+               
+               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+               
+               static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
+               
+               int getSenderRank() const;
+               #endif
       
-      /**
-       * @author This class is generated by DaStGen
-       * 		   DataStructureGenerator (DaStGen)
-       * 		   2007-2009 Wolfgang Eckhardt
-       * 		   2012      Tobias Weinzierl
-       *
-       * 		   build date: 09-02-2014 14:40
-       *
-       * @date   21/03/2017 02:50
-       */
-      class peano::grid::tests::records::TestStatePacked { 
+   };
+   
+   /**
+    * @author This class is generated by DaStGen
+    * 		   DataStructureGenerator (DaStGen)
+    * 		   2007-2009 Wolfgang Eckhardt
+    * 		   2012      Tobias Weinzierl
+    *
+    * 		   build date: 09-02-2014 14:40
+    *
+    * @date   31/03/2018 18:55
+    */
+   class peano::grid::tests::records::TestStatePacked { 
+      
+      public:
          
-         public:
+         typedef peano::grid::tests::records::TestState::LoadBalancingState LoadBalancingState;
+         
+         struct PersistentRecords {
+            tarch::la::Vector<DIMENSIONS,double> _minMeshWidth;
+            tarch::la::Vector<DIMENSIONS,double> _maxMeshWidth;
+            double _numberOfInnerVertices;
+            double _numberOfBoundaryVertices;
+            double _numberOfOuterVertices;
+            double _numberOfInnerCells;
+            double _numberOfOuterCells;
+            int _maxLevel;
+            bool _isTraversalInverted;
+            LoadBalancingState _loadRebalancingState;
             
-            typedef peano::grid::tests::records::TestState::LoadBalancingState LoadBalancingState;
+            /** mapping of records:
+            || Member 	|| startbit 	|| length
+             |  hasRefined	| startbit 0	| #bits 1
+             |  hasTriggeredRefinementForNextIteration	| startbit 1	| #bits 1
+             |  hasErased	| startbit 2	| #bits 1
+             |  hasTriggeredEraseForNextIteration	| startbit 3	| #bits 1
+             |  hasChangedVertexOrCellState	| startbit 4	| #bits 1
+             |  reduceStateAndCell	| startbit 5	| #bits 1
+             */
+            int _packedRecords0;
             
-            struct PersistentRecords {
-               tarch::la::Vector<DIMENSIONS,double> _minMeshWidth;
-               tarch::la::Vector<DIMENSIONS,double> _maxMeshWidth;
-               double _numberOfInnerVertices;
-               double _numberOfBoundaryVertices;
-               double _numberOfOuterVertices;
-               double _numberOfInnerCells;
-               double _numberOfOuterCells;
-               int _maxLevel;
-               bool _isTraversalInverted;
-               LoadBalancingState _loadRebalancingState;
-               
-               /** mapping of records:
-               || Member 	|| startbit 	|| length
-                |  hasRefined	| startbit 0	| #bits 1
-                |  hasTriggeredRefinementForNextIteration	| startbit 1	| #bits 1
-                |  hasErased	| startbit 2	| #bits 1
-                |  hasTriggeredEraseForNextIteration	| startbit 3	| #bits 1
-                |  hasChangedVertexOrCellState	| startbit 4	| #bits 1
-                |  reduceStateAndCell	| startbit 5	| #bits 1
-                */
-               int _packedRecords0;
-               
-               /**
-                * Generated
-                */
-               PersistentRecords();
-               
-               /**
-                * Generated
-                */
-               PersistentRecords(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell);
-               
-                tarch::la::Vector<DIMENSIONS,double> getMinMeshWidth() const ;
-               
-                void setMinMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth) ;
-               
-                tarch::la::Vector<DIMENSIONS,double> getMaxMeshWidth() const ;
-               
-                void setMaxMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth) ;
-               
-               /**
-                * Generated
-                */
-                double getNumberOfInnerVertices() const ;
-               
-               /**
-                * Generated
-                */
-                void setNumberOfInnerVertices(const double& numberOfInnerVertices) ;
-               
-               /**
-                * Generated
-                */
-                double getNumberOfBoundaryVertices() const ;
-               
-               /**
-                * Generated
-                */
-                void setNumberOfBoundaryVertices(const double& numberOfBoundaryVertices) ;
-               
-               /**
-                * Generated
-                */
-                double getNumberOfOuterVertices() const ;
-               
-               /**
-                * Generated
-                */
-                void setNumberOfOuterVertices(const double& numberOfOuterVertices) ;
-               
-               /**
-                * Generated
-                */
-                double getNumberOfInnerCells() const ;
-               
-               /**
-                * Generated
-                */
-                void setNumberOfInnerCells(const double& numberOfInnerCells) ;
-               
-               /**
-                * Generated
-                */
-                double getNumberOfOuterCells() const ;
-               
-               /**
-                * Generated
-                */
-                void setNumberOfOuterCells(const double& numberOfOuterCells) ;
-               
-               /**
-                * Generated
-                */
-                int getMaxLevel() const ;
-               
-               /**
-                * Generated
-                */
-                void setMaxLevel(const int& maxLevel) ;
-               
-               /**
-                * Generated
-                */
-                bool getHasRefined() const ;
-               
-               /**
-                * Generated
-                */
-                void setHasRefined(const bool& hasRefined) ;
-               
-               /**
-                * Generated
-                */
-                bool getHasTriggeredRefinementForNextIteration() const ;
-               
-               /**
-                * Generated
-                */
-                void setHasTriggeredRefinementForNextIteration(const bool& hasTriggeredRefinementForNextIteration) ;
-               
-               /**
-                * Generated
-                */
-                bool getHasErased() const ;
-               
-               /**
-                * Generated
-                */
-                void setHasErased(const bool& hasErased) ;
-               
-               /**
-                * Generated
-                */
-                bool getHasTriggeredEraseForNextIteration() const ;
-               
-               /**
-                * Generated
-                */
-                void setHasTriggeredEraseForNextIteration(const bool& hasTriggeredEraseForNextIteration) ;
-               
-               /**
-                * Generated
-                */
-                bool getHasChangedVertexOrCellState() const ;
-               
-               /**
-                * Generated
-                */
-                void setHasChangedVertexOrCellState(const bool& hasChangedVertexOrCellState) ;
-               
-               /**
-                * Generated
-                */
-                bool getIsTraversalInverted() const ;
-               
-               /**
-                * Generated
-                */
-                void setIsTraversalInverted(const bool& isTraversalInverted) ;
-               
-               /**
-                * Generated
-                */
-                LoadBalancingState getLoadRebalancingState() const ;
-               
-               /**
-                * Generated
-                */
-                void setLoadRebalancingState(const LoadBalancingState& loadRebalancingState) ;
-               
-               /**
-                * Generated
-                */
-                bool getReduceStateAndCell() const ;
-               
-               /**
-                * Generated
-                */
-                void setReduceStateAndCell(const bool& reduceStateAndCell) ;
-               
-               
-            };
+            /**
+             * Generated
+             */
+            PersistentRecords();
             
+            /**
+             * Generated
+             */
+            PersistentRecords(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted, const LoadBalancingState& loadRebalancingState, const bool& reduceStateAndCell);
+            
+             tarch::la::Vector<DIMENSIONS,double> getMinMeshWidth() const ;
+            
+             void setMinMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth) ;
+            
+             tarch::la::Vector<DIMENSIONS,double> getMaxMeshWidth() const ;
+            
+             void setMaxMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth) ;
+            
+            /**
+             * Generated
+             */
+             double getNumberOfInnerVertices() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfInnerVertices(const double& numberOfInnerVertices) ;
+            
+            /**
+             * Generated
+             */
+             double getNumberOfBoundaryVertices() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfBoundaryVertices(const double& numberOfBoundaryVertices) ;
+            
+            /**
+             * Generated
+             */
+             double getNumberOfOuterVertices() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfOuterVertices(const double& numberOfOuterVertices) ;
+            
+            /**
+             * Generated
+             */
+             double getNumberOfInnerCells() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfInnerCells(const double& numberOfInnerCells) ;
+            
+            /**
+             * Generated
+             */
+             double getNumberOfOuterCells() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfOuterCells(const double& numberOfOuterCells) ;
+            
+            /**
+             * Generated
+             */
+             int getMaxLevel() const ;
+            
+            /**
+             * Generated
+             */
+             void setMaxLevel(const int& maxLevel) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasRefined() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasRefined(const bool& hasRefined) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasTriggeredRefinementForNextIteration() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasTriggeredRefinementForNextIteration(const bool& hasTriggeredRefinementForNextIteration) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasErased() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasErased(const bool& hasErased) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasTriggeredEraseForNextIteration() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasTriggeredEraseForNextIteration(const bool& hasTriggeredEraseForNextIteration) ;
+            
+            /**
+             * Generated
+             */
+             bool getHasChangedVertexOrCellState() const ;
+            
+            /**
+             * Generated
+             */
+             void setHasChangedVertexOrCellState(const bool& hasChangedVertexOrCellState) ;
+            
+            /**
+             * Generated
+             */
+             bool getIsTraversalInverted() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsTraversalInverted(const bool& isTraversalInverted) ;
+            
+            /**
+             * Generated
+             */
+             LoadBalancingState getLoadRebalancingState() const ;
+            
+            /**
+             * Generated
+             */
+             void setLoadRebalancingState(const LoadBalancingState& loadRebalancingState) ;
+            
+            /**
+             * Generated
+             */
+             bool getReduceStateAndCell() const ;
+            
+            /**
+             * Generated
+             */
+             void setReduceStateAndCell(const bool& reduceStateAndCell) ;
+            
+            
+         };
          private: 
             PersistentRecords _persistentRecords;
             
@@ -946,197 +940,191 @@ namespace peano {
                
                static void shutdownDatatype();
                
-               /**
-                * @param communicateSleep -1 Data exchange through blocking mpi
-                * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                */
-               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+               enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
                
-               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+               void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+               
+               void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
                
                static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                
                int getSenderRank() const;
-               
-         #endif
-            
-         };
+               #endif
+      
+   };
+   
+   #elif !defined(Parallel)
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestState { 
          
-         
-      #elif !defined(Parallel)
-         /**
-          * @author This class is generated by DaStGen
-          * 		   DataStructureGenerator (DaStGen)
-          * 		   2007-2009 Wolfgang Eckhardt
-          * 		   2012      Tobias Weinzierl
-          *
-          * 		   build date: 09-02-2014 14:40
-          *
-          * @date   21/03/2017 02:50
-          */
-         class peano::grid::tests::records::TestState { 
+         public:
             
-            public:
+            typedef peano::grid::tests::records::TestStatePacked Packed;
+            
+            struct PersistentRecords {
+               tarch::la::Vector<DIMENSIONS,double> _minMeshWidth;
+               tarch::la::Vector<DIMENSIONS,double> _maxMeshWidth;
+               double _numberOfInnerVertices;
+               double _numberOfBoundaryVertices;
+               double _numberOfOuterVertices;
+               double _numberOfInnerCells;
+               double _numberOfOuterCells;
+               int _maxLevel;
+               bool _hasRefined;
+               bool _hasTriggeredRefinementForNextIteration;
+               bool _hasErased;
+               bool _hasTriggeredEraseForNextIteration;
+               bool _hasChangedVertexOrCellState;
+               bool _isTraversalInverted;
+               /**
+                * Generated
+                */
+               PersistentRecords();
                
-               typedef peano::grid::tests::records::TestStatePacked Packed;
+               /**
+                * Generated
+                */
+               PersistentRecords(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
                
-               struct PersistentRecords {
-                  tarch::la::Vector<DIMENSIONS,double> _minMeshWidth;
-                  tarch::la::Vector<DIMENSIONS,double> _maxMeshWidth;
-                  double _numberOfInnerVertices;
-                  double _numberOfBoundaryVertices;
-                  double _numberOfOuterVertices;
-                  double _numberOfInnerCells;
-                  double _numberOfOuterCells;
-                  int _maxLevel;
-                  bool _hasRefined;
-                  bool _hasTriggeredRefinementForNextIteration;
-                  bool _hasErased;
-                  bool _hasTriggeredEraseForNextIteration;
-                  bool _hasChangedVertexOrCellState;
-                  bool _isTraversalInverted;
-                  /**
-                   * Generated
-                   */
-                  PersistentRecords();
-                  
-                  /**
-                   * Generated
-                   */
-                  PersistentRecords(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
-                  
-                   tarch::la::Vector<DIMENSIONS,double> getMinMeshWidth() const ;
-                  
-                   void setMinMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth) ;
-                  
-                   tarch::la::Vector<DIMENSIONS,double> getMaxMeshWidth() const ;
-                  
-                   void setMaxMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   double getNumberOfInnerVertices() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfInnerVertices(const double& numberOfInnerVertices) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   double getNumberOfBoundaryVertices() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfBoundaryVertices(const double& numberOfBoundaryVertices) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   double getNumberOfOuterVertices() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfOuterVertices(const double& numberOfOuterVertices) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   double getNumberOfInnerCells() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfInnerCells(const double& numberOfInnerCells) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   double getNumberOfOuterCells() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfOuterCells(const double& numberOfOuterCells) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getMaxLevel() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setMaxLevel(const int& maxLevel) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getHasRefined() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setHasRefined(const bool& hasRefined) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getHasTriggeredRefinementForNextIteration() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setHasTriggeredRefinementForNextIteration(const bool& hasTriggeredRefinementForNextIteration) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getHasErased() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setHasErased(const bool& hasErased) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getHasTriggeredEraseForNextIteration() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setHasTriggeredEraseForNextIteration(const bool& hasTriggeredEraseForNextIteration) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getHasChangedVertexOrCellState() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setHasChangedVertexOrCellState(const bool& hasChangedVertexOrCellState) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getIsTraversalInverted() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setIsTraversalInverted(const bool& isTraversalInverted) ;
-                  
-                  
-               };
+                tarch::la::Vector<DIMENSIONS,double> getMinMeshWidth() const ;
                
+                void setMinMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getMaxMeshWidth() const ;
+               
+                void setMaxMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfInnerVertices() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfInnerVertices(const double& numberOfInnerVertices) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfBoundaryVertices() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfBoundaryVertices(const double& numberOfBoundaryVertices) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfOuterVertices() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfOuterVertices(const double& numberOfOuterVertices) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfInnerCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfInnerCells(const double& numberOfInnerCells) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfOuterCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfOuterCells(const double& numberOfOuterCells) ;
+               
+               /**
+                * Generated
+                */
+                int getMaxLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setMaxLevel(const int& maxLevel) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasRefined() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasRefined(const bool& hasRefined) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasTriggeredRefinementForNextIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasTriggeredRefinementForNextIteration(const bool& hasTriggeredRefinementForNextIteration) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasErased() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasErased(const bool& hasErased) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasTriggeredEraseForNextIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasTriggeredEraseForNextIteration(const bool& hasTriggeredEraseForNextIteration) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasChangedVertexOrCellState() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasChangedVertexOrCellState(const bool& hasChangedVertexOrCellState) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsTraversalInverted() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsTraversalInverted(const bool& isTraversalInverted) ;
+               
+               
+            };
             private: 
                PersistentRecords _persistentRecords;
                
@@ -1339,421 +1327,412 @@ namespace peano {
                   
                   static void shutdownDatatype();
                   
-                  /**
-                   * @param communicateSleep -1 Data exchange through blocking mpi
-                   * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                   * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                   */
-                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
                   
-                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
+                  
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
                   
                   static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                   
                   int getSenderRank() const;
-                  
-            #endif
+                  #endif
+         
+      };
+      
+      /**
+       * @author This class is generated by DaStGen
+       * 		   DataStructureGenerator (DaStGen)
+       * 		   2007-2009 Wolfgang Eckhardt
+       * 		   2012      Tobias Weinzierl
+       *
+       * 		   build date: 09-02-2014 14:40
+       *
+       * @date   31/03/2018 18:55
+       */
+      class peano::grid::tests::records::TestStatePacked { 
+         
+         public:
+            
+            struct PersistentRecords {
+               tarch::la::Vector<DIMENSIONS,double> _minMeshWidth;
+               tarch::la::Vector<DIMENSIONS,double> _maxMeshWidth;
+               double _numberOfInnerVertices;
+               double _numberOfBoundaryVertices;
+               double _numberOfOuterVertices;
+               double _numberOfInnerCells;
+               double _numberOfOuterCells;
+               int _maxLevel;
+               bool _isTraversalInverted;
+               
+               /** mapping of records:
+               || Member 	|| startbit 	|| length
+                |  hasRefined	| startbit 0	| #bits 1
+                |  hasTriggeredRefinementForNextIteration	| startbit 1	| #bits 1
+                |  hasErased	| startbit 2	| #bits 1
+                |  hasTriggeredEraseForNextIteration	| startbit 3	| #bits 1
+                |  hasChangedVertexOrCellState	| startbit 4	| #bits 1
+                */
+               int _packedRecords0;
+               
+               /**
+                * Generated
+                */
+               PersistentRecords();
+               
+               /**
+                * Generated
+                */
+               PersistentRecords(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+               
+                tarch::la::Vector<DIMENSIONS,double> getMinMeshWidth() const ;
+               
+                void setMinMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getMaxMeshWidth() const ;
+               
+                void setMaxMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfInnerVertices() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfInnerVertices(const double& numberOfInnerVertices) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfBoundaryVertices() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfBoundaryVertices(const double& numberOfBoundaryVertices) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfOuterVertices() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfOuterVertices(const double& numberOfOuterVertices) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfInnerCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfInnerCells(const double& numberOfInnerCells) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfOuterCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfOuterCells(const double& numberOfOuterCells) ;
+               
+               /**
+                * Generated
+                */
+                int getMaxLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setMaxLevel(const int& maxLevel) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasRefined() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasRefined(const bool& hasRefined) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasTriggeredRefinementForNextIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasTriggeredRefinementForNextIteration(const bool& hasTriggeredRefinementForNextIteration) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasErased() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasErased(const bool& hasErased) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasTriggeredEraseForNextIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasTriggeredEraseForNextIteration(const bool& hasTriggeredEraseForNextIteration) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasChangedVertexOrCellState() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasChangedVertexOrCellState(const bool& hasChangedVertexOrCellState) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsTraversalInverted() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsTraversalInverted(const bool& isTraversalInverted) ;
+               
                
             };
-            
-            /**
-             * @author This class is generated by DaStGen
-             * 		   DataStructureGenerator (DaStGen)
-             * 		   2007-2009 Wolfgang Eckhardt
-             * 		   2012      Tobias Weinzierl
-             *
-             * 		   build date: 09-02-2014 14:40
-             *
-             * @date   21/03/2017 02:50
-             */
-            class peano::grid::tests::records::TestStatePacked { 
+            private: 
+               PersistentRecords _persistentRecords;
                
+            public:
+               /**
+                * Generated
+                */
+               TestStatePacked();
+               
+               /**
+                * Generated
+                */
+               TestStatePacked(const PersistentRecords& persistentRecords);
+               
+               /**
+                * Generated
+                */
+               TestStatePacked(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+               
+               /**
+                * Generated
+                */
+               virtual ~TestStatePacked();
+               
+                tarch::la::Vector<DIMENSIONS,double> getMinMeshWidth() const ;
+               
+                void setMinMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth) ;
+               
+                double getMinMeshWidth(int elementIndex) const ;
+               
+                void setMinMeshWidth(int elementIndex, const double& minMeshWidth) ;
+               
+                tarch::la::Vector<DIMENSIONS,double> getMaxMeshWidth() const ;
+               
+                void setMaxMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth) ;
+               
+                double getMaxMeshWidth(int elementIndex) const ;
+               
+                void setMaxMeshWidth(int elementIndex, const double& maxMeshWidth) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfInnerVertices() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfInnerVertices(const double& numberOfInnerVertices) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfBoundaryVertices() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfBoundaryVertices(const double& numberOfBoundaryVertices) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfOuterVertices() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfOuterVertices(const double& numberOfOuterVertices) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfInnerCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfInnerCells(const double& numberOfInnerCells) ;
+               
+               /**
+                * Generated
+                */
+                double getNumberOfOuterCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfOuterCells(const double& numberOfOuterCells) ;
+               
+               /**
+                * Generated
+                */
+                int getMaxLevel() const ;
+               
+               /**
+                * Generated
+                */
+                void setMaxLevel(const int& maxLevel) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasRefined() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasRefined(const bool& hasRefined) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasTriggeredRefinementForNextIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasTriggeredRefinementForNextIteration(const bool& hasTriggeredRefinementForNextIteration) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasErased() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasErased(const bool& hasErased) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasTriggeredEraseForNextIteration() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasTriggeredEraseForNextIteration(const bool& hasTriggeredEraseForNextIteration) ;
+               
+               /**
+                * Generated
+                */
+                bool getHasChangedVertexOrCellState() const ;
+               
+               /**
+                * Generated
+                */
+                void setHasChangedVertexOrCellState(const bool& hasChangedVertexOrCellState) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsTraversalInverted() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsTraversalInverted(const bool& isTraversalInverted) ;
+               
+               /**
+                * Generated
+                */
+               std::string toString() const;
+               
+               /**
+                * Generated
+                */
+               void toString(std::ostream& out) const;
+               
+               
+               PersistentRecords getPersistentRecords() const;
+               /**
+                * Generated
+                */
+               TestState convert() const;
+               
+               
+            #ifdef Parallel
+               protected:
+                  static tarch::logging::Log _log;
+                  
+                  int _senderDestinationRank;
+                  
                public:
                   
-                  struct PersistentRecords {
-                     tarch::la::Vector<DIMENSIONS,double> _minMeshWidth;
-                     tarch::la::Vector<DIMENSIONS,double> _maxMeshWidth;
-                     double _numberOfInnerVertices;
-                     double _numberOfBoundaryVertices;
-                     double _numberOfOuterVertices;
-                     double _numberOfInnerCells;
-                     double _numberOfOuterCells;
-                     int _maxLevel;
-                     bool _isTraversalInverted;
-                     
-                     /** mapping of records:
-                     || Member 	|| startbit 	|| length
-                      |  hasRefined	| startbit 0	| #bits 1
-                      |  hasTriggeredRefinementForNextIteration	| startbit 1	| #bits 1
-                      |  hasErased	| startbit 2	| #bits 1
-                      |  hasTriggeredEraseForNextIteration	| startbit 3	| #bits 1
-                      |  hasChangedVertexOrCellState	| startbit 4	| #bits 1
-                      */
-                     int _packedRecords0;
-                     
-                     /**
-                      * Generated
-                      */
-                     PersistentRecords();
-                     
-                     /**
-                      * Generated
-                      */
-                     PersistentRecords(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
-                     
-                      tarch::la::Vector<DIMENSIONS,double> getMinMeshWidth() const ;
-                     
-                      void setMinMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth) ;
-                     
-                      tarch::la::Vector<DIMENSIONS,double> getMaxMeshWidth() const ;
-                     
-                      void setMaxMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      double getNumberOfInnerVertices() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setNumberOfInnerVertices(const double& numberOfInnerVertices) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      double getNumberOfBoundaryVertices() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setNumberOfBoundaryVertices(const double& numberOfBoundaryVertices) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      double getNumberOfOuterVertices() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setNumberOfOuterVertices(const double& numberOfOuterVertices) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      double getNumberOfInnerCells() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setNumberOfInnerCells(const double& numberOfInnerCells) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      double getNumberOfOuterCells() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setNumberOfOuterCells(const double& numberOfOuterCells) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      int getMaxLevel() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setMaxLevel(const int& maxLevel) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getHasRefined() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setHasRefined(const bool& hasRefined) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getHasTriggeredRefinementForNextIteration() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setHasTriggeredRefinementForNextIteration(const bool& hasTriggeredRefinementForNextIteration) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getHasErased() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setHasErased(const bool& hasErased) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getHasTriggeredEraseForNextIteration() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setHasTriggeredEraseForNextIteration(const bool& hasTriggeredEraseForNextIteration) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getHasChangedVertexOrCellState() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setHasChangedVertexOrCellState(const bool& hasChangedVertexOrCellState) ;
-                     
-                     /**
-                      * Generated
-                      */
-                      bool getIsTraversalInverted() const ;
-                     
-                     /**
-                      * Generated
-                      */
-                      void setIsTraversalInverted(const bool& isTraversalInverted) ;
-                     
-                     
-                  };
-                  
-               private: 
-                  PersistentRecords _persistentRecords;
-                  
-               public:
                   /**
-                   * Generated
+                   * Global that represents the mpi datatype.
+                   * There are two variants: Datatype identifies only those attributes marked with
+                   * parallelise. FullDatatype instead identifies the whole record with all fields.
                    */
-                  TestStatePacked();
+                  static MPI_Datatype Datatype;
+                  static MPI_Datatype FullDatatype;
                   
                   /**
-                   * Generated
+                   * Initializes the data type for the mpi operations. Has to be called
+                   * before the very first send or receive operation is called.
                    */
-                  TestStatePacked(const PersistentRecords& persistentRecords);
+                  static void initDatatype();
                   
-                  /**
-                   * Generated
-                   */
-                  TestStatePacked(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth, const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth, const double& numberOfInnerVertices, const double& numberOfBoundaryVertices, const double& numberOfOuterVertices, const double& numberOfInnerCells, const double& numberOfOuterCells, const int& maxLevel, const bool& hasRefined, const bool& hasTriggeredRefinementForNextIteration, const bool& hasErased, const bool& hasTriggeredEraseForNextIteration, const bool& hasChangedVertexOrCellState, const bool& isTraversalInverted);
+                  static void shutdownDatatype();
                   
-                  /**
-                   * Generated
-                   */
-                  virtual ~TestStatePacked();
+                  enum class ExchangeMode { Blocking, NonblockingWithPollingLoopOverTests, LoopOverProbeWithBlockingReceive };
                   
-                   tarch::la::Vector<DIMENSIONS,double> getMinMeshWidth() const ;
+                  void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
                   
-                   void setMinMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& minMeshWidth) ;
+                  void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, ExchangeMode mode );
                   
-                   double getMinMeshWidth(int elementIndex) const ;
+                  static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
                   
-                   void setMinMeshWidth(int elementIndex, const double& minMeshWidth) ;
-                  
-                   tarch::la::Vector<DIMENSIONS,double> getMaxMeshWidth() const ;
-                  
-                   void setMaxMeshWidth(const tarch::la::Vector<DIMENSIONS,double>& maxMeshWidth) ;
-                  
-                   double getMaxMeshWidth(int elementIndex) const ;
-                  
-                   void setMaxMeshWidth(int elementIndex, const double& maxMeshWidth) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   double getNumberOfInnerVertices() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfInnerVertices(const double& numberOfInnerVertices) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   double getNumberOfBoundaryVertices() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfBoundaryVertices(const double& numberOfBoundaryVertices) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   double getNumberOfOuterVertices() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfOuterVertices(const double& numberOfOuterVertices) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   double getNumberOfInnerCells() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfInnerCells(const double& numberOfInnerCells) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   double getNumberOfOuterCells() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setNumberOfOuterCells(const double& numberOfOuterCells) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   int getMaxLevel() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setMaxLevel(const int& maxLevel) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getHasRefined() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setHasRefined(const bool& hasRefined) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getHasTriggeredRefinementForNextIteration() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setHasTriggeredRefinementForNextIteration(const bool& hasTriggeredRefinementForNextIteration) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getHasErased() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setHasErased(const bool& hasErased) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getHasTriggeredEraseForNextIteration() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setHasTriggeredEraseForNextIteration(const bool& hasTriggeredEraseForNextIteration) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getHasChangedVertexOrCellState() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setHasChangedVertexOrCellState(const bool& hasChangedVertexOrCellState) ;
-                  
-                  /**
-                   * Generated
-                   */
-                   bool getIsTraversalInverted() const ;
-                  
-                  /**
-                   * Generated
-                   */
-                   void setIsTraversalInverted(const bool& isTraversalInverted) ;
-                  
-                  /**
-                   * Generated
-                   */
-                  std::string toString() const;
-                  
-                  /**
-                   * Generated
-                   */
-                  void toString(std::ostream& out) const;
-                  
-                  
-                  PersistentRecords getPersistentRecords() const;
-                  /**
-                   * Generated
-                   */
-                  TestState convert() const;
-                  
-                  
-               #ifdef Parallel
-                  protected:
-                     static tarch::logging::Log _log;
-                     
-                     int _senderDestinationRank;
-                     
-                  public:
-                     
-                     /**
-                      * Global that represents the mpi datatype.
-                      * There are two variants: Datatype identifies only those attributes marked with
-                      * parallelise. FullDatatype instead identifies the whole record with all fields.
-                      */
-                     static MPI_Datatype Datatype;
-                     static MPI_Datatype FullDatatype;
-                     
-                     /**
-                      * Initializes the data type for the mpi operations. Has to be called
-                      * before the very first send or receive operation is called.
-                      */
-                     static void initDatatype();
-                     
-                     static void shutdownDatatype();
-                     
-                     /**
-                      * @param communicateSleep -1 Data exchange through blocking mpi
-                      * @param communicateSleep  0 Data exchange through non-blocking mpi, i.e. pending messages are received via polling until MPI_Test succeeds
-                      * @param communicateSleep >0 Same as 0 but in addition, each unsuccessful MPI_Test is follows by an usleep
-                      */
-                     void send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                     
-                     void receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallelise, int communicateSleep);
-                     
-                     static bool isMessageInQueue(int tag, bool exchangeOnlyAttributesMarkedWithParallelise);
-                     
-                     int getSenderRank() const;
-                     
-               #endif
-                  
-               };
-               
-               
-            
-         #endif
+                  int getSenderRank() const;
+                  #endif
          
-         #endif
-         
+      };
+      
+      
+   
+#endif
+
+#endif
+

@@ -56,7 +56,7 @@ void tarch::parallel::NodePool::restart() {
     tarch::parallel::messages::RegisterAtNodePoolMessage registerMessage(
       tarch::parallel::StringTools::convert(_log.getMachineInformation())
     );
-    registerMessage.send( Node::getGlobalMasterRank(), _registrationTag, true, SendAndReceiveLoadBalancingMessagesBlocking);
+    registerMessage.send( Node::getGlobalMasterRank(), _registrationTag, true, tarch::parallel::messages::RegisterAtNodePoolMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
     logDebug( "restart()", "register message sent: " << registerMessage.toString() << " on tag " << _registrationTag );
   }
   #endif
@@ -252,7 +252,10 @@ tarch::parallel::NodePool::JobRequestMessageAnswer tarch::parallel::NodePool::wa
 
   #ifdef Parallel
   tarch::parallel::messages::JobRequestMessage message;
-  message.send(Node::getInstance().getGlobalMasterRank(),_jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking);
+  message.send(
+    Node::getInstance().getGlobalMasterRank(),_jobManagementTag, true,
+	tarch::parallel::messages::JobRequestMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
+  );
 
   logInfo( "waitForJob()", "sent out job request message" );
 
@@ -261,25 +264,8 @@ tarch::parallel::NodePool::JobRequestMessageAnswer tarch::parallel::NodePool::wa
     Node::getInstance().getGlobalMasterRank(),
     _jobManagementTag,
     true,
-    SendAndReceiveLoadBalancingMessagesBlocking
+	tarch::parallel::messages::ActivationMessage::ExchangeMode::NonblockingWithPollingLoopOverTests
   );
-
-/*
-  int result = MPI_Recv(
-    &answer, 1,
-    tarch::parallel::messages::ActivationMessage::Datatype,
-    Node::getInstance().getGlobalMasterRank(), _jobManagementTag,
-    tarch::parallel::Node::getInstance().getCommunicator(),
-    &status
-  );
-  if ( result != MPI_SUCCESS ) {
-    logError(
-      "waitForJob()",
-      "failed to start to receive tarch::parallel::messages::ActivationMessage from master node: "
-      << tarch::parallel::MPIReturnValueToString(result)
-    );
-  }
-*/
 
   if ( answer.getNewMaster() == JobRequestMessageAnswerValues::Terminate ) {
     logDebug("waitForJob()", "node received termination signal");
@@ -322,7 +308,7 @@ void tarch::parallel::NodePool::terminate() {
     for (int i=0; i<tarch::parallel::Node::getInstance().getNumberOfNodes(); i++) {
       if ( _strategy->isIdleNode(i) ) {
         tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
-        answerMessage.send( i, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+        answerMessage.send( i, _jobManagementTag, true, tarch::parallel::messages::ActivationMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
         _strategy->removeNode(i);
       }
     }
@@ -391,7 +377,7 @@ std::vector<int>  tarch::parallel::NodePool::reserveFreeNodesForServer(int numbe
     activatedNode = getFreeNode( Node::getInstance().getGlobalMasterRank());
     if (activatedNode!=NoFreeNodesMessage) {
       tarch::parallel::messages::ActivationMessage message( Node::getInstance().getGlobalMasterRank() );
-      message.send( activatedNode, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+      message.send( activatedNode, _jobManagementTag, true, tarch::parallel::messages::ActivationMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
       result.push_back(activatedNode);
     }
     #endif
@@ -435,13 +421,13 @@ std::vector<int>  tarch::parallel::NodePool::reserveFreeNodesForClient(int numbe
 
   #ifdef Parallel
   tarch::parallel::messages::WorkerRequestMessage queryMessage(numberOfRanksWanted);
-  queryMessage.send(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking);
+  queryMessage.send(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, tarch::parallel::messages::WorkerRequestMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
   #endif
 
   do {
   #ifdef Parallel
     tarch::parallel::messages::NodePoolAnswerMessage answer;
-    answer.receive(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+    answer.receive(Node::getInstance().getGlobalMasterRank(),_jobServicesTag, true, tarch::parallel::messages::NodePoolAnswerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
 
     activatedNode = answer.getNewWorker();
     if (activatedNode!=NoFreeNodesMessage) {
@@ -505,7 +491,7 @@ void tarch::parallel::NodePool::replyToRegistrationMessages() {
 
   while ( tarch::parallel::messages::RegisterAtNodePoolMessage::isMessageInQueue(_registrationTag, true) ) {
     tarch::parallel::messages::RegisterAtNodePoolMessage message;
-    message.receive( MPI_ANY_SOURCE, _registrationTag, true, -1 );
+    message.receive( MPI_ANY_SOURCE, _registrationTag, true, tarch::parallel::messages::RegisterAtNodePoolMessage::ExchangeMode::Blocking );
     logDebug(  "replyToRegistrationMessages()", "got registration from rank " << message.getSenderRank() );
     _strategy->addNode( message );
     assertion1( !_strategy->isIdleNode(message.getSenderRank()), message.toString() );
@@ -523,7 +509,7 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
   #ifdef Parallel
   while ( tarch::parallel::messages::JobRequestMessage::isMessageInQueue(_jobManagementTag, true) ) {
     tarch::parallel::messages::JobRequestMessage queryMessage;
-    queryMessage.receive( MPI_ANY_SOURCE, _jobManagementTag, true, -1 );
+    queryMessage.receive( MPI_ANY_SOURCE, _jobManagementTag, true, tarch::parallel::messages::JobRequestMessage::ExchangeMode::Blocking );
 
     assertion1( queryMessage.getSenderRank() !=Node::getInstance().getGlobalMasterRank(), Node::getInstance().getRank() );
 
@@ -575,7 +561,7 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
       _strategy->setNodeIdle( queryMessage.getSenderRank() );
       _strategy->removeNode(queryMessage.getSenderRank());
       tarch::parallel::messages::ActivationMessage answerMessage( JobRequestMessageAnswerValues::Terminate );
-      answerMessage.send( queryMessage.getSenderRank(), _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+      answerMessage.send( queryMessage.getSenderRank(), _jobManagementTag, true, tarch::parallel::messages::ActivationMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
     }
     else {
       _strategy->setNodeIdle( queryMessage.getSenderRank() );
@@ -610,11 +596,11 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
         if (activatedNode!=NoFreeNodesMessage) {
           _hasGivenOutRankSizeLastQuery = true;
           tarch::parallel::messages::ActivationMessage activationMessage( nextRequestToAnswer.getSenderRank() );
-          activationMessage.send( activatedNode, _jobManagementTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+          activationMessage.send( activatedNode, _jobManagementTag, true, tarch::parallel::messages::ActivationMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
         }
 
         tarch::parallel::messages::NodePoolAnswerMessage answerMessage( activatedNode );
-        answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, SendAndReceiveLoadBalancingMessagesBlocking );
+        answerMessage.send( nextRequestToAnswer.getSenderRank(), _jobServicesTag, true, tarch::parallel::messages::NodePoolAnswerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
       }
 
       //NOTE: Take care of recursive calls.
@@ -631,7 +617,7 @@ void tarch::parallel::NodePool::emptyRegisterMessageReceiveBuffer() {
   #ifdef Parallel
   while ( tarch::parallel::messages::RegisterAtNodePoolMessage::isMessageInQueue(_registrationTag, true) ) {
     tarch::parallel::messages::RegisterAtNodePoolMessage message;
-    message.receive( MPI_ANY_SOURCE, _registrationTag, true, -1 );
+    message.receive( MPI_ANY_SOURCE, _registrationTag, true, tarch::parallel::messages::RegisterAtNodePoolMessage::ExchangeMode::Blocking );
   }
   #endif
 }
@@ -641,7 +627,7 @@ void tarch::parallel::NodePool::emptyJobRequestMessageBuffer() {
   #ifdef Parallel
   while ( tarch::parallel::messages::JobRequestMessage::isMessageInQueue(_jobManagementTag, true) ) {
     tarch::parallel::messages::JobRequestMessage message;
-    message.receive( MPI_ANY_SOURCE, _jobManagementTag, true, -1 );
+    message.receive( MPI_ANY_SOURCE, _jobManagementTag, true, tarch::parallel::messages::JobRequestMessage::ExchangeMode::Blocking );
   }
   #endif
 }
@@ -651,7 +637,7 @@ void tarch::parallel::NodePool::emptyWorkerRequestMessageBuffer() {
   #ifdef Parallel
   while ( tarch::parallel::messages::WorkerRequestMessage::isMessageInQueue(_jobServicesTag, true) ) {
     tarch::parallel::messages::WorkerRequestMessage message;
-    message.receive( MPI_ANY_SOURCE, _jobServicesTag, true, -1 );
+    message.receive( MPI_ANY_SOURCE, _jobServicesTag, true, tarch::parallel::messages::WorkerRequestMessage::ExchangeMode::Blocking );
   }
   #endif
 }
@@ -670,7 +656,7 @@ void tarch::parallel::NodePool::activateIdleNodes() {
   for (int rank=1; rank<Node::getInstance().getNumberOfNodes(); rank++) {
     if (_strategy->isIdleNode(rank)) {
       _strategy->reserveParticularNode(rank);
-      message.send(rank,getTagForForkMessages(), true, SendAndReceiveLoadBalancingMessagesBlocking);
+      message.send(rank,getTagForForkMessages(), true, tarch::parallel::messages::ActivationMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
     }
   }
   logTraceOut( "activateIdleNodes(int)" );

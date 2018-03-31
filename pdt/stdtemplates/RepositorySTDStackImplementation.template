@@ -278,7 +278,7 @@ __NAMESPACE__::repositories::RepositorySTDStack::ContinueCommand __NAMESPACE__::
     int masterNode = tarch::parallel::Node::getInstance().getGlobalMasterRank();
     assertion( masterNode != -1 );
 
-    _repositoryState.receive( masterNode, peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), true, ReceiveIterationControlMessagesBlocking );
+    _repositoryState.receive( masterNode, peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(), true, records::RepositoryState::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     result = Continue;
     if (_repositoryState.getAction()==__NAMESPACE__::records::RepositoryState::Terminate) {

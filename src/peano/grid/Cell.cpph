@@ -406,7 +406,7 @@ void peano::grid::Cell<CellData>::shutdownDatatype() {
 
 
 template <class CellData>
-void peano::grid::Cell<CellData>::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking) {
+void peano::grid::Cell<CellData>::send(int destination, int tag, bool exchangeOnlyAttributesMarkedWithParallel, typename MPIDatatypeContainer::ExchangeMode exchangeDataBlocking) {
   assertion4(MPIDatatypeContainer::Datatype!=0,destination,tag,toString(),tarch::parallel::Node::getInstance().getRank());
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
@@ -418,7 +418,7 @@ void peano::grid::Cell<CellData>::send(int destination, int tag, bool exchangeOn
 
 
 template <class CellData>
-void peano::grid::Cell<CellData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, bool exchangeDataBlocking) {
+void peano::grid::Cell<CellData>::receive(int source, int tag, bool exchangeOnlyAttributesMarkedWithParallel, typename MPIDatatypeContainer::ExchangeMode exchangeDataBlocking) {
   assertion4(MPIDatatypeContainer::Datatype!=0,source,tag,toString(),tarch::parallel::Node::getInstance().getRank());
 
   #if defined(ParallelExchangePackedRecordsBetweenMasterAndWorker)
