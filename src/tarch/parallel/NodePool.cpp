@@ -586,7 +586,9 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
 
     while ( !queue.empty() ) {
       tarch::parallel::messages::WorkerRequestMessage nextRequestToAnswer = _strategy->extractElementFromRequestQueue(queue);
-      for (int i=0; i<nextRequestToAnswer.getNumberOfRequestedWorkers(); i++) {
+      int workersStillRequested = nextRequestToAnswer.getNumberOfRequestedWorkers();
+      assertion1(workersStillRequested>0, nextRequestToAnswer.toString() );
+      while (workersStillRequested>0) {
         int activatedNode = NoFreeNodesMessage;
         if ( _isAlive && _strategy->hasIdleNode(nextRequestToAnswer.getSenderRank()) ) {
           activatedNode = _strategy->reserveNode(nextRequestToAnswer.getSenderRank());
@@ -597,6 +599,10 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
           _hasGivenOutRankSizeLastQuery = true;
           tarch::parallel::messages::ActivationMessage activationMessage( nextRequestToAnswer.getSenderRank() );
           activationMessage.send( activatedNode, _jobManagementTag, true, tarch::parallel::messages::ActivationMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+          workersStillRequested--;
+        }
+        else {
+          workersStillRequested=0;
         }
 
         tarch::parallel::messages::NodePoolAnswerMessage answerMessage( activatedNode );
