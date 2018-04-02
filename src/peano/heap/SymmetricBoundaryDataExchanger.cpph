@@ -92,7 +92,7 @@ void peano::heap::SymmetricBoundaryDataExchanger<Data,CreateCopiesOfSentData, Se
   logTraceIn( "handleAndQueueSendTask(...)" );
   _totalNumberOfSentMessagesThisTraversal++;
 
-  if (sendTask._metaInformation.getLength()==0) {
+  if (sendTask.getMetaInformation().getLength()==0) {
     logDebug( "handleAndQueueSendTask(...)", "was told to send out empty message, so only memorise this data" );
     _numberOfEmptyMessagesSinceLastNonEmptySendCall++;
   }
@@ -102,7 +102,7 @@ void peano::heap::SymmetricBoundaryDataExchanger<Data,CreateCopiesOfSentData, Se
     logDebug( "handleAndQueueSendTask(...)", "enqueue new receive task for rank " << sendTask._rank );
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( SendReceiveTaskType() );
     Base::_receiveTasks[Base::_currentReceiveBuffer].back().getMetaInformation().setLength( sendTask.getMetaInformation().getLength() );
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back().setRank( sendTask._rank );
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back().setRank( sendTask.getRank() );
     #ifdef Asserts
     //Set debug information
     Base::_receiveTasks[Base::_currentReceiveBuffer].back().getMetaInformation().setPosition(sendTask.getMetaInformation().getPosition());
