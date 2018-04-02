@@ -194,12 +194,8 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
     const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
     const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
     bool           triggeredTimeoutWarning = false;
-    int            finishedWait            = i->_metaInformation.getLength()==0;
 
-    while (!finishedWait) {
-      assertion1(i->_data!=nullptr, i->toString() );
-      MPI_Test(&(i->_request), &finishedWait, MPI_STATUS_IGNORE);
-
+    while ( !i->hasCommunicationCompleted() ) {
       // deadlock aspect
       if (
          tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
@@ -208,7 +204,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
       ) {
          tarch::parallel::Node::getInstance().writeTimeOutWarning(
            "peano::heap::SynchronousDataExchanger",
-           "finishedToSendData()", i->_rank,-1,i->_metaInformation.getLength()
+           "finishedToSendData()", i->getRank(),-1,i->getMetaInformation().getLength()
          );
          triggeredTimeoutWarning = true;
       }
@@ -221,15 +217,14 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
          msg << ",dataTag=" << _dataTag;
          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut(
            "peano::heap::SynchronousDataExchanger",
-           "finishedToSendData()", i->_rank,
+           "finishedToSendData()", i->getRank(),
            -1,
-           i->_metaInformation.getLength(), msg.str()
+           i->getMetaInformation().getLength(), msg.str()
          );
       }
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
     }
 
-    i->_metaInformation.setLength(0);
     i->freeMemory();
   }
 
@@ -278,26 +273,21 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
 
   #ifdef MPIProgressionReliesOnMPITest
-  int progressFlag;
   for(auto& p: _sendTasks) {
-    if(p._metaInformation.getLength() > 0) {
-      MPI_Test(&(p._request), &progressFlag, MPI_STATUS_IGNORE);
+	p.hasCommunicationCompleted();
 //      if (progressFlag) {
 //        p._metaInformation.setLength(0);
 //        p.freeMemory();
 //      }
-    }
   }
   for(auto& p: _receiveTasks[_currentReceiveBuffer]) {
-    if(p._metaInformation.getLength() > 0)  {
-      MPI_Test(&(p._request), &progressFlag, MPI_STATUS_IGNORE);
+	p.hasCommunicationCompleted();
       // It is absolute catastrophic to set the length to 0 here manually as
       // the RLE exchanger will evaluate exactly this length later on.
       //
       //if (progressFlag) {
       //  p._metaInformation.setLength(0);
       //}
-    }
   }
   #endif
 
@@ -322,11 +312,11 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
         SendReceiveTaskType receiveTask;
 
-        receiveTask._metaInformation.receive(_rank, _metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::Blocking);
-        receiveTask._rank = _rank;
+        receiveTask.setRank( _rank );
+        receiveTask.getMetaInformation().receive(_rank, _metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::Blocking);
 
         _numberOfReceivedMessages += 1;
-        _numberOfSentRecords      += receiveTask._metaInformation.getLength();
+        _numberOfSentRecords      += receiveTask.getMetaInformation().getLength();
 
         handleAndQueueReceivedTask( receiveTask );
 
@@ -348,16 +338,16 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   assertion5( _isCurrentlySending, _identifier, count, position, level, "forgot to call startToSendBoundaryData on heap?" );
 
   SendReceiveTaskType sendTask;
-  sendTask._rank = _rank;
+  sendTask.setRank( _rank );
   #ifdef Asserts
   //Set debug information
-  sendTask._metaInformation.setPosition(position);
-  sendTask._metaInformation.setLevel(level);
+  sendTask.getMetaInformation().setPosition(position);
+  sendTask.getMetaInformation().setLevel(level);
   #endif
 
   logDebug("sendData", "sending data at " << position << " to Rank " << _rank << " with tag " << _dataTag  );
 
-  sendTask._metaInformation.setLength(count);
+  sendTask.getMetaInformation().setLength(count);
 
   tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
   handleAndQueueSendTask( sendTask, data );
@@ -388,8 +378,8 @@ VectorContainer  peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,Vec
       readElement->fits(position,level) | !dataExchangerCommunicatesInBackground(),
       _readDeployBufferInReverseOrder,
       level,  position,
-      _receiveTasks[currentDeployBuffer].front()._metaInformation.toString(),
-      _receiveTasks[currentDeployBuffer].back()._metaInformation.toString(),
+      _receiveTasks[currentDeployBuffer].front().getMetaInformation().toString(),
+      _receiveTasks[currentDeployBuffer].back().getMetaInformation().toString(),
       tarch::parallel::Node::getInstance().getRank(),
       _rank,
       _identifier,
@@ -397,13 +387,13 @@ VectorContainer  peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,Vec
       "if _readDeployBufferInReverseOrder: take back() element"
     );
 
-    const int numberOfElementsOfThisEntry = readElement->_metaInformation.getLength();
+    const int numberOfElementsOfThisEntry = readElement->getMetaInformation().getLength();
     assertion3(numberOfElementsOfThisEntry >= 0, position, level, numberOfElementsOfThisEntry);
-    assertion3(readElement->_data!=0 || numberOfElementsOfThisEntry==0, position, level, numberOfElementsOfThisEntry);
+    assertion3(readElement->data()!=0 || numberOfElementsOfThisEntry==0, position, level, numberOfElementsOfThisEntry);
   }
   #endif
 
-  const VectorContainer result(readElement->_data, readElement->_data+readElement->_metaInformation.getLength());
+  const VectorContainer result(readElement->data(), readElement->data()+readElement->getMetaInformation().getLength());
 
   readElement->freeMemory();
   _receiveTasks[currentDeployBuffer].erase(readElement);
@@ -473,7 +463,6 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   const clock_t  timeOutWarning          = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
   const clock_t  timeOutShutdown         = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
   bool           triggeredTimeoutWarning = false;
-  int            finishedWait            = false;
 
   logInfo(
     "releaseReceivedNeighbourMessagesRequests()",
@@ -485,15 +474,8 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
     logDebug( "releaseReceivedNeighbourMessagesRequests()", "check all " << _receiveTasks[_currentReceiveBuffer].size() << " messages from rank " << _rank );
 
-    for(
-      typename std::list<SendReceiveTaskType >::iterator i = _receiveTasks[_currentReceiveBuffer].begin();
-      i != _receiveTasks[_currentReceiveBuffer].end();
-      i++
-    ) {
-      if(i->_metaInformation.getLength() > 0) {
-        MPI_Test(&(i->_request), &finishedWait, MPI_STATUS_IGNORE);
-        allMessageCommunicationsAreFinished &= (finishedWait!=0);
-      }
+    for (auto& p: _receiveTasks[_currentReceiveBuffer]) {
+      allMessageCommunicationsAreFinished &= p.hasDataExchangeFinished();
     }
 
     // deadlock aspect

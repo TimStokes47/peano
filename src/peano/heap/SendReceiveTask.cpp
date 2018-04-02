@@ -14,6 +14,18 @@ peano::heap::SendReceiveTask<double>::SendReceiveTask():
 #endif
 
 
+bool peano::heap::SendReceiveTask<double>::hasDataExchangeFinished() {
+  #ifdef Parallel
+  int finishedWait;
+  if(_metaInformation.getLength() > 0) {
+    MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
+    return (finishedWait!=0);
+  }
+  #endif
+  return true;
+}
+
+
 bool peano::heap::SendReceiveTask<double>::fits(
   const tarch::la::Vector<DIMENSIONS, double>&  position,
   int                                           level
@@ -52,8 +64,28 @@ void peano::heap::SendReceiveTask<double>::freeMemory() {
   if (_freeDataPointer && _metaInformation.getLength()>0) {
     delete[] _data;
   }
+  _metaInformation.setLength(0);
 }
 
+
+double* peano::heap::SendReceiveTask<double>::data() {
+  return _data;
+}
+
+
+const double* peano::heap::SendReceiveTask<double>::data() const {
+  return _data;
+}
+
+
+peano::heap::SendReceiveTask<double>::MetaInformation& peano::heap::SendReceiveTask<double>::getMetaInformation() {
+  return _metaInformation;
+}
+
+
+peano::heap::SendReceiveTask<double>::MetaInformation peano::heap::SendReceiveTask<double>::getMetaInformation() const {
+  return _metaInformation;
+}
 
 
 void peano::heap::SendReceiveTask<double>::sendDataDirectlyFromBuffer(const double* const data) {
@@ -105,6 +137,16 @@ void peano::heap::SendReceiveTask<double>::triggerSend(int tag) {
 }
 
 
+int peano::heap::SendReceiveTask<double>::getRank() const {
+  return _rank;
+}
+
+
+void peano::heap::SendReceiveTask<double>::setRank(int value) {
+  _rank = value;
+}
+
+
 void peano::heap::SendReceiveTask<double>::triggerReceive(int tag) {
   assertion( _rank >= 0 );
   assertion( _data==0 );
@@ -116,11 +158,22 @@ void peano::heap::SendReceiveTask<double>::triggerReceive(int tag) {
     logError( "triggerReceive(int)", "memory allocation failed. Terminate" );
     exit(-1);
   }
+
+  #if defined(NonblockingHeapDataReceives)
   const int  result = MPI_Irecv(
     _data, _metaInformation.getLength(), MPI_DOUBLE,
     _rank, tag, tarch::parallel::Node::getInstance().getCommunicator(),
     &_request
   );
+  #else
+  const int  result = MPI_Recv(
+    _data, _metaInformation.getLength(), MPI_DOUBLE,
+    _rank, tag, tarch::parallel::Node::getInstance().getCommunicator(),
+  	MPI_STATUS_IGNORE
+  );
+  _request = MPI_REQUEST_NULL;
+  #endif
+
   if ( result != MPI_SUCCESS ) {
     logError(
       "triggerReceive()",
@@ -150,6 +203,18 @@ peano::heap::SendReceiveTask<char>::SendReceiveTask():
   _data(0) {
 }
 #endif
+
+
+bool peano::heap::SendReceiveTask<char>::hasDataExchangeFinished() {
+  #ifdef Parallel
+  int finishedWait;
+  if(_metaInformation.getLength() > 0) {
+    MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
+    return (finishedWait!=0);
+  }
+  #endif
+  return true;
+}
 
 
 bool peano::heap::SendReceiveTask<char>::fits(
@@ -190,8 +255,13 @@ void peano::heap::SendReceiveTask<char>::freeMemory() {
   if (_freeDataPointer && _metaInformation.getLength()>0) {
     delete[] _data;
   }
+  _metaInformation.setLength(0);
 }
 
+
+int peano::heap::SendReceiveTask<char>::getRank() const {
+  return _rank;
+}
 
 
 void peano::heap::SendReceiveTask<char>::sendDataDirectlyFromBuffer(const char* const data) {
@@ -254,11 +324,22 @@ void peano::heap::SendReceiveTask<char>::triggerReceive(int tag) {
     logError( "triggerReceive(int)", "memory allocation failed. Terminate" );
     exit(-1);
   }
+
+  #if defined(NonblockingHeapDataReceives)
   const int  result = MPI_Irecv(
     _data, _metaInformation.getLength(), MPI_CHAR,
     _rank, tag, tarch::parallel::Node::getInstance().getCommunicator(),
     &_request
   );
+  #else
+  const int  result = MPI_Recv(
+    _data, _metaInformation.getLength(), MPI_CHAR,
+    _rank, tag, tarch::parallel::Node::getInstance().getCommunicator(),
+	MPI_STATUS_IGNORE
+  );
+  _request = MPI_REQUEST_NULL;
+  #endif
+
   if ( result != MPI_SUCCESS ) {
     logError(
       "triggerReceive()",
@@ -278,3 +359,63 @@ std::string peano::heap::SendReceiveTask<char>::toString() const {
   out << "(" << _metaInformation.toString() << ",rank=" << _rank << ",data=" << (_data==nullptr ? "no" : "yes") << ")";
   return out.str();
 }
+
+
+void peano::heap::SendReceiveTask<char>::setRank(int value) {
+  _rank = value;
+}
+
+
+char* peano::heap::SendReceiveTask<char>::data() {
+  return _data;
+}
+
+
+const char* peano::heap::SendReceiveTask<char>::data() const {
+  return _data;
+}
+
+
+peano::heap::SendReceiveTask<char>::MetaInformation& peano::heap::SendReceiveTask<char>::getMetaInformation() {
+  return _metaInformation;
+}
+
+
+peano::heap::SendReceiveTask<char>::MetaInformation  peano::heap::SendReceiveTask<char>::getMetaInformation() const {
+  return _metaInformation;
+}
+
+
+bool peano::heap::SendReceiveTask<double>::hasCommunicationCompleted() {
+  #ifdef Parallel
+  if ( _metaInformation.getLength()==0 ) {
+    return true;
+  }
+  else {
+	int finishedWait;
+    assertion1(_data!=nullptr, toString() );
+    MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
+    return finishedWait;
+  }
+  #else
+  return true;
+  #endif
+}
+
+
+bool peano::heap::SendReceiveTask<char>::hasCommunicationCompleted() {
+  #ifdef Parallel
+  if ( _metaInformation.getLength()==0 ) {
+    return true;
+  }
+  else {
+	int finishedWait;
+    assertion1(_data!=nullptr, toString() );
+    MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
+    return finishedWait;
+  }
+  #else
+  return true;
+  #endif
+}
+

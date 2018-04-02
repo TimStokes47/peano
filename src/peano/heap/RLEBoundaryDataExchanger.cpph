@@ -52,12 +52,11 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
     logTraceInWith1Argument( "sendAllCompressedEmptyMessages()", _numberOfEmptyMessagesSinceLastNonEmptySendCall );
     SendReceiveTask<Data> zeroLengthReceiveTask;
 
-    zeroLengthReceiveTask._rank = Base::_rank;
-    zeroLengthReceiveTask._metaInformation.setLength(-_numberOfEmptyMessagesSinceLastNonEmptySendCall);
-    zeroLengthReceiveTask._data = 0;
+    zeroLengthReceiveTask.setRank( Base::_rank );
+    zeroLengthReceiveTask.getMetaInformation().setLength(-_numberOfEmptyMessagesSinceLastNonEmptySendCall);
+    //zeroLengthReceiveTask._data = 0;
 
-
-    zeroLengthReceiveTask._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    zeroLengthReceiveTask.getMetaInformation().send(Base::_rank, Base::_metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     _numberOfEmptyMessagesSinceLastNonEmptySendCall = 0;
     logTraceOut( "sendAllCompressedEmptyMessages()" );
@@ -75,8 +74,8 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendReceiveTaskType,VectorContainer>::handleAndQueueReceivedTask( const SendReceiveTaskType&  receivedTask ) {
-  assertion2(receivedTask._metaInformation.getLength() != 0, receivedTask._metaInformation.getLength(), receivedTask.toString());
-  if(receivedTask._metaInformation.getLength() > 0) {
+  assertion2(receivedTask.getMetaInformation().getLength() != 0, receivedTask.getMetaInformation().getLength(), receivedTask.toString());
+  if(receivedTask.getMetaInformation().getLength() > 0) {
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
     Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_dataTag);
     logDebug(
@@ -87,7 +86,7 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
     );
   }
   else {
-    for (int i=0; i<-receivedTask._metaInformation.getLength(); i++) {
+    for (int i=0; i<-receivedTask.getMetaInformation().getLength(); i++) {
       SendReceiveTaskType zeroLengthReceiveTask;
 
       zeroLengthReceiveTask.setInvalid();
@@ -112,7 +111,7 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
   logTraceIn( "handleAndQueueSendTask(...)" );
   _totalNumberOfSentMessagesThisTraversal++;
 
-  if (sendTask._metaInformation.getLength()==0) {
+  if (sendTask.getMetaInformation().getLength()==0) {
     _numberOfEmptyMessagesSinceLastNonEmptySendCall++;
   }
   else {
@@ -127,10 +126,11 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
       Base::_sendTasks.back().sendDataDirectlyFromBuffer(data);
     }
 
-    assertion2( Base::_sendTasks.back()._metaInformation.getLength() > 0, Base::_sendTasks.back()._metaInformation.getLength(), Base::_sendTasks.back().toString() );
+    assertion2( Base::_sendTasks.back().getMetaInformation().getLength() > 0, Base::_sendTasks.back().getMetaInformation().getLength(), Base::_sendTasks.back().toString() );
 
     Base::_sendTasks.back().triggerSend(Base::_dataTag);
-    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    Base::_sendTasks.back().setRank( Base::_rank );
+    Base::_sendTasks.back().getMetaInformation().send(Base::_rank, Base::_metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::NonblockingWithPollingLoopOverTests);
   }
   logTraceOut( "handleAndQueueSendTask(...)" );
 }

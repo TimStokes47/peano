@@ -101,12 +101,12 @@ void peano::heap::SymmetricBoundaryDataExchanger<Data,CreateCopiesOfSentData, Se
 
     logDebug( "handleAndQueueSendTask(...)", "enqueue new receive task for rank " << sendTask._rank );
     Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( SendReceiveTaskType() );
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setLength( sendTask._metaInformation.getLength() );
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._rank = sendTask._rank;
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back().getMetaInformation().setLength( sendTask.getMetaInformation().getLength() );
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back().setRank( sendTask._rank );
     #ifdef Asserts
     //Set debug information
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setPosition(sendTask._metaInformation.getPosition());
-    Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.setLevel(sendTask._metaInformation.getLevel());
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back().getMetaInformation().setPosition(sendTask.getMetaInformation().getPosition());
+    Base::_receiveTasks[Base::_currentReceiveBuffer].back().getMetaInformation().setLevel(sendTask.getMetaInformation().getLevel());
     #endif
     Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_dataTag);
 

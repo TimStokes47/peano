@@ -16,6 +16,7 @@
 #endif
 
 
+
 namespace peano {
   namespace heap {
     template<class Data>
@@ -48,208 +49,232 @@ namespace peano {
  * stored (send task) or is to be stored (receive task).
  */
 template<class Data>
-struct peano::heap::SendReceiveTask {
-  static tarch::logging::Log _log;
+class peano::heap::SendReceiveTask {
+  public:
+    /**
+     * We always use the plain meta information as record, i.e. we do not pack
+     * anything here as the meta information usually is one integer only
+     * anyway.
+     */
+    typedef peano::heap::records::MetaInformation          MetaInformation;
+  private:
+    static tarch::logging::Log _log;
 
-  /**
-   * We always use the plain meta information as record, i.e. we do not pack
-   * anything here as the meta information usually is one integer only
-   * anyway.
-   */
-  typedef peano::heap::records::MetaInformation          MetaInformation;
+    #ifdef Parallel
+    MPI_Request     _request;
+    #endif
 
-  #ifdef Parallel
-  MPI_Request     _request;
-  #endif
+    MetaInformation _metaInformation;
 
-  MetaInformation _metaInformation;
+    /**
+     * Without semantics for send tasks but important for receive tasks as we
+     * have to store from which rank the data arrived from.
+     */
+    int             _rank;
 
-  /**
-   * Without semantics for send tasks but important for receive tasks as we
-   * have to store from which rank the data arrived from.
-   */
-  int             _rank;
+    /**
+     * Pointer to the actual data. If meta data marks a message without
+     * content, this pointer is 0.
+     */
+    Data*           _data;
 
-  /**
-   * Pointer to the actual data. If meta data marks a message without
-   * content, this pointer is 0.
-   */
-  Data*           _data;
+    bool            _freeDataPointer;
+  public:
+    #ifdef Asserts
+    SendReceiveTask();
+    #endif
 
-  bool            _freeDataPointer;
+    bool hasDataExchangeFinished();
 
-  #ifdef Asserts
-  SendReceiveTask();
-  #endif
+    /**
+     * Prelude to sendData().
+     *
+     * Please note that you have to call delete[] on _data afterwards through
+     * operation freeMemory().
+     *
+     * We assume that the meta data already encodes the correct size.
+     */
+    void wrapData(const Data* const data);
 
-  /**
-   * Prelude to sendData().
-   *
-   * Please note that you have to call delete[] on _data afterwards through
-   * operation freeMemory().
-   *
-   * We assume that the meta data already encodes the correct size.
-   */
-  void wrapData(const Data* const data);
+    /**
+     * Counterpart of wrapData(). The task sends away the data directly from the
+     * specified buffer. Please call freeMemory() nevertheless.
+     *
+     * We assume that the meta data already encodes the correct size.
+     */
+    void sendDataDirectlyFromBuffer(const Data* const data);
 
-  /**
-   * Counterpart of wrapData(). The task sends away the data directly from the
-   * specified buffer. Please call freeMemory() nevertheless.
-   *
-   * We assume that the meta data already encodes the correct size.
-   */
-  void sendDataDirectlyFromBuffer(const Data* const data);
+    /**
+     * @see triggerReceive() for implementation remarks.
+     */
+    void triggerSend(int tag);
 
-  /**
-   * @see triggerReceive() for implementation remarks.
-   */
-  void triggerSend(int tag);
+    /**
+     * If you use the task in combination with containers, please push or pop
+     * data first and then call trigger. Trigger uses MPI and MPI uses memory
+     * references. If you move the tasks around later on, MPI references invalid
+     * memory addresses and data consistency is not given anymore.
+     *
+     * @see   BoundaryDataExchanger::receiveDanglingMessages()
+     */
+    void triggerReceive(int tag);
 
-  /**
-   * If you use the task in combination with containers, please push or pop
-   * data first and then call trigger. Trigger uses MPI and MPI uses memory
-   * references. If you move the tasks around later on, MPI references invalid
-   * memory addresses and data consistency is not given anymore.
-   *
-   * @see   BoundaryDataExchanger::receiveDanglingMessages()
-   */
-  void triggerReceive(int tag);
+    /**
+     * Frees local memory. Is safe to call even if the message might be empty. Is
+     * not safe to call if you don't work with copies and the message length is
+     * bigger than 0.
+     */
+    void freeMemory();
 
-  /**
-   * Frees local memory. Is safe to call even if the message might be empty. Is
-   * not safe to call if you don't work with copies and the message length is
-   * bigger than 0.
-   */
-  void freeMemory();
+    /**
+     * Set a task invalid explicitly. Messages marked that way will pass the
+     * validation though their data is not in agreement with checks: it is
+     * explicitly known that the message is invalid and can be ignored. I use
+     * this for null messages, i.e. messages without content that are often
+     * squeezed (together with their meta data) by sophisticated communication
+     * schemes.
+     */
+    void setInvalid();
 
-  /**
-   * Set a task invalid explicitly. Messages marked that way will pass the
-   * validation though their data is not in agreement with checks: it is
-   * explicitly known that the message is invalid and can be ignored. I use
-   * this for null messages, i.e. messages without content that are often
-   * squeezed (together with their meta data) by sophisticated communication
-   * schemes.
-   */
-  void setInvalid();
+    /**
+     * A task fits if it is
+     *
+     * - either invalid (see setInvalid())
+     * - or position and level coincide.
+     *
+     * Fits should only be called in assert mode. However, some compiler seem to
+     * translate it also if the function is not used at all. For them, I provide
+     * a non-asserts version returning true all the time.
+     */
+    bool fits(
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level
+    ) const;
 
-  /**
-   * A task fits if it is
-   *
-   * - either invalid (see setInvalid())
-   * - or position and level coincide.
-   *
-   * Fits should only be called in assert mode. However, some compiler seem to
-   * translate it also if the function is not used at all. For them, I provide
-   * a non-asserts version returning true all the time.
-   */
-  bool fits(
-    const tarch::la::Vector<DIMENSIONS, double>&  position,
-    int                                           level
-  ) const;
+    std::string toString() const;
 
-  std::string toString() const;
+    Data* data();
+    const Data* data() const;
+    int getRank() const;
+    void setRank(int value);
+
+    bool hasCommunicationCompleted();
+
+    MetaInformation& getMetaInformation();
+    MetaInformation getMetaInformation() const;
 };
 
 
 
 
 template<>
-struct peano::heap::SendReceiveTask<double> {
-  static tarch::logging::Log _log;
+class peano::heap::SendReceiveTask<double> {
+  public:
+    /**
+     * We always use the plain meta information as record, i.e. we do not pack
+     * anything here as the meta information usually is one integer only
+     * anyway.
+     */
+    typedef peano::heap::records::MetaInformation          MetaInformation;
+  private:
+	  static tarch::logging::Log _log;
 
-  /**
-   * We always use the plain meta information as record, i.e. we do not pack
-   * anything here as the meta information usually is one integer only
-   * anyway.
-   */
-  typedef peano::heap::records::MetaInformation          MetaInformation;
+	  #ifdef Parallel
+	  MPI_Request     _request;
+	  #endif
 
-  #ifdef Parallel
-  MPI_Request     _request;
-  #endif
+	  MetaInformation _metaInformation;
 
-  MetaInformation _metaInformation;
+	  /**
+	   * Without semantics for send tasks but important for receive tasks as we
+	   * have to store from which rank the data arrived from.
+	   */
+	  int             _rank;
 
-  /**
-   * Without semantics for send tasks but important for receive tasks as we
-   * have to store from which rank the data arrived from.
-   */
-  int             _rank;
+	  /**
+	   * Pointer to the actual data. If meta data marks a message without
+	   * content, this pointer is 0.
+	   */
+	  double*         _data;
 
-  /**
-   * Pointer to the actual data. If meta data marks a message without
-   * content, this pointer is 0.
-   */
-  double*         _data;
+	  bool            _freeDataPointer;
+  public:
+    #ifdef Asserts
+    SendReceiveTask();
+    #endif
 
-  bool            _freeDataPointer;
+    bool hasDataExchangeFinished();
 
-  #ifdef Asserts
-  SendReceiveTask();
-  #endif
+	  /**
+	   * Prelude to sendData().
+	   *
+	   * Please note that you have to call delete[] on _data afterwards through
+	   * operation freeMemoryOfSendTask().
+	   *
+	   * We assume that the meta data already encodes the correct size.
+	   */
+	  void wrapData(const double* const data);
 
-  /**
-   * Prelude to sendData().
-   *
-   * Please note that you have to call delete[] on _data afterwards through
-   * operation freeMemoryOfSendTask().
-   *
-   * We assume that the meta data already encodes the correct size.
-   */
-  void wrapData(const double* const data);
+	  /**
+	   * Counterpart of wrapData(). The task sends away the data directly from the
+	   * specified buffer. Please call freeMemory() nevertheless.
+	   *
+	   * We assume that the meta data already encodes the correct size.
+	   */
+	  void sendDataDirectlyFromBuffer(const double* const  data);
 
-  /**
-   * Counterpart of wrapData(). The task sends away the data directly from the
-   * specified buffer. Please call freeMemory() nevertheless.
-   *
-   * We assume that the meta data already encodes the correct size.
-   */
-  void sendDataDirectlyFromBuffer(const double* const  data);
+	  /**
+	   * This is a sole trigger of a send, i.e. an Isend. There's not a
+	   * receive/test/dangling messages thing in there.
+	   *
+	   * @see triggerReceive() for implementation remarks.
+	   */
+	  void triggerSend(int tag);
 
-  /**
-   * This is a sole trigger of a send, i.e. an Isend. There's not a
-   * receive/test/dangling messages thing in there.
-   *
-   * @see triggerReceive() for implementation remarks.
-   */
-  void triggerSend(int tag);
+	  /**
+	   * If you use the task in combination with containers, please push or pop
+	   * data first and then call trigger. Trigger uses MPI and MPI uses memory
+	   * references. If you move the tasks around later on, MPI references invalid
+	   * memory addresses and data consistency is not given anymore.
+	   */
+	  void triggerReceive(int tag);
 
-  /**
-   * If you use the task in combination with containers, please push or pop
-   * data first and then call trigger. Trigger uses MPI and MPI uses memory
-   * references. If you move the tasks around later on, MPI references invalid
-   * memory addresses and data consistency is not given anymore.
-   */
-  void triggerReceive(int tag);
+	  void freeMemory();
 
-  void freeMemory();
+	  /**
+	   * Set a task invalid explicitly. Messages marked that way will pass the
+	   * validation though their data is not in agreement with checks: it is
+	   * explicilty known that the message is invalid and can be ignored. I use
+	   * this for null messages, i.e. messages without content that are often
+	   * squeezed (together with their meta data) by sophisticated communication
+	   * schemes.
+	   */
+	  void setInvalid();
 
-  /**
-   * Set a task invalid explicitly. Messages marked that way will pass the
-   * validation though their data is not in agreement with checks: it is
-   * explicilty known that the message is invalid and can be ignored. I use
-   * this for null messages, i.e. messages without content that are often
-   * squeezed (together with their meta data) by sophisticated communication
-   * schemes.
-   */
-  void setInvalid();
+    /**
+     * A task fits if it is
+     *
+     * - either invalid (see setInvalid())
+     * - or position and level coincide.
+     *
+     * Fits should only be called in assert mode. However, some compiler seem to
+     * translate it also if the function is not used at all. For them, I provide
+     * a non-asserts version returning true all the time.
+     */
+    bool fits(
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level
+    ) const;
 
-  /**
-   * A task fits if it is
-   *
-   * - either invalid (see setInvalid())
-   * - or position and level coincide.
-   *
-   * Fits should only be called in assert mode. However, some compiler seem to
-   * translate it also if the function is not used at all. For them, I provide
-   * a non-asserts version returning true all the time.
-   */
-  bool fits(
-    const tarch::la::Vector<DIMENSIONS, double>&  position,
-    int                                           level
-  ) const;
+    std::string toString() const;
+    double* data();
+    const double* data() const;
+    int getRank() const;
+    void setRank(int value);
 
-  std::string toString() const;
+    bool hasCommunicationCompleted();
+    MetaInformation& getMetaInformation();
+    MetaInformation getMetaInformation() const;
 };
 
 
@@ -257,99 +282,112 @@ struct peano::heap::SendReceiveTask<double> {
 
 
 template<>
-struct peano::heap::SendReceiveTask<char> {
-  static tarch::logging::Log _log;
+class peano::heap::SendReceiveTask<char> {
+  public:
+    /**
+     * We always use the plain meta information as record, i.e. we do not pack
+     * anything here as the meta information usually is one integer only
+     * anyway.
+     */
+    typedef peano::heap::records::MetaInformation          MetaInformation;
 
-  /**
-   * We always use the plain meta information as record, i.e. we do not pack
-   * anything here as the meta information usually is one integer only
-   * anyway.
-   */
-  typedef peano::heap::records::MetaInformation          MetaInformation;
+  private:
+    static tarch::logging::Log _log;
 
-  #ifdef Parallel
-  MPI_Request     _request;
-  #endif
 
-  MetaInformation _metaInformation;
+	  #ifdef Parallel
+	  MPI_Request     _request;
+	  #endif
 
-  /**
-   * Without semantics for send tasks but important for receive tasks as we
-   * have to store from which rank the data arrived from.
-   */
-  int             _rank;
+	  MetaInformation _metaInformation;
 
-  /**
-   * Pointer to the actual data. If meta data marks a message without
-   * content, this pointer is 0.
-   */
-  char*           _data;
+	  /**
+	   * Without semantics for send tasks but important for receive tasks as we
+	   * have to store from which rank the data arrived from.
+	   */
+	  int             _rank;
 
-  bool            _freeDataPointer;
+	  /**
+	   * Pointer to the actual data. If meta data marks a message without
+	   * content, this pointer is 0.
+	   */
+	  char*           _data;
 
-  #ifdef Asserts
-  SendReceiveTask();
-  #endif
+	  bool            _freeDataPointer;
+  public:
+    #ifdef Asserts
+    SendReceiveTask();
+    #endif
 
-  /**
-   * Prelude to sendData().
-   *
-   * Please note that you have to call delete[] on _data afterwards through
-   * operation freeMemoryOfSendTask().
-   *
-   * We assume that the meta data already encodes the correct size.
-   */
-  void wrapData(const char* const data);
+    bool hasDataExchangeFinished();
 
-  /**
-   * Counterpart of wrapData(). The task sends away the data directly from the
-   * specified buffer. Please call freeMemory() nevertheless.
-   *
-   * We assume that the meta data already encodes the correct size.
-   */
-  void sendDataDirectlyFromBuffer(const char* const  data);
+	  /**
+	   * Prelude to sendData().
+	   *
+	   * Please note that you have to call delete[] on _data afterwards through
+	   * operation freeMemoryOfSendTask().
+	   *
+	   * We assume that the meta data already encodes the correct size.
+	   */
+	  void wrapData(const char* const data);
 
-  /**
-   * @see triggerReceive() for implementation remarks.
-   */
-  void triggerSend(int tag);
+	  /**
+	   * Counterpart of wrapData(). The task sends away the data directly from the
+	   * specified buffer. Please call freeMemory() nevertheless.
+	   *
+	   * We assume that the meta data already encodes the correct size.
+	   */
+	  void sendDataDirectlyFromBuffer(const char* const  data);
 
-  /**
-   * If you use the task in combination with containers, please push or pop
-   * data first and then call trigger. Trigger uses MPI and MPI uses memory
-   * references. If you move the tasks around later on, MPI references invalid
-   * memory addresses and data consistency is not given anymore.
-   */
-  void triggerReceive(int tag);
+	  /**
+	   * @see triggerReceive() for implementation remarks.
+	   */
+	  void triggerSend(int tag);
 
-  void freeMemory();
+	  /**
+	   * If you use the task in combination with containers, please push or pop
+	   * data first and then call trigger. Trigger uses MPI and MPI uses memory
+	   * references. If you move the tasks around later on, MPI references invalid
+	   * memory addresses and data consistency is not given anymore.
+	   */
+	  void triggerReceive(int tag);
 
-  /**
-   * Set a task invalid explicitly. Messages marked that way will pass the
-   * validation though their data is not in agreement with checks: it is
-   * explicilty known that the message is invalid and can be ignored. I use
-   * this for null messages, i.e. messages without content that are often
-   * squeezed (together with their meta data) by sophisticated communication
-   * schemes.
-   */
-  void setInvalid();
+	  void freeMemory();
 
-  /**
-   * A task fits if it is
-   *
-   * - either invalid (see setInvalid())
-   * - or position and level coincide.
-   *
-   * Fits should only be called in assert mode. However, some compiler seem to
-   * translate it also if the function is not used at all. For them, I provide
-   * a non-asserts version returning true all the time.
-   */
-  bool fits(
-    const tarch::la::Vector<DIMENSIONS, double>&  position,
-    int                                           level
-  ) const;
+	  /**
+	   * Set a task invalid explicitly. Messages marked that way will pass the
+	   * validation though their data is not in agreement with checks: it is
+	   * explicilty known that the message is invalid and can be ignored. I use
+	   * this for null messages, i.e. messages without content that are often
+	   * squeezed (together with their meta data) by sophisticated communication
+	   * schemes.
+	   */
+	  void setInvalid();
 
-  std::string toString() const;
+    /**
+     * A task fits if it is
+     *
+     * - either invalid (see setInvalid())
+     * - or position and level coincide.
+     *
+     * Fits should only be called in assert mode. However, some compiler seem to
+     * translate it also if the function is not used at all. For them, I provide
+     * a non-asserts version returning true all the time.
+     */
+    bool fits(
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level
+    ) const;
+
+    std::string toString() const;
+    char* data();
+    const char* data() const;
+    int getRank() const;
+    void setRank(int value);
+
+    bool hasCommunicationCompleted();
+    MetaInformation& getMetaInformation();
+    MetaInformation getMetaInformation() const;
 };
 
 #ifdef PackRecordsInHeaps

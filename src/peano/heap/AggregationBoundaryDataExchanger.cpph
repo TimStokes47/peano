@@ -62,7 +62,7 @@ int  peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
   int result = 0;
   int base   = 1;
   for (int i=0; i<NumberOfCharsToEncodeTotalMessageCount; i++) {
-    int extractedData = receivedTask._data[i];
+    int extractedData = static_cast<int>( receivedTask.data()[i] );
     result += extractedData * base;
     base *= std::numeric_limits<Data>::max();
     logDebug(
@@ -103,11 +103,11 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
       totalNumberOfMessages>0,
 	  totalNumberOfMessages,Base::_receiveTasks[BufferToBeUnpacked].size(),Base::_receiveTasks[1-BufferToBeUnpacked].size(),
 	  localTask.toString(),
-	  localTask._metaInformation.getLength(),
-	  static_cast<int>( localTask._data[0] ),
-	  static_cast<int>( localTask._data[1] ),
-	  static_cast<int>( localTask._data[2] ),
-	  static_cast<int>( localTask._data[3] )
+	  localTask.getMetaInformation().getLength(),
+	  static_cast<int>( localTask.data()[0] ),
+	  static_cast<int>( localTask.data()[1] ),
+	  static_cast<int>( localTask.data()[2] ),
+	  static_cast<int>( localTask.data()[3] )
 	);
 
     int index = 4;
@@ -120,19 +120,31 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
     #endif
 
     for (int j=0; j<totalNumberOfMessages; j++) {
-      int sizeOfNextMessage = static_cast<int>(localTask._data[index]);
+      int sizeOfNextMessage = static_cast<int>(localTask.data()[index]);
   	  index++;
   	  assertion(sizeOfNextMessage>=0);
 
       Base::_receiveTasks[BufferToBeUnpacked].push_back( SendReceiveTaskType() );
-      Base::_receiveTasks[BufferToBeUnpacked].back()._metaInformation.setLength(0);
+      // @todo
+      //Base::_receiveTasks[BufferToBeUnpacked].back()._metaInformation.setLength(0);
+
       if (sizeOfNextMessage>0) {
+/*
         Base::_receiveTasks[BufferToBeUnpacked].back()._data = new Data[sizeOfNextMessage];
         for (int i=0; i<static_cast<int>(sizeOfNextMessage); i++) {
      		Base::_receiveTasks[BufferToBeUnpacked].back()._data[i] = localTask._data[index];
      		index++;
         }
+*/
+        Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(sizeOfNextMessage);
+        Base::_receiveTasks[BufferToBeUnpacked].back().wrapData( &(localTask.data()[0]) );
       }
+      else {
+        Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(0);
+      }
+
+      Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(0);
+
       logDebug( "postprocessStartToSendData(...)", "message terminating after " <<
         index << " entries did contain " << sizeOfNextMessage << " data entries"
       );
@@ -183,13 +195,13 @@ void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,Ve
 
     Base::_sendTasks.push_back( SendReceiveTaskType() );
 
-    Base::_sendTasks.back()._metaInformation.setLength( _aggregatedSendData.size() );
-    Base::_sendTasks.back()._rank = Base::_rank;
+    Base::_sendTasks.back().getMetaInformation().setLength( _aggregatedSendData.size() );
+    Base::_sendTasks.back().setRank( Base::_rank );
     if (!_aggregatedSendData.empty()) {
       Base::_sendTasks.back().sendDataDirectlyFromBuffer( _aggregatedSendData.data() );
       Base::_sendTasks.back().triggerSend(Base::_dataTag);
     }
-    Base::_sendTasks.back()._metaInformation.send(Base::_rank, Base::_metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    Base::_sendTasks.back().getMetaInformation().send(Base::_rank, Base::_metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::NonblockingWithPollingLoopOverTests);
   }
   #endif
 }
@@ -199,12 +211,12 @@ template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::AggregationBoundaryDataExchanger<Data,  SendReceiveTaskType,VectorContainer>::handleAndQueueReceivedTask( const SendReceiveTaskType&  receivedTask ) {
   #ifdef Asserts
   logInfo( "handleAndQueueReceivedTask()",
-    "received message from rank " << Base::_rank << " which contains " << receivedTask._metaInformation.getLength() << " entries in total. Enqueue to receive actual data behind envelope"
+    "received message from rank " << Base::_rank << " which contains " << receivedTask.getMetaInformation().getLength() << " entries in total. Enqueue to receive actual data behind envelope"
   );
   #endif
 
   Base::_receiveTasks[Base::_currentReceiveBuffer].push_back( receivedTask );
-  if (Base::_receiveTasks[Base::_currentReceiveBuffer].back()._metaInformation.getLength() > 0) {
+  if (Base::_receiveTasks[Base::_currentReceiveBuffer].back().getMetaInformation().getLength() > 0) {
     Base::_receiveTasks[Base::_currentReceiveBuffer].back().triggerReceive(Base::_dataTag);
   }
 }
@@ -225,9 +237,11 @@ void peano::heap::AggregationBoundaryDataExchanger<Data, SendReceiveTaskType,Vec
      "handleAndQueueReceivedTask(...)", "attach " << _numberOfSentMessages << "th message to aggregated data. Message carries " <<
 	 sendTask._metaInformation.getLength() << " entries. Aggregated message so far has " << _aggregatedSendData.size() << " entries");
 
-  _aggregatedSendData.push_back(static_cast<Data>(sendTask._metaInformation.getLength()));
+  assertion( sendTask.getMetaInformation().getLength()<std::numeric_limits<Data>::max()/2 );
 
-  for (int i=0; i<sendTask._metaInformation.getLength(); i++) {
+  _aggregatedSendData.push_back(static_cast<Data>(sendTask.getMetaInformation().getLength()));
+
+  for (int i=0; i<sendTask.getMetaInformation().getLength(); i++) {
     _aggregatedSendData.push_back(data[i]);
   }
 

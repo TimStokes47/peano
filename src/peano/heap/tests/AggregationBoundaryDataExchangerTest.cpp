@@ -49,7 +49,7 @@ void peano::heap::tests::AggregationBoundaryDataExchangerTest::testComposeDecomp
     exchanger.setAggregatedMessageHeader();
 
     SendReceiveTask<char> receivedTask;
-    receivedTask._metaInformation.setLength( NumberOfCharsToEncodeTotalMessageCount );
+    receivedTask.getMetaInformation().setLength( NumberOfCharsToEncodeTotalMessageCount );
     receivedTask.wrapData( exchanger._aggregatedSendData.data() );
 
     int sentNumberOfMessgaes = exchanger.getNumberOfMessages( receivedTask );
