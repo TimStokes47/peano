@@ -74,6 +74,9 @@ void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRe
 
   Base::_sendTasks.push_back(sendTask);
 
+  Base::_sendTasks.back().setRank( Base::_rank );
+  Base::_sendTasks.back().getMetaInformation().send(Base::_rank, Base::_metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::NonblockingWithPollingLoopOverTests);
+
   if(Base::_sendTasks.back().getMetaInformation().getLength() > 0) {
     if (CreateCopiesOfSentData) {
       Base::_sendTasks.back().wrapData(data);
@@ -81,9 +84,7 @@ void peano::heap::PlainBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRe
     else {
       Base::_sendTasks.back().sendDataDirectlyFromBuffer(data);
     }
-
     Base::_sendTasks.back().triggerSend(Base::_dataTag);
-    Base::_sendTasks.back().getMetaInformation().send(Base::_rank, Base::_metaDataTag, true, SendReceiveTaskType::MetaInformation::ExchangeMode::NonblockingWithPollingLoopOverTests);
   }
 
   logTraceOut( "handleAndQueueSendTask(...)" );

@@ -405,7 +405,7 @@ bool peano::heap::SendReceiveTask<double>::hasCommunicationCompleted() {
 
 bool peano::heap::SendReceiveTask<char>::hasCommunicationCompleted() {
   #ifdef Parallel
-  if ( _metaInformation.getLength()==0 ) {
+  if ( _metaInformation.getLength()==0 or _data==nullptr) {
     return true;
   }
   else {
