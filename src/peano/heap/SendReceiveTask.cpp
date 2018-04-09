@@ -388,7 +388,7 @@ peano::heap::SendReceiveTask<char>::MetaInformation  peano::heap::SendReceiveTas
 
 bool peano::heap::SendReceiveTask<double>::hasCommunicationCompleted() {
   #ifdef Parallel
-  if ( _metaInformation.getLength()==0 ) {
+  if ( _metaInformation.getLength()==0 or _data==nullptr ) {
     return true;
   }
   else {

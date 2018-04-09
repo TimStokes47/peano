@@ -67,7 +67,7 @@ typename peano::heap::SendReceiveTask<Data>::MetaInformation  peano::heap::SendR
 template<class Data>
 bool peano::heap::SendReceiveTask<Data>::hasCommunicationCompleted() {
   #ifdef Parallel
-  if ( _metaInformation.getLength()==0 ) {
+  if ( _metaInformation.getLength()==0  or _data==nullptr ) {
     return true;
   }
   else {
