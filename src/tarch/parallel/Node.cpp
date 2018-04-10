@@ -227,7 +227,8 @@ tarch::parallel::Node::Node():
   _numberOfProcessors(-1),
   _communicator( MPI_COMM_WORLD),
   _timeOutWarning(0),
-  _deadlockTimeOut(0) {
+  _deadlockTimeOut(0),
+  _areTimeoutsEnabled(true) {
 }
 #else
 tarch::parallel::Node::Node():
@@ -235,7 +236,8 @@ tarch::parallel::Node::Node():
   _numberOfProcessors(1),
   _communicator(-1),
   _timeOutWarning(0),
-  _deadlockTimeOut(0) {
+  _deadlockTimeOut(0),
+  _areTimeoutsEnabled(true) {
 }
 #endif
 
