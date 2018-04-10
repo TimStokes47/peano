@@ -146,12 +146,21 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       peano::performanceanalysis::Analysis::getInstance().beginToReceiveDataFromWorker();
 
       if (_eventHandle.communicationSpecification().sendDataBackToMaster()!=peano::CommunicationSpecification::Action::Skip) {
+        if (state.getBatchState()!=State::BatchState::NoBatch) {
+          tarch::parallel::Node::getInstance().suspendTimeouts(true);
+        }
+
         receivedWorkerCell.receive(
           currentWorker,
           peano::parallel::SendReceiveBufferPool::getInstance().getIterationManagementTag(),
           true,
           Cell::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
         );
+
+        if (state.getBatchState()!=State::BatchState::NoBatch) {
+          tarch::parallel::Node::getInstance().suspendTimeouts(false);
+        }
+
         for (int i=0; i<TWO_POWER_D; i++) {
           receivedWorkerVertices[i].receive(
             currentWorker,

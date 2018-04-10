@@ -6,12 +6,13 @@ tarch::logging::Log  peano::heap::SendReceiveTask<double>::_log( "peano::heap::S
 tarch::logging::Log  peano::heap::SendReceiveTask<char>::_log(   "peano::heap::SendReceiveTask<char>" );
 
 
-#ifdef Asserts
 peano::heap::SendReceiveTask<double>::SendReceiveTask():
+  #ifdef Parallel
+  _request( MPI_REQUEST_NULL ),
+  #endif
   _rank(-1),
   _data(0) {
 }
-#endif
 
 
 bool peano::heap::SendReceiveTask<double>::hasDataExchangeFinished() {
@@ -197,12 +198,13 @@ std::string peano::heap::SendReceiveTask<double>::toString() const {
 
 
 
-#ifdef Asserts
 peano::heap::SendReceiveTask<char>::SendReceiveTask():
+  #ifdef Parallel
+  _request( MPI_REQUEST_NULL ),
+  #endif
   _rank(-1),
   _data(0) {
 }
-#endif
 
 
 bool peano::heap::SendReceiveTask<char>::hasDataExchangeFinished() {

@@ -6,13 +6,14 @@ template <class Data>
 tarch::logging::Log  peano::heap::SendReceiveTask<Data>::_log( "peano::heap::SendReceiveTask<Data>" );
 
 
-#ifdef Asserts
 template <class Data>
 peano::heap::SendReceiveTask<Data>::SendReceiveTask():
+  #ifdef Parallel
+  _request( MPI_REQUEST_NULL ),
+  #endif
   _rank(-1),
   _data(0) {
 }
-#endif
 
 
 template<class Data>

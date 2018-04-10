@@ -80,9 +80,7 @@ class peano::heap::SendReceiveTask {
 
     bool            _freeDataPointer;
   public:
-    #ifdef Asserts
     SendReceiveTask();
-    #endif
 
     bool hasDataExchangeFinished();
 
@@ -199,9 +197,7 @@ class peano::heap::SendReceiveTask<double> {
 
 	  bool            _freeDataPointer;
   public:
-    #ifdef Asserts
     SendReceiveTask();
-    #endif
 
     bool hasDataExchangeFinished();
 
@@ -315,9 +311,7 @@ class peano::heap::SendReceiveTask<char> {
 
 	  bool            _freeDataPointer;
   public:
-    #ifdef Asserts
     SendReceiveTask();
-    #endif
 
     bool hasDataExchangeFinished();
 

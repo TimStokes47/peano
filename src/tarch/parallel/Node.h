@@ -98,6 +98,8 @@ class tarch::parallel::Node {
 
     clock_t _deadlockTimeOut;
 
+    bool    _areTimeoutsEnabled;
+
     /**
      * The standard constructor assignes the attributes default values and
      * checks whether the program is compiled using the -DParallel option.
@@ -353,7 +355,7 @@ class tarch::parallel::Node {
      */
     void receiveDanglingMessages();
 
-
+    void suspendTimeouts( bool timeoutsDisabled );
 };
 
 #endif
