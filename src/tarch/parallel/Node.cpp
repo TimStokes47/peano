@@ -152,12 +152,17 @@ clock_t tarch::parallel::Node::getDeadlockTimeOutTimeStamp() const {
 
 
 bool tarch::parallel::Node::isTimeOutDeadlockEnabled() const {
-  return _deadlockTimeOut > 0;
+  return _areTimeoutsEnabled and _deadlockTimeOut > 0;
 }
 
 
 bool tarch::parallel::Node::isTimeOutWarningEnabled() const {
-  return _timeOutWarning > 0;
+  return _areTimeoutsEnabled and _timeOutWarning > 0;
+}
+
+
+void tarch::parallel::Node::suspendTimeouts( bool timeoutsDisabled ) {
+  _areTimeoutsEnabled = !timeoutsDisabled;
 }
 
 
