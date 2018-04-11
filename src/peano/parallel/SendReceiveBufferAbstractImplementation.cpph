@@ -229,6 +229,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePa
       _receiveBufferRequestHandle = new MPI_Request();
       logDebug( "receivePageIfAvailable()", "request handle instantiated: " << (_receiveBufferRequestHandle!=0) );
 
+      #ifdef NonblockingBoundaryDataReceives
       int result = MPI_Irecv(
         _receiveBuffer[ _currentReceiveBuffer ].at(_currentReceiveBufferPage),
         messages,
@@ -238,6 +239,19 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePa
         tarch::parallel::Node::getInstance().getCommunicator(),
         _receiveBufferRequestHandle
       );
+      #else
+      _receiveBufferRequestHandle = MPI_REQUEST_NULL;
+
+      int result = MPI_Recv(
+        _receiveBuffer[ _currentReceiveBuffer ].at(_currentReceiveBufferPage),
+        messages,
+        MPIDatatypeContainer::Datatype,
+        _destinationNodeNumber,
+        peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(),
+        tarch::parallel::Node::getInstance().getCommunicator(),
+        MPI_STATUS_IGNORE
+      );
+      #endif
 
       if (result!=MPI_SUCCESS) {
         logError(

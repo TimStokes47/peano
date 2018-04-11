@@ -18,7 +18,7 @@ peano::heap::SendReceiveTask<double>::SendReceiveTask():
 bool peano::heap::SendReceiveTask<double>::hasDataExchangeFinished() {
   #ifdef Parallel
   int finishedWait;
-  if(_metaInformation.getLength() > 0) {
+  if(_metaInformation.getLength() > 0 and _data!=nullptr) {
     MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
     return (finishedWait!=0);
   }
@@ -210,7 +210,7 @@ peano::heap::SendReceiveTask<char>::SendReceiveTask():
 bool peano::heap::SendReceiveTask<char>::hasDataExchangeFinished() {
   #ifdef Parallel
   int finishedWait;
-  if(_metaInformation.getLength() > 0) {
+  if(_metaInformation.getLength() > 0 and _data!=nullptr) {
     MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
     return (finishedWait!=0);
   }

@@ -149,8 +149,13 @@
  * alter this behaviour and make each heap send/receive a blocking
  * send/receive.
  */
-#ifndef noNonblockingHeapDataReceives
+#if !defined(noNonblockingHeapDataReceives) and !defined(NonblockingHeapDataReceives)
   #define NonblockingHeapDataReceives
+#endif
+
+
+#if !defined(noNonblockingBoundaryDataReceives) and !defined(NonblockingBoundaryDataReceives)
+  #define NonblockingBoundaryDataReceives
 #endif
 
 

@@ -20,7 +20,7 @@ template<class Data>
 bool peano::heap::SendReceiveTask<Data>::hasDataExchangeFinished() {
   #ifdef Parallel
   int finishedWait;
-  if(_metaInformation.getLength() > 0) {
+  if(_metaInformation.getLength() > 0 and _data!=nullptr ) {
     MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
     return (finishedWait!=0);
   }
