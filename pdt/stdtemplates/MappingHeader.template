@@ -981,7 +981,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * traversed. The grid then decides how to do this and runs over all cells
      * and vertices. Whenever the grid traversal reads a vertex the very first 
      * time throughout an iteration, it invokes touchVertexFirstTime() for this 
-     * vertex. Then, it calls handleCell up to @f$ 2^d @f$ times for the 
+     * vertex. Then, it calls enterCell and leaveCell up to @f$ 2^d @f$ times for the 
      * adjacent cells and passes this vertex to these calls. Finally, the grid
      * traversal invokes touchVertexLastTime(), i.e. the counterpart of this 
      * operation.
@@ -1040,7 +1040,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * traversed. The grid then decides how to do this and runs over all cells
      * and vertices. Whenever the grid traversal reads a vertex the very first 
      * time throughout an iteration, it invokes touchVertexFirstTime() for this 
-     * vertex. Then, it calls handleCell up to @f$ 2^d @f$ times for the 
+     * vertex. Then, it calls enterCell and leaveCell up to @f$ 2^d @f$ times for the 
      * adjacent cells and passes this vertex to these calls. Finally, the grid
      * traversal invokes touchVertexLastTime().
      *
@@ -1094,9 +1094,10 @@ class __THIS_QUALIFIED_TYPENAME__ {
      *
      * In the Peano world, an algorithm tells the grid that the grid should be 
      * traversed. The grid then decides how to do this and runs over all cells
-     * (and vertices). For each cell, it calls handleCell(), i.e. if you want 
-     * your algorithm to do somethin on a cell, you should implement this 
-     * operation.
+     * (and vertices). For each cell, it calls enterCell(), i.e. if you want 
+     * your algorithm to do something on a cell, you should implement this 
+     * operation. If the cell is refined, it then descends into the finer levels
+     * and some time later calls leaveCell().
      *
      * @image html peano/grid/geometry-cell-inside-outside.png
      *
@@ -1154,7 +1155,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * 
      * This operation is called whenever the algorithm tells Peano that the grid 
      * is to be traversed, i.e. this operation is called before any creational 
-     * mapping operation or touchVertexFirstTime() or handleCell() is called.
+     * mapping operation or touchVertexFirstTime() or enterCell() are called.
      * The operation receives a solver state that has to 
      * encode the solver's state. Take this attribute to set the mapping's 
      * attributes. This mapping's attributes will remain valid until endIteration()
@@ -1197,7 +1198,7 @@ class __THIS_QUALIFIED_TYPENAME__ {
     /**
      * Iteration is done
      * 
-     * This operation is called at the very end, i.e. after all the handleCell() 
+     * This operation is called at the very end, i.e. after all the leaveCell() 
      * and touchVertexLastTime() operations have been invoked. In this 
      * operation, you have to write all the data you will need later on back to 
      * the state object passed. Afterwards, the attributes of your mapping 
