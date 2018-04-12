@@ -361,9 +361,9 @@ void tarch::multicore::jobs::spawnAndWait(
   int deadlockCounter = 0;
   #endif
   while (semaphore>0) {
-    g.run( [&]() { processJobs(jobClass0,1); });
-    g.run( [&]() { processJobs(jobClass1,1); });
-    g.run( [&]() { processJobs(jobClass2,1); });
+    g.run( [&]() { processJobs(jobClass0); });
+    g.run( [&]() { processJobs(jobClass1); });
+    g.run( [&]() { processJobs(jobClass2); });
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>65536) {
