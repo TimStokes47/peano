@@ -1,5 +1,6 @@
 #include "tarch/Assertions.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "peano/utils/PeanoOptimisations.h"
 
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>

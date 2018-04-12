@@ -1,5 +1,6 @@
 #include "tarch/Assertions.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "peano/utils/PeanoOptimisations.h"
 #include "peano/datatraversal/TaskSet.h"
 #include "peano/performanceanalysis/ScorePMacros.h"
 #include "tarch/multicore/Lock.h"

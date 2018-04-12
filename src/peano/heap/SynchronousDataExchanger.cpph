@@ -1,4 +1,5 @@
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "peano/utils/PeanoOptimisations.h"
 
 
 template<class Data, bool CreateCopiesOfSentData, class SendReceiveTaskType, class VectorContainer>

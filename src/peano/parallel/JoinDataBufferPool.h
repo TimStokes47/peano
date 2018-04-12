@@ -6,6 +6,7 @@
 #include "tarch/logging/Log.h"
 #include "tarch/services/Service.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "peano/utils/PeanoOptimisations.h"
 
 #include "peano/utils/Globals.h"
 #include "peano/parallel/JoinDataBuffer.h"

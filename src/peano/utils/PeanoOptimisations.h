@@ -141,6 +141,16 @@
 #endif
 
 
+#if !defined(MPIProgressionReliesOnMPITest) &&  !defined(noMPIProgressionReliesOnMPITest)
+#define MPIProgressionReliesOnMPITest
+#endif
+
+
+#if !defined(UseTBBsParallelForAndReduce) &&  !defined(noUseTBBsParallelForAndReduce)
+#define UseTBBsParallelForAndReduce
+#endif
+
+
 /**
  * We usually do all the heap data exchange via non-blocking calls, i.e. all
  * meta data (how many records are exchanged) is communicated immediately while
@@ -156,6 +166,35 @@
 
 #if !defined(noNonblockingBoundaryDataReceives) and !defined(NonblockingBoundaryDataReceives)
   #define NonblockingBoundaryDataReceives
+#endif
+
+
+
+
+#if !defined(MPIProgressionReliesOnMPITest) &&  !defined(noMPIProgressionReliesOnMPITest)
+#define MPIProgressionReliesOnMPITest
+#endif
+
+#if defined(MultipleThreadsMayTriggerMPICalls) && !defined(noMPIHeapUsesItsOwnThread) && !defined(MPIHeapUsesItsOwnThread)
+#define MPIHeapUsesItsOwnThread
+#endif
+
+#if defined(MultipleThreadsMayTriggerMPICalls) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
+#define MPIUsesItsOwnThread
+#endif
+
+
+
+#if !defined(BooleanSemaphoreUsesASpinLock) && !defined(noBooleanSemaphoreUsesASpinLock)
+#define BooleanSemaphoreUsesASpinLock
+#endif
+
+#if !defined(JobQueueUsesSpinLockInsteadOfMutex) && !defined(noJobQueueUsesSpinLockInsteadOfMutex)
+#define JobQueueUsesSpinLockInsteadOfMutex
+#endif
+
+#if !defined(JobQueueUsesStackOfBefilledQueues) && !defined(noJobQueueUsesStackOfBefilledQueues)
+#define JobQueueUsesStackOfBefilledQueues
 #endif
 
 

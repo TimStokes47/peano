@@ -4,6 +4,7 @@
 #include "peano/utils/PeanoOptimisations.h"
 #include "tarch/Assertions.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "peano/utils/PeanoOptimisations.h"
 
 template <class Vertex, class Cell>
 const std::string peano::grid::Checkpoint<Vertex,Cell>::StandardFilenameExtension = "peano-checkpoint";

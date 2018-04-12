@@ -1,6 +1,7 @@
 #include "peano/heap/CompressedFloatingPointNumbers.h"
 #include "tarch/Assertions.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "peano/utils/PeanoOptimisations.h"
 #include "tarch/la/Scalar.h"
 
 #include <bitset>

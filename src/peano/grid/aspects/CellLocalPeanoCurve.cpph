@@ -1,6 +1,7 @@
 #include "peano/utils/Globals.h"
 #include "peano/stacks/Stacks.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "peano/utils/PeanoOptimisations.h"
 
 
 template <class Cell>

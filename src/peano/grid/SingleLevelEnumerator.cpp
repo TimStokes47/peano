@@ -1,5 +1,6 @@
 #include "peano/grid/SingleLevelEnumerator.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "peano/utils/PeanoOptimisations.h"
 #include "peano/utils/Loop.h"
 #include "tarch/Assertions.h"
 

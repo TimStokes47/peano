@@ -5,6 +5,7 @@
 
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
+#include "peano/utils/PeanoOptimisations.h"
 
 #include <stdlib.h>
 #include <stdio.h>
