@@ -128,8 +128,8 @@ void peano::heap::tests::AggregationBoundaryDataExchangerTest::testComposeDecomp
     validateEqualsWithParams3(
       sentNumberOfMessgaes,i,
 	  exchanger._numberOfSentMessages,
-	  (int)(std::numeric_limits<double>::max()),
-	  (int)(exchanger._aggregatedSendData[0])
+	  std::numeric_limits<double>::max(),
+	  exchanger._aggregatedSendData[0]
 	);
 
     receivedTask.freeMemory();
