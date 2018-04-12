@@ -12,7 +12,34 @@
 namespace peano {
   namespace heap {
     template<class Data, class SendReceiveTaskType, class VectorContainer = std::vector<Data> >
+    class AbstractAggregationBoundaryDataExchanger;
+
+    /**
+     * This is just a declaration. It does not actually exist.
+     */
+    //template<class Data, class SendReceiveTaskType, class VectorContainer = std::vector<Data> >
+    template<class Data, class SendReceiveTaskType, class VectorContainer >
     class AggregationBoundaryDataExchanger;
+
+    /**
+     * I usually use the template alike
+     *
+     *   template<class SendReceiveTaskType, class VectorContainer = std::vector<char> >
+     *
+     * Most people use it that way, but others prefer to use aligned container variants.
+     */
+    template<class SendReceiveTaskType, class VectorContainer >
+    class AggregationBoundaryDataExchanger<char, SendReceiveTaskType, VectorContainer>;
+
+    /**
+     * @todo The integer specialisation here is already written, but the
+     *       SendReceiveTask specialisation is missing.
+     */
+    template<class SendReceiveTaskType, class VectorContainer >
+    class AggregationBoundaryDataExchanger<int, SendReceiveTaskType, VectorContainer>;
+
+    template<class SendReceiveTaskType, class VectorContainer >
+    class AggregationBoundaryDataExchanger<double, SendReceiveTaskType, VectorContainer>;
 
     namespace tests {
       class AggregationBoundaryDataExchangerTest;
@@ -39,12 +66,14 @@ namespace peano {
  * entries for this message, and then the actual message data.
  */
 template<class Data, class SendReceiveTaskType, class VectorContainer>
-class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer> {
-  private:
+class peano::heap::AbstractAggregationBoundaryDataExchanger: public peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer> {
+  protected:
     /**
      * Logging device.
      */
     static tarch::logging::Log _log;
+
+    friend class tests::AggregationBoundaryDataExchangerTest;
 
     typedef BoundaryDataExchanger<Data, SendReceiveTaskType, VectorContainer> Base;
 
@@ -52,14 +81,10 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
 
     std::vector<Data>    _aggregatedSendData;
 
-    static constexpr int NumberOfCharsToEncodeTotalMessageCount = 4;
+    virtual void setAggregatedMessageHeader() = 0;
+    virtual int  getNumberOfHeaderEntries() = 0;
+    virtual int  getNumberOfMessages( const SendReceiveTaskType& receivedTask ) = 0;
 
-    friend class tests::AggregationBoundaryDataExchangerTest;
-
-    void setAggregatedMessageHeader();
-    int  getNumberOfMessages( const SendReceiveTaskType& receivedTask );
-
-  protected:
     /**
      * As each message immediately is sent, the internal field
      * _sendTasks.size() holds this value. Each task there equals one sent
@@ -112,11 +137,11 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
 
     virtual bool dataExchangerCommunicatesInBackground() const;
   public:
-    AggregationBoundaryDataExchanger();
+    AbstractAggregationBoundaryDataExchanger();
 
-    AggregationBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
+    AbstractAggregationBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
 
-    virtual ~AggregationBoundaryDataExchanger();
+    virtual ~AbstractAggregationBoundaryDataExchanger();
 
     #ifdef Asserts
     /**
@@ -132,6 +157,51 @@ class peano::heap::AggregationBoundaryDataExchanger: public peano::heap::Boundar
     bool probeMPIQueues() const override {
       return true;
     };
+};
+
+
+template<class SendReceiveTaskType, class VectorContainer >
+class peano::heap::AggregationBoundaryDataExchanger<char, SendReceiveTaskType, VectorContainer>: public peano::heap::AbstractAggregationBoundaryDataExchanger<char,SendReceiveTaskType,VectorContainer> {
+  private:
+	typedef peano::heap::AbstractAggregationBoundaryDataExchanger<char,SendReceiveTaskType,VectorContainer>  Base;
+    friend class tests::AggregationBoundaryDataExchangerTest;
+
+    int  getNumberOfHeaderEntries() override;
+    void setAggregatedMessageHeader() override;
+    int  getNumberOfMessages( const SendReceiveTaskType& receivedTask ) override;
+  public:
+    AggregationBoundaryDataExchanger();
+    AggregationBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
+};
+
+
+template<class SendReceiveTaskType, class VectorContainer >
+class peano::heap::AggregationBoundaryDataExchanger<int, SendReceiveTaskType, VectorContainer>: public peano::heap::AbstractAggregationBoundaryDataExchanger<int,SendReceiveTaskType,VectorContainer> {
+  private:
+	typedef peano::heap::AbstractAggregationBoundaryDataExchanger<int,SendReceiveTaskType,VectorContainer>  Base;
+    friend class tests::AggregationBoundaryDataExchangerTest;
+
+    int  getNumberOfHeaderEntries() override;
+    void setAggregatedMessageHeader() override;
+    int  getNumberOfMessages( const SendReceiveTaskType& receivedTask ) override;
+  public:
+    AggregationBoundaryDataExchanger();
+    AggregationBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
+};
+
+
+template<class SendReceiveTaskType, class VectorContainer >
+class peano::heap::AggregationBoundaryDataExchanger<double, SendReceiveTaskType, VectorContainer>: public peano::heap::AbstractAggregationBoundaryDataExchanger<double,SendReceiveTaskType,VectorContainer> {
+  private:
+	typedef peano::heap::AbstractAggregationBoundaryDataExchanger<double,SendReceiveTaskType,VectorContainer>  Base;
+    friend class tests::AggregationBoundaryDataExchangerTest;
+
+    int  getNumberOfHeaderEntries() override;
+    void setAggregatedMessageHeader() override;
+    int  getNumberOfMessages( const SendReceiveTaskType& receivedTask ) override;
+  public:
+    AggregationBoundaryDataExchanger();
+    AggregationBoundaryDataExchanger(const std::string& identifier, int metaDataTag, int dataTag, int rank);
 };
 
 
