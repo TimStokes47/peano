@@ -7,13 +7,14 @@ template<int Alignment>
 tarch::logging::Log  peano::heap::AlignedDoubleSendReceiveTask<Alignment>::_log( "peano::heap::AlignedDoubleSendReceiveTask<Alignment>" );
 
 
-#ifdef Asserts
 template<int Alignment>
 peano::heap::AlignedDoubleSendReceiveTask<Alignment>::AlignedDoubleSendReceiveTask():
+  #ifdef Parallel
+  _request( MPI_REQUEST_NULL ),
+  #endif
   _rank(-1),
   _data(0) {
 }
-#endif
 
 
 template<int Alignment>
