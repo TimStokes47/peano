@@ -161,3 +161,74 @@ std::string peano::heap::AlignedCharSendReceiveTask<Alignment>::toString() const
   out << "(" << _metaInformation.toString() << ",rank=" << _rank << ",data=" << (_data==nullptr ? "no" : "yes") << ")";
   return out.str();
 }
+
+
+
+
+template<int Alignment>
+char* peano::heap::AlignedCharSendReceiveTask<Alignment>::data() {
+  return _data;
+}
+
+
+template<int Alignment>
+const char* peano::heap::AlignedCharSendReceiveTask<Alignment>::data() const {
+  return _data;
+}
+
+
+template<int Alignment>
+int peano::heap::AlignedCharSendReceiveTask<Alignment>::getRank() const {
+  return _rank;
+}
+
+
+template<int Alignment>
+void peano::heap::AlignedCharSendReceiveTask<Alignment>::setRank(int value) {
+  _rank = value;
+}
+
+
+template<int Alignment>
+bool peano::heap::AlignedCharSendReceiveTask<Alignment>::hasCommunicationCompleted() {
+  #ifdef Parallel
+  if ( _metaInformation.getLength()==0  or _data==nullptr ) {
+    return true;
+  }
+  else {
+	int finishedWait;
+    assertion1(_data!=nullptr, toString() );
+    MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
+    return finishedWait;
+  }
+  #else
+  return true;
+  #endif
+}
+
+
+template<int Alignment>
+bool peano::heap::AlignedCharSendReceiveTask<Alignment>::hasDataExchangeFinished() {
+  #ifdef Parallel
+  int finishedWait;
+  if(_metaInformation.getLength() > 0 and _data!=nullptr ) {
+    MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
+    return (finishedWait!=0);
+  }
+  return true;
+  #else
+  return true;
+  #endif
+}
+
+
+template<int Alignment>
+typename peano::heap::AlignedCharSendReceiveTask<Alignment>::MetaInformation& peano::heap::AlignedCharSendReceiveTask<Alignment>::getMetaInformation() {
+  return _metaInformation;
+}
+
+
+template<int Alignment>
+typename peano::heap::AlignedCharSendReceiveTask<Alignment>::MetaInformation  peano::heap::AlignedCharSendReceiveTask<Alignment>::getMetaInformation() const {
+  return _metaInformation;
+}

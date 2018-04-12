@@ -20,7 +20,7 @@
 namespace peano {
   namespace heap {
     template<int Alignment>
-    struct AlignedCharSendReceiveTask;
+    class AlignedCharSendReceiveTask;
   }
 }
 
@@ -35,23 +35,23 @@ namespace peano {
  * stored (send task) or is to be stored (receive task).
  */
 template<int Alignment>
-struct peano::heap::AlignedCharSendReceiveTask {
-  typedef std::vector< char, HeapAllocator<char, Alignment > >  DataVectorType;
+class peano::heap::AlignedCharSendReceiveTask {
+  public:
+    /**
+     * We always use the plain meta information as record, i.e. we do not pack
+     * anything here as the meta information usually is one integer only
+     * anyway.
+     */
+    typedef peano::heap::records::MetaInformation          MetaInformation;
 
+  private:
+    typedef std::vector< char, HeapAllocator<char, Alignment > >  DataVectorType;
 
-  static tarch::logging::Log _log;
+    static tarch::logging::Log _log;
 
-
-  /**
-   * We always use the plain meta information as record, i.e. we do not pack
-   * anything here as the meta information usually is one integer only
-   * anyway.
-   */
-  typedef peano::heap::records::MetaInformation          MetaInformation;
-
-  #ifdef Parallel
-  MPI_Request     _request;
-  #endif
+    #ifdef Parallel
+    MPI_Request     _request;
+    #endif
 
   MetaInformation _metaInformation;
 
@@ -69,17 +69,16 @@ struct peano::heap::AlignedCharSendReceiveTask {
 
   bool            _freeDataPointer;
 
-  #ifdef Asserts
-  AlignedCharSendReceiveTask();
-  #endif
+  public:
+    AlignedCharSendReceiveTask();
 
-  /**
-   * Prelude to sendData().
-   *
-   * Please note that you have to call delete[] on _data afterwards through
-   * operation freeMemory().
-   */
-  void wrapData(const char* const data);
+    /**
+     * Prelude to sendData().
+     *
+     * Please note that you have to call delete[] on _data afterwards through
+     * operation freeMemory().
+     */
+    void wrapData(const char* const data);
 
   /**
    * Counterpart of wrapData(). The task sends away the data directly from the
@@ -112,22 +111,33 @@ struct peano::heap::AlignedCharSendReceiveTask {
    */
   void setInvalid();
 
-  /**
-   * A task fits if it is
-   *
-   * - either invalid (see setInvalid())
-   * - or position and level coincide.
-   *
-   * Fits should only be called in assert mode. However, some compiler seem to
-   * translate it also if the function is not used at all. For them, I provide
-   * a non-asserts version returning true all the time.
-   */
-  bool fits(
-    const tarch::la::Vector<DIMENSIONS, double>&  position,
-    int                                           level
-  ) const;
+    /**
+     * A task fits if it is
+     *
+     * - either invalid (see setInvalid())
+     * - or position and level coincide.
+     *
+     * Fits should only be called in assert mode. However, some compiler seem to
+     * translate it also if the function is not used at all. For them, I provide
+     * a non-asserts version returning true all the time.
+     */
+    bool fits(
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level
+    ) const;
 
-  std::string toString() const;
+    std::string toString() const;
+
+    char* data();
+    const char* data() const;
+    int getRank() const;
+    void setRank(int value);
+
+    bool hasCommunicationCompleted();
+    bool hasDataExchangeFinished();
+
+    MetaInformation& getMetaInformation();
+    MetaInformation getMetaInformation() const;
 };
 
 

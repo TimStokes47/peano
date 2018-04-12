@@ -20,7 +20,7 @@
 namespace peano {
   namespace heap {
     template<int Alignment>
-    struct AlignedDoubleSendReceiveTask;
+    class AlignedDoubleSendReceiveTask;
   }
 }
 
@@ -35,43 +35,41 @@ namespace peano {
  * stored (send task) or is to be stored (receive task).
  */
 template<int Alignment>
-struct peano::heap::AlignedDoubleSendReceiveTask {
-  typedef std::vector< double, HeapAllocator<double, Alignment > >  DataVectorType;
+class peano::heap::AlignedDoubleSendReceiveTask {
+  public:
+    /**
+     * We always use the plain meta information as record, i.e. we do not pack
+     * anything here as the meta information usually is one integer only
+     * anyway.
+     */
+    typedef peano::heap::records::MetaInformation          MetaInformation;
 
+  private:
+    typedef std::vector< double, HeapAllocator<double, Alignment > >  DataVectorType;
 
-  static tarch::logging::Log _log;
+    static tarch::logging::Log _log;
 
+    #ifdef Parallel
+    MPI_Request     _request;
+    #endif
 
-  /**
-   * We always use the plain meta information as record, i.e. we do not pack
-   * anything here as the meta information usually is one integer only
-   * anyway.
-   */
-  typedef peano::heap::records::MetaInformation          MetaInformation;
+    MetaInformation _metaInformation;
 
-  #ifdef Parallel
-  MPI_Request     _request;
-  #endif
+    /**
+     * Without semantics for send tasks but important for receive tasks as we
+     * have to store from which rank the data arrived from.
+     */
+    int             _rank;
 
-  MetaInformation _metaInformation;
+    /**
+     * Pointer to the actual data. If meta data marks a message without
+     * content, this pointer is 0.
+     */
+    double*         _data;
 
-  /**
-   * Without semantics for send tasks but important for receive tasks as we
-   * have to store from which rank the data arrived from.
-   */
-  int             _rank;
-
-  /**
-   * Pointer to the actual data. If meta data marks a message without
-   * content, this pointer is 0.
-   */
-  double*         _data;
-
-  bool            _freeDataPointer;
-
-  #ifdef Asserts
-  AlignedDoubleSendReceiveTask();
-  #endif
+    bool            _freeDataPointer;
+  public:
+    AlignedDoubleSendReceiveTask();
 
   /**
    * Prelude to sendData().
@@ -112,22 +110,33 @@ struct peano::heap::AlignedDoubleSendReceiveTask {
    */
   void setInvalid();
 
-  /**
-   * A task fits if it is
-   *
-   * - either invalid (see setInvalid())
-   * - or position and level coincide.
-   *
-   * Fits should only be called in assert mode. However, some compiler seem to
-   * translate it also if the function is not used at all. For them, I provide
-   * a non-asserts version returning true all the time.
-   */
-  bool fits(
-    const tarch::la::Vector<DIMENSIONS, double>&  position,
-    int                                           level
-  ) const;
+    /**
+     * A task fits if it is
+     *
+     * - either invalid (see setInvalid())
+     * - or position and level coincide.
+     *
+     * Fits should only be called in assert mode. However, some compiler seem to
+     * translate it also if the function is not used at all. For them, I provide
+     * a non-asserts version returning true all the time.
+     */
+    bool fits(
+      const tarch::la::Vector<DIMENSIONS, double>&  position,
+      int                                           level
+    ) const;
 
-  std::string toString() const;
+    std::string toString() const;
+
+    double* data();
+    const double* data() const;
+    int getRank() const;
+    void setRank(int value);
+
+    bool hasCommunicationCompleted();
+    bool hasDataExchangeFinished();
+
+    MetaInformation& getMetaInformation();
+    MetaInformation getMetaInformation() const;
 };
 
 

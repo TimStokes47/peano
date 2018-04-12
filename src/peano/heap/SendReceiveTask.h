@@ -313,8 +313,6 @@ class peano::heap::SendReceiveTask<char> {
   public:
     SendReceiveTask();
 
-    bool hasDataExchangeFinished();
-
 	  /**
 	   * Prelude to sendData().
 	   *
@@ -380,6 +378,7 @@ class peano::heap::SendReceiveTask<char> {
     void setRank(int value);
 
     bool hasCommunicationCompleted();
+    bool hasDataExchangeFinished();
     MetaInformation& getMetaInformation();
     MetaInformation getMetaInformation() const;
 };
