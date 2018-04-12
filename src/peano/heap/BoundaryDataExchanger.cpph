@@ -322,6 +322,10 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
         handleAndQueueReceivedTask( receiveTask );
 
         logTraceOutWith1Argument( "receiveDanglingMessages(...)", receiveTask._metaInformation.toString() );
+
+        #ifdef ReceiveDanglingMessagesReceivesAtMostOneMessageAtATime
+        flag = 0;
+        #endif
       }
     }
   }
