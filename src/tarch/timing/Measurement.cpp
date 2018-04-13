@@ -1,5 +1,7 @@
 #include "tarch/timing/Measurement.h"
 #include "tarch/Assertions.h"
+#include "tarch/la/Scalar.h"
+#include "tarch/la/ScalarOperations.h"
 
 
 #include <limits>
@@ -53,7 +55,7 @@ double tarch::timing::Measurement::getAccumulatedValue() const {
 
 
 double tarch::timing::Measurement::getValue() const {
-  if (_numberOfMeasurements==0) {
+  if ( tarch::la::smaller(_numberOfMeasurements,1.0) ) {
     assertionEquals(_accumulatedValue,0.0);
     return 0.0;
   }
@@ -64,12 +66,12 @@ double tarch::timing::Measurement::getValue() const {
 
 
 double tarch::timing::Measurement::getStandardDeviation() const {
-  if (_numberOfMeasurements==0) {
+  if ( tarch::la::smaller(_numberOfMeasurements,1.0) ) {
     assertionEquals(_accumulatedValue,0.0);
     return 0.0;
   }
   else {
-    return std::sqrt( _accumulatedSquares / _numberOfMeasurements -  getMeanValue()*getMeanValue() );
+    return std::sqrt( std::abs(_accumulatedSquares / _numberOfMeasurements -  getMeanValue()*getMeanValue()) );
   }
 }
 
@@ -93,7 +95,7 @@ void tarch::timing::Measurement::increaseAccuracy( const double& factor ) {
 
 
 void tarch::timing::Measurement::setValue(const double& value) {
-  if (_numberOfMeasurements<=1) {
+  if ( tarch::la::smallerEquals(_numberOfMeasurements,1.0) ) {
     assertion( !_isAccurateValue );
   }
   else {

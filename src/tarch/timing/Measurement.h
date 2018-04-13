@@ -74,6 +74,12 @@ class tarch::timing::Measurement {
 
     double getAccumulatedValue() const;
 
+    /**
+     * We did face some seg faults (very rarely) where the parameter under the
+     * square root did become slightly negative. This seems to be a round-off
+     * error. We circumnavigate it by adding an absolute value which is
+     * mathematically not required.
+     */
     double getStandardDeviation() const;
 
     /**
