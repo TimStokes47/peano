@@ -585,7 +585,8 @@ write the vector data into the right place)
 void petsc::mappings::Assemble::touchVertexFirstTime(...) {
   if (fineGridVertex.isUnknown()) {
     fineGridVertex.setRhs(
-      ...
+      ... // take 1.0 for the time being. In the present Finite Differences mindset, this means the right-hand 
+          // side us 1 everywhere. Obviously, you might later want to compute more complicated things.
     );
   }
 }
