@@ -318,7 +318,7 @@ void tarch::multicore::jobs::spawnAndWait(
   #ifdef Asserts
   int deadlockCounter = 0;
   #endif
-  while (semaphore>0) {
+  while (semaphore.load()>0) {
     g.run( [&]() { processJobs(jobClass0); });
     g.run( [&]() { processJobs(jobClass1); });
     #ifdef Asserts
@@ -360,7 +360,7 @@ void tarch::multicore::jobs::spawnAndWait(
   #ifdef Asserts
   int deadlockCounter = 0;
   #endif
-  while (semaphore>0) {
+  while (semaphore.load()>0) {
     g.run( [&]() { processJobs(jobClass0); });
     g.run( [&]() { processJobs(jobClass1); });
     g.run( [&]() { processJobs(jobClass2); });
@@ -407,7 +407,7 @@ void tarch::multicore::jobs::spawnAndWait(
   #ifdef Asserts
   int deadlockCounter = 0;
   #endif
-  while (semaphore>0) {
+  while (semaphore.load()>0) {
     g.run( [&]() { processJobs(jobClass0); });
     g.run( [&]() { processJobs(jobClass1); });
     g.run( [&]() { processJobs(jobClass2); });
@@ -460,7 +460,7 @@ void tarch::multicore::jobs::spawnAndWait(
   #ifdef Asserts
   int deadlockCounter = 0;
   #endif
-  while (semaphore>0) {
+  while (semaphore.load()>0) {
     g.run( [&]() { processJobs(jobClass0); });
     g.run( [&]() { processJobs(jobClass1); });
     g.run( [&]() { processJobs(jobClass2); });
@@ -518,7 +518,7 @@ void tarch::multicore::jobs::spawnAndWait(
   #ifdef Asserts
   int deadlockCounter = 0;
   #endif
-  while (semaphore>0) {
+  while (semaphore.load()>0) {
     g.run( [&]() { processJobs(jobClass0); });
     g.run( [&]() { processJobs(jobClass1); });
     g.run( [&]() { processJobs(jobClass2); });
