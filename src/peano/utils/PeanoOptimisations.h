@@ -163,13 +163,9 @@
   #define NonblockingHeapDataReceives
 #endif
 
-
 #if !defined(noNonblockingBoundaryDataReceives) and !defined(NonblockingBoundaryDataReceives)
   #define NonblockingBoundaryDataReceives
 #endif
-
-
-
 
 #if !defined(MPIProgressionReliesOnMPITest) &&  !defined(noMPIProgressionReliesOnMPITest)
 #define MPIProgressionReliesOnMPITest
@@ -180,10 +176,8 @@
 #endif
 
 #if defined(MultipleThreadsMayTriggerMPICalls) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
-#define MPIUsesItsOwnThread
+#define noMPIUsesItsOwnThread
 #endif
-
-
 
 #if !defined(BooleanSemaphoreUsesASpinLock) && !defined(noBooleanSemaphoreUsesASpinLock)
 #define BooleanSemaphoreUsesASpinLock
@@ -197,5 +191,9 @@
 #define JobQueueUsesStackOfBefilledQueues
 #endif
 
+
+#if !defined(NonblockingHeapDataReceives) && !defined(noNonblockingHeapDataReceives)
+#define noNonblockingHeapDataReceives
+#endif
 
 #endif
