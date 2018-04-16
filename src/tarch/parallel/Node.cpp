@@ -407,7 +407,15 @@ void tarch::parallel::Node::receiveDanglingMessages() {
   static int counter = 0;
   counter++;
   if (counter>IprobeEveryKIterations) {
-    counter = 0;
-    tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+    #ifdef Parallel
+    int          flag;
+    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, _communicator, &flag, MPI_STATUS_IGNORE);
+    if (flag or counter>IprobeEveryKIterations) {
+    #endif
+      counter = 0;
+      tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+    #ifdef Parallel
+    }
+    #endif
   }
 }
