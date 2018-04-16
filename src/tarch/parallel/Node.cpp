@@ -404,5 +404,10 @@ void tarch::parallel::Node::setCommunicator( MPI_Comm communicator ) {
 
 
 void tarch::parallel::Node::receiveDanglingMessages() {
-  tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+  static int counter = 0;
+  counter++;
+  if (counter>IprobeEveryKIterations) {
+    counter = 0;
+    tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
+  }
 }
