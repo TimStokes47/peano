@@ -158,6 +158,14 @@
  * optimisation, i.e. to free MPI from too many dangling requests, you can
  * alter this behaviour and make each heap send/receive a blocking
  * send/receive.
+ *
+ * Heap data is usually sent out in pairs: There's a meta data message
+ * containing (among other data) the information how many records are
+ * exchanged. And then next we transfer the actual data. So whenever we
+ * receive a meta data message, we know that there will be real data, too.
+ * With this flag, one can select whether this very data is to be received
+ * blocking or non-blocking. By default, I try to do this real data exchange
+ * in the background as I assume that this data is massive.
  */
 #if !defined(noNonblockingHeapDataReceives) and !defined(NonblockingHeapDataReceives)
   #define NonblockingHeapDataReceives
@@ -189,11 +197,6 @@
 
 #if !defined(JobQueueUsesStackOfBefilledQueues) && !defined(noJobQueueUsesStackOfBefilledQueues)
 #define JobQueueUsesStackOfBefilledQueues
-#endif
-
-
-#if !defined(NonblockingHeapDataReceives) && !defined(noNonblockingHeapDataReceives)
-#define noNonblockingHeapDataReceives
 #endif
 
 
