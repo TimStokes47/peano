@@ -114,6 +114,16 @@ class tarch::parallel::Node {
 
     /**
      * Receive any Message Pending in the MPI/Receive Buffers
+     *
+     * We do poll MPI only every k iterations. Once we have found a message, we 
+     * wait again k iterations. If the threshold is exceeded and no message is 
+     * found we however do not reset k (I've tried this and it gives worse 
+     * runtime): receiveDanglingMessages is typically called when we enter a 
+     * critical phase of the simulation and we urgently wait for incoming MPI
+     * messages. So once we are in that critical regime and have already 
+     * exceeded the k it would be harakiri to reset this one to 0 again - we 
+     * only do so if data drops in and we thus may assume that we'll leave the 
+     * critical phase anyway.
      */
     void receiveDanglingMessagesFromReceiveBuffers();
 

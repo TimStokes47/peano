@@ -410,7 +410,7 @@ void tarch::parallel::Node::receiveDanglingMessages() {
     #ifdef Parallel
     int          flag;
     MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, _communicator, &flag, MPI_STATUS_IGNORE);
-    if (flag or counter>IprobeEveryKIterations) {
+    if (flag) {
     #endif
       counter = 0;
       tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
