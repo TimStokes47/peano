@@ -326,6 +326,10 @@ void tarch::multicore::jobs::spawnAndWait(
     processJobs(jobClass0);
     processJobs(jobClass1); 
 
+    // There are several gaming companies that report that busy loops/spinning
+    // over atomics did deadlock in their case (the atomic never was updated)
+    // if they didn't use a yield. In our case, some applications seem to
+    // exhibit exactly the same behaviour, so I decided to yield here.
     tbb::this_tbb_thread::yield();
 
     #ifdef Asserts

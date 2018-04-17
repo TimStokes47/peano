@@ -175,6 +175,13 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
   logTraceInWith1Argument( "releaseMessages()", toString(_mode) );
 
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+  if (_backgroundThread!=nullptr) {
+    _backgroundThread->suspend(true);
+    logInfo( "releaseMessages()", "did suspend thread");
+  }
+  #endif
+
   tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
 
   logInfo( "releaseMessages()", "release the sent messages" );
@@ -211,6 +218,13 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
   lock.free();
 
+
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+  if (_backgroundThread!=nullptr) {
+    _backgroundThread->suspend(false);
+  }
+  #endif
+
   logTraceOutWith1Argument( "releaseMessages()", toString(_mode) );
 }
 
@@ -237,25 +251,45 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
 
   bool result = true;
 
-  tarch::multicore::Lock stateLock( _semaphore );
-  switch (_state) {
-    case State::Running:
-      {
-        SendReceiveBufferPool::getInstance().receiveDanglingMessages();
-        // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
-        //std::atomic_thread_fence(std::memory_order_release);
-      }
-      break;
-    case State::Terminate:
-      #ifdef Asserts
-      logInfo( "BackgroundThread::operator()", "terminating" );
-      #endif
-      result = false;
-      break;
+  static int counter = 0;
+  counter++;
+  if (counter>IprobeEveryKIterations) {
+    counter = 0;
+    tarch::multicore::Lock stateLock( _semaphore );
+    switch (_state) {
+      case State::Running:
+        {
+          SendReceiveBufferPool::getInstance().receiveDanglingMessages();
+          // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
+          //std::atomic_thread_fence(std::memory_order_release);
+        }
+        break;
+      case State::Terminate:
+        #ifdef Asserts
+        logInfo( "BackgroundThread::operator()", "terminating" );
+        #endif
+        result = false;
+        break;
+      case State::Suspend:
+	result = true;
+	break;
+    }
+    stateLock.free();
   }
-  stateLock.free();
 
   return result;
+}
+
+
+void peano::parallel::SendReceiveBufferPool::BackgroundThread::suspend(bool value) {
+  if (_state!=State::Terminate) {
+    if (value) {
+      _state = State::Suspend;
+    }
+    else {
+      _state = State::Running;
+    }
+  }
 }
 
 
@@ -269,7 +303,9 @@ std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString(S
     case State::Running:
       return "running";
     case State::Terminate:
-	  return "terminate";
+      return "terminate";
+    case State::Suspend:
+      return "suspend";
   }
 
   return "<undef>";

@@ -175,6 +175,17 @@
   #define NonblockingHeapDataReceives
 #endif
 
+/**
+ * The boundary data exchange (grid data) relies on probing the MPI queues: We
+ * check from time to time whether there are messages pending. If there's one,
+ * we issue a receive. This receive either can be blocking or non-blocking. The
+ * latter is the default as it implies that computation and communication can
+ * overlap. There might however be cases where the non-blocking management
+ * overhead renders a blocking data exchange advantageous.
+ *
+ * For most of the existing Peano applications, this flag did not make any
+ * difference.
+ */
 #if !defined(noNonblockingBoundaryDataReceives) and !defined(NonblockingBoundaryDataReceives)
   #define NonblockingBoundaryDataReceives
 #endif
