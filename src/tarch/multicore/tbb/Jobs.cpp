@@ -313,14 +313,19 @@ void tarch::multicore::jobs::spawnAndWait(
 
   g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, semaphore ); });
   g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, semaphore ); });
+  //g.wait();
+
+  g.run( [&]() { processJobs(jobClass0); });
+  g.run( [&]() { processJobs(jobClass1); });
   g.wait();
 
   #ifdef Asserts
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
-    g.run( [&]() { processJobs(jobClass0); });
-    g.run( [&]() { processJobs(jobClass1); });
+    processJobs(jobClass0);
+    processJobs(jobClass1); 
+
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>65536) {
@@ -330,7 +335,6 @@ void tarch::multicore::jobs::spawnAndWait(
       deadlockCounter = 0;
     }
     #endif
-    g.wait();
   }
 }
 
@@ -355,15 +359,21 @@ void tarch::multicore::jobs::spawnAndWait(
   g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, semaphore ); });
   g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, semaphore ); });
   g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, semaphore ); });
+  //g.wait();
+
+  g.run( [&]() { processJobs(jobClass0); });
+  g.run( [&]() { processJobs(jobClass1); });
+  g.run( [&]() { processJobs(jobClass2); });
   g.wait();
 
   #ifdef Asserts
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
-    g.run( [&]() { processJobs(jobClass0); });
-    g.run( [&]() { processJobs(jobClass1); });
-    g.run( [&]() { processJobs(jobClass2); });
+    processJobs(jobClass0);
+    processJobs(jobClass1);
+    processJobs(jobClass2);
+
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>65536) {
@@ -373,7 +383,6 @@ void tarch::multicore::jobs::spawnAndWait(
       deadlockCounter = 0;
     }
     #endif
-    g.wait(); // Bin mer hier net sicher
   }
 }
 
@@ -402,17 +411,23 @@ void tarch::multicore::jobs::spawnAndWait(
   g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, semaphore ); });
   g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, semaphore ); });
   g.run( [&]() { internal::spawnBlockingJob( job3, jobType3, jobClass3, semaphore ); });
+  //g.wait();
+
+  g.run( [&]() { processJobs(jobClass0); });
+  g.run( [&]() { processJobs(jobClass1); });
+  g.run( [&]() { processJobs(jobClass2); });
+  g.run( [&]() { processJobs(jobClass3); });
   g.wait();
 
   #ifdef Asserts
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
-    g.run( [&]() { processJobs(jobClass0); });
-    g.run( [&]() { processJobs(jobClass1); });
-    g.run( [&]() { processJobs(jobClass2); });
-    g.run( [&]() { processJobs(jobClass3); });
-    //g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    processJobs(jobClass0);
+    processJobs(jobClass1);
+    processJobs(jobClass2);
+    processJobs(jobClass3);
+
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>65536) {
@@ -422,7 +437,6 @@ void tarch::multicore::jobs::spawnAndWait(
       deadlockCounter = 0;
     }
     #endif
-    g.wait();
   }
 }
 
@@ -455,18 +469,25 @@ void tarch::multicore::jobs::spawnAndWait(
   g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, semaphore ); });
   g.run( [&]() { internal::spawnBlockingJob( job3, jobType3, jobClass3, semaphore ); });
   g.run( [&]() { internal::spawnBlockingJob( job4, jobType4, jobClass4, semaphore ); });
+  //g.wait();
+
+  g.run( [&]() { processJobs(jobClass0); });
+  g.run( [&]() { processJobs(jobClass1); });
+  g.run( [&]() { processJobs(jobClass2); });
+  g.run( [&]() { processJobs(jobClass3); });
+  g.run( [&]() { processJobs(jobClass4); });
   g.wait();
 
   #ifdef Asserts
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
-    g.run( [&]() { processJobs(jobClass0); });
-    g.run( [&]() { processJobs(jobClass1); });
-    g.run( [&]() { processJobs(jobClass2); });
-    g.run( [&]() { processJobs(jobClass3); });
-    g.run( [&]() { processJobs(jobClass4); });
-    //g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    processJobs(jobClass0); 
+    processJobs(jobClass1); 
+    processJobs(jobClass2); 
+    processJobs(jobClass3); 
+    processJobs(jobClass4); 
+
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>65536) {
@@ -476,7 +497,6 @@ void tarch::multicore::jobs::spawnAndWait(
       deadlockCounter = 0;
     }
     #endif
-    g.wait();
   }
 }
 
@@ -513,19 +533,27 @@ void tarch::multicore::jobs::spawnAndWait(
   g.run( [&]() { internal::spawnBlockingJob( job3, jobType3, jobClass3, semaphore ); });
   g.run( [&]() { internal::spawnBlockingJob( job4, jobType4, jobClass4, semaphore ); });
   g.run( [&]() { internal::spawnBlockingJob( job5, jobType5, jobClass5, semaphore ); });
+  //g.wait();
+
+  g.run( [&]() { processJobs(jobClass0); });
+  g.run( [&]() { processJobs(jobClass1); });
+  g.run( [&]() { processJobs(jobClass2); });
+  g.run( [&]() { processJobs(jobClass3); });
+  g.run( [&]() { processJobs(jobClass4); });
+  g.run( [&]() { processJobs(jobClass5); });
   g.wait();
 
   #ifdef Asserts
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
-    g.run( [&]() { processJobs(jobClass0); });
-    g.run( [&]() { processJobs(jobClass1); });
-    g.run( [&]() { processJobs(jobClass2); });
-    g.run( [&]() { processJobs(jobClass3); });
-    g.run( [&]() { processJobs(jobClass4); });
-    g.run( [&]() { processJobs(jobClass5); });
-    //g.run( [&]() { internal::processNumberOfBackgroundJobs(1); });
+    processJobs(jobClass0); 
+    processJobs(jobClass1); 
+    processJobs(jobClass2); 
+    processJobs(jobClass3); 
+    processJobs(jobClass4);
+    processJobs(jobClass5);
+
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>65536) {
@@ -535,7 +563,6 @@ void tarch::multicore::jobs::spawnAndWait(
       deadlockCounter = 0;
     }
     #endif
-    g.wait();
   }
 }
 
