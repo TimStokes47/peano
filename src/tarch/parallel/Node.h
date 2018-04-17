@@ -135,15 +135,15 @@ class tarch::parallel::Node {
      * delivered exactly once. The string argument is just for logging.
      *
      *
-     * !!! Implementation details
+     * <h2> Implementation details </h2>
      *
      * This operation should write something to the log devices. However, it
      * is static and the class' log devices are static, too. C++ has no
-     * mechanism to define which static entitiy has to be instantiated first.
+     * mechanism to define which static entity has to be instantiated first.
      * On some systems, it hence happened that someone called this static
      * function while the static log attribute has not been initialised yet.
      * Consequently, the operation uses its own (local) log variable instead
-     * of the log variable of the class. This is an important workaround!.
+     * of the log variable of the class. This is an important workaround!
      */
     static int reserveFreeTag(const std::string& fullQualifiedMessageName);
     static void releaseTag(int tag);
