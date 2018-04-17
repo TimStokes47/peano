@@ -61,7 +61,7 @@ tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute(
   _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
 
   if (
-	(newNumberOfBackgroundJobs>0 && _numberOfRunningBackgroundJobConsumerTasks==0)
+	(newNumberOfBackgroundJobs>0 && _numberOfRunningBackgroundJobConsumerTasks.load()==0)
   ) {
     enqueue();
   }
@@ -127,7 +127,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
       {
         internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.push(job);
         
-        const int currentlyRunningBackgroundThreads = internal::_numberOfRunningBackgroundJobConsumerTasks;
+        const int currentlyRunningBackgroundThreads = internal::_numberOfRunningBackgroundJobConsumerTasks.load();
         if (
           currentlyRunningBackgroundThreads<Job::_maxNumberOfRunningBackgroundThreads
         ) {
@@ -141,7 +141,7 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
 
 
 int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
-  return internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.unsafe_size() + internal::_numberOfRunningBackgroundJobConsumerTasks;
+  return internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.unsafe_size() + internal::_numberOfRunningBackgroundJobConsumerTasks.load();
 }
 
 
@@ -236,7 +236,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
 bool tarch::multicore::jobs::processBackgroundJobs() {
   const int additionalBackgroundThreads =
     std::min(
-      Job::_maxNumberOfRunningBackgroundThreads - internal::_numberOfRunningBackgroundJobConsumerTasks,
+      Job::_maxNumberOfRunningBackgroundThreads - internal::_numberOfRunningBackgroundJobConsumerTasks.load(),
 	  static_cast<int>( internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).jobs.unsafe_size() )
 	);
 
@@ -246,7 +246,7 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
     logInfo(
       "processBackgroundJobs()",
       "spawn another " << additionalBackgroundThreads << " background job consumer tasks ("
-  	  << internal::_numberOfRunningBackgroundJobConsumerTasks << " task(s) already running)"
+  	  << internal::_numberOfRunningBackgroundJobConsumerTasks.load() << " task(s) already running)"
     );
   }
   #endif
@@ -580,7 +580,7 @@ void tarch::multicore::jobs::spawnAndWait(
 std::string tarch::multicore::jobs::internal::report() {
   std::ostringstream msg;
   msg << "job-system-status: background-queue-no=" << internal::BackgroundJobsJobClassNumber
-	  << ", no-of-running-bg-consumer-tasks=" << _numberOfRunningBackgroundJobConsumerTasks;
+	  << ", no-of-running-bg-consumer-tasks=" << _numberOfRunningBackgroundJobConsumerTasks.load();
   for (auto& p: _pendingJobs) {
 	msg << ",queue[" << p.first
         << "]=" << p.second.jobs.unsafe_size() << " job(s)";
