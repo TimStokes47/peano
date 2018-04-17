@@ -99,7 +99,10 @@ void tarch::timing::Measurement::setValue(const double& value) {
     assertion( !_isAccurateValue );
   }
   else {
-    const double differenceDueToNewValue = std::abs(getMeanValueOfNextStep(value) / getMeanValue() -1.0);
+    const double differenceDueToNewValue =
+      tarch::la::smallerEquals(getMeanValue(),1.0) ?
+      std::abs(getMeanValueOfNextStep(value) - getMeanValue()) :
+      std::abs(getMeanValueOfNextStep(value) / getMeanValue() -1.0);
     _isAccurateValue = _numberOfMeasurements>0 && differenceDueToNewValue < _accuracy;
   }
 
