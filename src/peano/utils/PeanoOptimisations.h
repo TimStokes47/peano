@@ -147,9 +147,12 @@
  *
  * Flag only plays a role if you are heavily relying on heaps. For the standard
  * boundary data exchange, the testing is always implicitly enabled.
+ *
+ * It seems however that for most applications switching on this feature is not
+ * a good idea.
  */
 #if !defined(MPIProgressionReliesOnMPITest) &&  !defined(noMPIProgressionReliesOnMPITest)
-#define MPIProgressionReliesOnMPITest
+#define noMPIProgressionReliesOnMPITest
 #endif
 
 /**
