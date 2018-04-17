@@ -88,6 +88,16 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
          * The operator returns true as long as the state equals Running. For
          * TBB (for example) this means that the job is processed and afterward
          * directly again enqueued into the job list.
+         *
+         * <h2> Optimisation </h2>
+         *
+         * I tried an additional guard around this operator which probes the
+         * respective MPI tags. It turned out that this is a poor idea. Also,
+         * invoking yield() in a TBB context did not pay off. What however
+         * turned out to be absolutely crucial is the value of IprobeEveryKIterations.
+         * If it is too big, the code tends to run into timeouts. If it is too
+         * small, the MPI data exchange seems to suffer from the MPI call
+         * overheads and it starts to deadlock, too.
          */
         bool operator()();
         std::string toString() const;
