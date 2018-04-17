@@ -168,11 +168,11 @@
 #endif
 
 #if !defined(MPIProgressionReliesOnMPITest) &&  !defined(noMPIProgressionReliesOnMPITest)
-#define MPIProgressionReliesOnMPITest
+#define noMPIProgressionReliesOnMPITest
 #endif
 
 #if defined(MultipleThreadsMayTriggerMPICalls) && !defined(noMPIHeapUsesItsOwnThread) && !defined(MPIHeapUsesItsOwnThread)
-#define MPIHeapUsesItsOwnThread
+#define noMPIHeapUsesItsOwnThread
 #endif
 
 #if defined(MultipleThreadsMayTriggerMPICalls) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
