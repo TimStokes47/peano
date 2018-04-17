@@ -18,11 +18,15 @@ peano::heap::SendReceiveTask<double>::SendReceiveTask():
 
 bool peano::heap::SendReceiveTask<double>::hasDataExchangeFinished() {
   #ifdef Parallel
-  int finishedWait;
-  if(_metaInformation.getLength() > 0 and _data!=nullptr) {
-    MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
-    return (finishedWait!=0);
+  if (!_dataExchangeHasCompleted) {
+    int finishedWait;
+    if(_metaInformation.getLength() > 0 and _data!=nullptr ) {
+      MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
+      _dataExchangeHasCompleted |= finishedWait!=0;
+      return _dataExchangeHasCompleted;
+    }
   }
+  return true;
   #endif
   return true;
 }
@@ -204,21 +208,22 @@ peano::heap::SendReceiveTask<char>::SendReceiveTask():
   _request( MPI_REQUEST_NULL ),
   #endif
   _rank(-1),
-  _data(0) {
+  _data(0),
+  _dataExchangeHasCompleted(false)  {
 }
 
 
 bool peano::heap::SendReceiveTask<char>::hasDataExchangeFinished() {
   #ifdef Parallel
-  if (_dataExchangeHasCompleted) {
-    return true;
+  if (!_dataExchangeHasCompleted) {
+    int finishedWait;
+    if(_metaInformation.getLength() > 0 and _data!=nullptr ) {
+      MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
+      _dataExchangeHasCompleted |= finishedWait!=0;
+      return _dataExchangeHasCompleted;
+    }
   }
-  int finishedWait;
-  if(_metaInformation.getLength() > 0 and _data!=nullptr) {
-    MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
-    _dataExchangeHasCompleted = finishedWait!=0;
-    return _dataExchangeHasCompleted;
-  }
+  return true;
   #endif
   return true;
 }
