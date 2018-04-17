@@ -240,7 +240,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePa
         _receiveBufferRequestHandle
       );
       #else
-      _receiveBufferRequestHandle = MPI_REQUEST_NULL;
+      *_receiveBufferRequestHandle = MPI_REQUEST_NULL;
 
       int result = MPI_Recv(
         _receiveBuffer[ _currentReceiveBuffer ].at(_currentReceiveBufferPage),
