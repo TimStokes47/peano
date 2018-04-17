@@ -179,10 +179,6 @@
   #define NonblockingBoundaryDataReceives
 #endif
 
-#if !defined(MPIProgressionReliesOnMPITest) &&  !defined(noMPIProgressionReliesOnMPITest)
-#define noMPIProgressionReliesOnMPITest
-#endif
-
 #if defined(MultipleThreadsMayTriggerMPICalls) && !defined(noMPIHeapUsesItsOwnThread) && !defined(MPIHeapUsesItsOwnThread)
 #define noMPIHeapUsesItsOwnThread
 #endif
