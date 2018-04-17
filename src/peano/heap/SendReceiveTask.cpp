@@ -11,7 +11,8 @@ peano::heap::SendReceiveTask<double>::SendReceiveTask():
   _request( MPI_REQUEST_NULL ),
   #endif
   _rank(-1),
-  _data(0) {
+  _data(0),
+  _dataExchangeHasCompleted(false) {
 }
 
 
@@ -209,10 +210,14 @@ peano::heap::SendReceiveTask<char>::SendReceiveTask():
 
 bool peano::heap::SendReceiveTask<char>::hasDataExchangeFinished() {
   #ifdef Parallel
+  if (_dataExchangeHasCompleted) {
+    return true;
+  }
   int finishedWait;
   if(_metaInformation.getLength() > 0 and _data!=nullptr) {
     MPI_Test(&(_request), &finishedWait, MPI_STATUS_IGNORE);
-    return (finishedWait!=0);
+    _dataExchangeHasCompleted = finishedWait!=0;
+    return _dataExchangeHasCompleted;
   }
   #endif
   return true;

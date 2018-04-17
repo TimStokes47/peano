@@ -79,6 +79,8 @@ class peano::heap::SendReceiveTask {
     Data*           _data;
 
     bool            _freeDataPointer;
+
+    bool            _dataExchangeHasCompleted;
   public:
     SendReceiveTask();
 
