@@ -198,6 +198,8 @@ class peano::heap::SendReceiveTask<double> {
 	  double*         _data;
 
 	  bool            _freeDataPointer;
+
+    bool            _dataExchangeHasCompleted;
   public:
     SendReceiveTask();
 
@@ -312,6 +314,8 @@ class peano::heap::SendReceiveTask<char> {
 	  char*           _data;
 
 	  bool            _freeDataPointer;
+
+    bool            _dataExchangeHasCompleted;
   public:
     SendReceiveTask();
 
