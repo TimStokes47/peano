@@ -196,4 +196,10 @@
 #define noNonblockingHeapDataReceives
 #endif
 
+
+#if !defined(ReceiveDanglingMessagesReceivesAtMostOneMessageAtATime) && !defined(noReceiveDanglingMessagesReceivesAtMostOneMessageAtATime)
+#define noReceiveDanglingMessagesReceivesAtMostOneMessageAtATime
+#endif
+
+
 #endif

@@ -416,8 +416,10 @@ class peano::heap::BoundaryDataExchanger {
      * by a mutex (we ensure that noone changes the task's state while we get
      * in MPI data). So we may not switch ourself - this would otherwise
      * introduce a deadlock.
+     *
+     * @return Message did receive something.
      */
-    void receiveDanglingMessages();
+    bool receiveDanglingMessages();
 
     /**
      *

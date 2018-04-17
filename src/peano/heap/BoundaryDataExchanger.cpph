@@ -255,7 +255,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
-void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::receiveDanglingMessages() {
+bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::receiveDanglingMessages() {
   // I do compile the class even without Parallel as I've written some unit tests. In turn,
   // I thus have to manually mask out routines that require -DParallel.
   #ifdef Parallel
@@ -293,6 +293,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   #endif
 
 
+  bool result = false;
   if (probeMPIQueues()) {
     int        flag   = 1;
     while (flag) {
@@ -310,6 +311,8 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
       }
       if (flag) {
         logTraceInWith1Argument( "receiveDanglingMessages(...)", _metaDataTag );
+
+        result = true;
 
         SendReceiveTaskType receiveTask;
 
@@ -329,6 +332,9 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
       }
     }
   }
+  return result;
+  #else
+  return false;
   #endif
 }
 
