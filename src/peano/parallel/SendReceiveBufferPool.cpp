@@ -178,7 +178,6 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread!=nullptr) {
     _backgroundThread->suspend(true);
-    logInfo( "releaseMessages()", "did suspend thread");
   }
   #endif
 
@@ -253,12 +252,16 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
 
   static int counter = 0;
   counter++;
-  if (counter>IprobeEveryKIterations) {
+  if (counter> IprobeEveryKIterations ) {
     counter = 0;
+
     tarch::multicore::Lock stateLock( _semaphore );
     switch (_state) {
       case State::Running:
         {
+          //int flag;
+          //MPI_Iprobe( MPI_ANY_SOURCE, peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(), tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE );
+          //if (flag) {
           SendReceiveBufferPool::getInstance().receiveDanglingMessages();
           // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
           //std::atomic_thread_fence(std::memory_order_release);
@@ -271,10 +274,10 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
         result = false;
         break;
       case State::Suspend:
-	result = true;
-	break;
-    }
-    stateLock.free();
+        result = true;
+        break;
+     }
+     stateLock.free();
   }
 
   return result;
@@ -335,6 +338,12 @@ void peano::parallel::SendReceiveBufferPool::exchangeBoundaryVertices(bool value
       }
       else {
         _mode = DeployButDoNotSend;
+        #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+        if (_backgroundThread != nullptr) {
+          _backgroundThread->terminate();
+          _backgroundThread = nullptr;
+        }
+        #endif
       }
       break;
     case DeployButDoNotSend:
