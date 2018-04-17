@@ -326,6 +326,8 @@ void tarch::multicore::jobs::spawnAndWait(
     processJobs(jobClass0);
     processJobs(jobClass1); 
 
+    tbb::this_tbb_thread::yield();
+
     #ifdef Asserts
     deadlockCounter++;
     if (deadlockCounter>65536) {
@@ -373,6 +375,8 @@ void tarch::multicore::jobs::spawnAndWait(
     processJobs(jobClass0);
     processJobs(jobClass1);
     processJobs(jobClass2);
+
+    tbb::this_tbb_thread::yield();
 
     #ifdef Asserts
     deadlockCounter++;
@@ -427,6 +431,8 @@ void tarch::multicore::jobs::spawnAndWait(
     processJobs(jobClass1);
     processJobs(jobClass2);
     processJobs(jobClass3);
+
+    tbb::this_tbb_thread::yield();
 
     #ifdef Asserts
     deadlockCounter++;
@@ -487,6 +493,8 @@ void tarch::multicore::jobs::spawnAndWait(
     processJobs(jobClass2); 
     processJobs(jobClass3); 
     processJobs(jobClass4); 
+
+    tbb::this_tbb_thread::yield();
 
     #ifdef Asserts
     deadlockCounter++;
@@ -553,6 +561,8 @@ void tarch::multicore::jobs::spawnAndWait(
     processJobs(jobClass3); 
     processJobs(jobClass4);
     processJobs(jobClass5);
+
+    tbb::this_tbb_thread::yield();
 
     #ifdef Asserts
     deadlockCounter++;

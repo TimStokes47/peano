@@ -140,16 +140,17 @@
   #define PersistentRegularSubtrees
 #endif
 
-
+/**
+ * Some MPI implementations cannot do data transfers in the background of
+ * computations but need the code to call MPI_Test over and over again to
+ * realise the data transfer.
+ *
+ * Flag only plays a role if you are heavily relying on heaps. For the standard
+ * boundary data exchange, the testing is always implicitly enabled.
+ */
 #if !defined(MPIProgressionReliesOnMPITest) &&  !defined(noMPIProgressionReliesOnMPITest)
 #define MPIProgressionReliesOnMPITest
 #endif
-
-
-#if !defined(UseTBBsParallelForAndReduce) &&  !defined(noUseTBBsParallelForAndReduce)
-#define UseTBBsParallelForAndReduce
-#endif
-
 
 /**
  * We usually do all the heap data exchange via non-blocking calls, i.e. all
@@ -185,6 +186,10 @@
 
 #if defined(MultipleThreadsMayTriggerMPICalls) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)
 #define noMPIUsesItsOwnThread
+#endif
+
+#if !defined(UseTBBsParallelForAndReduce) &&  !defined(noUseTBBsParallelForAndReduce)
+#define UseTBBsParallelForAndReduce
 #endif
 
 #if !defined(BooleanSemaphoreUsesASpinLock) && !defined(noBooleanSemaphoreUsesASpinLock)
