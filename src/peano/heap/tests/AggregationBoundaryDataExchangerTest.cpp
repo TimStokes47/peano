@@ -32,6 +32,7 @@ void peano::heap::tests::AggregationBoundaryDataExchangerTest::run() {
   testMethod( testHeaderComposeDecomposeOnCharHeap );
   testMethod( testHeaderComposeDecomposeOnIntHeap );
   testMethod( testHeaderComposeDecomposeOnDoubleHeap );
+  testMethod( testWholeMessageDecompositionInCharHeap );
   testMethod( testWholeMessageDecompositionInDoubleHeap );
 }
 
@@ -137,6 +138,55 @@ void peano::heap::tests::AggregationBoundaryDataExchangerTest::testHeaderCompose
 
     exchanger._numberOfSentMessages++;
   }
+}
+
+
+void peano::heap::tests::AggregationBoundaryDataExchangerTest::testWholeMessageDecompositionInCharHeap() {
+  typedef peano::heap::AggregationBoundaryDataExchanger<char, SendReceiveTask<char>, std::vector<char> >  Exchanger;
+
+  Exchanger exchanger;
+  exchanger._currentReceiveBuffer = 0;
+
+  const int NumberOfMessages = 6;
+
+  std::vector<char> data;
+  data.push_back( NumberOfMessages );
+  data.push_back(0);
+  data.push_back(0);
+  data.push_back(0);
+  for (int i=0; i<NumberOfMessages; i++ ) {
+    data.push_back(i);
+    for (int j=0; j<i; j++) {
+      data.push_back(-j);
+    }
+  }
+
+  std::ostringstream msg;
+  msg << "[";
+  for (auto p: data) {
+	msg << " " << (int)p;
+  }
+  msg << " ]";
+  logInfo( "testWholeMessageDecompositionInCharHeap()", msg.str() );
+
+  SendReceiveTask<char>  receivedTask;
+  receivedTask.getMetaInformation().setLength( data.size() );
+  receivedTask.wrapData( data.data() );
+
+  exchanger._receiveTasks[1].push_back( receivedTask );
+  exchanger.postprocessStartToSendData();
+
+  validateEquals( exchanger._receiveTasks[1].size(), NumberOfMessages );
+  int currentMessageLenght = 0;
+  for (auto p: exchanger._receiveTasks[1]) {
+    validateEqualsWithParams1( p.getMetaInformation().getLength(), currentMessageLenght, p.getMetaInformation().toString() );
+    for (int j=0; j<currentMessageLenght; j++) {
+      validateNumericalEqualsWithParams3( p.data()[j], -j, p.getMetaInformation().toString(), currentMessageLenght, j );
+    }
+    currentMessageLenght++;
+  }
+
+  exchanger._receiveTasks[1].clear();
 }
 
 
