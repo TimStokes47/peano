@@ -94,32 +94,16 @@ void peano::heap::AbstractAggregationBoundaryDataExchanger<Data,  SendReceiveTas
 
       Base::_receiveTasks[BufferToBeUnpacked].push_back( SendReceiveTaskType() );
 
-      //
-      // I guess this should be it
-      // =========================
-      //
-/*
       if (sizeOfNextMessage>0) {
+        logInfo( "postprocessStartToSendData(...)", "create message with " << sizeOfNextMessage << " entries. First data entry is " << localTask.data()[index] << " from input entry " << index );
         Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(sizeOfNextMessage);
         Base::_receiveTasks[BufferToBeUnpacked].back().wrapData( &(localTask.data()[index]) );
         index += sizeOfNextMessage;
       }
       else {
+        logInfo( "postprocessStartToSendData(...)", "create empty message" );
         Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(0);
       }
-*/
-      if (sizeOfNextMessage>0) {
-        Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(sizeOfNextMessage);
-        Base::_receiveTasks[BufferToBeUnpacked].back().wrapData( &(localTask.data()[0]) );
-      }
-      else {
-        Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(0);
-      }
-
-      //
-      // From hereon everything is fine.
-      //
-      Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(0);
 
       logDebug( "postprocessStartToSendData(...)", "message terminating after " <<
         index << " entries did contain " << sizeOfNextMessage << " data entries"
@@ -156,12 +140,12 @@ void peano::heap::AbstractAggregationBoundaryDataExchanger<Data,  SendReceiveTas
   assertion( Base::_sendTasks.empty() );
 
   if ( static_cast<int>(_aggregatedSendData.size())<=getNumberOfHeaderEntries()) {
-    logInfo( "postprocessFinishedToSendData()",
+    logDebug( "postprocessFinishedToSendData()",
       "do not sent out any aggregated message as no sends had been triggered"
     );
   }
   else {
-    logInfo( "postprocessFinishedToSendData()",
+    logDebug( "postprocessFinishedToSendData()",
       "send out one big message to rank " << Base::_rank << " which aggregates " << _numberOfSentMessages <<
 	  " message(s) and has " << _aggregatedSendData.size() << " entries in total"
     );

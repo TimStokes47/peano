@@ -29,13 +29,14 @@ peano::heap::tests::AggregationBoundaryDataExchangerTest::~AggregationBoundaryDa
 
 
 void peano::heap::tests::AggregationBoundaryDataExchangerTest::run() {
-  testMethod( testComposeDecomposeOnCharHeap );
-  testMethod( testComposeDecomposeOnIntHeap );
-  testMethod( testComposeDecomposeOnDoubleHeap );
+  testMethod( testHeaderComposeDecomposeOnCharHeap );
+  testMethod( testHeaderComposeDecomposeOnIntHeap );
+  testMethod( testHeaderComposeDecomposeOnDoubleHeap );
+  testMethod( testWholeMessageDecompositionInDoubleHeap );
 }
 
 
-void peano::heap::tests::AggregationBoundaryDataExchangerTest::testComposeDecomposeOnCharHeap() {
+void peano::heap::tests::AggregationBoundaryDataExchangerTest::testHeaderComposeDecomposeOnCharHeap() {
   typedef peano::heap::AggregationBoundaryDataExchanger<char, SendReceiveTask<char>, std::vector<char> >  Exchanger;
 
   Exchanger exchanger;
@@ -72,7 +73,7 @@ void peano::heap::tests::AggregationBoundaryDataExchangerTest::testComposeDecomp
 
 
 
-void peano::heap::tests::AggregationBoundaryDataExchangerTest::testComposeDecomposeOnIntHeap() {
+void peano::heap::tests::AggregationBoundaryDataExchangerTest::testHeaderComposeDecomposeOnIntHeap() {
 /*
   typedef peano::heap::AggregationBoundaryDataExchanger<int, SendReceiveTask<int>, std::vector<int> >  Exchanger;
 
@@ -107,7 +108,7 @@ void peano::heap::tests::AggregationBoundaryDataExchangerTest::testComposeDecomp
 }
 
 
-void peano::heap::tests::AggregationBoundaryDataExchangerTest::testComposeDecomposeOnDoubleHeap() {
+void peano::heap::tests::AggregationBoundaryDataExchangerTest::testHeaderComposeDecomposeOnDoubleHeap() {
   typedef peano::heap::AggregationBoundaryDataExchanger<double, SendReceiveTask<double>, std::vector<double> >  Exchanger;
 
   Exchanger exchanger;
@@ -136,6 +137,52 @@ void peano::heap::tests::AggregationBoundaryDataExchangerTest::testComposeDecomp
 
     exchanger._numberOfSentMessages++;
   }
+}
+
+
+void peano::heap::tests::AggregationBoundaryDataExchangerTest::testWholeMessageDecompositionInDoubleHeap() {
+  typedef peano::heap::AggregationBoundaryDataExchanger<double, SendReceiveTask<double>, std::vector<double> >  Exchanger;
+
+  Exchanger exchanger;
+  exchanger._currentReceiveBuffer = 0;
+
+  const int NumberOfMessages = 6;
+
+  std::vector<double> data;
+  data.push_back( NumberOfMessages );
+  for (int i=0; i<NumberOfMessages; i++ ) {
+    data.push_back(i);
+    for (int j=0; j<i; j++) {
+      data.push_back(-j);
+    }
+  }
+
+  std::ostringstream msg;
+  msg << "[";
+  for (auto p: data) {
+	msg << " " << p;
+  }
+  msg << " ]";
+  logInfo( "testWholeMessageDecompositionInDoubleHeap()", msg.str() );
+
+  SendReceiveTask<double>  receivedTask;
+  receivedTask.getMetaInformation().setLength( data.size() );
+  receivedTask.wrapData( data.data() );
+
+  exchanger._receiveTasks[1].push_back( receivedTask );
+  exchanger.postprocessStartToSendData();
+
+  validateEquals( exchanger._receiveTasks[1].size(), NumberOfMessages );
+  int currentMessageLenght = 0;
+  for (auto p: exchanger._receiveTasks[1]) {
+    validateEqualsWithParams1( p.getMetaInformation().getLength(), currentMessageLenght, p.getMetaInformation().toString() );
+    for (int j=0; j<currentMessageLenght; j++) {
+      validateNumericalEqualsWithParams3( p.data()[j], -j, p.getMetaInformation().toString(), currentMessageLenght, j );
+    }
+    currentMessageLenght++;
+  }
+
+  exchanger._receiveTasks[1].clear();
 }
 
 

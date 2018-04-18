@@ -32,9 +32,16 @@ class peano::heap::tests::AggregationBoundaryDataExchangerTest: public tarch::te
   private:
     static tarch::logging::Log  _log;
 
-    void testComposeDecomposeOnCharHeap();
-    void testComposeDecomposeOnIntHeap();
-    void testComposeDecomposeOnDoubleHeap();
+    void testHeaderComposeDecomposeOnCharHeap();
+    void testHeaderComposeDecomposeOnIntHeap();
+    void testHeaderComposeDecomposeOnDoubleHeap();
+
+    /**
+     * We construct the message
+     *
+     * 6, 0, 1, 0, 2, 0, -1, 3, 0, -1, -2, 4, ...
+     */
+    void testWholeMessageDecompositionInDoubleHeap();
   public:
     AggregationBoundaryDataExchangerTest();
     virtual ~AggregationBoundaryDataExchangerTest();
