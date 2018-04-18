@@ -296,6 +296,12 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
      * and all statements on `how long do I have to wait` are irrelevant. However,
      * I want to remove buffers if they are used anymore. And C++'s erase is
      * only defined on (forward) iterators. So this means I use this one.
+     *
+     * <h2> Multithreading </h2>
+     *
+     * The releaseMessages() call terminates the background task. We may assume
+     * that no further messages drop in after we have released all messages.
+     * The subsequent sends then however will issue a new thread.
      */
     void releaseMessages();
 
