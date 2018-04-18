@@ -78,7 +78,7 @@ void peano::heap::AbstractAggregationBoundaryDataExchanger<Data,  SendReceiveTas
 	  static_cast<int>( localTask.data()[3] )
 	);
 
-    int index = 4;
+    int index = getNumberOfHeaderEntries();
 
     #ifdef Asserts
     logInfo( "postprocessStartToSendData(...)",
@@ -93,17 +93,22 @@ void peano::heap::AbstractAggregationBoundaryDataExchanger<Data,  SendReceiveTas
   	  assertion(sizeOfNextMessage>=0);
 
       Base::_receiveTasks[BufferToBeUnpacked].push_back( SendReceiveTaskType() );
-      // @todo
-      //Base::_receiveTasks[BufferToBeUnpacked].back()._metaInformation.setLength(0);
 
-      if (sizeOfNextMessage>0) {
+      //
+      // I guess this should be it
+      // =========================
+      //
 /*
-        Base::_receiveTasks[BufferToBeUnpacked].back()._data = new Data[sizeOfNextMessage];
-        for (int i=0; i<static_cast<int>(sizeOfNextMessage); i++) {
-     		Base::_receiveTasks[BufferToBeUnpacked].back()._data[i] = localTask._data[index];
-     		index++;
-        }
+      if (sizeOfNextMessage>0) {
+        Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(sizeOfNextMessage);
+        Base::_receiveTasks[BufferToBeUnpacked].back().wrapData( &(localTask.data()[index]) );
+        index += sizeOfNextMessage;
+      }
+      else {
+        Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(0);
+      }
 */
+      if (sizeOfNextMessage>0) {
         Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(sizeOfNextMessage);
         Base::_receiveTasks[BufferToBeUnpacked].back().wrapData( &(localTask.data()[0]) );
       }
@@ -111,6 +116,9 @@ void peano::heap::AbstractAggregationBoundaryDataExchanger<Data,  SendReceiveTas
         Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(0);
       }
 
+      //
+      // From hereon everything is fine.
+      //
       Base::_receiveTasks[BufferToBeUnpacked].back().getMetaInformation().setLength(0);
 
       logDebug( "postprocessStartToSendData(...)", "message terminating after " <<

@@ -108,30 +108,29 @@ class peano::heap::AbstractAggregationBoundaryDataExchanger: public peano::heap:
      * Originally, I used only the first element of the buffer to store the
      * number of messages. This is a poor idea if we work with chars. There are
      * obviously many situations, where a buffer holds more than 255 messages.
-     *
-     * To make the whole bit encoding work, we interpret the input data all
-     * as bitfields.
      */
     virtual void postprocessFinishedToSendData();
 
-    /**
-     * nop
-     */
-    virtual void postprocessStartToSendData();
 
     /**
-     * A meta data message came in. We receive it into a temporary task message
-     * and then decompose the incoming messages into the many messages it did
+     * If data had dropped in, we can now decompose it into the many messages it did
      * stem from in the first place. While we do so, we have to ensure that all
      * these reconstructed messages are marked to have length 0. Otherwise,
      * receiveDanglingMessages() would try to invoke MPI_Test on them.
      *
      * @see BoundaryDataExchanger::handleAndQueueReceivedTask()
      */
+    virtual void postprocessStartToSendData();
+
+    /**
+     * Well, just enqueue the task and trigger the receive. Nothing more to be done
+     * in this very moment.
+     */
     virtual void handleAndQueueReceivedTask( const SendReceiveTaskType& receivedTask );
 
     /**
-     * We look whether there is already a
+     * Append the size of the message (from sendTask) to the local data and
+     * then append also all the data.
      */
     virtual void handleAndQueueSendTask( const SendReceiveTaskType& sendTask, const Data* const data );
 
