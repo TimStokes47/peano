@@ -96,7 +96,8 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
          * turned out to be absolutely crucial is the value of IprobeEveryKIterations.
          * If it is too big, the code tends to run into timeouts. If it is too
          * small, the MPI data exchange seems to suffer from the MPI call
-         * overheads and it starts to deadlock, too.
+         * overheads and it starts to deadlock, too. So we kind of try to adopt
+         * it manually throughout the runs.
          */
         bool operator()();
         std::string toString() const;
@@ -149,6 +150,7 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
 
     static std::string toString( SendReceiveMode  mode);
 
+    bool receiveDanglingMessagesIfAvailable();
   public:
     /**
      * Delete all the buffers not yet deleted.

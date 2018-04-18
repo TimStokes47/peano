@@ -53,7 +53,8 @@ class peano::heap::BoundaryDataExchanger {
       public:
         enum class State {
           Running,
-		  Terminate
+		  Terminate,
+		  Suspended
         };
 
         static std::string toString(State state);
@@ -74,13 +75,18 @@ class peano::heap::BoundaryDataExchanger {
       public:
         BackgroundThread(BoundaryDataExchanger*  boundaryDataExchanger);
         virtual ~BackgroundThread();
+        /**
+         * @see
+         */
         bool operator()();
         std::string toString() const;
 
         /**
-         * @see _semaphore
+         * @see _semaphores
          */
         void terminate();
+
+        void suspend(bool value);
     };
 
     #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)

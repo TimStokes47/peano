@@ -153,7 +153,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::addAdditi
 
 
 template <class Vertex>
-void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePageIfAvailable() {
+bool peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePageIfAvailable() {
   #ifdef Parallel
 
   #ifdef MPIPProgressionReliesOnMPITest
@@ -185,6 +185,7 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePa
     }
   }
 
+  bool result = false;
   if ( _receiveBufferRequestHandle == 0 ) {
     int        flag   = 0;
     MPI_Status status;
@@ -267,8 +268,12 @@ void peano::parallel::SendReceiveBufferAbstractImplementation<Vertex>::receivePa
 
       _sizeOfReceiveBuffer += messages;
       _currentReceiveBufferPage++;
+      result = true;
     }
   }
+  return result;
+  #else
+  return false;
   #endif
 }
 

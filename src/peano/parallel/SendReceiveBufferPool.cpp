@@ -119,14 +119,21 @@ int peano::parallel::SendReceiveBufferPool::getIterationDataTag() const {
 
 
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
-  SCOREP_USER_REGION("peano::parallel::SendReceiveBufferPool::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
+  receiveDanglingMessagesIfAvailable();
+}
+
+
+bool peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesIfAvailable() {
+  SCOREP_USER_REGION("peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesIfAvailable()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
   tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
 
+  bool result = false;
   for (std::map<int,SendReceiveBuffer*>::iterator p = _map.begin(); p!=_map.end(); p++ ) {
-    logDebug( "receiveDanglingMessagesFromAllBuffersInPool()", "receive data from rank " << p->first << " in mode " << toString(_mode) );
-    p->second->receivePageIfAvailable();
+    logDebug( "receiveDanglingMessagesIfAvailable()", "receive data from rank " << p->first << " in mode " << toString(_mode) );
+    result |= p->second->receivePageIfAvailable();
   }
+  return result;
 }
 
 
@@ -211,9 +218,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   lock.free();
 
   #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  //_backgroundThread = nullptr;
-  _backgroundThread = new BackgroundThread();
-  peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
+  _backgroundThread = nullptr;
   #endif
 
   logTraceOutWith1Argument( "releaseMessages()", toString(_mode) );
@@ -255,15 +260,12 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
     switch (state) {
       case State::Running:
         {
-          //int flag;
-          //MPI_Iprobe( MPI_ANY_SOURCE, peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(), tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE );
-          //if (flag) {
-            SendReceiveBufferPool::getInstance().receiveDanglingMessages();
-          //  CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives-1 : IprobeEveryKIterations;
-          //}
-          //else {
+          if (SendReceiveBufferPool::getInstance().receiveDanglingMessagesIfAvailable()) {
+            CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives/2 : IprobeEveryKIterations;
+          }
+          else {
             CallsInBetweenTwoReceives+=IprobeEveryKIterations;
-          // }
+          }
           // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
           //std::atomic_thread_fence(std::memory_order_release);
         }

@@ -45,7 +45,7 @@ class peano::parallel::SendReceiveBuffer {
      *
      * @return A message has been received
      */
-    virtual void receivePageIfAvailable() = 0;
+    virtual bool receivePageIfAvailable() = 0;
 
     /**
      * Return Number of Received Messages

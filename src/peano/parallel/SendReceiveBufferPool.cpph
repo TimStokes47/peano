@@ -92,6 +92,13 @@ void peano::parallel::SendReceiveBufferPool::sendVertex(const Vertex& vertex, in
     MySendReceiveBuffer* buffer = static_cast<MySendReceiveBuffer*>(bufferPointer->second);
     logDebug("sendVertex(...)", "sending vertex from rank " << tarch::parallel::Node::getInstance().getRank() << " to rank " << toRank << " due to boundary exchange. Send " << vertex);
     buffer->sendVertex(vertex);
+
+    #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+    if (_backgroundThread == nullptr) {
+      _backgroundThread = new BackgroundThread();
+      peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
+    }
+    #endif
   }
 }
 

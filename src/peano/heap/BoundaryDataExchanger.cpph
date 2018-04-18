@@ -97,7 +97,12 @@ peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::~B
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
 void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::startToSendData(bool isTraversalInverted) {
+  SCOREP_USER_REGION("peano::heap::BoundaryDataExchanger::startToSendData()", SCOREP_USER_REGION_TYPE_FUNCTION)
+
   logTraceInWith1Argument( "startToSendData(bool)", isTraversalInverted );
+
+//  #if !defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+//  #endif
 
   tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
 
@@ -602,6 +607,8 @@ std::string peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorCo
       return "running";
     case State::Terminate:
       return "terminate";
+    case State::Suspended:
+      return "suspended";
   }
 
   return "<undef>";
@@ -619,6 +626,8 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   bool result = true;
 
   tarch::multicore::Lock stateLock( _semaphore );
+  State state = _state;
+  stateLock.free();
   switch (_state) {
     case State::Running:
       {
@@ -630,10 +639,26 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
     case State::Terminate:
       result = false;
       break;
+    case State::Suspended:
+      result = true;
+      break;
   }
-  stateLock.free();
 
   return result;
+}
+
+
+template <class Data, class SendReceiveTaskType, class VectorContainer>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::BackgroundThread::suspend(bool value) {
+  tarch::multicore::Lock stateLock( _semaphore );
+  if (_state!=State::Terminate) {
+	if (value) {
+	  _state = State::Suspended;
+	}
+	else {
+	  _state = State::Running;
+	}
+  }
 }
 
 

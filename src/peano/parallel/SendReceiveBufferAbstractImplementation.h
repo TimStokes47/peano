@@ -348,7 +348,7 @@ class peano::parallel::SendReceiveBufferAbstractImplementation: public peano::pa
      */
     int getSizeOfReceiveBuffer() const;
 
-    void receivePageIfAvailable() override;
+    bool receivePageIfAvailable() override;
     int getNumberOfReceivedMessages() const override;
     void releaseSentMessages() override;
     void releaseReceivedMessages(bool) override;
