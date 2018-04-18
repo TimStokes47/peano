@@ -261,7 +261,7 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
       case State::Running:
         {
           if (SendReceiveBufferPool::getInstance().receiveDanglingMessagesIfAvailable()) {
-            CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives/2 : IprobeEveryKIterations;
+            CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives-1 : IprobeEveryKIterations;
           }
           else {
             CallsInBetweenTwoReceives+=IprobeEveryKIterations;

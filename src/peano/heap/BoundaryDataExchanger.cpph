@@ -644,7 +644,7 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
       case State::Running:
         {
           if (_boundaryDataExchanger->receiveDanglingMessages()) {
-            CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives/2 : IprobeEveryKIterations;
+            CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives-1 : IprobeEveryKIterations;
           }
           else {
             CallsInBetweenTwoReceives+=IprobeEveryKIterations;
