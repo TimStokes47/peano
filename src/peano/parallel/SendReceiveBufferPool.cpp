@@ -210,12 +210,10 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
   lock.free();
 
-
   #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  if (_backgroundThread!=nullptr) {
-    _backgroundThread = new BackgroundThread();
-    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
-  }
+  //_backgroundThread = nullptr;
+  _backgroundThread = new BackgroundThread();
+  peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
   #endif
 
   logTraceOutWith1Argument( "releaseMessages()", toString(_mode) );
@@ -257,15 +255,15 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
     switch (state) {
       case State::Running:
         {
-          int flag;
-          MPI_Iprobe( MPI_ANY_SOURCE, peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(), tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE );
-          if (flag) {
+          //int flag;
+          //MPI_Iprobe( MPI_ANY_SOURCE, peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(), tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE );
+          //if (flag) {
             SendReceiveBufferPool::getInstance().receiveDanglingMessages();
-            CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives/2 : IprobeEveryKIterations;
-          }
-          else {
-            CallsInBetweenTwoReceives++;
-          }
+          //  CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives-1 : IprobeEveryKIterations;
+          //}
+          //else {
+            CallsInBetweenTwoReceives+=IprobeEveryKIterations;
+          // }
           // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
           //std::atomic_thread_fence(std::memory_order_release);
         }
