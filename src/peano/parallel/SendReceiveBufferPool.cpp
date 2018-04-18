@@ -119,13 +119,6 @@ int peano::parallel::SendReceiveBufferPool::getIterationDataTag() const {
 
 
 void peano::parallel::SendReceiveBufferPool::receiveDanglingMessages() {
-  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  if (_backgroundThread==nullptr) {
-    _backgroundThread = new BackgroundThread();
-    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
-  }
-  #endif
-
   SCOREP_USER_REGION("peano::parallel::SendReceiveBufferPool::receiveDanglingMessages()", SCOREP_USER_REGION_TYPE_FUNCTION)
 
   tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
@@ -177,7 +170,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
   #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread!=nullptr) {
-    _backgroundThread->suspend(true);
+   _backgroundThread->terminate();
   }
   #endif
 
@@ -220,7 +213,8 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
   #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread!=nullptr) {
-    _backgroundThread->suspend(false);
+    _backgroundThread = new BackgroundThread();
+    peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
   }
   #endif
 
@@ -251,18 +245,27 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
   bool result = true;
 
   static int counter = 0;
+  static int CallsInBetweenTwoReceives = IprobeEveryKIterations;
   counter++;
-  if (counter> IprobeEveryKIterations ) {
+  if (counter>CallsInBetweenTwoReceives) {
     counter = 0;
 
     tarch::multicore::Lock stateLock( _semaphore );
-    switch (_state) {
+    State state = _state;
+    stateLock.free();
+
+    switch (state) {
       case State::Running:
         {
-          //int flag;
-          //MPI_Iprobe( MPI_ANY_SOURCE, peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(), tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE );
-          //if (flag) {
-          SendReceiveBufferPool::getInstance().receiveDanglingMessages();
+          int flag;
+          MPI_Iprobe( MPI_ANY_SOURCE, peano::parallel::SendReceiveBufferPool::getInstance().getIterationDataTag(), tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE );
+          if (flag) {
+            SendReceiveBufferPool::getInstance().receiveDanglingMessages();
+            CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives/2 : IprobeEveryKIterations;
+          }
+          else {
+            CallsInBetweenTwoReceives++;
+          }
           // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
           //std::atomic_thread_fence(std::memory_order_release);
         }
@@ -273,26 +276,10 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
         #endif
         result = false;
         break;
-      case State::Suspend:
-        result = true;
-        break;
-     }
-     stateLock.free();
+    }
   }
 
   return result;
-}
-
-
-void peano::parallel::SendReceiveBufferPool::BackgroundThread::suspend(bool value) {
-  if (_state!=State::Terminate) {
-    if (value) {
-      _state = State::Suspend;
-    }
-    else {
-      _state = State::Running;
-    }
-  }
 }
 
 
@@ -307,8 +294,6 @@ std::string peano::parallel::SendReceiveBufferPool::BackgroundThread::toString(S
       return "running";
     case State::Terminate:
       return "terminate";
-    case State::Suspend:
-      return "suspend";
   }
 
   return "<undef>";

@@ -62,7 +62,6 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
       public:
         enum class State {
           Running,
-	  Suspend,
 	  Terminate
         };
 
@@ -106,8 +105,6 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
          * @see _semaphore
          */
         void terminate();
-
-	void suspend(bool value);
     };
 
     #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
