@@ -264,7 +264,7 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
             CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives-1 : IprobeEveryKIterations;
           }
           else {
-            CallsInBetweenTwoReceives+=IprobeEveryKIterations;
+            CallsInBetweenTwoReceives*=2;
           }
           // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
           //std::atomic_thread_fence(std::memory_order_release);
