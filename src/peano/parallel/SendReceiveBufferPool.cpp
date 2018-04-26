@@ -260,18 +260,17 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
     switch (state) {
       case State::Running:
         {
-          if (SendReceiveBufferPool::getInstance().receiveDanglingMessagesIfAvailable()) {
-            CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives-1 : IprobeEveryKIterations;
-          }
-          else {
-            CallsInBetweenTwoReceives*=2;
+          if (!SendReceiveBufferPool::getInstance().receiveDanglingMessagesIfAvailable()) {
+            CallsInBetweenTwoReceives++;
           }
           #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-          if (CallsInBetweenTwoReceives>IprobeEveryKIterations*IprobeEveryKIterations) {
+          if (CallsInBetweenTwoReceives>2*IprobeEveryKIterations) {
             tarch::multicore::Lock stateLock( _semaphore );
             _state =  State::Terminate;
             stateLock.free();
             SendReceiveBufferPool::getInstance()._backgroundThread = nullptr;
+            
+            logDebug( "operator()()", "decided to kill myself" );
           }
           #endif
           // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
