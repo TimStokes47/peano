@@ -34,10 +34,6 @@
 #define UseManualInlining
 #endif
 
-#if !defined(MPIProgressionReliesOnMPITest) &&  !defined(noMPIProgressionReliesOnMPITest)
-#define MPIProgressionReliesOnMPITest
-#endif
-
 #define LittleEndian
 
 

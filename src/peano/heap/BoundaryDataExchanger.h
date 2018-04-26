@@ -95,6 +95,9 @@ class peano::heap::BoundaryDataExchanger {
     BackgroundThread*  _backgroundThread;
     #endif
 
+    //void terminateBackgroundThread();
+    //void disconnectBackgroundThread();
+
   protected:
     const std::string    _identifier;
     const int            _metaDataTag;
