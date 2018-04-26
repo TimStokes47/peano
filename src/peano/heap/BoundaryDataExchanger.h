@@ -76,6 +76,11 @@ class peano::heap::BoundaryDataExchanger {
         virtual ~BackgroundThread();
         /**
          * @see peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()
+         *
+         * This implementation explains most of the details. Different to the plain
+         * boundary data receiver (which can't have too much overlap anyway), we do
+         * terminate the task here also if we have already received more data than
+         * we have sent out.
          */
         bool operator()();
         std::string toString() const;

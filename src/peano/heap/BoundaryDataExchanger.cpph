@@ -643,20 +643,24 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
     switch (state) {
       case State::Running:
         {
-          if ( !(_boundaryDataExchanger->receiveDanglingMessages()) ) {
+          if ( _boundaryDataExchanger->receiveDanglingMessages() and CallsInBetweenTwoReceives>IprobeEveryKIterations ) {
+            CallsInBetweenTwoReceives--;
+          }
+          else {
             CallsInBetweenTwoReceives++;
           }
 
           #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-//          if (CallsInBetweenTwoReceives>2*IprobeEveryKIterations) {
- // one ahead is fine -> document
-          if (_boundaryDataExchanger->_sendTasks.size() <= _boundaryDataExchanger->_receiveTasks[_boundaryDataExchanger->_currentReceiveBuffer].size()) {
-       	    tarch::multicore::Lock stateLock( _semaphore );
+          if (
+            (CallsInBetweenTwoReceives>2*IprobeEveryKIterations)
+			or
+			(_boundaryDataExchanger->_sendTasks.size() <= _boundaryDataExchanger->_receiveTasks[_boundaryDataExchanger->_currentReceiveBuffer].size())
+		  ) {
+            tarch::multicore::Lock stateLock( _semaphore );
        	    _state = State::Terminate;
-       	    _boundaryDataExchanger->_backgroundThread = nullptr;
-       	    stateLock.free();
- // @todo change into debug
-       	    logDebug( "operator()()", "decided to kill myself" );
+            _boundaryDataExchanger->_backgroundThread = nullptr;
+            stateLock.free();
+            logDebug( "operator()()", "decided to kill myself" );
           }
           #endif
         }
