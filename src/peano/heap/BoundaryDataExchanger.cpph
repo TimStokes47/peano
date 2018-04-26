@@ -643,12 +643,20 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
     switch (state) {
       case State::Running:
         {
-          if (_boundaryDataExchanger->receiveDanglingMessages()) {
-            CallsInBetweenTwoReceives = CallsInBetweenTwoReceives>IprobeEveryKIterations ? CallsInBetweenTwoReceives-1 : IprobeEveryKIterations;
+          if ( !(_boundaryDataExchanger->receiveDanglingMessages()) ) {
+            CallsInBetweenTwoReceives++;
           }
-          else {
-            CallsInBetweenTwoReceives+=IprobeEveryKIterations;
+
+          #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+          if (CallsInBetweenTwoReceives>2*IprobeEveryKIterations) {
+       	    tarch::multicore::Lock stateLock( _semaphore );
+       	    _state = State::Terminate;
+       	   _boundaryDataExchanger->_backgroundThread = nullptr;
+       	    stateLock.free();
+
+       	    logDebug( "operator()()", "decided to kill myself" );
           }
+          #endif
         }
         break;
       case State::Terminate:

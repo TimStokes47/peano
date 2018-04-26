@@ -106,20 +106,21 @@ class peano::grid::nodes::Refined: public peano::grid::nodes::Node<Vertex,Cell,S
     );
 
     /**
-     * Identify Inner Cells of Patch That Could be Forked
+     * Identify cells of that could be forked
      *
      * Runs through the cells of a @f$ 3^d @f$ patch. The bitset at the
      * beginning is unset. The operation then flags each bit for each
-     * cell that is local.
+     * cell that is local. A cell may be forked if and only if all of the
+     * following criteria do hold:
      *
-     * Furthermore, it ensures that only cells are forked that are not
-     * adjacent to hanging nodes. If we would allow hanging nodes to be
-     * part of a forked cell, things become really messy. Some illustrations
-     * on this issue can be found in Node::updateCellsParallelStateAfterLoad().
+     * - the cell is refined (cmp Cell::isCellAForkCandidate())
+     * - the cell is not yet spawned to another rank
+     * - the cell is not refined, local, but a descendent in turn has spawned stuff
+     * - the cell overlaps with the computational domain, i.e. it is not completely outside
      *
-     * If all adjacent vertices of a forked cell are refined, we ensure that
-     * the boundary topology of the domains will not change significantly, and
-     * all the algorithmics become a little bit simpler.
+     * For the geometric analysis whether a cell is completely outside (Geometry::isCompletelyOutside()),
+     * we do not pass any Minkowski parameter, i.e. the parameter h is zero. This does make sense
+     * here as we want to have the precise overlap.
      */
     std::bitset<THREE_POWER_D> getForkCandidates(
       const std::vector< SingleLevelEnumerator >&  newFineGridVerticesEnumerators,

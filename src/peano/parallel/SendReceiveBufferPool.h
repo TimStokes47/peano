@@ -62,7 +62,7 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
       public:
         enum class State {
           Running,
-	  Terminate
+	      Terminate
         };
 
         static std::string toString(State state);
@@ -98,6 +98,9 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
          * small, the MPI data exchange seems to suffer from the MPI call
          * overheads and it starts to deadlock, too. So we kind of try to adopt
          * it manually throughout the runs.
+         *
+         * The second insight stems from Philipp Samfass. The whole idea to get
+         * in data in the background is fine, as long as
          */
         bool operator()();
         std::string toString() const;

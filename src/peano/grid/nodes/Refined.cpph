@@ -421,7 +421,6 @@ std::bitset<THREE_POWER_D> peano::grid::nodes::Refined<Vertex,Cell,State,VertexS
 
     if (isForkable && newFineGridCells[kScalar].isOutside()) {
       const tarch::la::Vector<DIMENSIONS,double> x = newFineGridVerticesEnumerators[kScalar].getCellCenter();
-      const tarch::la::Vector<DIMENSIONS,double> h = newFineGridVerticesEnumerators[kScalar].getCellSize();   
       isForkable &= !Base::_geometry.isCompletelyOutside(x,0.0);
     }
 
