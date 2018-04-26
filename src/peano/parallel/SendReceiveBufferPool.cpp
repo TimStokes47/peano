@@ -59,12 +59,28 @@ peano::parallel::SendReceiveBufferPool::SendReceiveBufferPool():
 #endif
 
 
-peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
+void peano::parallel::SendReceiveBufferPool::terminateBackgroundThread() {
   #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+  tarch::multicore::Lock lock( _backgroundThreadSemaphore );
   if (_backgroundThread != nullptr) {
     _backgroundThread->terminate();
-    _backgroundThread = nullptr;
   }
+  #endif
+}
+
+
+void peano::parallel::SendReceiveBufferPool::disconnectBackgroundThread() {
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+  tarch::multicore::Lock lock( _backgroundThreadSemaphore );
+  _backgroundThread = nullptr;
+  #endif
+}
+
+
+peano::parallel::SendReceiveBufferPool::~SendReceiveBufferPool() {
+  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+  terminateBackgroundThread();
+  disconnectBackgroundThread();
   #endif
 
   // Don't use the semaphore here as the pool is static and thus might be shut
@@ -138,12 +154,8 @@ bool peano::parallel::SendReceiveBufferPool::receiveDanglingMessagesIfAvailable(
 
 
 void peano::parallel::SendReceiveBufferPool::terminate() {
-  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  if (_backgroundThread != nullptr) {
-    _backgroundThread->terminate();
-    _backgroundThread = nullptr;
-  }
-  #endif
+  terminateBackgroundThread();
+  disconnectBackgroundThread();
 
   tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
 
@@ -162,10 +174,8 @@ void peano::parallel::SendReceiveBufferPool::restart() {
   assertion1( _map.empty(), tarch::parallel::Node::getInstance().getRank() );
 
   #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  if (_backgroundThread!=nullptr) {
-    _backgroundThread->terminate();
-    _backgroundThread = nullptr;
-  }
+  terminateBackgroundThread();
+  disconnectBackgroundThread();
   #endif
 }
 
@@ -176,9 +186,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
   logTraceInWith1Argument( "releaseMessages()", toString(_mode) );
 
   #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  if (_backgroundThread!=nullptr) {
-   _backgroundThread->terminate();
-  }
+  terminateBackgroundThread();
   #endif
 
   tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
@@ -217,9 +225,7 @@ void peano::parallel::SendReceiveBufferPool::releaseMessages() {
 
   lock.free();
 
-  #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  _backgroundThread = nullptr;
-  #endif
+  disconnectBackgroundThread();
 
   logTraceOutWith1Argument( "releaseMessages()", toString(_mode) );
 }
@@ -265,10 +271,8 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
           }
           #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
           if (CallsInBetweenTwoReceives>2*IprobeEveryKIterations) {
-            tarch::multicore::Lock stateLock( _semaphore );
-            _state =  State::Terminate;
-            stateLock.free();
-            SendReceiveBufferPool::getInstance()._backgroundThread = nullptr;
+            SendReceiveBufferPool::getInstance().terminateBackgroundThread();
+            SendReceiveBufferPool::getInstance().disconnectBackgroundThread();
             
             logDebug( "operator()()", "decided to kill myself" );
           }
@@ -330,12 +334,8 @@ void peano::parallel::SendReceiveBufferPool::exchangeBoundaryVertices(bool value
       }
       else {
         _mode = DeployButDoNotSend;
-        #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-        if (_backgroundThread != nullptr) {
-          _backgroundThread->terminate();
-          _backgroundThread = nullptr;
-        }
-        #endif
+        terminateBackgroundThread();
+        disconnectBackgroundThread();
       }
       break;
     case DeployButDoNotSend:

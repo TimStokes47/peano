@@ -92,11 +92,12 @@ class peano::heap::BoundaryDataExchanger {
     };
 
     #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-    BackgroundThread*  _backgroundThread;
+    BackgroundThread*                    _backgroundThread;
+    tarch::multicore::BooleanSemaphore   _backgroundThreadSemaphore;
     #endif
 
-    //void terminateBackgroundThread();
-    //void disconnectBackgroundThread();
+    void terminateBackgroundThread();
+    void disconnectBackgroundThread();
 
   protected:
     const std::string    _identifier;

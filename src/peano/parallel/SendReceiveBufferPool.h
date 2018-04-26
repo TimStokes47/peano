@@ -118,7 +118,11 @@ class peano::parallel::SendReceiveBufferPool: public tarch::services::Service {
      * the responsibility to delete all job objects.
      */
     BackgroundThread* _backgroundThread;
+    tarch::multicore::BooleanSemaphore   _backgroundThreadSemaphore;
     #endif
+
+    void terminateBackgroundThread();
+    void disconnectBackgroundThread();
 
     static tarch::logging::Log _log;
 

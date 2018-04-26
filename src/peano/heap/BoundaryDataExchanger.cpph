@@ -32,7 +32,7 @@ peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::Bo
   #endif
 {
   #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  _backgroundThread = nullptr;
+  disconnectBackgroundThread();
   #endif
 
   assertion5( _sendTasks.empty(),       _sendTasks.size(),       _identifier, _metaDataTag, _dataTag, _rank );
@@ -64,7 +64,7 @@ peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::Bo
   #endif
   {
   #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  _backgroundThread = nullptr;
+  disconnectBackgroundThread();
   #endif
 
   assertion5( _sendTasks.empty(),       _sendTasks.size(),       _identifier, _metaDataTag, _dataTag, _rank );
@@ -74,12 +74,30 @@ peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::Bo
 
 
 template<class Data, class SendReceiveTaskType, class VectorContainer>
-void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::shutdown() {
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::terminateBackgroundThread() {
   #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+  tarch::multicore::Lock lock(_backgroundThreadSemaphore);
   if (_backgroundThread != nullptr) {
     _backgroundThread->terminate();
-    _backgroundThread = nullptr;
   }
+  #endif
+}
+
+
+template<class Data, class SendReceiveTaskType, class VectorContainer>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::disconnectBackgroundThread() {
+  #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+  tarch::multicore::Lock lock(_backgroundThreadSemaphore);
+  _backgroundThread = nullptr;
+  #endif
+}
+
+
+template<class Data, class SendReceiveTaskType, class VectorContainer>
+void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer>::shutdown() {
+  #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+  terminateBackgroundThread();
+  disconnectBackgroundThread();
   assertion( _backgroundThread == nullptr );
   #endif
 
@@ -102,9 +120,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   logTraceInWith1Argument( "startToSendData(bool)", isTraversalInverted );
 
   #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  if (_backgroundThread != nullptr) {
-    _backgroundThread->terminate();
-  }
+  terminateBackgroundThread();
   #endif
 
   tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
@@ -143,7 +159,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
   lock.free();
 
   #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-  _backgroundThread = nullptr;
+  disconnectBackgroundThread();
   #endif
 
   logTraceOut( "startToSendData(bool)" );
@@ -370,6 +386,7 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
   #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
   if (_backgroundThread==nullptr) {
+    tarch::multicore::Lock lock(_backgroundThreadSemaphore);
     _backgroundThread = new BackgroundThread(this);
     peano::datatraversal::TaskSet spawnTask(_backgroundThread,peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask);
   }
@@ -656,10 +673,8 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
             or
             (_boundaryDataExchanger->_sendTasks.size() < _boundaryDataExchanger->_receiveTasks[_boundaryDataExchanger->_currentReceiveBuffer].size())
           ) {
-            tarch::multicore::Lock stateLock( _semaphore );
-       	    _state = State::Terminate;
-            _boundaryDataExchanger->_backgroundThread = nullptr;
-            stateLock.free();
+            _boundaryDataExchanger->terminateBackgroundThread();
+            _boundaryDataExchanger->disconnectBackgroundThread();
             logDebug( "operator()()", "decided to kill myself" );
           }
           #endif
