@@ -266,7 +266,7 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
           else {
             CallsInBetweenTwoReceives*=2;
           }
-          #if !defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+          #if defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
           if (CallsInBetweenTwoReceives>IprobeEveryKIterations*IprobeEveryKIterations) {
             tarch::multicore::Lock stateLock( _semaphore );
             _state =  State::Terminate;
