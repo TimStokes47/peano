@@ -648,12 +648,14 @@ bool peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
           }
 
           #if defined(MPIHeapUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
-          if (CallsInBetweenTwoReceives>2*IprobeEveryKIterations) {
+//          if (CallsInBetweenTwoReceives>2*IprobeEveryKIterations) {
+ // one ahead is fine -> document
+          if (_boundaryDataExchanger->_sendTasks.size() <= _boundaryDataExchanger->_receiveTasks[_boundaryDataExchanger->_currentReceiveBuffer].size()) {
        	    tarch::multicore::Lock stateLock( _semaphore );
        	    _state = State::Terminate;
-       	   _boundaryDataExchanger->_backgroundThread = nullptr;
+       	    _boundaryDataExchanger->_backgroundThread = nullptr;
        	    stateLock.free();
-
+ // @todo change into debug
        	    logDebug( "operator()()", "decided to kill myself" );
           }
           #endif
