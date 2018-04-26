@@ -27,26 +27,17 @@ namespace tarch {
          */
         extern tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks;
 
-        /**
-         * Work around for future versions where I might want to augment each
-         * individual job queue.
-         */
-        struct JobQueue {
-          tbb::concurrent_queue<tarch::multicore::jobs::Job*> jobs;
-        };
+        //#define NumberOfJobQueues 32
+        constexpr int NumberOfJobQueues = 32;
+        typedef tbb::concurrent_queue<tarch::multicore::jobs::Job*>   JobQueue;
+        extern JobQueue _pendingJobs[NumberOfJobQueues];
 
-        /**
-         * There are different classes of jobs. See Job class description.
-         * Per job class, there is one queue.
-         */
-        typedef tbb::concurrent_hash_map< int, JobQueue >  JobMap;
-        extern JobMap     _pendingJobs;
-
-        constexpr int BackgroundJobsJobClassNumber = -1;
+        constexpr int BackgroundJobsJobClassNumber = NumberOfJobQueues-1;
 
         #ifndef TBBMinimalNumberOfJobsPerBackgroundConsumerRun
         #define TBBMinimalNumberOfJobsPerBackgroundConsumerRun 4
         #endif
+
         extern tarch::logging::Log _log;
 
         /**
