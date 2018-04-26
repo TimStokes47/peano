@@ -266,6 +266,14 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
           else {
             CallsInBetweenTwoReceives*=2;
           }
+          #if !defined(MPIUsesItsOwnThread) and defined(MultipleThreadsMayTriggerMPICalls) and defined(SharedMemoryParallelisation)
+          if (CallsInBetweenTwoReceives>IprobeEveryKIterations*IprobeEveryKIterations) {
+            tarch::multicore::Lock stateLock( _semaphore );
+            _state =  State::Terminate;
+            stateLock.free();
+            SendReceiveBufferPool::getInstance()._backgroundThread = nullptr;
+          }
+          #endif
           // A release fence prevents the memory reordering of any read or write which precedes it in program order with any write which follows it in program order.
           //std::atomic_thread_fence(std::memory_order_release);
         }
