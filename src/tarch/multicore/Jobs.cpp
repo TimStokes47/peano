@@ -84,7 +84,11 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* task) {
 }
 
 
-bool tarch::multicore::jobs::processBackgroundJobs() {
+void tarch::multicore::jobs::startToProcessBackgroundJobs() {
+}
+
+
+bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
   // Note: Only invoked if no shared memory parallelisation activated. If
   // TBB/C++/OpenMP are enabled, the routine of the respective subfolder is
   // invoked

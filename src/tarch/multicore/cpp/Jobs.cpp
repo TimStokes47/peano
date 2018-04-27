@@ -67,10 +67,11 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
 }
 
 
-/**
- * MPI jobs are background jobs, too.
- */
-bool tarch::multicore::jobs::processBackgroundJobs() {
+void tarch::multicore::jobs::startToProcessBackgroundJobs() {
+}
+
+
+bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
   bool result = false;
   int  numberOfJobs = 0;
   const int MinNumberOfBackgroundJobs = 1;

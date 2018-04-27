@@ -355,7 +355,8 @@ class peano::datatraversal::TaskSet {
 	 * There is such a routine in Peano's tarch as well. This essentially is a
 	 * wrapper which however also keeps track of the statistics.
 	 */
-	static bool processBackgroundJobs();
+	static void startToProcessBackgroundJobs();
+	static bool finishToProcessBackgroundJobs();
 };
 
 

@@ -230,7 +230,11 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
  * pending, and we handle those. Yet, we leave a few for the still pending
  * background tasks.
  */
-bool tarch::multicore::jobs::processBackgroundJobs() {
+void tarch::multicore::jobs::startToProcessBackgroundJobs() {
+}
+
+
+bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
   const int additionalBackgroundThreads =
     std::min(
       Job::_maxNumberOfRunningBackgroundThreads - internal::_numberOfRunningBackgroundJobConsumerTasks.load(),
@@ -241,7 +245,7 @@ bool tarch::multicore::jobs::processBackgroundJobs() {
   if (additionalBackgroundThreads>0) {
     static tarch::logging::Log _log( "tarch::multicore::jobs" );
     logInfo(
-      "processBackgroundJobs()",
+      "finishToProcessBackgroundJobs()",
       "spawn another " << additionalBackgroundThreads << " background job consumer tasks ("
   	  << internal::_numberOfRunningBackgroundJobConsumerTasks.load() << " task(s) already running)"
     );

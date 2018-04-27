@@ -56,7 +56,8 @@ namespace tarch {
     	   const int      _jobClass;
 
     	   friend void spawnBackgroundJob(Job* job);
-    	   friend bool processBackgroundJobs();
+    	   friend void startToProcessBackgroundJobs();
+    	   friend bool finishToProcessBackgroundJobs();
 
     	   static int _maxNumberOfRunningBackgroundThreads;
          public:
@@ -180,14 +181,16 @@ namespace tarch {
         * loop looks similar to
         * <pre>
 bool terminate = false;
+tarch::multicore::jobs::startToProcessBackgroundJobs();
 while ( !terminate ) {
-  tarch::multicore::jobs::processBackgroundJobs();
   tarch::parallel::Node::getInstance().receiveDanglingMessages();
   terminate = data I'm waiting for is available;
 }
+tarch::multicore::jobs::finishToProcessBackgroundJobs();
         </pre>
         */
-       bool processBackgroundJobs();
+       void startToProcessBackgroundJobs();
+       bool finishToProcessBackgroundJobs();
 
        /**
         * This is the logical number of background tasks, i.e. how many things
