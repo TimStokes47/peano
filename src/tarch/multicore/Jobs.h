@@ -188,8 +188,23 @@ while ( !terminate ) {
 }
 tarch::multicore::jobs::finishToProcessBackgroundJobs();
         </pre>
+        *
+        * <h2> Number of background jobs </h2>
+        *
+        * Most shared memory implementations in Peano do constrain the maximum
+        * number of background jobs. If all threads do background jobs at a
+        * time, one hardly can speak of a background job anymore. Once such
+        * jobs however enter a phase where they wait (for MPI, e.g.), it makes
+        * sense to weaken this constraint. Then, it is not a problem anymore if
+        * (almost) all cores do process the background jobs. If you call
+        * startToProcessBackgroundJobs(), then this tells the runtime system
+        * that background jobs from hereon shall have a high prioriy.
         */
        void startToProcessBackgroundJobs();
+
+       /**
+        * @see startToProcessBackgroundJobs()
+        */
        bool finishToProcessBackgroundJobs();
 
        /**
