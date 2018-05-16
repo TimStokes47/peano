@@ -255,28 +255,8 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
 
 
 bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
-  const int additionalBackgroundThreads =
-    std::min(
-      Job::_maxNumberOfRunningBackgroundThreads - internal::_numberOfRunningBackgroundJobConsumerTasks.load(),
-	  static_cast<int>( internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size() )
-	);
+  startToProcessBackgroundJobs();
 
-  #ifdef Asserts
-  if (additionalBackgroundThreads>0) {
-    static tarch::logging::Log _log( "tarch::multicore::jobs" );
-    logInfo(
-      "finishToProcessBackgroundJobs()",
-      "spawn another " << additionalBackgroundThreads << " background job consumer tasks ("
-  	  << internal::_numberOfRunningBackgroundJobConsumerTasks.load() << " task(s) already running)"
-    );
-  }
-  #endif
-
-  for (int i=0; i<additionalBackgroundThreads; i++) {
-    internal::BackgroundJobConsumerTask::enqueue();
-  }
-
-  // New: Not used for SC
   processJobs( internal::BackgroundJobsJobClassNumber, TBBMinimalNumberOfJobsPerBackgroundConsumerRun );
 
   return !internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).empty();
