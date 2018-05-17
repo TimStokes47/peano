@@ -413,7 +413,7 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass2,
   int                     jobClass3
 ) {
-  tbb::atomic<int>  semaphore(3);
+  tbb::atomic<int>  semaphore(4);
   tbb::task_group g;
 
   g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, semaphore ); });
@@ -472,7 +472,7 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass3,
   int                     jobClass4
 ) {
-  tbb::atomic<int>  semaphore(3);
+  tbb::atomic<int>  semaphore(5);
   tbb::task_group g;
 
   g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, semaphore ); });
@@ -537,7 +537,7 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass4,
   int                     jobClass5
 ) {
-  tbb::atomic<int>  semaphore(3);
+  tbb::atomic<int>  semaphore(6);
   tbb::task_group g;
 
   g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, semaphore ); });
