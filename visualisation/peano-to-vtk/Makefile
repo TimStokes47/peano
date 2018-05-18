@@ -23,12 +23,10 @@ LINK_OMP=-fopenmp
 
 
 default: header
-	@echo Peano block file to VTK converter
-	@echo \(C\) 2018 Dan Tuthill-Jones, Tobias Weinzierl
-	@echo
 	@echo Please specify your target:
 	@echo clean
 	@echo build-gcc
+	@echo build-gcc-openmp
 
 
 EXECUTABLE=peano-to-vtk
@@ -38,6 +36,12 @@ build-gcc: CC=g++ -std=c++0x
 build-gcc: CFLAGS=
 build-gcc: LFLAGS=
 build-gcc: header build
+
+
+build-gcc-openmp: CC=g++ -std=c++0x
+build-gcc-openmp: CFLAGS=-fopenmp
+build-gcc-openmp: LFLAGS=-fopenmp
+build-gcc-openmp: header build
 
 
 #
@@ -54,11 +58,13 @@ all: header build
 
 
 header:
-	@echo  --- This is Peano 3 ---
+	@echo Peano block file to VTK converter
+	@echo \(C\) 2018 Dan Tuthill-Jones, Tobias Weinzierl
+	@echo
 
 
 build: $(OBJECTS)
-	$(LL) $(OBJECTS) -L$(VTK_LIB) -o $(EXECUTABLE) $(LFLAGS) -lvtkIOXML -lvtkCommonExecutionModel -lvtkCommonCore -lvtkCommonDataModel -lvtkFiltersCore
+	$(LL) $(OBJECTS) -L$(VTK_LIB) -o $(EXECUTABLE) $(LFLAGS) -lvtkIOXML -lvtkCommonExecutionModel -lvtkCommonCore -lvtkCommonDataModel -lvtkFiltersCore -lvtkFiltersGeneral
 	@echo
 	@echo build of Peano file converter successful
 	@echo visit Peano\'s homepage at http://www.peano-framework.org
@@ -71,4 +77,4 @@ clean:
 
 
 $(OBJECTS): %.o : %.cpp
-	$(CC)  -I$(VTK_INCLUDE)  -c $< -o $@
+	$(CC) $(CFLAGS) -I$(VTK_INCLUDE)  -c $< -o $@

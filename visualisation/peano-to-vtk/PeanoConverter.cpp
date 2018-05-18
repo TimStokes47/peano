@@ -67,6 +67,7 @@ vtkSmartPointer<vtkImageData> PeanoConverter::toImageData(PeanoPatch *patch) {
 	return imageData;
 }
 
+
 vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::toUnstructuredGrid(PeanoPatch *patch) {
 
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
@@ -145,38 +146,38 @@ vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::toUnstructuredGrid(PeanoPat
 		}
 	}
 
-
-
 	return grid;
 }
+
 
 int PeanoConverter::xyzToIndex(int x, int y, int z, int dimensions[3]) {
 	return x + y*(dimensions[0]+1) + z*(dimensions[0]+1)*(dimensions[1]+1);
 }
 
-vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::combineImageData(std::vector<PeanoPatch*>* patches){
-	vtkSmartPointer<vtkAppendFilter> appendFilter = vtkSmartPointer<vtkAppendFilter>::New();
-	for(uint i = 0; i < patches->size(); i++) {
-		PeanoPatch* patch = patches->at(i);
 
-		if(patch->hasMappings()) {
-			appendFilter->AddInputData(toUnstructuredGrid(patches->at(i)));
-		} else {
-			appendFilter->AddInputData(toImageData(patches->at(i)));
-		}
+vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::combine(const std::vector<PeanoPatch*>& patches){
+  vtkSmartPointer<vtkAppendFilter> appendFilter = vtkSmartPointer<vtkAppendFilter>::New();
+  for(uint i = 0; i < patches.size(); i++) {
+    PeanoPatch* patch = patches.at(i);
+   	if(patch->hasMappings()) {
+	  appendFilter->AddInputData(toUnstructuredGrid(patches.at(i)));
+	} else {
+      appendFilter->AddInputData(toImageData(patches.at(i)));
 	}
+  }
 
-	appendFilter->Update();
-	vtkSmartPointer<vtkUnstructuredGrid> combined = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	combined->ShallowCopy(appendFilter->GetOutput());
+  appendFilter->Update();
+  vtkSmartPointer<vtkUnstructuredGrid> combined = vtkSmartPointer<vtkUnstructuredGrid>::New();
+  combined->ShallowCopy(appendFilter->GetOutput());
 
-	return combined;
+  return combined;
 }
 
-vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::combineImageData(std::vector<PeanoReader*> *readers) {
+
+vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::combine(const std::vector<PeanoReader*>& readers) {
 	vtkSmartPointer<vtkAppendFilter> appendFilter = vtkSmartPointer<vtkAppendFilter>::New();
-	for(uint i = 0; i < readers->size(); i++) {
-		std::vector<PeanoPatch*> patches = readers->at(i)->patches;
+	for(uint i = 0; i < readers.size(); i++) {
+		std::vector<PeanoPatch*> patches = readers.at(i)->patches;
 		for(uint j = 0; j < patches.size(); j++) {
 			PeanoPatch* patch = patches[j];
 			if(patch->hasMappings()) {

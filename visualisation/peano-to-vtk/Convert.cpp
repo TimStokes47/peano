@@ -8,12 +8,45 @@
 #include "PeanoMetaFile.h"
 #include "PeanoDataSet.h"
 
-#include "vtkSmartPointer.h"
-#include "vtkXMLUnstructuredGridWriter.h"
+#include <vtkSmartPointer.h>
+#include <vtkXMLUnstructuredGridWriter.h>
+#include <vtkMergeCells.h>
+
 
 int main(int argc, char* argv[]) {
-    bool validParams = false;
+    std::cout << "Peano block file to vtk converter" << std::endl;
+    std::cout << "(C) 2018 Dan Tuthill-Jones, Tobias Weinzierl" << std::endl << std::endl;
+    bool validParams = true;
 
+    if(argc < 4) {
+      std::cerr << "too few arguments" << std::endl;
+      validParams = false;
+    }
+    else {
+      std::string mode = argv[1];
+      if (mode.compare("convert")==0) {
+    	std::string outputDirectory = argv[ argc-1 ];
+    	std::cout << "write into directory " << outputDirectory << std::endl;
+    	for (int i=2; i<argc-1; i++) {
+          std::string inputFile       = argv[i];
+          PeanoReader reader( inputFile );
+
+          vtkSmartPointer<vtkUnstructuredGrid> outputGrid = PeanoConverter::combine( reader.patches );
+
+          vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+          std::string outFile = outputDirectory + "/" + inputFile.erase(inputFile.find_last_of(".") ) + "." + writer->GetDefaultFileExtension();
+          std::cout << "writing file " << outFile << std::endl;
+          writer->SetFileName(outFile.c_str());
+          writer->AddInputDataObject( outputGrid );
+          writer->Write();
+    	}
+      }
+      else {
+        std::cerr << "unknown command. First argument has to be convert" << std::endl;
+        validParams = false;
+      }
+    }
+/*
     if(argc == 6) {
         std::string command = argv[1];
         if(command.compare("subsample") == 0) {
@@ -68,11 +101,19 @@ int main(int argc, char* argv[]) {
             return 0;
         }
     }
+*/
 
-    std::cout << "Incorrect usage of the standalone Peano tool..." << (argc-1) << ":\n";
-    std::cout << "Program should be ran like so:\n";
-    std::cout << "\t./PeanoStandalone subsample INPUT_FILE X_SIZE Y_SIZE Z_SIZE\n";
-    std::cout << "or:\n";
-    std::cout << "\t./PeanoStandalone convert INPUT_FILE OUTPUT_FOLDER\n";
-    return -1;
+    if (!validParams) {
+      std::cerr << std::endl << std::endl;
+      std::cerr << "Usage:";
+      std::cerr << "\t./executable convert InputFile1 [InputFile2 ...] OutputFolder\n";
+//      std::cerr << "\t./PeanoStandalone subsample INPUT_FILE X_SIZE Y_SIZE Z_SIZE\n";
+ //     std::cerr << "or:\n";
+      std::cerr << std::endl << std::endl;
+      std::cerr << "Only convert will yield actual VTK files. All other operations create new " << std::endl
+      		  << "internal data representations that then can be converted. Please ensure that" << std::endl
+                << "the OutputFolder exists prior to program invocation." << std::endl;
+      return -1;
+    }
+    else return 0;
 }

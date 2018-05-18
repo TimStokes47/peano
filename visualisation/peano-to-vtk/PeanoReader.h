@@ -14,15 +14,30 @@
 #include "PeanoVariable.h"
 #include "PeanoPatch.h"
 
+/**
+ * Represent a Peano reader
+ *
+ * A reader is an object which basically takes one file and gives the content
+ * of this file.
+ *
+ * If you just wanna in one file, open it with this file and pass the field
+ * patches into the PeanoConverter.
+ *
+ * @author Dan Tuthill-Jones, Tobias Weinzierl
+ */
 class PeanoReader {
-public:
+  public:
+	/**
+	 * Read in one file.
+	 */
 	PeanoReader(const std::string &file);
 	virtual ~PeanoReader();
-	//declare variables
+
 	int dimensions = -1;
 	int cells = -1;
 	int vertices = -1;
 	int* patchSize;
+
 	std::vector<PeanoVariable*> variables;
 	std::vector<PeanoPatch*> patches;
 };

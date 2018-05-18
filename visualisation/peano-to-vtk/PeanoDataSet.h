@@ -13,8 +13,14 @@
 
 #include <string>
 
+
+/**
+ * One individual data set
+ *
+ * @author Dan Tuthill-Jones, Tobias Weinzierl
+ */
 class PeanoDataSet {
-public:
+  public:
 	PeanoDataSet(std::vector<std::string> &lines, std::string directory);
 	std::vector<PeanoReader*>* createReadersFull();
 	std::vector<PeanoReader*>* createReadersResolution(int res);
