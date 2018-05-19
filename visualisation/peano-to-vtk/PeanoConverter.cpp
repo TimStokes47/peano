@@ -25,6 +25,7 @@
 #include "vtkIdTypeArray.h"
 #include "vtkCellArray.h"
 #include "vtkVoxel.h"
+#include "vtkQuad.h"
 
 #include <vtkSmartPointer.h>
 #include <vtkXMLUnstructuredGridWriter.h>
@@ -73,7 +74,6 @@ vtkSmartPointer<vtkImageData> PeanoConverter::toImageData(PeanoPatch *patch) {
 
 
 vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::toUnstructuredGrid(PeanoPatch *patch) {
-
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
 	PeanoVariable* structure = patch->getStructure();
@@ -83,15 +83,15 @@ vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::toUnstructuredGrid(PeanoPat
 	double* mapping = structure->mapping;
 	int mappings = structure->mappings;
 	int dimensions = patch->dimensions;
-	int numberOfPoints = mappings/3;
-	//std::cout << "Number of points = " << numberOfPoints << "\n";
+	int numberOfPoints = mappings/patch->dimensions;
+
 	points->SetNumberOfPoints(numberOfPoints);
 
 	for(int i = 0; i < numberOfPoints; i++) {
 		int index = i*patch->dimensions;
 
 		double position[3] = {0, 0, 0};
-		for(int j = 0; j < 3; j++) {
+		for(int j = 0; j < patch->dimensions; j++) {
 			position[j] = mapping[index + j]*sizes[j] + offsets[j];
 		}
 		points->SetPoint(i, position);
@@ -100,7 +100,7 @@ vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::toUnstructuredGrid(PeanoPat
 
 	int dimensions3D[3] = {1, 1, 1};
 	int totalCells = 1;
-	for(int i = 0; i < 3; i++) {
+	for(int i = 0; i < patch->dimensions; i++) {
 		totalCells *= patch->resolution[i];
 		dimensions3D[i] = patch->resolution[i];
 	}
@@ -108,7 +108,9 @@ vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::toUnstructuredGrid(PeanoPat
 	vtkSmartPointer<vtkCellArray> connectivity = vtkSmartPointer<vtkCellArray>::New();
 	connectivity->Allocate(VTK_VOXEL,totalCells);
 
-	for(int x = 0; x < dimensions3D[0]; x++) {
+    vtkSmartPointer<vtkUnstructuredGrid> grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+	if (patch->dimensions==3) {
+      for(int x = 0; x < dimensions3D[0]; x++) {
 		for(int y = 0; y < dimensions3D[1]; y++) {
 			for(int z = 0; z < dimensions3D[2]; z++) {
 				vtkSmartPointer<vtkVoxel> voxel = vtkSmartPointer<vtkVoxel>::New();
@@ -125,11 +127,27 @@ vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::toUnstructuredGrid(PeanoPat
 				connectivity->InsertNextCell(voxel);
 			}
 		}
+	  }
+      grid->SetPoints(points);
+      grid->SetCells(VTK_VOXEL, connectivity);
+	}
+	else {
+      for(int x = 0; x < dimensions3D[0]; x++) {
+		for(int y = 0; y < dimensions3D[1]; y++) {
+          vtkSmartPointer<vtkQuad> voxel = vtkSmartPointer<vtkQuad>::New();
+          vtkIdList* points = voxel->GetPointIds();
+          points->SetId(0, xyzToIndex(x,y,0, dimensions3D));
+		  points->SetId(1, xyzToIndex(x+1,y,0, dimensions3D));
+		  points->SetId(2, xyzToIndex(x+1,y+1,0, dimensions3D));
+		  points->SetId(3, xyzToIndex(x,y+1,0, dimensions3D));
+
+          connectivity->InsertNextCell(voxel);
+        }
+      }
+      grid->SetPoints(points);
+      grid->SetCells(VTK_QUAD, connectivity);
 	}
 
-	vtkSmartPointer<vtkUnstructuredGrid> grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	grid->SetPoints(points);
-	grid->SetCells(VTK_VOXEL, connectivity);
 
 	//allocate any variables
 	std::vector<vtkSmartPointer<vtkDoubleArray>> variables;

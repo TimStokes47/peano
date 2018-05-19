@@ -56,9 +56,8 @@ PeanoDataSet::PeanoDataSet(std::vector<std::string> &lines, std::string director
 			fullData->push_back(fileName);
 		}
 	}
-	std::cout << fullData->size() << " file(s) found for this dataset \n";
-
 }
+
 
 std::vector<std::string> PeanoDataSet::toString() {
 	std::vector<std::string> lines;
@@ -88,22 +87,15 @@ std::vector<std::string> PeanoDataSet::toString() {
 }
 
 std::vector<PeanoReader*>* PeanoDataSet::createReadersFull() {
-	//std::cout << "resolutionData size " << resolutionData.size() << "\n";
-	//std::cout << "resolutions size " << resolutions.size() << "\n";
-	//std::cout << "directory = " << directory << "\n";
-
-
-	//std::cout << "Dataset is creating readers...\n";
-	std::vector<PeanoReader*>* readers = new std::vector<PeanoReader*>();
-	//std::cout << "Readers list created!\n";
-	//std::cout << "Readers populating list from dataset with size " << fullData.size() << "\n";
-	for(uint i = 0; i < fullData->size(); i++) {
-		std::cout << "Reading index " << i << "\n";
-		std::cout << "Reading file " << fullData->at(i)<< "...\n";
-		readers->push_back(new PeanoReader(directory + fullData->at(i)));
-	}
-	std::cout << "Dataset finished creating readers!\n";
-	return readers;
+  std::vector<PeanoReader*>* readers = new std::vector<PeanoReader*>();
+  const int maxSize = fullData->size();
+  #pragma omp parallel for
+  for(uint i = 0; i < maxSize; i++) {
+    PeanoReader* newReader = new PeanoReader(directory + fullData->at(i));
+    #pragma omp critical
+	readers->push_back(newReader);
+  }
+  return readers;
 }
 
 std::vector<PeanoReader*>* PeanoDataSet::createReadersResolution(int res) {

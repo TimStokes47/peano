@@ -42,19 +42,23 @@ void convertTimeSeries( std::string filename, const std::string& outputDirectory
   for( auto timeStep: *dataSets ) {
     std::vector<PeanoReader*>* readers = timeStep->createReadersFull();
 
-    std::cout << "process " << timeStep->getSimpleName() << std::endl;
-
-    int partCounter = 0;
-    for( auto p: *readers ) {
-      std::string outFile = outFileNamePrefix + "-" + std::to_string(partCounter) + "-" + std::to_string(timeStepCounter);
+    //for( auto p: *readers ) {
+    #pragma omp parallel for
+    for( int i=0; i<readers->size(); i++) {
+      auto p = (*readers)[i];
+      std::string outFile = outFileNamePrefix + "-" + std::to_string(i) + "-" + std::to_string(timeStepCounter);
       std::cout << "writing file " << outFile << std::endl;
-      std::string filename =  PeanoConverter::combineAndWriteToFile( p->patches, outFile );
 
-      pvdFile << "<DataSet timestep=\"" << timeStepCounter << "\" group=\"\" part=\"" << partCounter << "\" "
-    		  << " file=\"" << filename << "\" "
-			  << "/>" << std::endl;
+      if (!p->patches.empty()) {
+        std::string filename =  PeanoConverter::combineAndWriteToFile( p->patches, outFile );
 
-      partCounter++;
+        #pragma omp critical
+        {
+        pvdFile << "<DataSet timestep=\"" << timeStepCounter << "\" group=\"\" part=\"" << i << "\" "
+      	        << " file=\"" << filename << "\" "
+		        << "/>" << std::endl;
+        }
+      }
     }
 
     timeStepCounter++;

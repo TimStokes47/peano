@@ -10,6 +10,9 @@
 
 class PeanoConverter {
   public:
+	/**
+	 * Maps a set of patches onto one unstructured grids.
+	 */
 	static vtkSmartPointer<vtkUnstructuredGrid> combine(const std::vector<PeanoPatch*>& patches);
 
 	static vtkSmartPointer<vtkUnstructuredGrid> combine(const std::vector<PeanoReader*>& readers);
@@ -23,6 +26,9 @@ class PeanoConverter {
 
 	static PeanoPatch* subSample(std::vector<PeanoReader*> &readers, int x, int y, int z);
   private:
+	/**
+	 * Used if the patch doesn't have any mapping and thus represents a regular grid.
+	 */
 	static vtkSmartPointer<vtkImageData> toImageData(PeanoPatch *patch);
 
 	/**

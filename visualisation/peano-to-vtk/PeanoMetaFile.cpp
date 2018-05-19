@@ -21,7 +21,7 @@
  * Default consstructor, exists to prevent errors when an class's
  * instance of a meta file is not created during the constructor
 */
-PeanoMetaFile::PeanoMetaFile() {}
+//PeanoMetaFile::PeanoMetaFile() {}
 
 PeanoMetaFile::PeanoMetaFile(std::string fileName) {
 	dataSets = new std::vector<PeanoDataSet*>();
@@ -62,12 +62,10 @@ PeanoMetaFile::PeanoMetaFile(std::string fileName) {
 
 	//if the input was not a dataset then it was a peano file
 	if(!metadataFile) {
-		std::cout << "Initial file is a patch file and not a metadata file...\n";
 		std::vector<std::string> dataLine;
 		dataLine.push_back(this->fileName);
 		dataSets->push_back(new PeanoDataSet(dataLine, directory));
 	} else {
-		std::cout << "Initial file is a metadata file...:\n";
 	}
 }
 
@@ -95,6 +93,7 @@ void PeanoMetaFile::save() {
 	file.close();
 }
 
+/*
 std::vector<PeanoReader*>* PeanoMetaFile::createReadersFull(int index) {
 	return getDataSet(index)->createReadersFull();
 }
@@ -102,6 +101,7 @@ std::vector<PeanoReader*>* PeanoMetaFile::createReadersFull(int index) {
 std::vector<PeanoReader*>* PeanoMetaFile::createReadersResolution(int index, int resolution) {
 	return getDataSet(index)->createReadersResolution(resolution);
 }
+*/
 
 std::vector<PeanoDataSet*>* PeanoMetaFile::getDataSets() {
 	return this->dataSets;

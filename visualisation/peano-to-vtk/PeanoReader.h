@@ -29,6 +29,11 @@ class PeanoReader {
   public:
 	/**
 	 * Read in one file.
+	 *
+	 * <h2> Parse process </h2>
+	 *
+	 * - Load the whole files into a vector called lines, i.e. we load line by line.
+	 * -
 	 */
 	PeanoReader(const std::string &file);
 	virtual ~PeanoReader();
