@@ -24,10 +24,10 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWri
 
   if (mapping!=nullptr) {
     _writer._snapshotFileOut << "  begin mapping" << std::endl;
-    for (int i=0; i<_writer.getVerticesPerPatch()*_writer._dimensions; i++) {
+    for (int i=0; i<_writer.getVerticesPerPatch() * _writer._dimensions; i++) {
       _writer._snapshotFileOut << " " << mapping[i];
     }
-    _writer._snapshotFileOut << "  end mapping" << std::endl;
+    _writer._snapshotFileOut << std::endl << "  end mapping" << std::endl;
   }
 
   _writer._snapshotFileOut << "end cell-values" << std::endl << std::endl;
