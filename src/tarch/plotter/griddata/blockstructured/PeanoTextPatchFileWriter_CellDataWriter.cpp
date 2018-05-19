@@ -39,6 +39,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWri
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, double value ) {
+  assertion( !std::isnan(value) );
   _out << " " << value;
   for (int i=1; i<_numberOfUnknowns; i++) {
     _out << " 0";
@@ -49,6 +50,8 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, const tarch::la::Vector<2,double>& value ) {
+  assertion( !std::isnan(value(0)) );
+  assertion( !std::isnan(value(1)) );
   _out << " " << value(0) << " " << value(1);
   for (int i=2; i<_numberOfUnknowns; i++) {
     _out << " 0";
@@ -59,6 +62,9 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, const tarch::la::Vector<3,double>& value ) {
+  assertion( !std::isnan(value(0)) );
+  assertion( !std::isnan(value(1)) );
+  assertion( !std::isnan(value(2)) );
   _out << " " << value(0) << " " << value(1) << " " << value(2);
   for (int i=3; i<_numberOfUnknowns; i++) {
     _out << " 0";
@@ -70,6 +76,7 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, double* values, int numberOfValues ) {
   for (int i=0; i<numberOfValues; i++) {
+    assertion( !std::isnan(values[i]) );
     _out << " " << values[i];
   }
   for (int i=numberOfValues; i<_numberOfUnknowns; i++) {
