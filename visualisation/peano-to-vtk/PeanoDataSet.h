@@ -15,23 +15,33 @@
 
 
 /**
- * One individual data set
+ * One individual data set which typically is one time step with its different
+ * resolutions.
  *
  * @author Dan Tuthill-Jones, Tobias Weinzierl
  */
 class PeanoDataSet {
   public:
 	PeanoDataSet(std::vector<std::string> &lines, std::string directory);
+	virtual ~PeanoDataSet();
+
+	/**
+	 * @return Set of readers tied to the full resolution model
+	 */
 	std::vector<PeanoReader*>* createReadersFull();
+
 	std::vector<PeanoReader*>* createReadersResolution(int res);
 	std::string getDirectory();
 	std::vector<std::string>* getFullData();
 	std::vector<std::vector<int>>* getResolutions();
 	std::string getResolution(int index);
 	std::vector<std::string> toString();
+
+	// @todo remove
 	std::string getSimpleName();
+
+
 	PeanoPatch* createSubSample(int x, int y, int z, bool saveToFile);
-	virtual ~PeanoDataSet();
 private:
 	std::vector<std::string>* fullData;
 	std::vector<std::string>* resolutionData;

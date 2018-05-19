@@ -14,6 +14,13 @@ class PeanoConverter {
 
 	static vtkSmartPointer<vtkUnstructuredGrid> combine(const std::vector<PeanoReader*>& readers);
 
+	/**
+	 * See combine(). Don't pass in an extension. It is added automatically.
+	 *
+	 * @return File name used
+	 */
+	static std::string combineAndWriteToFile(const std::vector<PeanoPatch*>& patches, const std::string& outputFileWithoutExtention);
+
 	static PeanoPatch* subSample(std::vector<PeanoReader*> &readers, int x, int y, int z);
   private:
 	static vtkSmartPointer<vtkImageData> toImageData(PeanoPatch *patch);

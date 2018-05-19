@@ -14,18 +14,23 @@
 #include "PeanoDataSet.h"
 #include "PeanoReader.h"
 
+/**
+ * Meta files are files that hold time series or reduced resolution images.
+ */
 class PeanoMetaFile {
-public:
-	PeanoMetaFile();
+  public:
+//	PeanoMetaFile();
+	/**
+	 * Open a meta file and parse its content
+	 */
 	PeanoMetaFile(std::string file);
+	virtual ~PeanoMetaFile();
+
 	std::vector<PeanoDataSet*>* getDataSets();
-	std::vector<PeanoReader*>* createReadersFull(int index);
-	std::vector<PeanoReader*>* createReadersResolution(int index, int resolution);
 	PeanoDataSet* getDataSet(int index);
 	int numberOfDataSets();
 	void save();
-	virtual ~PeanoMetaFile();
-private:
+  private:
 	static std::string getDirectory(const std::string &fileName);
 	std::string fileName;
 	std::vector<PeanoDataSet*>* dataSets;

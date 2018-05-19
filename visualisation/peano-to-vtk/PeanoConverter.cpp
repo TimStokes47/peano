@@ -26,6 +26,10 @@
 #include "vtkCellArray.h"
 #include "vtkVoxel.h"
 
+#include <vtkSmartPointer.h>
+#include <vtkXMLUnstructuredGridWriter.h>
+#include <vtkMergeCells.h>
+
 
 vtkSmartPointer<vtkImageData> PeanoConverter::toImageData(PeanoPatch *patch) {
 	vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
@@ -152,6 +156,22 @@ vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::toUnstructuredGrid(PeanoPat
 
 int PeanoConverter::xyzToIndex(int x, int y, int z, int dimensions[3]) {
 	return x + y*(dimensions[0]+1) + z*(dimensions[0]+1)*(dimensions[1]+1);
+}
+
+
+std::string PeanoConverter::combineAndWriteToFile(const std::vector<PeanoPatch*>& patches, const std::string& outputFileWithoutExtention) {
+  vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+
+  std::string outFile = outputFileWithoutExtention + "." + writer->GetDefaultFileExtension();
+
+  vtkSmartPointer<vtkUnstructuredGrid> outputGrid = PeanoConverter::combine( patches );
+
+  writer->SetFileName(outFile.c_str());
+  writer->SetCompressorTypeToZLib();
+  writer->AddInputDataObject( outputGrid );
+  writer->Write();
+
+  return outFile;
 }
 
 

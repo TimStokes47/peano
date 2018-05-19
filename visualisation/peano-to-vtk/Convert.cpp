@@ -13,6 +13,66 @@
 #include <vtkMergeCells.h>
 
 
+void convertFile( std::string filename, const std::string& outputDirectory ) {
+  std::string outFile = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
+  std::cout << "writing file " << outFile << std::endl;
+
+  PeanoReader reader( filename );
+  PeanoConverter::combineAndWriteToFile( reader.patches, outFile );
+}
+
+
+void convertTimeSeries( std::string filename, const std::string& outputDirectory ) {
+  PeanoMetaFile reader( filename );
+  std::string outFileNamePrefix = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
+  std::string outFileName       = outFileNamePrefix + ".pvd";
+  std::ofstream pvdFile(outFileName);
+
+  pvdFile << "<?xml version=\"1.0\"?>" << std::endl
+		  << "<VTKFile type=\"Collection\" version=\"0.1\" >" << std::endl
+		  << "<Collection>" << std::endl;
+/*
+		  ""
+		  "byte_order="LittleEndian"
+         compressor="vtkZLibDataCompressor">
+*/
+
+  int timeStepCounter = 0;
+  std::vector<PeanoDataSet*>* dataSets = reader.getDataSets();
+  for( auto timeStep: *dataSets ) {
+    std::vector<PeanoReader*>* readers = timeStep->createReadersFull();
+
+    std::cout << "process " << timeStep->getSimpleName() << std::endl;
+
+    int partCounter = 0;
+    for( auto p: *readers ) {
+      std::string outFile = outFileNamePrefix + "-" + std::to_string(partCounter) + "-" + std::to_string(timeStepCounter);
+      std::cout << "writing file " << outFile << std::endl;
+      std::string filename =  PeanoConverter::combineAndWriteToFile( p->patches, outFile );
+
+      pvdFile << "<DataSet timestep=\"" << timeStepCounter << "\" group=\"\" part=\"" << partCounter << "\" "
+    		  << " file=\"" << filename << "\" "
+			  << "/>" << std::endl;
+
+      partCounter++;
+    }
+
+    timeStepCounter++;
+  }
+
+  pvdFile << "</Collection>" << std::endl
+		  << "</VTKFile>" << std::endl;
+  pvdFile.close();
+/*
+
+
+    delete readers;
+  }
+
+*/
+}
+
+
 int main(int argc, char* argv[]) {
     std::cout << "Peano block file to vtk converter" << std::endl;
     std::cout << "(C) 2018 Dan Tuthill-Jones, Tobias Weinzierl" << std::endl << std::endl;
@@ -24,21 +84,18 @@ int main(int argc, char* argv[]) {
     }
     else {
       std::string mode = argv[1];
-      if (mode.compare("convert")==0) {
+      if (mode.compare("convert-file")==0) {
     	std::string outputDirectory = argv[ argc-1 ];
     	std::cout << "write into directory " << outputDirectory << std::endl;
     	for (int i=2; i<argc-1; i++) {
-          std::string inputFile       = argv[i];
-          PeanoReader reader( inputFile );
-
-          vtkSmartPointer<vtkUnstructuredGrid> outputGrid = PeanoConverter::combine( reader.patches );
-
-          vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
-          std::string outFile = outputDirectory + "/" + inputFile.erase(inputFile.find_last_of(".") ) + "." + writer->GetDefaultFileExtension();
-          std::cout << "writing file " << outFile << std::endl;
-          writer->SetFileName(outFile.c_str());
-          writer->AddInputDataObject( outputGrid );
-          writer->Write();
+    	  convertFile( argv[i], outputDirectory );
+    	}
+      }
+      else if (mode.compare("convert-time-series")==0) {
+    	std::string outputDirectory = argv[ argc-1 ];
+    	std::cout << "write into directory " << outputDirectory << std::endl;
+    	for (int i=2; i<argc-1; i++) {
+    	  convertTimeSeries( argv[i], outputDirectory );
     	}
       }
       else {
@@ -106,7 +163,8 @@ int main(int argc, char* argv[]) {
     if (!validParams) {
       std::cerr << std::endl << std::endl;
       std::cerr << "Usage:";
-      std::cerr << "\t./executable convert InputFile1 [InputFile2 ...] OutputFolder\n";
+      std::cerr << "\t./executable convert-file InputFile1 [InputFile2 ...] OutputFolder" << std::endl;
+      std::cerr << "\t./executable convert-time-series InputFile1 [InputFile2 ...] OutputFolder" << std::endl;
 //      std::cerr << "\t./PeanoStandalone subsample INPUT_FILE X_SIZE Y_SIZE Z_SIZE\n";
  //     std::cerr << "or:\n";
       std::cerr << std::endl << std::endl;
