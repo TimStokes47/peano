@@ -255,8 +255,6 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
 
 
 bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
-  startToProcessBackgroundJobs();
-
   processJobs( internal::BackgroundJobsJobClassNumber, TBBMinimalNumberOfJobsPerBackgroundConsumerRun );
 
   return !internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).empty();
