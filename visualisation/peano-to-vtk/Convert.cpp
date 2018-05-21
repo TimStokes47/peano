@@ -13,6 +13,11 @@
 #include <vtkMergeCells.h>
 
 
+#ifndef noCreateDirectory
+#include <experimental/filesystem> // or #include <filesystem>
+#endif
+
+
 void convertFile( std::string filename, const std::string& outputDirectory ) {
   std::string outFile = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
   std::cout << "writing file " << outFile << std::endl;
@@ -22,12 +27,37 @@ void convertFile( std::string filename, const std::string& outputDirectory ) {
 }
 
 
-void convertTimeSeries( std::string filename, const std::string& outputDirectory ) {
+void convertTimeSeries( std::string filename, std::string outputDirectory ) {
+  std::cout << "read file " << filename << std::endl;
   PeanoMetaFile reader( filename );
-  std::string outFileNamePrefix = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
-  std::string outFileName       = outFileNamePrefix + ".pvd";
-  std::ofstream pvdFile(outFileName);
 
+
+  std::string outFileNamePrefix  = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
+  std::string outFileName        = outFileNamePrefix + ".pvd";
+
+
+  #ifdef noCreateDirectory
+  std::string dataFileNamePrefix = outFileNamePrefix;
+  #else
+  std::string dataFileNamePrefix = outFileNamePrefix + "-full-resolution";
+  if (
+    !std::experimental::filesystem::is_directory(dataFileNamePrefix)
+    ||
+    !std::experimental::filesystem::exists(dataFileNamePrefix)
+  ) {
+	try {
+      std::experimental::filesystem::create_directory(dataFileNamePrefix);
+      std::cout << "created directory " << dataFileNamePrefix << std::endl;
+	}
+	catch (std::exception exc) {
+      std::cerr << "failed to create directory " << dataFileNamePrefix << std::endl;
+      std::cerr << "error message: " << exc.what() << std::endl;
+	}
+  }
+  dataFileNamePrefix += "/data";
+  #endif
+
+  std::ofstream pvdFile(outFileName);
   pvdFile << "<?xml version=\"1.0\"?>" << std::endl
 		  << "<VTKFile type=\"Collection\" version=\"0.1\" >" << std::endl
 		  << "<Collection>" << std::endl;
@@ -42,11 +72,10 @@ void convertTimeSeries( std::string filename, const std::string& outputDirectory
   for( auto timeStep: *dataSets ) {
     std::vector<PeanoReader*>* readers = timeStep->createReadersFull();
 
-    //for( auto p: *readers ) {
     #pragma omp parallel for
     for( int i=0; i<readers->size(); i++) {
       auto p = (*readers)[i];
-      std::string outFile = outFileNamePrefix + "-" + std::to_string(i) + "-" + std::to_string(timeStepCounter);
+      std::string outFile = dataFileNamePrefix + "-" + std::to_string(i) + "-" + std::to_string(timeStepCounter);
       std::cout << "writing file " << outFile << std::endl;
 
       if (!p->patches.empty()) {

@@ -26,7 +26,12 @@ default: header
 	@echo Please specify your target:
 	@echo clean
 	@echo build-gcc
+	@echo build-gcc-nofs
 	@echo build-gcc-openmp
+	@echo
+	@echo The -nofs option is to be used if you don't want the tool to create directories, 
+	@echo or if your compiler/system does not support the experimental filesystem extensions
+	@echo of C++.
 
 
 EXECUTABLE=peano-to-vtk
@@ -34,13 +39,18 @@ EXECUTABLE=peano-to-vtk
 
 build-gcc: CC=g++ -std=c++0x
 build-gcc: CFLAGS=
-build-gcc: LFLAGS=
+build-gcc: LFLAGS=-lstdc++fs
 build-gcc: header build
 
 
+build-gcc-nofs: CC=g++ -std=c++0x
+build-gcc-nofs: CFLAGS=-DnoCreateDirectory
+build-gcc-nofs: LFLAGS=
+build-gcc-nofs: header build
+
 build-gcc-openmp: CC=g++ -std=c++0x
 build-gcc-openmp: CFLAGS=-fopenmp
-build-gcc-openmp: LFLAGS=-fopenmp
+build-gcc-openmp: LFLAGS=-fopenmp -lstdc++fs
 build-gcc-openmp: header build
 
 
