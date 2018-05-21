@@ -33,7 +33,7 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
 
 
   std::string outFileNamePrefix  = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
-  std::string outFileName        = outFileNamePrefix + ".pvd";
+  std::string outFileName        = outFileNamePrefix + "-full-resolution.pvd";
 
 
   #ifdef noCreateDirectory
