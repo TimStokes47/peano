@@ -23,37 +23,17 @@
 PeanoReader::PeanoReader(const std::string &file) {
   patchSize = new int[3];
 
-  // read the file in to a vector of strings
-  std::cout << "Reading file " << file << std::endl;
+  #pragma omp critical
+  {
+    std::cout << "Reading file " << file << std::endl;
+  }
+
   std::ifstream ifs(file);
   std::vector<std::string> lines;
   for (std::string line; std::getline(ifs, line); /**/ ) {
 	lines.push_back(line);
   }
   ifs.close();
-
-	//if we found no file, maybe the rank bug occured, try removing "-rank-0"
-/*
-	if(lines.size() == 0) {
-		std::string location2 = file;
-		boost::erase_all(location2, "-rank-0");
-
-		std::cout << "No file found, trying " << location2 << "...\n";
-
-		std::ifstream ifs(location2);
-		for (std::string line; std::getline(ifs, line);  )
-			lines.push_back(line);
-		ifs.close();
-
-		if(lines.size() == 0) {
-			std::cout << "No file found :(\n";
-			return;
-		} else {
-			std::cout << "File found!\n";
-		}
-	}
-
-*/
 
   for(uint i = 0; i < lines.size(); i++) {
     std::string line = lines[i];
@@ -168,18 +148,15 @@ PeanoReader::PeanoReader(const std::string &file) {
 	}
 }
 
+
 PeanoReader::~PeanoReader() {
-	//std::cout << "Deleting peano reader\n";
+  delete [] patchSize;
 
-	delete [] patchSize;
+  for(uint i = 0; i < patches.size(); i++) {
+    delete patches[i];
+  }
 
-	for(uint i = 0; i < patches.size(); i++) {
-		delete patches[i];
-	}
-
-	for(uint i = 0; i < variables.size(); i++) {
-		delete variables[i];
-	}
-
-
+  for(uint i = 0; i < variables.size(); i++) {
+    delete variables[i];
+  }
 }

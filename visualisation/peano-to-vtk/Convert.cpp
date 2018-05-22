@@ -76,6 +76,8 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
     for( int i=0; i<readers->size(); i++) {
       auto p = (*readers)[i];
       std::string outFile = dataFileNamePrefix + "-" + std::to_string(i) + "-" + std::to_string(timeStepCounter);
+
+      #pragma omp critical
       std::cout << "writing file " << outFile << std::endl;
 
       if (!p->patches.empty()) {
@@ -96,13 +98,6 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
   pvdFile << "</Collection>" << std::endl
 		  << "</VTKFile>" << std::endl;
   pvdFile.close();
-/*
-
-
-    delete readers;
-  }
-
-*/
 }
 
 
