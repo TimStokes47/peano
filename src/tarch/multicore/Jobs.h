@@ -171,6 +171,11 @@ namespace tarch {
        /**
         * Tell job system that pending background tasks now should be done
         *
+        * All of the discussion below highlights the usage pattern. In
+        * practice, it is very convenient to invoke startToProcessBackgroundJobs()
+        * in endIteration(), i.e. once you know all `hard' stuff is done.
+        * This implies that the exchange of MPI data teams up with background
+        * job processing. The snippets below abstract from this fact.
         *
         * <h2> Usage pattern: wait for all background jobs </h2>
         *
