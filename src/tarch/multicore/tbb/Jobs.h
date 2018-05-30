@@ -194,8 +194,8 @@ namespace tarch {
              * Process _maxJobs from the background job queue. There are a few
              * situations that can arise from this processing:
              *
-             * - This has been the only background job and there had been
-             *   background jobs to handle. Then is does make sense to
+             * - This is the last background job consumer thread standing and
+             *   there are still background jobs to handle. Then it does make sense to
              *   immediately reschedule the consumer task again - just to be
              *   sure that all background jobs are handled eventually. It does not
              *   make sense to use TBB's recycling mechanism as we want the
