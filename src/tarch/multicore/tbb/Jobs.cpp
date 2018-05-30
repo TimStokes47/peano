@@ -231,11 +231,19 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
  * background tasks.
  */
 void tarch::multicore::jobs::startToProcessBackgroundJobs() {
-  const int additionalBackgroundThreads =
-    std::max(
-      tarch::multicore::Core::getInstance().getNumberOfThreads() - internal::_numberOfRunningBackgroundJobConsumerTasks.load(),
-	  0
+  const int maxBusyConsumerTasks = 
+    std::max( 
+      0, 
+	  static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size())/TBBMinimalNumberOfJobsPerBackgroundConsumerRun 
 	);
+
+  const int maxAdditionalBackgroundThreads =
+    std::max(
+      tarch::multicore::Core::getInstance().getNumberOfThreads()-1 - internal::_numberOfRunningBackgroundJobConsumerTasks.load(),
+      0
+    );
+  
+  const int additionalBackgroundThreads = std::min( maxBusyConsumerTasks, maxAdditionalBackgroundThreads );
 
   #ifdef Asserts
   if (additionalBackgroundThreads>0) {
@@ -243,7 +251,7 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
     logInfo(
       "startToProcessBackgroundJobs()",
       "spawn another " << additionalBackgroundThreads << " background job consumer tasks ("
-  	  << internal::_numberOfRunningBackgroundJobConsumerTasks.load() << " task(s) already running)"
+        << internal::_numberOfRunningBackgroundJobConsumerTasks.load() << " task(s) already running)"
     );
   }
   #endif
