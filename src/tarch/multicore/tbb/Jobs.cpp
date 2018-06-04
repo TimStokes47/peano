@@ -54,6 +54,8 @@ void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
 
 
 tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute() {
+  const int oldNumberOfBackgroundJobs = internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size();
+
   processJobs(internal::BackgroundJobsJobClassNumber,_maxJobs);
 
   const int newNumberOfBackgroundJobs = internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size();
@@ -61,7 +63,7 @@ tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute(
   _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
 
   if (
-	(newNumberOfBackgroundJobs>0 && _numberOfRunningBackgroundJobConsumerTasks.load()==0)
+	(newNumberOfBackgroundJobs!=oldNumberOfBackgroundJobs && newNumberOfBackgroundJobs>0)
   ) {
     enqueue();
   }
