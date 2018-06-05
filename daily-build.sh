@@ -1,4 +1,5 @@
-folders=(pdf src visualisation)
+folders=(pdt src visualisation)
+files=(README.md)
 
 peanoVersion="Peano-$(git log --format="%h" -n 1 .)"
 
