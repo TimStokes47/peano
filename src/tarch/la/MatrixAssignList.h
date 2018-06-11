@@ -8,6 +8,9 @@
 #include "tarch/la/Matrix.h"
 
 
+#include <string>
+
+
 namespace tarch {
   namespace la {
     template<int Rows, int Cols, typename Scalar>
