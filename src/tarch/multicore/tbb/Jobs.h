@@ -39,7 +39,7 @@ namespace tarch {
         #endif
 
         #ifndef TBBMaximalNumberOfJobsPerBackgroundConsumerRun
-        #define TBBMaximalNumberOfJobsPerBackgroundConsumerRun (TBBMinimalNumberOfJobsPerBackgroundConsumerRun*4)
+        #define TBBMaximalNumberOfJobsPerBackgroundConsumerRun (TBBMinimalNumberOfJobsPerBackgroundConsumerRun*2)
         #endif
 
         extern tarch::logging::Log _log;

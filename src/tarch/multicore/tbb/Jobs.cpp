@@ -195,7 +195,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
     bool reschedule = myTask->run();
     if (reschedule) {
       internal::getJobQueue(jobClass).push(myTask);
-      maxNumberOfJobs = 0;
+      maxNumberOfJobs--;
     }
     else {
       delete myTask;
