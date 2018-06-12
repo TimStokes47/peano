@@ -193,9 +193,9 @@ void peano::heap::AbstractAggregationBoundaryDataExchanger<Data, SendReceiveTask
 
   assertion( Base::_sendTasks.empty() );
 
-  //logDebug(
-  //   "handleAndQueueReceivedTask(...)", "attach " << _numberOfSentMessages << "th message to aggregated data. Message carries " <<
-  //	 sendTask._metaInformation.getLength() << " entries. Aggregated message so far has " << _aggregatedSendData.size() << " entries");
+  logDebug(
+     "handleAndQueueReceivedTask(...)", "attach " << _numberOfSentMessages << "th message to aggregated data. Message carries " <<
+	 sendTask._metaInformation.getLength() << " entries. Aggregated message so far has " << _aggregatedSendData.size() << " entries");
 
   assertion( sendTask.getMetaInformation().getLength()<std::numeric_limits<Data>::max()/2 );
 
@@ -245,7 +245,7 @@ void peano::heap::AggregationBoundaryDataExchanger<char,  SendReceiveTaskType,Ve
     numberOfSentMessages -= value;
     value /= (base/std::numeric_limits<char>::max());
     Base::_aggregatedSendData[i] = static_cast< char >( value );
-    //logDebug( "postprocessFinishedToSendData()", "header-byte[" << i << "]=" << static_cast<int>(_aggregatedSendData[i]) << " for rank " << Base::_rank);
+    logDebug( "postprocessFinishedToSendData()", "header-byte[" << i << "]=" << static_cast<int>(_aggregatedSendData[i]) << " for rank " << Base::_rank);
   }
 }
 
@@ -258,11 +258,11 @@ int  peano::heap::AggregationBoundaryDataExchanger<char,  SendReceiveTaskType,Ve
     int extractedData = static_cast<int>( receivedTask.data()[i] );
     result += extractedData * base;
     base *= std::numeric_limits<char>::max();
-    //logDebug(
-    //  "postprocessStartToSendData()",
-     // "header-byte[" << i << "]=" << static_cast<int>(localTask._data[i]) << " added and obtained message count " <<
-	 // totalNumberOfMessages << " for input from rank " << Base::_rank
-	//);
+    logDebug(
+      "postprocessStartToSendData()",
+      "header-byte[" << i << "]=" << static_cast<int>(localTask._data[i]) << " added and obtained message count " <<
+	  totalNumberOfMessages << " for input from rank " << Base::_rank
+	);
   }
   return result;
 }

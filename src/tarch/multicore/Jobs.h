@@ -59,9 +59,8 @@ namespace tarch {
     	   friend void startToProcessBackgroundJobs();
     	   friend bool finishToProcessBackgroundJobs();
 
-
-         public:
     	   static int _maxNumberOfRunningBackgroundThreads;
+         public:
     	   /**
     	    * A task is a job without any dependencies on other jobs though it
     	    * might have children. Tasks form a tree structure. Jobs may form
@@ -170,16 +169,48 @@ namespace tarch {
        void spawnBackgroundJob(Job* task);
 
        /**
-        * Work through the background tasks and let the caller know whether some
-        * tasks have been processed.
+        * Tell job system that pending background tasks now should be done
         *
-        * <h2> Hybrid runs </h2>
+        * All of the discussion below highlights the usage pattern. In
+        * practice, it is very convenient to invoke startToProcessBackgroundJobs()
+        * in endIteration(), i.e. once you know all `hard' stuff is done.
+        * This implies that the exchange of MPI data teams up with background
+        * job processing. The snippets below abstract from this fact.
+        *
+        * <h2> Usage pattern: wait for all background jobs </h2>
+        *
+        * Some codes do not have particular background jobs they wait for but
+        * want to wait until all background jobs have terminated. In this case,
+        * the program snippets typically look similar to
+        *
+        * <pre>
+          while (!tarch::multicore::jobs::finishToProcessBackgroundJobs()) {
+            tarch::parallel::Node::getInstance().receiveDanglingMessages();
+          }
+          </pre>
+        *
+        * This example illustrates that you can invoke finishToProcessBackgroundJobs()
+        * without a corresponding start invocation. However, I consider it to
+        * be good practice to issue start explicitly. This is then done prior
+        * to the while loop.
+        *
+        *
+        * <h2> Usage pattern: wait for particular background jobs </h2>
+        *
+        * Some codes wanna wait for particular background jobs only. In this
+        * case, see the example below on hybrid runs how to realise this.
+        *
+        * The example would also work without a start invocation. However,
+        * I consider it to be good practice to issue start explicitly. This is
+        * then done prior to the while loop.
+        *
         *
         * Some hybrid codes use processBackgroundJobs at certain points as they
         * have to wait for some low priority stuff to terminate. Such a method
         * invocation then often is embedded into a while loop. If you do this,
         * please ensure you receive dangling messages, i.e. that your while
         * loop looks similar to
+        *
         * <pre>
 bool terminate = false;
 tarch::multicore::jobs::startToProcessBackgroundJobs();
@@ -204,6 +235,13 @@ tarch::multicore::jobs::finishToProcessBackgroundJobs();
        void startToProcessBackgroundJobs();
 
        /**
+        * Wait for all background jobs to have terminated
+        *
+        * If you use MPI+TBB, I strongly recommend to add a
+        * receiveDanglingMessages() call do any while loop iterating over
+        * finishToProcessBackgroundJobs(). See startToProcessBackgroundJobs()
+        * for examples.
+        *
         * @see startToProcessBackgroundJobs()
         */
        bool finishToProcessBackgroundJobs();

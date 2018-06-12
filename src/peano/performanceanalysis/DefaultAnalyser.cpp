@@ -55,7 +55,6 @@ peano::performanceanalysis::DefaultAnalyser::DefaultAnalyser():
   }
 
   enable(true);
-  //std::cout<<_processBackgroundJobsWatch.size()<<std::endl;
 }
 
 

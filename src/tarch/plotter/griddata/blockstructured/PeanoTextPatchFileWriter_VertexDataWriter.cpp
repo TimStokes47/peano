@@ -24,10 +24,10 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataW
 
   if (mapping!=nullptr) {
     _writer._snapshotFileOut << "  begin mapping" << std::endl;
-    for (int i=0; i<_writer.getVerticesPerPatch()*_writer._dimensions; i++) {
+    for (int i=0; i<_writer.getVerticesPerPatch() * _writer._dimensions; i++) {
       _writer._snapshotFileOut << " " << mapping[i];
     }
-    _writer._snapshotFileOut << "  end mapping" << std::endl;
+    _writer._snapshotFileOut << std::endl << "  end mapping" << std::endl;
   }
 
   _writer._snapshotFileOut << "end vertex-values" << std::endl << std::endl;
@@ -39,6 +39,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataW
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::plotVertex( int index, double value ) {
+  assertion( !std::isnan(value) );
   _out << " " << value;
   for (int i=1; i<_numberOfUnknowns; i++) {
     _out << " 0";
@@ -49,6 +50,8 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::plotVertex( int index, const tarch::la::Vector<2,double>& value ) {
+  assertion( !std::isnan(value(0)) );
+  assertion( !std::isnan(value(1)) );
   _out << " " << value(0) << " " << value(1);
   for (int i=2; i<_numberOfUnknowns; i++) {
     _out << " 0";
@@ -59,6 +62,9 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::plotVertex( int index, const tarch::la::Vector<3,double>& value ) {
+  assertion( !std::isnan(value(0)) );
+  assertion( !std::isnan(value(1)) );
+  assertion( !std::isnan(value(2)) );
   _out << " " << value(0) << " " << value(1) << " " << value(2);
   for (int i=3; i<_numberOfUnknowns; i++) {
     _out << " 0";
@@ -71,6 +77,7 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::plotVertex( int index, double* values, int numberOfValues ) {
   for (int i=0; i<numberOfValues; i++) {
     _out << " " << values[i];
+    assertion( !std::isnan(values[i]) );
   }
   for (int i=numberOfValues; i<_numberOfUnknowns; i++) {
     _out << " 0";

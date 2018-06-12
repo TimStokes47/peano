@@ -46,7 +46,6 @@ void tarch::multicore::Core::shutDown() {
 #endif
   jobs::terminateAllPendingBackgroundConsumerJobs();
 
-
   if (_globalThreadCountControl!=nullptr) {
     delete _globalThreadCountControl;
     _globalThreadCountControl = nullptr;
