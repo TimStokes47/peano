@@ -65,7 +65,9 @@ tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute(
   _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
 
   if (
-	(newNumberOfBackgroundJobs!=oldNumberOfBackgroundJobs && newNumberOfBackgroundJobs>0)
+	(newNumberOfBackgroundJobs!=oldNumberOfBackgroundJobs and newNumberOfBackgroundJobs>0)
+	or
+	(_numberOfRunningBackgroundJobConsumerTasks.load()==0)
   ) {
     enqueue();
   }
