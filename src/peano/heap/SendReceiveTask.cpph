@@ -225,6 +225,7 @@ void peano::heap::SendReceiveTask<Data>::triggerReceive(int tag) {
     );
   }
 
+  _freeDataPointer = true;
   logTraceOut( "triggerReceive(int)" );
   #endif
 }

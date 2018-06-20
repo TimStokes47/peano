@@ -152,6 +152,8 @@ void peano::heap::AlignedCharSendReceiveTask<Alignment>::triggerReceive(int tag)
       << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }
+
+  _freeDataPointer = true;
   logTraceOut( "triggerReceive(int)" );
   #endif
 }

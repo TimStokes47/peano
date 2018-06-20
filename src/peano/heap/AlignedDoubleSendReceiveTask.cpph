@@ -152,6 +152,8 @@ void peano::heap::AlignedDoubleSendReceiveTask<Alignment>::triggerReceive(int ta
       << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }
+
+  _freeDataPointer = true;
   logTraceOut( "triggerReceive(int)" );
   #endif
 }
