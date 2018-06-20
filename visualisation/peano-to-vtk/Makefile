@@ -29,7 +29,7 @@ default: header
 	@echo build-gcc-nofs
 	@echo build-gcc-openmp
 	@echo
-	@echo The -nofs option is to be used if you don't want the tool to create directories, 
+	@echo The -nofs option is to be used if you don\'t want the tool to create directories, 
 	@echo or if your compiler/system does not support the experimental filesystem extensions
 	@echo of C++.
 
