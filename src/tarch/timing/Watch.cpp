@@ -19,7 +19,9 @@ tarch::timing::Watch::Watch(
   _elapsedTime(),
   _isRunning(startToTickImmediately) {
   
-  startTimer();
+  if (startToTickImmediately) {
+    startTimer();
+  }
 }
 
 

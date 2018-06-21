@@ -539,7 +539,7 @@ class sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize: public peano
      * time, we scale it with _InitialRelativeAccuracy and we make this the
      * accuracy we want to see from hereon.
      */
-    void parallelSectionHasTerminated(int problemSize, peano::datatraversal::autotuning::MethodTrace askingMethod, double costPerProblemElement) override;
+    void parallelSectionHasTerminated(int problemSize, int grainSize, peano::datatraversal::autotuning::MethodTrace askingMethod, double costPerProblemElement) override;
 
     /**
      * See DatabaseEnty's constructor or toString(), respectively.

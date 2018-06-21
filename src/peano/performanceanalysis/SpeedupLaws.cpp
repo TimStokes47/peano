@@ -211,6 +211,35 @@ std::string peano::performanceanalysis::SpeedupLaws::toString() const {
 }
 
 
+std::string peano::performanceanalysis::SpeedupLaws::toShortString() const {
+  std::ostringstream out;
+
+  out << "(f="  << _f
+      << ",t_1=" << _t_1
+      << ",s="  << _s
+      << ")";
+
+  return out.str();
+}
+
+
+int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads() const {
+  if (
+	tarch::la::smallerEquals( _s, 0.0 )
+    or
+	tarch::la::smallerEquals( _t_1, 0.0 )
+    or
+	tarch::la::greaterEquals( _f, 1.0 )
+  )	{
+    return 1;
+  }
+  else {
+	const double optimum = std::sqrt( (1-_f)/_s/_t_1 );
+	return std::round( optimum );
+  }
+}
+
+
 int peano::performanceanalysis::SpeedupLaws::getOptimalNumberOfThreads(
   int                  rankNumber,
   std::vector<double>  t_1,

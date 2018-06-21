@@ -27,7 +27,8 @@ namespace peano {
 /**
  * Class to compute standard speedup laws
  *
- * Currently, I support solely Amdahl's law, i.e. strong speedup.
+ * Currently, I support solely Amdahl's law, i.e. strong speedup, with an
+ * additional penalty term whenever we start up a thread.
  *
  * The class is designed to allow users to determine the parameters of
  * Amdahl's law (strong speedup) from multiple measurements. The class
@@ -39,7 +40,7 @@ namespace peano {
  * overdetermined. Which makes sense, as all measurement data is typically
  * noisy. So we want to construct a model
  *
- * @f$ t(p) = f \cdot t(1) + (1-f) \cdot \frac{t(1)}{p} @f$
+ * @f$ t(p) = f \cdot t(1) + (1-f) \cdot \frac{t(1)}{p} + s \cdot p @f$
  *
  * from measurement tuples @f$ ( p_i, t(p_i) ) @f$.
  *
@@ -319,6 +320,30 @@ comprising the update rule
     double getStartupCostPerThread() const;
 
     std::string toString() const;
+    std::string toShortString() const;
+
+    /**
+     * This rule identifies the optimal number of threads. Obviously, the
+     * routine does only make sense if you have relaxed the statistics through
+     * Amdahl's law plus some threading start overhead. Otherwise, there's no
+     * maximum. We compute the result analytically as
+     *
+     * @f$
+ \partial _p t(p) = f \cdot t(1) + (1-f) \cdot \frac{t(1)}{p} + s \cdot p
+       @f$
+     *
+     * So we effectively search for
+     *
+     * @f$
+-(1-f) \cdot \frac{t(1)}{p^2} + s = 0
+       @f$
+     * which yields an explicit formula
+     *
+     * @f$
+p = \sqrt{ \frac{1-f}{s \cdot t(1)} }
+       @f$
+     */
+    int getOptimalNumberOfThreads() const;
 
     /**
      * Computes the optimal number of threads for one particular rank if

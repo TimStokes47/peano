@@ -35,7 +35,7 @@ class peano::datatraversal::autotuning::GrainSize {
     const int              _problemSize;
     const MethodTrace      _askingMethod;
     OracleForOnePhase*     _hostOracle;
-    tarch::timing::Watch*  _watch;
+    tarch::timing::Watch   _watch;
   public:
     /**
      * Construct the answer object
