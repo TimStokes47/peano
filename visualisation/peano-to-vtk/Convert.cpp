@@ -83,6 +83,11 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
       if (!p->patches.empty()) {
         std::string filename =  PeanoConverter::combineAndWriteToFile( p->patches, outFile );
 
+        // Strip output directory
+        std::string toRemove = outputDirectory + "/";
+        int pos = filename.find(toRemove);
+        filename.erase(pos, toRemove.length());
+
         #pragma omp critical
         {
         pvdFile << "<DataSet timestep=\"" << timeStepCounter << "\" group=\"\" part=\"" << i << "\" "
