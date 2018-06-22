@@ -1,5 +1,5 @@
-#include "EulerFlow3d/multiscalelinkedcell/tests/HangingVertexBookkeeperTest.h"
-#include "EulerFlow3d/multiscalelinkedcell/HangingVertexBookkeeper.h"
+#include "multiscalelinkedcell/tests/HangingVertexBookkeeperTest.h"
+#include "multiscalelinkedcell/HangingVertexBookkeeper.h"
 
 #include "tarch/la/Vector.h"
 #include "peano/utils/Globals.h"

@@ -106,7 +106,7 @@ double mpibalancing::HotspotBalancing::getMinimumWeightOfWorkers() {
 }
 
 
-void mpibalancing::HotspotBalancing::identifyCriticalPathes( peano::parallel::loadbalancing::LoadBalancingFlag commandFromMaster ) {
+void mpibalancing::HotspotBalancing::identifyCriticalPaths( peano::parallel::loadbalancing::LoadBalancingFlag commandFromMaster ) {
   /**
    * We consider the CritialPathThreshold upper percent of the workers to be
    * critical.
@@ -186,7 +186,7 @@ void mpibalancing::HotspotBalancing::computeMaxForksOnCriticalWorker( peano::par
 void mpibalancing::HotspotBalancing::receivedStartCommand( peano::parallel::loadbalancing::LoadBalancingFlag commandFromMaster ) {
   logTraceInWith1Argument("receivedStartCommand(LoadBalancingFlag)", peano::parallel::loadbalancing::convertLoadBalancingFlagToString(commandFromMaster));
 
-  identifyCriticalPathes( commandFromMaster );
+  identifyCriticalPaths( commandFromMaster );
   computeMaxForksOnCriticalWorker( commandFromMaster );
 
   logTraceOut("receivedStartCommand(LoadBalancingFlag)" );

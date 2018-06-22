@@ -8,6 +8,7 @@
 
 
 tarch::logging::Log  sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::_log( "sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw" );
+constexpr int        sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::MinSampleInterval;
 
 
 sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::OracleForOnePhaseWithAmdahlsLaw():
@@ -113,7 +114,7 @@ void sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::loadStatistics(const 
     tagOpen |= str.compare( "adapter-number=" + std::to_string( (long long)oracleNumber) )==0;
   }
 
-  assertion( _measurements.count(peano::datatraversal::autotuning::MethodTrace::NumberOfDifferentMethodsCalling)==0 );
+  assertion( _executionTimeDatabase.count(peano::datatraversal::autotuning::MethodTrace::NumberOfDifferentMethodsCalling)==0 );
 }
 
 
