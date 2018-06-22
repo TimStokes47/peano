@@ -24,6 +24,11 @@ peano::performanceanalysis::SpeedupLaws::SpeedupLaws(double f):
 }
 
 
+int peano::performanceanalysis::SpeedupLaws::getNumberOfDifferentSamples() const {
+  return _samples;
+}
+
+
 void peano::performanceanalysis::SpeedupLaws::addMeasurement( int p, double t ) {
   assertion( p>0 );
 
@@ -60,13 +65,15 @@ void peano::performanceanalysis::SpeedupLaws::addMeasurement( int p, double t ) 
     if (_samples<Entries) {
       _t_1 = t;
     }
-    _samples++;
+    if (measurementToBeDropped!=Entries-1 and _samples<Entries) {
+      _samples++;
+    }
   }
 }
 
 
 void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
-  if (_samples>Entries) {
+  if (_samples>2) {
     const int NewtonIterations = Entries;
     for (int it=0; it<NewtonIterations; it++) {
       tarch::la::Matrix<2,Entries,double>  gradJ(0.0);
@@ -123,7 +130,7 @@ void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLaw() {
 
 
 void peano::performanceanalysis::SpeedupLaws::relaxAmdahlsLawWithThreadStartupCost() {
-  if (_samples>Entries) {
+  if (_samples>3) {
     const int NewtonIterations = Entries;
     for (int it=0; it<NewtonIterations; it++) {
       tarch::la::Matrix<3,Entries,double>  gradJ(0.0);
@@ -217,6 +224,7 @@ std::string peano::performanceanalysis::SpeedupLaws::toShortString() const {
   out << "(f="  << _f
       << ",t_1=" << _t_1
       << ",s="  << _s
+	  << ",samples=" << _samples
       << ")";
 
   return out.str();

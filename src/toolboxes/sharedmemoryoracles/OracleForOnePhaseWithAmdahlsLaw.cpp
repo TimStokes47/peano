@@ -142,10 +142,11 @@ peano::datatraversal::autotuning::OracleForOnePhase* sharedmemoryoracles::Oracle
 void sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::deactivateOracle() {
   bool hasChangedAnEntry = false;
   for (auto& measurement: _executionTimeDatabase) {
-	int oldValue = measurement.second._optimalGrainSize;
+	const int oldValue = measurement.second._optimalGrainSize;
 	measurement.second._statistics.relaxAmdahlsLawWithThreadStartupCost();
-	int newValue = std::min( measurement.second._statistics.getOptimalNumberOfThreads(), measurement.second._maxProblemSize );
-	if (oldValue!=newValue) {
+	int newValue = std::min( measurement.second._statistics.getOptimalNumberOfThreads(), measurement.second._maxProblemSize+1 );
+	if ( oldValue!=newValue and !hasChangedAnEntry) {
+	  newValue = std::abs(oldValue-newValue)>=2 ? (oldValue+newValue)/2 : newValue;
       logInfo(
         "deactivateOracle()",
 		"change optimal grain size for " << toString(measurement.first)
@@ -153,7 +154,9 @@ void sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::deactivateOracle() {
 		<< " (max size=" << measurement.second._maxProblemSize << ")"
 	  );
       measurement.second._optimalGrainSize = newValue;
-      hasChangedAnEntry = true;
+      if ( std::abs(newValue-oldValue) > oldValue / 10 ) { // More than ten percent is significant
+        hasChangedAnEntry = true;
+      }
 	}
   }
 

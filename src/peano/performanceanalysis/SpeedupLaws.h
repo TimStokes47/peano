@@ -85,6 +85,10 @@ class peano::performanceanalysis::SpeedupLaws {
     tarch::la::Vector<Entries, double> _t;
     tarch::la::Vector<Entries, double> _p;
 
+    /**
+     * Number of valid samples. Note that addMeasurement does replace
+     * measurements, so this value might grow slowly.
+     */
     int        _samples;
   public:
     /**
@@ -121,6 +125,15 @@ class peano::performanceanalysis::SpeedupLaws {
      * so far.
      */
     void addMeasurement( int p, double t );
+
+    /**
+     * The code does keep track of up to Entries different measurements and
+     * then squeezes a curve into these measurements. As addMeasurement() does
+     * replace entries, it is not always clear how many different valid samples
+     * do exist. This routine allows you to check. Its result never exceeds
+     * Entries.
+     */
+    int getNumberOfDifferentSamples() const;
 
     /**
      * This operation determines a new iterate (approximation) for f and t_1
