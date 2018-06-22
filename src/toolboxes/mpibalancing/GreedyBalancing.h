@@ -37,7 +37,7 @@ class mpibalancing::GreedyBalancing: public peano::parallel::loadbalancing::Orac
      *
      * @param coarsestRegularInnerAndOuterGridLevel If you use this balancing,
      *                     the grid is refined regularly up to level
-     *                     coarsestRegularInnerAndOuterGridLevel - indepenent
+     *                     coarsestRegularInnerAndOuterGridLevel - independent
      *                     of whether grid elements are inside or outside of
      *                     the domain. Too regular grids facilitate a
      *                     proper load balancing in several cases.
