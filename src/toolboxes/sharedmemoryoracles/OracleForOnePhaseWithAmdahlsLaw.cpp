@@ -12,7 +12,7 @@ tarch::logging::Log  sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::_log(
 
 sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::OracleForOnePhaseWithAmdahlsLaw():
   _executionTimeDatabase(),
-  _sampleEveryXQueries(4),
+  _sampleEveryXQueries(MinSampleInterval),
   _sampleCounter(0) {
 }
 
@@ -27,17 +27,17 @@ peano::datatraversal::autotuning::GrainSize sharedmemoryoracles::OracleForOnePha
   _sampleCounter++;
   _sampleCounter = _sampleCounter%_sampleEveryXQueries;
 
-  const int baseSize = _executionTimeDatabase[askingMethod]._optimalGrainSize > problemSize ? 0 : _executionTimeDatabase[askingMethod]._optimalGrainSize;
-
   logDebug( "parallelise(...)", "optimal base size is " << baseSize );
 
   _executionTimeDatabase[askingMethod]._maxProblemSize = std::max( _executionTimeDatabase[askingMethod]._maxProblemSize, problemSize );
 
-  if (_sampleCounter==0) {
-    const int delta       = baseSize / 2;
-    const int startSearch = std::max(1,baseSize-delta);
+  if (_sampleCounter==0 and problemSize>1) {
+    const int grainSize = (rand() % (problemSize-1) )+1;
+    assertion2(grainSize>=0,grainSize,problemSize);
+    assertion2(grainSize<problemSize,grainSize,problemSize);
+
     return peano::datatraversal::autotuning::GrainSize(
-      startSearch + (rand() % 3) * delta,
+      grainSize,
 	  true,
       problemSize,
       askingMethod,
@@ -45,8 +45,9 @@ peano::datatraversal::autotuning::GrainSize sharedmemoryoracles::OracleForOnePha
     );
   }
   else {
+    const int grainSize = _executionTimeDatabase[askingMethod]._optimalGrainSize >= problemSize ? 0 : _executionTimeDatabase[askingMethod]._optimalGrainSize;
     return peano::datatraversal::autotuning::GrainSize(
-      baseSize, false,
+      grainSize, false,
       problemSize,
       askingMethod,
       this
@@ -56,26 +57,75 @@ peano::datatraversal::autotuning::GrainSize sharedmemoryoracles::OracleForOnePha
 
 
 void sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::parallelSectionHasTerminated(int problemSize, int grainSize, peano::datatraversal::autotuning::MethodTrace askingMethod, double costPerProblemElement) {//  assertion(_executionTimes.count(askingMethod)==1);
+  // 0 doesn't fit to Amdahl's law, so we manually have to postprocess
+  grainSize = grainSize==0 ? _executionTimeDatabase[askingMethod]._maxProblemSize+1 : grainSize;
+
   _executionTimeDatabase[askingMethod]._statistics.addMeasurement(grainSize,costPerProblemElement);
 }
 
 
 
 void sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::loadStatistics(const std::string& filename, int oracleNumber) {
-  logWarning( "loadStatistics(std::string)", "reload of statistics is not supported. Statistics file will be overwritten" );
+  std::ifstream file(filename);
+  std::string str = "";
+
+  bool        tagOpen = false;
+  while (std::getline(file, str)) {
+    tagOpen &= str.compare("end OracleForOnePhaseWithAmdahlsLaw")!=0;
+
+    if (tagOpen) {
+      #ifdef __EXCEPTIONS
+      try {
+      #endif
+      std::string rightString = str;
+
+      std::string traceToken      = rightString.substr( 0, rightString.find("=") );
+      rightString                 = rightString.substr( traceToken.size()+1 );
+      std::string grainSizeToken  = rightString.substr( 0, rightString.find(",") );
+      rightString                 = rightString.substr( grainSizeToken.size()+1 );
+      std::string maxToken        = rightString.substr( 0, rightString.find(",") );
+
+      peano::datatraversal::autotuning::MethodTrace  methodTrace      = peano::datatraversal::autotuning::toMethodTrace(traceToken);
+      int                                            optimalGrainSize = atoi( grainSizeToken.c_str() );
+      int                                            maxProblemSize   = atoi( maxToken.c_str() );
+
+      _executionTimeDatabase[methodTrace]._optimalGrainSize = optimalGrainSize;
+      _executionTimeDatabase[methodTrace]._maxProblemSize   = maxProblemSize;
+
+      logInfo( "loadStatistics(...)", "added entry " << toString(methodTrace) << ":" << optimalGrainSize << "," << maxProblemSize );
+
+      #ifdef __EXCEPTIONS
+      }
+      catch (std::out_of_range& exception) {
+        logError(
+          "loadStatistics(...)",
+          "failed to parse shared memory configuration file " << filename << " with error in " << exception.what() << " in adapter " << oracleNumber
+        );
+        logError(
+          "loadStatistics(...)",
+          "flawed string: " << str
+        );
+      }
+      #endif
+    }
+
+    // Older GCC versions require an explicit cast here
+    tagOpen |= str.compare( "adapter-number=" + std::to_string( (long long)oracleNumber) )==0;
+  }
+
+  assertion( _measurements.count(peano::datatraversal::autotuning::MethodTrace::NumberOfDifferentMethodsCalling)==0 );
 }
 
 
 void sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::plotStatistics(std::ostream& out, int oracleNumber) const {
   out << "begin OracleForOnePhaseWithAmdahlsLaw" << std::endl;
-  out << "adapter-number=" << oracleNumber << std::endl
-	  << "sample-delta=" << _sampleEveryXQueries << std::endl;
+  out << "adapter-number=" << oracleNumber << std::endl;
 
   for (auto measurement: _executionTimeDatabase) {
     out << peano::datatraversal::autotuning::toString(measurement.first)
         << "=" << measurement.second._optimalGrainSize
 		<< "," << measurement.second._maxProblemSize
-        << " " << measurement.second._statistics.toShortString() << std::endl;
+        << "," << measurement.second._statistics.toShortString() << std::endl;
   }
 
   out << "end OracleForOnePhaseWithAmdahlsLaw" << std::endl;
@@ -99,6 +149,7 @@ void sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::deactivateOracle() {
         "deactivateOracle()",
 		"change optimal grain size for " << toString(measurement.first)
 		<< " from " << oldValue << " to " << newValue
+		<< " (max size=" << measurement.second._maxProblemSize << ")"
 	  );
       measurement.second._optimalGrainSize = newValue;
       hasChangedAnEntry = true;
@@ -115,7 +166,7 @@ void sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::deactivateOracle() {
   }
   else {
     _sampleEveryXQueries /= 2;
-    _sampleEveryXQueries = std::max(_sampleEveryXQueries,2);
+    _sampleEveryXQueries = std::max(_sampleEveryXQueries,MinSampleInterval);
   }
 }
 
