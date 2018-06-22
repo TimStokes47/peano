@@ -160,18 +160,18 @@ void sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw::deactivateOracle() {
 	}
   }
 
-  if (!hasChangedAnEntry) {
+  if (hasChangedAnEntry) {
     _sampleEveryXQueries++;
     _sampleEveryXQueries = std::min(_sampleEveryXQueries,65536);
-    logInfo(
-      "deactivateOracle()",
-       "new sample interval: sample every " << _sampleEveryXQueries << "th request "
-    );
   }
   else {
-    _sampleEveryXQueries /= 2;
+    _sampleEveryXQueries--;
     _sampleEveryXQueries = std::max(_sampleEveryXQueries,MinSampleInterval);
   }
+  logInfo(
+    "deactivateOracle()",
+     "new sample interval: sample every " << _sampleEveryXQueries << "th request "
+  );
 }
 
 

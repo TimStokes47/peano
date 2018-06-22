@@ -45,7 +45,7 @@ namespace sharedmemoryoracles {
 class sharedmemoryoracles::OracleForOnePhaseWithAmdahlsLaw: public peano::datatraversal::autotuning::OracleForOnePhase {
   private:
     static tarch::logging::Log  _log;
-    static constexpr int MinSampleInterval = 32;
+    static constexpr int MinSampleInterval = 2;
 
     struct DataBaseEntry {
       peano::performanceanalysis::SpeedupLaws   _statistics;
