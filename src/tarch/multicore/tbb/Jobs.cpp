@@ -213,7 +213,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
     if ( maxNumberOfJobs>0 ) {
       gotOne = internal::getJobQueue(jobClass).try_pop(myTask);
     }
-    else {nd
+    else {
       gotOne = false;
     }
   }
