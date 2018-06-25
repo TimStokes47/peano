@@ -34,6 +34,7 @@ class peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch {
     peano::grid::RegularGridContainer<Vertex,Cell>&                   _regularGridContainer;
     CellStack&                                                        _cellStack;
     const bool                                                        _storeProcessRunsInParallelToOtherTasks;
+    const int                _regularSubtreeIndex;
 
     /**
      * Store cells
@@ -74,6 +75,7 @@ class peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch {
 
   public:
     StoreCellsOnRegularRefinedPatch(
+      int                                                               regularSubtreeIndex,
       peano::utils::LoopDirection                                       topLevelLoopDirection,
       const int                                                         treeDepth,
       const bool                                                        isTraversalInverted,

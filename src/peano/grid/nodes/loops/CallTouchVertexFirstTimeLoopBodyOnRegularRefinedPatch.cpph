@@ -8,6 +8,7 @@ tarch::logging::Log peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyO
 
 template <class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch(
+  int                                              regularSubtreeIndex,
   EventHandle&                                     eventHandle,
   peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
   int                                              level
@@ -16,8 +17,9 @@ peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch
   _eventHandle(eventHandle),
   _threadLocalEventHandle(eventHandle),
   _regularGridContainer(regularGridContainer),
-  _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(level)),
-  _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(level-1)) {
+  _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(regularSubtreeIndex, level)),
+  _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(regularSubtreeIndex, level-1)),
+  _regularSubtreeIndex(regularSubtreeIndex) {
 }
 
 
@@ -30,7 +32,8 @@ peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch
   _threadLocalEventHandle(copy._eventHandle),
   _regularGridContainer(copy._regularGridContainer),
   _fineGridEnumerator(copy._fineGridEnumerator),
-  _coarseGridEnumerator(copy._coarseGridEnumerator) {
+  _coarseGridEnumerator(copy._coarseGridEnumerator),
+  _regularSubtreeIndex(copy._regularSubtreeIndex) {
 }
 
 
@@ -59,15 +62,15 @@ void peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefined
   const int fineGridVertexIndex = _fineGridEnumerator.lineariseVertexIndex(i);
   const int coarseGridCellIndex = _coarseGridEnumerator.lineariseCellIndex(offsetOfCoarseGridEnumerator);
 
-  Vertex& currentVertex = _regularGridContainer.getVertex(_level,fineGridVertexIndex);
-  if (!currentVertex.isOutside()  && !_regularGridContainer.isReadFromTemporaryStack(_level,fineGridVertexIndex) ) {
+  Vertex& currentVertex = _regularGridContainer.getVertex(_regularSubtreeIndex, _level,fineGridVertexIndex);
+  if (!currentVertex.isOutside()  && !_regularGridContainer.isReadFromTemporaryStack(_regularSubtreeIndex, _level,fineGridVertexIndex) ) {
     _threadLocalEventHandle.touchVertexFirstTime(
       currentVertex,
       _fineGridEnumerator.getVertexPosition(),
       _fineGridEnumerator.getCellSize(),
-      _regularGridContainer.getVertex(_level-1),
+      _regularGridContainer.getVertex(_regularSubtreeIndex, _level-1),
       _coarseGridEnumerator,
-      _regularGridContainer.getCell(_level-1,coarseGridCellIndex),
+      _regularGridContainer.getCell(_regularSubtreeIndex, _level-1,coarseGridCellIndex),
       positionWithinNextCoarserCell
     );
   }

@@ -14,6 +14,7 @@ tarch::logging::Log peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRef
 
 template <class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cell,State,EventHandle>::CallEnterCellLoopBodyOnRegularRefinedPatch(
+  int                                              regularSubtreeIndex,
   EventHandle&                                     eventHandle,
   peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
   int                                              level
@@ -22,8 +23,9 @@ peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cel
   _eventHandle(eventHandle),
   _threadLocalEventHandle(eventHandle),
   _regularGridContainer(regularGridContainer),
-  _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(level)),
-  _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(level-1)) {
+  _fineGridEnumerator(_regularGridContainer.getVertexEnumerator(regularSubtreeIndex, level)),
+  _coarseGridEnumerator(_regularGridContainer.getVertexEnumerator(regularSubtreeIndex, level-1)),
+  _regularSubtreeIndex(regularSubtreeIndex) {
 }
 
 
@@ -36,7 +38,8 @@ peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Vertex,Cel
   _threadLocalEventHandle(copy._eventHandle),
   _regularGridContainer(copy._regularGridContainer),
   _fineGridEnumerator(copy._fineGridEnumerator),
-  _coarseGridEnumerator(copy._coarseGridEnumerator) {
+  _coarseGridEnumerator(copy._coarseGridEnumerator),
+  _regularSubtreeIndex(copy._regularSubtreeIndex) {
 }
 
 
@@ -65,16 +68,16 @@ void peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch<Verte
   const int fineGridCellIndex   = _fineGridEnumerator.lineariseCellIndex(i);
   const int coarseGridCellIndex = _coarseGridEnumerator.lineariseCellIndex(offsetOfCoarseGridEnumerator);
 
-  Cell& currentCell = _regularGridContainer.getCell(_level,fineGridCellIndex);
+  Cell& currentCell = _regularGridContainer.getCell(_regularSubtreeIndex, _level,fineGridCellIndex);
 
   if (currentCell.isInside()) {
     _threadLocalEventHandle.enterCell(
       currentCell,
-      _regularGridContainer.getVertex(_level),
+      _regularGridContainer.getVertex(_regularSubtreeIndex, _level),
       _fineGridEnumerator,
-      _regularGridContainer.getVertex(_level-1),
+      _regularGridContainer.getVertex(_regularSubtreeIndex, _level-1),
       _coarseGridEnumerator,
-      _regularGridContainer.getCell(_level-1,coarseGridCellIndex),
+      _regularGridContainer.getCell(_regularSubtreeIndex, _level-1,coarseGridCellIndex),
       positionWithinNextCoarserCell
     );
   }

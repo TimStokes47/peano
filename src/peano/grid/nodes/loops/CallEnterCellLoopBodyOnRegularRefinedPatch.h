@@ -64,8 +64,11 @@ class peano::grid::nodes::loops::CallEnterCellLoopBodyOnRegularRefinedPatch {
 
     UnrolledLevelEnumerator  _fineGridEnumerator;
     UnrolledLevelEnumerator  _coarseGridEnumerator;
+
+    const int                _regularSubtreeIndex;
   public:
     CallEnterCellLoopBodyOnRegularRefinedPatch(
+      int                                              regularSubtreeIndex,
       EventHandle&                                     eventHandle,
       peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
       int                                              level

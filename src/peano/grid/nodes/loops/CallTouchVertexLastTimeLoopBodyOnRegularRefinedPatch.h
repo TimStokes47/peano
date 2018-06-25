@@ -72,6 +72,8 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
     UnrolledLevelEnumerator  _fineGridEnumerator;
     UnrolledLevelEnumerator  _coarseGridEnumerator;
 
+    const int                _regularSubtreeIndex;
+
   public:
     /**
      * The name is slightly misleading: the routine does track the vertex state
@@ -83,6 +85,7 @@ class peano::grid::nodes::loops::CallTouchVertexLastTimeLoopBodyOnRegularRefined
     static void performVertexTransition( Vertex& vertex, int level, int treeDepth, bool& treeRemainsStatic );
 
     CallTouchVertexLastTimeLoopBodyOnRegularRefinedPatch(
+      int                                              regularSubtreeIndex,
       const int                                        treeDepth,
       EventHandle&                                     eventHandle,
       peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,

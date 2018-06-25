@@ -68,8 +68,10 @@ class peano::grid::nodes::loops::CallDescendLoopBodyOnRegularRefinedPatch {
     UnrolledAscendDescendLevelEnumerator             _fineGridEnumerator;
     UnrolledLevelEnumerator                          _coarseGridEnumerator;
 
+    const int                _regularSubtreeIndex;
   public:
     CallDescendLoopBodyOnRegularRefinedPatch(
+      int                                               regularSubtreeIndex,
       EventHandle&                                      eventHandle,
       peano::grid::RegularGridContainer<Vertex,Cell>&   regularGridContainer,
       int                                               level

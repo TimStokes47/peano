@@ -15,6 +15,7 @@ tarch::multicore::BooleanSemaphore  peano::grid::nodes::tasks::Descend<Vertex,Ce
 
 template <class Vertex, class Cell, class State, class EventHandle>
 peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::Descend(
+  int                    regularSubtreeIndex,
   const int              treeDepth,
   State&                 state,
   EventHandle&           eventHandle,
@@ -25,7 +26,8 @@ peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::Descend(
   _state(state),
   _eventHandle(eventHandle),
   _gridContainer( gridContainer ),
-  _descendProcessRunsInParallelToOtherTasks(descendProcessRunsInParallelToOtherTasks) {
+  _descendProcessRunsInParallelToOtherTasks(descendProcessRunsInParallelToOtherTasks),
+  _regularSubtreeIndex(regularSubtreeIndex) {
   assertion( treeDepth>=1 );
 }
 
@@ -40,7 +42,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
   #if !defined(SharedMemoryParallelisation) and !defined(PersistentRegularSubtrees)
   assertion2(_gridContainer.isLevelInitialised(level), level, _gridContainer.toString());
   #else
-  while (_descendProcessRunsInParallelToOtherTasks && !_gridContainer.isLevelInitialised(level)) {
+  while (_descendProcessRunsInParallelToOtherTasks && !_gridContainer.isLevelInitialised(_regularSubtreeIndex, level)) {
     peano::datatraversal::TaskSet::waitForLoadCellsTask();
     peano::datatraversal::TaskSet::waitForLoadVerticesTask();
   }
@@ -49,7 +51,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
   if (runOperation) {
     const tarch::la::Vector<DIMENSIONS,int> NumberOfVertices      = _gridContainer.getNumberOfVertices(level);
     
-    TouchVertexFirstTimeLoopBody  touchVertexFirstTimeLoopBody(_eventHandle, _gridContainer, level);
+    TouchVertexFirstTimeLoopBody  touchVertexFirstTimeLoopBody(_regularSubtreeIndex, _eventHandle, _gridContainer, level);
 
     int  colouring = -1;
     int  problemSize = tarch::la::volume(NumberOfVertices);
@@ -118,7 +120,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
   if (runOperation) {
     const tarch::la::Vector<DIMENSIONS,int> NumberOfCells         = _gridContainer.getNumberOfCells(level);
 
-    EnterCellLoopBody  enterCellLoopBody(_eventHandle, _gridContainer, level);
+    EnterCellLoopBody  enterCellLoopBody(_regularSubtreeIndex, _eventHandle, _gridContainer, level);
 
     int  colouring = -1;
     int  problemSize = tarch::la::volume(NumberOfCells);
@@ -188,7 +190,7 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(
   if (runOperation) {
     const tarch::la::Vector<DIMENSIONS,int> NumberOfCoarseGridCells = _gridContainer.getNumberOfCells(fineGridLevel-1);
 
-    DescendLoopBody  descendLoopBody(_eventHandle, _gridContainer, fineGridLevel-1 );
+    DescendLoopBody  descendLoopBody(_regularSubtreeIndex, _eventHandle, _gridContainer, fineGridLevel-1 );
 
     int  colouring   = -1;
     int  problemSize = tarch::la::volume(NumberOfCoarseGridCells);

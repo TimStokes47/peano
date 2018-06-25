@@ -320,6 +320,13 @@ class peano::grid::Cell {
      * output stacks, respectively, all the time. This information is not
      * analysed, if we encounter a regular subtree. As I do not reanalyse
      * it, I have to switch store and load statistics after each iteration.
+     *
+     * <h2> Assertions </h2>
+     *
+     * Originally, I had plenty of assertions in this routine that check
+     * whether all stack counters are correct. However, these flags have to
+     * wrong if we use persistent subtrees and those guys are drained.
+     * Prior to the drain, there's no valid data stored in the cell.
      */
     void storedCellOfRegularRefinedGrid();
     #endif

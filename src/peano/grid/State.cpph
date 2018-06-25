@@ -19,6 +19,13 @@ template <class StateData>
 typename peano::grid::State<StateData>::LoadBalancingState  peano::grid::State<StateData>::_loadRebalancingState(peano::grid::State<StateData>::LoadBalancingState::NoRebalancing);
 #endif
 
+
+#ifdef PersistentRegularSubtrees
+template <class StateData>
+typename peano::grid::State<StateData>::PersistentSubtreeStorage     peano::grid::State<StateData>::_persistentSubtreeStorage( PersistentSubtreeStorage::Store );
+#endif
+
+
 template <class StateData>
 typename peano::grid::State<StateData>::BatchState          peano::grid::State<StateData>::_batchState(BatchState::NoBatch);
 
@@ -45,11 +52,6 @@ peano::grid::State<StateData>::State():
   #endif
   #endif
   
-  #ifdef PersistentRegularSubtrees
-  _smallestRegularTreeThatIsToBeHeldPersistently                    = 0; 
-  _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = 0; 
-  #endif
-
   _stateData.setHasRefined( false );
   _stateData.setHasErased( false );
   _stateData.setHasChangedVertexOrCellState( false );
@@ -158,11 +160,18 @@ void peano::grid::State<StateData>::toString(std::ostream& out) const {
   #endif
   
   #ifdef PersistentRegularSubtrees
-  out << "[smallest-regular-tree-that-is-held-persistently(currently/previous iteration)=" 
-      << _smallestRegularTreeThatIsToBeHeldPersistently 
-      << "/"
-      << _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration
-      << "]";
+  out << ",persistent-subtree-storage=";
+  switch (_persistentSubtreeStorage) {
+    case PersistentSubtreeStorage::Store:
+      out << "store";
+	  break;
+    case PersistentSubtreeStorage::DrainTriggered:
+      out << "drain-triggered";
+	  break;
+    case PersistentSubtreeStorage::Drain:
+      out << "drain";
+	  break;
+  }
   #endif
 }
 
@@ -983,8 +992,8 @@ void peano::grid::State<StateData>::sendStateToMaster() const {
 template <class StateData>
 bool peano::grid::State<StateData>::storeRegularSubtreesPersistently(int treeDepth) const {
   #ifdef PersistentRegularSubtrees
-  return treeDepth >= _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration
-      && _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration >= 0;
+  return _persistentSubtreeStorage == PersistentSubtreeStorage::Store
+	  or _persistentSubtreeStorage == PersistentSubtreeStorage::DrainTriggered;
   #else
   return false;
   #endif
@@ -994,22 +1003,19 @@ bool peano::grid::State<StateData>::storeRegularSubtreesPersistently(int treeDep
 template <class StateData>
 void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
   #ifdef PersistentRegularSubtrees
-  if (
-    !value 
-    && 
-    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration == _smallestRegularTreeThatIsToBeHeldPersistently
-  ) {
-    _smallestRegularTreeThatIsToBeHeldPersistently = 0;
+  switch (_persistentSubtreeStorage) {
+    case PersistentSubtreeStorage::Store:
+      _persistentSubtreeStorage = PersistentSubtreeStorage::Store;
+	  break;
+    case PersistentSubtreeStorage::DrainTriggered:
+      logDebug( "holdsPersistentSubtrees(bool)", "switch to Drain" );
+      _persistentSubtreeStorage = PersistentSubtreeStorage::Drain;
+  	  break;
+    case PersistentSubtreeStorage::Drain:
+      logDebug( "holdsPersistentSubtrees(bool)", "switch to Store" );
+      _persistentSubtreeStorage = PersistentSubtreeStorage::Store;
+	  break;
   }
-  else if (
-    _smallestRegularTreeThatIsToBeHeldPersistently>0
-    &&
-    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration == _smallestRegularTreeThatIsToBeHeldPersistently
-  ) {
-    _smallestRegularTreeThatIsToBeHeldPersistently--;
-  }
-  
-  _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = _smallestRegularTreeThatIsToBeHeldPersistently;
     
 
   #ifdef Parallel
@@ -1027,32 +1033,14 @@ void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
 
 
 template <class StateData>
-void peano::grid::State<StateData>::informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees(int treeDepth) {
+void peano::grid::State<StateData>::informAboutFailedRefineOrEraseBecauseOfPersistentSubtreesOrDrainBecauseOfFork() {
   #ifdef PersistentRegularSubtrees
-  if ( 
-    treeDepth==0 
-    &&
-    _smallestRegularTreeThatIsToBeHeldPersistently == _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration
-  ) {
-    _smallestRegularTreeThatIsToBeHeldPersistently = _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration+1;
+  switch (_persistentSubtreeStorage) {
+    case PersistentSubtreeStorage::Store:
+    case PersistentSubtreeStorage::DrainTriggered:
+    case PersistentSubtreeStorage::Drain:
+    	_persistentSubtreeStorage = PersistentSubtreeStorage::Drain;
+    	break;
   }
-  else if (
-    _smallestRegularTreeThatIsToBeHeldPersistently<treeDepth
-    &&
-    _smallestRegularTreeThatIsToBeHeldPersistently>=0
-  ) {
-    _smallestRegularTreeThatIsToBeHeldPersistently = treeDepth+1;
-  }
-  #endif
-}
-
-
-template <class StateData>
-void peano::grid::State<StateData>::informToDrainPersistentSubtreesBecauseOfFork() {
-  #ifdef PersistentRegularSubtrees
-  _smallestRegularTreeThatIsToBeHeldPersistently = -1;
-  // we may not do this because if we do this, then the grid never becomes balanced
-  // if any node wants to load balance
-  // changedCellState();
   #endif
 }

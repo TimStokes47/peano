@@ -40,6 +40,7 @@ class peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch {
     CellStack&                                                        _cellStack;
 
     const bool                                                        _runsInParallelToOtherTasks;
+    const int                _regularSubtreeIndex;
 
     void loadCells(
       peano::utils::LoopDirection               loopDirection,
@@ -49,6 +50,7 @@ class peano::grid::nodes::tasks::LoadCellsOnRegularRefinedPatch {
 
   public:
     LoadCellsOnRegularRefinedPatch(
+      const int                                                         regularSubtreeIndex,
       peano::utils::LoopDirection                                       topLevelLoopDirection,
       const int                                                         treeDepth,
       const bool                                                        isTraversalInverted,

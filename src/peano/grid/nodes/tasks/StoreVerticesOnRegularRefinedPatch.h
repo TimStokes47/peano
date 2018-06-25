@@ -94,6 +94,7 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
      * subtrees are enumerated lexicographically.
      */
     std::bitset<THREE_POWER_D>                                        _forkedSubtree;
+    const int                _regularSubtreeIndex;
 
     /**
      * Store Vertices Of One Cell
@@ -172,6 +173,7 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
      * Create new task
      */
     StoreVerticesOnRegularRefinedPatch(
+      const int                                                         regularSubtreeIndex,
       const bool                                                        isTraversalInverted,
       peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
       VertexStack&                                                      vertexStack,
@@ -230,6 +232,7 @@ class peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch {
      *   PersistentSubtreeIsDrained.
      */
     StoreVerticesOnRegularRefinedPatch(
+      int                                                               regularSubtreeIndex,
       const bool                                                        isTraversalInverted,
       peano::grid::RegularGridContainer<Vertex,Cell>&                   regularGridContainer,
       VertexStack&                                                      vertexStack,

@@ -125,6 +125,9 @@ class peano::grid::UnrolledLevelEnumerator: public peano::grid::VertexEnumerator
     static LocalVertexIntegerIndex getVertexPositionOnCoarserLevel(const LocalVertexIntegerIndex& index );
     static bool isVertexPositionAtCoarseVertexsPosition(const LocalVertexIntegerIndex& index );
 
+    /**
+     * Return depth of adjacent trees which is set at construction.
+     */
     virtual peano::grid::CellFlags getCellFlags() const;
 
     int getCellsPerAxis() const;

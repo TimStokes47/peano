@@ -272,9 +272,9 @@ class peano::grid::RegularGridContainer {
     /**
      * Only for assert mode
      */
-    void validateThatRegularSubtreeIsAvailable( int level ) const;
+    void validateThatRegularSubtreeIsAvailable( int activeRegularSubtree, int level ) const;
 
-    void validateInitialValuesUpToLevel( int level ) const;
+    void validateInitialValuesUpToLevel( int activeRegularSubtree, int level ) const;
 
     /**
      * Noone shall ever copy a grid container.
@@ -287,6 +287,13 @@ class peano::grid::RegularGridContainer {
     RegularGridContainer();
     ~RegularGridContainer();
 
+    /**
+     * There is always one active regular subtree, all the others are not-active.
+     * The latter means cut out of the domain and stored in separate arrays.
+     * That does not mean they are not processed at the very moment. But it
+     * implies that they are processed by other threads at most.
+     */
+    int getActiveRegularSubtree() const;
 
     /**
      * Does some logging statements and resets the usage counters per grid
@@ -304,11 +311,11 @@ class peano::grid::RegularGridContainer {
      * This is not a const operation though it sounds like that. What the
      * operation does is a sequence of steps:
      *
-     * # Check whether such an array can be loaded with the memory already
+     * - Check whether such an array can be loaded with the memory already
      *   allocated before. If yes, return immediately.
-     * # Check whether the container is allowed to allocate additional
+     * - Check whether the container is allowed to allocate additional
      *   levels.
-     * # Then, the operation tries to allocate memory for up to the given
+     * - Then, the operation tries to allocate memory for up to the given
      *   level if not available already. If an out-of-memory exception pops up,
      *   we stop trying.
      *
@@ -319,9 +326,9 @@ class peano::grid::RegularGridContainer {
      *
      * @param requestedHeight>0
      */
-    bool isRegularSubtreeAvailable( int requestedHeight );
+    bool isRegularSubtreeAvailable( int activeRegularSubtree, int requestedHeight );
     
-    void haveReadVertices( const std::vector<int>& readsOfPatchesPerLevel );
+    void haveReadVertices( int activeRegularSubtree, const std::vector<int>& readsOfPatchesPerLevel );
 
     /**
      * Is used by the load cells task to inform the container level by level
@@ -330,12 +337,12 @@ class peano::grid::RegularGridContainer {
      * the level-by-level setter and sets all the level at once in the very
      * end (see haveReadAllPatchsCells()).
      */
-    void haveReadAllChildrenCellsOfOneRefinedNode( int level );
+    void haveReadAllChildrenCellsOfOneRefinedNode( int activeRegularSubtree, int level );
 
-    void haveReadAllCells( int maxLevel );
+    void haveReadAllCells( int activeRegularSubtree, int maxLevel );
 
-    void haveStoredAllVertices( int maxLevel );
-    void haveStoredAllCells( int maxLevel );
+    void haveStoredAllVertices( int activeRegularSubtree, int maxLevel );
+    void haveStoredAllCells( int activeRegularSubtree, int maxLevel );
 
     /**
      * All events called on this level
@@ -344,7 +351,7 @@ class peano::grid::RegularGridContainer {
      * bottom-up through the tree and invoked touchVertexLastTime() on each
      * vertex. It is called only once per level.
      */
-    void haveCalledAllEventsOnThisLevel( int level );
+    void haveCalledAllEventsOnThisLevel( int activeRegularSubtree, int level );
     
     /**
      * Is a level completely loaded, i.e. is all data read
@@ -357,48 +364,50 @@ class peano::grid::RegularGridContainer {
      * @see haveReadPatch()
      * @see haveStoredPatch()
      */
-    bool isLevelInitialised( int level ) const;
+    bool isLevelInitialised( int activeRegularSubtree, int level ) const;
 
     /**
      * Subpart of isLevelIinitialised();
      */
-    bool areCellsOfLevelLoaded( int level ) const;
-    bool areAllEventsOnThisLevelCalled( int level ) const;
+    bool areCellsOfLevelLoaded( int activeRegularSubtree, int level ) const;
+    bool areAllEventsOnThisLevelCalled( int activeRegularSubtree, int level ) const;
 
     /**
      * Attention: Level starts to count with 1.
      */
     void setVertexEnumerator(
+    		int activeRegularSubtree,
       int                             level,
       const UnrolledLevelEnumerator&  enumerator
     );
 
-    UnrolledLevelEnumerator& getVertexEnumerator( int level );
-    const UnrolledLevelEnumerator& getVertexEnumerator( int level ) const;
+    UnrolledLevelEnumerator& getVertexEnumerator( int activeRegularSubtree, int level );
+    const UnrolledLevelEnumerator& getVertexEnumerator( int activeRegularSubtree, int level ) const;
 
-    Cell& getCell( int level, int cellIndex );
-    const Cell& getCell( int level, int cellIndex ) const;
-    void setCell( int level, int cellIndex, const Cell& cell );
-    Cell* getCell( int level );
+    Cell& getCell( int activeRegularSubtree, int level, int cellIndex );
+    const Cell& getCell( int activeRegularSubtree, int level, int cellIndex ) const;
+    void setCell( int activeRegularSubtree, int level, int cellIndex, const Cell& cell );
+    Cell* getCell( int activeRegularSubtree, int level );
 
-    int& getCounter( int level, int vertexIndex );
+    int& getCounter( int activeRegularSubtree, int level, int vertexIndex );
 
-    Vertex& getVertex( int level, int vertexIndex );
-    const Vertex& getVertex( int level, int vertexIndex ) const;
-    void setVertex( int level, int vertexIndex, const Vertex&  vertex );
-    Vertex* getVertex( int level );
+    Vertex& getVertex( int activeRegularSubtree, int level, int vertexIndex );
+    const Vertex& getVertex( int activeRegularSubtree, int level, int vertexIndex ) const;
+    void setVertex( int activeRegularSubtree, int level, int vertexIndex, const Vertex&  vertex );
+    Vertex* getVertex( int activeRegularSubtree, int level );
 
-    void setIsReadFromTemporaryStack( int level, int vertexIndex, bool value );
-    void setIsToBeWrittenToTemporaryStack( int level, int vertexIndex, bool value );
+    void setIsReadFromTemporaryStack( int activeRegularSubtree, int level, int vertexIndex, bool value );
+    void setIsToBeWrittenToTemporaryStack( int activeRegularSubtree, int level, int vertexIndex, bool value );
 
-    bool isReadFromTemporaryStack( int level, int vertexIndex) const;
-    bool isToBeWrittenToTemporaryStack( int level, int vertexIndex) const;
+    bool isReadFromTemporaryStack( int activeRegularSubtree, int level, int vertexIndex) const;
+    bool isToBeWrittenToTemporaryStack( int activeRegularSubtree, int level, int vertexIndex) const;
 
     /**
      * Copy cell and vertices into data structure of regular grid. The vertex
      * enumerator is not copied.
      */
     void copyRootNodeDataIntoRegularPatch(
+      int                                       regularSubtreeIndex,
       const Cell&                               fineGridCell,
       Vertex                                    fineGridVertices[FOUR_POWER_D],
       const SingleLevelEnumerator&              fineGridVerticesEnumerator
@@ -408,17 +417,26 @@ class peano::grid::RegularGridContainer {
      * Counterpart of copyRootNodeDataIntoRegularPatch().
      */
     void copyRootNodeDataFromRegularPatch(
+      int                                       regularSubtreeIndex,
       Cell&                                     fineGridCell,
       Vertex                                    fineGridVertices[FOUR_POWER_D],
       const SingleLevelEnumerator&              fineGridVerticesEnumerator
     ) const;
 
+    /**
+     * @return How many cells do exist on a given level
+     */
     static tarch::la::Vector<DIMENSIONS,int> getNumberOfCells( int level );
+
+    /**
+     * @return How many vertices do exist on a given level
+     */
     static tarch::la::Vector<DIMENSIONS,int> getNumberOfVertices( int level );
 
-    std::string toString() const;
+    std::string toString(int activeRegularSubtree) const;
 
     bool isCellAtPatchBoundaryWithinRegularSubtree(
+      int regularSubtreeIndex,
       const tarch::la::Vector<DIMENSIONS,int>&  cellIndex,
       const int                                 level
     ) const;
@@ -426,20 +444,13 @@ class peano::grid::RegularGridContainer {
     void setMaximumMemoryFootprintForTemporaryRegularGrids(double value);
 
     /**
-     * Tells the container to keep the current subtree for the next
-     * traversal.
+     * Tells the container whether to keep the current subtree for the next
+     * traversal. Is always called if the tree has been persistent before or
+     * is a new persistent one.
      *
-     * We have do not have tto know the depth of the persistent subtree though
-     * this might be a straightforward optimisation later on as it allows us to
-     * save memory as we free stuff.
-     *
-     * Please note that you can recover the real tree depth later on by asking
-     * for the coarsest grid enumerator and then reading its depth flag.
-     *
-     * @return        Index of kept subgrid
+     * Some statistics (which trees are kept) are stored in _usedPerTraversal.
      */
-    int keepCurrentRegularSubgrid();
-    void switchToStoredRegularSubgrid( int index );
+    void keepCurrentRegularSubgrid(bool keepIt, int index);
 
     /**
      * @return Whether any regular subgrid is held persistently

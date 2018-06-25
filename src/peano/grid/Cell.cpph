@@ -153,11 +153,13 @@ void peano::grid::Cell<CellData>::storedCellOfRegularRefinedGrid() {
   _cellData.setNumberOfStoresToOutputStream(_cellData.getNumberOfLoadsFromInputStream());
   _cellData.setNumberOfLoadsFromInputStream(tmp);
 
+  #if !defined(PersistentRegularSubtrees)
   assertion1( _cellData.getNumberOfLoadsFromInputStream()  >= 0, toString() );
   assertion1( _cellData.getNumberOfStoresToOutputStream() >= 0, toString() );
 
   assertion1( _cellData.getNumberOfLoadsFromInputStream()>0  || isLeaf(), toString() );
   assertion1( _cellData.getNumberOfStoresToOutputStream()>0 || isLeaf(), toString() );
+  #endif
 }
 
 
