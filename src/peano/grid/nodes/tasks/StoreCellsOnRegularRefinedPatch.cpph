@@ -77,7 +77,7 @@ void peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch<Vertex,Cell,Cell
     Cell pushCell = _regularGridContainer.getCell(_regularSubtreeIndex,currentLevel,cellIndex);
     pushCell.storedCellOfRegularRefinedGrid();
     #else
-    Cell& pushCell = _regularGridContainer.getCell(currentLevel,cellIndex);
+    Cell& pushCell = _regularGridContainer.getCell(_regularSubtreeIndex,currentLevel,cellIndex);
     #endif
 
     assertion1( !pushCell.rootsPersistentRegularSubtree(), pushCell.toString() );
