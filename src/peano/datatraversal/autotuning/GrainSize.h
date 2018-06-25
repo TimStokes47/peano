@@ -57,6 +57,12 @@ class peano::datatraversal::autotuning::GrainSize {
     GrainSize( const GrainSize& rhs ) = delete;
 
     /**
+     * Creates a dummy, serial grain size. Is required whenever we have to
+     * circumnavigate the oracle.
+     */
+    static GrainSize serialGrainSize(MethodTrace askingMethod);
+
+    /**
      * Whenever we move stuff around, we have to ensure that only the target
      * instance remains responsible for the watch and informs the oracle. We
      * do this by copying the watch pointer and removing the link from the old

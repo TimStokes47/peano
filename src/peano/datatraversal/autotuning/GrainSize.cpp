@@ -3,6 +3,11 @@
 #include "tarch/Assertions.h"
 
 
+peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::GrainSize::serialGrainSize(MethodTrace askingMethod) {
+  return GrainSize(0, false, 1, askingMethod, nullptr);
+}
+
+
 peano::datatraversal::autotuning::GrainSize::GrainSize(int grainSize, bool useTimer, int problemSize, MethodTrace askingMethod, OracleForOnePhase* hostOracle):
   _grainSize(grainSize),
   _useTimer(useTimer),
