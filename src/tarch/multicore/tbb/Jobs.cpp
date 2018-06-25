@@ -58,19 +58,12 @@ void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
 tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute() {
   const int oldNumberOfBackgroundJobs = internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size();
 
+  _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
+
   processJobs(internal::BackgroundJobsJobClassNumber,_maxJobs);
 
   const int newNumberOfBackgroundJobs = internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size();
 
-  _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
-
-  if (
-	(newNumberOfBackgroundJobs!=oldNumberOfBackgroundJobs and newNumberOfBackgroundJobs>0)
-	or
-	(_numberOfRunningBackgroundJobConsumerTasks.load()==0)
-  ) {
-    enqueue();
-  }
   return nullptr;
 }
 
@@ -180,6 +173,14 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
 }
 
 
+/**
+ * If we are handling background jobs and if there are still jobs left once
+ * we've done our share, then we spawn a new background task consumer job.
+ * This is done for cases where the master processes background jobs and there
+ * are plenty of them left. In such a case, the master might be totally blocked
+ * by the background jobs (if processJobs() is called in a while loop) and
+ * should actually use further tasks instead.
+ */
 bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
   logDebug( "processJobs()", "search for jobs of class " << jobClass );
 
@@ -212,9 +213,19 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
     if ( maxNumberOfJobs>0 ) {
       gotOne = internal::getJobQueue(jobClass).try_pop(myTask);
     }
-    else {
+    else {nd
       gotOne = false;
     }
+  }
+
+
+  if(
+    jobClass==internal::BackgroundJobsJobClassNumber
+	and
+    internal::getJobQueue(jobClass).unsafe_size()>0
+    and
+    internal::_numberOfRunningBackgroundJobConsumerTasks.load()==0) {
+    internal::BackgroundJobConsumerTask::enqueue();
   }
 
   return result;
