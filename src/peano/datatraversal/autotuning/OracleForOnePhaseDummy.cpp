@@ -101,6 +101,12 @@ peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::Or
     grainSize           = _grainSizeOfUserDefinedRegions;
     smallestProblemSize = _grainSizeOfUserDefinedRegions;
   }
+  else if (
+    askingMethod==MethodTrace::HoldPersistentRegularSubgrid
+  ) {
+	grainSize           = 1;
+	smallestProblemSize = 1;
+  }
 
 
   if (
