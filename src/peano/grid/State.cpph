@@ -626,10 +626,6 @@ void peano::grid::State<StateData>::mergeWithWorkerState(const peano::grid::Stat
     workerState._stateData.getSubWorkerIsInvolvedInJoinOrFork()
   );
   
-  #ifdef PersistentRegularSubtrees
-  _smallestRegularTreeThatIsToBeHeldPersistently = std::max(_smallestRegularTreeThatIsToBeHeldPersistently,workerState._smallestRegularTreeThatIsToBeHeldPersistently);
-  #endif
-
   if (workerState._stateData.getSubWorkerIsInvolvedInJoinOrFork()) {
     _iterationCounter = 0;
   }
@@ -1020,12 +1016,9 @@ void peano::grid::State<StateData>::holdsPersistentSubtrees( bool value ) {
 
   #ifdef Parallel
   if (
-    _loadRebalancingState!=LoadBalancingState::NoRebalancing
-    || 
     peano::parallel::loadbalancing::Oracle::getInstance().getLastStartCommand()!=peano::parallel::loadbalancing::LoadBalancingFlag::Continue
   ) {
-    _smallestRegularTreeThatIsToBeHeldPersistently                    = -1;
-    _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration = -1;
+    _persistentSubtreeStorage = PersistentSubtreeStorage::Drain;
   }
   #endif
   #endif
