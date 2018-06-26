@@ -65,8 +65,11 @@ class peano::grid::nodes::loops::CallTouchVertexFirstTimeLoopBodyOnRegularRefine
     UnrolledLevelEnumerator  _fineGridEnumerator;
     UnrolledLevelEnumerator  _coarseGridEnumerator;
 
+    const int                _regularSubtreeIndex;
+
   public:
     CallTouchVertexFirstTimeLoopBodyOnRegularRefinedPatch(
+      int                                              regularSubtreeIndex,
       EventHandle&                                     eventHandle,
       peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
       int                                              level

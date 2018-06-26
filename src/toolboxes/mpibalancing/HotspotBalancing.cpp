@@ -106,7 +106,7 @@ double mpibalancing::HotspotBalancing::getMinimumWeightOfWorkers() {
 }
 
 
-void mpibalancing::HotspotBalancing::identifyCriticalPathes( peano::parallel::loadbalancing::LoadBalancingFlag commandFromMaster ) {
+void mpibalancing::HotspotBalancing::identifyCriticalPaths( peano::parallel::loadbalancing::LoadBalancingFlag commandFromMaster ) {
   /**
    * We consider the CritialPathThreshold upper percent of the workers to be
    * critical.
@@ -186,7 +186,7 @@ void mpibalancing::HotspotBalancing::computeMaxForksOnCriticalWorker( peano::par
 void mpibalancing::HotspotBalancing::receivedStartCommand( peano::parallel::loadbalancing::LoadBalancingFlag commandFromMaster ) {
   logTraceInWith1Argument("receivedStartCommand(LoadBalancingFlag)", peano::parallel::loadbalancing::convertLoadBalancingFlagToString(commandFromMaster));
 
-  identifyCriticalPathes( commandFromMaster );
+  identifyCriticalPaths( commandFromMaster );
   computeMaxForksOnCriticalWorker( commandFromMaster );
 
   logTraceOut("receivedStartCommand(LoadBalancingFlag)" );
@@ -269,7 +269,6 @@ void mpibalancing::HotspotBalancing::mergeWithMaster(
   }
   else {
     MPI_Request* sendRequestHandle = new MPI_Request();
-    MPI_Status   status;
     int          flag = 0;
     clock_t      timeOutWarning   = -1;
     clock_t      timeOutShutdown  = -1;
@@ -278,11 +277,11 @@ void mpibalancing::HotspotBalancing::mergeWithMaster(
       &workerWeight, 1, MPI_DOUBLE, workerRank, _loadBalancingTag,
       tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
     );
-    MPI_Test( sendRequestHandle, &flag, &status );
+    MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
     while (!flag) {
       if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
       if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-      MPI_Test( sendRequestHandle, &flag, &status );
+      MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
       if (
         tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
         (clock()>timeOutWarning) &&
@@ -329,7 +328,6 @@ void mpibalancing::HotspotBalancing::setLocalWeightAndNotifyMaster(
   }
   else {
     MPI_Request* sendRequestHandle = new MPI_Request();
-    MPI_Status   status;
     int          flag = 0;
     clock_t      timeOutWarning   = -1;
     clock_t      timeOutShutdown  = -1;
@@ -338,11 +336,11 @@ void mpibalancing::HotspotBalancing::setLocalWeightAndNotifyMaster(
       &ranksWeight, 1, MPI_DOUBLE, tarch::parallel::NodePool::getInstance().getMasterRank(), _loadBalancingTag,
       tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle
     );
-    MPI_Test( sendRequestHandle, &flag, &status );
+    MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
     while (!flag) {
       if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp();
       if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp();
-      MPI_Test( sendRequestHandle, &flag, &status );
+      MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE );
       if (
         tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() &&
         (clock()>timeOutWarning) &&

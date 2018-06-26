@@ -177,7 +177,7 @@ void boxmg::mappings::CreateGrid::mergeWithMaster(
  * If its command from its master is unequal to fork, there's no analysis to
  * be done, i.e. we evaluate the critical path recursively which works as we
  * are working in a tree environment. Otherwise, the two operations map onto
- * the routines identifyCriticalPathes() and
+ * the routines identifyCriticalPaths() and
  * computeMaxForksOnCriticalWorker().
  *
  * If we shall fork, we first identify the biggest and the smallest local
@@ -232,7 +232,7 @@ class mpibalancing::HotspotBalancing: public peano::parallel::loadbalancing::Ora
      *                     has however no direct impact on the load balancing.
      *                     It solely controls the grid refinement pattern.
      */
-    HotspotBalancing( bool joinsAllowed, int coarsestRegularInnerAndOuterGridLevel, int maxRanksThatCanBeUsedAsAdministors = std::numeric_limits<int>::max() );
+    HotspotBalancing( bool joinsAllowed, int coarsestRegularInnerAndOuterGridLevel, int maxRanksThatCanBeUsedAsAdministors = 1 );
 
     virtual ~HotspotBalancing();
 
@@ -301,11 +301,11 @@ class mpibalancing::HotspotBalancing: public peano::parallel::loadbalancing::Ora
      * routine. We do the path analysis if and only if the master has told us
      * to fork further.
      */
-    void identifyCriticalPathes( peano::parallel::loadbalancing::LoadBalancingFlag commandFromMaster );
+    void identifyCriticalPaths( peano::parallel::loadbalancing::LoadBalancingFlag commandFromMaster );
 
     /**
      * See class documentation. We rely on the fact that _criticalWorker is
-     * properly initialised, i.e. identifyCriticalPathes() has been called
+     * properly initialised, i.e. identifyCriticalPaths() has been called
      * before.
      */
     void computeMaxForksOnCriticalWorker( peano::parallel::loadbalancing::LoadBalancingFlag commandFromMaster );

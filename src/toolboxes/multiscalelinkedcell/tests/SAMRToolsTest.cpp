@@ -1,5 +1,5 @@
-#include "EulerFlow3d/multiscalelinkedcell/tests/SAMRToolsTest.h"
-#include "EulerFlow3d/multiscalelinkedcell/SAMRTools.h"
+#include "multiscalelinkedcell/tests/SAMRToolsTest.h"
+#include "multiscalelinkedcell/SAMRTools.h"
 
 #include "tarch/la/Vector.h"
 #include "peano/utils/Globals.h"

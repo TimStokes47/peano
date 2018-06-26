@@ -151,6 +151,8 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      */
     std::bitset<THREE_POWER_D>                                        _forkedSubtree;
 
+    const int                _regularSubtreeIndex;
+
     /**
      * Load Vertices and Get Where-to-load-from Information from On-the-fly Generated Cells
      *
@@ -327,6 +329,7 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      * father of the @f$ 3^d @f$ cells to load.
      */
     LoadVerticesOnRegularRefinedPatch(
+      const int                                                         regularSubtreeIndex,
       const bool                                                        isTraversalInverted,
       peano::grid::RegularGridContainer<Vertex,Cell>&                   regularGridContainer,
       VertexStack&                                                      vertexStack,
@@ -350,6 +353,7 @@ class peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch {
      * @param maxLevelToFork   Required by peano::grid::mayForkLoadOrStoreVertexTaskOnRegularSubtree().
      */
     LoadVerticesOnRegularRefinedPatch(
+      const int                                                         regularSubtreeIndex,
       const bool                                                        isTraversalInverted,
       peano::grid::RegularGridContainer<Vertex,Cell>&                   regularGridContainer,
       VertexStack&                                                      vertexStack,

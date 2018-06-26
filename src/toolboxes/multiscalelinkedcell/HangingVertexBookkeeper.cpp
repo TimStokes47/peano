@@ -1,7 +1,7 @@
-#include "EulerFlow3d/multiscalelinkedcell/HangingVertexBookkeeper.h"
+#include "multiscalelinkedcell/HangingVertexBookkeeper.h"
 
 #include "peano/utils/Loop.h"
-
+#include "tarch/parallel/Node.h"
 
 const int multiscalelinkedcell::HangingVertexBookkeeper::InvalidAdjacencyIndex         = -1;
 const int multiscalelinkedcell::HangingVertexBookkeeper::RemoteAdjacencyIndex          = -2;
@@ -10,6 +10,105 @@ const int multiscalelinkedcell::HangingVertexBookkeeper::DomainBoundaryAdjacency
 
 tarch::logging::Log  multiscalelinkedcell::HangingVertexBookkeeper::_log( "multiscalelinkedcell::HangingVertexBookkeeper" );
 
+
+std::string multiscalelinkedcell::indexToString( int index ) {
+  std::ostringstream msg;
+  switch (index) {
+    case multiscalelinkedcell::HangingVertexBookkeeper::InvalidAdjacencyIndex:
+      msg << "invalid";
+      break;
+    case multiscalelinkedcell::HangingVertexBookkeeper::RemoteAdjacencyIndex:
+      msg << "remote";
+      break;
+    case multiscalelinkedcell::HangingVertexBookkeeper::DomainBoundaryAdjacencyIndex:
+      msg << "boundary";
+      break;
+    default:
+      msg << index;
+      break;
+  }
+  return msg.str();
+}
+
+
+std::string multiscalelinkedcell::indicesToString( const tarch::la::Vector<THREE_POWER_D,int>& indices ) {
+  std::ostringstream msg;
+
+  msg << "(";
+  for (int i=0; i<THREE_POWER_D; i++) {
+    if (i!=0) msg << ",";
+    switch (indices(i)) {
+      case multiscalelinkedcell::HangingVertexBookkeeper::InvalidAdjacencyIndex:
+        msg << "invalid";
+        break;
+      case multiscalelinkedcell::HangingVertexBookkeeper::RemoteAdjacencyIndex:
+        msg << "remote";
+        break;
+      case multiscalelinkedcell::HangingVertexBookkeeper::DomainBoundaryAdjacencyIndex:
+        msg << "boundary";
+        break;
+      default:
+        msg << indices(i);
+        break;
+    }
+  }
+  msg << ")";
+
+  return msg.str();
+}
+
+
+std::string multiscalelinkedcell::indicesToString( const tarch::la::Vector<TWO_POWER_D,int>& indices ) {
+  std::ostringstream msg;
+
+  msg << "(";
+  for (int i=0; i<TWO_POWER_D; i++) {
+    if (i!=0) msg << ",";
+    switch (indices(i)) {
+      case multiscalelinkedcell::HangingVertexBookkeeper::InvalidAdjacencyIndex:
+        msg << "invalid";
+        break;
+      case multiscalelinkedcell::HangingVertexBookkeeper::RemoteAdjacencyIndex:
+        msg << "remote";
+        break;
+      case multiscalelinkedcell::HangingVertexBookkeeper::DomainBoundaryAdjacencyIndex:
+        msg << "boundary";
+        break;
+      default:
+        msg << indices(i);
+        break;
+    }
+  }
+  msg << ")";
+
+  return msg.str();
+}
+
+bool multiscalelinkedcell::adjacencyInformationIsConsistent(
+    const tarch::la::Vector<TWO_POWER_D_TIMES_TWO_POWER_D,int>&  indices
+) {
+  tarch::la::Vector<DIMENSIONS,int> centre(1); // Initialize center(1) as (1,1,...,1).
+  dfor2(v1) // Loop over vertices.
+    dfor2(v2) // Loop over vertices.
+      if (v1Scalar < v2Scalar) { // Allow only single check per pair.
+        dfor2(a1) // Loop over indices vertex v1.
+          dfor2(a2) // Loop over indices of vertex v2.
+            if (
+                tarch::la::equals(v1+a1,v2+a2) &&
+                tarch::la::countEqualEntries(a1+v1,centre) >= DIMENSIONS-1
+            ) { // Detect overlap of adjacency data. Only include cell (i.e., centre) and face neighbours of cell.
+              if( indices( v1Scalar * TWO_POWER_D + a1Scalar )!=indices( v2Scalar * TWO_POWER_D + a2Scalar ) ) {
+                return false;
+              }
+            }
+          enddforx // a2
+        enddforx // a1
+      }
+    enddforx // v2
+  enddforx // v1
+
+  return true;
+}
 
 tarch::la::Vector<THREE_POWER_D,int> multiscalelinkedcell::getIndicesAroundCell(
   const tarch::la::Vector<TWO_POWER_D_TIMES_TWO_POWER_D,int>&  indices
@@ -20,6 +119,8 @@ tarch::la::Vector<THREE_POWER_D,int> multiscalelinkedcell::getIndicesAroundCell(
 
   tarch::la::Vector<THREE_POWER_D,int> result;
 
+  assertion1( adjacencyInformationIsConsistent(indices), indices );
+
   #ifdef Dim2
   assertionEquals1(indices( 0*TWO_POWER_D + 1 ), indices( 1*TWO_POWER_D + 0 ), indices);
   assertionEquals1(indices( 0*TWO_POWER_D + 3 ), indices( 3*TWO_POWER_D + 0 ), indices);
@@ -29,7 +130,6 @@ tarch::la::Vector<THREE_POWER_D,int> multiscalelinkedcell::getIndicesAroundCell(
   assertionEquals1(indices( 0*TWO_POWER_D + 3 ), indices( 1*TWO_POWER_D + 2 ), indices);
   assertionEquals1(indices( 1*TWO_POWER_D + 2 ), indices( 3*TWO_POWER_D + 0 ), indices);
   assertionEquals1(indices( 3*TWO_POWER_D + 0 ), indices( 2*TWO_POWER_D + 1 ), indices);
-
   result(0) = indices( 0*TWO_POWER_D + 0 );
   result(1) = indices( 0*TWO_POWER_D + 1 );
   result(2) = indices( 1*TWO_POWER_D + 1 );
@@ -82,19 +182,18 @@ multiscalelinkedcell::HangingVertexBookkeeper::HangingVertexBookkeeper():
 }
 
 
-
 multiscalelinkedcell::HangingVertexBookkeeper&  multiscalelinkedcell::HangingVertexBookkeeper::getInstance() {
   static multiscalelinkedcell::HangingVertexBookkeeper instance;
   return instance;
 }
 
 
-tarch::la::Vector<TWO_POWER_D,int> multiscalelinkedcell::HangingVertexBookkeeper::createVertexLinkMapForNewVertex() const {
+tarch::la::Vector<TWO_POWER_D,int> multiscalelinkedcell::HangingVertexBookkeeper::createVertexLinkMapForNewVertex() {
   return tarch::la::Vector<TWO_POWER_D,int>(InvalidAdjacencyIndex);
 }
 
 
-tarch::la::Vector<TWO_POWER_D,int> multiscalelinkedcell::HangingVertexBookkeeper::createVertexLinkMapForBoundaryVertex() const {
+tarch::la::Vector<TWO_POWER_D,int> multiscalelinkedcell::HangingVertexBookkeeper::createVertexLinkMapForBoundaryVertex() {
   return tarch::la::Vector<TWO_POWER_D,int>(DomainBoundaryAdjacencyIndex);
 }
 
@@ -155,7 +254,7 @@ tarch::la::Vector<TWO_POWER_D,int>&  multiscalelinkedcell::HangingVertexBookkeep
   int                                          level
 ) {
   const tarch::la::Vector<DIMENSIONS+1,double > key = getKey(x,level);
-  assertion(_vertexMap.count(key)==1);
+  assertion3(_vertexMap.count(key)==1 || level<=1,x,level,key);
   _vertexMap[key].usedInLastTraversal = true;
   return _vertexMap[key].indicesOfAdjacentCells;
 }
@@ -224,11 +323,11 @@ tarch::la::Vector<TWO_POWER_D,int> multiscalelinkedcell::HangingVertexBookkeeper
   const tarch::la::Vector<DIMENSIONS,double>&                  x,
   int                                                          level,
   const tarch::la::Vector<DIMENSIONS,int>&                     fineGridPositionOfVertex,
-  const tarch::la::Vector<TWO_POWER_D_TIMES_TWO_POWER_D,int>&  adjacencyEntries
+  const tarch::la::Vector<TWO_POWER_D_TIMES_TWO_POWER_D,int>&  coarseGridAdjacencyEntries
 ) {
   const tarch::la::Vector<DIMENSIONS+1, double> key = getKey(x,level);
 
-  logTraceInWith6Arguments( "createHangingVertex(...)",x,level,fineGridPositionOfVertex,adjacencyEntries,key,_vertexMap.count(key));
+  logTraceInWith6Arguments( "createHangingVertex(...)",x,level,fineGridPositionOfVertex,coarseGridAdjacencyEntries,key,_vertexMap.count(key));
 
   if (_vertexMap.count(key)==0) {
     HangingVertexIdentifier   newHangingVertexIdentifier;
@@ -266,7 +365,7 @@ tarch::la::Vector<TWO_POWER_D,int> multiscalelinkedcell::HangingVertexBookkeeper
       ||
       (_vertexMap[key].indicesOfAdjacentCells(kScalar)==DomainBoundaryAdjacencyIndex)
      ) {
-      _vertexMap[key].indicesOfAdjacentCells(kScalar) = adjacencyEntries(
+      _vertexMap[key].indicesOfAdjacentCells(kScalar) = coarseGridAdjacencyEntries(
         peano::utils::dLinearised(fromCoarseGridVertex,2) * TWO_POWER_D +
         peano::utils::dLinearised(coarseGridVertexAdjacentCellDescriptionIndex,2)
       );
@@ -276,4 +375,28 @@ tarch::la::Vector<TWO_POWER_D,int> multiscalelinkedcell::HangingVertexBookkeeper
   logTraceOutWith2Arguments( "createHangingVertex(...)",_vertexMap[key].indicesOfAdjacentCells,_vertexMap[key].usedInLastTraversal);
 
   return _vertexMap[key].indicesOfAdjacentCells;
+}
+
+
+tarch::la::Vector<TWO_POWER_D,int> multiscalelinkedcell::HangingVertexBookkeeper::updateCellIndicesInMergeWithNeighbour(
+  const tarch::la::Vector<TWO_POWER_D,int>&  adjacentRanks,
+  const tarch::la::Vector<TWO_POWER_D,int>&  oldAdjacencyEntries
+) {
+  tarch::la::Vector<TWO_POWER_D,int> result;
+  for (int i=0; i<TWO_POWER_D; i++) {
+    if (
+        adjacentRanks(i)==tarch::parallel::Node::getInstance().getGlobalMasterRank()
+    ) {
+      result(i) = DomainBoundaryAdjacencyIndex;
+    }
+    else if (
+        adjacentRanks(i)!=tarch::parallel::Node::getInstance().getRank()
+    ) {
+      result(i) = RemoteAdjacencyIndex;
+    }
+    else {
+      result(i) = oldAdjacencyEntries(i);
+    }
+  }
+  return result;
 }

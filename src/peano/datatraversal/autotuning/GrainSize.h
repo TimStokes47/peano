@@ -35,7 +35,7 @@ class peano::datatraversal::autotuning::GrainSize {
     const int              _problemSize;
     const MethodTrace      _askingMethod;
     OracleForOnePhase*     _hostOracle;
-    tarch::timing::Watch*  _watch;
+    tarch::timing::Watch   _watch;
   public:
     /**
      * Construct the answer object
@@ -55,6 +55,12 @@ class peano::datatraversal::autotuning::GrainSize {
      */
     GrainSize( int grainSize, bool useTimer, int problemSize, MethodTrace askingMethod, OracleForOnePhase* hostOracle );
     GrainSize( const GrainSize& rhs ) = delete;
+
+    /**
+     * Creates a dummy, serial grain size. Is required whenever we have to
+     * circumnavigate the oracle.
+     */
+    static GrainSize serialGrainSize(MethodTrace askingMethod);
 
     /**
      * Whenever we move stuff around, we have to ensure that only the target

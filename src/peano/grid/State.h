@@ -191,8 +191,11 @@ class peano::grid::State {
     static BatchState            _batchState;
 
     #ifdef PersistentRegularSubtrees
-    int                          _smallestRegularTreeThatIsToBeHeldPersistently;
-    int                          _smallestRegularTreeThatIsToBeHeldPersistentlyInPreviousIteration;
+    enum class PersistentSubtreeStorage {
+      Store, DrainTriggered, Drain
+    };
+
+    static PersistentSubtreeStorage     _persistentSubtreeStorage;
     #endif
   public:
      ~State();
@@ -779,9 +782,7 @@ class peano::grid::State {
      *
      * @param treeDepth Pass 0 if tree depth is not known
      */
-    void informAboutFailedRefineOrEraseBecauseOfPersistentSubtrees(int treeDepth);
-
-    void informToDrainPersistentSubtreesBecauseOfFork();
+    void informAboutFailedRefineOrEraseBecauseOfPersistentSubtreesOrDrainBecauseOfFork();
 
     /**
      * Should be invoked once per traversal just before the latter is kicked

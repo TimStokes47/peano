@@ -86,7 +86,7 @@ class tarch::multicore::Core {
      * @see UseDefaultStackSize
      * @see UseDefaultNumberOfThreads
      */
-    void configure( int numberOfThreads, int stackSize );
+    void configure( int numberOfThreads, int stackSize = UseDefaultStackSize );
 
     /**
      * Shutdown parallel environment.

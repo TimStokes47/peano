@@ -83,6 +83,11 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
       if (!p->patches.empty()) {
         std::string filename =  PeanoConverter::combineAndWriteToFile( p->patches, outFile );
 
+        // Strip output directory
+        std::string toRemove = outputDirectory + "/";
+        int pos = filename.find(toRemove);
+        filename.erase(pos, toRemove.length());
+
         #pragma omp critical
         {
         pvdFile << "<DataSet timestep=\"" << timeStepCounter << "\" group=\"\" part=\"" << i << "\" "
@@ -197,8 +202,11 @@ int main(int argc, char* argv[]) {
  //     std::cerr << "or:\n";
       std::cerr << std::endl << std::endl;
       std::cerr << "Only convert will yield actual VTK files. All other operations create new " << std::endl
-      		  << "internal data representations that then can be converted. Please ensure that" << std::endl
-                << "the OutputFolder exists prior to program invocation." << std::endl;
+      		<< "internal data representations that then can be converted. " << std::endl << std::endl
+                << "Please ensure that the OutputFolder exists prior to program invocation." << std::endl << std::endl
+                << "convert-file only should be used for individual snapshot files, but not for files referring to/including other files" << std::endl << std::endl
+                << "Please invoke the tool from the directory the actual input files are stored in, i.e. do not refer to files stored relative" << std::endl
+                << "to the current directory." << std::endl << std::endl;
       return -1;
     }
     else return 0;

@@ -109,6 +109,16 @@ the directory.
   degradation---notably if you run your code with shared memory parallelisation.
 \end{itemize}
 
+\section{TBB troubleshooting}
+
+\begin{itemize}
+  \item \textbf{ I get tons of warning alike ``warning \#603: ``typeid'' is reserved for future use as a keyword'' }.
+  Peano's pdt adds a compile flag \texttt{-fno-rtti} to the makefile as the core framework does 
+  not need type information at runtime and codes thus become smaller and faster. TBB however 
+  seems to use runtime information, so you have to remove this flag from your makefile if you 
+  want to get rid of all the warning. 
+\end{itemize}
+
 \section{MPI troubleshooting}
 
 \begin{itemize}

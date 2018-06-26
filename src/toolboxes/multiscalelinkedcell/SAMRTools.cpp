@@ -1,4 +1,4 @@
-#include "EulerFlow3d/multiscalelinkedcell/SAMRTools.h"
+#include "multiscalelinkedcell/SAMRTools.h"
 
 
 int multiscalelinkedcell::SAMRTools::getNumberOfCellsPerCellDescription(

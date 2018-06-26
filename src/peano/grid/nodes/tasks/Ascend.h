@@ -55,6 +55,8 @@ class peano::grid::nodes::tasks::Ascend {
     RegularGridContainer&  _gridContainer;
     bool                   _treeRemainsStatic;
 
+    const int                _regularSubtreeIndex;
+
     /**
      * !!! Optimisation
      *
@@ -71,6 +73,7 @@ class peano::grid::nodes::tasks::Ascend {
     bool mayRunEventsOnMultipleLevelsInParallel(int levelOfTouchLastTime) const;
   public:
     Ascend(
+      const int              regularSubtreeIndex,
       const int              treeDepth,
       State&                 state,
       EventHandle&           eventHandle,

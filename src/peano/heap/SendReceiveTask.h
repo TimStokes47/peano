@@ -89,22 +89,35 @@ class peano::heap::SendReceiveTask {
     /**
      * Prelude to sendData().
      *
-     * Please note that you have to call delete[] on _data afterwards through
-     * operation freeMemory().
+     * Please note that you have the responsibility to free data yourself.
+     * Typically, data is from a heap map and will be reused later on, so
+     * there's nothing to care about. However, the task object has to
+     * call delete[] on its internal copy held in _data. This is done through
+     * operation freeMemory(), i.e. it is absolutely essential that the user
+     * invokes freeMemory(). freeMemory() actually calls delete if and only
+     * if the internal flag _freeDataPointer is set. So we do it here.
      *
      * We assume that the meta data already encodes the correct size.
      */
     void wrapData(const Data* const data);
 
     /**
-     * Counterpart of wrapData(). The task sends away the data directly from the
-     * specified buffer. Please call freeMemory() nevertheless.
+     * Counterpart of wrapData(). The task will send away the data directly from the
+     * specified buffer when you later call triggerSend(). Please call
+     * freeMemory() nevertheless. The task memorised internally through
+     * _freeDataPointer whether to call delete or not, i.e. by calling
+     * freeMemory(), you are always on the safe side.
      *
      * We assume that the meta data already encodes the correct size.
      */
     void sendDataDirectlyFromBuffer(const Data* const data);
 
     /**
+     * Trigger send issues the actual send. Before this, you either have to
+     * configure the send through sendDataDirectlyFromBuffer() or through
+     * wrapData().
+     *
+     *
      * @see triggerReceive() for implementation remarks.
      */
     void triggerSend(int tag);
@@ -114,6 +127,14 @@ class peano::heap::SendReceiveTask {
      * data first and then call trigger. Trigger uses MPI and MPI uses memory
      * references. If you move the tasks around later on, MPI references invalid
      * memory addresses and data consistency is not given anymore.
+     *
+     * triggerReceive() internally issues the MPI send. For this, it needs a
+     * well-suited receive buffer. So the first thing the routine does is that
+     * it actually allocs a reasonable buffer. This buffer is to be deleted
+     * later on again through freeMemory(), i.e. it is absolutely essential
+     * that the user calls freeMemory(). However, freeMemory() frees data if
+     * and only if the internal flag _freeDataPointer is set. So the trigger
+     * has to set _freeDataPointer.
      *
      * @see   BoundaryDataExchanger::receiveDanglingMessages()
      */
@@ -167,100 +188,39 @@ class peano::heap::SendReceiveTask {
 
 
 
+/**
+ * @see Generic (template) class. This is a specialisation with the same semantics.
+ */
 template<>
 class peano::heap::SendReceiveTask<double> {
   public:
-    /**
-     * We always use the plain meta information as record, i.e. we do not pack
-     * anything here as the meta information usually is one integer only
-     * anyway.
-     */
     typedef peano::heap::records::MetaInformation          MetaInformation;
   private:
-	  static tarch::logging::Log _log;
+    static tarch::logging::Log _log;
 
-	  #ifdef Parallel
-	  MPI_Request     _request;
-	  #endif
+    #ifdef Parallel
+    MPI_Request     _request;
+    #endif
 
-	  MetaInformation _metaInformation;
+    MetaInformation _metaInformation;
 
-	  /**
-	   * Without semantics for send tasks but important for receive tasks as we
-	   * have to store from which rank the data arrived from.
-	   */
-	  int             _rank;
+    int             _rank;
 
-	  /**
-	   * Pointer to the actual data. If meta data marks a message without
-	   * content, this pointer is 0.
-	   */
-	  double*         _data;
+    double*         _data;
 
-	  bool            _freeDataPointer;
+    bool            _freeDataPointer;
 
     bool            _dataExchangeHasCompleted;
   public:
     SendReceiveTask();
 
     bool hasDataExchangeFinished();
-
-	  /**
-	   * Prelude to sendData().
-	   *
-	   * Please note that you have to call delete[] on _data afterwards through
-	   * operation freeMemoryOfSendTask().
-	   *
-	   * We assume that the meta data already encodes the correct size.
-	   */
-	  void wrapData(const double* const data);
-
-	  /**
-	   * Counterpart of wrapData(). The task sends away the data directly from the
-	   * specified buffer. Please call freeMemory() nevertheless.
-	   *
-	   * We assume that the meta data already encodes the correct size.
-	   */
-	  void sendDataDirectlyFromBuffer(const double* const  data);
-
-	  /**
-	   * This is a sole trigger of a send, i.e. an Isend. There's not a
-	   * receive/test/dangling messages thing in there.
-	   *
-	   * @see triggerReceive() for implementation remarks.
-	   */
-	  void triggerSend(int tag);
-
-	  /**
-	   * If you use the task in combination with containers, please push or pop
-	   * data first and then call trigger. Trigger uses MPI and MPI uses memory
-	   * references. If you move the tasks around later on, MPI references invalid
-	   * memory addresses and data consistency is not given anymore.
-	   */
-	  void triggerReceive(int tag);
-
-	  void freeMemory();
-
-	  /**
-	   * Set a task invalid explicitly. Messages marked that way will pass the
-	   * validation though their data is not in agreement with checks: it is
-	   * explicilty known that the message is invalid and can be ignored. I use
-	   * this for null messages, i.e. messages without content that are often
-	   * squeezed (together with their meta data) by sophisticated communication
-	   * schemes.
-	   */
-	  void setInvalid();
-
-    /**
-     * A task fits if it is
-     *
-     * - either invalid (see setInvalid())
-     * - or position and level coincide.
-     *
-     * Fits should only be called in assert mode. However, some compiler seem to
-     * translate it also if the function is not used at all. For them, I provide
-     * a non-asserts version returning true all the time.
-     */
+    void wrapData(const double* const data);
+    void sendDataDirectlyFromBuffer(const double* const  data);
+    void triggerSend(int tag);
+    void triggerReceive(int tag);
+    void freeMemory();
+    void setInvalid();
     bool fits(
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level
@@ -280,98 +240,40 @@ class peano::heap::SendReceiveTask<double> {
 
 
 
-
+/**
+ * @see Generic (template) class. This is a specialisation with the same semantics.
+ */
 template<>
 class peano::heap::SendReceiveTask<char> {
   public:
-    /**
-     * We always use the plain meta information as record, i.e. we do not pack
-     * anything here as the meta information usually is one integer only
-     * anyway.
-     */
     typedef peano::heap::records::MetaInformation          MetaInformation;
 
   private:
     static tarch::logging::Log _log;
 
 
-	  #ifdef Parallel
-	  MPI_Request     _request;
-	  #endif
+    #ifdef Parallel
+    MPI_Request     _request;
+    #endif
 
-	  MetaInformation _metaInformation;
+    MetaInformation _metaInformation;
 
-	  /**
-	   * Without semantics for send tasks but important for receive tasks as we
-	   * have to store from which rank the data arrived from.
-	   */
-	  int             _rank;
+    int             _rank;
 
-	  /**
-	   * Pointer to the actual data. If meta data marks a message without
-	   * content, this pointer is 0.
-	   */
-	  char*           _data;
+    char*           _data;
 
-	  bool            _freeDataPointer;
+    bool            _freeDataPointer;
 
     bool            _dataExchangeHasCompleted;
   public:
     SendReceiveTask();
 
-	  /**
-	   * Prelude to sendData().
-	   *
-	   * Please note that you have to call delete[] on _data afterwards through
-	   * operation freeMemoryOfSendTask().
-	   *
-	   * We assume that the meta data already encodes the correct size.
-	   */
-	  void wrapData(const char* const data);
-
-	  /**
-	   * Counterpart of wrapData(). The task sends away the data directly from the
-	   * specified buffer. Please call freeMemory() nevertheless.
-	   *
-	   * We assume that the meta data already encodes the correct size.
-	   */
-	  void sendDataDirectlyFromBuffer(const char* const  data);
-
-	  /**
-	   * @see triggerReceive() for implementation remarks.
-	   */
-	  void triggerSend(int tag);
-
-	  /**
-	   * If you use the task in combination with containers, please push or pop
-	   * data first and then call trigger. Trigger uses MPI and MPI uses memory
-	   * references. If you move the tasks around later on, MPI references invalid
-	   * memory addresses and data consistency is not given anymore.
-	   */
-	  void triggerReceive(int tag);
-
-	  void freeMemory();
-
-	  /**
-	   * Set a task invalid explicitly. Messages marked that way will pass the
-	   * validation though their data is not in agreement with checks: it is
-	   * explicilty known that the message is invalid and can be ignored. I use
-	   * this for null messages, i.e. messages without content that are often
-	   * squeezed (together with their meta data) by sophisticated communication
-	   * schemes.
-	   */
-	  void setInvalid();
-
-    /**
-     * A task fits if it is
-     *
-     * - either invalid (see setInvalid())
-     * - or position and level coincide.
-     *
-     * Fits should only be called in assert mode. However, some compiler seem to
-     * translate it also if the function is not used at all. For them, I provide
-     * a non-asserts version returning true all the time.
-     */
+    void wrapData(const char* const data);
+    void sendDataDirectlyFromBuffer(const char* const  data);
+    void triggerSend(int tag);
+    void triggerReceive(int tag);
+    void freeMemory();
+    void setInvalid();
     bool fits(
       const tarch::la::Vector<DIMENSIONS, double>&  position,
       int                                           level

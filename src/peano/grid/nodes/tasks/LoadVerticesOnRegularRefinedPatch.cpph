@@ -19,6 +19,7 @@ tarch::multicore::BooleanSemaphore  peano::grid::nodes::tasks::LoadVerticesOnReg
 
 template <class Vertex, class Cell, class VertexStack>
 peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::LoadVerticesOnRegularRefinedPatch(
+  const int                                        regularSubtreeIndex,
   const bool                                       isTraversalInverted,
   peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
   VertexStack&                                     vertexStack,
@@ -33,14 +34,16 @@ peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexS
   _stackView(),
   _coarsestLevelOfThisTask(0),
   _coarsestCellsOffset(0),
-  _trackNumberOfReadsPerLevel(_regularGridContainer.getVertexEnumerator(0).getCellFlags()+1,0),
-  _forkedSubtree(0) {
+  _trackNumberOfReadsPerLevel(_regularGridContainer.getVertexEnumerator(regularSubtreeIndex, 0).getCellFlags()+1,0),
+  _forkedSubtree(0),
+  _regularSubtreeIndex( regularSubtreeIndex) {
 }
 
 
 
 template <class Vertex, class Cell, class VertexStack>
 peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::LoadVerticesOnRegularRefinedPatch(
+  int                                              regularSubtreeIndex,
   const bool                                       isTraversalInverted,
   peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer,
   VertexStack&                                     vertexStack,
@@ -59,8 +62,9 @@ peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexS
   _stackView(stackView),
   _coarsestLevelOfThisTask(currentLevel),
   _coarsestCellsOffset(offsetWithinPatch),
-  _trackNumberOfReadsPerLevel(_regularGridContainer.getVertexEnumerator(0).getCellFlags()+1,0),
-  _forkedSubtree(forkedSubtree) {
+  _trackNumberOfReadsPerLevel(_regularGridContainer.getVertexEnumerator(regularSubtreeIndex, 0).getCellFlags()+1,0),
+  _forkedSubtree(forkedSubtree),
+  _regularSubtreeIndex(regularSubtreeIndex) {
   logTraceInWith2Arguments( "LoadVerticesOnRegularRefinedPatch()", _coarsestLevelOfThisTask, _coarsestCellsOffset );
 
   assertion( !_stackView.isEmpty() );
@@ -94,7 +98,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 ) {
   logTraceInWith3Arguments( "loadVerticesOfOneCellWithinRegularSubtree(...)", currentCell, cellsPositionWithinUnrolledTreeLevel, currentLevel );
 
-  peano::grid::UnrolledLevelEnumerator  cellsVertexEnumerator( _regularGridContainer.getVertexEnumerator(currentLevel) );
+  peano::grid::UnrolledLevelEnumerator  cellsVertexEnumerator( _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, currentLevel) );
   cellsVertexEnumerator.setOffset(cellsPositionWithinUnrolledTreeLevel);
 
   #if defined(CacheActionSets)
@@ -132,27 +136,28 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     
     if ( CaseLoadPersistentVertex ) {
       if (!_stackView.isEmpty() && popVertex) {
-        _regularGridContainer.setVertex(currentLevel,positionInArray,_stackView.pop());
+        _regularGridContainer.setVertex(_regularSubtreeIndex, currentLevel,positionInArray,_stackView.pop());
       }
       else if (popVertex){
-        _regularGridContainer.setVertex(currentLevel,positionInArray,_vertexStack.pop(peano::stacks::Constants::InOutStack));
+        _regularGridContainer.setVertex(_regularSubtreeIndex, currentLevel,positionInArray,_vertexStack.pop(peano::stacks::Constants::InOutStack));
       }
-      _regularGridContainer.getVertex(currentLevel,positionInArray).clearCounterOfAdjacentRefinedCells();
-      _regularGridContainer.getVertex(currentLevel,positionInArray).saveAndClearAdjacentCellsInformation();
-      _regularGridContainer.setIsReadFromTemporaryStack(currentLevel,positionInArray,false);
-      _regularGridContainer.setIsToBeWrittenToTemporaryStack(currentLevel,positionInArray,false);
+      _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).clearCounterOfAdjacentRefinedCells();
+      _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).saveAndClearAdjacentCellsInformation();
+      _regularGridContainer.setIsReadFromTemporaryStack(_regularSubtreeIndex, currentLevel,positionInArray,false);
+      _regularGridContainer.setIsToBeWrittenToTemporaryStack(_regularSubtreeIndex, currentLevel,positionInArray,false);
       _trackNumberOfReadsPerLevel[currentLevel]++;
 
-      assertionNumericalEquals7(
-        _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
-        _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
-        _regularGridContainer.getVertexEnumerator(currentLevel).toString(),
-        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+      assertionNumericalEquals8(
+        _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getX(),
+        _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, currentLevel).getVertexPosition(positionInArray),
+        _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, currentLevel).toString(),
+        _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
         currentLevel,
         positionInArray,
         _coarsestCellsOffset,
         _coarsestLevelOfThisTask,
-        _maxLevelToFork
+        _maxLevelToFork,
+		_regularSubtreeIndex
       );
     }
 
@@ -197,23 +202,23 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       );
       #endif
 
-      if (_regularGridContainer.getVertexEnumerator(0).getCellFlags()-currentLevel==0) {
+      if (_regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags()-currentLevel==0) {
         #ifdef Parallel
         assertion5(
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing) &&
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
-          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
-          _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing) &&
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
+          _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
+          _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(),
           currentLevel,
           currentLevel,positionInArray
         );
         #else
         assertion5(
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
-          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
-          _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
+          _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
+          _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(),
           currentLevel,
           currentLevel,positionInArray
         );
@@ -221,9 +226,9 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       }
       else {
         assertionEquals1(
-          _regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl(),
+          _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl(),
           Vertex::Records::Refined,
-          _regularGridContainer.getVertex(currentLevel,positionInArray).toString()
+          _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString()
         );
       }
     }
@@ -241,7 +246,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 ) {
   logTraceInWith3Arguments( "loadVerticesOfOneCellAtBoundaryofSubtree(...)", currentCell, cellsPositionWithinUnrolledTreeLevel, currentLevel );
 
-  peano::grid::UnrolledLevelEnumerator  cellsVertexEnumerator( _regularGridContainer.getVertexEnumerator(currentLevel) );
+  peano::grid::UnrolledLevelEnumerator  cellsVertexEnumerator( _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, currentLevel) );
   cellsVertexEnumerator.setOffset(cellsPositionWithinUnrolledTreeLevel);
 
   #if defined(CacheActionSets)
@@ -284,7 +289,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         && _coarsestLevelOfThisTask==0
         && !isSubmanifoldVertexAdjacentToDeployedSubtree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)
       #endif
-        && _regularGridContainer.getCounter(currentLevel,positionInArray)==CounterPersistentNode;
+        && _regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray)==CounterPersistentNode;
 
     const bool popVertex = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                          || cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex);
@@ -293,24 +298,24 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     if ( CaseLoadPersistentVertex) {
       if (popVertex) {
         _regularGridContainer.setVertex(
-          currentLevel, positionInArray,
+          _regularSubtreeIndex, currentLevel, positionInArray,
           _stackView.isEmpty() ? _vertexStack.pop(peano::stacks::Constants::InOutStack) : _stackView.pop()
         );
       }
       
-      _regularGridContainer.getVertex(currentLevel,positionInArray).clearCounterOfAdjacentRefinedCells();
-      _regularGridContainer.getVertex(currentLevel,positionInArray).saveAndClearAdjacentCellsInformation();
-      _regularGridContainer.setIsReadFromTemporaryStack(currentLevel,positionInArray,false);
+      _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).clearCounterOfAdjacentRefinedCells();
+      _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).saveAndClearAdjacentCellsInformation();
+      _regularGridContainer.setIsReadFromTemporaryStack(_regularSubtreeIndex, currentLevel,positionInArray,false);
 
       tarch::multicore::Lock lock(_vertexCounterSemaphore);
       _trackNumberOfReadsPerLevel[currentLevel]++;
       lock.free();
 
       assertionNumericalEquals8(
-        _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
-        _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
-        _regularGridContainer.getVertexEnumerator(currentLevel).toString(),
-        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+        _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getX(),
+        _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, currentLevel).getVertexPosition(positionInArray),
+        _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, currentLevel).toString(),
+        _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
         currentLevel,
         positionInArray,
         _coarsestCellsOffset,
@@ -323,17 +328,17 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       assertion1( actionFlag>=0, actionFlag );
       
       if (popVertex) {
-        _regularGridContainer.setVertex(currentLevel,positionInArray,_vertexStack.pop(actionFlag));
+        _regularGridContainer.setVertex(_regularSubtreeIndex, currentLevel,positionInArray,_vertexStack.pop(actionFlag));
       }
       
-      _regularGridContainer.setIsReadFromTemporaryStack(currentLevel,positionInArray,true);
+      _regularGridContainer.setIsReadFromTemporaryStack(_regularSubtreeIndex, currentLevel,positionInArray,true);
       _trackNumberOfReadsPerLevel[currentLevel]++;
 
       assertionNumericalEquals7(
-        _regularGridContainer.getVertex(currentLevel,positionInArray).getX(),
-        _regularGridContainer.getVertexEnumerator(currentLevel).getVertexPosition(positionInArray),
-        _regularGridContainer.getVertexEnumerator(currentLevel).toString(),
-        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+        _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getX(),
+        _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, currentLevel).getVertexPosition(positionInArray),
+        _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, currentLevel).toString(),
+        _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
         currentLevel,
         positionInArray,
         _coarsestCellsOffset,
@@ -347,7 +352,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     const bool IsToBeWrittenToTemporaryStack =
         cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)
      && actionFlagForWrite != peano::stacks::Constants::InOutStack;
-    _regularGridContainer.setIsToBeWrittenToTemporaryStack(currentLevel,positionInArray,IsToBeWrittenToTemporaryStack);
+    _regularGridContainer.setIsToBeWrittenToTemporaryStack(_regularSubtreeIndex, currentLevel,positionInArray,IsToBeWrittenToTemporaryStack);
 
     logDebug(
       "loadVerticesOfOneCellAtBoundaryofSubtree(...)",
@@ -368,52 +373,52 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       for (int d=0; d<DIMENSIONS; d++) {
         assertionNumericalEquals10(
           cellsVertexEnumerator.getVertexPosition(currentVertex)(d),
-          _regularGridContainer.getVertex(currentLevel,positionInArray).getX()(d),
+          _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getX()(d),
           cellsVertexEnumerator.toString(),
-          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
-          _regularGridContainer.getVertexEnumerator(0).toString(),
+          _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
+          _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).toString(),
           currentLevel,
           positionInArray,
           CaseLoadPersistentVertex, CaseTakeFromTempStacks,
           _coarsestLevelOfThisTask,
           isSubmanifoldVertexAdjacentToDeployedSubtree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree),
-          peano::grid::aspects::CellPeanoCurve::getLoopDirection(_regularGridContainer.getCell(0,_regularGridContainer.getVertexEnumerator(0).lineariseCellIndex(0)),_isTraversalInverted)
+          peano::grid::aspects::CellPeanoCurve::getLoopDirection(_regularGridContainer.getCell(_regularSubtreeIndex, 0,_regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).lineariseCellIndex(0)),_isTraversalInverted)
         );
       }
       assertionEquals5(
-        _regularGridContainer.getVertex(currentLevel,positionInArray).getLevel(),
+        _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getLevel(),
         cellsVertexEnumerator.getLevel(),
-        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+        _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
         currentCell.toString(),
         currentLevel,positionInArray,_coarsestLevelOfThisTask
       );
       assertion7(
-        !_regularGridContainer.getVertex(currentLevel,positionInArray).isHangingNode(),
-        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+        !_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).isHangingNode(),
+        _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
         cellsVertexEnumerator.toString(),
-        _regularGridContainer.getVertexEnumerator(0).toString(),
+        _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).toString(),
         CaseLoadPersistentVertex, CaseTakeFromTempStacks,
         _coarsestCellsOffset,
         _coarsestLevelOfThisTask
       );
 
-      if (_regularGridContainer.getVertexEnumerator(0).getCellFlags()-currentLevel==0) {
+      if (_regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags()-currentLevel==0) {
         #ifdef Parallel
         assertion5(
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing) &&
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
-          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
-          _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl() != Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing) &&
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
+          _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
+          _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(),
           currentLevel,
           _maxLevelToFork,positionInArray
         );
         #else
         assertion5(
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
-          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
-          _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Refining) &&
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl() != Vertex::Records::Erasing),
+          _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
+          _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(),
           currentLevel,
           _maxLevelToFork,positionInArray
         );
@@ -421,9 +426,9 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       }
       else {
         assertion7(
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::Refined) ||
-          (_regularGridContainer.getVertex(currentLevel,positionInArray).getRefinementControl()==Vertex::Records::EraseTriggered),
-          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl()==Vertex::Records::Refined) ||
+          (_regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).getRefinementControl()==Vertex::Records::EraseTriggered),
+          _regularGridContainer.getVertex(_regularSubtreeIndex, currentLevel,positionInArray).toString(),
           CaseLoadPersistentVertex, CaseTakeFromTempStacks,
           currentLevel, positionInArray,
           cellsPositionWithinUnrolledTreeLevel,
@@ -435,14 +440,14 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     if (cellsVertexEnumerator.isVertexAtPatchBoundaryWithinRegularSubtree(currentVertex)) {
       if (isSubmanifoldVertexAdjacentToDeployedSubtree(currentVertexInPatch,cellsVertexEnumerator.getCellsPerAxis(),_forkedSubtree)) {
         tarch::multicore::Lock lock(_vertexCounterSemaphore);
-        assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)>=0,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
-        _regularGridContainer.getCounter(currentLevel,positionInArray)++;
-        assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)<=TWO_POWER_D,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
+        assertion3(_regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray)>=0,_regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray),currentLevel,positionInArray);
+        _regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray)++;
+        assertion3(_regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray)<=TWO_POWER_D,_regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray),currentLevel,positionInArray);
       }
       else {
-        assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)>=0,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
-        _regularGridContainer.getCounter(currentLevel,positionInArray)++;
-        assertion3(_regularGridContainer.getCounter(currentLevel,positionInArray)<=TWO_POWER_D,_regularGridContainer.getCounter(currentLevel,positionInArray),currentLevel,positionInArray);
+        assertion3(_regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray)>=0,_regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray),currentLevel,positionInArray);
+        _regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray)++;
+        assertion3(_regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray)<=TWO_POWER_D,_regularGridContainer.getCounter(_regularSubtreeIndex, currentLevel,positionInArray),currentLevel,positionInArray);
       }
     }
   }
@@ -476,6 +481,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     const Cell&                              currentFineGridCell     = fineGridCells[ peano::utils::dLinearised(k,3) ];
 
     const bool callLoadOperationsForBoundaryLayer = _regularGridContainer.isCellAtPatchBoundaryWithinRegularSubtree(
+      _regularSubtreeIndex,
       currentFineCellPosition,
       currentFineGridLevel
     );
@@ -498,14 +504,15 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
   logDebug( "loadVerticesWithOnTheFlyCellReconstruction(...)", "loaded all vertex data of level " << currentFineGridLevel << " within tree of depth " << _regularGridContainer.getVertexEnumerator(0).getCellFlags() );
 
-  if (currentFineGridLevel<_regularGridContainer.getVertexEnumerator(0).getCellFlags()) {
+  if (currentFineGridLevel<_regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags()) {
     zfor3(k,loopDirection2)
       const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k + currentCoarseCellPositionWithinUnrolledPatch*3;
       Cell&                                    currentFineGridCell     = fineGridCells[ peano::utils::dLinearised(k,3) ];
 
       const bool recurse  = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                          || _regularGridContainer.isCellAtPatchBoundaryWithinRegularSubtree(
-                             currentFineCellPosition,
+                        		 _regularSubtreeIndex,
+								 currentFineCellPosition,
                              currentFineGridLevel
                             );
 
@@ -533,18 +540,18 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 ) {
   logTraceInWith2Arguments( "loadSubVerticesWithCellsFromGridContainer(...)", currentLevelOfCoarseCell, currentCoarseCellPositionWithinUnrolledPatch );
 
-  const UnrolledLevelEnumerator& coarseGridEnumerator      = _regularGridContainer.getVertexEnumerator(currentLevelOfCoarseCell);
-  const Cell&                    coarseGridCell            = _regularGridContainer.getCell(currentLevelOfCoarseCell,coarseGridEnumerator.lineariseCellIndex(currentCoarseCellPositionWithinUnrolledPatch));
+  const UnrolledLevelEnumerator& coarseGridEnumerator      = _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, currentLevelOfCoarseCell);
+  const Cell&                    coarseGridCell            = _regularGridContainer.getCell(_regularSubtreeIndex, currentLevelOfCoarseCell,coarseGridEnumerator.lineariseCellIndex(currentCoarseCellPositionWithinUnrolledPatch));
 
   #if defined(SharedMemoryParallelisation)
   const int  ExpectedNumberOfLoadsFromInputStack = coarseGridCell.getNumberOfLoadsFromInputStack();
-  const bool coarseCellIsAtBoundary              = _regularGridContainer.isCellAtPatchBoundaryWithinRegularSubtree(currentCoarseCellPositionWithinUnrolledPatch,currentLevelOfCoarseCell);
+  const bool coarseCellIsAtBoundary              = _regularGridContainer.isCellAtPatchBoundaryWithinRegularSubtree(_regularSubtreeIndex, currentCoarseCellPositionWithinUnrolledPatch,currentLevelOfCoarseCell);
 
   assertion7(
     currentLevelOfCoarseCell==0 || ExpectedNumberOfLoadsFromInputStack>0,
     coarseGridCell.toString(),
-    _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
-    _regularGridContainer.getCell(0,0).toString(),
+    _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(),
+    _regularGridContainer.getCell(_regularSubtreeIndex, 0,0).toString(),
     _maxLevelToFork,
     currentLevelOfCoarseCell,
     currentCoarseCellPositionWithinUnrolledPatch,
@@ -556,17 +563,17 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   )) {
     #ifdef Dim2
     assertion4(
-      _regularGridContainer.getVertexEnumerator(0).getCellFlags()>2
+      _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags()>2
       || ExpectedNumberOfLoadsFromInputStack==3*3  // have already visited two edges, two edges are free
       || ExpectedNumberOfLoadsFromInputStack==3*4  // have touched only one edge
       || ExpectedNumberOfLoadsFromInputStack==3*2, // have touched three edges
       ExpectedNumberOfLoadsFromInputStack,
       coarseGridCell.toString(),
-      _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+      _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(),
       currentLevelOfCoarseCell
     );
     assertion4(
-      _regularGridContainer.getVertexEnumerator(0).getCellFlags()>3
+      _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags()>3
       || ExpectedNumberOfLoadsFromInputStack==3*3 // have already visited two edges, two edges are free
       || ExpectedNumberOfLoadsFromInputStack==3*4 // have touched only one edge
       || ExpectedNumberOfLoadsFromInputStack==3*2 // have touched three edges
@@ -575,11 +582,11 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       || ExpectedNumberOfLoadsFromInputStack==3*2+9*8,
       ExpectedNumberOfLoadsFromInputStack,
       coarseGridCell.toString(),
-      _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+      _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(),
       currentLevelOfCoarseCell
     );
     assertion4(
-      _regularGridContainer.getVertexEnumerator(0).getCellFlags()>4
+      _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags()>4
       || ExpectedNumberOfLoadsFromInputStack==3*3 // have already visited two edges, two edges are free
       || ExpectedNumberOfLoadsFromInputStack==3*4 // have touched only one edge
       || ExpectedNumberOfLoadsFromInputStack==3*2 // have touched three edges
@@ -591,13 +598,14 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       || ExpectedNumberOfLoadsFromInputStack==3*2+9*8+27*26,
       ExpectedNumberOfLoadsFromInputStack,
       coarseGridCell.toString(),
-      _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
+      _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(),
       currentLevelOfCoarseCell
     );
     #endif
 
     typedef LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>  ForkedTask;
     ForkedTask forkedTask(
+      _regularSubtreeIndex,
       _isTraversalInverted,
       _regularGridContainer,
       _vertexStack,
@@ -626,7 +634,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
   while (
     _loadProcessRunsInParallelToOtherTasks &&
-    !_regularGridContainer.areCellsOfLevelLoaded(currentFineGridLevel)
+    !_regularGridContainer.areCellsOfLevelLoaded(_regularSubtreeIndex, currentFineGridLevel)
   ) {
     peano::datatraversal::TaskSet::waitForLoadCellsTask();
   };
@@ -634,9 +642,10 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   zfor3(k,loopDirection1)
     const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k + currentCoarseCellPositionWithinUnrolledPatch*3;
     const int                                currentFineCellIndex    = peano::utils::dLinearisedWithoutLookup(currentFineCellPosition,cellsPerAxisOnFineGrid);
-    const Cell&                              currentFineGridCell     = _regularGridContainer.getCell(currentFineGridLevel,currentFineCellIndex);
+    const Cell&                              currentFineGridCell     = _regularGridContainer.getCell(_regularSubtreeIndex, currentFineGridLevel,currentFineCellIndex);
 
     const bool callLoadOperationsForBoundaryLayer = _regularGridContainer.isCellAtPatchBoundaryWithinRegularSubtree(
+    		_regularSubtreeIndex,
       currentFineCellPosition,
       currentFineGridLevel
     );
@@ -657,12 +666,13 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     }
   endzfor
 
-  if (currentFineGridLevel<_regularGridContainer.getVertexEnumerator(0).getCellFlags()) {
+  if (currentFineGridLevel<_regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags()) {
     zfor3(k,loopDirection2)
       const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k + currentCoarseCellPositionWithinUnrolledPatch*3;
 
       const bool recurse  = _maxLevelToFork != DoNotSplitAndHandleOnlyPatchBoundary
                          || _regularGridContainer.isCellAtPatchBoundaryWithinRegularSubtree(
+                        		 _regularSubtreeIndex,
                              currentFineCellPosition,
                              currentFineGridLevel
                             );
@@ -689,8 +699,8 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
   #if defined(SharedMemoryParallelisation)
 
-  const UnrolledLevelEnumerator& coarseGridEnumerator      = _regularGridContainer.getVertexEnumerator(0);
-  const Cell&                    coarseGridCell            = _regularGridContainer.getCell(0,coarseGridEnumerator.lineariseCellIndex(0));
+  const UnrolledLevelEnumerator& coarseGridEnumerator      = _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0);
+  const Cell&                    coarseGridCell            = _regularGridContainer.getCell(_regularSubtreeIndex, 0,coarseGridEnumerator.lineariseCellIndex(0));
 
   peano::utils::LoopDirection    loopDirection1 = peano::grid::aspects::CellPeanoCurve::getLoopDirection(coarseGridCell,_isTraversalInverted);
   peano::utils::LoopDirection    loopDirection2 = loopDirection1;
@@ -703,7 +713,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
   while (
     _loadProcessRunsInParallelToOtherTasks &&
-    !_regularGridContainer.areCellsOfLevelLoaded(currentFineGridLevel)
+    !_regularGridContainer.areCellsOfLevelLoaded(_regularSubtreeIndex, currentFineGridLevel)
   ) {
     peano::datatraversal::TaskSet::waitForLoadCellsTask();
   };
@@ -712,7 +722,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   zfor3(k,loopDirection1)
     const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k;
     const int                                currentFineCellIndex    = peano::utils::dLinearisedWithoutLookup(currentFineCellPosition,cellsPerAxisOnFineGrid);
-    const Cell&                              currentFineGridCell     = _regularGridContainer.getCell(currentFineGridLevel,currentFineCellIndex);
+    const Cell&                              currentFineGridCell     = _regularGridContainer.getCell(_regularSubtreeIndex, currentFineGridLevel,currentFineCellIndex);
 
     loadVerticesOfOneCellAtBoundaryofSubtree(
       currentFineGridCell,
@@ -722,22 +732,22 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   endzfor
 
   assertion2(
-    currentFineGridLevel<_regularGridContainer.getVertexEnumerator(0).getCellFlags(),
-    currentFineGridLevel,_regularGridContainer.getVertexEnumerator(0).getCellFlags()
+    currentFineGridLevel<_regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(),
+    currentFineGridLevel,_regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags()
   );
 
   typename VertexStack::PopBlockVertexStackView topLevelStackView[THREE_POWER_D];
   zfor3(k,loopDirection2)
     const tarch::la::Vector<DIMENSIONS,int>  currentFineCellPosition = k;
     const int                                currentFineCellIndex    = peano::utils::dLinearisedWithoutLookup(currentFineCellPosition,cellsPerAxisOnFineGrid);
-    const Cell&                              currentFineGridCell     = _regularGridContainer.getCell(currentFineGridLevel,currentFineCellIndex);
+    const Cell&                              currentFineGridCell     = _regularGridContainer.getCell(_regularSubtreeIndex, currentFineGridLevel,currentFineCellIndex);
 
     assertion5(
       currentFineGridCell.getNumberOfLoadsFromInputStack()>0,
       currentFineGridCell.toString(),
       currentFineCellPosition,
-      _regularGridContainer.getVertexEnumerator(0).getCellFlags(),
-      _regularGridContainer.getCell(0,0).toString(),
+      _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(),
+      _regularGridContainer.getCell(_regularSubtreeIndex, 0,0).toString(),
       _maxLevelToFork
     );
 
@@ -755,7 +765,8 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     if (_forkedSubtree[currentFineCellIndex]) {
       typedef LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>  ForkedTask;
       ForkedTask forkedTask(
-          _isTraversalInverted,
+           _regularSubtreeIndex,
+           _isTraversalInverted,
            _regularGridContainer,
            _vertexStack,
            _loadProcessRunsInParallelToOtherTasks,
@@ -801,7 +812,7 @@ bool peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
   #ifdef SharedMemoryParallelisation
   const bool UseOnTheFlyReconstruction =
-    (_loadProcessRunsInParallelToOtherTasks && !_regularGridContainer.areCellsOfLevelLoaded(_coarsestLevelOfThisTask))
+    (_loadProcessRunsInParallelToOtherTasks && !_regularGridContainer.areCellsOfLevelLoaded(_regularSubtreeIndex, _coarsestLevelOfThisTask))
     ||
     _maxLevelToFork < 0;
   #else
@@ -809,8 +820,8 @@ bool peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   #endif
 
   if ( UseOnTheFlyReconstruction ) {
-    const UnrolledLevelEnumerator& coarseGridEnumerator = _regularGridContainer.getVertexEnumerator(_coarsestLevelOfThisTask);
-    Cell                           copyOfCoarseCell     = _regularGridContainer.getCell(_coarsestLevelOfThisTask,coarseGridEnumerator.lineariseCellIndex(_coarsestCellsOffset));
+    const UnrolledLevelEnumerator& coarseGridEnumerator = _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, _coarsestLevelOfThisTask);
+    Cell                           copyOfCoarseCell     = _regularGridContainer.getCell(_regularSubtreeIndex, _coarsestLevelOfThisTask,coarseGridEnumerator.lineariseCellIndex(_coarsestCellsOffset));
     copyOfCoarseCell.switchToLeaf();
 
     loadVerticesWithOnTheFlyCellReconstruction(
@@ -823,7 +834,7 @@ bool peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
   else if (
     _coarsestLevelOfThisTask==0 &&
     _maxLevelToFork>=0 &&
-    _regularGridContainer.getVertexEnumerator(0).getCellFlags()>1
+    _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags()>1
   ) {
     loadSubVerticesWithCellsOnFirstLevelInSharedMemoryMode();
   }
@@ -835,11 +846,11 @@ bool peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     );
   }
 
-  _regularGridContainer.haveReadVertices(_trackNumberOfReadsPerLevel);
+  _regularGridContainer.haveReadVertices(_regularSubtreeIndex, _trackNumberOfReadsPerLevel);
 
   if (_maxLevelToFork==0) {
-    for (int i=0; i<_regularGridContainer.getVertexEnumerator(0).getCellFlags(); i++) {
-      assertion2( _regularGridContainer.isLevelInitialised(i), i, _regularGridContainer.toString() );
+    for (int i=0; i<_regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags(); i++) {
+      assertion2( _regularGridContainer.isLevelInitialised(_regularSubtreeIndex, i), i, _regularGridContainer.toString(_regularSubtreeIndex) );
     }
   }
 

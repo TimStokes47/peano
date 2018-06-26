@@ -655,6 +655,12 @@ class __THIS_QUALIFIED_TYPENAME__ {
      * now is located at the new boundary, Peano moves the data as well, i.e.
      * the move also can be a (global) copy operation.
      *
+     * This operation is called for every cell that is either moved or is 
+     * adjacent to a cell on the same level which is transported. Please note
+     * that the operation is called copy and not move, i.e. no data is to be 
+     * destroyed here. If data has to be destroyed, Peano invokes a delete
+     * call later on.
+     *
      * @param localVertex The local vertex. This is not a copy, i.e. you may 
      *                    modify the vertex before a copy of it is sent away.  
      */

@@ -50,12 +50,16 @@ peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::Or
   int smallestProblemSize = 0;
 
   if ( _pipelineAscendProcessing && askingMethod == MethodTrace::PipelineAscendTask ) {
-    grainSize           = 1;
-    smallestProblemSize = 0;
+//    grainSize           = 1;
+//    smallestProblemSize = 0;
+    grainSize           = 0;
+    smallestProblemSize = 65536;
   }
   else if ( _pipelineDescendProcessing && askingMethod == MethodTrace::PipelineDescendTask ) {
-    grainSize           = 1;
-    smallestProblemSize = 0;
+    //    grainSize           = 1;
+    //    smallestProblemSize = 0;
+    grainSize           = 0;
+    smallestProblemSize = 65536;
   }
   else if (
     ( askingMethod==MethodTrace::AscendOnRegularStationaryGrid        ||
@@ -87,10 +91,14 @@ peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::Or
   }
   else if (
     _splitTheTree != SplitVertexReadsOnRegularSubtree::DoNotSplit  &&
-    (
-      askingMethod == MethodTrace::SplitLoadVerticesTaskOnRegularStationaryGrid  ||
-      askingMethod == MethodTrace::SplitStoreVerticesTaskOnRegularStationaryGrid
-    )
+    askingMethod == MethodTrace::SplitStoreVerticesTaskOnRegularStationaryGrid
+  ) {
+    grainSize           = _grainSizeForSplitLoadStore;
+    smallestProblemSize = _smallestProblemSizeForSplitLoadStore;
+  }
+  else if (
+    _splitTheTree != SplitVertexReadsOnRegularSubtree::DoNotSplit  &&
+    askingMethod == MethodTrace::SplitLoadVerticesTaskOnRegularStationaryGrid
   ) {
     grainSize           = _grainSizeForSplitLoadStore;
     smallestProblemSize = _smallestProblemSizeForSplitLoadStore;
@@ -100,6 +108,12 @@ peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::Or
   ) {
     grainSize           = _grainSizeOfUserDefinedRegions;
     smallestProblemSize = _grainSizeOfUserDefinedRegions;
+  }
+  else if (
+    askingMethod==MethodTrace::HoldPersistentRegularSubgrid
+  ) {
+	grainSize           = 1;
+	smallestProblemSize = 1;
   }
 
 

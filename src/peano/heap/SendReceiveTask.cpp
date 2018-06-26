@@ -187,6 +187,9 @@ void peano::heap::SendReceiveTask<double>::triggerReceive(int tag) {
       << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }
+
+  _freeDataPointer = true;
+
   logTraceOut( "triggerReceive(int)" );
   #else
   assertionMsg( false, "should not be called if compiled without -DParallel" );
@@ -359,6 +362,9 @@ void peano::heap::SendReceiveTask<char>::triggerReceive(int tag) {
       << _rank << ": " << tarch::parallel::MPIReturnValueToString(result)
     );
   }
+
+  _freeDataPointer = true;
+
   logTraceOut( "triggerReceive(int)" );
   #else
   assertionMsg( false, "should not be called if compiled without -DParallel" );

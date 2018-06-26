@@ -4,11 +4,13 @@ tarch::logging::Log  peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnReg
 
 template <class Vertex, class Cell>
 peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatch<Vertex,Cell>::InitialiseVertexEnumeratorsOnRegularRefinedPatch(
-  const SingleLevelEnumerator&                                      fineGridVerticesEnumerator,
+  int                                              regularSubtreeIndex,
+  const SingleLevelEnumerator&                     fineGridVerticesEnumerator,
   peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
 ):
   _fineGridVerticesEnumerator(fineGridVerticesEnumerator),
-  _regularGridContainer(regularGridContainer) {
+  _regularGridContainer(regularGridContainer),
+  _regularSubtreeIndex(regularSubtreeIndex) {
 }
 
 
@@ -19,6 +21,7 @@ bool peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatch
   const int TreeDepth = _fineGridVerticesEnumerator.getCellFlags();
   for (int i=0; i<=TreeDepth; i++) {
     _regularGridContainer.setVertexEnumerator(
+      _regularSubtreeIndex,
       i,
       UnrolledLevelEnumerator(
         _fineGridVerticesEnumerator.getCellSize(),

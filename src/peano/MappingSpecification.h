@@ -51,7 +51,13 @@ Application hence doesn't need semaphores. </td>
  Variant seems to be unnecessary for touchVertex...Time events as
  those are not passed their neighbouring vertices anyway, i.e. there
  may not be any data races. However, if you work with pointers to
- adjacent cells, it can make sense to have this colouring. </td>
+ adjacent cells, it can make sense to have this colouring.
+ It introduces @f$ 2^d @f$ colouring on the vertices as well:
+ If two vertices access their adjacent cells, no data races can occur,
+ as @f$ 2^d @f$ colouring implies that only those vertices are processed
+ concurrently which are at least separated by two faces along any coordinate
+ axis.
+ </td>
   </table>
  *
  * The order is Serial>AvoidCoarseGridRaces>AvoidFineGridRaces>RunConcurrentlyOnFineGrid.

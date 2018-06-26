@@ -196,19 +196,10 @@ namespace tarch {
             BackgroundJobConsumerTask(const BackgroundJobConsumerTask& copy);
 
             /**
-             * Process _maxJobs from the background job queue. There are a few
-             * situations that can arise from this processing:
-             *
-             * - This is the last background job consumer thread standing and
-             *   there are still background jobs to handle. Then it does make sense to
-             *   immediately reschedule the consumer task again - just to be
-             *   sure that all background jobs are handled eventually. It does not
-             *   make sense to use TBB's recycling mechanism as we want the
-             *   background consumption to be very low priority.
-             * - There have been lots of other background consumer jobs. We terminate
-             *   this one.
-             * - We found the queue of background jobs to be empty when we launched
-             *   this thread. We terminate this consumer task.
+             * Process _maxJobs from the background job queue and then
+             * terminate. This doesn't mean that the background consumer
+             * task really dies, as processJobs() might reschedule a new
+             * one.
              *
              * @see enqueue()
              */

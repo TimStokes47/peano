@@ -23,8 +23,10 @@ class peano::grid::nodes::tasks::InitialiseVertexEnumeratorsOnRegularRefinedPatc
 
     const SingleLevelEnumerator&                                      _fineGridVerticesEnumerator;
     peano::grid::RegularGridContainer<Vertex,Cell>&                   _regularGridContainer;
+    const int                                                         _regularSubtreeIndex;
   public:
     InitialiseVertexEnumeratorsOnRegularRefinedPatch(
+      const int                                        regularSubtreeIndex,
       const SingleLevelEnumerator&                     fineGridVerticesEnumerator,
       peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
     );
