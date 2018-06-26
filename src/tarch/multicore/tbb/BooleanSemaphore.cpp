@@ -28,4 +28,8 @@ void tarch::multicore::BooleanSemaphore::enterCriticalSection() {
 void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
   _mutex.unlock();
 }
+
+bool tarch::multicore::BooleanSemaphore::tryEnterCriticalSection() {
+  return _mutex.try_lock();
+}
 #endif

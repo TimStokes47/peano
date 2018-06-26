@@ -38,7 +38,7 @@ void tarch::multicore::PerformanceMonitor::start() {
 void tarch::multicore::PerformanceMonitor::stop() {
 	if(_isStarted) {
 		_isStarted=false;
-		//logInfo("performance monitor","perfmon has stopped");
+		logInfo("performance monitor","perfmon has stopped");
 	}
 	while(!isGloballyTerminated())
 		progressGather();
@@ -72,7 +72,9 @@ void tarch::multicore::PerformanceMonitor::progressGather() {
     if(completed) {
         std::string str="received new update ";
         for(int i=0;i<tarch::parallel::Node::getInstance().getNumberOfNodes();i++)  str=str+" , "+std::to_string(_currentNumBackgroundTasksBuffer[i]);
+#if defined(PerformanceAnalysisStealing)
         logInfo("performance monitor", str);
+#endif
     	for(int i=0;i<tarch::parallel::Node::getInstance().getNumberOfNodes();i++)  _currentNumBackgroundTasks[i]=_currentNumBackgroundTasksBuffer[i];
     }
     lock.free();
