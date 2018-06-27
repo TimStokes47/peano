@@ -54,7 +54,7 @@ void peano::grid::nodes::tasks::StoreCellsOnRegularRefinedPatch<Vertex,Cell,Cell
   }
 
   #if !defined(SharedMemoryParallelisation)
-  assertion2(_regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel),           currentLevel, _regularGridContainer.toString());
+  assertion2(_regularGridContainer.areAllEventsOnThisLevelCalled(_regularSubtreeIndex,currentLevel), currentLevel, _regularGridContainer.toString(_regularSubtreeIndex));
   #else
   logDebug( "storeCells(...)", "wait until all store processes have terminated. store-runs-in-parallel=" <<_storeProcessRunsInParallelToOtherTasks << ", all events called on current level " << currentLevel << "=" << _regularGridContainer.areAllEventsOnThisLevelCalled(currentLevel) );
   assertion2( _storeProcessRunsInParallelToOtherTasks || _regularGridContainer.areAllEventsOnThisLevelCalled(_regularSubtreeIndex,currentLevel), currentLevel, _regularGridContainer.toString(_regularSubtreeIndex) );
