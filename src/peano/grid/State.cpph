@@ -749,7 +749,7 @@ bool peano::grid::State<StateData>::isInvolvedInJoinOrFork() {
 
 template <class StateData>
 bool peano::grid::State<StateData>::mayUseLazyStateAndDataReceives() const {
-  return (_loadRebalancingState == LoadBalancingState::NoRebalancing) && _batchState!=BatchState::NoBatch;
+  return (_loadRebalancingState == LoadBalancingState::NoRebalancing) && (_stateData.getTotalNumberOfBatchIterations()>1);
 }
 
 
