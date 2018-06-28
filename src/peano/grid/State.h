@@ -468,6 +468,8 @@ class peano::grid::State {
      * Tells you whether the user currently runs a batch of iterations, i.e.
      * has triggered the iterate command on the global master with an
      * integer greater one. Is always greater than or equal to one.
+     *
+     * @return A number greater than 1 if the user uses batching.
      */
     int getNumberOfBatchIterations() const;
 

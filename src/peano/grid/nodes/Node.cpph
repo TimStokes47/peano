@@ -146,7 +146,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       peano::performanceanalysis::Analysis::getInstance().beginToReceiveDataFromWorker();
 
       if (_eventHandle.communicationSpecification().sendDataBackToMaster()!=peano::CommunicationSpecification::Action::Skip) {
-        if (state.getBatchState()!=State::BatchState::NoBatch) {
+        if (state.getNumberOfBatchIterations()>1) {
           tarch::parallel::Node::getInstance().suspendTimeouts(true);
         }
 
@@ -157,7 +157,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           Cell::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
         );
 
-        if (state.getBatchState()!=State::BatchState::NoBatch) {
+        if (state.getNumberOfBatchIterations()>1) {
           tarch::parallel::Node::getInstance().suspendTimeouts(false);
         }
 
