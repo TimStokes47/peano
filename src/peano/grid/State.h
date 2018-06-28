@@ -96,24 +96,12 @@ class peano::grid::State {
 
     typedef StateData                                      Records;
 
-    enum class BatchState {
-      /**
-       * No batch is currently running (default)
-       */
-      NoBatch,
-      /**
-       * As a batch comprises, by definition, more than one sweep, there is
-       * always a first and a last one.
-       */
-      FirstIterationOfBatch,
-      LastIterationOfBatch,
-      IntermediateIterationOfBatch
-    };
   protected:
     StateData           _stateData;
 
     State();
     State(const PersistentState& argument);
+
   private:
     /**
      * Logging device
@@ -187,8 +175,6 @@ class peano::grid::State {
     #endif
 
     #endif
-
-    static BatchState            _batchState;
 
     #ifdef PersistentRegularSubtrees
     enum class PersistentSubtreeStorage {
@@ -473,14 +459,27 @@ class peano::grid::State {
      */
     void resetStateAtEndOfIteration();
 
-    static void currentlyRunsMultipleIterations(BatchState batchState = BatchState::NoBatch);
+    /**
+     * Used by repository. Should not be used by anybody else.
+     */
+    void setBatchState(int totalNumberOfBatchIterations, int batchIteration );
 
     /**
      * Tells you whether the user currently runs a batch of iterations, i.e.
      * has triggered the iterate command on the global master with an
-     * integer greater one.
+     * integer greater one. Is always greater than or equal to one.
      */
-    static BatchState getBatchState();
+    int getNumberOfBatchIterations() const;
+
+    /**
+     * Current iteration within batch. Please note that we follow C's
+     * convention and start to count with 0. So we have two trivial
+     * invariants on the result.
+     *
+     * @return Counter greater or equal to 0 but always smaller than
+     *         getNumberOfBatchIterations().
+     */
+    int getBatchIteration() const;
 
     #ifdef Parallel
     /**

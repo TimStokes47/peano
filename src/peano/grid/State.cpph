@@ -27,10 +27,6 @@ typename peano::grid::State<StateData>::PersistentSubtreeStorage     peano::grid
 
 
 template <class StateData>
-typename peano::grid::State<StateData>::BatchState          peano::grid::State<StateData>::_batchState(BatchState::NoBatch);
-
-
-template <class StateData>
 tarch::logging::Log  peano::grid::State<StateData>::_log( "peano::grid::State" );
 
 
@@ -55,6 +51,9 @@ peano::grid::State<StateData>::State():
   _stateData.setHasRefined( false );
   _stateData.setHasErased( false );
   _stateData.setHasChangedVertexOrCellState( false );
+
+  _stateData.setTotalNumberOfBatchIterations( 0 );
+  _stateData.setBatchIteration( 0 );
 }
 
 
@@ -559,14 +558,24 @@ void peano::grid::State<StateData>::incNumberOfOuterLeafCells( double increment 
 
 
 template <class StateData>
-void peano::grid::State<StateData>::currentlyRunsMultipleIterations(BatchState batchState) {
-  _batchState = batchState;
+void peano::grid::State<StateData>::setBatchState(int totalNumberOfBatchIterations, int batchIteration ) {
+  assertion2( totalNumberOfBatchIterations>=1, totalNumberOfBatchIterations, batchIteration );
+  assertion2( batchIteration>=0, totalNumberOfBatchIterations, batchIteration );
+  assertion2( totalNumberOfBatchIterations>batchIteration, totalNumberOfBatchIterations, batchIteration );
+  _stateData.setTotalNumberOfBatchIterations( totalNumberOfBatchIterations );
+  _stateData.setBatchIteration( batchIteration );
 }
 
 
 template <class StateData>
-typename peano::grid::State<StateData>::BatchState peano::grid::State<StateData>::getBatchState() {
-  return _batchState;
+int peano::grid::State<StateData>::getNumberOfBatchIterations() const {
+  return _stateData.getTotalNumberOfBatchIterations();
+}
+
+
+template <class StateData>
+int peano::grid::State<StateData>::getBatchIteration() const {
+  return _stateData.getBatchIteration();
 }
 
 
