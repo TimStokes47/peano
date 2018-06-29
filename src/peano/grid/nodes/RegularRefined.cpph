@@ -355,7 +355,8 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       enddforx
 
 
-      #if !( defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(SharedMemoryParallelisation) )
+//      #if !( defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(SharedMemoryParallelisation) )
+//      @todo brauchen wir schon aber anders.
       const bool pipelineTasks = false;
       StoreVerticesTask   storeVerticesTask(
         regularSubtreeIndex,
@@ -363,7 +364,6 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
         StoreVerticesTask::DoNotSplitAndHandleOnlyPatchBoundary
       );
       storeVerticesTask();
-      #endif
 
       #ifdef SharedMemoryParallelisation
       logDebug( "operator()()", "wait until all store processes have terminated" );
