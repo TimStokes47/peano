@@ -200,7 +200,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     enddforx
     logDebug( "traverse(...)", "- cell " << fineGridCell.toString() );
 
-    #if defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(DeployOutsourcesRegularSubtreesToSeparateThreads)
+    #if defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(SharedMemoryParallelisation)
     // Do ignore the result here and then ask again below
     _backgroundPatchUpdateTask->waitUntilTraversalHasTerminated(regularSubtreeIndex);
     #endif
@@ -220,7 +220,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 //       vom Input Stream
     loadVerticesTask();
 
-    #if !defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(DeployOutsourcesRegularSubtreesToSeparateThreads)
+    #if !( defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(SharedMemoryParallelisation) )
     DescendTask         descendTask( regularSubtreeIndex, TreeDepth, state, Base::_eventHandle, _regularGridContainer, pipelineTasks );
     descendTask();
     #endif
@@ -311,13 +311,6 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   }
 
 
-  #if defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(SharedMemoryParallelisation)
-  bool       retainRegularSubtreePersistently =
-    (!readTreeIsStoredPersistently and TryToRetainRegularSubtreePersistently.runsParallel())
-	or
-    ( readTreeIsStoredPersistently and _backgroundPatchUpdateTask->waitUntilTraversalHasTerminated(regularSubtreeIndex));
-  #endif
-
   #if defined(PersistentRegularSubtrees) && defined(SharedMemoryParallelisation)
   auto TryToRetainRegularSubtreePersistently = peano::datatraversal::autotuning::Oracle::getInstance().parallelise(
     TreeDepth+1,
@@ -331,10 +324,11 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   #endif
 
   if (retainRegularSubtreePersistently || readTreeIsStoredPersistently)  {
-    #if defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(DeployOutsourcesRegularSubtreesToSeparateThreads)
-    const bool persistentSubtreeRemainsPersistent = true;
-// @todo Das muss schon komplett gemacht sein
-// Das const bool falsch. Das muss ich jetzt vom Baum abholen.
+    #if defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(SharedMemoryParallelisation)
+    const bool persistentSubtreeRemainsPersistent =
+	    !readTreeIsStoredPersistently
+		or
+	    ( readTreeIsStoredPersistently and _backgroundPatchUpdateTask->waitUntilTraversalHasTerminated(regularSubtreeIndex));
     #else
     AscendTask ascendTask(regularSubtreeIndex, TreeDepth, state, Base::_eventHandle, _regularGridContainer );
     ascendTask();
@@ -360,7 +354,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
       enddforx
 
 
-      #if !defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(DeployOutsourcesRegularSubtreesToSeparateThreads)
+      #if !( defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(SharedMemoryParallelisation) )
       const bool pipelineTasks = false;
       StoreVerticesTask   storeVerticesTask(
         regularSubtreeIndex,
@@ -566,7 +560,7 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::beginIteration() {
-  #if defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(DeployOutsourcesRegularSubtreesToSeparateThreads)
+  #if defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(SharedMemoryParallelisation)
   _backgroundPatchUpdateTask->kickOffTraversals();
   #endif
 }
@@ -656,16 +650,23 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::BackgroundPatchUpdateTask::processOneSubtree( int subtreeIndex ) {
-//	  typedef peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>                        AscendTask;
-//	  typedef peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>                       DescendTask;
-  // @todo Hier Descend/Ascend pair
-	// brauchen wir die Enumerators? Auch im Hauptbranch net, glaub ich
+  typedef peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>                        AscendTask;
+  typedef peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>                       DescendTask;
 
 /*
-  typename peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::DescendTask         descendTask( regularSubtreeIndex, TreeDepth, state, Base::_eventHandle, _regularGridContainer, PipelineTasks.runsParallel() );
-  descendTask();
+  const peano::grid::CellFlags  TreeDepth = _regularRefinedNode._regularGridContainer.getVertexEnumerator( subtreeIndex, 0 ).getCellFlags();
 
-  typename peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::AscendTask ascendTask(regularSubtreeIndex, TreeDepth, state, Base::_eventHandle, _regularGridContainer );
+  DescendTask   descendTask(
+    _regularRefinedNode.regularSubtreeIndex,
+    _regularRefinedNode.TreeDepth,
+    state,
+    _regularRefinedNode._eventHandle,
+    _regularRefinedNode._regularGridContainer,
+    false    // PipelineTasks.runsParallel()
+  );
+  AscendTask    ascendTask(regularSubtreeIndex, TreeDepth, state, Base::_eventHandle, _regularGridContainer );
+
+  descendTask();
   ascendTask();
 */
 
