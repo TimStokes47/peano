@@ -204,7 +204,13 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
     	TaskState                           _taskState;
     	EventHandle                         _localHandle;
     	std::map< int, bool >               _keepSubtree;
+    	State                               _state;
 
+    	/**
+    	 * We need the state for Ascend and Descend. Descend actually doesn't
+    	 * need it, and Ascend only does a few state updates, so we accept
+    	 * that there might be race conditions.
+    	 */
     	void processOneSubtree( int subtreeIndex );
       public:
     	BackgroundPatchUpdateTask(
@@ -221,7 +227,7 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
     	 *
     	 * - Copy my own, my local version of the mapping?
     	 */
-    	void kickOffTraversals();
+    	void kickOffTraversals(const State& state);
 
     	/**
     	 * @return Whether we may keep this persistent subtree for the next iteration.
@@ -244,8 +250,8 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
       peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
     );
 
-    void beginIteration();
-    void endIteration();
+    void beginIteration(State& state);
+    void endIteration(State& state);
 
     /**
      * @see Standard constructor

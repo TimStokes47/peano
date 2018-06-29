@@ -567,7 +567,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   Base::_eventHandle.beginIteration(state);
   #endif
 
-  _regularRefinedNode.beginIteration();
+  _regularRefinedNode.beginIteration(state);
 
   Vertex  fineGridVertices[FOUR_POWER_D];
   int     counter[FOUR_POWER_D];
@@ -809,7 +809,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     } while (storeLoopCounter < loadLoopCounter);
   } while (loadLoopCounter<THREE_POWER_D);
 
-  _regularRefinedNode.endIteration();
+  _regularRefinedNode.endIteration(state);
 
   #ifdef Parallel
   if (

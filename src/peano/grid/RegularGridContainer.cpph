@@ -756,7 +756,7 @@ void peano::grid::RegularGridContainer<Vertex,Cell>::keepCurrentRegularSubgrid(b
       );
     }
     else {
-      _activeRegularSubtree = * (_freedSubtreeIndices.end() );
+      _activeRegularSubtree = * (_freedSubtreeIndices.begin() );
       _freedSubtreeIndices.erase( _activeRegularSubtree );
       logDebug(
         "keepCurrentRegularSubgrid(bool,int)",

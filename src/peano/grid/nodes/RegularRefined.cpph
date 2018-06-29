@@ -23,6 +23,7 @@
 
 #include "tarch/parallel/Node.h"
 
+#include "tarch/multicore/MulticoreDefinitions.h"
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 tarch::logging::Log peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::_log( "peano::grid::nodes::RegularRefined" );
@@ -559,15 +560,15 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
-void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::beginIteration() {
+void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::beginIteration(State& state) {
   #if defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(SharedMemoryParallelisation)
-  _backgroundPatchUpdateTask->kickOffTraversals();
+  _backgroundPatchUpdateTask->kickOffTraversals(state);
   #endif
 }
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
-void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::endIteration() {
+void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::endIteration(State& state) {
   #if defined(UseRecursionUnrollingOnRegularPatches)
   _regularGridContainer.endOfIteration();
   #endif
@@ -578,7 +579,8 @@ template <class Vertex, class Cell, class State, class VertexStack, class CellSt
 peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::BackgroundPatchUpdateTask::BackgroundPatchUpdateTask(
   RegularRefined&  regularRefinedNode
 ):
-  _regularRefinedNode( regularRefinedNode ) {
+  _regularRefinedNode( regularRefinedNode ),
+  _state() {
 }
 
 
@@ -614,11 +616,12 @@ bool peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
-void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::BackgroundPatchUpdateTask::kickOffTraversals() {
+void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::BackgroundPatchUpdateTask::kickOffTraversals(const State& state) {
   tarch::multicore::Lock myLock( _stateSemaphore );
-  assertion( _taskState = TaskState::Suspended );
+  assertion( _taskState == TaskState::Suspended );
   _taskState = TaskState::Processing;
   _keepSubtree.clear();
+  _state = state;
 }
 
 
@@ -643,34 +646,42 @@ bool peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::BackgroundPatchUpdateTask::terminate() {
   tarch::multicore::Lock myLock( _stateSemaphore );
-  assertion( _taskState = TaskState::Suspended );
+  assertion( _taskState == TaskState::Suspended );
   _taskState = TaskState::Terminating;
 }
 
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
-void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::BackgroundPatchUpdateTask::processOneSubtree( int subtreeIndex ) {
+void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::BackgroundPatchUpdateTask::processOneSubtree(
+  int     subtreeIndex
+) {
   typedef peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>                        AscendTask;
   typedef peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>                       DescendTask;
 
-/*
   const peano::grid::CellFlags  TreeDepth = _regularRefinedNode._regularGridContainer.getVertexEnumerator( subtreeIndex, 0 ).getCellFlags();
 
   DescendTask   descendTask(
-    _regularRefinedNode.regularSubtreeIndex,
-    _regularRefinedNode.TreeDepth,
-    state,
+    subtreeIndex,
+    TreeDepth,
+    _state,
     _regularRefinedNode._eventHandle,
     _regularRefinedNode._regularGridContainer,
     false    // PipelineTasks.runsParallel()
   );
-  AscendTask    ascendTask(regularSubtreeIndex, TreeDepth, state, Base::_eventHandle, _regularGridContainer );
+  AscendTask    ascendTask(
+    subtreeIndex,
+    TreeDepth,
+    _state,
+    _regularRefinedNode._eventHandle,
+    _regularRefinedNode._regularGridContainer
+  );
 
   descendTask();
   ascendTask();
-*/
+
+  const bool retainSubtree = ascendTask.treeRemainsStatic();
 
   tarch::multicore::Lock myLock( _stateSemaphore );
   assertion( _keepSubtree.count(subtreeIndex)==0 );
-//  _keepSubtree.insert( std::pair<int,bool>(subtreeIndex, ascendTask.treeRemainsStatic() ));
+  _keepSubtree.insert( std::pair<int,bool>(subtreeIndex, retainSubtree ));
 }
