@@ -215,8 +215,9 @@ class peano::datatraversal::TaskSet {
      *
      * <pre>
         peano::datatraversal::TaskSet backgroundTask(
-         [=] () {
+         [=] () -> bool {
           // do something
+          return false; // don't want to repeat this one forever
          },
          peano::datatraversal::TaskSet::TaskType::Background
        );

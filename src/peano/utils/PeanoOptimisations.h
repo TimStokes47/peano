@@ -228,4 +228,9 @@
 //  #define DeployOutsourcesRegularSubtreesToSeparateThreads
 #endif
 
+
+#if defined(DeployOutsourcesRegularSubtreesToSeparateThreads) and !defined(UseRecursionUnrollingOnRegularPatches)
+  #error Cannot use DeployOutsourcesRegularSubtreesToSeparateThreads without UseRecursionUnrollingOnRegularPatches
+#endif
+
 #endif

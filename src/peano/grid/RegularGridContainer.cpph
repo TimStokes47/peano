@@ -756,8 +756,8 @@ void peano::grid::RegularGridContainer<Vertex,Cell>::keepCurrentRegularSubgrid(b
       );
     }
     else {
-      _activeRegularSubtree = _freedSubtreeIndices.back();
-      _freedSubtreeIndices.pop_back();
+      _activeRegularSubtree = * (_freedSubtreeIndices.end() );
+      _freedSubtreeIndices.erase( _activeRegularSubtree );
       logDebug(
         "keepCurrentRegularSubgrid(bool,int)",
 		"keep index " << index << " and reuse index " << _activeRegularSubtree
@@ -784,7 +784,7 @@ void peano::grid::RegularGridContainer<Vertex,Cell>::keepCurrentRegularSubgrid(b
   // not keepIt and not _activeRegularSubtree==index
   else {
 	// Don't keep it, so this index can be given out again
-    _freedSubtreeIndices.push_back(index);
+    _freedSubtreeIndices.insert(index);
     logDebug(
       "keepCurrentRegularSubgrid(bool,int)",
       "store " << index << " to be recycled later; active index remains " << _activeRegularSubtree
@@ -797,5 +797,17 @@ template < class Vertex, class Cell >
 bool peano::grid::RegularGridContainer<Vertex,Cell>::holdsRegularSubgridsPersistently() const {
   const bool result = _data.size() - _freedSubtreeIndices.size() > 1;
   logDebug( "holdsRegularSubgridsPersistently()", "result=" << result );
+  return result;
+}
+
+
+template < class Vertex, class Cell >
+std::set<int> peano::grid::RegularGridContainer<Vertex,Cell>::getSetOfPersistentSubgridIndices() const {
+  std::set<int> result;
+  for (auto p: _data) {
+	if (p.first!=_activeRegularSubtree and _freedSubtreeIndices.count(p.first)==0) {
+	  result.insert(p.first);
+	}
+  }
   return result;
 }
