@@ -199,12 +199,16 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
           Suspended, Processing, Terminating
     	};
 
-    	RegularRefined&                     _regularRefinedNode;
-    	tarch::multicore::BooleanSemaphore  _stateSemaphore;
-    	TaskState                           _taskState;
-    	EventHandle                         _localHandle;
-    	std::map< int, bool >               _keepSubtree;
-    	State                               _state;
+    	enum class TreeProcessingResult {
+          CurrentlyRunning, KeepPersistentTree, DiscardPersistentTree
+    	};
+
+    	RegularRefined&                         _regularRefinedNode;
+    	tarch::multicore::BooleanSemaphore      _stateSemaphore;
+    	TaskState                               _taskState;
+    	EventHandle                             _localHandle;
+    	std::map< int, TreeProcessingResult >   _keepSubtree;
+    	State                                   _state;
 
     	/**
     	 * We need the state for Ascend and Descend. Descend actually doesn't

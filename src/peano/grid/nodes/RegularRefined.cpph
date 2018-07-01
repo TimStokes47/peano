@@ -631,11 +631,18 @@ bool peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
   bool result = false;
   while (!found) {
     tarch::multicore::Lock myLock( _stateSemaphore );
-    if ( _keepSubtree.count(subtreeIndex)>0 ) {
-      result = _keepSubtree.at(subtreeIndex);
+    if ( _keepSubtree.count(subtreeIndex)>0 && _keepSubtree.at(subtreeIndex)!=TreeProcessingResult::CurrentlyRunning) {
+      result = _keepSubtree.at(subtreeIndex)==TreeProcessingResult::KeepPersistentTree;
+      myLock.free();
       found  = true;
-
+    }
+    else if ( _keepSubtree.count(subtreeIndex)>0 && _keepSubtree.at(subtreeIndex)==TreeProcessingResult::CurrentlyRunning) {
+      myLock.free();
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
+    }
+    else {
+      myLock.free();
+      processOneSubtree(subtreeIndex);
     }
   }
 
@@ -655,33 +662,44 @@ template <class Vertex, class Cell, class State, class VertexStack, class CellSt
 void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::BackgroundPatchUpdateTask::processOneSubtree(
   int     subtreeIndex
 ) {
-  typedef peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>                        AscendTask;
-  typedef peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>                       DescendTask;
-
-  const peano::grid::CellFlags  TreeDepth = _regularRefinedNode._regularGridContainer.getVertexEnumerator( subtreeIndex, 0 ).getCellFlags();
-
-  DescendTask   descendTask(
-    subtreeIndex,
-    TreeDepth,
-    _state,
-    _regularRefinedNode._eventHandle,
-    _regularRefinedNode._regularGridContainer,
-    false    // PipelineTasks.runsParallel()
-  );
-  AscendTask    ascendTask(
-    subtreeIndex,
-    TreeDepth,
-    _state,
-    _regularRefinedNode._eventHandle,
-    _regularRefinedNode._regularGridContainer
-  );
-
-  descendTask();
-  ascendTask();
-
-  const bool retainSubtree = ascendTask.treeRemainsStatic();
-
   tarch::multicore::Lock myLock( _stateSemaphore );
-  assertion( _keepSubtree.count(subtreeIndex)==0 );
-  _keepSubtree.insert( std::pair<int,bool>(subtreeIndex, retainSubtree ));
+  const bool process = _keepSubtree.count(subtreeIndex)==0;
+  if (process) {
+	_keepSubtree.insert( std::pair<int,TreeProcessingResult>(subtreeIndex, TreeProcessingResult::CurrentlyRunning ));
+	myLock.free();
+
+    typedef peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>                        AscendTask;
+    typedef peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>                       DescendTask;
+
+    const peano::grid::CellFlags  TreeDepth = _regularRefinedNode._regularGridContainer.getVertexEnumerator( subtreeIndex, 0 ).getCellFlags();
+
+    DescendTask   descendTask(
+      subtreeIndex,
+      TreeDepth,
+      _state,
+      _regularRefinedNode._eventHandle,
+      _regularRefinedNode._regularGridContainer,
+      false    // PipelineTasks.runsParallel()
+    );
+    AscendTask    ascendTask(
+      subtreeIndex,
+      TreeDepth,
+      _state,
+      _regularRefinedNode._eventHandle,
+      _regularRefinedNode._regularGridContainer
+    );
+
+    descendTask();
+    ascendTask();
+
+    const bool retainSubtree = ascendTask.treeRemainsStatic();
+
+    myLock.lock();
+    if (retainSubtree) {
+      _keepSubtree[subtreeIndex] = TreeProcessingResult::KeepPersistentTree;
+    }
+    else {
+      _keepSubtree[subtreeIndex] = TreeProcessingResult::DiscardPersistentTree;
+    }
+  }
 }
