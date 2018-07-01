@@ -701,5 +701,6 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     else {
       _keepSubtree[subtreeIndex] = TreeProcessingResult::DiscardPersistentTree;
     }
+	myLock.free();
   }
 }
