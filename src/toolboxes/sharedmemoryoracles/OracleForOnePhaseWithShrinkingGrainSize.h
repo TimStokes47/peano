@@ -147,6 +147,8 @@ class sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize: public peano
      */
     static const double                                  _InitialRelativeAccuracy;
 
+    static bool                                          _hasLearnedSinceLastQuery;
+
     /**
      * We never do optimise all traces. We only do it with one trace at a time.
      * This field identifies which trace currently is studied.
@@ -580,6 +582,13 @@ class sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize: public peano
     void activateOracle() override;
 
     peano::datatraversal::autotuning::OracleForOnePhase* createNewOracle() const override;
+
+    /**
+     * @return Whether one of the oracles has somehow changes 'its mind'. The
+     * routine gives back a bool, but it also resets the internal state, i.e.
+     * for two consecutive calls, the second one always returns false.
+     */
+    static bool hasLearnedSinceLastQuery();
 };
 
 

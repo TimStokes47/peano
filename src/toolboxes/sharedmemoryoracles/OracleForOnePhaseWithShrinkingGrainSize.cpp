@@ -14,6 +14,7 @@ tarch::logging::Log  sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSiz
 
 const double   sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize::_InitialRelativeAccuracy(1e-2);
 const double   sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize::_TimingMax( 65536.0 );
+bool           sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize::_hasLearnedSinceLastQuery(false);
 
 
 
@@ -552,6 +553,7 @@ void sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize::activateOracl
 
       if (oneMeasurementDidLearn) {
         clearAllMeasurementsBesidesActiveOne();
+        _hasLearnedSinceLastQuery = true;
       }
     }
 
@@ -561,3 +563,11 @@ void sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize::activateOracl
     }
   }
 }
+
+
+bool sharedmemoryoracles::OracleForOnePhaseWithShrinkingGrainSize::hasLearnedSinceLastQuery() {
+  bool result = _hasLearnedSinceLastQuery;
+  _hasLearnedSinceLastQuery = false;
+  return result;
+}
+
