@@ -214,6 +214,10 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
     	 * We need the state for Ascend and Descend. Descend actually doesn't
     	 * need it, and Ascend only does a few state updates, so we accept
     	 * that there might be race conditions.
+    	 *
+    	 * This operation is idempotent, i.e. you can call it as often as you
+    	 * want. If the subtree subtreeIndex is already processed or is
+    	 * currently in the make, the call will simply return.
     	 */
     	void processOneSubtree( int subtreeIndex );
       public:
@@ -222,8 +226,28 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
         );
 
     	/**
-    	 * Runs in a busy loop until the whole thing has died.
-    	 */
+         * Runs in a busy loop until the whole thing has died. The busy loop
+         * waits for a Processing sign, sets this immediately back to Suspended
+         * and, in the same rush, spawns one job/task per persistent subtree.
+         *
+         * <h2> Implementation of the tasking </h2>
+         *
+         * I originally was tempted to spawn the tasks with the flag
+         * peano::datatraversal::TaskSet::TaskType::IsTaskAndRunAsSoonAsPossible,
+         * i.e. to make them real tasks in a TBB sense. However, brief
+         * profiling clarifies that all the tiny little persistent trees then
+         * totally mess up the performance. Tools alike Intel Amplifier even
+         * start to crash. So I make the tasks background jobs
+         * and issue them with TaskType::Background.
+         *
+         * Once I do it that way, I have to make the patch update task itself
+         * process the stuff mapped onto background jobs. Otherwise I launch all these background
+         * tasks but then enter a busy loop only polling the status flag. This
+         * materialises in a performance flaw and notably a plateau between one
+         * and two threads.
+         *
+         * @see processOneSubtree()
+         */
     	bool operator()();
 
     	/**

@@ -586,32 +586,38 @@ peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,Event
 
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 bool peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::BackgroundPatchUpdateTask::operator()() {
- tarch::multicore::Lock myLock( _stateSemaphore );
- TaskState taskState = _taskState;
- myLock.free();
+  tarch::multicore::Lock myLock( _stateSemaphore );
+  TaskState taskState = _taskState;
+  myLock.free();
 
- if (taskState==TaskState::Processing ) {
-   std::set<int> indexSet = _regularRefinedNode._regularGridContainer.getSetOfPersistentSubgridIndices();
-   for (auto p: indexSet) {
-     peano::datatraversal::TaskSet backgroundTask(
-      [=] () -> bool {
-       processOneSubtree(p);
-       return false;
-      },
-      peano::datatraversal::TaskSet::TaskType::Background
-    );
-   }
- }
+  if (taskState==TaskState::Processing ) {
+    std::set<int> indexSet = _regularRefinedNode._regularGridContainer.getSetOfPersistentSubgridIndices();
 
- if (taskState == TaskState::Terminating) {
-   return false;
- }
- else {
-   myLock.lock();
-   _taskState = TaskState::Suspended;
-   myLock.free();
-   return true;
- }
+    logInfo( "operator()", "spawn " << indexSet.size() << " persistent tree tasks" );
+
+    for (auto p: indexSet) {
+      peano::datatraversal::TaskSet backgroundTask(
+        [=] () -> bool {
+          processOneSubtree(p);
+          return false;
+        },
+        peano::datatraversal::TaskSet::TaskType::Background
+      );
+    }
+    for (auto p: indexSet) {
+      processOneSubtree(p);
+    }
+  }
+
+  if (taskState == TaskState::Terminating) {
+    return false;
+  }
+  else {
+    myLock.lock();
+    _taskState = TaskState::Suspended;
+    myLock.free();
+    return true;
+  }
 }
 
 
