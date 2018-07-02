@@ -182,6 +182,9 @@ template <
   class CellStack,
   class EventHandle
 >
+
+
+
 class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandle> {
   private:
     typedef peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandle>     Base;
@@ -190,7 +193,57 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
 
     static tarch::logging::Log _log;
 
-    RegularGridContainer&  _regularGridContainer;
+    struct BackgroundPatchUpdateTask {
+      private:
+    	enum class TaskState {
+          Suspended, Processing, Terminating
+    	};
+
+    	enum class TreeProcessingResult {
+          CurrentlyRunning, KeepPersistentTree, DiscardPersistentTree
+    	};
+
+    	RegularRefined&                         _regularRefinedNode;
+    	tarch::multicore::BooleanSemaphore      _stateSemaphore;
+    	TaskState                               _taskState;
+    	EventHandle                             _localHandle;
+    	std::map< int, TreeProcessingResult >   _keepSubtree;
+    	State                                   _state;
+
+    	/**
+    	 * We need the state for Ascend and Descend. Descend actually doesn't
+    	 * need it, and Ascend only does a few state updates, so we accept
+    	 * that there might be race conditions.
+    	 */
+    	void processOneSubtree( int subtreeIndex );
+      public:
+    	BackgroundPatchUpdateTask(
+  	      RegularRefined&  regularRefinedNode
+        );
+
+    	/**
+    	 * Runs in a busy loop until the whole thing has died.
+    	 */
+    	bool operator()();
+
+    	/**
+    	 * Called once per xxx.
+    	 *
+    	 * - Copy my own, my local version of the mapping?
+    	 */
+    	void kickOffTraversals(const State& state);
+
+    	/**
+    	 * @return Whether we may keep this persistent subtree for the next iteration.
+    	 */
+    	bool waitUntilTraversalHasTerminated( int subtreeIndex );
+
+    	void terminate();
+    };
+
+    RegularGridContainer&         _regularGridContainer;
+    BackgroundPatchUpdateTask*    _backgroundPatchUpdateTask;
+
 
   public:
     RegularRefined(
@@ -200,6 +253,9 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
       peano::geometry::Geometry&  geometry,
       peano::grid::RegularGridContainer<Vertex,Cell>&  regularGridContainer
     );
+
+    void beginIteration(State& state);
+    void endIteration(State& state);
 
     /**
      * @see Standard constructor

@@ -34,9 +34,10 @@ template <
 >
 class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandle> {
   private:
-    typedef peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandle>     Base;
-    typedef peano::grid::nodes::Leaf<Vertex,Cell,State,VertexStack,CellStack,EventHandle>     LeafNode;
-    typedef peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>  RefinedNode;
+    typedef peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandle>            Base;
+    typedef peano::grid::nodes::Leaf<Vertex,Cell,State,VertexStack,CellStack,EventHandle>            LeafNode;
+    typedef peano::grid::nodes::Refined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>         RefinedNode;
+    typedef peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>  RegularRefinedNode;
 
     static tarch::logging::Log _log;
 
@@ -102,6 +103,7 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
 
     LeafNode&                             _leafNode;
     RefinedNode&                          _refinedNode;
+    RegularRefinedNode&                   _regularRefinedNode;
 
     peano::grid::SingleLevelEnumerator          getCoarseGridEnumeratorForLocalData() const;
     peano::grid::SingleElementVertexEnumerator  getCoarseGridEnumeratorForReceivedData() const;
@@ -289,6 +291,7 @@ class peano::grid::nodes::Root: public peano::grid::nodes::Node<Vertex,Cell,Stat
       peano::geometry::Geometry&                   geometry,
       LeafNode&                                    leafNode,
       RefinedNode&                                 refinedNode,
+      RegularRefinedNode&                          regularRefinedNode,
       peano::grid::TraversalOrderOnTopLevel&       cellTraversal
     );
 

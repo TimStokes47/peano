@@ -311,7 +311,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
       const bool CaseStorePersistentVertex = actionFlag==peano::stacks::Constants::InOutStack;
 
       #if !defined(SharedMemoryParallelisation)
-      assertion( !CaseStorePersistentVertex || _regularGridContainer.getCounter(currentLevel,positionInArray)==CounterPersistentNode);
+      assertion( !CaseStorePersistentVertex || _regularGridContainer.getCounter(_regularSubtreeIndex,currentLevel,positionInArray)==CounterPersistentNode);
       #endif
 
       const bool CaseWriteToTempStacks     =
@@ -547,7 +547,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
   }
 
   #if !defined(SharedMemoryParallelisation)
-  assertion2(_regularGridContainer.areAllEventsOnThisLevelCalled(currentFineGridLevel), currentFineGridLevel, _regularGridContainer.toString());
+  assertion2(_regularGridContainer.areAllEventsOnThisLevelCalled(_regularSubtreeIndex,currentFineGridLevel), currentFineGridLevel, _regularGridContainer.toString(_regularSubtreeIndex));
   #else
   assertion5(
     _storeProcessRunsInParallelToOtherTasks || _regularGridContainer.areAllEventsOnThisLevelCalled(_regularSubtreeIndex,currentFineGridLevel), currentFineGridLevel,

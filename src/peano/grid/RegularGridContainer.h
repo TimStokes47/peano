@@ -15,6 +15,7 @@
 #include "peano/utils/PeanoOptimisations.h"
 
 #include <vector>
+#include <set>
 #include <map>
 
 #if defined(SharedTBB)
@@ -264,7 +265,7 @@ class peano::grid::RegularGridContainer {
      */
     std::map<int, std::pair<int,int> >        _usedPerTraversal;
 
-    std::vector<int>                          _freedSubtreeIndices;
+    std::set<int>                             _freedSubtreeIndices;
     int                                       _activeRegularSubtree;
 
     double                   _maximumMemoryFootprintForTemporaryRegularGrid;
@@ -456,6 +457,11 @@ class peano::grid::RegularGridContainer {
      * @return Whether any regular subgrid is held persistently
      */
     bool holdsRegularSubgridsPersistently() const;
+
+    /**
+     * Can be used to iterate over all persistent subtrees.
+     */
+    std::set<int> getSetOfPersistentSubgridIndices() const;
 };
 
 

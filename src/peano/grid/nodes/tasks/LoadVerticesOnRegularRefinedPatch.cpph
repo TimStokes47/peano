@@ -278,7 +278,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     const bool CaseLoadPersistentVertex  = actionFlag == peano::stacks::Constants::InOutStack;
 
     #if !defined(SharedMemoryParallelisation)
-    assertion( !CaseLoadPersistentVertex || _regularGridContainer.getCounter(currentLevel,positionInArray)==CounterPersistentNode);
+    assertion( !CaseLoadPersistentVertex || _regularGridContainer.getCounter(_regularSubtreeIndex,currentLevel,positionInArray)==CounterPersistentNode);
     #endif
 
 

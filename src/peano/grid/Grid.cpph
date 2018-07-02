@@ -32,7 +32,7 @@ peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::Grid(
   _leafNode   (vertexStack,cellStack,_eventHandle,geometry,_refinedNode),
   _refinedNode(vertexStack,cellStack,_eventHandle,geometry,_leafNode,_regularRefinedNode,regularGridContainer),
   _regularRefinedNode(vertexStack,cellStack,_eventHandle,geometry,regularGridContainer),
-  _root       (vertexStack,cellStack,_eventHandle,geometry,_leafNode,_refinedNode, _traversalOrderOnTopLevel) {
+  _root       (vertexStack,cellStack,_eventHandle,geometry,_leafNode,_refinedNode, _regularRefinedNode, _traversalOrderOnTopLevel) {
   logTraceIn( "Grid(...)" );
   _root.restart(state,domainSize,domainOffset,1);
   logTraceOut( "Grid(...)" );
@@ -54,10 +54,10 @@ peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::Grid(
   _eventHandle(),
   _regularGridContainer(regularGridContainer),
   _traversalOrderOnTopLevel(traversalOrderOnTopLevel),
-  _leafNode   (vertexStack,cellStack,_eventHandle,geometry,_refinedNode),
-  _refinedNode(vertexStack,cellStack,_eventHandle,geometry,_leafNode,_regularRefinedNode,regularGridContainer),
-  _regularRefinedNode(vertexStack,cellStack,_eventHandle,geometry,regularGridContainer),
-  _root       (vertexStack,cellStack,_eventHandle,geometry,_leafNode,_refinedNode, _traversalOrderOnTopLevel) {
+  _leafNode   (vertexStack, cellStack, _eventHandle, geometry, _refinedNode),
+  _refinedNode(vertexStack, cellStack, _eventHandle, geometry, _leafNode, _regularRefinedNode, regularGridContainer),
+  _regularRefinedNode(vertexStack, cellStack, _eventHandle, geometry, regularGridContainer),
+  _root       (vertexStack, cellStack, _eventHandle, geometry, _leafNode, _refinedNode, _regularRefinedNode, _traversalOrderOnTopLevel) {
   logTraceIn( "Grid(...)" );
   logTraceOut( "Grid(...)" );
 }
@@ -98,12 +98,6 @@ void peano::grid::Grid<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::ite
   _state.holdsPersistentSubtrees(_regularGridContainer.holdsRegularSubgridsPersistently());
 
   logDebug( "iterate(State)", "finished iterate" );
-
-  #if defined(UseRecursionUnrollingOnRegularPatches)
-  _regularGridContainer.endOfIteration();
-  #endif
-
-  logDebug( "iterate(State)", "called endOfIteration()" );
 
   peano::performanceanalysis::Analysis::getInstance().endIteration(
     #ifdef TrackGridStatistics
