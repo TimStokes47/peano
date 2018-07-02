@@ -598,7 +598,7 @@ bool peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
        processOneSubtree(p);
        return false;
       },
-      peano::datatraversal::TaskSet::TaskType::IsTaskAndRunAsSoonAsPossible
+      peano::datatraversal::TaskSet::TaskType::Background
     );
    }
  }
@@ -629,6 +629,7 @@ template <class Vertex, class Cell, class State, class VertexStack, class CellSt
 bool peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::BackgroundPatchUpdateTask::waitUntilTraversalHasTerminated( int subtreeIndex ) {
   bool found  = false;
   bool result = false;
+  bool startUpBackgroundJobs = false;
   while (!found) {
     tarch::multicore::Lock myLock( _stateSemaphore );
     if ( _keepSubtree.count(subtreeIndex)>0 && _keepSubtree.at(subtreeIndex)!=TreeProcessingResult::CurrentlyRunning) {
@@ -638,14 +639,26 @@ bool peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     }
     else if ( _keepSubtree.count(subtreeIndex)>0 && _keepSubtree.at(subtreeIndex)==TreeProcessingResult::CurrentlyRunning) {
       myLock.free();
+      
+      startUpBackgroundJobs = true;
+      tarch::multicore::jobs::startToProcessBackgroundJobs();
+      
       tarch::parallel::Node::getInstance().receiveDanglingMessages();
     }
     else {
       myLock.free();
+      
+      startUpBackgroundJobs = true;
+      tarch::multicore::jobs::startToProcessBackgroundJobs();
+
       processOneSubtree(subtreeIndex);
     }
   }
 
+  if (startUpBackgroundJobs) {
+    tarch::multicore::jobs::finishToProcessBackgroundJobs();
+  }
+  
   return true;
 }
 
