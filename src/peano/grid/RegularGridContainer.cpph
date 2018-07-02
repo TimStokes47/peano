@@ -197,8 +197,8 @@ void peano::grid::RegularGridContainer<Vertex,Cell>::endOfIteration() {
   logInfo( "endOfIteration()", "persistently held subgrids=" << persistentlyStoredTrees );
   logInfo( "endOfIteration()", "no of freed subgrids (not reused yet)=" << _freedSubtreeIndices.size() );
 
-  assertionEquals3(
-    persistentlyStoredTrees,static_cast<int>(_data.size())-static_cast<int>(_freedSubtreeIndices.size())-1,
+  assertion3(
+    persistentlyStoredTrees <= static_cast<int>(_data.size())-static_cast<int>(_freedSubtreeIndices.size()),
     persistentlyStoredTrees,_data.size(),_freedSubtreeIndices.size()
   );
 
