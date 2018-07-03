@@ -550,11 +550,6 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
 }
 
 
-#ifdef SharedTBB
-#include "tarch/multicore/tbb/Jobs.h"
-#endif
-
-
 template <class Vertex, class Cell, class State, class VertexStack, class CellStack, class EventHandle>
 void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,EventHandle>::beginIteration(State& state) {
   #if defined(DeployOutsourcesRegularSubtreesToSeparateThreads) && defined(SharedMemoryParallelisation)
@@ -578,10 +573,6 @@ void peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
             peano::datatraversal::TaskSet::TaskType::Background
           );
         }
-
-        #ifdef SharedTBB
-        logInfo( "operator()", "max background tasks=" << tarch::multicore::jobs::internal::MaxSizeOfBackgroundQueue.load() );
-        #endif
 
         return false;
       },
