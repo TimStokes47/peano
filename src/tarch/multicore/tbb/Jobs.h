@@ -27,20 +27,18 @@ namespace tarch {
          */
         extern tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks;
 
-        //#define NumberOfJobQueues 32
         constexpr int NumberOfJobQueues = 32;
         typedef tbb::concurrent_queue<tarch::multicore::jobs::Job*>   JobQueue;
         extern JobQueue _pendingJobs[NumberOfJobQueues];
 
         constexpr int BackgroundJobsJobClassNumber = NumberOfJobQueues-1;
 
-        #ifndef TBBMinimalNumberOfJobsPerBackgroundConsumerRun
-        #define TBBMinimalNumberOfJobsPerBackgroundConsumerRun 4
-        #endif
+        /**
+         * This is not the real value but an estimate.
+         */
+        extern tbb::atomic<int>         MaxSizeOfBackgroundQueue;
 
-        #ifndef TBBMaximalNumberOfJobsPerBackgroundConsumerRun
-        #define TBBMaximalNumberOfJobsPerBackgroundConsumerRun (TBBMinimalNumberOfJobsPerBackgroundConsumerRun*2)
-        #endif
+        int getMinimalNumberOfJobsPerBackgroundConsumerRun();
 
         extern tarch::logging::Log _log;
 

@@ -20,6 +20,11 @@ tarch::logging::Log tarch::multicore::jobs::internal::_log( "tarch::multicore::j
 
 tbb::atomic<int>                              tarch::multicore::jobs::internal::_numberOfRunningBackgroundJobConsumerTasks(0);
 tarch::multicore::jobs::internal::JobQueue    tarch::multicore::jobs::internal::_pendingJobs[NumberOfJobQueues];
+tbb::atomic<int>                              tarch::multicore::jobs::internal::MaxSizeOfBackgroundQueue;
+
+
+//int  tarch::multicore::jobs::internal::TBBMinimalNumberOfJobsPerBackgroundConsumerRun=128
+
 
 //
 // This is a bug in Intel's TBB as documented on
@@ -42,12 +47,20 @@ tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsum
 }
 
 
+int tarch::multicore::jobs::internal::getMinimalNumberOfJobsPerBackgroundConsumerRun() {
+  return std::max(
+    4,
+	tarch::multicore::jobs::internal::MaxSizeOfBackgroundQueue.load() / tarch::multicore::Core::getInstance().getNumberOfThreads()
+  );
+}
+
+
 void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
   _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(1);
   const int jobsPerThread = static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size())/tarch::multicore::Core::getInstance().getNumberOfThreads();
   BackgroundJobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) BackgroundJobConsumerTask( std::max(
-	TBBMinimalNumberOfJobsPerBackgroundConsumerRun,
-	std::max( jobsPerThread, TBBMaximalNumberOfJobsPerBackgroundConsumerRun )
+	getMinimalNumberOfJobsPerBackgroundConsumerRun(),
+	std::max( jobsPerThread, getMinimalNumberOfJobsPerBackgroundConsumerRun()*2 )
   ));
   tbb::task::enqueue(*tbbTask);
   ::backgroundTaskContext.set_priority(tbb::priority_low);
@@ -118,6 +131,9 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
       {
         internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).push(job);
         
+        const int oldSize = std::max(internal::MaxSizeOfBackgroundQueue.load(),2);
+        internal::MaxSizeOfBackgroundQueue = std::max(oldSize-1,static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size()));
+
         const int currentlyRunningBackgroundThreads = internal::_numberOfRunningBackgroundJobConsumerTasks.load();
         if (
           currentlyRunningBackgroundThreads<Job::_maxNumberOfRunningBackgroundThreads
@@ -247,7 +263,7 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
   const int maxBusyConsumerTasks = 
     std::max( 
       0, 
-	  static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size())/TBBMinimalNumberOfJobsPerBackgroundConsumerRun 
+	  static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size())/internal::getMinimalNumberOfJobsPerBackgroundConsumerRun()
 	);
 
   const int maxAdditionalBackgroundThreads =
@@ -276,7 +292,7 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
 
 
 bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
-  processJobs( internal::BackgroundJobsJobClassNumber, TBBMinimalNumberOfJobsPerBackgroundConsumerRun );
+  processJobs( internal::BackgroundJobsJobClassNumber, internal::getMinimalNumberOfJobsPerBackgroundConsumerRun() );
 
   return !internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).empty();
 }
