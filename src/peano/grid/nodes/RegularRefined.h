@@ -193,80 +193,31 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
 
     static tarch::logging::Log _log;
 
-    struct BackgroundPatchUpdateTask {
-      private:
-    	enum class TaskState {
-          Suspended, Processing, Terminating
-    	};
-
-    	enum class TreeProcessingResult {
-          CurrentlyRunning, KeepPersistentTree, DiscardPersistentTree
-    	};
-
-    	RegularRefined&                         _regularRefinedNode;
-    	tarch::multicore::BooleanSemaphore      _stateSemaphore;
-    	TaskState                               _taskState;
-    	EventHandle                             _localHandle;
-    	std::map< int, TreeProcessingResult >   _keepSubtree;
-    	State                                   _state;
-
-    	/**
-    	 * We need the state for Ascend and Descend. Descend actually doesn't
-    	 * need it, and Ascend only does a few state updates, so we accept
-    	 * that there might be race conditions.
-    	 *
-    	 * This operation is idempotent, i.e. you can call it as often as you
-    	 * want. If the subtree subtreeIndex is already processed or is
-    	 * currently in the make, the call will simply return.
-    	 */
-    	void processOneSubtree( int subtreeIndex );
-      public:
-    	BackgroundPatchUpdateTask(
-  	      RegularRefined&  regularRefinedNode
-        );
-
-    	/**
-         * Runs in a busy loop until the whole thing has died. The busy loop
-         * waits for a Processing sign, sets this immediately back to Suspended
-         * and, in the same rush, spawns one job/task per persistent subtree.
-         *
-         * <h2> Implementation of the tasking </h2>
-         *
-         * I originally was tempted to spawn the tasks with the flag
-         * peano::datatraversal::TaskSet::TaskType::IsTaskAndRunAsSoonAsPossible,
-         * i.e. to make them real tasks in a TBB sense. However, brief
-         * profiling clarifies that all the tiny little persistent trees then
-         * totally mess up the performance. Tools alike Intel Amplifier even
-         * start to crash. So I make the tasks background jobs
-         * and issue them with TaskType::Background.
-         *
-         * Once I do it that way, I have to make the patch update task itself
-         * process the stuff mapped onto background jobs. Otherwise I launch all these background
-         * tasks but then enter a busy loop only polling the status flag. This
-         * materialises in a performance flaw and notably a plateau between one
-         * and two threads.
-         *
-         * @see processOneSubtree()
-         */
-    	bool operator()();
-
-    	/**
-    	 * Called once per xxx.
-    	 *
-    	 * - Copy my own, my local version of the mapping?
-    	 */
-    	void kickOffTraversals(const State& state);
-
-    	/**
-    	 * @return Whether we may keep this persistent subtree for the next iteration.
-    	 */
-    	bool waitUntilTraversalHasTerminated( int subtreeIndex );
-
-    	void terminate();
+    enum class TreeProcessingResult {
+      CurrentlyRunning, KeepPersistentTree, DiscardPersistentTree
     };
 
+   	tarch::multicore::BooleanSemaphore      _stateSemaphore;
+
+   	/**
+   	 * Only used if we handle persistent subtrees in threads of their own.
+   	 */
+   	std::map< int, TreeProcessingResult >   _keepSubtree;
+   	State                                   _stateForPersistentSubtrees;
+
+   	/**
+   	 * We need the state for Ascend and Descend. Descend actually doesn't
+   	 * need it, and Ascend only does a few state updates, so we accept
+   	 * that there might be race conditions.
+   	 *
+   	 * This operation is idempotent, i.e. you can call it as often as you
+   	 * want. If the subtree subtreeIndex is already processed or is
+   	 * currently in the make, the call will simply return.
+   	 */
+   	void processOneSubtree( int subtreeIndex );
+   	bool waitUntilTraversalHasTerminated( int subtreeIndex );
+
     RegularGridContainer&         _regularGridContainer;
-    BackgroundPatchUpdateTask*    _backgroundPatchUpdateTask;
 
 
   public:
