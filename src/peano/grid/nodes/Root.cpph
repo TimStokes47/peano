@@ -540,6 +540,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       peano::heap::AbstractHeap::allHeapsStartToSendSynchronousData();
     }
     Base::_eventHandle.beginIteration(state);
+    _regularRefinedNode.beginIteration(state);
   }
 
   if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
@@ -548,6 +549,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       peano::heap::AbstractHeap::allHeapsStartToSendSynchronousData();
     }
     Base::_eventHandle.beginIteration(state);
+    _regularRefinedNode.beginIteration(state);
   }
 
   if ( !_cellTraversal.isValid() ) {
@@ -565,9 +567,8 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   #else
   state.resetStateAtBeginOfIteration();
   Base::_eventHandle.beginIteration(state);
-  #endif
-
   _regularRefinedNode.beginIteration(state);
+  #endif
 
   Vertex  fineGridVertices[FOUR_POWER_D];
   int     counter[FOUR_POWER_D];
@@ -636,6 +637,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           peano::heap::AbstractHeap::allHeapsStartToSendSynchronousData();
         }
         Base::_eventHandle.beginIteration(state);
+        _regularRefinedNode.beginIteration(state);
       }
       else if (
         (ReceiveStateFromMasterStrategy==peano::CommunicationSpecification::Action::Skip)
@@ -649,6 +651,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
           peano::heap::AbstractHeap::allHeapsStartToSendSynchronousData();
         }
         Base::_eventHandle.beginIteration(state);
+        _regularRefinedNode.beginIteration(state);
         receiveCellAndVerticesFromMaster( state, true );
         mergeReceivedCellAndVerticesFromMasterIntoLocalDataStructure(
           state,

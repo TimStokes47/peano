@@ -193,56 +193,31 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
 
     static tarch::logging::Log _log;
 
-    struct BackgroundPatchUpdateTask {
-      private:
-    	enum class TaskState {
-          Suspended, Processing, Terminating
-    	};
-
-    	enum class TreeProcessingResult {
-          CurrentlyRunning, KeepPersistentTree, DiscardPersistentTree
-    	};
-
-    	RegularRefined&                         _regularRefinedNode;
-    	tarch::multicore::BooleanSemaphore      _stateSemaphore;
-    	TaskState                               _taskState;
-    	EventHandle                             _localHandle;
-    	std::map< int, TreeProcessingResult >   _keepSubtree;
-    	State                                   _state;
-
-    	/**
-    	 * We need the state for Ascend and Descend. Descend actually doesn't
-    	 * need it, and Ascend only does a few state updates, so we accept
-    	 * that there might be race conditions.
-    	 */
-    	void processOneSubtree( int subtreeIndex );
-      public:
-    	BackgroundPatchUpdateTask(
-  	      RegularRefined&  regularRefinedNode
-        );
-
-    	/**
-    	 * Runs in a busy loop until the whole thing has died.
-    	 */
-    	bool operator()();
-
-    	/**
-    	 * Called once per xxx.
-    	 *
-    	 * - Copy my own, my local version of the mapping?
-    	 */
-    	void kickOffTraversals(const State& state);
-
-    	/**
-    	 * @return Whether we may keep this persistent subtree for the next iteration.
-    	 */
-    	bool waitUntilTraversalHasTerminated( int subtreeIndex );
-
-    	void terminate();
+    enum class TreeProcessingResult {
+      CurrentlyRunning, KeepPersistentTree, DiscardPersistentTree
     };
 
+   	tarch::multicore::BooleanSemaphore      _stateSemaphore;
+
+   	/**
+   	 * Only used if we handle persistent subtrees in threads of their own.
+   	 */
+   	std::map< int, TreeProcessingResult >   _keepSubtree;
+   	State                                   _stateForPersistentSubtrees;
+
+   	/**
+   	 * We need the state for Ascend and Descend. Descend actually doesn't
+   	 * need it, and Ascend only does a few state updates, so we accept
+   	 * that there might be race conditions.
+   	 *
+   	 * This operation is idempotent, i.e. you can call it as often as you
+   	 * want. If the subtree subtreeIndex is already processed or is
+   	 * currently in the make, the call will simply return.
+   	 */
+   	void processOneSubtree( int subtreeIndex );
+   	bool waitUntilTraversalHasTerminated( int subtreeIndex );
+
     RegularGridContainer&         _regularGridContainer;
-    BackgroundPatchUpdateTask*    _backgroundPatchUpdateTask;
 
 
   public:

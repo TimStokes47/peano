@@ -25,6 +25,11 @@ tarch::logging::Log tarch::multicore::jobs::_log( "tarch::multicore::jobs" );
 
 tbb::atomic<int>                              tarch::multicore::jobs::internal::_numberOfRunningBackgroundJobConsumerTasks(0);
 tarch::multicore::jobs::internal::JobQueue    tarch::multicore::jobs::internal::_pendingJobs[NumberOfJobQueues];
+tbb::atomic<int>                              tarch::multicore::jobs::internal::MaxSizeOfBackgroundQueue;
+
+
+//int  tarch::multicore::jobs::internal::TBBMinimalNumberOfJobsPerBackgroundConsumerRun=128
+
 
 //
 // This is a bug in Intel's TBB as documented on
@@ -47,6 +52,14 @@ tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsum
 }
 
 
+int tarch::multicore::jobs::internal::getMinimalNumberOfJobsPerBackgroundConsumerRun() {
+  return std::max(
+    4,
+	tarch::multicore::jobs::internal::MaxSizeOfBackgroundQueue.load() / tarch::multicore::Core::getInstance().getNumberOfThreads()
+  );
+}
+
+
 void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
 	static tbb::atomic<int> cnt=0;
   _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(1);
@@ -54,8 +67,8 @@ void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
 
   const int jobsPerThread = static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size())/tarch::multicore::Core::getInstance().getNumberOfThreads();
   BackgroundJobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) BackgroundJobConsumerTask( std::max(
-	TBBMinimalNumberOfJobsPerBackgroundConsumerRun,
-	std::max( jobsPerThread, TBBMaximalNumberOfJobsPerBackgroundConsumerRun )
+	getMinimalNumberOfJobsPerBackgroundConsumerRun(),
+	std::max( jobsPerThread, getMinimalNumberOfJobsPerBackgroundConsumerRun()*2 )
   ));
   tbb::task::enqueue(*tbbTask);
   ::backgroundTaskContext.set_priority(tbb::priority_low);
@@ -66,6 +79,7 @@ void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
 
 
 tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute() {
+<<<<<<< HEAD
   int oldNumberOfBackgroundJobs = internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size();
 
   processJobs(internal::BackgroundJobsJobClassNumber,_maxJobs);
@@ -110,6 +124,12 @@ tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute(
 	  	//																	<< " oldNumberOfBackgroundJobs "<< oldNumberOfBackgroundJobs);
     enqueue();
   }
+=======
+  _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
+
+  processJobs(internal::BackgroundJobsJobClassNumber,_maxJobs);
+
+>>>>>>> master
   return nullptr;
 }
 
@@ -167,6 +187,13 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
     case JobType::Job:
       {
         internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).push(job);
+<<<<<<< HEAD
+=======
+        
+        const int oldSize = std::max(internal::MaxSizeOfBackgroundQueue.load(),2);
+        internal::MaxSizeOfBackgroundQueue = std::max(oldSize-1,static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size()));
+
+>>>>>>> master
         const int currentlyRunningBackgroundThreads = internal::_numberOfRunningBackgroundJobConsumerTasks.load();
         if (
           currentlyRunningBackgroundThreads<Job::_maxNumberOfRunningBackgroundThreads
@@ -316,7 +343,7 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
   const int maxBusyConsumerTasks = 
     std::max( 
       0, 
-	  static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size())/TBBMinimalNumberOfJobsPerBackgroundConsumerRun 
+	  static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size())/internal::getMinimalNumberOfJobsPerBackgroundConsumerRun()
 	);
 
   const int maxAdditionalBackgroundThreads =
@@ -345,7 +372,7 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
 
 
 bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
-  processJobs( internal::BackgroundJobsJobClassNumber, TBBMinimalNumberOfJobsPerBackgroundConsumerRun );
+  processJobs( internal::BackgroundJobsJobClassNumber, internal::getMinimalNumberOfJobsPerBackgroundConsumerRun() );
 
   return !internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).empty();
 }

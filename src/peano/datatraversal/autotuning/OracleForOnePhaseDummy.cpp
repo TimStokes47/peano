@@ -113,7 +113,7 @@ peano::datatraversal::autotuning::GrainSize peano::datatraversal::autotuning::Or
     askingMethod==MethodTrace::HoldPersistentRegularSubgrid
   ) {
 	grainSize           = 1;
-	smallestProblemSize = 1;
+	smallestProblemSize = 2;
   }
 
 
