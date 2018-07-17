@@ -215,6 +215,10 @@ class peano::grid::nodes::RegularRefined: public peano::grid::nodes::Node<Vertex
    	 * currently in the make, the call will simply return.
    	 */
    	void processOneSubtree( int subtreeIndex );
+
+   	/**
+   	 * @return Whether the tree is to be kept persistently.
+   	 */
    	bool waitUntilTraversalHasTerminated( int subtreeIndex );
 
     RegularGridContainer&         _regularGridContainer;

@@ -164,8 +164,8 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     logDebug(
       "loadVerticesOfOneCellWithinRegularSubtree(...)",
       "analysed vertex " << currentVertex << ", i.e. vertex #no=" << positionInArray << " on level " << currentLevel
-      << ": read-from-temp-stack=" << _regularGridContainer.isReadFromTemporaryStack(currentLevel,positionInArray)
-      << ", to-be-written-to-temp-stack=" << _regularGridContainer.isToBeWrittenToTemporaryStack(currentLevel,positionInArray)
+      << ": read-from-temp-stack=" << _regularGridContainer.isReadFromTemporaryStack(_regularSubtreeIndex,currentLevel,positionInArray)
+      << ", to-be-written-to-temp-stack=" << _regularGridContainer.isToBeWrittenToTemporaryStack(_regularSubtreeIndex,currentLevel,positionInArray)
       << ", loaded vertex from input stream in this cell=" << CaseLoadPersistentVertex
       << ", took from stack view=" << static_cast<bool>(CaseLoadPersistentVertex && !_stackView.isEmpty())
     );
@@ -181,9 +181,9 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
       for (int d=0; d<DIMENSIONS; d++) {
         assertionNumericalEquals10(
           cellsVertexEnumerator.getVertexPosition(currentVertex)(d),
-          _regularGridContainer.getVertex(currentLevel,positionInArray).getX()(d),
+          _regularGridContainer.getVertex(_regularSubtreeIndex,currentLevel,positionInArray).getX()(d),
           cellsVertexEnumerator.getVertexPosition(currentVertex),
-          _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+          _regularGridContainer.getVertex(_regularSubtreeIndex,currentLevel,positionInArray).toString(),
           cellsVertexEnumerator.toString(),
           currentLevel,
           positionInArray,
@@ -194,9 +194,9 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         );
       }
       assertionEquals5(
-        _regularGridContainer.getVertex(currentLevel,positionInArray).getLevel(),
+        _regularGridContainer.getVertex(_regularSubtreeIndex,currentLevel,positionInArray).getLevel(),
         currentCell.getLevel(),
-        _regularGridContainer.getVertex(currentLevel,positionInArray).toString(),
+        _regularGridContainer.getVertex(_regularSubtreeIndex,currentLevel,positionInArray).toString(),
         currentCell.toString(),
         currentLevel,positionInArray,_coarsestLevelOfThisTask
       );
@@ -346,7 +346,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
         popVertex
       );
 
-      logDebug( "loadVerticesOfOneCellAtBoundaryofSubtree(...)", "got vertex #no=" << positionInArray << ": " <<  _regularGridContainer.getVertex(currentLevel,positionInArray).toString() << " from temporary stack " << actionFlag );
+      logDebug( "loadVerticesOfOneCellAtBoundaryofSubtree(...)", "got vertex #no=" << positionInArray << ": " <<  _regularGridContainer.getVertex(_regularSubtreeIndex,currentLevel,positionInArray).toString() << " from temporary stack " << actionFlag );
     }
 
     const bool IsToBeWrittenToTemporaryStack =
@@ -357,8 +357,8 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     logDebug(
       "loadVerticesOfOneCellAtBoundaryofSubtree(...)",
       "analysed vertex " << currentVertex << ", i.e. vertex #no=" << positionInArray << " on level " << currentLevel
-      << ": read-from-temp-stack=" << _regularGridContainer.isReadFromTemporaryStack(currentLevel,positionInArray)
-      << ", to-be-written-to-temp-stack=" << _regularGridContainer.isToBeWrittenToTemporaryStack(currentLevel,positionInArray)
+      << ": read-from-temp-stack=" << _regularGridContainer.isReadFromTemporaryStack(_regularSubtreeIndex,currentLevel,positionInArray)
+      << ", to-be-written-to-temp-stack=" << _regularGridContainer.isToBeWrittenToTemporaryStack(_regularSubtreeIndex,currentLevel,positionInArray)
       << ", loaded vertex from input stream in this cell=" << CaseLoadPersistentVertex
       << ", loaded vertex from temporary stream in this cell=" << CaseTakeFromTempStacks
     );
@@ -502,7 +502,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
     }
   endzfor
 
-  logDebug( "loadVerticesWithOnTheFlyCellReconstruction(...)", "loaded all vertex data of level " << currentFineGridLevel << " within tree of depth " << _regularGridContainer.getVertexEnumerator(0).getCellFlags() );
+  logDebug( "loadVerticesWithOnTheFlyCellReconstruction(...)", "loaded all vertex data of level " << currentFineGridLevel << " within tree of depth " << _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex,0).getCellFlags() );
 
   if (currentFineGridLevel<_regularGridContainer.getVertexEnumerator(_regularSubtreeIndex, 0).getCellFlags()) {
     zfor3(k,loopDirection2)
@@ -695,7 +695,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
 template <class Vertex, class Cell, class VertexStack>
 void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::loadSubVerticesWithCellsOnFirstLevelInSharedMemoryMode() {
-  logTraceInWith1Argument( "loadSubVerticesWithCellsOnFirstLevelInSharedMemoryMode(...)", _regularGridContainer.getCell(0,_regularGridContainer.getVertexEnumerator(0).lineariseCellIndex(0)).toString() );
+  logTraceInWith1Argument( "loadSubVerticesWithCellsOnFirstLevelInSharedMemoryMode(...)", _regularGridContainer.getCell(_regularSubtreeIndex,0,_regularGridContainer.getVertexEnumerator(_regularSubtreeIndex,0).lineariseCellIndex(0)).toString() );
 
   #if defined(SharedMemoryParallelisation)
 
@@ -808,7 +808,7 @@ void peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,Ve
 
 template <class Vertex, class Cell, class VertexStack>
 bool peano::grid::nodes::tasks::LoadVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::operator()() {
-  logTraceInWith7Arguments( "operator()()", _isTraversalInverted, _loadProcessRunsInParallelToOtherTasks, _maxLevelToFork, _stackView.isEmpty(), _coarsestLevelOfThisTask, _coarsestCellsOffset, _regularGridContainer.getVertexEnumerator(0).getCellFlags() );
+  logTraceInWith7Arguments( "operator()()", _isTraversalInverted, _loadProcessRunsInParallelToOtherTasks, _maxLevelToFork, _stackView.isEmpty(), _coarsestLevelOfThisTask, _coarsestCellsOffset, _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex,0).getCellFlags() );
 
   #ifdef SharedMemoryParallelisation
   const bool UseOnTheFlyReconstruction =

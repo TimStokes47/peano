@@ -616,7 +616,7 @@ bool peano::grid::nodes::RegularRefined<Vertex,Cell,State,VertexStack,CellStack,
     }
   }
   
-  return true;
+  return result;
 }
 
 

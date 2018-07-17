@@ -127,10 +127,6 @@ void peano::heap::SynchronousDataExchanger<Data, CreateCopiesOfSentData,SendRece
 
     if(receiveTask.getMetaInformation().getLength() > 0) {
       _receiveTasks.back().triggerReceive(_dataTag);
-      logDebug(
-        "receiveDanglingMessages(...)",
-        "started to receive " << _receiveTasks.size() << "th message from rank " << receiveTask._rank << " with " << receiveTask._metaInformation.getLength() << " entries and data pointing to " << receiveTask._data
-      );
     }
 
     logTraceOut( "receiveDanglingMessages(...)" );

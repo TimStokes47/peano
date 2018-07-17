@@ -82,8 +82,8 @@ void peano::heap::RLEBoundaryDataExchanger<Data,CreateCopiesOfSentData, SendRece
     logDebug(
       "handleAndQueueReceivedTask(...)",
       "started to receive " << Base::_receiveTasks[Base::_currentReceiveBuffer].size() <<
-      "th message from rank " << receivedTask._rank << " with " << receivedTask._metaInformation.getLength() <<
-      " entries and data pointing to " << receivedTask._data
+      "th message from rank " << receivedTask.getRank() << " with " << receivedTask.getMetaInformation().getLength() <<
+      " entries"
     );
   }
   else {

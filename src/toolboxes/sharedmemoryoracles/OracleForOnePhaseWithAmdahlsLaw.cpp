@@ -28,8 +28,6 @@ peano::datatraversal::autotuning::GrainSize sharedmemoryoracles::OracleForOnePha
   _sampleCounter++;
   _sampleCounter = _sampleCounter%_sampleEveryXQueries;
 
-  logDebug( "parallelise(...)", "optimal base size is " << baseSize );
-
   _executionTimeDatabase[askingMethod]._maxProblemSize = std::max( _executionTimeDatabase[askingMethod]._maxProblemSize, problemSize );
 
   if (_sampleCounter==0 and problemSize>1) {
