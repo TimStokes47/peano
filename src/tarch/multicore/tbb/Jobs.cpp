@@ -79,7 +79,7 @@ void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
 
 
 tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute() {
-<<<<<<< HEAD
+
   int oldNumberOfBackgroundJobs = internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size();
 
   processJobs(internal::BackgroundJobsJobClassNumber,_maxJobs);
@@ -124,12 +124,7 @@ tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute(
 	  	//																	<< " oldNumberOfBackgroundJobs "<< oldNumberOfBackgroundJobs);
     enqueue();
   }
-=======
-  _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
 
-  processJobs(internal::BackgroundJobsJobClassNumber,_maxJobs);
-
->>>>>>> master
   return nullptr;
 }
 
@@ -187,13 +182,10 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
     case JobType::Job:
       {
         internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).push(job);
-<<<<<<< HEAD
-=======
         
         const int oldSize = std::max(internal::MaxSizeOfBackgroundQueue.load(),2);
         internal::MaxSizeOfBackgroundQueue = std::max(oldSize-1,static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size()));
 
->>>>>>> master
         const int currentlyRunningBackgroundThreads = internal::_numberOfRunningBackgroundJobConsumerTasks.load();
         if (
           currentlyRunningBackgroundThreads<Job::_maxNumberOfRunningBackgroundThreads
