@@ -120,6 +120,28 @@ namespace peano {
     /**
      * Wrapper around findMostAgressiveCompression() that works for an array of
      * count entries.
+     *
+     * I run over the array of length count and check for every single entry
+     * whether we could store it with fewer than 8 bytes without harming the
+     * maxError constraint. This check relies on
+     * findMostAgressiveCompression(double,double,bool). The routine then
+     * returns the minimal number of bytes you have to invest to encode this
+     * whole array such that the result still remains in the error bounds.
+     *
+     * <h2> Usage pattern </h2>
+     *
+     * This is the standard workflow:
+     *
+     * - Convert an array into its hierarchical representation. Usually, I
+     *   determine the mean value and then store all remaining values within the
+     *   array as actual value minus mean.
+     * - Call this routine on the remaining array.
+     * - If the result is bigger or equal 8, I store/send away the original
+     *   array. Otherwise:
+     * - I store the mean as 8 bytes into a char stream. I then loop over the
+     *   array and per array entry call decompose. I know how many bytes of
+     *   exponent and mantissa are valid from the result of this routine
+     *   and thus enqueue only those guys in an output stream/MPI message.
      */
     int findMostAgressiveCompression(
       double        values[],
