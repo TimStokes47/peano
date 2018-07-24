@@ -14,6 +14,12 @@
 #include <functional>
 
 
+#if defined(TBBInvade)
+#include "shminvade/SHMInvade.h"
+#endif
+
+
+
 namespace peano {
   namespace datatraversal {
     class TaskSet;
@@ -155,6 +161,10 @@ class peano::datatraversal::TaskSet {
 
     static int                               translateIntoJobClass( TaskType type );
     static tarch::multicore::jobs::JobType   translateIntoJobType( TaskType type );
+
+    #if defined(TBBInvade)
+    static shminvade::SHMInvade*  _backgroundTaskInvade;
+    #endif
 
   public:
     /**

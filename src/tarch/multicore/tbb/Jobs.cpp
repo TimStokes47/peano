@@ -73,7 +73,7 @@ void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
   tbb::task::enqueue(*tbbTask);
   ::backgroundTaskContext.set_priority(tbb::priority_low);
   if(cnt%1000==0) {
-      logInfo( "enqueue()", "spawned new background consumer task ntasks "<< _numberOfRunningBackgroundJobConsumerTasks <<" cnt="<<cnt );
+   //   logInfo( "enqueue()", "spawned new background consumer task ntasks "<< _numberOfRunningBackgroundJobConsumerTasks <<" cnt="<<cnt );
   }
 }
 
@@ -150,8 +150,6 @@ void tarch::multicore::jobs::internal::spawnBlockingJob(
     internal::getJobQueue(jobClass).push(
       new JobWithoutCopyOfFunctorAndSemaphore(job, jobType, jobClass, semaphore )
     );
-
-    logDebug( "spawnBlockingJob(...)", "enqueued job. tasks in this queue of class " << jobClass << "=" << internal::getJobQueue(jobClass).jobs.unsafe_size() );
   }
 }
 
@@ -228,8 +226,6 @@ void tarch::multicore::jobs::spawn(Job*  job) {
   }
   else {
     internal::getJobQueue(job->getClass()).push(job);
-
-    logDebug( "spawn(Job*)", "enqueued job of class " << job->getClass() );
   }
 }
 
@@ -248,8 +244,6 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
  * should actually use further tasks instead.
  */
 bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
-  logDebug( "processJobs()", "search for jobs of class " << jobClass );
-
   // Ensure that we do not redo all re-enqueued jobs within the same while loop
   maxNumberOfJobs = std::min(
     maxNumberOfJobs,
@@ -289,11 +283,6 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
       maxNumberOfJobs--;
     }
     result   = true;
-    logDebug(
-      "processJob(int)", "job of class " << jobClass << " complete, there are still " <<
-	  internal::getJobQueue(jobClass).jobs.unsafe_size() <<
-	  " jobs of this class pending"
-	);
     if ( maxNumberOfJobs>0 ) {
       gotOne = internal::getJobQueue(jobClass).try_pop(myTask);
     }

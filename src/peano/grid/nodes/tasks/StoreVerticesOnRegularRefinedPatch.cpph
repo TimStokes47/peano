@@ -707,7 +707,7 @@ void peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,V
 
 template <class Vertex, class Cell, class VertexStack>
 bool peano::grid::nodes::tasks::StoreVerticesOnRegularRefinedPatch<Vertex,Cell,VertexStack>::operator()() {
-  logTraceInWith9Arguments( "operator()()", _isTraversalInverted, _storeProcessRunsInParallelToOtherTasks, _maxLevelToFork, _stackView.isOpen(), _stackView.getTotalViewSize(), _coarsestLevelOfThisTask, _coarsestCellsOffset, _regularGridContainer.getVertexEnumerator(0).getCellFlags(), _regularGridContainer.getCell(0,0).toString() );
+  logTraceInWith9Arguments( "operator()()", _isTraversalInverted, _storeProcessRunsInParallelToOtherTasks, _maxLevelToFork, _stackView.isOpen(), _stackView.getTotalViewSize(), _coarsestLevelOfThisTask, _coarsestCellsOffset, _regularGridContainer.getVertexEnumerator(_regularSubtreeIndex,0).getCellFlags(), _regularGridContainer.getCell(_regularSubtreeIndex,0,0).toString() );
 
   #ifdef Asserts
   tarch::multicore::Lock enterOperatorlock( _semaphore );

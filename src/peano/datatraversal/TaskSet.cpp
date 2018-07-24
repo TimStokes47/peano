@@ -8,7 +8,17 @@
 #include "tarch/multicore/Jobs.h"
 #include "tarch/Assertions.h"
 
+
+
 tarch::logging::Log  peano::datatraversal::TaskSet::_log( "peano::datatraversal::TaskSet" );
+
+
+#if defined(TBBInvade)
+#include "tarch/multicore/Core.h"
+
+
+shminvade::SHMInvade*  peano::datatraversal::TaskSet::_backgroundTaskInvade = nullptr;
+#endif
 
 
 
@@ -104,6 +114,10 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(2,2);
 
+    #if defined(TBBInvade)
+    shminvade::SHMInvade invade( 2 );
+    #endif
+
     tarch::multicore::jobs::spawnAndWait(
       function1,
 	  function2,
@@ -112,6 +126,10 @@ peano::datatraversal::TaskSet::TaskSet(
 	  translateIntoJobClass(type1),
 	  translateIntoJobClass(type2)
     );
+
+    #if defined(TBBInvade)
+    invade.retreat();
+    #endif
 
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-2,-2);
   }
@@ -136,6 +154,10 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(3,3);
 
+    #if defined(TBBInvade)
+    shminvade::SHMInvade invade( 3 );
+    #endif
+
     tarch::multicore::jobs::spawnAndWait(
       function1,
 	  function2,
@@ -147,6 +169,10 @@ peano::datatraversal::TaskSet::TaskSet(
 	  translateIntoJobClass(type2),
 	  translateIntoJobClass(type3)
     );
+
+    #if defined(TBBInvade)
+    invade.retreat();
+    #endif
 
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-3,-3);
   }
@@ -174,6 +200,10 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(4,4);
 
+    #if defined(TBBInvade)
+    shminvade::SHMInvade invade( 4 );
+    #endif
+
     tarch::multicore::jobs::spawnAndWait(
       function1,
 	  function2,
@@ -188,6 +218,10 @@ peano::datatraversal::TaskSet::TaskSet(
 	  translateIntoJobClass(type3),
 	  translateIntoJobClass(type4)
     );
+
+    #if defined(TBBInvade)
+    invade.retreat();
+    #endif
 
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-4,-4);
   }
@@ -218,6 +252,10 @@ peano::datatraversal::TaskSet::TaskSet(
   if (parallelise) {
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(4,4);
 
+    #if defined(TBBInvade)
+    shminvade::SHMInvade invade( 5 );
+    #endif
+
     tarch::multicore::jobs::spawnAndWait(
       function1,
 	  function2,
@@ -235,6 +273,10 @@ peano::datatraversal::TaskSet::TaskSet(
 	  translateIntoJobClass(type4),
 	  translateIntoJobClass(type5)
     );
+
+    #if defined(TBBInvade)
+    invade.retreat();
+    #endif
 
     peano::performanceanalysis::Analysis::getInstance().changeConcurrencyLevel(-4,-4);
   }
@@ -279,6 +321,14 @@ peano::datatraversal::TaskSet::TaskSet(
 
 
 void peano::datatraversal::TaskSet::startToProcessBackgroundJobs() {
+  #if defined(TBBInvade)
+  if (_backgroundTaskInvade==nullptr) {
+	_backgroundTaskInvade = new shminvade::SHMInvade(
+	  tarch::multicore::Core::getInstance().getNumberOfThreads()
+    );
+  }
+  #endif
+
   tarch::multicore::jobs::startToProcessBackgroundJobs();
 }
 
@@ -288,5 +338,13 @@ bool peano::datatraversal::TaskSet::finishToProcessBackgroundJobs() {
   peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
     tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
   );
+
+  #if defined(TBBInvade)
+  if (_backgroundTaskInvade!=nullptr) {
+	delete _backgroundTaskInvade;
+	_backgroundTaskInvade= nullptr;
+  }
+  #endif
+
   return result;
 }

@@ -129,7 +129,7 @@ bool tarch::parallel::FCFSNodePoolStrategy::isRegisteredNode(int rank) const {
 
 
 bool tarch::parallel::FCFSNodePoolStrategy::isIdleNode(int rank) const {
-  assertion1( isRegisteredNode(rank), rank );
+  assertion1( rank==0 || isRegisteredNode(rank), rank );
   for (
     NodeContainer::const_iterator p = _nodes.begin();
     p != _nodes.end();
