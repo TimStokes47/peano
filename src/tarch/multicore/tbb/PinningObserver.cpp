@@ -28,38 +28,6 @@ tarch::multicore::PinningObserver::PinningObserver(int pinningStep):
   }
 }
 
-/*
-
-
-
-std::string tarch::multicore::tailoredAffinityMask( const AffinityMask& mask ) {
-  std::ostringstream msg;
-  for (int i=0; i<getNumberOfPhysicalCores(); i++) {
-    msg << (mask[i] ? "x" : "0");
-  }
-  return msg.str();
-}
-
-std::bitset<sizeof(long int)*8> tarch::multicore::getCPUSet() {
-  std::bitset<sizeof(long int)*8> result = 0;
-
-//  https://yyshen.github.io/2015/01/18/binding_threads_to_cores_osx.html
-  #ifdef CompilerHasSysinfo
-  cpu_set_t cpuset;
-  sched_getaffinity(0, sizeof(cpuset), &cpuset);
-
-  for (long i = 0; i < getNumberOfPhysicalCores(); i++) {
-    if (CPU_ISSET(i, &cpuset)) {
-      result[i] = true;
-    }
-  }
-  #endif
-
-  return result;
-}
-
-
- */
 
 tarch::multicore::PinningObserver::~PinningObserver() {
   if ( _mask != nullptr ) {
@@ -101,7 +69,7 @@ void tarch::multicore::PinningObserver::pinCurrentThread() {
   else {
     struct rlimit l;
     getrlimit(RLIMIT_STACK, &l);
-    logInfo( "PinningObserver()", "Set thread affinity: thread " << thr_idx << " is pinned to CPU " << mapped_idx << ", stack size is " << l.rlim_cur );
+    logInfo( "PinningObserver()", "Set thread affinity: thread " << thr_idx << " is pinned to hardware thread " << mapped_idx << ", stack size is " << l.rlim_cur );
   }
 
   CPU_FREE( target_mask );
