@@ -5,6 +5,14 @@
 
 
 namespace peano {
+  /**
+   * The heap namespace holds all routines that we use in connection with
+   * Peano's heap data storage. This means
+   *
+   * - the actual heap classes
+   * - allocators used for heaps and architectures requiring concurrent and aligned layouts
+   * - data conversion/compression routines
+   */
   namespace heap {
     /**
      * Takes a double and returns the exponent and the mantissa.
