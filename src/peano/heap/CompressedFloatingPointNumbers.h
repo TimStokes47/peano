@@ -109,6 +109,9 @@ namespace peano {
 	  bool          useRelativeError
     );
 
+    /**
+     * @see findMostAgressiveCompression(double,double,bool)
+     */
     int findMostAgressiveCompression(
       double        value,
 	  double        maxAsoluteError
@@ -150,10 +153,10 @@ namespace peano {
      * Counterpart of decompose( const double&, char& , T& )
      *
      * As it is the counterpart, code typically looks similar to
-     *<pre>
+     * <pre>
   char exponent  = 0;
   long int mantissa = 0;
-  char* pMantissa = reinterpret_cast<char*>( &(mantissa) );
+  char* pMantissa = reinterpret_cast char* ( &(mantissa) );
 
   for (int j=bytesForMantissa-1; j>=0; j--) {
     pMantissa[j] = CompressedDataHeap::getInstance().getData( heapIndex )[compressedDataHeapIndex]._persistentRecords._u;
@@ -188,15 +191,6 @@ namespace peano {
      * return arrays you used. However, it is increased by one, i.e. if you
      * pass 1, the operation assumes that you've taken the entry exponent[0]
      * of decompose, e.g.
-     *
-     *
-     * Typically usage:
-     *
-     * <pre>
-     * @todo
-       </pre>
-     *
-     *
      */
     double compose(
       char         exponent,
