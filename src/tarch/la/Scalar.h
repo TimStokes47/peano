@@ -29,6 +29,12 @@ namespace tarch {
 	  int      count,
 	  double   relativeError
     );
+
+    /**
+     * I need the maximum of three values all the time, to I decided to write a
+     * function for this.
+     */
+    double max( double a, double b, double c);
   }
 }
 

@@ -439,16 +439,16 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
     _fineGridVerticesEnumerator.toString(),
     _fineGridVertices[positionInVertexArray].toString()
   );
-  for (int d=0; d<DIMENSIONS; d++) {
-    assertionNumericalEquals7(
-      _fineGridVertices[positionInVertexArray].getX()(d), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)(d),
-      positionInVertexArray,
-      _fineGridVertices[positionInVertexArray].getX(),
-      positionInLocalCell,
-      _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
-      d,
-      _fineGridVerticesEnumerator.toString(),
-      _fineGridVertices[positionInVertexArray].toString()
-    );
-  }
+  assertion6(
+    tarch::la::equals(
+      _fineGridVertices[positionInVertexArray].getX(), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+      tarch::la::NUMERICAL_ZERO_DIFFERENCE * std::max(1.0,tarch::la::normMax(_fineGridVerticesEnumerator.getCellSize())*std::pow(3.0,_fineGridVerticesEnumerator.getLevel()))
+    ),
+    positionInVertexArray,
+    _fineGridVertices[positionInVertexArray].getX(),
+    positionInLocalCell,
+    _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+    _fineGridVerticesEnumerator.toString(),
+    _fineGridVertices[positionInVertexArray].toString()
+  );
 }

@@ -412,7 +412,13 @@ void peano::grid::aspects::ParallelMerge::mergeWithForkedVertexFromMaster(
   assertion3( localVertex.getRefinementControl()!=Vertex::Records::EnforceRefinementTriggered,    localVertex.toString(), masterVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
   assertion3( masterVertex.getRefinementControl()!=Vertex::Records::EnforceRefinementTriggered,   localVertex.toString(), masterVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
 
-  assertionVectorNumericalEquals2( localVertex._vertexData.getX(),     masterVertex._vertexData.getX(),     localVertex.toString(), masterVertex.toString() );
+  assertion2(
+    tarch::la::equals(
+      localVertex._vertexData.getX(), masterVertex._vertexData.getX(),
+	  tarch::la::NUMERICAL_ZERO_DIFFERENCE * std::pow(3.0,localVertex._vertexData.getLevel())
+	),
+	localVertex.toString(), masterVertex.toString()
+  );
   assertionEquals2(                localVertex._vertexData.getLevel(), masterVertex._vertexData.getLevel(), localVertex.toString(), masterVertex.toString() );
 
   assertion2( !localVertex.isHangingNode(),                                               localVertex.toString(), masterVertex.toString() );

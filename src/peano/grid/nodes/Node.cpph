@@ -80,15 +80,16 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       fineGridVertices[fineGridVerticesEnumerator(k)],
       k
     );
-    for (int d=0; d<DIMENSIONS; d++) {
-      assertionNumericalEquals4(
-        fineGridVerticesEnumerator.getVertexPosition(k)(d),
-        fineGridVertices[fineGridVerticesEnumerator(k)].getX()(d),
-        fineGridVerticesEnumerator.toString(),
-        fineGridVertices[fineGridVerticesEnumerator(k)],
-        k,d
-      )
-    }
+    assertion4(
+      tarch::la::equals(
+        fineGridVerticesEnumerator.getVertexPosition(k), fineGridVertices[fineGridVerticesEnumerator(k)].getX(),
+        tarch::la::NUMERICAL_ZERO_DIFFERENCE * std::max(1.0,tarch::la::normMax(fineGridVerticesEnumerator.getCellSize())*std::pow(3.0,fineGridVerticesEnumerator.getLevel()))
+      ),
+	  fineGridVerticesEnumerator.getVertexPosition(k),
+      fineGridVerticesEnumerator.toString(),
+      fineGridVertices[fineGridVerticesEnumerator(k)],
+      k
+    );
   enddforx
   logTraceOut( "validatePositionOfVertices(...)" );
   #endif
