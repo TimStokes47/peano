@@ -2,21 +2,14 @@
 #define _TARCH_MULTICORE_PINNING_OBSERVER_
 
 
-#include <sched.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-
-#include <tbb/task_arena.h>
-#include <tbb/task_scheduler_observer.h>
-#include <tbb/atomic.h>
-
-#include <tbb/task_scheduler_init.h>
-#include <tbb/parallel_reduce.h>
-#include <tbb/blocked_range.h>
-#include <tbb/tick_count.h>
-
 #include "tarch/logging/Log.h"
+
+#include <bitset>
+#include <map>
+
+#include <tbb/spin_mutex.h>
+#include <tbb/task_scheduler_observer.h>
+
 
 namespace tarch {
   namespace multicore {
@@ -26,57 +19,65 @@ namespace tarch {
 
 
 /**
- * This implementations follows very closely
+ *
+ * <h2> Rationale </h2>
+ *
+ * My original implementation followed very closely
  *
  * https://software.intel.com/en-us/blogs/2013/10/31/applying-intel-threading-building-blocks-observers-for-thread-affinity-on-intel
  *
- * @author Leonhard Rannabauer
+ * However, the solution there is flawed for long-running simulations: The code
+ * counts the threads one by one and pins them in ascending order. Now, TBB uses
+ * an additional load balancing thread from time to time plus it does create and
+ * destroy threads in kind of a mysterious manner. This usually doesn't harm
+ * short-running codes (doesn't happen there too frequently or hardly at all) but
+ * for long-running codes, we end up with the situation that some threads are
+ * pinned to the same core.
+ *
  * @author Tobias Weinzierl
  */
 class tarch::multicore::PinningObserver: public tbb::task_scheduler_observer {
   private:
     static tarch::logging::Log  _log;
 
-    const int        _pinningStep;
+    static constexpr int MaxCores = sizeof(long int)*8;
 
     /**
-     * Masking being available to process. This is basically a bitfield which
-     * holds an entry for each core (hardware thread) the present application
-     * is allowed to run on. If you run multiple MPI ranks for example, this
-     * is a subset of the actual cores available on a node. The fild is
-     * initialised in the constructor.
+     * Masks are bitfields which hold an entry for each core (hardware thread)
+     * the present application is allowed to run on. If you run multiple MPI
+     * ranks for example, this is a subset of the actual cores available on a
+     * node. Pinning is realised by disabling all bits but one for a particular
+     * thread. Obviously, the pin mask has to be a subset of the process mask.
      */
-    cpu_set_t*    _mask;
-    //AffinityMask*    _mask;
-
-    int              _ncpus;
-
-    tbb::atomic<int> _threadIndex;
+    typedef std::bitset<MaxCores> CPUSetBitfield;
 
     /**
-     * How many threads have been registered through callback
+     * We may not initialise this field before we
+     * Is initialised in the constructor PinningObserver().
      */
-    tbb::atomic<int> _numThreads;
+    CPUSetBitfield           _availableCores;
 
-    /**
-     * If the observer is switched on, it automatically pins all threads.
-     */
-    void pinCurrentThread();
+    tbb::spin_mutex          _mutex;
 
+    int                      _numberOfCPUs;
   public:
     /**
-     * @todo ncpus should be replaced by the concurrency operation from C++14
-     *
-     * @see _mask
+     * Initialise the field _availableCores.
      */
-    PinningObserver( int pinningStep=1 );
+    PinningObserver();
     virtual ~PinningObserver();
 
-
+    /**
+     * Search for a free core in the bitset.
+     */
     void on_scheduler_entry( bool ) override;
     void on_scheduler_exit( bool ) override;
 
-    int getNumberOfRegisteredThreads();
+    /**
+     * Is an override though TBB developers didn't want it to be overriden for
+     * whatever reason
+     */
+    void observe(bool toggle);
 };
 
 #endif

@@ -14,7 +14,7 @@ tarch::multicore::Core::Core():
   _numberOfThreads(std::thread::hardware_concurrency()),
   _globalThreadCountControl(nullptr),
   _globalStackSizeControl(nullptr),
-  _pinningObserver(1) {
+  _pinningObserver() {
 }
 
 
