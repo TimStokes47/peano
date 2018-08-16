@@ -8,30 +8,21 @@ tarch::logging::Log peano::geometry::Hexahedron::_log( "peano::geometry::Hexahed
 bool peano::geometry::Hexahedron::greaterUpToRelativeTolerance(const double& lhs, const double& rhs) {
   const double tolerance =
     tarch::la::NUMERICAL_ZERO_DIFFERENCE *
-    std::max(
-      1.0, std::max( tarch::la::abs(lhs), tarch::la::abs(rhs)
-    )
-  );
+	tarch::la::max( 1.0, tarch::la::abs(lhs), tarch::la::abs(rhs) );
   return tarch::la::greater( lhs, rhs, tolerance );
 }
 
 bool peano::geometry::Hexahedron::smallerUpToRelativeTolerance(const double& lhs, const double& rhs) {
   const double tolerance =
     tarch::la::NUMERICAL_ZERO_DIFFERENCE *
-    std::max(
-      1.0, std::max( tarch::la::abs(lhs), tarch::la::abs(rhs)
-    )
-  );
+	tarch::la::max( 1.0, tarch::la::abs(lhs), tarch::la::abs(rhs) );
   return tarch::la::smaller( lhs, rhs, tolerance );
 }
 
 bool peano::geometry::Hexahedron::greaterEqualsUpToRelativeTolerance(const double& lhs, const double& rhs) {
   const double tolerance =
     tarch::la::NUMERICAL_ZERO_DIFFERENCE *
-    std::max(
-      1.0, std::max( tarch::la::abs(lhs), tarch::la::abs(rhs)
-    )
-  );
+	tarch::la::max( 1.0, tarch::la::abs(lhs), tarch::la::abs(rhs) );
   return tarch::la::greaterEquals( lhs, rhs, tolerance );
 }
 

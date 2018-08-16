@@ -701,18 +701,20 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
   );
   #endif
 
-
-  for (int d=0; d<DIMENSIONS; d++) {
-    assertionNumericalEquals8(
-      _fineGridVertices[positionInVertexArray].getX()(d), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)(d),
-      positionInVertexArray,
-      _fineGridVertices[positionInVertexArray].getX(),
-      positionInLocalCell,
-      _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
-      d,
-      _fineGridVerticesEnumerator.toString(),
-      _fineGridVertices[positionInVertexArray].toString(),
-      stackNumber
-    );
-  }
+  // The positions are relative w.r.t. to the total domain size. We don't know
+  // the total domain size directly, but we can reconstruct it through the
+  // grid levels
+  assertion7(
+    tarch::la::equals(
+      _fineGridVertices[positionInVertexArray].getX(), _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+      tarch::la::NUMERICAL_ZERO_DIFFERENCE * std::max(1.0,tarch::la::normMax(_fineGridVerticesEnumerator.getCellSize())*std::pow(3.0,_fineGridVerticesEnumerator.getLevel()))
+    ),
+    positionInVertexArray,
+    _fineGridVertices[positionInVertexArray].getX(),
+    positionInLocalCell,
+    _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
+    _fineGridVerticesEnumerator.toString(),
+    _fineGridVertices[positionInVertexArray].toString(),
+    stackNumber
+  );
 }

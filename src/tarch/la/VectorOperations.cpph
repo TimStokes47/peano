@@ -66,6 +66,30 @@ double tarch::la::norm2 (
 
 
 template<int Size, typename Scalar>
+Scalar tarch::la::normMax (const Vector<Size,Scalar>& vector) {
+  Scalar result(0);
+
+  for (int i=0; i < Size; i++) {
+    result = std::abs(vector(i)) > result ? std::abs(vector(i)) : result;
+  }
+
+  return result;
+}
+
+
+template<int Size>
+double tarch::la::normMax (const Vector<Size,std::complex<double> >& vector) {
+  double result = 0.0;
+
+  for (int i=0; i < Size; i++) {
+    result = std::abs(vector(i)) > result ? std::abs(vector(i)) : result;
+  }
+
+  return result;
+}
+
+
+template<int Size, typename Scalar>
 tarch::la::Vector<Size,Scalar> tarch::la::abs (
   const Vector<Size,Scalar>&  vector
 ) {
