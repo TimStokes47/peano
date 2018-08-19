@@ -36,8 +36,20 @@ void tarch::multicore::PinningObserver::observe(bool toggle) {
   }
 
   // Convert into bitset to make it more C++ish
-  if ( !mask ) {
-    logError( "PinningObserver()","Failed to obtain process affinity mask");
+  if ( mask ) {
+    _availableCores = 0;
+    for (int i=0; i<MaxCores; i++) {
+      if (CPU_ISSET(i, mask)) {
+        _availableCores[i] = true;
+      }
+    }
+
+    logInfo( "observe(bool)", "identified available cores: " << _availableCores );
+
+    tbb::task_scheduler_observer::observe(toggle);
+  }
+  else {
+    logError( "observe(bool)","failed to obtain process affinity mask");
   }
 }
 
@@ -69,7 +81,7 @@ void tarch::multicore::PinningObserver::on_scheduler_entry( bool ) {
 	const int err = sched_setaffinity( 0, size, target_mask );
 
     if ( err ) {
-      logInfo( "on_scheduler_entry(bool)", "pinning new thread to core " << targetCore << " failed with error code " << err );
+      logError( "on_scheduler_entry(bool)", "pinning new thread to core " << targetCore << " failed with error code " << err );
     }
     else {
       const int   currentCore     = sched_getcpu();

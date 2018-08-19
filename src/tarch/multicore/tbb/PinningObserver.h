@@ -74,7 +74,7 @@ class tarch::multicore::PinningObserver: public tbb::task_scheduler_observer {
     void on_scheduler_exit( bool ) override;
 
     /**
-     * Is an override though TBB developers didn't want it to be overriden for
+     * Is an override though TBB developers didn't want it to be overwritten for
      * whatever reason
      */
     void observe(bool toggle);
