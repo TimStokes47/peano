@@ -34,10 +34,24 @@ namespace tarch {
         constexpr int BackgroundJobsJobClassNumber = NumberOfJobQueues-1;
 
         /**
-         * This is not the real value but an estimate.
+         * This is not the real value but an estimate. Whenever a new
+         * background job is enqueued, we check that this field is
+         * as least as big as the current queue size. If the queue is
+         * smaller than MaxSizeOfBackgroundQueue, we do decrease
+         * MaxSizeOfBackgroundQueue by one. Therefore, MaxSizeOfBackgroundQueue
+         * is monotonically bigger than the maximum queue size, but it is
+         * decreases steadily to the real size if this size is significantly
+         * smaller than MaxSizeOfBackgroundQueue.
+         *
+         * @see spawnBackgroundJob()
          */
         extern tbb::atomic<int>         MaxSizeOfBackgroundQueue;
 
+        /**
+         * Each consumer should roughly process MaxSizeOfBackgroundQueue
+         * jobs divided by the number of threads. A consumer should at least
+         * process one job.
+         */
         int getMinimalNumberOfJobsPerBackgroundConsumerRun();
 
         extern tarch::logging::Log _log;

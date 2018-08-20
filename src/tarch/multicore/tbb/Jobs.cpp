@@ -48,8 +48,9 @@ tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsum
 
 
 int tarch::multicore::jobs::internal::getMinimalNumberOfJobsPerBackgroundConsumerRun() {
+  const int MinimumNumberOfJobsPerConsumer = 1;
   return std::max(
-    4,
+    MinimumNumberOfJobsPerConsumer,
 	tarch::multicore::jobs::internal::MaxSizeOfBackgroundQueue.load() / tarch::multicore::Core::getInstance().getNumberOfThreads()
   );
 }
@@ -57,11 +58,9 @@ int tarch::multicore::jobs::internal::getMinimalNumberOfJobsPerBackgroundConsume
 
 void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
   _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(1);
-  const int jobsPerThread = static_cast<int>(internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size())/tarch::multicore::Core::getInstance().getNumberOfThreads();
-  BackgroundJobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) BackgroundJobConsumerTask( std::max(
-	getMinimalNumberOfJobsPerBackgroundConsumerRun(),
-	std::max( jobsPerThread, getMinimalNumberOfJobsPerBackgroundConsumerRun()*2 )
-  ));
+  BackgroundJobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) BackgroundJobConsumerTask(
+	getMinimalNumberOfJobsPerBackgroundConsumerRun()
+  );
   tbb::task::enqueue(*tbbTask);
   ::backgroundTaskContext.set_priority(tbb::priority_low);
 }
