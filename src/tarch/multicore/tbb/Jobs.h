@@ -5,7 +5,6 @@
 
 
 #include <tbb/task.h>
-#include <tbb/concurrent_queue.h>
 #include <tbb/parallel_invoke.h>
 #include <tbb/tbb_machine.h>
 #include <tbb/task.h>
@@ -27,6 +26,13 @@
 #endif
 
 
+#if defined(TBBUsesLocalQueueWhenProcessingJobs)
+#include <list>
+#else
+#include <tbb/concurrent_queue.h>
+#endif
+
+
 namespace tarch {
   namespace multicore {
     namespace jobs {
@@ -41,7 +47,12 @@ namespace tarch {
         extern tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks;
 
         constexpr int NumberOfJobQueues = 32;
+        #if defined(TBBUsesLocalQueueWhenProcessingJobs)
+        typedef std::list<tarch::multicore::jobs::Job*>               JobQueue;
+        extern tbb::spin_mutex                                        _jobQueueMutex;
+        #else
         typedef tbb::concurrent_queue<tarch::multicore::jobs::Job*>   JobQueue;
+        #endif
         extern JobQueue _pendingJobs[NumberOfJobQueues];
 
         constexpr int BackgroundJobsJobClassNumber = NumberOfJobQueues-1;
@@ -76,6 +87,9 @@ namespace tarch {
          * implemented here.
          */
         JobQueue& getJobQueue( int jobClass );
+
+        void insertJob( int jobClass, Job* job );
+        int  getJobQueueSize( int jobClass );
 
         /**
          * The spawn and wait routines fire their job and then have to wait for all
