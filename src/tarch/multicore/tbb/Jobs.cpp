@@ -194,6 +194,41 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
 	static_cast<int>( internal::getJobQueue(jobClass).unsafe_size() )
   );
 
+
+  #ifdef TBBUsesLocalQueueWhenProcessingJobs
+  std::vector<tarch::multicore::jobs::Job*> localJobs(0);
+  localJobs.reserve(maxNumberOfJobs);
+
+  Job* myTask   = nullptr;
+  bool gotOne   = internal::getJobQueue(jobClass).try_pop(myTask);
+  bool result   = false;
+  while (gotOne) {
+	localJobs.push_back(myTask);
+    maxNumberOfJobs--;
+    if ( maxNumberOfJobs>0 ) {
+      gotOne = internal::getJobQueue(jobClass).try_pop(myTask);
+    }
+    else {
+      gotOne = false;
+    }
+  }
+
+  #ifdef TBBPrefetchesJobData
+  for (auto& p: localJobs) {
+    p->prefetchData();
+  }
+  #endif
+
+  for (auto& p: localJobs) {
+    bool reschedule = p->run();
+    if (reschedule) {
+      internal::getJobQueue(jobClass).push(p);
+    }
+    else {
+      delete p;
+    }
+  }
+  #else
   Job* myTask   = nullptr;
   bool gotOne   = internal::getJobQueue(jobClass).try_pop(myTask);
   bool result   = false;
@@ -215,6 +250,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
       gotOne = false;
     }
   }
+  #endif
 
 
   if(

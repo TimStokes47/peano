@@ -14,6 +14,19 @@
 #include <tbb/concurrent_hash_map.h>
 
 
+#ifndef TBBUsesLocalQueueWhenProcessingJobs
+  #define TBBUsesLocalQueueWhenProcessingJobs
+#endif
+
+#ifndef TBBPrefetchesJobData
+  #define TBBPrefetchesJobData
+#endif
+
+#if defined(TBBPrefetchesJobData) and !defined(TBBUsesLocalQueueWhenProcessingJobs)
+  #error TBB can not prefetch job data when it works without a local queue
+#endif
+
+
 namespace tarch {
   namespace multicore {
     namespace jobs {

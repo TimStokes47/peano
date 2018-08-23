@@ -42,6 +42,9 @@ int tarch::multicore::jobs::Job::getClass() const {
 }
 
 
+void tarch::multicore::jobs::Job::prefetchData() {
+}
+
 
 tarch::multicore::jobs::GenericJobWithCopyOfFunctor::GenericJobWithCopyOfFunctor( const std::function<bool()>& functor, JobType jobType, int jobClass ):
   Job(jobType,jobClass),

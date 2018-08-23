@@ -69,6 +69,20 @@ namespace tarch {
     	   Job( JobType jobType, int jobClass );
 
            virtual bool run() = 0;
+           /**
+            * This operation is called prior to run(). We try to make it as
+            * close to run as possible. The idea is that codes use it to
+            * insert their prefetch macros. Peano gives no guarantee that this
+            * operation is called, i.e. everything done here is solely
+            * optional.
+            *
+            * Prefetching for Intel is specified at
+            *
+            * https://software.intel.com/en-us/node/684213
+            *
+            * We usually use mode/hint 3 for data on machines with Optane.
+            */
+           virtual void prefetchData();
            virtual ~Job();
            bool isTask() const;
            int getClass() const;
