@@ -14,11 +14,11 @@
 #include <tbb/concurrent_hash_map.h>
 
 
-#ifndef TBBUsesLocalQueueWhenProcessingJobs
+#if !defined(TBBUsesLocalQueueWhenProcessingJobs) and !defined(noTBBUsesLocalQueueWhenProcessingJobs)
   #define TBBUsesLocalQueueWhenProcessingJobs
 #endif
 
-#ifndef TBBPrefetchesJobData
+#if !defined(TBBPrefetchesJobData) and !defined(noTBBPrefetchesJobData)
   #define TBBPrefetchesJobData
 #endif
 
