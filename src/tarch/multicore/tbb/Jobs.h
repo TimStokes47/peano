@@ -17,7 +17,7 @@
   #define TBBUsesLocalQueueWhenProcessingJobs
 #endif
 
-#if !defined(TBBPrefetchesJobData) and !defined(noTBBPrefetchesJobData)
+#if !defined(TBBPrefetchesJobData) and !defined(noTBBPrefetchesJobData) and !defined(noTBBUsesLocalQueueWhenProcessingJobs)
   #define TBBPrefetchesJobData
 #endif
 

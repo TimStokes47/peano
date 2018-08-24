@@ -266,7 +266,6 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
         delete myTask;
         maxNumberOfJobs--;
       }
-      result   = true;
       if ( maxNumberOfJobs>0 ) {
         gotOne = internal::getJobQueue(jobClass).try_pop(myTask);
       }
