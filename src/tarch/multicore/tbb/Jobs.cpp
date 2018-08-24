@@ -238,13 +238,15 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
     );
     internal::_jobQueueMutex.unlock();
 
-    #ifdef TBBPrefetchesJobData
     for (auto& p: localJobs) {
-      p->prefetchData();
-    }
-    #endif
+      #ifdef TBBPrefetchesJobData
+      if (p!=localJobs.back()) {
+        auto prefetch = p;
+        std::advance(prefetch,1);
+        prefetch->prefetchData();
+      }
+      #endif
 
-    for (auto& p: localJobs) {
       bool reschedule = p->run();
       if (reschedule) {
         internal::insertJob(jobClass,p);
@@ -286,7 +288,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
 
     return true;
   }
-  else false;
+  else return false;
 }
 
 
