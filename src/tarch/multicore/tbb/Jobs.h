@@ -48,8 +48,10 @@ namespace tarch {
 
         constexpr int NumberOfJobQueues = 32;
         #if defined(TBBUsesLocalQueueWhenProcessingJobs)
-        typedef std::list<tarch::multicore::jobs::Job*>               JobQueue;
-        extern tbb::spin_mutex                                        _jobQueueMutex;
+        struct JobQueue {
+          std::list<tarch::multicore::jobs::Job*>  jobs;
+          tbb::spin_mutex                          mutex;
+        };
         #else
         typedef tbb::concurrent_queue<tarch::multicore::jobs::Job*>   JobQueue;
         #endif

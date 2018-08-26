@@ -18,39 +18,41 @@ tarch::multicore::PinningObserver::PinningObserver():
 
 
 void tarch::multicore::PinningObserver::observe(bool toggle) {
-  assertion( _availableCores.count()==0 );
+  if (toggle) {
+    assertion( _availableCores.count()==0 );
 
-  // reconstruct Unix mask
-  cpu_set_t* mask;
-  for ( _numberOfCPUs = sizeof(cpu_set_t)/CHAR_BIT; _numberOfCPUs < MaxCores; _numberOfCPUs <<= 1 ) {
-    mask = CPU_ALLOC( _numberOfCPUs );
-    if ( !mask ) break;
-    const size_t size = CPU_ALLOC_SIZE( _numberOfCPUs );
-    CPU_ZERO_S( size, mask );
-    const int err = sched_getaffinity( 0, size, mask );
-    if ( !err ) break;
+    // reconstruct Unix mask
+    cpu_set_t* mask;
+    for ( _numberOfCPUs = sizeof(cpu_set_t)/CHAR_BIT; _numberOfCPUs < MaxCores; _numberOfCPUs <<= 1 ) {
+      mask = CPU_ALLOC( _numberOfCPUs );
+      if ( !mask ) break;
+      const size_t size = CPU_ALLOC_SIZE( _numberOfCPUs );
+      CPU_ZERO_S( size, mask );
+      const int err = sched_getaffinity( 0, size, mask );
+      if ( !err ) break;
 
-    CPU_FREE( mask );
-    mask = NULL;
-    if ( errno != EINVAL )  break;
-  }
-
-  // Convert into bitset to make it more C++ish
-  if ( mask ) {
-    _availableCores = 0;
-    for (int i=0; i<MaxCores; i++) {
-      if (CPU_ISSET(i, mask)) {
-        _availableCores[i] = true;
-      }
+      CPU_FREE( mask );
+      mask = NULL;
+      if ( errno != EINVAL )  break;
     }
 
-    logInfo( "observe(bool)", "identified available cores: " << _availableCores );
+    // Convert into bitset to make it more C++ish
+    if ( mask ) {
+      _availableCores = 0;
+      for (int i=0; i<MaxCores; i++) {
+        if (CPU_ISSET(i, mask)) {
+        _availableCores[i] = true;
+        }
+      }
 
-    tbb::task_scheduler_observer::observe(toggle);
+      logInfo( "observe(bool)", "identified available cores: " << _availableCores );
+    }
+    else {
+      logError( "observe(bool)","failed to obtain process affinity mask");
+    }
   }
-  else {
-    logError( "observe(bool)","failed to obtain process affinity mask");
-  }
+
+  tbb::task_scheduler_observer::observe(toggle);
 }
 
 

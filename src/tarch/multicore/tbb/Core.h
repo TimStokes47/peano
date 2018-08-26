@@ -43,7 +43,7 @@ class tarch::multicore::Core {
     ::tbb::global_control*      _globalThreadCountControl;
     ::tbb::global_control*      _globalStackSizeControl;
 
-    PinningObserver             _pinningObserver;
+    PinningObserver*            _pinningObserver;
   public:
     /**
      * Tells the constructor to use the default. Does not mean that 0 is used

@@ -22,10 +22,6 @@ tbb::atomic<int>                              tarch::multicore::jobs::internal::
 tarch::multicore::jobs::internal::JobQueue    tarch::multicore::jobs::internal::_pendingJobs[NumberOfJobQueues];
 tbb::atomic<int>                              tarch::multicore::jobs::internal::MaxSizeOfBackgroundQueue;
 
-#if defined(TBBUsesLocalQueueWhenProcessingJobs)
-tbb::spin_mutex                               tarch::multicore::jobs::internal::_jobQueueMutex;
-#endif
-
 
 
 //
@@ -86,9 +82,9 @@ tarch::multicore::jobs::internal::JobQueue& tarch::multicore::jobs::internal::ge
 
 void tarch::multicore::jobs::internal::insertJob( int jobClass, Job* job ) {
   #if defined(TBBUsesLocalQueueWhenProcessingJobs)
-  _jobQueueMutex.lock();
-  internal::getJobQueue(jobClass).push_back( job );
-  _jobQueueMutex.unlock();
+  internal::getJobQueue(jobClass).mutex.lock();
+  internal::getJobQueue(jobClass).jobs.push_back( job );
+  internal::getJobQueue(jobClass).mutex.unlock();
   #else
   internal::getJobQueue(jobClass).push( job );
   #endif
@@ -97,7 +93,10 @@ void tarch::multicore::jobs::internal::insertJob( int jobClass, Job* job ) {
 
 int  tarch::multicore::jobs::internal::getJobQueueSize( int jobClass ) {
   #if defined(TBBUsesLocalQueueWhenProcessingJobs)
-  return static_cast<int>(internal::getJobQueue( jobClass ).size());
+  //internal::getJobQueue( jobClass ).mutex.lock();
+  int result = static_cast<int>(internal::getJobQueue( jobClass ).jobs.size());
+  //internal::getJobQueue( jobClass ).mutex.unlock();
+  return result;
   #else
   return static_cast<int>(internal::getJobQueue( jobClass ).unsafe_size());
   #endif
@@ -192,13 +191,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
     tbb::task::enqueue(*tbbTask);
   }
   else {
-    #if defined(TBBUsesLocalQueueWhenProcessingJobs)
-    internal::_jobQueueMutex.lock();
-    internal::getJobQueue(job->getClass()).push_back(job);
-    internal::_jobQueueMutex.unlock();
-    #else
-    internal::getJobQueue(job->getClass()).push(job);
-    #endif
+	internal::insertJob( job->getClass(), job );
   }
 }
 
@@ -227,32 +220,36 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
     #ifdef TBBUsesLocalQueueWhenProcessingJobs
     std::list<tarch::multicore::jobs::Job*> localJobs;
 
-    internal::_jobQueueMutex.lock();
-    auto firstIteration = internal::getJobQueue(jobClass).begin();
-    auto lastIteration  = internal::getJobQueue(jobClass).begin();
+    internal::getJobQueue(jobClass).mutex.lock();
+    auto firstIteration = internal::getJobQueue(jobClass).jobs.begin();
+    auto lastIteration  = internal::getJobQueue(jobClass).jobs.begin();
     std::advance( lastIteration, maxNumberOfJobs );
 
-    internal::getJobQueue(jobClass).splice(
+    internal::getJobQueue(jobClass).jobs.splice(
       localJobs.begin(), localJobs,
       firstIteration, lastIteration
     );
-    internal::_jobQueueMutex.unlock();
+    internal::getJobQueue(jobClass).mutex.unlock();
 
-    for (auto& p: localJobs) {
+    for (
+      std::list<tarch::multicore::jobs::Job*>::iterator p = localJobs.begin();
+      p!=localJobs.end();
+      p++
+	) {
       #ifdef TBBPrefetchesJobData
-      if (p!=localJobs.back()) {
-        auto prefetch = p;
+      if (p!=std::prev(localJobs.end())) {
+        std::list<tarch::multicore::jobs::Job*>::iterator prefetch = p;
         std::advance(prefetch,1);
-        prefetch->prefetchData();
+        (*prefetch)->prefetchData();
       }
       #endif
 
-      bool reschedule = p->run();
+      bool reschedule = (*p)->run();
       if (reschedule) {
-        internal::insertJob(jobClass,p);
+        internal::insertJob(jobClass,*p);
       }
       else {
-        delete p;
+        delete *p;
       }
     }
     #else
@@ -342,7 +339,7 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
 bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
   processJobs( internal::BackgroundJobsJobClassNumber, internal::getMinimalNumberOfJobsPerBackgroundConsumerRun() );
 
-  return !internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).empty();
+  return internal::getJobQueueSize(internal::BackgroundJobsJobClassNumber)>0;
 }
 
 

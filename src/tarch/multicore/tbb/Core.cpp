@@ -14,7 +14,9 @@ tarch::multicore::Core::Core():
   _numberOfThreads(std::thread::hardware_concurrency()),
   _globalThreadCountControl(nullptr),
   _globalStackSizeControl(nullptr),
-  _pinningObserver() {
+  _pinningObserver(nullptr) {
+
+  _pinningObserver = new PinningObserver();
 }
 
 
@@ -24,7 +26,7 @@ tarch::multicore::Core::~Core() {
 
 
 void tarch::multicore::Core::pinThreads(bool value) {
-  _pinningObserver.observe(value);
+  _pinningObserver->observe(value);
 }
 
 
@@ -37,6 +39,11 @@ tarch::multicore::Core& tarch::multicore::Core::getInstance() {
 void tarch::multicore::Core::shutDown() {
   jobs::terminateAllPendingBackgroundConsumerJobs();
 
+  if (_pinningObserver!=nullptr) {
+    _pinningObserver->observe(false);
+    delete _pinningObserver;
+    _pinningObserver = nullptr;
+  }
   if (_globalThreadCountControl!=nullptr) {
     delete _globalThreadCountControl;
     _globalThreadCountControl = nullptr;
@@ -45,6 +52,7 @@ void tarch::multicore::Core::shutDown() {
     delete _globalStackSizeControl;
     _globalStackSizeControl = nullptr;
   }
+
   _numberOfThreads = -1;
 }
 
