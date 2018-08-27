@@ -219,8 +219,11 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
     internal::getJobQueue(jobClass).mutex.lock();
     auto firstIteration = internal::getJobQueue(jobClass).jobs.begin();
     auto lastIteration  = internal::getJobQueue(jobClass).jobs.begin();
+    maxNumberOfJobs = std::min(
+      maxNumberOfJobs,
+	  static_cast<int>( internal::getJobQueue(jobClass).jobs.size() )
+	);
     std::advance( lastIteration, maxNumberOfJobs );
-
     internal::getJobQueue(jobClass).jobs.splice(
       localJobs.begin(), localJobs,
       firstIteration, lastIteration
