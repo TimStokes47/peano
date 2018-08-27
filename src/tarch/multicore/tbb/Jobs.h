@@ -13,16 +13,12 @@
 #include <tbb/concurrent_hash_map.h>
 
 
-#if !defined(TBBUsesLocalQueueWhenProcessingJobs) and !defined(noTBBUsesLocalQueueWhenProcessingJobs)
-  #define TBBUsesLocalQueueWhenProcessingJobs
-#endif
+//#if !defined(TBBUsesLocalQueueWhenProcessingJobs) and !defined(noTBBUsesLocalQueueWhenProcessingJobs)
+//  #define TBBUsesLocalQueueWhenProcessingJobs
+//#endif
 
-#if !defined(TBBPrefetchesJobData) and !defined(noTBBPrefetchesJobData) and !defined(noTBBUsesLocalQueueWhenProcessingJobs)
+#if !defined(TBBPrefetchesJobData) and !defined(noTBBPrefetchesJobData)
   #define TBBPrefetchesJobData
-#endif
-
-#if defined(TBBPrefetchesJobData) and !defined(TBBUsesLocalQueueWhenProcessingJobs)
-  #error TBB can not prefetch job data when it works without a local queue
 #endif
 
 
