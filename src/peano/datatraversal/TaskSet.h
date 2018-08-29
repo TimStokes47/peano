@@ -278,6 +278,33 @@ class peano::datatraversal::TaskSet {
 
 
     /**
+     * Third alternative to other TaskSet constructors. Works only for
+     * background tasks!
+     *
+     * Ownership goes to TaskSet class, i.e. you don't have to delete it.
+     * Basically all in here is a simple wrapper around the tarch. Allows you
+     * to pass Jobs that also provide prefetch routines, e.g.
+     *
+     * <h2> Usage </h2>
+     *
+     * - Create a new subclass of tarch::multicore::jobs::Job.
+     * - Ensure it has type tarch::multicore::jobs::JobType::Task passed to the
+     *   superclass in its constructor
+     * - Create it via new in the calling code
+     * - Pass the instance to this constructor
+     */
+    TaskSet(
+      tarch::multicore::jobs::Job*  job
+    ) {
+      assertion( job->getJobType()==tarch::multicore::jobs::JobType::Task );
+      peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
+        tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
+      );
+      tarch::multicore::jobs::spawnBackgroundJob( job );
+    }
+
+
+    /**
      * Invoke operations in parallel. Works fine with lambda
      * expressions:
      *
