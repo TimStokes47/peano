@@ -285,10 +285,16 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
         maxNumberOfJobs--;
       }
 
-      if ( maxNumberOfJobs>0 and prefetchedOne ) {
-    	gotOne        = prefetchedOne;
-    	myTask        = prefetchedTask;
+      if ( maxNumberOfJobs>1 and prefetchedOne ) {
+        gotOne        = prefetchedOne;
+        myTask        = prefetchedTask;
         prefetchedOne = internal::getJobQueue(jobClass).try_pop(prefetchedTask);
+      }
+      else if ( prefetchedOne ) {
+        gotOne         = prefetchedOne;
+        myTask         = prefetchedTask;
+        prefetchedOne  = false;
+        prefetchedTask = nullptr;
       }
       else {
         gotOne = false;
