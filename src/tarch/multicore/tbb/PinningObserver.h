@@ -37,9 +37,10 @@ namespace tarch {
  * @author Tobias Weinzierl
  */
 class tarch::multicore::PinningObserver: public tbb::task_scheduler_observer {
-  private:
-    static tarch::logging::Log  _log;
-
+  public:
+	/**
+	 * Maximum number of cores we do support theoretically.
+	 */
     static constexpr int MaxCores = sizeof(long int)*8;
 
     /**
@@ -52,14 +53,24 @@ class tarch::multicore::PinningObserver: public tbb::task_scheduler_observer {
     typedef std::bitset<MaxCores> CPUSetBitfield;
 
     /**
+     * Returns the bitfield identifying the available CPUs. This is not the same
+     * as the C++14 concurrency/thread getter, as it does not ask for the number
+     * of physical cores, but it analyses the process' mask to count how many
+     * cores the scheduler assigns to the process.
+     */
+    static CPUSetBitfield getAvailableCPUs();
+  private:
+    static tarch::logging::Log  _log;
+
+    /**
      * We may not initialise this field before we
      * Is initialised in the constructor PinningObserver().
      */
-    CPUSetBitfield           _availableCores;
+    CPUSetBitfield           _totalAvailableCores;
+
+    CPUSetBitfield           _remainingAvailableCores;
 
     tbb::spin_mutex          _mutex;
-
-    int                      _numberOfCPUs;
   public:
     /**
      * Initialise the field _availableCores.
