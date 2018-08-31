@@ -484,10 +484,10 @@ void tarch::parallel::NodePool::emptyReceiveBuffers() {
 
 
 void tarch::parallel::NodePool::replyToRegistrationMessages() {
-  assertion1( _strategy!=0, Node::getInstance().getRank() );
-
   #ifdef Parallel
   logTraceInWith1Argument( "replyToRegistrationMessages()", tarch::parallel::messages::RegisterAtNodePoolMessage::isMessageInQueue(_registrationTag, true) );
+
+  assertion1( _strategy!=0, Node::getInstance().getRank() );
 
   while ( tarch::parallel::messages::RegisterAtNodePoolMessage::isMessageInQueue(_registrationTag, true) ) {
     tarch::parallel::messages::RegisterAtNodePoolMessage message;
@@ -503,10 +503,10 @@ void tarch::parallel::NodePool::replyToRegistrationMessages() {
 
 
 void tarch::parallel::NodePool::replyToJobRequestMessages() {
+  #ifdef Parallel
   logTraceIn( "replyToJobRequestMessage() ");
   assertion1( _strategy!=0, Node::getInstance().getRank() );
 
-  #ifdef Parallel
   while ( tarch::parallel::messages::JobRequestMessage::isMessageInQueue(_jobManagementTag, true) ) {
     tarch::parallel::messages::JobRequestMessage queryMessage;
     queryMessage.receive( MPI_ANY_SOURCE, _jobManagementTag, true, tarch::parallel::messages::JobRequestMessage::ExchangeMode::Blocking );
@@ -567,8 +567,9 @@ void tarch::parallel::NodePool::replyToJobRequestMessages() {
       _strategy->setNodeIdle( queryMessage.getSenderRank() );
     }
   }
-  #endif
+
   logTraceOut( "replyToJobRequestMessage() ");
+  #endif
 }
 
 
