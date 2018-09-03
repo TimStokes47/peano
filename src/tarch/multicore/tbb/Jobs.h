@@ -18,7 +18,7 @@
 //#endif
 
 #if !defined(TBBPrefetchesJobData) and !defined(noTBBPrefetchesJobData)
-  #define TBBPrefetchesJobData
+//  #define TBBPrefetchesJobData
 #endif
 
 
@@ -53,7 +53,8 @@ namespace tarch {
         #endif
         extern JobQueue _pendingJobs[NumberOfJobQueues];
 
-        constexpr int BackgroundJobsJobClassNumber = NumberOfJobQueues-1;
+        constexpr int BackgroundJobsJobClassNumber   = NumberOfJobQueues-1;
+        constexpr int HighPriorityJobsJobClassNumber = NumberOfJobQueues-2;
 
         /**
          * This is not the real value but an estimate. Whenever a new

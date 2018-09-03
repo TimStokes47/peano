@@ -137,11 +137,16 @@ void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
       break;
     case JobType::RunTaskAsSoonAsPossible:
       {
+    	  // @todo Remove importantTaskContext
+/*
         internal::TBBJobWrapper* tbbTask = new(tbb::task::allocate_root(importantTaskContext)) internal::TBBJobWrapper(job);
         // we may not use spawn as spawn relies on the current context and thus kills us if this context is already freed
         //        tbb::task::spawn(*tbbTask);
         tbb::task::enqueue(*tbbTask);
         importantTaskContext.set_priority(tbb::priority_high);
+*/
+
+    	internal::insertJob(internal::HighPriorityJobsJobClassNumber,job);
       }
       break;
     case JobType::MPIReceiveTask:
@@ -188,8 +193,9 @@ int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
  */
 void tarch::multicore::jobs::spawn(Job*  job) {
   if ( job->isTask() ) {
-    internal::TBBJobWrapper* tbbTask = new(tbb::task::allocate_root(importantTaskContext)) internal::TBBJobWrapper(job);
-    tbb::task::enqueue(*tbbTask);
+    //internal::TBBJobWrapper* tbbTask = new(tbb::task::allocate_root(importantTaskContext)) internal::TBBJobWrapper(job);
+    //tbb::task::enqueue(*tbbTask);
+    internal::insertJob(internal::HighPriorityJobsJobClassNumber,job);
   }
   else {
 	internal::insertJob( job->getClass(), job );
@@ -211,7 +217,7 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
  * should actually use further tasks instead.
  */
 bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
-  bool result = false;
+  bool result = (jobClass!=internal::HighPriorityJobsJobClassNumber) ? processJobs( internal::HighPriorityJobsJobClassNumber, 1 ) : false;
 
   #if defined(TBBUsesLocalQueueWhenProcessingJobs)
     std::list<tarch::multicore::jobs::Job*> localJobs;
