@@ -18,9 +18,8 @@
 tarch::logging::Log tarch::multicore::jobs::internal::_log( "tarch::multicore::jobs::internal" );
 
 
-tbb::atomic<int>                              tarch::multicore::jobs::internal::_numberOfRunningBackgroundJobConsumerTasks(0);
+tbb::atomic<int>                              tarch::multicore::jobs::internal::_numberOfRunningJobConsumerTasks(0);
 tarch::multicore::jobs::internal::JobQueue    tarch::multicore::jobs::internal::_pendingJobs[NumberOfJobQueues];
-tbb::atomic<int>                              tarch::multicore::jobs::internal::MaxSizeOfBackgroundQueue;
 
 
 
@@ -32,42 +31,46 @@ tbb::atomic<int>                              tarch::multicore::jobs::internal::
 // These task groups have to be static inside a cpp file.
 //
 static tbb::task_group_context  backgroundTaskContext(tbb::task_group_context::isolated);
-static tbb::task_group_context  importantTaskContext(tbb::task_group_context::isolated);
 
 
-tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsumerTask(int maxJobs):
+tarch::multicore::jobs::internal::JobConsumerTask::JobConsumerTask(int maxJobs):
   _maxJobs(maxJobs) {
 }
 
 
-tarch::multicore::jobs::internal::BackgroundJobConsumerTask::BackgroundJobConsumerTask(const BackgroundJobConsumerTask& copy):
+tarch::multicore::jobs::internal::JobConsumerTask::JobConsumerTask(const JobConsumerTask& copy):
   _maxJobs(copy._maxJobs) {
 }
 
 
-int tarch::multicore::jobs::internal::getMinimalNumberOfJobsPerBackgroundConsumerRun() {
+int tarch::multicore::jobs::internal::getMinimalNumberOfJobsPerConsumerRun( int jobClass ) {
   const int MinimumNumberOfJobsPerConsumer = 1;
   return std::max(
     MinimumNumberOfJobsPerConsumer,
-	tarch::multicore::jobs::internal::MaxSizeOfBackgroundQueue.load() / tarch::multicore::Core::getInstance().getNumberOfThreads()
+	tarch::multicore::jobs::internal::getJobQueue(jobClass).maxSize.load() / tarch::multicore::Core::getInstance().getNumberOfThreads()
   );
 }
 
 
-void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
-  _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(1);
-  BackgroundJobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) BackgroundJobConsumerTask(
-	getMinimalNumberOfJobsPerBackgroundConsumerRun()
+void tarch::multicore::jobs::internal::JobConsumerTask::enqueue() {
+  _numberOfRunningJobConsumerTasks.fetch_and_add(1);
+  JobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) JobConsumerTask(
+    internal::getMinimalNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
   );
   tbb::task::enqueue(*tbbTask);
   ::backgroundTaskContext.set_priority(tbb::priority_low);
 }
 
 
-tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute() {
-  _numberOfRunningBackgroundJobConsumerTasks.fetch_and_add(-1);
+tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
+  _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
 
-  processJobs(internal::BackgroundJobsJobClassNumber,_maxJobs);
+  // @todo High BW jobs
+//  constexpr int HighPriorityTasksJobClassNumber  = NumberOfJobQueues-2;
+//  constexpr int HighBandwidthTasksJobClassNumber = NumberOfJobQueues-3;
+
+  processJobs(internal::HighPriorityTasksJobClassNumber,std::numeric_limits<int>::max());
+  processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
 
   return nullptr;
 }
@@ -86,7 +89,7 @@ void tarch::multicore::jobs::internal::insertJob( int jobClass, Job* job ) {
   internal::getJobQueue(jobClass).jobs.push_back( job );
   internal::getJobQueue(jobClass).mutex.unlock();
   #else
-  internal::getJobQueue(jobClass).push( job );
+  internal::getJobQueue(jobClass).jobs.push( job );
   #endif
 }
 
@@ -98,7 +101,7 @@ int  tarch::multicore::jobs::internal::getJobQueueSize( int jobClass ) {
   //internal::getJobQueue( jobClass ).mutex.unlock();
   return result;
   #else
-  return static_cast<int>(internal::getJobQueue( jobClass ).unsafe_size());
+  return static_cast<int>(internal::getJobQueue( jobClass ).jobs.unsafe_size());
   #endif
 }
 
@@ -129,76 +132,52 @@ void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
 
 
 
-void tarch::multicore::jobs::spawnBackgroundJob(Job* job) {
-  switch (job->getJobType()) {
-    case JobType::ProcessImmediately:
-      while (job->run()) {};
-      delete job;
-      break;
-    case JobType::RunTaskAsSoonAsPossible:
-      {
-    	  // @todo Remove importantTaskContext
-/*
-        internal::TBBJobWrapper* tbbTask = new(tbb::task::allocate_root(importantTaskContext)) internal::TBBJobWrapper(job);
-        // we may not use spawn as spawn relies on the current context and thus kills us if this context is already freed
-        //        tbb::task::spawn(*tbbTask);
-        tbb::task::enqueue(*tbbTask);
-        importantTaskContext.set_priority(tbb::priority_high);
-*/
-
-    	internal::insertJob(internal::HighPriorityJobsJobClassNumber,job);
-      }
-      break;
-    case JobType::MPIReceiveTask:
-    case JobType::Task:
-    case JobType::Job:
-      {
-    	internal::insertJob(internal::BackgroundJobsJobClassNumber,job);
-
-        const int oldSize = std::max(internal::MaxSizeOfBackgroundQueue.load(),2);
-        internal::MaxSizeOfBackgroundQueue = std::max(oldSize-1,internal::getJobQueueSize(internal::BackgroundJobsJobClassNumber));
-
-        const int currentlyRunningBackgroundThreads = internal::_numberOfRunningBackgroundJobConsumerTasks.load();
-        if (
-          currentlyRunningBackgroundThreads<Job::_maxNumberOfRunningBackgroundThreads
-        ) {
-          internal::BackgroundJobConsumerTask::enqueue();
-        }
-      }
-      break;
-  }
-}
-
-
-
 int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
-  return internal::getJobQueueSize( internal::BackgroundJobsJobClassNumber ) + internal::_numberOfRunningBackgroundJobConsumerTasks.load();
+  return internal::getJobQueueSize( internal::BackgroundTasksJobClassNumber ) + internal::_numberOfRunningJobConsumerTasks.load();
 }
 
 
-/**
- * Spawn means a thread fires a new job and wants to continue itself.
- *
- * <h2> The spawned job is a task </h2>
- *
- * That means that the new job has no dependencies on any other job. It is
- * thus convenient to launch a real TBB task for it.
- *
- * <h2> The spawned job is not a task </h2>
- *
- * We enqueue it. We may not immediately spawn a job consumer task, as this
- * might mean that TBB might immediately start to consume the job and halt the
- * current thread. This is not what we want: We want to continue with the
- * calling thread immediately.
- */
 void tarch::multicore::jobs::spawn(Job*  job) {
-  if ( job->isTask() ) {
-    //internal::TBBJobWrapper* tbbTask = new(tbb::task::allocate_root(importantTaskContext)) internal::TBBJobWrapper(job);
-    //tbb::task::enqueue(*tbbTask);
-    internal::insertJob(internal::HighPriorityJobsJobClassNumber,job);
+  bool checkWhetherToLaunchAJobConsumer = false;
+
+  switch (job->getJobType()) {
+	case JobType::ProcessImmediately:
+	  while (job->run()) {};
+	  delete job;
+	  break;
+	case JobType::RunTaskAsSoonAsPossible:
+    case JobType::BandwidthBoundTask:
+      internal::insertJob(internal::HighPriorityTasksJobClassNumber,job);
+      checkWhetherToLaunchAJobConsumer = true;
+      break;
+    	// @todo Warum alle in den Background -> Doku
+    case JobType::BackgroundTask:
+      internal::insertJob(internal::BackgroundTasksJobClassNumber,job);
+      checkWhetherToLaunchAJobConsumer = true;
+      break;
+    case JobType::Job:
+      internal::insertJob(job->getClass(),job);
+      checkWhetherToLaunchAJobConsumer = true;
+      break;
   }
-  else {
-	internal::insertJob( job->getClass(), job );
+
+  if (checkWhetherToLaunchAJobConsumer) {
+    if (Job::_maxNumberOfRunningBackgroundThreads==UseDefaultNumberOFBackgroundJobs) {
+      Job::_maxNumberOfRunningBackgroundThreads = std::max(tarch::multicore::Core::getInstance().getNumberOfThreads()-1,1);
+    }
+
+	internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
+	  std::max(
+        internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize-1,
+		1
+      );
+
+    const int currentlyRunningBackgroundThreads = internal::_numberOfRunningJobConsumerTasks.load();
+    if (
+      currentlyRunningBackgroundThreads<Job::_maxNumberOfRunningBackgroundThreads
+    ) {
+      internal::JobConsumerTask::enqueue();
+    }
   }
 }
 
@@ -217,7 +196,7 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
  * should actually use further tasks instead.
  */
 bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
-  bool result = (jobClass!=internal::HighPriorityJobsJobClassNumber) ? processJobs( internal::HighPriorityJobsJobClassNumber, 1 ) : false;
+  bool result = false;
 
   #if defined(TBBUsesLocalQueueWhenProcessingJobs)
     std::list<tarch::multicore::jobs::Job*> localJobs;
@@ -308,13 +287,13 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
     }
   #else
     Job* myTask   = nullptr;
-    bool gotOne   = internal::getJobQueue(jobClass).try_pop(myTask);
+    bool gotOne   = internal::getJobQueue(jobClass).jobs.try_pop(myTask);
     while (gotOne) {
       result = true;
 
       bool reschedule = myTask->run();
       if (reschedule) {
-        internal::getJobQueue(jobClass).push(myTask);
+        internal::getJobQueue(jobClass).jobs.push(myTask);
         maxNumberOfJobs--;
       }
       else {
@@ -322,7 +301,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
         maxNumberOfJobs--;
       }
       if ( maxNumberOfJobs>0 ) {
-        gotOne = internal::getJobQueue(jobClass).try_pop(myTask);
+        gotOne = internal::getJobQueue(jobClass).jobs.try_pop(myTask);
       }
       else {
         gotOne = false;
@@ -331,12 +310,12 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
   #endif
 
   if(
-    jobClass==internal::BackgroundJobsJobClassNumber
+    jobClass==internal::BackgroundTasksJobClassNumber
     and
     internal::getJobQueueSize(jobClass)>0
     and
-    internal::_numberOfRunningBackgroundJobConsumerTasks.load()==0) {
-    internal::BackgroundJobConsumerTask::enqueue();
+    internal::_numberOfRunningJobConsumerTasks.load()==0) {
+    internal::JobConsumerTask::enqueue();
   }
 
   return result;
@@ -362,12 +341,12 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
   const int maxBusyConsumerTasks = 
     std::max( 
       0, 
-	  internal::getJobQueueSize( internal::BackgroundJobsJobClassNumber ) / internal::getMinimalNumberOfJobsPerBackgroundConsumerRun()
+	  internal::getJobQueueSize( internal::BackgroundTasksJobClassNumber ) / internal::getMinimalNumberOfJobsPerConsumerRun(internal::BackgroundTasksJobClassNumber)
 	);
 
   const int maxAdditionalBackgroundThreads =
     std::max(
-      tarch::multicore::Core::getInstance().getNumberOfThreads()-1 - internal::_numberOfRunningBackgroundJobConsumerTasks.load(),
+      tarch::multicore::Core::getInstance().getNumberOfThreads()-1 - internal::_numberOfRunningJobConsumerTasks.load(),
       0
     );
   
@@ -379,21 +358,21 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
     logInfo(
       "startToProcessBackgroundJobs()",
       "spawn another " << additionalBackgroundThreads << " background job consumer tasks ("
-        << internal::_numberOfRunningBackgroundJobConsumerTasks.load() << " task(s) already running)"
+        << internal::_numberOfRunningJobConsumerTasks.load() << " task(s) already running)"
     );
   }
   #endif
 
   for (int i=0; i<additionalBackgroundThreads; i++) {
-    internal::BackgroundJobConsumerTask::enqueue();
+    internal::JobConsumerTask::enqueue();
   }
 }
 
 
 bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
-  processJobs( internal::BackgroundJobsJobClassNumber, internal::getMinimalNumberOfJobsPerBackgroundConsumerRun() );
+  processJobs( internal::BackgroundTasksJobClassNumber, internal::getMinimalNumberOfJobsPerConsumerRun(internal::BackgroundTasksJobClassNumber) );
 
-  return internal::getJobQueueSize(internal::BackgroundJobsJobClassNumber)>0;
+  return internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)>0;
 }
 
 
@@ -718,11 +697,11 @@ void tarch::multicore::jobs::spawnAndWait(
 
 std::string tarch::multicore::jobs::internal::report() {
   std::ostringstream msg;
-  msg << "job-system-status: background-queue-no=" << internal::BackgroundJobsJobClassNumber
-	  << ", no-of-running-bg-consumer-tasks=" << _numberOfRunningBackgroundJobConsumerTasks.load();
+  msg << "no-of-running-bg-consumer-tasks=" << _numberOfRunningJobConsumerTasks.load();
   for (int i=0; i<NumberOfJobQueues; i++) {
 	msg << ",queue[" << i
-        << "]=" << internal::getJobQueueSize(i) << " job(s)";
+        << "]=" << internal::getJobQueueSize(i) << " job(s); max="
+		<< internal::getJobQueue(i).maxSize;
   }
   return msg.str();
 }

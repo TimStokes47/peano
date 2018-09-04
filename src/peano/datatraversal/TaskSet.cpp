@@ -41,8 +41,8 @@ int  peano::datatraversal::TaskSet::translateIntoJobClass( TaskType type ) {
  	  return 5;
     case TaskType::Background:
    	  return Default;
-    case TaskType::BackgroundMPIReceiveTask:
-   	  return Default;
+    case TaskType::IsBandwidthBoundTask:
+      return Default;
   }
   return Default;
 }
@@ -61,9 +61,9 @@ tarch::multicore::jobs::JobType peano::datatraversal::TaskSet::translateIntoJobT
     case TaskType::StoreVertices:
    	  return tarch::multicore::jobs::JobType::Job;
     case TaskType::Background:
-   	  return tarch::multicore::jobs::JobType::Task;
-    case TaskType::BackgroundMPIReceiveTask:
-      return tarch::multicore::jobs::JobType::MPIReceiveTask;
+   	  return tarch::multicore::jobs::JobType::BackgroundTask;
+    case TaskType::IsBandwidthBoundTask:
+      return tarch::multicore::jobs::JobType::BandwidthBoundTask;
   }
   return tarch::multicore::jobs::JobType::ProcessImmediately;
 }
@@ -297,26 +297,7 @@ peano::datatraversal::TaskSet::TaskSet(
   TaskType                  taskType
 ) {
   typedef tarch::multicore::jobs::GenericJobWithCopyOfFunctor           Job;
-  switch (taskType) {
-    case TaskType::IsTaskAndRunImmediately:
-      myTask();
-      break;
-    case TaskType::IsTaskAndRunAsSoonAsPossible:
-    case TaskType::LoadCells:
-    case TaskType::LoadVertices:
-    case TaskType::TriggerEvents:
-    case TaskType::StoreCells:
-    case TaskType::StoreVertices:
-      tarch::multicore::jobs::spawn( new Job(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
-      break;
-    case TaskType::Background:
-    case TaskType::BackgroundMPIReceiveTask:
-   	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
-   	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
-   	  );
-      tarch::multicore::jobs::spawnBackgroundJob( new Job(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
-      break;
-  }
+  tarch::multicore::jobs::spawn( new Job(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
 }
 
 
