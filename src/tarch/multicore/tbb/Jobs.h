@@ -40,42 +40,42 @@ namespace tarch {
          *
          * @see BackgroundJobConsumerTask
          */
-        extern tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks;
+        extern tbb::atomic<int>         _numberOfRunningJobConsumerTasks;
 
         constexpr int NumberOfJobQueues = 32;
-        #if defined(TBBUsesLocalQueueWhenProcessingJobs)
         struct JobQueue {
-          std::list<tarch::multicore::jobs::Job*>  jobs;
-          tbb::spin_mutex                          mutex;
+          tbb::concurrent_queue<tarch::multicore::jobs::Job*>   jobs;
+
+          #ifdef TBBUsesLocalQueueWhenProcessingJobs
+            #error Use normal queue here and an additional spin mutex
+          #endif
+
+          /**
+           * This is not the real value but an estimate. Whenever a new
+           * background job is enqueued, we check that this field is
+           * as least as big as the current queue size. If the queue is
+           * smaller than MaxSizeOfBackgroundQueue, we do decrease
+           * MaxSizeOfBackgroundQueue by one. Therefore, MaxSizeOfBackgroundQueue
+           * is monotonically bigger than the maximum queue size, but it is
+           * decreases steadily to the real size if this size is significantly
+           * smaller than MaxSizeOfBackgroundQueue.
+           *
+           * @see spawnBackgroundJob()
+           */
+          tbb::atomic<int>         maxSize;
         };
-        #else
-        typedef tbb::concurrent_queue<tarch::multicore::jobs::Job*>   JobQueue;
-        #endif
         extern JobQueue _pendingJobs[NumberOfJobQueues];
 
-        constexpr int BackgroundJobsJobClassNumber   = NumberOfJobQueues-1;
-        constexpr int HighPriorityJobsJobClassNumber = NumberOfJobQueues-2;
-
-        /**
-         * This is not the real value but an estimate. Whenever a new
-         * background job is enqueued, we check that this field is
-         * as least as big as the current queue size. If the queue is
-         * smaller than MaxSizeOfBackgroundQueue, we do decrease
-         * MaxSizeOfBackgroundQueue by one. Therefore, MaxSizeOfBackgroundQueue
-         * is monotonically bigger than the maximum queue size, but it is
-         * decreases steadily to the real size if this size is significantly
-         * smaller than MaxSizeOfBackgroundQueue.
-         *
-         * @see spawnBackgroundJob()
-         */
-        extern tbb::atomic<int>         MaxSizeOfBackgroundQueue;
+        constexpr int BackgroundTasksJobClassNumber    = NumberOfJobQueues-1;
+        constexpr int HighPriorityTasksJobClassNumber  = NumberOfJobQueues-2;
+        constexpr int HighBandwidthTasksJobClassNumber = NumberOfJobQueues-3;
 
         /**
          * Each consumer should roughly process MaxSizeOfBackgroundQueue
          * jobs divided by the number of threads. A consumer should at least
          * process one job.
          */
-        int getMinimalNumberOfJobsPerBackgroundConsumerRun();
+        int getMinimalNumberOfJobsPerConsumerRun( int jobClass );
 
         extern tarch::logging::Log _log;
 
@@ -136,28 +136,6 @@ namespace tarch {
             virtual ~JobWithCopyOfFunctorAndSemaphore() {}
         };
 
-       /**
-         * Maps one job onto a TBB task. Is used if Peano's job component is asked
-         * to process a job and this job is a task, i.e. has no incoming and outgoing
-         * dependencies. In this case, it wraps a TBB task around the job and spawns
-         * or enqueues it. The wrapper takes over the responsibility to delete the
-         * job instance in the end.
-         */
-        class TBBJobWrapper: public tbb::task {
-          private:
-            tarch::multicore::jobs::Job*        _job;
-          public:
-            TBBJobWrapper( tarch::multicore::jobs::Job* job ):
-              _job(job) {
-            }
-
-            tbb::task* execute() {
-              while ( _job->run() ) {};
-              delete _job;
-              return nullptr;
-            }
-        };
-
         /**
          * Helper function of the for loops and the parallel task invocations.
          *
@@ -209,10 +187,10 @@ namespace tarch {
          * have been more jobs to process, then it enqueues another consumer task
          * to continue to work on the jobs at a later point.
          */
-        class BackgroundJobConsumerTask: public tbb::task {
+        class JobConsumerTask: public tbb::task {
           private:
             const int _maxJobs;
-            BackgroundJobConsumerTask(int maxJobs);
+            JobConsumerTask(int maxJobs);
           public:
             static tbb::task_group_context  backgroundTaskContext;
             
@@ -230,7 +208,7 @@ namespace tarch {
              */
             static void enqueue();
 
-            BackgroundJobConsumerTask(const BackgroundJobConsumerTask& copy);
+            JobConsumerTask(const JobConsumerTask& copy);
 
             /**
              * Process _maxJobs from the background job queue and then

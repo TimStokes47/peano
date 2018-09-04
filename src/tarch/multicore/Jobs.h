@@ -24,8 +24,7 @@ namespace tarch {
     namespace jobs {
        enum class JobType {
          Job,
-         Task,
-		 MPIReceiveTask,
+         BackgroundTask,
 		 /**
 		  * Task implies that there are no dependencies.
 		  */
@@ -34,7 +33,8 @@ namespace tarch {
 		  * It does not really make sense to specify this flag by a user.
 		  * But it is used internally if background threads are disabled.
 		  */
-		 ProcessImmediately
+		 ProcessImmediately,
+		 BandwidthBoundTask
        };
 
        /**
@@ -42,6 +42,7 @@ namespace tarch {
         * deadlocks!
         */
        constexpr int DontUseAnyBackgroundJobs            = -1;
+       constexpr int UseDefaultNumberOFBackgroundJobs    =  0;
 
        /**
         * Abstract super class for a job. Job class is an integer. A job may
@@ -55,12 +56,11 @@ namespace tarch {
            const JobType  _jobType;
     	   const int      _jobClass;
 
-    	   friend void spawnBackgroundJob(Job* job);
     	   friend void startToProcessBackgroundJobs();
     	   friend bool finishToProcessBackgroundJobs();
 
-    	   static int _maxNumberOfRunningBackgroundThreads;
          public:
+    	   static int _maxNumberOfRunningBackgroundThreads;
     	   /**
     	    * A task is a job without any dependencies on other jobs though it
     	    * might have children. Tasks form a tree structure. Jobs may form
@@ -84,7 +84,6 @@ namespace tarch {
             */
            virtual void prefetchData();
            virtual ~Job();
-           bool isTask() const;
            int getClass() const;
            JobType getJobType() const;
 
@@ -177,12 +176,6 @@ namespace tarch {
        };
 
        /**
-        * Ownership for pointer goes to multicore component, i.e. the multicore
-        * component deletes the task once it has finished.
-        */
-       void spawnBackgroundJob(Job* task);
-
-       /**
         * Tell job system that pending background tasks now should be done
         *
         * All of the discussion below highlights the usage pattern. In
@@ -269,8 +262,7 @@ tarch::multicore::jobs::finishToProcessBackgroundJobs();
        /**
         * Kick out a new job. The job's type has to be set properly: It
         * has to be clear whether the job is a job or even a task, i.e. a
-        * special type of job. In the latter case, a runtime system could
-        * deploy the pointer to a different thread and return immediately.
+        * special type of job. See JobType.
         *
         * Ownership goes over to Peano's job namespace, i.e. you don't have
         * to delete the pointer.
