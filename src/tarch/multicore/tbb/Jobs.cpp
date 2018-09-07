@@ -64,14 +64,20 @@ void tarch::multicore::jobs::internal::JobConsumerTask::enqueue() {
 
 
 tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
-  _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
-
   if ( _bandwidthTasksAreProcessed.compare_and_swap(true,false) ) {
     processJobs(internal::HighBandwidthTasksJobClassNumber,std::numeric_limits<int>::max());
 	_bandwidthTasksAreProcessed = false;
   }
-  processJobs(internal::HighPriorityTasksJobClassNumber,std::numeric_limits<int>::max());
-  processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
+
+  bool hasProcessedJobs = false;
+  hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,std::numeric_limits<int>::max());
+  hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
+
+  if (hasProcessedJobs) {
+	enqueue();
+  }
+
+  _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
 
   return nullptr;
 }
@@ -160,20 +166,19 @@ void tarch::multicore::jobs::spawn(Job*  job) {
       break;
     case JobType::Job:
       internal::insertJob(job->getClass(),job);
-      checkWhetherToLaunchAJobConsumer = true;
       break;
   }
+
+  internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
+	std::max(
+      internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize-1,
+	  1
+    );
 
   if (checkWhetherToLaunchAJobConsumer) {
     if (Job::_maxNumberOfRunningBackgroundThreads==UseDefaultNumberOFBackgroundJobs) {
       Job::_maxNumberOfRunningBackgroundThreads = std::max(tarch::multicore::Core::getInstance().getNumberOfThreads()-1,1);
     }
-
-	internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
-	  std::max(
-        internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize-1,
-		1
-      );
 
     const int currentlyRunningBackgroundThreads = internal::_numberOfRunningJobConsumerTasks.load();
     if (
@@ -311,15 +316,6 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
       }
     }
   #endif
-
-  if(
-    jobClass==internal::BackgroundTasksJobClassNumber
-    and
-    internal::getJobQueueSize(jobClass)>0
-    and
-    internal::_numberOfRunningJobConsumerTasks.load()==0) {
-    internal::JobConsumerTask::enqueue();
-  }
 
   return result;
 }
