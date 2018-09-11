@@ -61,7 +61,7 @@ class tarch::multicore::Core {
      *
      * Multiply with two to exploit hyperthreading.
      */
-    static constexpr int UseMaxiumNumberOfAvailableThreads = -1;
+    static constexpr int UseMaximumNumberOfAvailableThreads = -1;
 
     /**
      * Destructor

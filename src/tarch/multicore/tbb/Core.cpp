@@ -5,6 +5,7 @@
 #include "tarch/multicore/tbb/Jobs.h"
 #include "tarch/Assertions.h"
 #include <thread>
+#include <tbb/task_scheduler_init.h>
 
 
 tarch::logging::Log  tarch::multicore::Core::_log( "tarch::multicore::Core" );
@@ -70,7 +71,7 @@ void tarch::multicore::Core::configure( int numberOfThreads, int stackSize ) {
   if (numberOfThreads==UseDefaultNumberOfThreads) {
     _numberOfThreads = tbb::task_scheduler_init::default_num_threads();
   }
-  else if (numberOfThreads==UseMaxiumNumberOfAvailableThreads) {
+  else if (numberOfThreads==UseMaximumNumberOfAvailableThreads) {
     _numberOfThreads = std::thread::hardware_concurrency();
   }
   else {
@@ -85,7 +86,7 @@ void tarch::multicore::Core::configure( int numberOfThreads, int stackSize ) {
   logInfo(
     "configure(int)",
 	"set number of threads to " << _numberOfThreads << " at a hardware concurrency of " << std::thread::hardware_concurrency() <<
-	" and a TBB default of " << tbb::task_scheduler_init::default_num_threads()
+	" and a TBB default of " << (tbb::task_scheduler_init::default_num_threads())
   );
 }
 
