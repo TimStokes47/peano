@@ -18,7 +18,7 @@
 //#endif
 
 #if !defined(TBBPrefetchesJobData) and !defined(noTBBPrefetchesJobData)
-//  #define TBBPrefetchesJobData
+  #define TBBPrefetchesJobData
 #endif
 
 
@@ -78,6 +78,8 @@ namespace tarch {
         int getMinimalNumberOfJobsPerConsumerRun( int jobClass );
 
         extern tarch::logging::Log _log;
+
+        extern tbb::atomic<bool> _bandwidthTasksAreProcessed;
 
         /**
          * Return job queue for one type of job. Does not hold for background jobs.
