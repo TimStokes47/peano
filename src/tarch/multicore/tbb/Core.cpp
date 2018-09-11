@@ -69,7 +69,6 @@ void tarch::multicore::Core::configure( int numberOfThreads, int stackSize ) {
 
   if (numberOfThreads==UseDefaultNumberOfThreads) {
     _numberOfThreads = tbb::task_scheduler_init::default_num_threads();
-    _numberOfThreads = std::thread::hardware_concurrency();
   }
   else if (numberOfThreads==UseMaxiumNumberOfAvailableThreads) {
     _numberOfThreads = std::thread::hardware_concurrency();
@@ -77,13 +76,17 @@ void tarch::multicore::Core::configure( int numberOfThreads, int stackSize ) {
   else {
     _numberOfThreads = numberOfThreads;
   }
-  _globalThreadCountControl = new tbb::global_control(tbb::global_control::max_allowed_parallelism,_numberOfThreads);
 
+  _globalThreadCountControl = new tbb::global_control(tbb::global_control::max_allowed_parallelism,_numberOfThreads);
   if (stackSize>UseDefaultStackSize) {
     _globalStackSizeControl = new tbb::global_control(tbb::global_control::thread_stack_size,stackSize);
   }
 
-  logInfo( "configure(int)", "set number of threads to " << numberOfThreads << " at a hardware concurrency of " << std::thread::hardware_concurrency() );
+  logInfo(
+    "configure(int)",
+	"set number of threads to " << _numberOfThreads << " at a hardware concurrency of " << std::thread::hardware_concurrency() <<
+	" and a TBB default of " << tbb::task_scheduler_init::default_num_threads()
+  );
 }
 
 
