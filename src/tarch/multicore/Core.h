@@ -44,7 +44,24 @@ class tarch::multicore::Core {
   private:
     Core();
   public:
-    static constexpr int UseDefaultNumberOfThreads = 0;
+    /**
+     * The default is what the system management typically gives you. So if
+     * you run four ranks on a 24 core node, then each MPI rank will get 6
+     * threads if you choose this constant.
+     *
+     * Multiply with two to exploit hyperthreading.
+     */
+    static constexpr int UseDefaultNumberOfThreads         = 0;
+
+    /**
+     * Use maximum number of threads. This is, if you run four ranks on a
+     * 24 core node, then each rank uses 24 threads. Usually not recommended
+     * with slurm, as the default OS masking forbids that a rank can pin its
+     * threads to cores assigned to another rank.
+     *
+     * Multiply with two to exploit hyperthreading.
+     */
+    static constexpr int UseMaxiumNumberOfAvailableThreads = -1;
 
     /**
      * Destructor
