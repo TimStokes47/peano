@@ -15,6 +15,10 @@
 //#include <ittnotify.h>
 #include "tarch/timing/Watch.h"
 
+#ifdef USE_ITAC
+#include "VT.h"
+#endif
+
 
 //__itt_domain* domain = __itt_domain_create("multicore.tbb.jobs");
 //__itt_string_handle* handleTask = __itt_string_handle_create("process_task");
@@ -72,14 +76,21 @@ void tarch::multicore::jobs::internal::BackgroundJobConsumerTask::enqueue() {
   ));
   tbb::task::enqueue(*tbbTask);
   ::backgroundTaskContext.set_priority(tbb::priority_low);
-  if(cnt%1000==0) {
+  //if(cnt%1000==0) {
    //   logInfo( "enqueue()", "spawned new background consumer task ntasks "<< _numberOfRunningBackgroundJobConsumerTasks <<" cnt="<<cnt );
-  }
+  //}
 }
 
 
 tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute() {
-
+#ifdef USE_ITAC
+  static int event_execute = -1;
+  if(event_execute==-1) {
+	static const char * name="execute consumer";
+	int ierr  = VT_funcdef(name, VT_NOCLASS, &event_execute); assert(ierr==0);
+  }
+  VT_begin(event_execute);
+#endif
   int oldNumberOfBackgroundJobs = internal::getJobQueue( internal::BackgroundJobsJobClassNumber ).unsafe_size();
 
   processJobs(internal::BackgroundJobsJobClassNumber,_maxJobs);
@@ -124,7 +135,9 @@ tbb::task* tarch::multicore::jobs::internal::BackgroundJobConsumerTask::execute(
 	  	//																	<< " oldNumberOfBackgroundJobs "<< oldNumberOfBackgroundJobs);
     enqueue();
   }
-
+#ifdef USE_ITAC
+  VT_end(event_execute);
+#endif
   return nullptr;
 }
 

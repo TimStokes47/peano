@@ -98,6 +98,7 @@ namespace tarch {
             * @see ProcessNormalBackgroundJobsImmediately
             */
            static void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
+           static int getMaxNumberOfRunningBackgroundThreads();
        };
 
        /**
