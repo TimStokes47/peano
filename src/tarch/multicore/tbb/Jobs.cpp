@@ -22,6 +22,10 @@ tbb::atomic<int>                              tarch::multicore::jobs::internal::
 tarch::multicore::jobs::internal::JobQueue    tarch::multicore::jobs::internal::_pendingJobs[NumberOfJobQueues];
 tbb::atomic<bool>                             tarch::multicore::jobs::internal::_bandwidthTasksAreProcessed(false);
 
+int                      tarch::multicore::jobs::internal::_minimalNumberOfJobsPerConsumerRun(1);
+int                      tarch::multicore::jobs::internal::_maximumNumberOfJobsPerConsumerRun(std::numeric_limits<int>::max());
+
+tarch::multicore::jobs::HighPriorityTaskProcessing  tarch::multicore::jobs::internal::_processHighPriorityJobsAlwaysFirst(HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARush);
 
 
 //
@@ -34,6 +38,15 @@ tbb::atomic<bool>                             tarch::multicore::jobs::internal::
 static tbb::task_group_context  backgroundTaskContext(tbb::task_group_context::isolated);
 
 
+void tarch::multicore::jobs::setMinMaxNumberOfJobsToConsumeInOneRush(int min, int max) {
+  assertion2(min>=1,min,max);
+  assertion2(max>=min,min,max);
+
+  internal::_minimalNumberOfJobsPerConsumerRun = min;
+  internal::_maximumNumberOfJobsPerConsumerRun = max;
+}
+
+
 tarch::multicore::jobs::internal::JobConsumerTask::JobConsumerTask(int maxJobs):
   _maxJobs(maxJobs) {
 }
@@ -44,19 +57,20 @@ tarch::multicore::jobs::internal::JobConsumerTask::JobConsumerTask(const JobCons
 }
 
 
-int tarch::multicore::jobs::internal::getMinimalNumberOfJobsPerConsumerRun( int jobClass ) {
-  const int MinimumNumberOfJobsPerConsumer = 1;
-  return std::max(
-    MinimumNumberOfJobsPerConsumer,
-	tarch::multicore::jobs::internal::getJobQueue(jobClass).maxSize.load() / tarch::multicore::Core::getInstance().getNumberOfThreads()
-  );
+int tarch::multicore::jobs::internal::getNumberOfJobsPerConsumerRun( int jobClass ) {
+  int result = tarch::multicore::jobs::internal::getJobQueue(jobClass).maxSize.load() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+
+  result = std::max( internal::_minimalNumberOfJobsPerConsumerRun, result );
+  result = std::min( internal::_maximumNumberOfJobsPerConsumerRun, result );
+
+  return result;
 }
 
 
 void tarch::multicore::jobs::internal::JobConsumerTask::enqueue() {
   _numberOfRunningJobConsumerTasks.fetch_and_add(1);
   JobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) JobConsumerTask(
-    internal::getMinimalNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
+    internal::getNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
   );
   tbb::task::enqueue(*tbbTask);
   ::backgroundTaskContext.set_priority(tbb::priority_low);
@@ -70,8 +84,29 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   }
 
   bool hasProcessedJobs = false;
-  hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,std::numeric_limits<int>::max());
-  hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
+
+  switch (_processHighPriorityJobsAlwaysFirst) {
+    case HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARush:
+      hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,std::numeric_limits<int>::max());
+      hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
+      break;
+    case HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARushAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft:
+      hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,std::numeric_limits<int>::max());
+      if (!hasProcessedJobs) {
+        hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
+      }
+      break;
+    case HighPriorityTaskProcessing::ProcessOneHighPriorityTasksAtATime:
+      hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,1);
+      hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
+      break;
+    case HighPriorityTaskProcessing::ProcessOneHighPriorityTasksAtATimeAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft:
+      hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,1);
+      if (!hasProcessedJobs) {
+        hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
+      }
+      break;
+  }
 
   if (hasProcessedJobs) {
 	enqueue();
@@ -340,7 +375,7 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
   const int maxBusyConsumerTasks = 
     std::max( 
       0, 
-	  internal::getJobQueueSize( internal::BackgroundTasksJobClassNumber ) / internal::getMinimalNumberOfJobsPerConsumerRun(internal::BackgroundTasksJobClassNumber)
+	  internal::getJobQueueSize( internal::BackgroundTasksJobClassNumber ) / internal::getNumberOfJobsPerConsumerRun(internal::BackgroundTasksJobClassNumber)
 	);
 
   const int maxAdditionalBackgroundThreads =
@@ -369,7 +404,7 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
 
 
 bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
-  processJobs( internal::BackgroundTasksJobClassNumber, internal::getMinimalNumberOfJobsPerConsumerRun(internal::BackgroundTasksJobClassNumber) );
+  processJobs( internal::BackgroundTasksJobClassNumber, internal::getNumberOfJobsPerConsumerRun(internal::BackgroundTasksJobClassNumber) );
 
   return internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)>0;
 }

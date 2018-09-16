@@ -34,13 +34,30 @@ namespace tarch {
     namespace jobs {
       void terminateAllPendingBackgroundConsumerJobs();
 
+      enum class HighPriorityTaskProcessing {
+  		ProcessAllHighPriorityTasksInARush,
+  		ProcessAllHighPriorityTasksInARushAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft,
+  		ProcessOneHighPriorityTasksAtATime,
+  		ProcessOneHighPriorityTasksAtATimeAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft
+      };
+
+      /**
+       * Configure TBB runtime.
+       */
+      void setMinMaxNumberOfJobsToConsumeInOneRush(int min=1, int max=std::numeric_limits<int>::max());
+      void setHighPriorityJobBehaviour(HighPriorityTaskProcessing behaviour);
+
       namespace internal {
         /**
          * Number of actively running background consumer tasks.
          *
          * @see BackgroundJobConsumerTask
          */
-        extern tbb::atomic<int>         _numberOfRunningJobConsumerTasks;
+        extern tbb::atomic<int>            _numberOfRunningJobConsumerTasks;
+
+        extern int                         _minimalNumberOfJobsPerConsumerRun;
+        extern int                         _maximumNumberOfJobsPerConsumerRun;
+        extern HighPriorityTaskProcessing  _processHighPriorityJobsAlwaysFirst;
 
         constexpr int NumberOfJobQueues = 32;
         struct JobQueue {
@@ -75,7 +92,7 @@ namespace tarch {
          * jobs divided by the number of threads. A consumer should at least
          * process one job.
          */
-        int getMinimalNumberOfJobsPerConsumerRun( int jobClass );
+        int getNumberOfJobsPerConsumerRun( int jobClass );
 
         extern tarch::logging::Log _log;
 
