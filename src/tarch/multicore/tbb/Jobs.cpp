@@ -47,6 +47,11 @@ void tarch::multicore::jobs::setMinMaxNumberOfJobsToConsumeInOneRush(int min, in
 }
 
 
+void tarch::multicore::jobs::setHighPriorityJobBehaviour(HighPriorityTaskProcessing behaviour) {
+  internal::_processHighPriorityJobsAlwaysFirst = behaviour;
+}
+
+
 tarch::multicore::jobs::internal::JobConsumerTask::JobConsumerTask(int maxJobs):
   _maxJobs(maxJobs) {
 }
