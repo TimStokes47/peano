@@ -252,6 +252,7 @@ namespace tarch {
             tbb::task* execute() {
               while ( _job->run() ) {}
               delete _job;
+	      return nullptr;
             }
         };
 
