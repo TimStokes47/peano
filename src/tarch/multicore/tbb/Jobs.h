@@ -38,7 +38,8 @@ namespace tarch {
   		ProcessAllHighPriorityTasksInARush,
   		ProcessAllHighPriorityTasksInARushAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft,
   		ProcessOneHighPriorityTasksAtATime,
-  		ProcessOneHighPriorityTasksAtATimeAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft
+  		ProcessOneHighPriorityTasksAtATimeAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft,
+  		MapHighPriorityTasksToRealTBBTasks
       };
 
       /**
@@ -238,6 +239,20 @@ namespace tarch {
              * @see enqueue()
              */
             tbb::task* execute();
+        };
+
+        class TBBWrapperAroundJob: public tbb::task {
+          private:
+        	Job*  _job;
+          public:
+        	TBBWrapperAroundJob( Job* job ):
+        	  _job(job) {
+        	}
+
+            tbb::task* execute() {
+              while ( _job->run() ) {}
+              delete _job;
+            }
         };
 
         /**

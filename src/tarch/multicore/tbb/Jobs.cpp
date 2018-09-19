@@ -111,6 +111,10 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
         hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
       }
       break;
+    case HighPriorityTaskProcessing::MapHighPriorityTasksToRealTBBTasks:
+      assertion( internal::getJobQueueSize(HighPriorityTasksJobClassNumber)==0 );
+      hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
+      break;
   }
 
   if (hasProcessedJobs) {
@@ -193,8 +197,17 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 	  delete job;
 	  break;
 	case JobType::RunTaskAsSoonAsPossible:
-      internal::insertJob(internal::HighPriorityTasksJobClassNumber,job);
-      checkWhetherToLaunchAJobConsumer = true;
+	  if ( internal::_processHighPriorityJobsAlwaysFirst==HighPriorityTaskProcessing::MapHighPriorityTasksToRealTBBTasks ) {
+	    internal::TBBWrapperAroundJob* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) internal::TBBWrapperAroundJob(
+	      job
+        );
+	    tbb::task::enqueue(*tbbTask);
+        checkWhetherToLaunchAJobConsumer = false;
+	  }
+	  else {
+        internal::insertJob(internal::HighPriorityTasksJobClassNumber,job);
+        checkWhetherToLaunchAJobConsumer = true;
+	  }
       break;
     case JobType::BandwidthBoundTask:
       internal::insertJob(internal::HighBandwidthTasksJobClassNumber,job);
