@@ -118,6 +118,7 @@ class peano::datatraversal::TaskSet {
        * its own task.
        */
       IsTaskAndRunImmediately,
+	  IsBandwidthBoundTask,
 	  /**
 	   * Not different to IsTaskAndRunImmediately if used in a construct with 
        * multiple functors. If you use only the single functor, it usually 
@@ -134,7 +135,6 @@ class peano::datatraversal::TaskSet {
        * on the difference between jobs and tasks.
        */
   	  Background,
-  	  BackgroundMPIReceiveTask,
       /**
        * Used by Peano's grid management.
        */
@@ -266,14 +266,38 @@ class peano::datatraversal::TaskSet {
         case peano::datatraversal::TaskSet::TaskType::StoreVertices:
           tarch::multicore::jobs::spawn( new tarch::multicore::jobs::GenericJobWithPointer<T>(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
           break;
-        case peano::datatraversal::TaskSet::TaskType::BackgroundMPIReceiveTask:
         case peano::datatraversal::TaskSet::TaskType::Background:
        	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
        	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
        	  );
-          tarch::multicore::jobs::spawnBackgroundJob( new tarch::multicore::jobs::GenericJobWithPointer<T>(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType)) );
+          tarch::multicore::jobs::spawn( new tarch::multicore::jobs::GenericJobWithPointer<T>(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType)) );
           break;
       }
+    }
+
+
+    /**
+     * Third alternative to other TaskSet constructors.
+     *
+     * Ownership goes to TaskSet class, i.e. you don't have to delete it.
+     * Basically all in here is a simple wrapper around the tarch. Allows you
+     * to pass Jobs that also provide prefetch routines, e.g.
+     *
+     * <h2> Usage </h2>
+     *
+     * - Create a new subclass of tarch::multicore::jobs::Job.
+     * - Ensure it has type tarch::multicore::jobs::JobType::BackgroundTask or
+     *   the bandwidth variation is passed to the superclass in its constructor
+     * - Create it via new in the calling code
+     * - Pass the instance to this constructor
+     */
+    TaskSet(
+      tarch::multicore::jobs::Job*  job
+    ) {
+      peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
+        tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
+      );
+      tarch::multicore::jobs::spawn( job );
     }
 
 

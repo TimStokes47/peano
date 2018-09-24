@@ -44,3 +44,8 @@ double tarch::la::absoluteWeight(
 
   return relativeError * weight;
 }
+
+
+double tarch::la::max( double a, double b, double c) {
+  return std::max( a, std::max(b,c) );
+}

@@ -8,11 +8,17 @@
 #include <queue>
 
 
-int tarch::multicore::jobs::Job::_maxNumberOfRunningBackgroundThreads( std::thread::hardware_concurrency() );
+int tarch::multicore::jobs::Job::_maxNumberOfRunningBackgroundThreads( UseDefaultNumberOFBackgroundJobs );
 
 
 void tarch::multicore::jobs::Job::setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads) {
-  assertion(maxNumberOfRunningBackgroundThreads==DontUseAnyBackgroundJobs || maxNumberOfRunningBackgroundThreads>=1);
+  assertion(
+    maxNumberOfRunningBackgroundThreads==DontUseAnyBackgroundJobs
+	||
+	maxNumberOfRunningBackgroundThreads==UseDefaultNumberOFBackgroundJobs
+	||
+	maxNumberOfRunningBackgroundThreads>=1
+  );
   _maxNumberOfRunningBackgroundThreads = maxNumberOfRunningBackgroundThreads;
 }
 
@@ -35,15 +41,13 @@ tarch::multicore::jobs::Job::~Job() {
 }
 
 
-bool tarch::multicore::jobs::Job::isTask() const {
-  return _jobType!=JobType::Job;
-}
-
-
 int tarch::multicore::jobs::Job::getClass() const {
   return _jobClass;
 }
 
+
+void tarch::multicore::jobs::Job::prefetchData() {
+}
 
 
 tarch::multicore::jobs::GenericJobWithCopyOfFunctor::GenericJobWithCopyOfFunctor( const std::function<bool()>& functor, JobType jobType, int jobClass ):
@@ -80,10 +84,6 @@ tarch::multicore::jobs::GenericJobWithoutCopyOfFunctor::~GenericJobWithoutCopyOf
 
 namespace {
   std::queue<tarch::multicore::jobs::Job* > backgroundJobs;
-}
-
-void tarch::multicore::jobs::spawnBackgroundJob(Job* task) {
-  backgroundJobs.push( task );
 }
 
 

@@ -5,6 +5,14 @@
 
 
 namespace peano {
+  /**
+   * The heap namespace holds all routines that we use in connection with
+   * Peano's heap data storage. This means
+   *
+   * - the actual heap classes
+   * - allocators used for heaps and architectures requiring concurrent and aligned layouts
+   * - data conversion/compression routines
+   */
   namespace heap {
     /**
      * Takes a double and returns the exponent and the mantissa.
@@ -101,6 +109,9 @@ namespace peano {
 	  bool          useRelativeError
     );
 
+    /**
+     * @see findMostAgressiveCompression(double,double,bool)
+     */
     int findMostAgressiveCompression(
       double        value,
 	  double        maxAsoluteError
@@ -109,6 +120,28 @@ namespace peano {
     /**
      * Wrapper around findMostAgressiveCompression() that works for an array of
      * count entries.
+     *
+     * I run over the array of length count and check for every single entry
+     * whether we could store it with fewer than 8 bytes without harming the
+     * maxError constraint. This check relies on
+     * findMostAgressiveCompression(double,double,bool). The routine then
+     * returns the minimal number of bytes you have to invest to encode this
+     * whole array such that the result still remains in the error bounds.
+     *
+     * <h2> Usage pattern </h2>
+     *
+     * This is the standard workflow:
+     *
+     * - Convert an array into its hierarchical representation. Usually, I
+     *   determine the mean value and then store all remaining values within the
+     *   array as actual value minus mean.
+     * - Call this routine on the remaining array.
+     * - If the result is bigger or equal 8, I store/send away the original
+     *   array. Otherwise:
+     * - I store the mean as 8 bytes into a char stream. I then loop over the
+     *   array and per array entry call decompose. I know how many bytes of
+     *   exponent and mantissa are valid from the result of this routine
+     *   and thus enqueue only those guys in an output stream/MPI message.
      */
     int findMostAgressiveCompression(
       double        values[],
@@ -142,10 +175,10 @@ namespace peano {
      * Counterpart of decompose( const double&, char& , T& )
      *
      * As it is the counterpart, code typically looks similar to
-     *<pre>
+     * <pre>
   char exponent  = 0;
   long int mantissa = 0;
-  char* pMantissa = reinterpret_cast<char*>( &(mantissa) );
+  char* pMantissa = reinterpret_cast char* ( &(mantissa) );
 
   for (int j=bytesForMantissa-1; j>=0; j--) {
     pMantissa[j] = CompressedDataHeap::getInstance().getData( heapIndex )[compressedDataHeapIndex]._persistentRecords._u;
@@ -180,15 +213,6 @@ namespace peano {
      * return arrays you used. However, it is increased by one, i.e. if you
      * pass 1, the operation assumes that you've taken the entry exponent[0]
      * of decompose, e.g.
-     *
-     *
-     * Typically usage:
-     *
-     * <pre>
-     * @todo
-       </pre>
-     *
-     *
      */
     double compose(
       char         exponent,

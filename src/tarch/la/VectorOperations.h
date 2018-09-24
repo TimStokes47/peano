@@ -39,6 +39,20 @@ namespace tarch {
     template<int Size>
     double norm2 (const Vector<Size,std::complex<double> >& vector);
 
+
+    /**
+     * Computes the max-norm of the vector.
+     */
+    template<int Size, typename Scalar>
+    Scalar normMax (const Vector<Size,Scalar>& vector);
+
+    /**
+     * Specialisation that is different to standard definition. Works as result
+     * type is not part of the signature
+     */
+    template<int Size>
+    double normMax (const Vector<Size,std::complex<double> >& vector);
+
     /**
      * Computes the absolute component values of the vector, creating a
      * temporary vector to hold the result.

@@ -5,13 +5,28 @@
 
 
 #include <tbb/task.h>
-#include <tbb/concurrent_queue.h>
 #include <tbb/parallel_invoke.h>
 #include <tbb/tbb_machine.h>
 #include <tbb/task.h>
 #include <tbb/tbb_thread.h>
 #include <tbb/task_group.h>
 #include <tbb/concurrent_hash_map.h>
+
+
+//#if !defined(TBBUsesLocalQueueWhenProcessingJobs) and !defined(noTBBUsesLocalQueueWhenProcessingJobs)
+//  #define TBBUsesLocalQueueWhenProcessingJobs
+//#endif
+
+#if !defined(TBBPrefetchesJobData) and !defined(noTBBPrefetchesJobData)
+  #define TBBPrefetchesJobData
+#endif
+
+
+#if defined(TBBUsesLocalQueueWhenProcessingJobs)
+#include <list>
+#else
+#include <tbb/concurrent_queue.h>
+#endif
 
 
 namespace tarch {
@@ -21,28 +36,70 @@ namespace tarch {
       extern tarch::logging::Log _log;
       void terminateAllPendingBackgroundConsumerJobs();
 
+      enum class HighPriorityTaskProcessing {
+  		ProcessAllHighPriorityTasksInARush,
+  		ProcessAllHighPriorityTasksInARushAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft,
+  		ProcessOneHighPriorityTasksAtATime,
+  		ProcessOneHighPriorityTasksAtATimeAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft,
+  		MapHighPriorityTasksToRealTBBTasks
+      };
+
+      /**
+       * Configure TBB runtime.
+       */
+      void setMinMaxNumberOfJobsToConsumeInOneRush(int min=1, int max=std::numeric_limits<int>::max());
+      void setHighPriorityJobBehaviour(HighPriorityTaskProcessing behaviour);
+
       namespace internal {
         /**
          * Number of actively running background consumer tasks.
          *
          * @see BackgroundJobConsumerTask
          */
-        extern tbb::atomic<int>         _numberOfRunningBackgroundJobConsumerTasks;
+        extern tbb::atomic<int>            _numberOfRunningJobConsumerTasks;
+
+        extern int                         _minimalNumberOfJobsPerConsumerRun;
+        extern int                         _maximumNumberOfJobsPerConsumerRun;
+        extern HighPriorityTaskProcessing  _processHighPriorityJobsAlwaysFirst;
 
         constexpr int NumberOfJobQueues = 32;
-        typedef tbb::concurrent_queue<tarch::multicore::jobs::Job*>   JobQueue;
+        struct JobQueue {
+          tbb::concurrent_queue<tarch::multicore::jobs::Job*>   jobs;
+
+          #ifdef TBBUsesLocalQueueWhenProcessingJobs
+            #error Use normal queue here and an additional spin mutex
+          #endif
+
+          /**
+           * This is not the real value but an estimate. Whenever a new
+           * background job is enqueued, we check that this field is
+           * as least as big as the current queue size. If the queue is
+           * smaller than MaxSizeOfBackgroundQueue, we do decrease
+           * MaxSizeOfBackgroundQueue by one. Therefore, MaxSizeOfBackgroundQueue
+           * is monotonically bigger than the maximum queue size, but it is
+           * decreases steadily to the real size if this size is significantly
+           * smaller than MaxSizeOfBackgroundQueue.
+           *
+           * @see spawnBackgroundJob()
+           */
+          tbb::atomic<int>         maxSize;
+        };
         extern JobQueue _pendingJobs[NumberOfJobQueues];
 
-        constexpr int BackgroundJobsJobClassNumber = NumberOfJobQueues-1;
+        constexpr int BackgroundTasksJobClassNumber    = NumberOfJobQueues-1;
+        constexpr int HighPriorityTasksJobClassNumber  = NumberOfJobQueues-2;
+        constexpr int HighBandwidthTasksJobClassNumber = NumberOfJobQueues-3;
 
         /**
-         * This is not the real value but an estimate.
+         * Each consumer should roughly process MaxSizeOfBackgroundQueue
+         * jobs divided by the number of threads. A consumer should at least
+         * process one job.
          */
-        extern tbb::atomic<int>         MaxSizeOfBackgroundQueue;
-
-        int getMinimalNumberOfJobsPerBackgroundConsumerRun();
+        int getNumberOfJobsPerConsumerRun( int jobClass );
 
         extern tarch::logging::Log _log;
+
+        extern tbb::atomic<bool> _bandwidthTasksAreProcessed;
 
         /**
          * Return job queue for one type of job. Does not hold for background jobs.
@@ -51,6 +108,9 @@ namespace tarch {
          * implemented here.
          */
         JobQueue& getJobQueue( int jobClass );
+
+        void insertJob( int jobClass, Job* job );
+        int  getJobQueueSize( int jobClass );
 
         /**
          * The spawn and wait routines fire their job and then have to wait for all
@@ -96,28 +156,6 @@ namespace tarch {
             }
 
             virtual ~JobWithCopyOfFunctorAndSemaphore() {}
-        };
-
-       /**
-         * Maps one job onto a TBB task. Is used if Peano's job component is asked
-         * to process a job and this job is a task, i.e. has no incoming and outgoing
-         * dependencies. In this case, it wraps a TBB task around the job and spawns
-         * or enqueues it. The wrapper takes over the responsibility to delete the
-         * job instance in the end.
-         */
-        class TBBJobWrapper: public tbb::task {
-          private:
-            tarch::multicore::jobs::Job*        _job;
-          public:
-            TBBJobWrapper( tarch::multicore::jobs::Job* job ):
-              _job(job) {
-            }
-
-            tbb::task* execute() {
-              while ( _job->run() ) {};
-              delete _job;
-              return nullptr;
-            }
         };
 
         /**
@@ -171,10 +209,10 @@ namespace tarch {
          * have been more jobs to process, then it enqueues another consumer task
          * to continue to work on the jobs at a later point.
          */
-        class BackgroundJobConsumerTask: public tbb::task {
+        class JobConsumerTask: public tbb::task {
           private:
             const int _maxJobs;
-            BackgroundJobConsumerTask(int maxJobs);
+            JobConsumerTask(int maxJobs);
           public:
             static tbb::task_group_context  backgroundTaskContext;
             
@@ -192,7 +230,7 @@ namespace tarch {
              */
             static void enqueue();
 
-            BackgroundJobConsumerTask(const BackgroundJobConsumerTask& copy);
+            JobConsumerTask(const JobConsumerTask& copy);
 
             /**
              * Process _maxJobs from the background job queue and then
@@ -203,6 +241,21 @@ namespace tarch {
              * @see enqueue()
              */
             tbb::task* execute();
+        };
+
+        class TBBWrapperAroundJob: public tbb::task {
+          private:
+        	Job*  _job;
+          public:
+        	TBBWrapperAroundJob( Job* job ):
+        	  _job(job) {
+        	}
+
+            tbb::task* execute() {
+              while ( _job->run() ) {}
+              delete _job;
+	      return nullptr;
+            }
         };
 
         /**

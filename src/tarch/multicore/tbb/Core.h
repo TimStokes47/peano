@@ -44,16 +44,15 @@ class tarch::multicore::Core {
     ::tbb::global_control*      _globalThreadCountControl;
     ::tbb::global_control*      _globalStackSizeControl;
 
-    PinningObserver             _pinningObserver;
+    PinningObserver*             _pinningObserver;
     ThreadIdMapper				_threadIdMapper;
-    //PerformanceMonitor			_perfMonitor;
   public:
     /**
-     * Tells the constructor to use the default. Does not mean that 0 is used
-     * as core count, as that would not make any sense. Usually implies that
-     * all cores plus hyperthreading are used.
-     */
-    static constexpr int UseDefaultNumberOfThreads = 0;
+ *   * @see Core header in super directory
+ *   */
+    static constexpr int UseDefaultNumberOfThreads         = 0;
+    static constexpr int UseMaximumNumberOfAvailableThreads = -1;
+
     /**
      * Tells the constructor to use the default. Does not mean that 0 is used
      * as stack size, as that would not make any sense.
