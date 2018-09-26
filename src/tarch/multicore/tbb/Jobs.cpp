@@ -209,6 +209,8 @@ void tarch::multicore::jobs::plotStatistics() {
   for (auto p: internal::JobConsumerTask::_histogramOfBackgroundTasks) {
     logInfo( "terminateAllPendingBackgroundConsumerJobs()", "no of background tasks[" << p.first << "]=" << p.second );
   }
+  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "max no of background tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load() );
+  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "max no of high priority tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load() );
   #endif
 }
 
@@ -253,6 +255,11 @@ void tarch::multicore::jobs::spawn(Job*  job) {
     case JobType::BackgroundTask:
       internal::insertJob(internal::BackgroundTasksJobClassNumber,job);
       checkWhetherToLaunchAJobConsumer = true;
+      internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
+        std::max(
+          internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber),
+		  internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load()
+        );
       #ifdef TBB_USE_THREADING_TOOLS
       tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks++;
       #endif
@@ -261,12 +268,6 @@ void tarch::multicore::jobs::spawn(Job*  job) {
       internal::insertJob(job->getClass(),job);
       break;
   }
-
-  internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
-	std::max(
-      internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize-1,
-	  1
-    );
 
   if (checkWhetherToLaunchAJobConsumer) {
     if (Job::_maxNumberOfRunningBackgroundThreads==UseDefaultNumberOFBackgroundJobs) {

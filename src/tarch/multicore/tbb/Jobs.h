@@ -27,6 +27,18 @@ namespace tarch {
       /**
        * Helper operation. Plots quite some statistics if code is
        * translated with -DTBB_USE_THREADING_TOOLS.
+       *
+       * <h2> Statistics format </h2>
+       *
+       * You receive the following information:
+       *
+       * - Total number of consumer runs and of different task types that have
+       *   been spawned.
+       * - Histograms for high priority tasks and background tasks.
+       *
+       * The histograms tell you how many background/priority tasks a consumer
+       * has seen upon launch. So if there always have been either none or ten
+       * tasks, you'll get two outputs alike [0]=200 and [10]=400.
        */
       void plotStatistics();
 
