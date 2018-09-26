@@ -13,20 +13,12 @@
 #include <tbb/concurrent_hash_map.h>
 
 
-//#if !defined(TBBUsesLocalQueueWhenProcessingJobs) and !defined(noTBBUsesLocalQueueWhenProcessingJobs)
-//  #define TBBUsesLocalQueueWhenProcessingJobs
-//#endif
-
 #if !defined(TBBPrefetchesJobData) and !defined(noTBBPrefetchesJobData)
   #define TBBPrefetchesJobData
 #endif
 
 
-#if defined(TBBUsesLocalQueueWhenProcessingJobs)
-#include <list>
-#else
 #include <tbb/concurrent_queue.h>
-#endif
 
 
 namespace tarch {
@@ -63,10 +55,6 @@ namespace tarch {
         constexpr int NumberOfJobQueues = 32;
         struct JobQueue {
           tbb::concurrent_queue<tarch::multicore::jobs::Job*>   jobs;
-
-          #ifdef TBBUsesLocalQueueWhenProcessingJobs
-            #error Use normal queue here and an additional spin mutex
-          #endif
 
           /**
            * This is not the real value but an estimate. Whenever a new
@@ -211,6 +199,13 @@ namespace tarch {
           private:
             const int _maxJobs;
             JobConsumerTask(int maxJobs);
+
+            #ifdef TBB_USE_THREADING_TOOLS
+            static tbb::atomic<int>  _numberOfConsumerRuns;
+            static tbb::atomic<int>  _totalNumberOfBackgroundTasks;
+            static tbb::atomic<int>  _totalNumberOfBackgroundTasks;
+            #endif
+
           public:
             static tbb::task_group_context  backgroundTaskContext;
             
