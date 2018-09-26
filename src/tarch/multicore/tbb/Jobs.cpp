@@ -74,8 +74,12 @@ int tarch::multicore::jobs::internal::getNumberOfJobsPerConsumerRun( int jobClas
 
 
 #ifdef TBB_USE_THREADING_TOOLS
-tbb::atomic<int>  tarch::multicore::jobs::internal::JobConsumerTask::_numberOfConsumerRuns(0);
-tbb::atomic<int>  tarch::multicore::jobs::internal::JobConsumerTask::_totalNumberOfTasks(0);
+tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfConsumerRuns(0);
+tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfHighPriorityTasks;
+tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfBackgroundTasks;
+tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighBandwidthTasks(0);
+tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks(0);
+tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks(0);
 #endif
 
 
@@ -97,6 +101,21 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   }
 
   bool hasProcessedJobs = false;
+
+  #ifdef TBB_USE_THREADING_TOOLS
+  _numberOfConsumerRuns++;
+
+  tbb::concurrent_hash_map<int,int>::accessor p;
+
+  _histogramOfHighPriorityTasks.insert(p,getJobQueueSize(internal::HighPriorityTasksJobClassNumber));
+  p->second += 1;
+  p.release();
+
+  _histogramOfBackgroundTasks.insert(p,getJobQueueSize(internal::BackgroundTasksJobClassNumber));
+  p->second += 1;
+  p.release();
+  #endif
+
 
   switch (_processHighPriorityJobsAlwaysFirst) {
     case HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARush:
@@ -177,6 +196,23 @@ void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
 }
 
 
+void tarch::multicore::jobs::plotStatistics() {
+  #ifdef TBB_USE_THREADING_TOOLS
+  static tarch::logging::Log _log("tarch::multicore::jobs");
+  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "total no of consumer runs=" << internal::JobConsumerTask::_numberOfConsumerRuns.load() );
+  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "total no of high bandwidth tasks=" << internal::JobConsumerTask::_numberOfHighBandwidthTasks.load() );
+  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "total no of high priority tasks=" << internal::JobConsumerTask::_numberOfHighPriorityTasks.load() );
+  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "total no of background tasks=" << internal::JobConsumerTask::_numberOfBackgroundTasks.load() );
+  for (auto p: internal::JobConsumerTask::_histogramOfHighPriorityTasks) {
+    logInfo( "terminateAllPendingBackgroundConsumerJobs()", "no of high priority tasks[" << p.first << "]=" << p.second );
+  }
+  for (auto p: internal::JobConsumerTask::_histogramOfBackgroundTasks) {
+    logInfo( "terminateAllPendingBackgroundConsumerJobs()", "no of background tasks[" << p.first << "]=" << p.second );
+  }
+  #endif
+}
+
+
 
 int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
   return internal::getJobQueueSize( internal::BackgroundTasksJobClassNumber ) + internal::_numberOfRunningJobConsumerTasks.load();
@@ -202,15 +238,24 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 	  else {
         internal::insertJob(internal::HighPriorityTasksJobClassNumber,job);
         checkWhetherToLaunchAJobConsumer = true;
-	  }
+  	  }
+      #ifdef TBB_USE_THREADING_TOOLS
+      tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks++;
+      #endif
       break;
     case JobType::BandwidthBoundTask:
       internal::insertJob(internal::HighBandwidthTasksJobClassNumber,job);
       checkWhetherToLaunchAJobConsumer = true;
+      #ifdef TBB_USE_THREADING_TOOLS
+      tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighBandwidthTasks++;
+      #endif
       break;
     case JobType::BackgroundTask:
       internal::insertJob(internal::BackgroundTasksJobClassNumber,job);
       checkWhetherToLaunchAJobConsumer = true;
+      #ifdef TBB_USE_THREADING_TOOLS
+      tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks++;
+      #endif
       break;
     case JobType::Job:
       internal::insertJob(job->getClass(),job);

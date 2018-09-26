@@ -24,6 +24,12 @@
 namespace tarch {
   namespace multicore {
     namespace jobs {
+      /**
+       * Helper operation. Plots quite some statistics if code is
+       * translated with -DTBB_USE_THREADING_TOOLS.
+       */
+      void plotStatistics();
+
       void terminateAllPendingBackgroundConsumerJobs();
 
       enum class HighPriorityTaskProcessing {
@@ -200,13 +206,16 @@ namespace tarch {
             const int _maxJobs;
             JobConsumerTask(int maxJobs);
 
+          public:
             #ifdef TBB_USE_THREADING_TOOLS
-            static tbb::atomic<int>  _numberOfConsumerRuns;
-            static tbb::atomic<int>  _totalNumberOfBackgroundTasks;
-            static tbb::atomic<int>  _totalNumberOfBackgroundTasks;
+            static tbb::atomic<int>                    _numberOfConsumerRuns;
+            static tbb::concurrent_hash_map<int,int>   _histogramOfHighPriorityTasks;
+            static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasks;
+            static tbb::atomic<int>                    _numberOfHighBandwidthTasks;
+            static tbb::atomic<int>                    _numberOfHighPriorityTasks;
+            static tbb::atomic<int>                    _numberOfBackgroundTasks;
             #endif
 
-          public:
             static tbb::task_group_context  backgroundTaskContext;
             
             /**
