@@ -134,6 +134,21 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
 }
 
 
+bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs) {
+  return false;
+}
+
+
+bool tarch::multicore::jobs::processHighPriorityJobs(int maxNumberOfJobs ) {
+  return false;
+}
+
+
+bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs ) {
+  return false;
+}
+
+
 void tarch::multicore::jobs::spawnAndWait(
   std::function<bool()>&  job0,
   std::function<bool()>&  job1,

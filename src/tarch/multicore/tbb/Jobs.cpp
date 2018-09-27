@@ -313,6 +313,21 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
 }
 
 
+bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs) {
+  return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs);
+}
+
+
+bool tarch::multicore::jobs::processHighPriorityJobs(int maxNumberOfJobs ) {
+  return processJobs(internal::HighPriorityTasksJobClassNumber, maxNumberOfJobs);
+}
+
+
+bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs ) {
+  return processJobs(internal::HighBandwidthTasksJobClassNumber, maxNumberOfJobs);
+}
+
+
 /**
  * If we are handling background jobs and if there are still jobs left once
  * we've done our share, then we spawn a new background task consumer job.

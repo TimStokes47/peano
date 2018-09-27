@@ -231,6 +231,7 @@ bool terminate = false;
 tarch::multicore::jobs::startToProcessBackgroundJobs();
 while ( !terminate ) {
   tarch::parallel::Node::getInstance().receiveDanglingMessages();
+  // do something
   terminate = data I'm waiting for is available;
 }
 tarch::multicore::jobs::finishToProcessBackgroundJobs();
@@ -239,6 +240,12 @@ tarch::multicore::jobs::finishToProcessBackgroundJobs();
         * Please note that it is convenient to remove/comment out the
         * finishToProcessBackgroundJobs() here: you know that you have the data
         * you are waiting for, so why bother with some cleanup/finish calls.
+        *
+        *
+        * Please note that the do something comment typically comprises a call
+        * to processBackgroundJobs() or processHighPriorityJobs(), as it would
+        * be stupid not to participate in those computations.
+        *
         *
         * <h2> Number of background jobs </h2>
         *
@@ -370,6 +377,10 @@ tarch::multicore::jobs::finishToProcessBackgroundJobs();
         * Handle only jobs of one job class.
         */
        bool processJobs(int jobClass, int maxNumberOfJobs = std::numeric_limits<int>::max() );
+
+       bool processBackgroundJobs(int maxNumberOfJobs = 1);
+       bool processHighPriorityJobs(int maxNumberOfJobs = 1);
+       bool processHighBandwidthJobs(int maxNumberOfJobs = 1);
     }
   }
 }
