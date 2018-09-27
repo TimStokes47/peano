@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <limits>
+#include <cmath>
 
 
 
@@ -63,7 +64,8 @@ tarch::multicore::jobs::internal::JobConsumerTask::JobConsumerTask(const JobCons
 
 
 int tarch::multicore::jobs::internal::getNumberOfJobsPerConsumerRun( int jobClass ) {
-  int result = tarch::multicore::jobs::internal::getJobQueue(jobClass).maxSize.load() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+  int result =
+    static_cast<int>(std::round(tarch::multicore::jobs::internal::getJobQueue(jobClass).maxSize.load())+1) / tarch::multicore::Core::getInstance().getNumberOfThreads();
 
   result = std::max( internal::_minimalNumberOfJobsPerConsumerRun, result );
   result = std::min( internal::_maximumNumberOfJobsPerConsumerRun, result );
@@ -147,25 +149,13 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   if (hasProcessedJobs) {
 	enqueue();
   }
-  else {
-    internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
-      std::max(
-        1,
-	    internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load()-1
-      );
-    internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize =
-      std::max(
-        1,
-	    internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load()-1
-      );
-    internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize =
-      std::max(
-        1,
-	    internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize.load()-1
-      );
-  }
 
   _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
+  if (_numberOfRunningJobConsumerTasks.load()==0) {
+    internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize    = internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize*0.9;
+    internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize  = internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize*0.9;
+    internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize = internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize*0.9;
+  }
 
   return nullptr;
 }
@@ -261,8 +251,8 @@ void tarch::multicore::jobs::spawn(Job*  job) {
         checkWhetherToLaunchAJobConsumer = true;
         internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize =
           std::max(
-            internal::getJobQueueSize(internal::HighPriorityTasksJobClassNumber),
-  		  internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load()
+            static_cast<double>(internal::getJobQueueSize(internal::HighPriorityTasksJobClassNumber)),
+            internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load()
           );
   	  }
       #ifdef TBB_USE_THREADING_TOOLS
@@ -277,7 +267,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
       #endif
       internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize =
         std::max(
-          internal::getJobQueueSize(internal::HighBandwidthTasksJobClassNumber),
+          static_cast<double>(internal::getJobQueueSize(internal::HighBandwidthTasksJobClassNumber)),
 		  internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize.load()
         );
       break;
@@ -286,7 +276,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
       checkWhetherToLaunchAJobConsumer = true;
       internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
         std::max(
-          internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber),
+          static_cast<double>(internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)),
 		  internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load()
         );
       #ifdef TBB_USE_THREADING_TOOLS
@@ -297,7 +287,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
       internal::insertJob(job->getClass(),job);
       internal::getJobQueue(job->getClass()).maxSize =
         std::max(
-          internal::getJobQueueSize(job->getClass()),
+          static_cast<double>(internal::getJobQueueSize(job->getClass())),
 		  internal::getJobQueue(job->getClass()).maxSize.load()
         );
       break;

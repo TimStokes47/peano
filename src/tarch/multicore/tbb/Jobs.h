@@ -86,7 +86,7 @@ namespace tarch {
            *
            * @see spawnBackgroundJob()
            */
-          tbb::atomic<int>         maxSize;
+          tbb::atomic<double>         maxSize;
         };
         extern JobQueue _pendingJobs[NumberOfJobQueues];
 
