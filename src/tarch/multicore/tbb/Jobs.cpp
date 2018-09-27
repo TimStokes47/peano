@@ -147,6 +147,23 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   if (hasProcessedJobs) {
 	enqueue();
   }
+  else {
+    internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
+      std::max(
+        1,
+	    internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load()-1
+      );
+    internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize =
+      std::max(
+        1,
+	    internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load()-1
+      );
+    internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize =
+      std::max(
+        1,
+	    internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize.load()-1
+      );
+  }
 
   _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
 
@@ -209,9 +226,11 @@ void tarch::multicore::jobs::plotStatistics() {
   for (auto p: internal::JobConsumerTask::_histogramOfBackgroundTasks) {
     logInfo( "terminateAllPendingBackgroundConsumerJobs()", "no of background tasks[" << p.first << "]=" << p.second );
   }
-  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "max no of background tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load() );
-  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "max no of high priority tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load() );
   #endif
+
+  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "max no of background tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load() << " (sliding average)");
+  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "max no of high priority tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load() << " (sliding average)" );
+  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "max no of high bandwidth tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize.load() << " (sliding average)" );
 }
 
 
@@ -240,6 +259,11 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 	  else {
         internal::insertJob(internal::HighPriorityTasksJobClassNumber,job);
         checkWhetherToLaunchAJobConsumer = true;
+        internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize =
+          std::max(
+            internal::getJobQueueSize(internal::HighPriorityTasksJobClassNumber),
+  		  internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load()
+          );
   	  }
       #ifdef TBB_USE_THREADING_TOOLS
       tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks++;
@@ -251,6 +275,11 @@ void tarch::multicore::jobs::spawn(Job*  job) {
       #ifdef TBB_USE_THREADING_TOOLS
       tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighBandwidthTasks++;
       #endif
+      internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize =
+        std::max(
+          internal::getJobQueueSize(internal::HighBandwidthTasksJobClassNumber),
+		  internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize.load()
+        );
       break;
     case JobType::BackgroundTask:
       internal::insertJob(internal::BackgroundTasksJobClassNumber,job);
@@ -266,6 +295,11 @@ void tarch::multicore::jobs::spawn(Job*  job) {
       break;
     case JobType::Job:
       internal::insertJob(job->getClass(),job);
+      internal::getJobQueue(job->getClass()).maxSize =
+        std::max(
+          internal::getJobQueueSize(job->getClass()),
+		  internal::getJobQueue(job->getClass()).maxSize.load()
+        );
       break;
   }
 
