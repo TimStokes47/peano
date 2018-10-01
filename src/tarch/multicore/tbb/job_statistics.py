@@ -103,6 +103,8 @@ def plotStatistics(fname, output_folder):
             y.append(0)
         if k == 0:
             labels.append(0)
+        elif k==1:
+            labels.append(r"1".format(base,k))
         else:
             labels.append(r"$<{}^{}$".format(base,k))
     #print "print " + str(x) + "x" + str(y) 
@@ -119,10 +121,6 @@ def plotStatistics(fname, output_folder):
             y.append(statsGrabbedBackgroundTasks[k])
         else:
             y.append(0)
-        #if k == 0:
-        #    labels.append(0)
-        #else:
-        #    labels.append(r"$<{}^{}$".format(base,k))
     #print "print " + str(x) + "x" + str(y) 
     x = [d+1*BarWidth for d in x]
     plt.bar(x, y, label="Tasks taken",width=BarWidth,log=True)
@@ -135,10 +133,6 @@ def plotStatistics(fname, output_folder):
             y.append(statsRunningConsumers[k])
         else:
             y.append(0)
-        #if k == 0:
-        #    labels.append(0)
-        #else:
-        #    labels.append(r"$<{}^{}$".format(base,k))
     #print "print " + str(x) + "x" + str(y) 
     x = [d+2*BarWidth for d in x]
     plt.bar(x, y, label="Running consumers",width=BarWidth,log=True)

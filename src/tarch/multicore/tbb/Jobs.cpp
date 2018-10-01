@@ -165,6 +165,15 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
       enqueue();
       enqueue();
 	}
+	else if (
+      currentlyRunningBackgroundThreads>1
+	  and
+	  internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) < internal::_minimalNumberOfJobsPerConsumerRun
+    ) {
+      // enqueue();
+      // enqueue();
+      // starve
+	}
 	else {
       enqueue();
 	}
