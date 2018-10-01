@@ -206,21 +206,21 @@ void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
 void tarch::multicore::jobs::plotStatistics() {
   #ifdef TBB_USE_THREADING_TOOLS
   static tarch::logging::Log _log("tarch::multicore::jobs");
-  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "total no of consumer runs=" << internal::JobConsumerTask::_numberOfConsumerRuns.load() );
-  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "total no of high bandwidth tasks=" << internal::JobConsumerTask::_numberOfHighBandwidthTasks.load() );
-  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "total no of high priority tasks=" << internal::JobConsumerTask::_numberOfHighPriorityTasks.load() );
-  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "total no of background tasks=" << internal::JobConsumerTask::_numberOfBackgroundTasks.load() );
+  logInfo( "plotStatistics()", "total no of consumer runs=" << internal::JobConsumerTask::_numberOfConsumerRuns.load() );
+  logInfo( "plotStatistics()", "total no of high bandwidth tasks=" << internal::JobConsumerTask::_numberOfHighBandwidthTasks.load() );
+  logInfo( "plotStatistics()", "total no of high priority tasks=" << internal::JobConsumerTask::_numberOfHighPriorityTasks.load() );
+  logInfo( "plotStatistics()", "total no of background tasks=" << internal::JobConsumerTask::_numberOfBackgroundTasks.load() );
   for (auto p: internal::JobConsumerTask::_histogramOfHighPriorityTasks) {
-    logInfo( "terminateAllPendingBackgroundConsumerJobs()", "no of high priority tasks[" << p.first << "]=" << p.second );
+    logInfo( "plotStatistics()", "no of high priority tasks[" << p.first << "]=" << p.second );
   }
   for (auto p: internal::JobConsumerTask::_histogramOfBackgroundTasks) {
-    logInfo( "terminateAllPendingBackgroundConsumerJobs()", "no of background tasks[" << p.first << "]=" << p.second );
+    logInfo( "plotStatistics()", "no of background tasks[" << p.first << "]=" << p.second );
   }
   #endif
 
-  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "max no of background tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load() << " (sliding average)");
-  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "max no of high priority tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load() << " (sliding average)" );
-  logInfo( "terminateAllPendingBackgroundConsumerJobs()", "max no of high bandwidth tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize.load() << " (sliding average)" );
+  logInfo( "plotStatistics()", "max no of background tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load() << " (sliding average)");
+  logInfo( "plotStatistics()", "max no of high priority tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load() << " (sliding average)" );
+  logInfo( "plotStatistics()", "max no of high bandwidth tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize.load() << " (sliding average)" );
 }
 
 
