@@ -39,6 +39,11 @@ namespace tarch {
        * The histograms tell you how many background/priority tasks a consumer
        * has seen upon launch. So if there always have been either none or ten
        * tasks, you'll get two outputs alike [0]=200 and [10]=400.
+       *
+       * <h2> Statistics visualisation </h2>
+       *
+       * There's a helper file in the directory (Python script) which helps
+       * you to understand what's going on with the tasks.
        */
       void plotStatistics();
 
@@ -226,6 +231,7 @@ namespace tarch {
             static tbb::atomic<int>                    _numberOfHighBandwidthTasks;
             static tbb::atomic<int>                    _numberOfHighPriorityTasks;
             static tbb::atomic<int>                    _numberOfBackgroundTasks;
+            static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasksProcessed;
             #endif
 
             static tbb::task_group_context  backgroundTaskContext;

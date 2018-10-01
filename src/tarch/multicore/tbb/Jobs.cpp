@@ -78,6 +78,7 @@ int tarch::multicore::jobs::internal::getNumberOfJobsPerConsumerRun( int jobClas
 #ifdef TBB_USE_THREADING_TOOLS
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfConsumerRuns(0);
 tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfHighPriorityTasks;
+tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfBackgroundTasksProcessed;
 tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfBackgroundTasks;
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighBandwidthTasks(0);
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks(0);
@@ -116,8 +117,11 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   _histogramOfBackgroundTasks.insert(p,getJobQueueSize(internal::BackgroundTasksJobClassNumber));
   p->second += 1;
   p.release();
-  #endif
 
+  _histogramOfBackgroundTasksProcessed.insert(p,_maxJobs);
+  p->second += 1;
+  p.release();
+  #endif
 
   switch (_processHighPriorityJobsAlwaysFirst) {
     case HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARush:
@@ -214,7 +218,10 @@ void tarch::multicore::jobs::plotStatistics() {
     logInfo( "plotStatistics()", "no of high priority tasks[" << p.first << "]=" << p.second );
   }
   for (auto p: internal::JobConsumerTask::_histogramOfBackgroundTasks) {
-    logInfo( "plotStatistics()", "no of background tasks[" << p.first << "]=" << p.second );
+    logInfo( "plotStatistics()", "no of background tasks available per consumer run[" << p.first << "]=" << p.second );
+  }
+  for (auto p: internal::JobConsumerTask::_histogramOfBackgroundTasksProcessed) {
+    logInfo( "plotStatistics()", "no of background tasks processed per consumer run[" << p.first << "]=" << p.second );
   }
   #endif
 
