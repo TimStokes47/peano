@@ -228,6 +228,7 @@ namespace tarch {
             static tbb::atomic<int>                    _numberOfConsumerRuns;
             static tbb::concurrent_hash_map<int,int>   _histogramOfHighPriorityTasks;
             static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasks;
+            static tbb::concurrent_hash_map<int,int>   _histogramOfRunningConsumers;
             static tbb::atomic<int>                    _numberOfHighBandwidthTasks;
             static tbb::atomic<int>                    _numberOfHighPriorityTasks;
             static tbb::atomic<int>                    _numberOfBackgroundTasks;

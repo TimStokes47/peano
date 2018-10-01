@@ -39,6 +39,7 @@ def parseArgument(argv,i):
 def plotStatistics(fname, output_folder):
     statsNoOfBackgroundTasks = {}
     statsGrabbedBackgroundTasks = {}
+    statsRunningConsumers = {}
     #  10.4573      info         no of background tasks[1]=19029
     base = 2
     with open(fname, 'r') as f:
@@ -71,10 +72,26 @@ def plotStatistics(fname, output_folder):
                             statsGrabbedBackgroundTasks[statsNoOfBackgroundTasks_bin] += occurences
                         else:
                             statsGrabbedBackgroundTasks[statsNoOfBackgroundTasks_bin] = occurences
+            if "no of running consumers" in l:
+                ex = re.compile(r"no of running consumers\[(\d+)\]=(\d+)?")
+                match = ex.search(l)
+                if match:
+                    num_tasks = int(match.group(1))
+                    occurences = int(match.group(2))
+                    if num_tasks == 0:
+                        statsRunningConsumers[0] = occurences
+                    else:
+                        statsNoOfBackgroundTasks_bin = int(math.log(num_tasks, base)) + 1
+                        if statsNoOfBackgroundTasks_bin in statsRunningConsumers:
+                            statsRunningConsumers[statsNoOfBackgroundTasks_bin] += occurences
+                        else:
+                            statsRunningConsumers[statsNoOfBackgroundTasks_bin] = occurences
     if len(statsNoOfBackgroundTasks) == 0:
         print("WARNING: {} doesn't contain TBB_USE_THREADING_TOOLS output: no plot created".format(fname))
         return
     labels = []
+    
+    BarWidth = 0.2
     
     x = []
     y = []
@@ -89,7 +106,8 @@ def plotStatistics(fname, output_folder):
         else:
             labels.append(r"$<{}^{}$".format(base,k))
     #print "print " + str(x) + "x" + str(y) 
-    plt.bar(x, y, label="Tasks in queue", tick_label=labels,log=True)
+    x = [d+0*BarWidth for d in x]
+    plt.bar(x, y, label="Tasks in queue", tick_label=labels,width=BarWidth,log=True)
 
     plt.ylim( [min(y)/2+1,max(y)*2] ) 
 
@@ -106,9 +124,26 @@ def plotStatistics(fname, output_folder):
         #else:
         #    labels.append(r"$<{}^{}$".format(base,k))
     #print "print " + str(x) + "x" + str(y) 
-    plt.bar(x, y, label="Tasks taken",alpha=0.5,log=True)
+    x = [d+1*BarWidth for d in x]
+    plt.bar(x, y, label="Tasks taken",width=BarWidth,log=True)
     
-    plt.xlabel("Number of tasks per consumer run")
+    x = []
+    y = []
+    for k in range(min(statsRunningConsumers.keys()), max(statsRunningConsumers.keys())+1):
+        x.append(k)
+        if k in statsRunningConsumers:
+            y.append(statsRunningConsumers[k])
+        else:
+            y.append(0)
+        #if k == 0:
+        #    labels.append(0)
+        #else:
+        #    labels.append(r"$<{}^{}$".format(base,k))
+    #print "print " + str(x) + "x" + str(y) 
+    x = [d+2*BarWidth for d in x]
+    plt.bar(x, y, label="Running consumers",width=BarWidth,log=True)
+    
+    plt.xlabel("Number of tasks/consumers")
     plt.ylabel("Frequency")
     plt.legend()
 
