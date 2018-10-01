@@ -88,8 +88,10 @@ def plotStatistics(fname, output_folder):
             labels.append(0)
         else:
             labels.append(r"$<{}^{}$".format(base,k))
-    print "print " + str(x) + "x" + str(y) 
-    plt.bar(x, y,tick_label=labels,log=True)
+    #print "print " + str(x) + "x" + str(y) 
+    plt.bar(x, y, label="Tasks in queue", tick_label=labels,log=True)
+
+    plt.ylim( [min(y)/2+1,max(y)*2] ) 
 
     x = []
     y = []
@@ -103,11 +105,12 @@ def plotStatistics(fname, output_folder):
         #    labels.append(0)
         #else:
         #    labels.append(r"$<{}^{}$".format(base,k))
-    print "print " + str(x) + "x" + str(y) 
-    plt.bar(x, y,log=True)
+    #print "print " + str(x) + "x" + str(y) 
+    plt.bar(x, y, label="Tasks taken",alpha=0.5,log=True)
     
-    plt.xlabel("Number of tasks available per consumer run")
+    plt.xlabel("Number of tasks per consumer run")
     plt.ylabel("Frequency")
+    plt.legend()
 
     if output_folder is None: output_folder="."
     out_file = os.path.join(output_folder, os.path.basename(fname)) + ".job-stats.pdf"
