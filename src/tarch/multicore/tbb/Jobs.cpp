@@ -92,6 +92,16 @@ void tarch::multicore::jobs::internal::JobConsumerTask::enqueue() {
 
 
 tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
+
+#ifdef USE_ITAC
+    static int event_execute = -1;
+    std::string event_execute_name = "execute_consumer";
+    if(event_execute == -1)
+        int ierr = VT_funcdef(event_execute_name.c_str(), VT_NOCLASS, &event_execute);
+    VT_begin(event_execute);
+#endif
+
+
   if ( _bandwidthTasksAreProcessed.compare_and_swap(true,false) ) {
     processJobs(internal::HighBandwidthTasksJobClassNumber,std::numeric_limits<int>::max());
 	_bandwidthTasksAreProcessed = false;
@@ -134,6 +144,9 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
   _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
 
+#ifdef USE_ITAC
+  VT_end(event_execute);
+#endif
   //logInfo("background system", "running consumers "<<_numberOfRunningJobConsumerTasks<<" has processed "<<hasProcessedJobs);
   return nullptr;
 }
