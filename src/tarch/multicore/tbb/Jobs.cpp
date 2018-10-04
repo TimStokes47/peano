@@ -155,10 +155,11 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
       break;
   }
 
+  const int oldNumberOfConsumerTasks = _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
+
   if (hasProcessedJobs) {
-    const int currentlyRunningBackgroundThreads = internal::_numberOfRunningJobConsumerTasks.load();
 	if (
-      currentlyRunningBackgroundThreads<Job::_maxNumberOfRunningBackgroundThreads
+      oldNumberOfConsumerTasks<Job::_maxNumberOfRunningBackgroundThreads
 	  and
 	  internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
     ) {
@@ -166,7 +167,7 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
       enqueue();
 	}
 	else if (
-      currentlyRunningBackgroundThreads>1
+      oldNumberOfConsumerTasks>1
 	  and
 	  internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) < internal::_minimalNumberOfJobsPerConsumerRun
     ) {
@@ -179,8 +180,7 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 	}
   }
 
-  _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
-  if (_numberOfRunningJobConsumerTasks.load()==0) {
+  if (oldNumberOfConsumerTasks==1) {
     internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize    = internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize*0.9;
     internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize  = internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize*0.9;
     internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize = internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize*0.9;
