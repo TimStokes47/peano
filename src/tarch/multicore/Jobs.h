@@ -176,8 +176,9 @@ namespace tarch {
            }
        };
 
+       
        /**
-        * Tell job system that pending background tasks now should be done
+        * Tell job system that pending background tasks and highy priority tasks now should be done asap
         *
         * All of the discussion below highlights the usage pattern. In
         * practice, it is very convenient to invoke startToProcessBackgroundJobs()
@@ -185,11 +186,13 @@ namespace tarch {
         * This implies that the exchange of MPI data teams up with background
         * job processing. The snippets below abstract from this fact.
         *
-        * <h2> Usage pattern: wait for all background jobs </h2>
+        * <h2> Usage pattern A: wait for all background jobs prior to subsequent traversal</h2>
         *
-        * Some codes do not have particular background jobs they wait for but
-        * want to wait until all background jobs have terminated. In this case,
-        * the program snippets typically look similar to
+        * Some codes want to wait until all background jobs have terminated
+        * before they issue a new traversal. IF the background jobs restrict
+        * some global variable, e.g., there's kind of a synchronisation point
+        * where we have to stop.  In this case, the program snippets typically
+        * look similar to
         *
         * <pre>
           while (!tarch::multicore::jobs::finishToProcessBackgroundJobs()) {
@@ -199,11 +202,17 @@ namespace tarch {
         *
         * This example illustrates that you can invoke finishToProcessBackgroundJobs()
         * without a corresponding start invocation. However, I consider it to
-        * be good practice to issue start explicitly. This is then done prior
-        * to the while loop.
+        * be good practice to issue start explicitly. So you'd have:
+        *
+        * <pre>
+          tarch::multicore::jobs::startToProcessBackgroundJobs();
+          while (!tarch::multicore::jobs::finishToProcessBackgroundJobs()) {
+            tarch::parallel::Node::getInstance().receiveDanglingMessages();
+          }
+          </pre>
         *
         *
-        * <h2> Usage pattern: wait for particular background jobs </h2>
+        * <h2> Usage pattern B: wait for particular background or high priority job </h2>
         *
         * Some codes wanna wait for particular background jobs only. In this
         * case, see the example below on hybrid runs how to realise this.
@@ -211,7 +220,6 @@ namespace tarch {
         * The example would also work without a start invocation. However,
         * I consider it to be good practice to issue start explicitly. This is
         * then done prior to the while loop.
-        *
         *
         * Some hybrid codes use processBackgroundJobs at certain points as they
         * have to wait for some low priority stuff to terminate. Such a method
@@ -224,10 +232,21 @@ bool terminate = false;
 tarch::multicore::jobs::startToProcessBackgroundJobs();
 while ( !terminate ) {
   tarch::parallel::Node::getInstance().receiveDanglingMessages();
+  // do something
   terminate = data I'm waiting for is available;
 }
 tarch::multicore::jobs::finishToProcessBackgroundJobs();
         </pre>
+        *
+        * Please note that it is convenient to remove/comment out the
+        * finishToProcessBackgroundJobs() here: you know that you have the data
+        * you are waiting for, so why bother with some cleanup/finish calls.
+        *
+        *
+        * Please note that the do something comment typically comprises a call
+        * to processBackgroundJobs() or processHighPriorityJobs(), as it would
+        * be stupid not to participate in those computations.
+        *
         *
         * <h2> Number of background jobs </h2>
         *
@@ -238,7 +257,7 @@ tarch::multicore::jobs::finishToProcessBackgroundJobs();
         * sense to weaken this constraint. Then, it is not a problem anymore if
         * (almost) all cores do process the background jobs. If you call
         * startToProcessBackgroundJobs(), then this tells the runtime system
-        * that background jobs from hereon shall have a high prioriy.
+        * that background jobs and high priority jobs from hereon shall have a high prioriy.
         */
        void startToProcessBackgroundJobs();
 
@@ -251,6 +270,9 @@ tarch::multicore::jobs::finishToProcessBackgroundJobs();
         * for examples.
         *
         * @see startToProcessBackgroundJobs()
+        * @return Have processed some jobs. Please note that this is not multithreaded
+        *   i.e. the routine might return true while some of the jobs are still under
+        *   work.
         */
        bool finishToProcessBackgroundJobs();
 
@@ -356,6 +378,10 @@ tarch::multicore::jobs::finishToProcessBackgroundJobs();
         * Handle only jobs of one job class.
         */
        bool processJobs(int jobClass, int maxNumberOfJobs = std::numeric_limits<int>::max() );
+
+       bool processBackgroundJobs(int maxNumberOfJobs = 1);
+       bool processHighPriorityJobs(int maxNumberOfJobs = 1);
+       bool processHighBandwidthJobs(int maxNumberOfJobs = 1);
     }
   }
 }

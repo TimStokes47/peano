@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <limits>
+#include <cmath>
 
 //#include <ittnotify.h>
 #include "tarch/timing/Watch.h"
@@ -72,13 +73,26 @@ tarch::multicore::jobs::internal::JobConsumerTask::JobConsumerTask(const JobCons
 
 
 int tarch::multicore::jobs::internal::getNumberOfJobsPerConsumerRun( int jobClass ) {
-  int result = tarch::multicore::jobs::internal::getJobQueue(jobClass).maxSize.load() / tarch::multicore::Core::getInstance().getNumberOfThreads();
+  int result =
+    static_cast<int>(std::round(tarch::multicore::jobs::internal::getJobQueue(jobClass).maxSize.load())+1) / tarch::multicore::Core::getInstance().getNumberOfThreads();
 
-  result = std::max( internal::_minimalNumberOfJobsPerConsumerRun, result );
+  result = std::max( std::max(internal::_minimalNumberOfJobsPerConsumerRun,1), result );
   result = std::min( internal::_maximumNumberOfJobsPerConsumerRun, result );
 
   return result;
 }
+
+#ifdef TBB_USE_THREADING_TOOLS
+tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfConsumerRuns(0);
+tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfHighPriorityTasks;
+tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfBackgroundTasksProcessed;
+tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfRunningConsumers;
+tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfBackgroundTasks;
+tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighBandwidthTasks(0);
+tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks(0);
+tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks(0);
+#endif
+
 
 void tarch::multicore::jobs::internal::JobConsumerTask::enqueue() {
   _numberOfRunningJobConsumerTasks.fetch_and_add(1);
@@ -109,6 +123,28 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
   bool hasProcessedJobs = false;
 
+  #ifdef TBB_USE_THREADING_TOOLS
+  _numberOfConsumerRuns++;
+
+  tbb::concurrent_hash_map<int,int>::accessor p;
+
+  _histogramOfHighPriorityTasks.insert(p,getJobQueueSize(internal::HighPriorityTasksJobClassNumber));
+  p->second += 1;
+  p.release();
+
+  _histogramOfBackgroundTasks.insert(p,getJobQueueSize(internal::BackgroundTasksJobClassNumber));
+  p->second += 1;
+  p.release();
+
+  _histogramOfBackgroundTasksProcessed.insert(p,_maxJobs);
+  p->second += 1;
+  p.release();
+
+  _histogramOfRunningConsumers.insert(p,_numberOfRunningJobConsumerTasks.load());
+  p->second += 1;
+  p.release();
+  #endif
+
   switch (_processHighPriorityJobsAlwaysFirst) {
     case HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARush:
       hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,std::numeric_limits<int>::max());
@@ -138,11 +174,36 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
  
   //assert(hasProcessedJobs);
 
-  if (hasProcessedJobs || !tarch::multicore::jobs::internal::getJobQueue(internal::BackgroundTasksJobClassNumber).jobs.empty() ) {
-	enqueue();
+  if (hasProcessedJobs) {
+    const int currentlyRunningBackgroundThreads = internal::_numberOfRunningJobConsumerTasks.load();
+	if (
+      currentlyRunningBackgroundThreads<Job::_maxNumberOfRunningBackgroundThreads
+	  and
+	  internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
+    ) {
+      enqueue();
+      enqueue();
+	}
+	else if (
+      currentlyRunningBackgroundThreads>1
+	  and
+	  internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) < internal::_minimalNumberOfJobsPerConsumerRun
+    ) {
+      // enqueue();
+      // enqueue();
+      // starve
+	}
+	else {
+      enqueue();
+	}
   }
 
   _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
+  if (_numberOfRunningJobConsumerTasks.load()==0) {
+    internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize    = internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize*0.9;
+    internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize  = internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize*0.9;
+    internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize = internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize*0.9;
+  }
 
 #ifdef USE_ITAC
   VT_end(event_execute);
@@ -160,25 +221,12 @@ tarch::multicore::jobs::internal::JobQueue& tarch::multicore::jobs::internal::ge
 
 
 void tarch::multicore::jobs::internal::insertJob( int jobClass, Job* job ) {
-  #if defined(TBBUsesLocalQueueWhenProcessingJobs)
-  internal::getJobQueue(jobClass).mutex.lock();
-  internal::getJobQueue(jobClass).jobs.push_back( job );
-  internal::getJobQueue(jobClass).mutex.unlock();
-  #else
   internal::getJobQueue(jobClass).jobs.push( job );
-  #endif
 }
 
 
 int  tarch::multicore::jobs::internal::getJobQueueSize( int jobClass ) {
-  #if defined(TBBUsesLocalQueueWhenProcessingJobs)
-  //internal::getJobQueue( jobClass ).mutex.lock();
-  int result = static_cast<int>(internal::getJobQueue( jobClass ).jobs.size());
-  //internal::getJobQueue( jobClass ).mutex.unlock();
-  return result;
-  #else
   return static_cast<int>(internal::getJobQueue( jobClass ).jobs.unsafe_size());
-  #endif
 }
 
 
@@ -207,12 +255,49 @@ void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
 }
 
 
+void tarch::multicore::jobs::plotStatistics() {
+  #ifdef TBB_USE_THREADING_TOOLS
+  static tarch::logging::Log _log("tarch::multicore::jobs");
+  logInfo( "plotStatistics()", "total no of consumer runs=" << internal::JobConsumerTask::_numberOfConsumerRuns.load() );
+  logInfo( "plotStatistics()", "total no of high bandwidth tasks=" << internal::JobConsumerTask::_numberOfHighBandwidthTasks.load() );
+  logInfo( "plotStatistics()", "total no of high priority tasks=" << internal::JobConsumerTask::_numberOfHighPriorityTasks.load() );
+  logInfo( "plotStatistics()", "total no of background tasks=" << internal::JobConsumerTask::_numberOfBackgroundTasks.load() );
+  for (auto p: internal::JobConsumerTask::_histogramOfHighPriorityTasks) {
+    logInfo( "plotStatistics()", "no of high priority tasks[" << p.first << "]=" << p.second );
+  }
+  for (auto p: internal::JobConsumerTask::_histogramOfBackgroundTasks) {
+    logInfo( "plotStatistics()", "no of background tasks available per consumer run[" << p.first << "]=" << p.second );
+  }
+  for (auto p: internal::JobConsumerTask::_histogramOfBackgroundTasksProcessed) {
+    logInfo( "plotStatistics()", "no of background tasks processed per consumer run[" << p.first << "]=" << p.second );
+  }
+  for (auto p: internal::JobConsumerTask::_histogramOfRunningConsumers) {
+    logInfo( "plotStatistics()", "no of running consumers[" << p.first << "]=" << p.second );
+  }
+  #endif
+
+  logInfo( "plotStatistics()", "max no of background tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load() << " (sliding average)");
+  logInfo( "plotStatistics()", "max no of high priority tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load() << " (sliding average)" );
+  logInfo( "plotStatistics()", "max no of high bandwidth tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize.load() << " (sliding average)" );
+}
+
+
 
 int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
   return internal::getJobQueueSize( internal::BackgroundTasksJobClassNumber ) + internal::_numberOfRunningJobConsumerTasks.load();
 }
 
 
+/**
+ * <h2> Flag checkWhetherToLaunchAJobConsumer </h2>
+ *
+ * We do spawn a consumer if this flag is set and if there are no other
+ * consumers around. Obviously, this behaviour never launches more than
+ * one consumer (for background and high priority tasks). The trick is
+ * that enqueue() itself checks for further spawns. This way, we have a
+ * tree spawn pattern and ensure that the main thread usually spawns only
+ * one consumer task.
+ */
 void tarch::multicore::jobs::spawn(Job*  job) {
   bool checkWhetherToLaunchAJobConsumer = false;
 
@@ -232,26 +317,49 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 	  else {
         internal::insertJob(internal::HighPriorityTasksJobClassNumber,job);
         checkWhetherToLaunchAJobConsumer = true;
-	  }
+        internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize =
+          std::max(
+            static_cast<double>(internal::getJobQueueSize(internal::HighPriorityTasksJobClassNumber)),
+            internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load()
+          );
+  	  }
+      #ifdef TBB_USE_THREADING_TOOLS
+      tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks++;
+      #endif
       break;
     case JobType::BandwidthBoundTask:
       internal::insertJob(internal::HighBandwidthTasksJobClassNumber,job);
       checkWhetherToLaunchAJobConsumer = true;
+      #ifdef TBB_USE_THREADING_TOOLS
+      tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighBandwidthTasks++;
+      #endif
+      internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize =
+        std::max(
+          static_cast<double>(internal::getJobQueueSize(internal::HighBandwidthTasksJobClassNumber)),
+		  internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize.load()
+        );
       break;
     case JobType::BackgroundTask:
       internal::insertJob(internal::BackgroundTasksJobClassNumber,job);
-      checkWhetherToLaunchAJobConsumer = true;
+      checkWhetherToLaunchAJobConsumer = internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun;
+      internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
+        std::max(
+          static_cast<double>(internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)),
+		  internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load()
+        );
+      #ifdef TBB_USE_THREADING_TOOLS
+      tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks++;
+      #endif
       break;
     case JobType::Job:
       internal::insertJob(job->getClass(),job);
+      internal::getJobQueue(job->getClass()).maxSize =
+        std::max(
+          static_cast<double>(internal::getJobQueueSize(job->getClass())),
+		  internal::getJobQueue(job->getClass()).maxSize.load()
+        );
       break;
   }
-
-  internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
-	std::max(
-      internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize-1,
-	  1
-    );
 
   if (checkWhetherToLaunchAJobConsumer) {
     if (Job::_maxNumberOfRunningBackgroundThreads==UseDefaultNumberOFBackgroundJobs) {
@@ -260,7 +368,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 
     const int currentlyRunningBackgroundThreads = internal::_numberOfRunningJobConsumerTasks.load();
     if (
-      currentlyRunningBackgroundThreads<Job::_maxNumberOfRunningBackgroundThreads
+      currentlyRunningBackgroundThreads==0
     ) {
       internal::JobConsumerTask::enqueue();
     }
@@ -273,6 +381,21 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
 }
 
 
+bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs) {
+  return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs);
+}
+
+
+bool tarch::multicore::jobs::processHighPriorityJobs(int maxNumberOfJobs ) {
+  return processJobs(internal::HighPriorityTasksJobClassNumber, maxNumberOfJobs);
+}
+
+
+bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs ) {
+  return processJobs(internal::HighBandwidthTasksJobClassNumber, maxNumberOfJobs);
+}
+
+
 /**
  * If we are handling background jobs and if there are still jobs left once
  * we've done our share, then we spawn a new background task consumer job.
@@ -282,49 +405,13 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
  * should actually use further tasks instead.
  */
 bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
-  bool result = false;
+  if (internal::getJobQueue(jobClass).jobs.empty() ) {
+    return false;
+  }
+  else {
+    bool result = false;
 
-  #if defined(TBBUsesLocalQueueWhenProcessingJobs)
-    std::list<tarch::multicore::jobs::Job*> localJobs;
-
-    internal::getJobQueue(jobClass).mutex.lock();
-    auto firstIteration = internal::getJobQueue(jobClass).jobs.begin();
-    auto lastIteration  = internal::getJobQueue(jobClass).jobs.begin();
-    maxNumberOfJobs = std::min(
-      maxNumberOfJobs,
-	  static_cast<int>( internal::getJobQueue(jobClass).jobs.size() )
-	);
-    std::advance( lastIteration, maxNumberOfJobs );
-    internal::getJobQueue(jobClass).jobs.splice(
-      localJobs.begin(), localJobs,
-      firstIteration, lastIteration
-    );
-    internal::getJobQueue(jobClass).mutex.unlock();
-
-    result = !localJobs.empty();
-
-    for (
-      std::list<tarch::multicore::jobs::Job*>::iterator p = localJobs.begin();
-      p!=localJobs.end();
-      p++
-	) {
-      #ifdef TBBPrefetchesJobData
-      if (p!=std::prev(localJobs.end())) {
-        std::list<tarch::multicore::jobs::Job*>::iterator prefetch = p;
-        std::advance(prefetch,1);
-        (*prefetch)->prefetchData();
-      }
-      #endif
-
-      bool reschedule = (*p)->run();
-      if (reschedule) {
-        internal::insertJob(jobClass,*p);
-      }
-      else {
-        delete *p;
-      }
-    }
-  #elif defined(TBBPrefetchesJobData)
+    #if defined(TBBPrefetchesJobData)
     Job* myTask           = nullptr;
     Job* prefetchedTask   = nullptr;
     bool gotOne           = internal::getJobQueue(jobClass).jobs.try_pop(myTask);
@@ -377,7 +464,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
         gotOne = false;
       }
     }
-  #else
+    #else
     Job* myTask   = nullptr;
     bool gotOne   = internal::getJobQueue(jobClass).jobs.try_pop(myTask);
     while (gotOne) {
@@ -399,15 +486,11 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
         gotOne = false;
       }
     }
-  #endif
-    //if(jobClass==internal::BackgroundTasksJobClassNumber ) {
-    //	logInfo("background job system", "rescheduled "<< rescheduled <<" result "<<result);
-    //}
 
-  //if(jobClass==internal::BackgroundTasksJobClassNumber && !result && internal::getJobQueue(jobClass).jobs.unsafe_size()>0) {
-  //  logInfo("background job system", "warning will not spawn consumer, jobs in queue "<< internal::getJobQueue(jobClass).jobs.unsafe_size()<<" active consumers "<<tarch::multicore::jobs::internal::_numberOfRunningJobConsumerTasks);
-  //}
-  return result;
+    #endif
+
+    return result;
+  }
 }
 
 

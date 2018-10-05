@@ -13,20 +13,12 @@
 #include <tbb/concurrent_hash_map.h>
 
 
-//#if !defined(TBBUsesLocalQueueWhenProcessingJobs) and !defined(noTBBUsesLocalQueueWhenProcessingJobs)
-//  #define TBBUsesLocalQueueWhenProcessingJobs
-//#endif
-
 #if !defined(TBBPrefetchesJobData) and !defined(noTBBPrefetchesJobData)
   #define TBBPrefetchesJobData
 #endif
 
 
-#if defined(TBBUsesLocalQueueWhenProcessingJobs)
-#include <list>
-#else
 #include <tbb/concurrent_queue.h>
-#endif
 
 
 namespace tarch {
@@ -34,6 +26,30 @@ namespace tarch {
     namespace jobs {
 
       extern tarch::logging::Log _log;
+
+      /**
+       * Helper operation. Plots quite some statistics if code is
+       * translated with -DTBB_USE_THREADING_TOOLS.
+       *
+       * <h2> Statistics format </h2>
+       *
+       * You receive the following information:
+       *
+       * - Total number of consumer runs and of different task types that have
+       *   been spawned.
+       * - Histograms for high priority tasks and background tasks.
+       *
+       * The histograms tell you how many background/priority tasks a consumer
+       * has seen upon launch. So if there always have been either none or ten
+       * tasks, you'll get two outputs alike [0]=200 and [10]=400.
+       *
+       * <h2> Statistics visualisation </h2>
+       *
+       * There's a helper file in the directory (Python script) which helps
+       * you to understand what's going on with the tasks.
+       */
+      void plotStatistics();
+
       void terminateAllPendingBackgroundConsumerJobs();
 
       enum class HighPriorityTaskProcessing {
@@ -66,10 +82,6 @@ namespace tarch {
         struct JobQueue {
           tbb::concurrent_queue<tarch::multicore::jobs::Job*>   jobs;
 
-          #ifdef TBBUsesLocalQueueWhenProcessingJobs
-            #error Use normal queue here and an additional spin mutex
-          #endif
-
           /**
            * This is not the real value but an estimate. Whenever a new
            * background job is enqueued, we check that this field is
@@ -82,7 +94,7 @@ namespace tarch {
            *
            * @see spawnBackgroundJob()
            */
-          tbb::atomic<int>         maxSize;
+          tbb::atomic<double>         maxSize;
         };
         extern JobQueue _pendingJobs[NumberOfJobQueues];
 
@@ -213,7 +225,19 @@ namespace tarch {
           private:
             const int _maxJobs;
             JobConsumerTask(int maxJobs);
+
           public:
+            #ifdef TBB_USE_THREADING_TOOLS
+            static tbb::atomic<int>                    _numberOfConsumerRuns;
+            static tbb::concurrent_hash_map<int,int>   _histogramOfHighPriorityTasks;
+            static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasks;
+            static tbb::concurrent_hash_map<int,int>   _histogramOfRunningConsumers;
+            static tbb::atomic<int>                    _numberOfHighBandwidthTasks;
+            static tbb::atomic<int>                    _numberOfHighPriorityTasks;
+            static tbb::atomic<int>                    _numberOfBackgroundTasks;
+            static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasksProcessed;
+            #endif
+
             static tbb::task_group_context  backgroundTaskContext;
             
             /**
