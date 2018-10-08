@@ -54,7 +54,8 @@ namespace tarch {
   		ProcessAllHighPriorityTasksInARushAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft,
   		ProcessOneHighPriorityTasksAtATime,
   		ProcessOneHighPriorityTasksAtATimeAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft,
-  		MapHighPriorityTasksToRealTBBTasks
+  		MapHighPriorityTasksToRealTBBTasks,
+  		MapHighPriorityAndBackgroundTasksToRealTBBTasks
       };
 
       /**

@@ -153,6 +153,10 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
       assertion( internal::getJobQueueSize(HighPriorityTasksJobClassNumber)==0 );
       hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
       break;
+    case HighPriorityTaskProcessing::MapHighPriorityAndBackgroundTasksToRealTBBTasks:
+      assertion( internal::getJobQueueSize(HighPriorityTasksJobClassNumber)==0 );
+      assertion( internal::getJobQueueSize(BackgroundTasksJobClassNumber)==0 );
+      break;
   }
 
   const int oldNumberOfConsumerTasks = _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
@@ -284,7 +288,11 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 	  delete job;
 	  break;
 	case JobType::RunTaskAsSoonAsPossible:
-	  if ( internal::_processHighPriorityJobsAlwaysFirst==HighPriorityTaskProcessing::MapHighPriorityTasksToRealTBBTasks ) {
+	  if (
+        internal::_processHighPriorityJobsAlwaysFirst==HighPriorityTaskProcessing::MapHighPriorityTasksToRealTBBTasks
+		or
+        internal::_processHighPriorityJobsAlwaysFirst==HighPriorityTaskProcessing::MapHighPriorityAndBackgroundTasksToRealTBBTasks
+      ) {
 	    internal::TBBWrapperAroundJob* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) internal::TBBWrapperAroundJob(
 	      job
         );
@@ -317,16 +325,27 @@ void tarch::multicore::jobs::spawn(Job*  job) {
         );
       break;
     case JobType::BackgroundTask:
-      internal::insertJob(internal::BackgroundTasksJobClassNumber,job);
-      checkWhetherToLaunchAJobConsumer = internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun;
-      internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
-        std::max(
-          static_cast<double>(internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)),
-		  internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load()
+  	  if (
+        internal::_processHighPriorityJobsAlwaysFirst==HighPriorityTaskProcessing::MapHighPriorityAndBackgroundTasksToRealTBBTasks
+      ) {
+        internal::TBBWrapperAroundJob* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) internal::TBBWrapperAroundJob(
+  	      job
         );
-      #ifdef TBB_USE_THREADING_TOOLS
-      tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks++;
-      #endif
+  	    tbb::task::enqueue(*tbbTask);
+        checkWhetherToLaunchAJobConsumer = false;
+  	  }
+  	  else {
+        internal::insertJob(internal::BackgroundTasksJobClassNumber,job);
+        checkWhetherToLaunchAJobConsumer = internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun;
+        internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
+          std::max(
+            static_cast<double>(internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)),
+		    internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load()
+          );
+        #ifdef TBB_USE_THREADING_TOOLS
+        tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks++;
+        #endif
+  	  }
       break;
     case JobType::Job:
       internal::insertJob(job->getClass(),job);
