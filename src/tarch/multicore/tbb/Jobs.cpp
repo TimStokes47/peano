@@ -161,6 +161,9 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
   const int oldNumberOfConsumerTasks = _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
 
+  tbb::task* result = nullptr;
+
+/*
   if (hasProcessedJobs) {
 	if (
       oldNumberOfConsumerTasks<Job::_maxNumberOfRunningBackgroundThreads
@@ -183,6 +186,40 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
       enqueue();
 	}
   }
+*/
+
+  if (
+    oldNumberOfConsumerTasks<Job::_maxNumberOfRunningBackgroundThreads
+    and
+    internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
+  ) {
+    enqueue();
+
+    JobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) JobConsumerTask(
+      internal::getNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
+    );
+    result = tbbTask;
+    _numberOfRunningJobConsumerTasks.fetch_and_add(1);
+  }
+  else if (
+    oldNumberOfConsumerTasks>1
+    and
+	internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) < internal::_minimalNumberOfJobsPerConsumerRun
+  ) {
+    // starve
+  }
+  else if (hasProcessedJobs) {
+    //enqueue();
+
+    JobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) JobConsumerTask(
+      internal::getNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
+    );
+    result = tbbTask;
+    _numberOfRunningJobConsumerTasks.fetch_and_add(1);
+  }
+  else if (internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)>0) {
+    enqueue();
+  }
 
   if (oldNumberOfConsumerTasks==1) {
     internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize    = internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize*0.9;
@@ -190,7 +227,7 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize = internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize*0.9;
   }
 
-  return nullptr;
+  return result;
 }
 
 
@@ -325,7 +362,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
         );
       break;
     case JobType::BackgroundTask:
-  	  if (
+      if (
         internal::_processHighPriorityJobsAlwaysFirst==HighPriorityTaskProcessing::MapHighPriorityAndBackgroundTasksToRealTBBTasks
       ) {
         internal::TBBWrapperAroundJob* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) internal::TBBWrapperAroundJob(
@@ -336,7 +373,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
   	  }
   	  else {
         internal::insertJob(internal::BackgroundTasksJobClassNumber,job);
-        checkWhetherToLaunchAJobConsumer = internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun;
+        checkWhetherToLaunchAJobConsumer = true;
         internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =
           std::max(
             static_cast<double>(internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)),
