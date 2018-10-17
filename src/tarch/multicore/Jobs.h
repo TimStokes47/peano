@@ -226,25 +226,21 @@ namespace tarch {
         * please ensure you receive dangling messages, i.e. that your while
         * loop looks similar to
         *
+        *
         * <pre>
-bool terminate = false;
-tarch::multicore::jobs::startToProcessBackgroundJobs();
-while ( !terminate ) {
-  tarch::parallel::Node::getInstance().receiveDanglingMessages();
-  // do something
-  terminate = data I'm waiting for is available;
-}
-tarch::multicore::jobs::finishToProcessBackgroundJobs();
-        </pre>
+           bool terminate = false;
+           tarch::multicore::jobs::startToProcessBackgroundJobs();
+           while ( !terminate ) {
+             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+             do real stuff
+             reevaluate terminate
+           }
+           tarch::multicore::jobs::finishToProcessBackgroundJobs();
+           </pre>
         *
         * Please note that it is convenient to remove/comment out the
         * finishToProcessBackgroundJobs() here: you know that you have the data
         * you are waiting for, so why bother with some cleanup/finish calls.
-        *
-        *
-        * Please note that the do something comment typically comprises a call
-        * to processBackgroundJobs() or processHighPriorityJobs(), as it would
-        * be stupid not to participate in those computations.
         *
         *
         * <h2> Number of background jobs </h2>
