@@ -177,7 +177,7 @@ namespace tarch {
 
        
        /**
-        * Tell job system that pending background tasks and highy priority tasks now should be done asap
+        * Tell job system that pending background tasks and highy priority tasks now should be done asap.
         *
         * All of the discussion below highlights the usage pattern. In
         * practice, it is very convenient to invoke startToProcessBackgroundJobs()
@@ -256,7 +256,7 @@ tarch::multicore::jobs::finishToProcessBackgroundJobs();
         * sense to weaken this constraint. Then, it is not a problem anymore if
         * (almost) all cores do process the background jobs. If you call
         * startToProcessBackgroundJobs(), then this tells the runtime system
-        * that background jobs and high priority jobs from hereon shall have a high prioriy.
+        * that background jobs and high priority jobs from hereon shall have a high priority.
         */
        void startToProcessBackgroundJobs();
 
