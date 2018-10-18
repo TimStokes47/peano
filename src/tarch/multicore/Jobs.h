@@ -178,11 +178,11 @@ namespace tarch {
 
        
        /**
-        * Tell job system that pending background tasks and highy priority tasks now should be done asap
+        * Tell job system that pending background tasks and highy priority tasks now should be done asap.
         *
         * All of the discussion below highlights the usage pattern. In
         * practice, it is very convenient to invoke startToProcessBackgroundJobs()
-        * in endIteration(), i.e. once you know all `hard' stuff is done.
+        * in endIteration(), i.e. once you know all hard stuff is done.
         * This implies that the exchange of MPI data teams up with background
         * job processing. The snippets below abstract from this fact.
         *
@@ -227,25 +227,21 @@ namespace tarch {
         * please ensure you receive dangling messages, i.e. that your while
         * loop looks similar to
         *
+        *
         * <pre>
-bool terminate = false;
-tarch::multicore::jobs::startToProcessBackgroundJobs();
-while ( !terminate ) {
-  tarch::parallel::Node::getInstance().receiveDanglingMessages();
-  // do something
-  terminate = data I'm waiting for is available;
-}
-tarch::multicore::jobs::finishToProcessBackgroundJobs();
-        </pre>
+           bool terminate = false;
+           tarch::multicore::jobs::startToProcessBackgroundJobs();
+           while ( !terminate ) {
+             tarch::parallel::Node::getInstance().receiveDanglingMessages();
+             do real stuff
+             reevaluate terminate
+           }
+           tarch::multicore::jobs::finishToProcessBackgroundJobs();
+           </pre>
         *
         * Please note that it is convenient to remove/comment out the
         * finishToProcessBackgroundJobs() here: you know that you have the data
         * you are waiting for, so why bother with some cleanup/finish calls.
-        *
-        *
-        * Please note that the do something comment typically comprises a call
-        * to processBackgroundJobs() or processHighPriorityJobs(), as it would
-        * be stupid not to participate in those computations.
         *
         *
         * <h2> Number of background jobs </h2>
@@ -257,7 +253,7 @@ tarch::multicore::jobs::finishToProcessBackgroundJobs();
         * sense to weaken this constraint. Then, it is not a problem anymore if
         * (almost) all cores do process the background jobs. If you call
         * startToProcessBackgroundJobs(), then this tells the runtime system
-        * that background jobs and high priority jobs from hereon shall have a high prioriy.
+        * that background jobs and high priority jobs from hereon shall have a high priority.
         */
        void startToProcessBackgroundJobs();
 
