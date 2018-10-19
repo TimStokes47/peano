@@ -16,9 +16,6 @@
 
 
 
-tarch::logging::Log tarch::multicore::jobs::internal::_log( "tarch::multicore::jobs::internal" );
-
-
 tbb::atomic<int>                              tarch::multicore::jobs::internal::_numberOfRunningJobConsumerTasks(0);
 tarch::multicore::jobs::internal::JobQueue    tarch::multicore::jobs::internal::_pendingJobs[NumberOfJobQueues];
 tbb::atomic<bool>                             tarch::multicore::jobs::internal::_bandwidthTasksAreProcessed(false);
@@ -75,7 +72,7 @@ int tarch::multicore::jobs::internal::getNumberOfJobsPerConsumerRun( int jobClas
 
 
 
-#ifdef TBB_USE_THREADING_TOOLS
+#if TBB_USE_THREADING_TOOLS>=1
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfConsumerRuns(0);
 tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfHighPriorityTasks;
 tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfBackgroundTasksProcessed;
@@ -106,7 +103,7 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
   bool hasProcessedJobs = false;
 
-  #ifdef TBB_USE_THREADING_TOOLS
+  #if TBB_USE_THREADING_TOOLS>=1
   _numberOfConsumerRuns++;
 
   tbb::concurrent_hash_map<int,int>::accessor p;
@@ -286,7 +283,9 @@ void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
 
 
 void tarch::multicore::jobs::plotStatistics() {
-  #ifdef TBB_USE_THREADING_TOOLS
+  static tarch::logging::Log _log( "tarch::multicore::jobs" );
+
+  #if TBB_USE_THREADING_TOOLS>=1
   static tarch::logging::Log _log("tarch::multicore::jobs");
   logInfo( "plotStatistics()", "total no of consumer runs=" << internal::JobConsumerTask::_numberOfConsumerRuns.load() );
   logInfo( "plotStatistics()", "total no of high bandwidth tasks=" << internal::JobConsumerTask::_numberOfHighBandwidthTasks.load() );
@@ -357,14 +356,14 @@ void tarch::multicore::jobs::spawn(Job*  job) {
             internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load()
           );
   	  }
-      #ifdef TBB_USE_THREADING_TOOLS
+      #if TBB_USE_THREADING_TOOLS>=1
       tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks++;
       #endif
       break;
     case JobType::BandwidthBoundTask:
       internal::insertJob(internal::HighBandwidthTasksJobClassNumber,job);
       checkWhetherToLaunchAJobConsumer = true;
-      #ifdef TBB_USE_THREADING_TOOLS
+      #if TBB_USE_THREADING_TOOLS>=1
       tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighBandwidthTasks++;
       #endif
       internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize =
@@ -391,7 +390,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
             static_cast<double>(internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)),
 		    internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load()
           );
-        #ifdef TBB_USE_THREADING_TOOLS
+        #if TBB_USE_THREADING_TOOLS>=1
         tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks++;
         #endif
   	  }
