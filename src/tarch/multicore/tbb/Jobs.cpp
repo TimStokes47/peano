@@ -193,7 +193,9 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     and
     internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
   ) {
-    result = spawnFollowUpConsumerAsDirectChild(2);
+//    result = spawnFollowUpConsumerAsDirectChild(2);
+    enqueue();
+    enqueue();
   }
   else if (
     oldNumberOfConsumerTasks>1
@@ -206,7 +208,9 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   // consumers tend to run into endless loops or somehow are not scheduled.
   // Might be due to the background thing.
   else if (
-    oldNumberOfConsumerTasks==1
+    hasProcessedJobs
+	or
+	internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)>0
   ) {
     enqueue();
   }
