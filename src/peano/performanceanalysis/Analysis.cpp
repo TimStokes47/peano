@@ -169,15 +169,6 @@ void peano::performanceanalysis::Analysis::minuteNumberOfBackgroundTasks(int tas
   _device->minuteNumberOfBackgroundTasks(taskCount);
 }
 
-void peano::performanceanalysis::Analysis::beginProcessingBackgroundJobs() {
-  assertion( _device!=0 );
-  _device->beginProcessingBackgroundJobs();
-}
-
-void peano::performanceanalysis::Analysis::endProcessingBackgroundJobs() {
-  assertion( _device!=0 );
-  _device->endProcessingBackgroundJobs();
-}
 
 void peano::performanceanalysis::Analysis::enable(bool value) {
   assertion( _device!=0 );

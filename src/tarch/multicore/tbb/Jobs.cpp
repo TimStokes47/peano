@@ -82,6 +82,8 @@ int tarch::multicore::jobs::internal::getNumberOfJobsPerConsumerRun( int jobClas
   return result;
 }
 
+
+
 #ifdef TBB_USE_THREADING_TOOLS
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfConsumerRuns(0);
 tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfHighPriorityTasks;
@@ -92,6 +94,7 @@ tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsume
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks(0);
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks(0);
 #endif
+
 
 
 void tarch::multicore::jobs::internal::JobConsumerTask::enqueue() {
@@ -210,7 +213,14 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     and
     internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
   ) {
-    result = spawnFollowUpConsumerAsDirectChild(2);
+    enqueue();
+    enqueue();
+
+    //JobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) JobConsumerTask(
+    //  internal::getNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
+    //);
+    //result = tbbTask;
+    //_numberOfRunningJobConsumerTasks.fetch_and_add(1);
   }
   else if (
     oldNumberOfConsumerTasks>1
@@ -219,12 +229,16 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   ) {
     // starve
   }
-  // It is very important not to directly spawn a consumer here, as otherwise
-  // consumers tend to run into endless loops or somehow are not scheduled.
-  // Might be due to the background thing.
-  else if (
-    oldNumberOfConsumerTasks==1
-  ) {
+  else if (hasProcessedJobs) {
+    enqueue();
+
+    //JobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) JobConsumerTask(
+    //  internal::getNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
+    //);
+    //result = tbbTask;
+    //_numberOfRunningJobConsumerTasks.fetch_and_add(1);
+  }
+  else if (internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)>0) {
     enqueue();
   }
 
@@ -600,6 +614,7 @@ bool tarch::multicore::jobs::finishToProcessBackgroundJobs() {
 
   return internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)>0;
 }
+
 
 /**
  * @see spawnBlockingJob
