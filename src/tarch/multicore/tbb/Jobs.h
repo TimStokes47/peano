@@ -227,6 +227,11 @@ namespace tarch {
             const int _maxJobs;
             JobConsumerTask(int maxJobs);
 
+            /**
+             * Use the tbb tree paradigm. Return pointer to latest child. Do
+             * not call more than once in within execute().
+             */
+            JobConsumerTask* spawnFollowUpConsumerAsDirectChild(int count);
           public:
             #ifdef TBB_USE_THREADING_TOOLS
             static tbb::atomic<int>                    _numberOfConsumerRuns;
