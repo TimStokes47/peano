@@ -264,7 +264,7 @@ void tarch::multicore::jobs::internal::spawnBlockingJob(
   tbb::atomic<int>&       semaphore
 ) {
   if ( jobType!=JobType::Job ) {
-    job();
+    while (job()) {};
     semaphore.fetch_and_add(-1);
   }
   else {
