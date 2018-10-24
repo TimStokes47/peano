@@ -24,8 +24,8 @@
 //__itt_domain* domain = __itt_domain_create("multicore.tbb.jobs");
 //__itt_string_handle* handleTask = __itt_string_handle_create("process_task");
 
-tarch::logging::Log tarch::multicore::jobs::internal::_log( "tarch::multicore::jobs::internal" );
-tarch::logging::Log tarch::multicore::jobs::_log( "tarch::multicore::jobs" );
+//tarch::logging::Log tarch::multicore::jobs::internal::_log( "tarch::multicore::jobs::internal" );
+//tarch::logging::Log tarch::multicore::jobs::_log( "tarch::multicore::jobs" );
 
 
 tbb::atomic<int>                              tarch::multicore::jobs::internal::_numberOfRunningJobConsumerTasks(0);
