@@ -308,7 +308,6 @@ void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
 
 
 void tarch::multicore::jobs::plotStatistics() {
-  static tarch::logging::Log _log( "tarch::multicore::jobs" );
 
   #if TBB_USE_THREADING_TOOLS>=1
   static tarch::logging::Log _log("tarch::multicore::jobs");
