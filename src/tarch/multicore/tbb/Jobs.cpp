@@ -84,7 +84,7 @@ int tarch::multicore::jobs::internal::getNumberOfJobsPerConsumerRun( int jobClas
 
 
 
-#ifdef TBB_USE_THREADING_TOOLS
+#if TBB_USE_THREADING_TOOLS>=1
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfConsumerRuns(0);
 tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfHighPriorityTasks;
 tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfBackgroundTasksProcessed;
@@ -102,7 +102,6 @@ void tarch::multicore::jobs::internal::JobConsumerTask::enqueue() {
   JobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) JobConsumerTask(
     internal::getNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
   );
-
   tbb::task::enqueue(*tbbTask);
   ::backgroundTaskContext.set_priority(tbb::priority_low);
 }
@@ -126,7 +125,7 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
   bool hasProcessedJobs = false;
 
-  #ifdef TBB_USE_THREADING_TOOLS
+  #if TBB_USE_THREADING_TOOLS>=1
   _numberOfConsumerRuns++;
 
   tbb::concurrent_hash_map<int,int>::accessor p;
@@ -213,14 +212,9 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     and
     internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
   ) {
+//    result = spawnFollowUpConsumerAsDirectChild(2);
     enqueue();
     enqueue();
-
-    //JobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) JobConsumerTask(
-    //  internal::getNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
-    //);
-    //result = tbbTask;
-    //_numberOfRunningJobConsumerTasks.fetch_and_add(1);
   }
   else if (
     oldNumberOfConsumerTasks>1
@@ -229,16 +223,14 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   ) {
     // starve
   }
-  else if (hasProcessedJobs) {
-    enqueue();
-
-    //JobConsumerTask* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) JobConsumerTask(
-    //  internal::getNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
-    //);
-    //result = tbbTask;
-    //_numberOfRunningJobConsumerTasks.fetch_and_add(1);
-  }
-  else if (internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)>0) {
+  // It is very important not to directly spawn a consumer here, as otherwise
+  // consumers tend to run into endless loops or somehow are not scheduled.
+  // Might be due to the background thing.
+  else if (
+    hasProcessedJobs
+	or
+	internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)>0
+  ) {
     enqueue();
   }
 
@@ -297,7 +289,7 @@ void tarch::multicore::jobs::internal::spawnBlockingJob(
   tbb::atomic<int>&       semaphore
 ) {
   if ( jobType!=JobType::Job ) {
-    job();
+    while (job()) {};
     semaphore.fetch_and_add(-1);
   }
   else {
@@ -316,7 +308,9 @@ void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
 
 
 void tarch::multicore::jobs::plotStatistics() {
-  #ifdef TBB_USE_THREADING_TOOLS
+  static tarch::logging::Log _log( "tarch::multicore::jobs" );
+
+  #if TBB_USE_THREADING_TOOLS>=1
   static tarch::logging::Log _log("tarch::multicore::jobs");
   logInfo( "plotStatistics()", "total no of consumer runs=" << internal::JobConsumerTask::_numberOfConsumerRuns.load() );
   logInfo( "plotStatistics()", "total no of high bandwidth tasks=" << internal::JobConsumerTask::_numberOfHighBandwidthTasks.load() );
@@ -387,14 +381,14 @@ void tarch::multicore::jobs::spawn(Job*  job) {
             internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load()
           );
   	  }
-      #ifdef TBB_USE_THREADING_TOOLS
+      #if TBB_USE_THREADING_TOOLS>=1
       tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks++;
       #endif
       break;
     case JobType::BandwidthBoundTask:
       internal::insertJob(internal::HighBandwidthTasksJobClassNumber,job);
       checkWhetherToLaunchAJobConsumer = true;
-      #ifdef TBB_USE_THREADING_TOOLS
+      #if TBB_USE_THREADING_TOOLS>=1
       tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighBandwidthTasks++;
       #endif
       internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize =
@@ -421,7 +415,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
             static_cast<double>(internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)),
 		    internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load()
           );
-        #ifdef TBB_USE_THREADING_TOOLS
+        #if TBB_USE_THREADING_TOOLS>=1
         tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks++;
         #endif
   	  }

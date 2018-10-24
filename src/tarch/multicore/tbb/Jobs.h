@@ -110,8 +110,6 @@ namespace tarch {
          */
         int getNumberOfJobsPerConsumerRun( int jobClass );
 
-        extern tarch::logging::Log _log;
-
         extern tbb::atomic<bool> _bandwidthTasksAreProcessed;
 
         /**
@@ -233,7 +231,7 @@ namespace tarch {
              */
             JobConsumerTask* spawnFollowUpConsumerAsDirectChild(int count);
           public:
-            #ifdef TBB_USE_THREADING_TOOLS
+            #if TBB_USE_THREADING_TOOLS>=1
             static tbb::atomic<int>                    _numberOfConsumerRuns;
             static tbb::concurrent_hash_map<int,int>   _histogramOfHighPriorityTasks;
             static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasks;

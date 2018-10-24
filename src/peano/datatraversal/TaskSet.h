@@ -193,27 +193,22 @@ class peano::datatraversal::TaskSet {
      *
      * Here's an example of a  job class from the ExaHyPE project:
      * <pre>
-
-  class PredictionTask {
-  private:
-    ADERDGSolver&    _solver;
-    CellDescription& _cellDescription;
-  public:
-    PredictionTask(
-        ADERDGSolver&     solver,
-        CellDescription&  cellDescription);
-
-    void operator()();
-  };
-
+class PredictionTask {
+private:
+  ADERDGSolver&    _solver;
+  CellDescription& _cellDescription;
+public:
+  PredictionTask(
+      ADERDGSolver&     solver,
+      CellDescription&  cellDescription);
+  void operator()();
+};
        </pre>
      *
      * This task then is used as follows:
      * <pre>
-
-      PredictionTask predictionTask( myPointer, cellDescription );
-      peano::datatraversal::TaskSet spawnedSet( predictionTask, peano::datatraversal::TaskSet::TaskType::Background  );
-
+PredictionTask predictionTask( myPointer, cellDescription );
+peano::datatraversal::TaskSet spawnedSet( predictionTask, peano::datatraversal::TaskSet::TaskType::Background  );
        </pre>
      *
      *
@@ -224,13 +219,13 @@ class peano::datatraversal::TaskSet {
      * defined functor:
      *
      * <pre>
-        peano::datatraversal::TaskSet backgroundTask(
-         [=] () -> bool {
-          // do something
-          return false; // don't want to repeat this one forever
-         },
-         peano::datatraversal::TaskSet::TaskType::Background
-       );
+peano::datatraversal::TaskSet backgroundTask(
+  [=] () -> bool {
+    // do something
+    return false; // don't want to repeat this one forever
+  },
+  peano::datatraversal::TaskSet::TaskType::Background
+);
        </pre>
      *
      * It is important that myFunctor catches everything via copy. As a
@@ -305,19 +300,21 @@ class peano::datatraversal::TaskSet {
      * Invoke operations in parallel. Works fine with lambda
      * expressions:
      *
-  peano::datatraversal::TaskSet runParallelTasks(
-    [&]() -> void {
-
-    ...
-    },
-    [&]() -> void {
-
-    ...
-    },
-    true
-  );
+     * <pre>
+peano::datatraversal::TaskSet runParallelTasks(
+  [&]() -> bool {
+   ...
+  },
+  [&]() -> bool {
+   ...
+  },
+  typeA,
+  typeB,
+  true
+);
      *
-     * Please do not invoke any background threads through this operation.
+     * Please do not invoke any background threads through this operation. In
+     * return, you can use catching via the reference operator.
      */
     TaskSet(
       std::function<bool ()>&&  function1,
