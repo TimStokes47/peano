@@ -254,5 +254,58 @@ void tarch::multicore::jobs::spawnAndWait(
 }
 
 
+void tarch::multicore::jobs::spawnAndWait(
+  std::function<bool()>& job0,
+  std::function<bool()>& job1,
+  std::function<bool()>& job2,
+  std::function<bool()>& job3,
+  std::function<bool()>& job4,
+  std::function<bool()>& job5,
+  std::function<bool()>& job6,
+  std::function<bool()>& job7,
+  std::function<bool()>& job8,
+  std::function<bool()>& job9,
+  std::function<bool()>& job10,
+  std::function<bool()>& job11,
+  JobType                    jobType0,
+  JobType                    jobType1,
+  JobType                    jobType2,
+  JobType                    jobType3,
+  JobType                    jobType4,
+  JobType                    jobType5,
+  JobType                    jobType6,
+  JobType                    jobType7,
+  JobType                    jobType8,
+  JobType                    jobType9,
+  JobType                    jobType10,
+  JobType                    jobType11,
+	 int                     jobClass0,
+	 int                     jobClass1,
+	 int                     jobClass2,
+	 int                     jobClass3,
+	 int                     jobClass4,
+	 int                     jobClass5,
+	 int                     jobClass6,
+	 int                     jobClass7,
+	 int                     jobClass8,
+	 int                     jobClass9,
+	 int                     jobClass10,
+	 int                     jobClass11
+) {
+  while (job0()) {};
+  while (job1()) {};
+  while (job2()) {};
+  while (job3()) {};
+  while (job4()) {};
+  while (job5()) {};
+  while (job6()) {};
+  while (job7()) {};
+  while (job8()) {};
+  while (job9()) {};
+  while (job10()) {};
+  while (job11()) {};
+}
+
+
 #endif
 

@@ -904,6 +904,107 @@ void tarch::multicore::jobs::spawnAndWait(
 }
 
 
+void tarch::multicore::jobs::spawnAndWait(
+  std::function<bool()>&  job0,
+  std::function<bool()>& job1,
+  std::function<bool()>& job2,
+  std::function<bool()>& job3,
+  std::function<bool()>& job4,
+  std::function<bool()>& job5,
+  std::function<bool()>& job6,
+  std::function<bool()>& job7,
+  std::function<bool()>& job8,
+  std::function<bool()>& job9,
+  std::function<bool()>& job10,
+  std::function<bool()>& job11,
+  JobType                    jobType0,
+  JobType                    jobType1,
+  JobType                    jobType2,
+  JobType                    jobType3,
+  JobType                    jobType4,
+  JobType                    jobType5,
+  JobType                    jobType6,
+  JobType                    jobType7,
+  JobType                    jobType8,
+  JobType                    jobType9,
+  JobType                    jobType10,
+  JobType                    jobType11,
+	 int                     jobClass0,
+	 int                     jobClass1,
+	 int                     jobClass2,
+	 int                     jobClass3,
+	 int                     jobClass4,
+	 int                     jobClass5,
+	 int                     jobClass6,
+	 int                     jobClass7,
+	 int                     jobClass8,
+	 int                     jobClass9,
+	 int                     jobClass10,
+	 int                     jobClass11
+) {
+  tbb::atomic<int>  semaphore(12);
+  tbb::task_group g;
+
+  g.run( [&]() { internal::spawnBlockingJob( job0,  jobType0,  jobClass0,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1,  jobType1,  jobClass1,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job2,  jobType2,  jobClass2,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job3,  jobType3,  jobClass3,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job4,  jobType4,  jobClass4,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job5,  jobType5,  jobClass5,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job6,  jobType6,  jobClass6,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job7,  jobType7,  jobClass7,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job8,  jobType8,  jobClass8,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job9,  jobType9,  jobClass9,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job10, jobType10, jobClass10, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job11, jobType11, jobClass11, semaphore ); });
+  //g.wait();
+
+  g.run( [&]() { processJobs(jobClass0); });
+  g.run( [&]() { processJobs(jobClass1); });
+  g.run( [&]() { processJobs(jobClass2); });
+  g.run( [&]() { processJobs(jobClass3); });
+  g.run( [&]() { processJobs(jobClass4); });
+  g.run( [&]() { processJobs(jobClass5); });
+  g.run( [&]() { processJobs(jobClass6); });
+  g.run( [&]() { processJobs(jobClass7); });
+  g.run( [&]() { processJobs(jobClass8); });
+  g.run( [&]() { processJobs(jobClass9); });
+  g.run( [&]() { processJobs(jobClass10); });
+  g.run( [&]() { processJobs(jobClass11); });
+  g.wait();
+
+  #ifdef Asserts
+  int deadlockCounter = 0;
+  #endif
+  while (semaphore.load()>0) {
+    processJobs(jobClass0);
+    processJobs(jobClass1);
+    processJobs(jobClass2);
+    processJobs(jobClass3);
+    processJobs(jobClass4);
+    processJobs(jobClass5);
+    processJobs(jobClass6);
+    processJobs(jobClass7);
+    processJobs(jobClass8);
+    processJobs(jobClass9);
+    processJobs(jobClass10);
+    processJobs(jobClass11);
+
+    tbb::this_tbb_thread::yield();
+
+    #ifdef Asserts
+    deadlockCounter++;
+    if (deadlockCounter>65536) {
+      static tarch::logging::Log _log( "tarch::multicore::jobs" );
+      logInfo( "spawnAndWait(12xJob,...)", internal::report() );
+      logInfo( "spawnAndWait(...)", "job-classes: " << jobClass0 << ", " << jobClass1 << ", " << jobClass2 << ", " << jobClass3 << ", " << jobClass4 << ", " << jobClass5 );
+      deadlockCounter = 0;
+    }
+    #endif
+  }
+}
+
+
 std::string tarch::multicore::jobs::internal::report() {
   std::ostringstream msg;
   msg << "no-of-running-bg-consumer-tasks=" << _numberOfRunningJobConsumerTasks.load();
