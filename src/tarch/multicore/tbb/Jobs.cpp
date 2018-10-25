@@ -309,8 +309,8 @@ void tarch::multicore::jobs::terminateAllPendingBackgroundConsumerJobs() {
 
 void tarch::multicore::jobs::plotStatistics() {
 
-  #if TBB_USE_THREADING_TOOLS>=1
   static tarch::logging::Log _log("tarch::multicore::jobs");
+  #if TBB_USE_THREADING_TOOLS>=1
   logInfo( "plotStatistics()", "total no of consumer runs=" << internal::JobConsumerTask::_numberOfConsumerRuns.load() );
   logInfo( "plotStatistics()", "total no of high bandwidth tasks=" << internal::JobConsumerTask::_numberOfHighBandwidthTasks.load() );
   logInfo( "plotStatistics()", "total no of high priority tasks=" << internal::JobConsumerTask::_numberOfHighPriorityTasks.load() );
