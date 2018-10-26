@@ -190,7 +190,6 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     and
     internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
   ) {
-//    result = spawnFollowUpConsumerAsDirectChild(2);
     enqueue();
     enqueue();
   }
@@ -219,24 +218,6 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   }
 
   return result;
-}
-
-
-tarch::multicore::jobs::internal::JobConsumerTask*  tarch::multicore::jobs::internal::JobConsumerTask::spawnFollowUpConsumerAsDirectChild(int count) {
-  assertion(count>=1);
-
-  set_ref_count(count);
-  recycle_as_continuation();
-
-  JobConsumerTask* tbbTask = nullptr;
-  for (int i=0; i<count; i++) {
-    JobConsumerTask* tbbTask = new (tbb::task::allocate_child()) JobConsumerTask(
-     internal::getNumberOfJobsPerConsumerRun(BackgroundTasksJobClassNumber)
-    );
-    _numberOfRunningJobConsumerTasks.fetch_and_add(1);
-  }
-
-  return tbbTask;
 }
 
 
