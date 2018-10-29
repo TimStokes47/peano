@@ -360,6 +360,35 @@ peano::datatraversal::TaskSet runParallelTasks(
       bool                     parallelise
     );
 
+
+    TaskSet(
+      std::function<bool ()>&& function1,
+      std::function<bool ()>&& function2,
+      std::function<bool ()>&& function3,
+      std::function<bool ()>&& function4,
+      std::function<bool ()>&& function5,
+      std::function<bool ()>&& function6,
+      std::function<bool ()>&& function7,
+      std::function<bool ()>&& function8,
+      std::function<bool ()>&& function9,
+      std::function<bool ()>&& function10,
+      std::function<bool ()>&& function11,
+      std::function<bool ()>&& function12,
+	  TaskType                 taskType1,
+	  TaskType                 taskType2,
+	  TaskType                 taskType3,
+	  TaskType                 taskType4,
+	  TaskType                 taskType5,
+	  TaskType                 taskType6,
+	  TaskType                 taskType7,
+	  TaskType                 taskType8,
+	  TaskType                 taskType9,
+	  TaskType                 taskType10,
+	  TaskType                 taskType11,
+	  TaskType                 taskType12,
+      bool                     parallelise
+    );
+
     /**
      * <h2> Use waitFor within busy waiting loop </h2>
      *
