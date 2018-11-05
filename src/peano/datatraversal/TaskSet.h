@@ -251,23 +251,12 @@ peano::datatraversal::TaskSet backgroundTask(
       T*                      myTask,
       TaskType                taskType
     ) {
-      switch (taskType) {
-        case peano::datatraversal::TaskSet::TaskType::IsTaskAndRunImmediately:
-        case peano::datatraversal::TaskSet::TaskType::IsTaskAndRunAsSoonAsPossible:
-        case peano::datatraversal::TaskSet::TaskType::LoadCells:
-        case peano::datatraversal::TaskSet::TaskType::LoadVertices:
-        case peano::datatraversal::TaskSet::TaskType::TriggerEvents:
-        case peano::datatraversal::TaskSet::TaskType::StoreCells:
-        case peano::datatraversal::TaskSet::TaskType::StoreVertices:
-          tarch::multicore::jobs::spawn( new tarch::multicore::jobs::GenericJobWithPointer<T>(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
-          break;
-        case peano::datatraversal::TaskSet::TaskType::Background:
+      if (taskType==peano::datatraversal::TaskSet::TaskType::Background) {
        	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
        	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
        	  );
-          tarch::multicore::jobs::spawn( new tarch::multicore::jobs::GenericJobWithPointer<T>(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType)) );
-          break;
       }
+      tarch::multicore::jobs::spawn( new tarch::multicore::jobs::GenericJobWithPointer<T>(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
     }
 
 
