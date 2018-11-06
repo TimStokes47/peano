@@ -265,7 +265,12 @@ class peano::parallel::loadbalancing::Oracle {
     int getRegularLevelAlongBoundary() const;
 
     /**
-     * You can switch off the load balancing via this value.
+     * You can switch off the load balancing via this value. All MPI Oracles
+     * are rank-local and do not communicate with each other.
+     * There might be variants which do synchronise, but the default do not.
+     * As a result, you have to invoke this operation on each and every rank
+     * if you want to switch off the load balancing globally. The other way
+     * round, this operation allows you to disable lb on a per-rank basis.
      */
     void activateLoadBalancing(bool value);
 
