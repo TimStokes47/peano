@@ -252,9 +252,9 @@ peano::datatraversal::TaskSet backgroundTask(
       TaskType                taskType
     ) {
       if (taskType==peano::datatraversal::TaskSet::TaskType::Background) {
-       	  peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
-       	    tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
-       	  );
+        peano::performanceanalysis::Analysis::getInstance().minuteNumberOfBackgroundTasks(
+          tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs()
+        );
       }
       tarch::multicore::jobs::spawn( new tarch::multicore::jobs::GenericJobWithPointer<T>(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
     }
