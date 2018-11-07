@@ -80,7 +80,22 @@ namespace tarch {
             *
             * https://software.intel.com/en-us/node/684213
             *
-            * We usually use mode/hint 3 for data on machines with Optane.
+            * or
+            *
+            * https://software.intel.com/en-us/cpp-compiler-developer-guide-and-reference-cacheability-support-intrinsics-1
+            *
+            * There are basically the following modes: _MM_HINT_T0,
+            * _MM_HINT_T1, _MM_HINT_T2 and _MM_HINT_NTA. T0 means a
+            * prefetch into all cache levels. T1 means into all levels
+            * except L1 (L1 might be populated but we do not enforce it),
+            * T2 means at least L3. NTA is the most defensive one.
+            * It loads stuff as close to the core as possible without
+            * polluting any other caches.
+            *
+            * We usually use mode/hint _MM_HINT_NTA for data on machines with
+            * Optane. This makes the data be loaded into L3. For urgent
+            * computations it might however make sense to use T0.
+	    *
             */
            virtual void prefetchData();
            virtual ~Job();

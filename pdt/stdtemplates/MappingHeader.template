@@ -930,7 +930,11 @@ class __THIS_QUALIFIED_TYPENAME__ {
      *                            run to adapter run, i.e. if you switch the adapter
      *                            you wanna use, Peano might come up with different
      *                            coarse vertices and you have to reset data there 
-     *                            again. 
+     *                            again. Please note that even without any manual 
+     *                            data update, receivedCoarseGridVertices and
+     *                            workersCoarseGridVertices have to differ. On a worker,
+     *                            the latter for example always is (logically) not-inside and remote,
+     *                            while it might be inside on the master.
      * @param coarseGridCell      Copy fo the coarse cell of the master.
      * @param fineGridPositionOfCell Position of receivedCell relative to coarse 
      *                            cell on master.
