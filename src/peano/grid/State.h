@@ -198,6 +198,20 @@ class peano::grid::State {
 
     #ifdef TrackGridStatistics
     /**
+     * This operation returns the total number of inner vertices within the
+     * spacetree. This includes refined and unrefined vertices.
+     *
+     * If you store unknowns on the fine grid only (in a traditional multigrid
+     * scheme, e.g., where the fine grid holds the solution), then this routine
+     * does not give you back the unknown count. It returns the unknown count
+     * plus those vertices/unknowns held on coarser grids. If you need the real
+     * number of unknowns, you have to use getNumberOfInnerLeafVertices().
+     *
+     * If you start from x getNumberOfInnerLeafVertices(), then this routine
+     * gives back around x + x/3^d + x/9^d + ... on a regular grid. On adaptive
+     * grids, the relation is slightly different.
+     *
+     * @see getNumberOfInnerLeafVertices()
      * @see getMaximumMeshWidth() for comments on the validity of the result
      */
      double getNumberOfInnerVertices() const;
@@ -254,6 +268,11 @@ class peano::grid::State {
      */
      double getNumberOfOuterCells() const;
 
+     /**
+      * Returns the number of unrefined/fine grid vertices.
+      *
+      * @see getNumberOfInnerVertices()
+      */
      double getNumberOfInnerLeafVertices() const;
      double getNumberOfBoundaryLeafVertices() const;
 
