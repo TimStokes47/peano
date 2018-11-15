@@ -37,7 +37,7 @@ double tarch::timing::GlidingAverageMeasurement::getValue() const {
     double accumulatedWeight = 0.0;
 
     for (int i=static_cast<int>(_values.size())-1; i>=0; i--) {
-      double currentWeight = std::pow(_weight, static_cast<int>(_values.size())-1 );
+      double currentWeight = std::pow(_weight, static_cast<int>(_values.size())-i-1 );
       accumulatedWeight += currentWeight;
       totalWeight       += currentWeight * _values[i];
     }
@@ -56,7 +56,7 @@ double tarch::timing::GlidingAverageMeasurement::getStandardDeviation() const {
     double accumulatedWeight  = 0.0;
 
     for (int i=static_cast<int>(_values.size())-1; i>=0; i--) {
-      double currentWeight = std::pow(_weight, static_cast<int>(_values.size())-1 );
+      double currentWeight = std::pow(_weight, static_cast<int>(_values.size())-i-1 );
       accumulatedWeight  += currentWeight;
       totalSquaredWeight += currentWeight * currentWeight * _values[i];
       totalWeight        += currentWeight * _values[i];
