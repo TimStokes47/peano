@@ -34,7 +34,8 @@ peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::Descend(
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVerticesFirstTime(int level) {
-  const int  passedLevel  = level == _treeDepth ? -level : level;
+  const int  absoluteLevel = level +  _gridContainer.getVertexEnumerator(_regularSubtreeIndex,0).getLevel();
+  const int  passedLevel   = (level == _treeDepth ? -absoluteLevel : absoluteLevel);
   const bool runOperation =
     (_eventHandle.touchVertexFirstTimeSpecification(passedLevel).manipulates == peano::MappingSpecification::WholeTree) ||
     (_eventHandle.touchVertexFirstTimeSpecification(passedLevel).manipulates == peano::MappingSpecification::OnlyLeaves && level == _treeDepth);
@@ -112,7 +113,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::touchVer
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCells(int level) {
-  const int  passedLevel  = level == _treeDepth ? -level : level;
+  const int  absoluteLevel = level +  _gridContainer.getVertexEnumerator(_regularSubtreeIndex,0).getLevel();
+  const int  passedLevel   = (level == _treeDepth ? -absoluteLevel : absoluteLevel);
   const bool runOperation =
     (_eventHandle.enterCellSpecification(passedLevel).manipulates == peano::MappingSpecification::WholeTree) ||
     (_eventHandle.enterCellSpecification(passedLevel).manipulates == peano::MappingSpecification::OnlyLeaves && level == _treeDepth);
@@ -182,7 +184,8 @@ void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::enterCel
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Descend<Vertex,Cell,State,EventHandle>::descend(int fineGridLevel) {
-  const int  passedLevel  = fineGridLevel == _treeDepth ? -fineGridLevel : fineGridLevel;
+  const int  absoluteLevel = level +  _gridContainer.getVertexEnumerator(_regularSubtreeIndex,0).getLevel();
+  const int  passedLevel   = (level == _treeDepth ? -absoluteLevel : absoluteLevel);
   const bool runOperation =
     (_eventHandle.descendSpecification(passedLevel).manipulates == peano::MappingSpecification::WholeTree) ||
     (_eventHandle.descendSpecification(passedLevel).manipulates == peano::MappingSpecification::OnlyLeaves && fineGridLevel == _treeDepth);
