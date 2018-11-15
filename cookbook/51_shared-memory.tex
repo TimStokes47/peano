@@ -83,6 +83,7 @@ possible. That's where the namespace identifier comes from.}.
 Details on this oracle are discussed later.
 For the time being, insert a commands into your runner.
 
+\label{page:shared_memory:dummy-oracle}
 \begin{code}
 int mynamespace::runners::Runner::run() {
   #ifdef SharedMemoryParallelisation
@@ -329,6 +330,29 @@ updated.
  publication. Please consult the extensive class documentation in the header for
  details.
 \end{remark}
+
+
+\noindent
+Peano's dummy oracle as used on page \pageref{page:shared_memory:dummy-oracle}
+works with a lot of default parameters.
+They are chosen empirically as they seem to work reasonably on most codes.
+However, these ``most'' codes all codes that use Peano under
+the hood for algorithms which have their own memory management (they load in
+patches per AMR grid cell for example).
+If you have a code that has requires Peano to deliver more memory throughput,
+ensure you select the \texttt{Split} strategy and uses pipelining: 
+
+\begin{code}
+new peano::datatraversal::autotuning::OracleForOnePhaseDummy(
+ true,  //   bool useMultithreading                  = true,
+ 0,     //   int  grainSizeOfUserDefinedRegions      = 0,
+ peano::datatraversal::autotuning::OracleForOnePhaseDummy::SplitVertexReadsOnRegularSubtree::Split,
+ true, //  bool pipelineDescendProcessing
+ true, //   bool pipelineAscendProcessing
+ ...
+\end{code}
+
+
 
 
 
