@@ -187,8 +187,8 @@ void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::leaveCell
 
 template <class Vertex, class Cell, class State, class EventHandle>
 void peano::grid::nodes::tasks::Ascend<Vertex,Cell,State,EventHandle>::ascend(int fineGridLevel) {
-  const int  absoluteLevel = level +  _gridContainer.getVertexEnumerator(_regularSubtreeIndex,0).getLevel();
-  const int  passedLevel   = (level == _treeDepth ? -absoluteLevel : absoluteLevel);
+  const int  absoluteLevel = fineGridLevel +  _gridContainer.getVertexEnumerator(_regularSubtreeIndex,0).getLevel();
+  const int  passedLevel   = (fineGridLevel == _treeDepth ? -absoluteLevel : absoluteLevel);
   const bool runOperation =
     (_eventHandle.ascendSpecification(passedLevel).manipulates == peano::MappingSpecification::WholeTree) ||
     (_eventHandle.ascendSpecification(passedLevel).manipulates == peano::MappingSpecification::OnlyLeaves && fineGridLevel == _treeDepth);
