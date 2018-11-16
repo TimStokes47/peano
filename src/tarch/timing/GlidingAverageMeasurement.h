@@ -47,7 +47,7 @@ class tarch::timing::GlidingAverageMeasurement {
      */
     bool            _isAccurateValue;
   public:
-    GlidingAverageMeasurement(double accuracy=0.0, double weight=0.9, int maxEntries=1024);
+    GlidingAverageMeasurement(double accuracy=0.0, double weight=0.7, int maxEntries=1024);
 
     /**
      * @return Averaged value (mean value) of all measurements.
@@ -98,4 +98,3 @@ class tarch::timing::GlidingAverageMeasurement {
 };
 
 #endif
-

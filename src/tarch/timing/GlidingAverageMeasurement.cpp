@@ -142,4 +142,3 @@ double tarch::timing::GlidingAverageMeasurement::min() const {
 double tarch::timing::GlidingAverageMeasurement::getAccuracy() const {
   return _accuracy;
 }
-
