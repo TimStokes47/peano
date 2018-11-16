@@ -113,9 +113,6 @@ class peano::performanceanalysis::Analyser {
 
     virtual void minuteNumberOfBackgroundTasks(int taskCount) = 0;
 
-    virtual void beginProcessingBackgroundJobs() = 0;
-    virtual void endProcessingBackgroundJobs() = 0;
-
     /**
      * Switch on/off.
      */
