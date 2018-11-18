@@ -1,0 +1,27 @@
+#include "peano/utils/Globals.h"
+
+Packed-Type: short int;
+
+Constant: DIMENSIONS hint-value 4;
+Constant: TWO_POWER_D;
+
+
+class peano4::GridVertex {
+  enum State {
+    HangingVertex,Unrefined,Refined,RefinementTriggered,
+    Refining,EraseTriggered,Erasing
+  };
+  
+  persistent parallelise packed State  state;
+  persistent int  adjacentRanks;
+  discard    int  adjacentRanksOfPreviousIteration;
+
+  /**
+   * A vertex is outside, if all @f$ 2^d @f$ adjacent cells are outside. In this
+   * case, no events are called for it. 
+   */
+  #ifdef PEANO_DEBUG
+  persistent parallelise double                      x[DIMENSIONS];
+  persistent parallelise int                         level;
+  #endif
+};

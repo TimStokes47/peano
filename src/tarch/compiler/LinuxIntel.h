@@ -37,15 +37,3 @@
 #endif
 
 #define LittleEndian
-
-
-#if !defined(UseTBBsParallelForAndReduce) &&  !defined(noUseTBBsParallelForAndReduce)
-#define UseTBBsParallelForAndReduce
-#endif
-
-
-#if !defined(IprobeEveryKIterations)
-#define IprobeEveryKIterations 1024
-#endif
-
-
