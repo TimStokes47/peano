@@ -24,7 +24,6 @@
 //#define DaStGenPackedPadding 1      // 32 bit version
 // #define DaStGenPackedPadding 2   // 64 bit version
 
-//#define SpecialiseVectorTemplatesForIntegers
 
 
 #if !defined(noMultipleThreadsMayTriggerMPICalls) && !defined(MultipleThreadsMayTriggerMPICalls)

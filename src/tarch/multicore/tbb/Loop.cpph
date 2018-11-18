@@ -7,6 +7,12 @@
 #include <bitset>
 
 
+//
+// @todo
+// Does rely on   #ifdef UseTBBsParallelForAndReduce
+// SHoudn't do. Should know its stuff internally.
+//
+
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
@@ -47,6 +53,9 @@ namespace {
 
 
 
+/**
+ * @todo Remove
+ */
 template <typename F>
 void tarch::multicore::parallelReduce(
   const tarch::multicore::dForRange<1>&  range,

@@ -171,9 +171,6 @@ struct tarch::la::Vector {
 
 
 
-#include "tarch/la/VectorIntegerSpecialisation.h"
-
-
 #include "tarch/la/Vector.cpph"
 
 
