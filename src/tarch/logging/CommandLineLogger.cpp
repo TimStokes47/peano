@@ -113,7 +113,7 @@ tarch::logging::CommandLineLogger::CommandLineLogger():
   setLogMessageType();
   setLogTrace();
 
-  #ifdef Debug
+  #if PeanoDebug>=1
   addFilterListEntry( FilterListEntry( "debug", false )  );
   #endif
   addFilterListEntry( FilterListEntry( "info", false )  );
@@ -311,8 +311,7 @@ void tarch::logging::CommandLineLogger::error(double timestamp, const std::strin
 
 
 void tarch::logging::CommandLineLogger::indent( bool indent, const std::string& trace, const std::string& message ) {
-  #ifdef Debug
-
+  #if PeanoDebug>=1
   tarch::multicore::Lock lockCout( _semaphore );
   if (indent) {
     _indent+=NumberOfIndentSpaces;

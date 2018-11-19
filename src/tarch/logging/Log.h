@@ -32,7 +32,7 @@ namespace tarch {
   }
 }
 
-#ifdef Debug
+#if PeanoDebug>=1
 /**
  * @see logInfo() macro
  */

@@ -541,7 +541,7 @@ void tarch::multicore::jobs::startToProcessBackgroundJobs() {
   
   const int additionalBackgroundThreads = std::min( maxBusyConsumerTasks, maxAdditionalBackgroundThreads );
 
-  #ifdef Asserts
+  #if PeanoDebug>=2
   if (additionalBackgroundThreads>0) {
     static tarch::logging::Log _log( "tarch::multicore::jobs" );
     logInfo(
@@ -622,7 +622,7 @@ void tarch::multicore::jobs::spawnAndWait(
   g.run( [&]() { processJobs(jobClass1); });
   g.wait();
 
-  #ifdef Asserts
+  #if PeanoDebug>=1
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
@@ -635,7 +635,7 @@ void tarch::multicore::jobs::spawnAndWait(
     // exhibit exactly the same behaviour, so I decided to yield here.
     tbb::this_tbb_thread::yield();
 
-    #ifdef Asserts
+    #if PeanoDebug>=2
     deadlockCounter++;
     if (deadlockCounter>65536) {
       static tarch::logging::Log _log( "tarch::multicore::jobs" );
@@ -675,7 +675,7 @@ void tarch::multicore::jobs::spawnAndWait(
   g.run( [&]() { processJobs(jobClass2); });
   g.wait();
 
-  #ifdef Asserts
+  #if PeanoDebug>=1
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
@@ -685,7 +685,7 @@ void tarch::multicore::jobs::spawnAndWait(
 
     tbb::this_tbb_thread::yield();
 
-    #ifdef Asserts
+    #if PeanoDebug>=1
     deadlockCounter++;
     if (deadlockCounter>65536) {
       static tarch::logging::Log _log( "tarch::multicore::jobs" );
@@ -730,7 +730,7 @@ void tarch::multicore::jobs::spawnAndWait(
   g.run( [&]() { processJobs(jobClass3); });
   g.wait();
 
-  #ifdef Asserts
+  #if PeanoDebug>=1
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
@@ -741,7 +741,7 @@ void tarch::multicore::jobs::spawnAndWait(
 
     tbb::this_tbb_thread::yield();
 
-    #ifdef Asserts
+    #if PeanoDebug>=1
     deadlockCounter++;
     if (deadlockCounter>65536) {
       static tarch::logging::Log _log( "tarch::multicore::jobs" );
@@ -791,7 +791,7 @@ void tarch::multicore::jobs::spawnAndWait(
   g.run( [&]() { processJobs(jobClass4); });
   g.wait();
 
-  #ifdef Asserts
+  #if PeanoDebug>=1
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
@@ -803,7 +803,7 @@ void tarch::multicore::jobs::spawnAndWait(
 
     tbb::this_tbb_thread::yield();
 
-    #ifdef Asserts
+    #if PeanoDebug>=1
     deadlockCounter++;
     if (deadlockCounter>65536) {
       static tarch::logging::Log _log( "tarch::multicore::jobs" );
@@ -858,7 +858,7 @@ void tarch::multicore::jobs::spawnAndWait(
   g.run( [&]() { processJobs(jobClass5); });
   g.wait();
 
-  #ifdef Asserts
+  #if PeanoDebug>=1
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
@@ -871,7 +871,7 @@ void tarch::multicore::jobs::spawnAndWait(
 
     tbb::this_tbb_thread::yield();
 
-    #ifdef Asserts
+    #if PeanoDebug>=1
     deadlockCounter++;
     if (deadlockCounter>65536) {
       static tarch::logging::Log _log( "tarch::multicore::jobs" );
@@ -953,7 +953,7 @@ void tarch::multicore::jobs::spawnAndWait(
   g.run( [&]() { processJobs(jobClass11); });
   g.wait();
 
-  #ifdef Asserts
+  #if PeanoDebug>=1
   int deadlockCounter = 0;
   #endif
   while (semaphore.load()>0) {
@@ -972,7 +972,7 @@ void tarch::multicore::jobs::spawnAndWait(
 
     tbb::this_tbb_thread::yield();
 
-    #ifdef Asserts
+    #if PeanoDebug>=1
     deadlockCounter++;
     if (deadlockCounter>65536) {
       static tarch::logging::Log _log( "tarch::multicore::jobs" );

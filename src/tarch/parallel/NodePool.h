@@ -110,7 +110,7 @@ class tarch::parallel::NodePool: public tarch::services::Service {
     int _jobManagementTag;
     int _jobServicesTag;
 
-    #ifdef Asserts
+    #if PeanoDebug>=1
     bool _isInitialised;
     #endif
 

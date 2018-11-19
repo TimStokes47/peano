@@ -8,7 +8,7 @@
 #include <mpi.h>
 #endif
 
-#ifdef  Asserts
+#if PeanoDebug>=1
 #include <stdio.h>
 #include <stdlib.h>
 #endif
@@ -35,7 +35,7 @@
     std::cerr.precision(20); \
   }
 
-  #ifdef Asserts
+  #if PeanoDebug>=1
     #include "tarch/logging/Log.h"
     #define assertionTriggersExit { \
       std::cout.flush(); \

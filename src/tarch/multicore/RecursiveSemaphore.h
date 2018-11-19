@@ -2,7 +2,6 @@
 // use, please see the copyright notice at www.peano-framework.org
 #include "tarch/multicore/MulticoreDefinitions.h"
 
-#include "tarch/multicore/cpp/RecursiveSemaphore.h"
 #include "tarch/multicore/tbb/RecursiveSemaphore.h"
 
 

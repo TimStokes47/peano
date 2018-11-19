@@ -38,12 +38,10 @@ tarch::multicore::dForRange<D>::dForRange( const tarch::la::Vector<D,int>&  offs
 
 template <int D>
 tarch::la::Vector<D,int> tarch::multicore::dForRange<D>::operator()(const tarch::la::Vector<D,int>& range) const {
-  #ifdef Asserts
   for (int d=0; d<D; d++) {
     assertion2(range(d)>=0,range,toString());
     assertion2(range(d)<_range(d),range,toString());
   }
-  #endif
   return _offset + range * _interleaving;
 }
 

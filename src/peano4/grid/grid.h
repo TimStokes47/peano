@@ -13,7 +13,7 @@ namespace peano4 {
   *
   * <h2> Recreate all DaStGen objects </h2>
   * <pre>
-java -jar DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator GridVertex.def  .
+java -jar DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator GridVertex.def  .
     </pre>
   *
   */

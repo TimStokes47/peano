@@ -33,7 +33,7 @@ tarch::parallel::NodePool::NodePool():
   _isAlive(false),
   _hasGivenOutRankSizeLastQuery(false),
   _strategy(0) {
-  #ifdef Asserts
+  #if PeanoDebug>=1
   _isInitialised = false;
   #endif
 }

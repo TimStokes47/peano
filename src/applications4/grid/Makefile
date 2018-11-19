@@ -1,25 +1,26 @@
-PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+PROJECT_NAME = grid
+PEANO_ROOT   = /home/tobias/git/Peano/src
+OBJS         = applications4/grid/main.o
+DIMENSIONS   = 2
 
-OBJS = src-Peano.o
+-include $(PEANO_ROOT)/peano4/Makefile
+-include $(PEANO_ROOT)/tarch/Makefile
 
-ifeq ($(BUILD_MODE),debug)
-	CFLAGS += -g
-else ifeq ($(BUILD_MODE),run)
-	CFLAGS += -O2
-else
-	$(error Build mode $(BUILD_MODE) not supported by this Makefile)
+
+ifeq ($(BUILD_MODE),release)
+	CFLAGS += -O3 
+else 
+	CFLAGS += -g -O3 -DPeanoDebug=1
 endif
 
-all:	src-Peano
 
-src-Peano:	$(OBJS)
-	$(CXX) -o $@ $^
+all:	compile
 
-%.o:	$(PROJECT_ROOT)%.cpp
-	$(CXX) -c $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -o $@ $<
+compile:	$(OBJS)
+	$(CXX) -o Peano-$(PROJECT_NAME) $^
 
-%.o:	$(PROJECT_ROOT)%.c
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) -o $@ $<
+%.o:	%.cpp
+	$(CXX) -DDimensions=$(DIMENSIONS) -I$(PEANO_ROOT) -c $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -o $@ $<
 
 clean:
-	rm -fr src-Peano $(OBJS)
+	rm -fr $(OBJS)
