@@ -2,4 +2,4 @@ OBJS += $(PEANO_ROOT)/peano4/peano.o
 OBJS += $(PEANO_ROOT)/peano4/grid/GridVertex.o
 OBJS += $(PEANO_ROOT)/peano4/grid/AutomatonState.o
 OBJS += $(PEANO_ROOT)/peano4/grid/Spacetree.o
-
+OBJS += $(PEANO_ROOT)/peano4/utils/Loop.o

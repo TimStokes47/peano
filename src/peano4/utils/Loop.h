@@ -502,7 +502,7 @@ namespace peano4 {
  *
  * You usually use this macro with
  * \code
- * #pragma unroll(TWO_POWER_D)
+ * #pragma unroll(TwoPowerD)
  * \endcode
  * or
  * \code
@@ -521,7 +521,7 @@ namespace peano4 {
  */ 
 #if Dimensions == 2
 #define dfor2(counter) \
-  for( int counter##Scalar=0, AA##counter = 0, BB##counter = 0; counter##Scalar<TWO_POWER_D; counter##Scalar++) { \
+  for( int counter##Scalar=0, AA##counter = 0, BB##counter = 0; counter##Scalar<TwoPowerD; counter##Scalar++) { \
   tarch::la::Vector<Dimensions,int> counter; \
   counter(0) = AA##counter; \
   counter(1) = BB##counter; \
@@ -530,7 +530,7 @@ namespace peano4 {
 
 #elif Dimensions == 3
 #define dfor2(counter) \
-  for( int counter##Scalar=0, AA##counter = 0, BB##counter = 0, CC##counter = 0; counter##Scalar<TWO_POWER_D; counter##Scalar++) { \
+  for( int counter##Scalar=0, AA##counter = 0, BB##counter = 0, CC##counter = 0; counter##Scalar<TwoPowerD; counter##Scalar++) { \
   tarch::la::Vector<Dimensions,int> counter; \
   counter(0) = AA##counter; \
   counter(1) = BB##counter; \
@@ -541,7 +541,7 @@ namespace peano4 {
 
 #else 
 #define dfor2(counter) \
-  for( int counter##Scalar=0; counter##Scalar<TWO_POWER_D; counter##Scalar++) { \
+  for( int counter##Scalar=0; counter##Scalar<TwoPowerD; counter##Scalar++) { \
     tarch::la::Vector<Dimensions,int> counter; \
       { \
       int   copy##counter##Scalar = counter##Scalar; \

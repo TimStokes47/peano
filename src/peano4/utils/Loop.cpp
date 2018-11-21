@@ -1,15 +1,12 @@
-#include "peano/utils/Loop.h"
-#include "peano/utils/PeanoOptimisations.h"
-
-//#include "tarch/la/Utilities.h"
+#include "Loop.h"
 
 
 namespace {
-  int dLinearisedNotOptimised( const tarch::la::Vector<DIMENSIONS,int> & counter, int max ) {
-    int result = counter(DIMENSIONS - 1);
-    assertion2(counter(DIMENSIONS - 1) >= 0, counter, max);
-    assertion2(counter(DIMENSIONS - 1) < max, counter, max);
-    for (int d = DIMENSIONS - 2; d >= 0; d--) {
+  int dLinearisedNotOptimised( const tarch::la::Vector<Dimensions,int> & counter, int max ) {
+    int result = counter(Dimensions - 1);
+    assertion2(counter(Dimensions - 1) >= 0, counter, max);
+    assertion2(counter(Dimensions - 1) < max, counter, max);
+    for (int d = Dimensions - 2; d >= 0; d--) {
       assertion2(counter(d) >= 0, counter(d), max);
       assertion2(counter(d) < max, counter(d), max);
       result = result * max + counter(d);
@@ -18,11 +15,11 @@ namespace {
   }
 
 
-  tarch::la::Vector<DIMENSIONS,int> dDelinearisedNotOptimised(int value, int max ) {
+  tarch::la::Vector<Dimensions,int> dDelinearisedNotOptimised(int value, int max ) {
     assertion2(value >= 0, value, max);
 
-    tarch::la::Vector<DIMENSIONS,int> result(0);
-    for (int d=DIMENSIONS-1; d>=0; d--) {
+    tarch::la::Vector<Dimensions,int> result(0);
+    for (int d=Dimensions-1; d>=0; d--) {
       result(d)  = value /  tarch::la::aPowI(d,max);
       value     -= result(d) * tarch::la::aPowI(d,max);
     }
@@ -36,13 +33,13 @@ namespace {
   const int MaxMax                  = 5;
   const int MaxIndexOfLinearization = FIVE_POWER_D;
   int       LookupTableDLinearised[MaxIndexOfLinearization*(MaxMax-1)];
-  tarch::la::Vector<DIMENSIONS,int> LookupTableDDeLinearised[MaxIndexOfLinearization*(MaxMax-1)];
+  tarch::la::Vector<Dimensions,int> LookupTableDDeLinearised[MaxIndexOfLinearization*(MaxMax-1)];
 
-  int getKeyForDLinearised(const tarch::la::Vector<DIMENSIONS,int>& counter, int max) {
+  int getKeyForDLinearised(const tarch::la::Vector<Dimensions,int>& counter, int max) {
     int result = 0;
     int key    = 1;
 
-    for (int d=0; d<DIMENSIONS; d++) {
+    for (int d=0; d<Dimensions; d++) {
       result += key * counter(d);
       key    *= MaxMax;
     }
@@ -63,7 +60,7 @@ namespace {
 }
 
 
-void peano::utils::setupLookupTableForDLinearised() {
+void peano4::utils::setupLookupTableForDLinearised() {
   #ifdef DloopOptimiseAggressive
   for (int i=2; i<=MaxMax; i++) {
     dfor(k,i) {
@@ -74,7 +71,7 @@ void peano::utils::setupLookupTableForDLinearised() {
 }
 
 
-void peano::utils::setupLookupTableForDDelinearised() {
+void peano4::utils::setupLookupTableForDDelinearised() {
   #ifdef DloopOptimiseAggressive
   for (int value=0; value<MaxIndexOfLinearization; value++) {
     for (int i=2; i<=MaxMax; i++) {
@@ -85,12 +82,12 @@ void peano::utils::setupLookupTableForDDelinearised() {
 }
 
 
-int peano::utils::dLinearisedWithoutLookup( const tarch::la::Vector<DIMENSIONS,int>& counter, int max ) {
+int peano4::utils::dLinearisedWithoutLookup( const tarch::la::Vector<Dimensions,int>& counter, int max ) {
 	return dLinearisedNotOptimised(counter,max);
 }
 
 
-int peano::utils::dLinearised( const tarch::la::Vector<DIMENSIONS,int>& counter, int max ) {
+int peano4::utils::dLinearised( const tarch::la::Vector<Dimensions,int>& counter, int max ) {
   #ifdef DloopOptimiseAggressive
     assertionEquals3(LookupTableDLinearised[getKeyForDLinearised(counter,max)], dLinearisedNotOptimised(counter,max), counter,max,getKeyForDLinearised(counter,max));
     return LookupTableDLinearised[getKeyForDLinearised(counter,max)];
@@ -100,7 +97,7 @@ int peano::utils::dLinearised( const tarch::la::Vector<DIMENSIONS,int>& counter,
 }
 
 
-int peano::utils::d2Linearised( const tarch::la::Vector<2,int>& counter, int max ) {
+int peano4::utils::d2Linearised( const tarch::la::Vector<2,int>& counter, int max ) {
   int result = counter(2 - 1);
   assertion2(counter(2 - 1) >= 0, counter, max);
   assertion2(counter(2 - 1) < max, counter, max);
@@ -113,7 +110,7 @@ int peano::utils::d2Linearised( const tarch::la::Vector<2,int>& counter, int max
 }
 
 
-int peano::utils::d3Linearised( const tarch::la::Vector<3,int>& counter, int max ) {
+int peano4::utils::d3Linearised( const tarch::la::Vector<3,int>& counter, int max ) {
   int result = counter(3 - 1);
   assertion2(counter(3 - 1) >= 0, counter, max);
   assertion2(counter(3 - 1) < max, counter, max);
@@ -126,13 +123,13 @@ int peano::utils::d3Linearised( const tarch::la::Vector<3,int>& counter, int max
 }
 
 
-tarch::la::Vector<DIMENSIONS,int> peano::utils::dDelinearisedWithoutLookup(int value, int max) {
+tarch::la::Vector<Dimensions,int> peano4::utils::dDelinearisedWithoutLookup(int value, int max) {
   return dDelinearisedNotOptimised(value, max);
 }
 
-tarch::la::Vector<DIMENSIONS,int> peano::utils::dDelinearised(int value, int max ) {
+tarch::la::Vector<Dimensions,int> peano4::utils::dDelinearised(int value, int max ) {
   #ifdef DloopOptimiseAggressive
-    for (int d=0; d<DIMENSIONS; d++) {
+    for (int d=0; d<Dimensions; d++) {
       assertionEquals2(LookupTableDDeLinearised[getKeyForDDeLinearised(value,max)](d), dDelinearisedNotOptimised(value,max)(d),value,max);
     }
     return LookupTableDDeLinearised[getKeyForDDeLinearised(value,max)];
@@ -142,9 +139,9 @@ tarch::la::Vector<DIMENSIONS,int> peano::utils::dDelinearised(int value, int max
 }
 
 
-void peano::utils::dInc(tarch::la::Vector<DIMENSIONS,int>& counter, int max) {
+void peano4::utils::dInc(tarch::la::Vector<Dimensions,int>& counter, int max) {
   counter(0)++;
-  for (int i=0; i<DIMENSIONS-1; i++) {
+  for (int i=0; i<Dimensions-1; i++) {
     if ( counter(i) >= max ) {
       counter(i) = 0;
       counter(i+1)++;
@@ -153,13 +150,13 @@ void peano::utils::dInc(tarch::la::Vector<DIMENSIONS,int>& counter, int max) {
 }
 
 
-void peano::utils::dDec(tarch::la::Vector<DIMENSIONS,int>& counter, int max) {
-  for (int i = 0; i < DIMENSIONS - 1; i++) {
+void peano4::utils::dDec(tarch::la::Vector<Dimensions,int>& counter, int max) {
+  for (int i = 0; i < Dimensions - 1; i++) {
     assertion(counter(i) >= 0);
   }
 
   counter(0)--;
-  for (int i=0; i<DIMENSIONS-1; i++) {
+  for (int i=0; i<Dimensions-1; i++) {
     if ( counter(i) < 0 ) {
       counter(i) = max-1;
       counter(i+1)--;
@@ -168,9 +165,9 @@ void peano::utils::dDec(tarch::la::Vector<DIMENSIONS,int>& counter, int max) {
 }
 
 
-void peano::utils::dInc(tarch::la::Vector<DIMENSIONS,int>& counter, const tarch::la::Vector<DIMENSIONS,int>& max) {
+void peano4::utils::dInc(tarch::la::Vector<Dimensions,int>& counter, const tarch::la::Vector<Dimensions,int>& max) {
   counter(0)++;
-  for (int i=0; i<DIMENSIONS-1; i++) {
+  for (int i=0; i<Dimensions-1; i++) {
     if ( counter(i) >= max(i) ) {
       counter(i) = 0;
       counter(i+1)++;
@@ -180,9 +177,9 @@ void peano::utils::dInc(tarch::la::Vector<DIMENSIONS,int>& counter, const tarch:
   }
 }
 
-void peano::utils::dIncByVector(tarch::la::Vector<DIMENSIONS,int>& counter, int max, int increment) {
+void peano4::utils::dIncByVector(tarch::la::Vector<Dimensions,int>& counter, int max, int increment) {
   counter(0) += increment;
-   for (int i=0; i<DIMENSIONS-1; i++) {
+   for (int i=0; i<Dimensions-1; i++) {
      if ( counter(i) >= max ) {
        counter(i) %= max;
        counter(i+1) += increment;
@@ -193,9 +190,9 @@ void peano::utils::dIncByVector(tarch::la::Vector<DIMENSIONS,int>& counter, int 
 }
 
 
-void peano::utils::dIncByScalar(tarch::la::Vector<DIMENSIONS,int>& counter, int max, int increment) {
+void peano4::utils::dIncByScalar(tarch::la::Vector<Dimensions,int>& counter, int max, int increment) {
   counter(0) += increment;
-  for (int i=0; i<DIMENSIONS-1; i++) {
+  for (int i=0; i<Dimensions-1; i++) {
     while ( counter(i) >= max ) {
       counter(i) -= max;
       counter(i+1) ++;
@@ -204,8 +201,8 @@ void peano::utils::dIncByScalar(tarch::la::Vector<DIMENSIONS,int>& counter, int 
 }
 
 
-void peano::utils::dInc(tarch::la::Vector<DIMENSIONS,int>& counter, int max, int doNotExamine) {
-  assertion( doNotExamine<DIMENSIONS);
+void peano4::utils::dInc(tarch::la::Vector<Dimensions,int>& counter, int max, int doNotExamine) {
+  assertion( doNotExamine<Dimensions);
   assertion( doNotExamine>=-1);
 
   if (doNotExamine!=0) {
@@ -214,18 +211,18 @@ void peano::utils::dInc(tarch::la::Vector<DIMENSIONS,int>& counter, int max, int
   else {
     counter(1)++;
   }
-  for (int i=0; i<DIMENSIONS-1; i++) {
+  for (int i=0; i<Dimensions-1; i++) {
     if ( counter(i) >= max ) {
       counter(i) = 0;
       if ( doNotExamine != i+1) {
         counter(i+1)++;
       }
       else {
-        if ( doNotExamine != DIMENSIONS-1 ) {
+        if ( doNotExamine != Dimensions-1 ) {
           counter(i+2)++;
         }
         else {
-          counter(DIMENSIONS-1) = max;
+          counter(Dimensions-1) = max;
         }
       }
     }
@@ -233,12 +230,12 @@ void peano::utils::dInc(tarch::la::Vector<DIMENSIONS,int>& counter, int max, int
 }
 
 
-void peano::utils::dInc(tarch::la::Vector<DIMENSIONS,int>& counter, int max, peano::utils::LoopDirection& direction ) {
-  for (int i=0; i<DIMENSIONS; i++) {
+void peano4::utils::dInc(tarch::la::Vector<Dimensions,int>& counter, int max, peano4::utils::LoopDirection& direction ) {
+  for (int i=0; i<Dimensions; i++) {
     if ( direction[i] ) {
       counter(i)++;
       bool greater = counter(i) >= max;
-      if (greater && (i==DIMENSIONS-1)) {
+      if (greater && (i==Dimensions-1)) {
         counter(i)=max;
         return;
       }
@@ -251,7 +248,7 @@ void peano::utils::dInc(tarch::la::Vector<DIMENSIONS,int>& counter, int max, pea
     else {
       counter(i)--;
       bool smaller = counter(i) < 0;
-      if (smaller && (i==DIMENSIONS-1)) {
+      if (smaller && (i==Dimensions-1)) {
         counter(i)=max;
         return;
       }
@@ -265,9 +262,9 @@ void peano::utils::dInc(tarch::la::Vector<DIMENSIONS,int>& counter, int max, pea
 }
 
 
-int peano::utils::dCmp(const tarch::la::Vector<DIMENSIONS,int>& counter, const tarch::la::Vector<DIMENSIONS,int>& max) {
+int peano4::utils::dCmp(const tarch::la::Vector<Dimensions,int>& counter, const tarch::la::Vector<Dimensions,int>& max) {
   int result = true;
-  for (int i=0; i<DIMENSIONS; i++) {
+  for (int i=0; i<Dimensions; i++) {
     assertion2( counter(i)<=max(i), counter,max );
     assertion2( counter(i)>=0,   counter,max );
     result &= (counter(i)<max(i));
@@ -276,9 +273,9 @@ int peano::utils::dCmp(const tarch::la::Vector<DIMENSIONS,int>& counter, const t
 }
 
 
-int peano::utils::dCmp(const tarch::la::Vector<DIMENSIONS,int>& counter, int max) {
+int peano4::utils::dCmp(const tarch::la::Vector<Dimensions,int>& counter, int max) {
   int result = true;
-  for (int i=0; i<DIMENSIONS; i++) {
+  for (int i=0; i<Dimensions; i++) {
     assertion2( counter(i)<=max, counter,max );
     assertion2( counter(i)>=0,   counter,max );
     result &= (counter(i)<max);
@@ -287,8 +284,8 @@ int peano::utils::dCmp(const tarch::la::Vector<DIMENSIONS,int>& counter, int max
 }
 
 
-bool peano::utils::dCmpLinearOrder(const tarch::la::Vector<DIMENSIONS,int>& counter, const tarch::la::Vector<DIMENSIONS,int>& max) {
-  for (int i = DIMENSIONS - 1; i >= 0; i--) {
+bool peano4::utils::dCmpLinearOrder(const tarch::la::Vector<Dimensions,int>& counter, const tarch::la::Vector<Dimensions,int>& max) {
+  for (int i = Dimensions - 1; i >= 0; i--) {
     if (counter(i) > max(i)) {
       return false;
     } else if (counter(i) < max(i)) {
@@ -298,26 +295,26 @@ bool peano::utils::dCmpLinearOrder(const tarch::la::Vector<DIMENSIONS,int>& coun
   return false;
 }
 
-tarch::la::Vector<DIMENSIONS,int> peano::utils::dStartVector() {
-  tarch::la::Vector<DIMENSIONS,int> result(0);
+tarch::la::Vector<Dimensions,int> peano4::utils::dStartVector() {
+  tarch::la::Vector<Dimensions,int> result(0);
   return result;
 }
 
 
-tarch::la::Vector<DIMENSIONS,int> peano::utils::dStartVector(int dim, int value) {
-  tarch::la::Vector<DIMENSIONS,int> result(0);
+tarch::la::Vector<Dimensions,int> peano4::utils::dStartVector(int dim, int value) {
+  tarch::la::Vector<Dimensions,int> result(0);
   assertion2( dim >= 0, dim, value );
-  assertion2( dim <  DIMENSIONS, dim, value );
+  assertion2( dim <  Dimensions, dim, value );
   assertion2( value >= 0, dim, value );
   result( dim ) = value;
   return result;
 }
 
 
-tarch::la::Vector<DIMENSIONS,int> peano::utils::dStartVector( int max, const peano::utils::LoopDirection& direction ) {
-  tarch::la::Vector<DIMENSIONS,int> result;
+tarch::la::Vector<Dimensions,int> peano4::utils::dStartVector( int max, const peano4::utils::LoopDirection& direction ) {
+  tarch::la::Vector<Dimensions,int> result;
   assertion2( max>0 && max<=3, max, direction );
-  for (int i=0; i<DIMENSIONS; i++) {
+  for (int i=0; i<Dimensions; i++) {
     if (direction[i]) {
       result(i) = 0;
     }

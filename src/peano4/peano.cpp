@@ -15,10 +15,14 @@
 
 
 void peano4::fillLookupTables() {
+/*
+  Had in in Globals.cpp
+
   setupLookupTableForTwoPowI();
   setupLookupTableForThreePowI();
   setupLookupTableForFourPowI();
   setupLookupTableForDPowI();
+*/
 
   peano4::utils::setupLookupTableForDLinearised();
   peano4::utils::setupLookupTableForDDelinearised();
