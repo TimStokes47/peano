@@ -1,9 +1,9 @@
-#include "tarch/logging/Log.h"
-#include "peano/utils/Loop.h"
+#include "peano.h"
 
-#include "peano/peano.h"
 
-#include "peano/grid/aspects/CellLocalPeanoCurve.h"
+#include "peano4/utils/Loop.h"
+
+
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
@@ -16,18 +16,18 @@
 #include "tarch/parallel/NodePool.h"
 
 
-void peano::fillLookupTables() {
+void peano4::fillLookupTables() {
   setupLookupTableForTwoPowI();
   setupLookupTableForThreePowI();
   setupLookupTableForFourPowI();
   setupLookupTableForDPowI();
 
-  peano::utils::setupLookupTableForDLinearised();
-  peano::utils::setupLookupTableForDDelinearised();
+  peano4::utils::setupLookupTableForDLinearised();
+  peano4::utils::setupLookupTableForDDelinearised();
 }
 
 
-int peano::initParallelEnvironment(int* argc, char*** argv) {
+int peano4::initParallelEnvironment(int* argc, char*** argv) {
   #ifdef Parallel
   if ( tarch::parallel::Node::getInstance().init(argc,argv) ) {
     tarch::parallel::NodePool::getInstance().init();
@@ -42,13 +42,13 @@ int peano::initParallelEnvironment(int* argc, char*** argv) {
 }
 
 
-void peano::shutdownParallelEnvironment() {
+void peano4::shutdownParallelEnvironment() {
   tarch::parallel::NodePool::getInstance().shutdown();
   tarch::parallel::Node::getInstance().shutdown();
 }
 
 
-int peano::initSharedMemoryEnvironment() {
+int peano4::initSharedMemoryEnvironment() {
   #ifdef SharedMemoryParallelisation
   if ( tarch::multicore::Core::getInstance().isInitialised() ) {
     return 0;
@@ -62,13 +62,8 @@ int peano::initSharedMemoryEnvironment() {
 }
 
 
-void peano::shutdownSharedMemoryEnvironment() {
+void peano4::shutdownSharedMemoryEnvironment() {
   #ifdef SharedMemoryParallelisation
   tarch::multicore::Core::getInstance().shutDown();
   #endif
-}
-
-
-void peano::releaseCachedData() {
-  peano::grid::aspects::CellLocalPeanoCurve::releaseCachedData();
 }
