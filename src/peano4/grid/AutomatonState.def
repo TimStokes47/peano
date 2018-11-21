@@ -1,0 +1,12 @@
+#include "peano4/utils/Globals.h"
+
+Packed-Type: short int;
+
+Constant: Dimensions hint-value 4;
+
+
+class peano4::grid::AutomatonState {
+  persistent parallelise packed int     level;
+  persistent parallelise packed double  x[Dimensions];
+  persistent parallelise packed double  h[Dimensions];
+};
