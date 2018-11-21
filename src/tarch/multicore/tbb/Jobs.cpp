@@ -159,36 +159,14 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   const int oldNumberOfConsumerTasks = _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
 
   tbb::task* result = nullptr;
-
-/*
-  if (hasProcessedJobs) {
-	if (
-      oldNumberOfConsumerTasks<Job::_maxNumberOfRunningBackgroundThreads
-	  and
-	  internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
-    ) {
-      enqueue();
-      enqueue();
-	}
-	else if (
-      oldNumberOfConsumerTasks>1
-	  and
-	  internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) < internal::_minimalNumberOfJobsPerConsumerRun
-    ) {
-      // enqueue();
-      // enqueue();
-      // starve
-	}
-	else {
-      enqueue();
-	}
-  }
-*/
-
   if (
     oldNumberOfConsumerTasks<Job::_maxNumberOfRunningBackgroundThreads
     and
-    internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
+    (
+      internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
+      or
+      internal::getJobQueueSize(internal::HighPriorityTasksJobClassNumber) > 1
+    )
   ) {
     enqueue();
     enqueue();
