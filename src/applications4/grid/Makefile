@@ -8,9 +8,9 @@ DIMENSIONS   = 2
 
 
 ifeq ($(BUILD_MODE),release)
-	CFLAGS += -O3 
+	CFLAGS += --std=c++14 -O3 
 else 
-	CFLAGS += -g -O3 -DPeanoDebug=1
+	CFLAGS += --std=c++14 -g -O3 -DPeanoDebug=1
 endif
 
 
