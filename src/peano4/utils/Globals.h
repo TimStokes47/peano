@@ -27,7 +27,12 @@
     enum {value = 1};
   };
 
-  #define TwoPowerD   (BasePowerExponent<2,Dimensions>::value)
+  #define DimensionsTimesTwo (BasePowerExponent<2,Dimensions>::value*2)
+
+  #define TwoPowerD          (BasePowerExponent<2,Dimensions>::value)
+  #define TwoPowerDPlusTwo   (BasePowerExponent<2,Dimensions>::value+2)
+
+  #define ThreePowerD        (BasePowerExponent<3,Dimensions>::value)
 /*
   #define TwoPowerDTimesD   (BasePowerExponent<2,Dimensions>::value*Dimensions)
   #define TwoPowerD_MINUS_ONE (BasePowerExponent<2,Dimensions>::value-1)

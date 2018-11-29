@@ -115,6 +115,8 @@ tarch::logging::CommandLineLogger::CommandLineLogger():
 
   #if PeanoDebug>=1
   addFilterListEntry( FilterListEntry( "debug", false )  );
+  #else
+  addFilterListEntry( FilterListEntry( "debug", true )  );
   #endif
   addFilterListEntry( FilterListEntry( "info", false )  );
 }
@@ -225,7 +227,7 @@ std::string tarch::logging::CommandLineLogger::constructMessageString(
 
 void tarch::logging::CommandLineLogger::debug(double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message) {
   if (writeDebug(trace)) {
-    #if !defined(Debug)
+    #if !defined(PeanoDebug) || PeanoDebug<1
     assertion(false);
     #endif
 

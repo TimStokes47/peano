@@ -53,7 +53,7 @@ namespace mpibalancing {
  *
  *
  * @author Tobias Weinzierl
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.7 $
  */
 class mpibalancing::SFCDiffusionNodePoolStrategy: public tarch::parallel::NodePoolStrategy {
   private:
@@ -64,7 +64,7 @@ class mpibalancing::SFCDiffusionNodePoolStrategy: public tarch::parallel::NodePo
      * requested an update.
      *
      * @author Tobias Weinzierl
-     * @version $Revision: 1.5 $
+     * @version $Revision: 1.7 $
      */
     class NodePoolListEntry {
       public:

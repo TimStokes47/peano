@@ -3,10 +3,33 @@
 Packed-Type: short int;
 
 Constant: Dimensions hint-value 4;
+Constant: DimensionsTimesTwo;
 
 
 class peano4::grid::AutomatonState {
   persistent parallelise packed int     level;
   persistent parallelise packed double  x[Dimensions];
   persistent parallelise packed double  h[Dimensions];
+
+  persistent packed bool inverted;
+
+  /**
+   * Defines whether this event belongs to an even column, row, plate etc.
+   * There is no need to exchange this data throughout the iterations or 
+   * even a join.
+   */
+  persistent packed bool evenFlags[Dimensions];
+
+  /**
+   * Identifies when the corresponding face is touched again. Negative values
+   * mean, this face has been touched before, positive values say this face
+   * will be touched later on.
+   * There is no need to exchange this data throughout the iterations or 
+   * even a join.
+   *
+   * @todo Hier muessen Symbolische Konstanten DIMENSIONS_TIMES_TWO verwendet
+   *       werden statt dieser festen Konstanten
+   * @todo Hier sollte ein packed stehen!
+   */
+  persistent short int accessNumber[DimensionsTimesTwo] from -8 to 8;
 };

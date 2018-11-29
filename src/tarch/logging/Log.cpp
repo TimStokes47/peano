@@ -56,14 +56,13 @@ tarch::logging::Log::~Log() {
 }
 
 
-#if defined(Debug) && !defined(LogOff)
+#if PeanoDebug>=1
 void tarch::logging::Log::debug(const std::string& methodName, const std::string& message) const {
   UsedLogService::getInstance().debug(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
 }
 #endif
 
 
-#if !defined(LogOff)
 void tarch::logging::Log::info(const std::string& methodName, const std::string& message) const {
   UsedLogService::getInstance().info(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
 }
@@ -77,11 +76,8 @@ void tarch::logging::Log::error(const std::string& methodName, const std::string
 }
 
 void tarch::logging::Log::indent( bool indent, const std::string& trace, const std::string& message ) const {
-  #if defined(Debug)
   UsedLogService::getInstance().indent( indent, trace, message );
-  #endif
 }
-#endif
 
 
 std::string tarch::logging::Log::getMachineInformation() const {

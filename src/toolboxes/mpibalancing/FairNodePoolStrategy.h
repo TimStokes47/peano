@@ -47,7 +47,7 @@ namespace mpibalancing {
  *
  *
  * @author Tobias Weinzierl
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.4 $
  */
 class mpibalancing::FairNodePoolStrategy: public tarch::parallel::NodePoolStrategy {
   protected:
@@ -56,7 +56,7 @@ class mpibalancing::FairNodePoolStrategy: public tarch::parallel::NodePoolStrate
      * requested an update.
      *
      * @author Tobias Weinzierl
-     * @version $Revision: 1.2 $
+     * @version $Revision: 1.4 $
      */
     class NodePoolListEntry {
       public:

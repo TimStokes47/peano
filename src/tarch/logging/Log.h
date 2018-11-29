@@ -28,7 +28,6 @@ namespace tarch {
   namespace logging {
     class Log;
     class CommandLineLogger;
-    class CCALogger;
   }
 }
 
@@ -436,11 +435,7 @@ namespace tarch {
  */
 class tarch::logging::Log {
   private:
-    #ifdef CCA
-    typedef CCALogger UsedLogService;
-    #else
     typedef CommandLineLogger UsedLogService;
-    #endif
 
     /**
      * Writes a timestamp to the standard output.
@@ -511,7 +506,7 @@ class tarch::logging::Log {
      * @param methodName method name
      * @param message    log message
      */
-    #if defined(Debug) && !defined(LogOff)
+    #if PeanoDebug>=1
     void debug(const std::string& methodName, const std::string& message) const;
     #else
     void debug(const std::string& methodName, const std::string& message) const {
@@ -533,11 +528,7 @@ class tarch::logging::Log {
      * @param methodName method name
      * @param message    log message
      */
-    #if defined(LogOff)
-    void info(const std::string& methodName, const std::string& message) const {}
-    #else
     void info(const std::string& methodName, const std::string& message) const;
-    #endif
 
 
     /**
@@ -555,11 +546,7 @@ class tarch::logging::Log {
      * @param methodName method name
      * @param message    log message
      */
-    #if defined(LogOff)
-    void warning(const std::string& methodName, const std::string& message) const {}
-    #else
     void warning(const std::string& methodName, const std::string& message) const;
-    #endif
 
 
     /**
@@ -577,11 +564,7 @@ class tarch::logging::Log {
      * @param methodName method name
      * @param message    log message
      */
-    #if defined(LogOff)
-    void error(const std::string& methodName, const std::string& message) const {}
-    #else
     void error(const std::string& methodName, const std::string& message) const;
-    #endif
 
     /**
      * Indent the Subsequent Messages
@@ -589,11 +572,7 @@ class tarch::logging::Log {
      * Depending on indent the operation increments or decrements the indent.
      * The call is forwarded to the logging device.
      */
-    #if defined(LogOff)
-    void indent( bool indent, const std::string& trace, const std::string& message ) const {}
-    #else
     void indent( bool indent, const std::string& trace, const std::string& message ) const;
-    #endif
 
     std::string getTraceInformation( const std::string& methodName ) const;
 };

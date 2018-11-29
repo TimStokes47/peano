@@ -5,10 +5,13 @@ peano4::grid::AutomatonState::PersistentRecords::PersistentRecords() {
 }
 
 
-peano4::grid::AutomatonState::PersistentRecords::PersistentRecords(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h):
+peano4::grid::AutomatonState::PersistentRecords::PersistentRecords(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber):
 _level(level),
 _x(x),
-_h(h) {
+_h(h),
+_inverted(inverted),
+_evenFlags(evenFlags),
+_accessNumber(accessNumber) {
    
 }
 
@@ -48,19 +51,55 @@ _h(h) {
 }
 
 
+
+ bool peano4::grid::AutomatonState::PersistentRecords::getInverted() const  {
+   return _inverted;
+}
+
+
+
+ void peano4::grid::AutomatonState::PersistentRecords::setInverted(const bool& inverted)  {
+   _inverted = inverted;
+}
+
+
+
+ std::bitset<Dimensions> peano4::grid::AutomatonState::PersistentRecords::getEvenFlags() const  {
+   return _evenFlags;
+}
+
+
+
+ void peano4::grid::AutomatonState::PersistentRecords::setEvenFlags(const std::bitset<Dimensions>& evenFlags)  {
+   _evenFlags = (evenFlags);
+}
+
+
+
+ tarch::la::Vector<DimensionsTimesTwo,short int> peano4::grid::AutomatonState::PersistentRecords::getAccessNumber() const  {
+   return _accessNumber;
+}
+
+
+
+ void peano4::grid::AutomatonState::PersistentRecords::setAccessNumber(const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber)  {
+   _accessNumber = (accessNumber);
+}
+
+
 peano4::grid::AutomatonState::AutomatonState() {
    
 }
 
 
 peano4::grid::AutomatonState::AutomatonState(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._level, persistentRecords._x, persistentRecords._h) {
+_persistentRecords(persistentRecords._level, persistentRecords._x, persistentRecords._h, persistentRecords._inverted, persistentRecords._evenFlags, persistentRecords._accessNumber) {
    
 }
 
 
-peano4::grid::AutomatonState::AutomatonState(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h):
-_persistentRecords(level, x, h) {
+peano4::grid::AutomatonState::AutomatonState(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber):
+_persistentRecords(level, x, h, inverted, evenFlags, accessNumber) {
    
 }
 
@@ -140,6 +179,86 @@ peano4::grid::AutomatonState::~AutomatonState() { }
 
 
 
+ bool peano4::grid::AutomatonState::getInverted() const  {
+   return _persistentRecords._inverted;
+}
+
+
+
+ void peano4::grid::AutomatonState::setInverted(const bool& inverted)  {
+   _persistentRecords._inverted = inverted;
+}
+
+
+
+ std::bitset<Dimensions> peano4::grid::AutomatonState::getEvenFlags() const  {
+   return _persistentRecords._evenFlags;
+}
+
+
+
+ void peano4::grid::AutomatonState::setEvenFlags(const std::bitset<Dimensions>& evenFlags)  {
+   _persistentRecords._evenFlags = (evenFlags);
+}
+
+
+
+ bool peano4::grid::AutomatonState::getEvenFlags(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<Dimensions);
+   return _persistentRecords._evenFlags[elementIndex];
+   
+}
+
+
+
+ void peano4::grid::AutomatonState::setEvenFlags(int elementIndex, const bool& evenFlags)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<Dimensions);
+   _persistentRecords._evenFlags[elementIndex]= evenFlags;
+   
+}
+
+
+
+ void peano4::grid::AutomatonState::flipEvenFlags(int elementIndex)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<Dimensions);
+   _persistentRecords._evenFlags.flip(elementIndex);
+}
+
+
+
+ tarch::la::Vector<DimensionsTimesTwo,short int> peano4::grid::AutomatonState::getAccessNumber() const  {
+   return _persistentRecords._accessNumber;
+}
+
+
+
+ void peano4::grid::AutomatonState::setAccessNumber(const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber)  {
+   _persistentRecords._accessNumber = (accessNumber);
+}
+
+
+
+ short int peano4::grid::AutomatonState::getAccessNumber(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<DimensionsTimesTwo);
+   return _persistentRecords._accessNumber[elementIndex];
+   
+}
+
+
+
+ void peano4::grid::AutomatonState::setAccessNumber(int elementIndex, const short int& accessNumber)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<DimensionsTimesTwo);
+   _persistentRecords._accessNumber[elementIndex]= accessNumber;
+   
+}
+
+
+
 
 std::string peano4::grid::AutomatonState::toString() const {
    std::ostringstream stringstr;
@@ -162,6 +281,20 @@ void peano4::grid::AutomatonState::toString (std::ostream& out) const {
       out << getH(i) << ",";
    }
    out << getH(Dimensions-1) << "]";
+   out << ",";
+   out << "inverted:" << getInverted();
+   out << ",";
+   out << "evenFlags:[";
+   for (int i = 0; i < Dimensions-1; i++) {
+      out << getEvenFlags(i) << ",";
+   }
+   out << getEvenFlags(Dimensions-1) << "]";
+   out << ",";
+   out << "accessNumber:[";
+   for (int i = 0; i < DimensionsTimesTwo-1; i++) {
+      out << getAccessNumber(i) << ",";
+   }
+   out << getAccessNumber(DimensionsTimesTwo-1) << "]";
    out <<  ")";
 }
 
@@ -174,7 +307,10 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
    return AutomatonStatePacked(
       getLevel(),
       getX(),
-      getH()
+      getH(),
+      getInverted(),
+      getEvenFlags(),
+      getAccessNumber()
    );
 }
 
@@ -273,14 +409,17 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
          AutomatonState dummyAutomatonState[2];
          
          #ifdef MPI2
-         const int Attributes = 3;
+         const int Attributes = 6;
          #else
-         const int Attributes = 4;
+         const int Attributes = 7;
          #endif
          MPI_Datatype subtypes[Attributes] = {
               MPI_INT		 //level
             , MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
+            , MPI_CXX_BOOL		 //inverted
+            , MPI_CXX_BOOL		 //evenFlags
+            , MPI_SHORT		 //accessNumber
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -291,6 +430,9 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
               1		 //level
             , Dimensions		 //x
             , Dimensions		 //h
+            , 1		 //inverted
+            , Dimensions		 //evenFlags
+            , DimensionsTimesTwo		 //accessNumber
             #ifndef MPI2
             , 1
             #endif
@@ -320,6 +462,21 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._h[0]))), 		&disp[2] );
          #endif
          #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._inverted))), 		&disp[3] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._inverted))), 		&disp[3] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._evenFlags))), 		&disp[4] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._evenFlags))), 		&disp[4] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._accessNumber[0]))), 		&disp[5] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[0]._persistentRecords._accessNumber[0]))), 		&disp[5] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
          #else
          for (int i=1; i<Attributes-1; i++) {
@@ -335,9 +492,9 @@ peano4::grid::AutomatonStatePacked peano4::grid::AutomatonState::convert() const
             assertion4(disp[i]<static_cast<int>(sizeof(AutomatonState)), i, disp[i], Attributes, sizeof(AutomatonState));
          }
          #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[1]))), 		&disp[3] );
-         disp[3] -= base;
-         disp[3] += disp[0];
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonState[1]))), 		&disp[6] );
+         disp[6] -= base;
+         disp[6] += disp[0];
          #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
@@ -617,14 +774,29 @@ switch (mode) {
 
 
 peano4::grid::AutomatonStatePacked::PersistentRecords::PersistentRecords() {
+   if ((Dimensions+1 >= (8 * sizeof(short int)))) {
+      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+      std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+   }
+   assertion((Dimensions+1 < (8 * sizeof(short int))));
    
 }
 
 
-peano4::grid::AutomatonStatePacked::PersistentRecords::PersistentRecords(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h) {
+peano4::grid::AutomatonStatePacked::PersistentRecords::PersistentRecords(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber):
+_accessNumber(accessNumber) {
    setLevel(level);
    setX(x);
    setH(h);
+   setInverted(inverted);
+   setEvenFlags(evenFlags);
+   if ((Dimensions+1 >= (8 * sizeof(short int)))) {
+      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+      std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+   }
+   assertion((Dimensions+1 < (8 * sizeof(short int))));
    
 }
 
@@ -664,19 +836,84 @@ peano4::grid::AutomatonStatePacked::PersistentRecords::PersistentRecords(const i
 }
 
 
+
+ bool peano4::grid::AutomatonStatePacked::PersistentRecords::getInverted() const  {
+   short int mask = 1 << (0);
+   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano4::grid::AutomatonStatePacked::PersistentRecords::setInverted(const bool& inverted)  {
+   short int mask = 1 << (0);
+   _packedRecords0 = static_cast<short int>( inverted ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+}
+
+
+
+ std::bitset<Dimensions> peano4::grid::AutomatonStatePacked::PersistentRecords::getEvenFlags() const  {
+   short int mask = (short int) (1 << (Dimensions)) - 1 ;
+   mask = static_cast<short int>(mask << (1));
+   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+   tmp = static_cast<short int>(tmp >> (1));
+   std::bitset<Dimensions> result = tmp;
+   return result;
+}
+
+
+
+ void peano4::grid::AutomatonStatePacked::PersistentRecords::setEvenFlags(const std::bitset<Dimensions>& evenFlags)  {
+   short int mask = (short int) (1 << (Dimensions)) - 1 ;
+   mask = static_cast<short int>(mask << (1));
+   _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
+   _packedRecords0 = static_cast<short int>(_packedRecords0 | evenFlags.to_ulong() << (1));
+}
+
+
+
+ tarch::la::Vector<DimensionsTimesTwo,short int> peano4::grid::AutomatonStatePacked::PersistentRecords::getAccessNumber() const  {
+   return _accessNumber;
+}
+
+
+
+ void peano4::grid::AutomatonStatePacked::PersistentRecords::setAccessNumber(const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber)  {
+   _accessNumber = (accessNumber);
+}
+
+
 peano4::grid::AutomatonStatePacked::AutomatonStatePacked() {
+   if ((Dimensions+1 >= (8 * sizeof(short int)))) {
+      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+      std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+   }
+   assertion((Dimensions+1 < (8 * sizeof(short int))));
    
 }
 
 
 peano4::grid::AutomatonStatePacked::AutomatonStatePacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getLevel(), persistentRecords.getX(), persistentRecords.getH()) {
+_persistentRecords(persistentRecords.getLevel(), persistentRecords.getX(), persistentRecords.getH(), persistentRecords.getInverted(), persistentRecords.getEvenFlags(), persistentRecords._accessNumber) {
+   if ((Dimensions+1 >= (8 * sizeof(short int)))) {
+      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+      std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+   }
+   assertion((Dimensions+1 < (8 * sizeof(short int))));
    
 }
 
 
-peano4::grid::AutomatonStatePacked::AutomatonStatePacked(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h):
-_persistentRecords(level, x, h) {
+peano4::grid::AutomatonStatePacked::AutomatonStatePacked(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber):
+_persistentRecords(level, x, h, inverted, evenFlags, accessNumber) {
+   if ((Dimensions+1 >= (8 * sizeof(short int)))) {
+      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+      std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+   }
+   assertion((Dimensions+1 < (8 * sizeof(short int))));
    
 }
 
@@ -756,6 +993,104 @@ peano4::grid::AutomatonStatePacked::~AutomatonStatePacked() { }
 
 
 
+ bool peano4::grid::AutomatonStatePacked::getInverted() const  {
+   short int mask = 1 << (0);
+   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano4::grid::AutomatonStatePacked::setInverted(const bool& inverted)  {
+   short int mask = 1 << (0);
+   _persistentRecords._packedRecords0 = static_cast<short int>( inverted ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+}
+
+
+
+ std::bitset<Dimensions> peano4::grid::AutomatonStatePacked::getEvenFlags() const  {
+   short int mask = (short int) (1 << (Dimensions)) - 1 ;
+   mask = static_cast<short int>(mask << (1));
+   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+   tmp = static_cast<short int>(tmp >> (1));
+   std::bitset<Dimensions> result = tmp;
+   return result;
+}
+
+
+
+ void peano4::grid::AutomatonStatePacked::setEvenFlags(const std::bitset<Dimensions>& evenFlags)  {
+   short int mask = (short int) (1 << (Dimensions)) - 1 ;
+   mask = static_cast<short int>(mask << (1));
+   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
+   _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | evenFlags.to_ulong() << (1));
+}
+
+
+
+ bool peano4::grid::AutomatonStatePacked::getEvenFlags(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<Dimensions);
+   int mask = 1 << (1);
+   mask = mask << elementIndex;
+   return (_persistentRecords._packedRecords0& mask);
+}
+
+
+
+ void peano4::grid::AutomatonStatePacked::setEvenFlags(int elementIndex, const bool& evenFlags)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<Dimensions);
+   assertion(!evenFlags || evenFlags==1);
+   int shift        = 1 + elementIndex; 
+   short int mask         = 1     << (shift);
+   short int shiftedValue = evenFlags << (shift);
+   _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 & ~mask;
+   _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 |  shiftedValue;
+}
+
+
+
+ void peano4::grid::AutomatonStatePacked::flipEvenFlags(int elementIndex)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<Dimensions);
+   short int mask = 1 << (1);
+   mask = mask << elementIndex;
+   _persistentRecords._packedRecords0^= mask;
+}
+
+
+
+ tarch::la::Vector<DimensionsTimesTwo,short int> peano4::grid::AutomatonStatePacked::getAccessNumber() const  {
+   return _persistentRecords._accessNumber;
+}
+
+
+
+ void peano4::grid::AutomatonStatePacked::setAccessNumber(const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber)  {
+   _persistentRecords._accessNumber = (accessNumber);
+}
+
+
+
+ short int peano4::grid::AutomatonStatePacked::getAccessNumber(int elementIndex) const  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<DimensionsTimesTwo);
+   return _persistentRecords._accessNumber[elementIndex];
+   
+}
+
+
+
+ void peano4::grid::AutomatonStatePacked::setAccessNumber(int elementIndex, const short int& accessNumber)  {
+   assertion(elementIndex>=0);
+   assertion(elementIndex<DimensionsTimesTwo);
+   _persistentRecords._accessNumber[elementIndex]= accessNumber;
+   
+}
+
+
+
 
 std::string peano4::grid::AutomatonStatePacked::toString() const {
    std::ostringstream stringstr;
@@ -778,6 +1113,20 @@ void peano4::grid::AutomatonStatePacked::toString (std::ostream& out) const {
       out << getH(i) << ",";
    }
    out << getH(Dimensions-1) << "]";
+   out << ",";
+   out << "inverted:" << getInverted();
+   out << ",";
+   out << "evenFlags:[";
+   for (int i = 0; i < Dimensions-1; i++) {
+      out << getEvenFlags(i) << ",";
+   }
+   out << getEvenFlags(Dimensions-1) << "]";
+   out << ",";
+   out << "accessNumber:[";
+   for (int i = 0; i < DimensionsTimesTwo-1; i++) {
+      out << getAccessNumber(i) << ",";
+   }
+   out << getAccessNumber(DimensionsTimesTwo-1) << "]";
    out <<  ")";
 }
 
@@ -790,7 +1139,10 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
    return AutomatonState(
       getLevel(),
       getX(),
-      getH()
+      getH(),
+      getInverted(),
+      getEvenFlags(),
+      getAccessNumber()
    );
 }
 
@@ -889,14 +1241,16 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
          AutomatonStatePacked dummyAutomatonStatePacked[2];
          
          #ifdef MPI2
-         const int Attributes = 3;
+         const int Attributes = 5;
          #else
-         const int Attributes = 4;
+         const int Attributes = 6;
          #endif
          MPI_Datatype subtypes[Attributes] = {
               MPI_INT		 //level
             , MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
+            , MPI_SHORT		 //accessNumber
+            , MPI_SHORT		 //_packedRecords0
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -907,6 +1261,8 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
               1		 //level
             , Dimensions		 //x
             , Dimensions		 //h
+            , DimensionsTimesTwo		 //accessNumber
+            , 1		 //_packedRecords0
             #ifndef MPI2
             , 1
             #endif
@@ -936,6 +1292,16 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._h[0]))), 		&disp[2] );
          #endif
          #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._accessNumber[0]))), 		&disp[3] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._accessNumber[0]))), 		&disp[3] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._packedRecords0))), 		&disp[4] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._packedRecords0))), 		&disp[4] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
          #else
          for (int i=1; i<Attributes-1; i++) {
@@ -951,9 +1317,9 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
             assertion4(disp[i]<static_cast<int>(sizeof(AutomatonStatePacked)), i, disp[i], Attributes, sizeof(AutomatonStatePacked));
          }
          #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[1]))), 		&disp[3] );
-         disp[3] -= base;
-         disp[3] += disp[0];
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[1]))), 		&disp[5] );
+         disp[5] -= base;
+         disp[5] += disp[0];
          #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 

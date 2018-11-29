@@ -209,7 +209,7 @@ namespace peano4 {
  * [0,0,1], [1,0,1], [0,1,1], [1,1,1].
  */
 #define dfor(counter,max) \
-  for (tarch::la::Vector<Dimensions,int> counter = peano::utils::dStartVector(); peano::utils::dCmp(counter,max); peano::utils::dInc(counter,max) )
+  for (tarch::la::Vector<Dimensions,int> counter = peano4::utils::dStartVector(); peano4::utils::dCmp(counter,max); peano4::utils::dInc(counter,max) )
 
 /**
  * Shortcut For dfor(counter,4)
@@ -571,7 +571,7 @@ namespace peano4 {
  * throughout the for-loop.
  */
 #define dfore(counter,max,dim,value) \
-  for (tarch::la::Vector<Dimensions,int> counter = peano::utils::dStartVector(dim,value); peano::utils::dCmp(counter,max); peano::utils::dInc(counter,max,dim) )
+  for (tarch::la::Vector<Dimensions,int> counter = peano4::utils::dStartVector(dim,value); peano4::utils::dCmp(counter,max); peano4::utils::dInc(counter,max,dim) )
 
 
 /**
@@ -606,7 +606,7 @@ namespace peano4 {
  
  
 #define zfor(counter,max,direction) \
-  {for (tarch::la::Vector<Dimensions,int> counter = peano::utils::dStartVector(max,direction); peano::utils::dCmp(counter,max); peano::utils::dInc(counter,max,direction) ) {
+  {for (tarch::la::Vector<Dimensions,int> counter = peano4::utils::dStartVector(max,direction); peano4::utils::dCmp(counter,max); peano4::utils::dInc(counter,max,direction) ) {
 
 
 

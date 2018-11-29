@@ -27,7 +27,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   20/11/2018 19:30
+ * @date   27/11/2018 05:42
  */
 class peano4::grid::AutomatonState { 
    
@@ -39,6 +39,9 @@ class peano4::grid::AutomatonState {
          int _level;
          tarch::la::Vector<Dimensions,double> _x;
          tarch::la::Vector<Dimensions,double> _h;
+         bool _inverted;
+         std::bitset<Dimensions> _evenFlags;
+         tarch::la::Vector<DimensionsTimesTwo,short int> _accessNumber;
          /**
           * Generated
           */
@@ -47,7 +50,7 @@ class peano4::grid::AutomatonState {
          /**
           * Generated
           */
-         PersistentRecords(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h);
+         PersistentRecords(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber);
          
          /**
           * Generated
@@ -66,6 +69,24 @@ class peano4::grid::AutomatonState {
           tarch::la::Vector<Dimensions,double> getH() const ;
          
           void setH(const tarch::la::Vector<Dimensions,double>& h) ;
+         
+         /**
+          * Generated
+          */
+          bool getInverted() const ;
+         
+         /**
+          * Generated
+          */
+          void setInverted(const bool& inverted) ;
+         
+          std::bitset<Dimensions> getEvenFlags() const ;
+         
+          void setEvenFlags(const std::bitset<Dimensions>& evenFlags) ;
+         
+          tarch::la::Vector<DimensionsTimesTwo,short int> getAccessNumber() const ;
+         
+          void setAccessNumber(const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber) ;
          
          
       };
@@ -86,7 +107,7 @@ class peano4::grid::AutomatonState {
          /**
           * Generated
           */
-         AutomatonState(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h);
+         AutomatonState(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber);
          
          /**
           * Generated
@@ -118,6 +139,34 @@ class peano4::grid::AutomatonState {
           double getH(int elementIndex) const ;
          
           void setH(int elementIndex, const double& h) ;
+         
+         /**
+          * Generated
+          */
+          bool getInverted() const ;
+         
+         /**
+          * Generated
+          */
+          void setInverted(const bool& inverted) ;
+         
+          std::bitset<Dimensions> getEvenFlags() const ;
+         
+          void setEvenFlags(const std::bitset<Dimensions>& evenFlags) ;
+         
+          bool getEvenFlags(int elementIndex) const ;
+         
+          void setEvenFlags(int elementIndex, const bool& evenFlags) ;
+         
+          void flipEvenFlags(int elementIndex) ;
+         
+          tarch::la::Vector<DimensionsTimesTwo,short int> getAccessNumber() const ;
+         
+          void setAccessNumber(const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber) ;
+         
+          short int getAccessNumber(int elementIndex) const ;
+         
+          void setAccessNumber(int elementIndex, const short int& accessNumber) ;
          
          /**
           * Generated
@@ -182,7 +231,7 @@ class peano4::grid::AutomatonState {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   20/11/2018 19:30
+ * @date   27/11/2018 05:42
  */
 class peano4::grid::AutomatonStatePacked { 
    
@@ -192,6 +241,15 @@ class peano4::grid::AutomatonStatePacked {
          int _level;
          tarch::la::Vector<Dimensions,double> _x;
          tarch::la::Vector<Dimensions,double> _h;
+         tarch::la::Vector<DimensionsTimesTwo,short int> _accessNumber;
+         
+         /** mapping of records:
+         || Member 	|| startbit 	|| length
+          |  inverted	| startbit 0	| #bits 1
+          |  evenFlags	| startbit 1	| #bits Dimensions
+          */
+         short int _packedRecords0;
+         
          /**
           * Generated
           */
@@ -200,7 +258,7 @@ class peano4::grid::AutomatonStatePacked {
          /**
           * Generated
           */
-         PersistentRecords(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h);
+         PersistentRecords(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber);
          
          /**
           * Generated
@@ -219,6 +277,24 @@ class peano4::grid::AutomatonStatePacked {
           tarch::la::Vector<Dimensions,double> getH() const ;
          
           void setH(const tarch::la::Vector<Dimensions,double>& h) ;
+         
+         /**
+          * Generated
+          */
+          bool getInverted() const ;
+         
+         /**
+          * Generated
+          */
+          void setInverted(const bool& inverted) ;
+         
+          std::bitset<Dimensions> getEvenFlags() const ;
+         
+          void setEvenFlags(const std::bitset<Dimensions>& evenFlags) ;
+         
+          tarch::la::Vector<DimensionsTimesTwo,short int> getAccessNumber() const ;
+         
+          void setAccessNumber(const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber) ;
          
          
       };
@@ -239,7 +315,7 @@ class peano4::grid::AutomatonStatePacked {
          /**
           * Generated
           */
-         AutomatonStatePacked(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h);
+         AutomatonStatePacked(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber);
          
          /**
           * Generated
@@ -271,6 +347,34 @@ class peano4::grid::AutomatonStatePacked {
           double getH(int elementIndex) const ;
          
           void setH(int elementIndex, const double& h) ;
+         
+         /**
+          * Generated
+          */
+          bool getInverted() const ;
+         
+         /**
+          * Generated
+          */
+          void setInverted(const bool& inverted) ;
+         
+          std::bitset<Dimensions> getEvenFlags() const ;
+         
+          void setEvenFlags(const std::bitset<Dimensions>& evenFlags) ;
+         
+          bool getEvenFlags(int elementIndex) const ;
+         
+          void setEvenFlags(int elementIndex, const bool& evenFlags) ;
+         
+          void flipEvenFlags(int elementIndex) ;
+         
+          tarch::la::Vector<DimensionsTimesTwo,short int> getAccessNumber() const ;
+         
+          void setAccessNumber(const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber) ;
+         
+          short int getAccessNumber(int elementIndex) const ;
+         
+          void setAccessNumber(int elementIndex, const short int& accessNumber) ;
          
          /**
           * Generated
