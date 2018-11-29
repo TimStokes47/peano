@@ -27,7 +27,7 @@
     enum {value = 1};
   };
 
-  #define DimensionsTimesTwo (BasePowerExponent<2,Dimensions>::value*2)
+  #define DimensionsTimesTwo (Dimensions*2)
 
   #define TwoPowerD          (BasePowerExponent<2,Dimensions>::value)
   #define TwoPowerDPlusTwo   (BasePowerExponent<2,Dimensions>::value+2)

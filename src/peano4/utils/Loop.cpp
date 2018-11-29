@@ -87,6 +87,17 @@ int peano4::utils::dLinearisedWithoutLookup( const tarch::la::Vector<Dimensions,
 }
 
 
+int peano4::utils::dLinearised( const std::bitset<Dimensions>& counter ) {
+  int result = 0;
+  int base   = 1;
+  for (int d=0; d<Dimensions; d++) {
+	result += (counter[d] ? 1 : 0) * base;
+    base   *= 2;
+  }
+  return result;
+}
+
+
 int peano4::utils::dLinearised( const tarch::la::Vector<Dimensions,int>& counter, int max ) {
   #ifdef DloopOptimiseAggressive
     assertionEquals3(LookupTableDLinearised[getKeyForDLinearised(counter,max)], dLinearisedNotOptimised(counter,max), counter,max,getKeyForDLinearised(counter,max));

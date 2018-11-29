@@ -27,6 +27,30 @@ class peano4::grid::Spacetree {
   private:
     static tarch::logging::Log  _log;
 
+    enum class VertexType {
+      New,
+	  Hanging,
+	  Persistent,
+	  Delete
+    };
+
+    static std::string toString( VertexType type );
+
+    /**
+     * Simple recursive type analysis
+     *
+     * <h2> Merge semantics </h2>
+     *
+     * We run over the parent vertices and merge along the faces (per
+     * dimension). The priority of flags should be taken from the code
+     * directly.
+     */
+    static VertexType getVertexType(
+      GridVertex                         coarseGridVertices[TwoPowerD],
+      tarch::la::Vector<Dimensions,int>  position,
+	  int                                dimension = Dimensions-1
+    );
+
     /**
      * The root of a spacetree corresponds to the initial state of the tree
      * traversal automaton. So we reuse the object here. It is basically the
@@ -34,7 +58,7 @@ class peano4::grid::Spacetree {
      */
     AutomatonState _root;
 
-    std::vector< GridVertex >  _vertexStack[TwoPowerDPlusTwo];
+    std::vector< GridVertex >  _vertexStack[Dimensions*2+2];
 
     Spacetree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width);
 
@@ -43,13 +67,49 @@ class peano4::grid::Spacetree {
 	  GridVertex            vertices[TwoPowerD]
     );
 
+    /**
+     * A spacetree node is refined if any of its adjacent vertices holds a
+     * refining or refinement-triggered flag.
+     */
     static bool isSpacetreeNodeRefined(GridVertex  vertices[TwoPowerD]);
 
-    static void refineState(const AutomatonState& coarseGrid, AutomatonState fineGrid[ThreePowerD] );
-    static void refineState(const AutomatonState& coarseGrid, AutomatonState fineGrid[ThreePowerD], tarch::la::Vector<Dimensions,int>  fineGridPosition, int  axis );
+    /**
+     * Takes a state (describing a node in the tree) and returns the
+     * @f$ 3^d @f$ states on the next finer level along the Peano SFC. This
+     * routine is basically the grammar generation of Bader et al. It relies
+     * internally on a recursive call of the other refineState() routine
+     * along the spatial dimensions.
+     */
+    static void refineState(
+      const AutomatonState&              coarseGrid,
+	  AutomatonState                     fineGrid[ThreePowerD],
+	  tarch::la::Vector<Dimensions,int>  fineGridPosition = tarch::la::Vector<Dimensions,int>(0),
+	  int                                axis = Dimensions-1
+	);
 
-    static void loadVertices(  const AutomatonState& state, GridVertex  vertices[TwoPowerD]);
-    static void storeVertices( const AutomatonState& state, GridVertex  vertices[TwoPowerD]);
+    /**
+     * Load the vertices of one cell
+     *
+     * The load process has to be done along the local order of the Peano
+     * SFC. For this, I rely on PeanoCurve::getFirstVertexIndex().
+     */
+    void loadVertices(
+      const AutomatonState&                        fineGridState,
+	  GridVertex                                   coarseGridVertices[TwoPowerD],
+	  GridVertex                                   fineGridVertices[TwoPowerD],
+	  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch
+	);
+    void storeVertices(
+      const AutomatonState&                        fineGridState,
+	  GridVertex                                   coarseGridVertices[TwoPowerD],
+	  GridVertex                                   fineGridVertices[TwoPowerD],
+	  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch
+    );
+
+    /**
+     * Little helper. Should likely go into la or utils.
+     */
+    static tarch::la::Vector<Dimensions,int> convertToIntegerVector( const std::bitset<Dimensions>& in );
   public:
     static Spacetree createTrivialTree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width);
 

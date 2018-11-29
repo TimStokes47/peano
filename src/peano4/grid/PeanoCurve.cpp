@@ -2,21 +2,6 @@
 #include "AutomatonState.h"
 
 
-int peano4::grid::PeanoCurve::lineariseCellIndex( const tarch::la::Vector<Dimensions,int>& cellPosition ) {
-  int base   = 1;
-  int result = 0;
-  for (int d=0; d<Dimensions; d++) {
-    assertion1(cellPosition(d)>=0,cellPosition);
-    assertion1(cellPosition(d)<=2,cellPosition);
-    result += cellPosition(d)*base;
-    base   *= 3;
-  }
-  assertion( result>= 0 );
-  assertion( result< ThreePowerD );
-  return result;
-}
-
-
 bool peano4::grid::PeanoCurve::isTraversePositiveAlongAxis(
   const AutomatonState&  state,
   int                    axis
@@ -95,6 +80,30 @@ void peano4::grid::PeanoCurve::removeFaceAccessNumber(AutomatonState& cell, int 
 }
 
 
+std::bitset<Dimensions> peano4::grid::PeanoCurve::getFirstVertexIndex( const AutomatonState& cell ) {
+  std::bitset<Dimensions> result;
+  std::bitset<Dimensions> currentMask;
+
+  for (int i=0; i<Dimensions; i++) {
+    if ( cell.getEvenFlags(i) ) {
+      currentMask[i] = true;
+      currentMask.flip();
+
+      result ^= currentMask;
+
+      currentMask.flip();
+      currentMask[i] = false;
+    }
+  }
+
+  if (cell.getInverted()) {
+	result.flip();
+  }
+
+  return result;
+}
+
+
 void peano4::grid::PeanoCurve::setFaceAccessNumber(AutomatonState& cell, int face, int value) {
   assertion( face >= 0 );
   assertion( face < 2*Dimensions );
@@ -116,3 +125,48 @@ void peano4::grid::PeanoCurve::setFaceAccessNumber(AutomatonState& cell, int fac
   cell.setAccessNumber(accessNumber);
 }
 
+
+int peano4::grid::PeanoCurve::getReadStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex ) {
+  int smallestValue = -2*Dimensions-1;
+  int result       = cell.getInverted() ? -1 : -2;
+  int direction     = -1;
+
+  for (int d=0; d<Dimensions; d++) {
+    const int face = vertex[d]==0 ? d : d+Dimensions;
+    const int faceAccessNumber = cell.getAccessNumber(face);
+    if (faceAccessNumber<0 && faceAccessNumber>smallestValue) {
+      result        = face;
+      smallestValue = faceAccessNumber;
+      direction     = d;
+    }
+  }
+
+  if ( direction>=0 and cell.getEvenFlags(direction) ) {
+    result = result<Dimensions ? result+Dimensions : result-Dimensions;
+  }
+
+  return result+2;
+}
+
+
+int peano4::grid::PeanoCurve::getWriteStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex ) {
+  int biggestValue = 2*Dimensions+1;
+  int result       = cell.getInverted() ? -2 : -1;
+  int direction    = -1;
+
+  for (int d=0; d<Dimensions; d++) {
+    const int face = vertex[d]==0 ? d : d+Dimensions;
+    const int faceAccessNumber = cell.getAccessNumber(face);
+    if (faceAccessNumber>0 && faceAccessNumber<biggestValue) {
+      result       = face;
+      biggestValue = faceAccessNumber;
+      direction    = d;
+    }
+  }
+
+  if ( direction>=0 and cell.getEvenFlags(direction) ) {
+    result = result<Dimensions ? result+Dimensions : result-Dimensions;
+  }
+
+  return result+2;
+}

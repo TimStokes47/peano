@@ -118,6 +118,7 @@ namespace peano4 {
      *         multiplied by max^k and the results are accumulated.
      */
     int dLinearised( const tarch::la::Vector<Dimensions,int>& counter, int max );
+    int dLinearised( const std::bitset<Dimensions>& counter );
 
     /**
      * Special 2d variant of dLinearised that works also if you compile with other
@@ -618,22 +619,23 @@ namespace peano4 {
  * the standard zfor is used instead
  */
 #if Dimensions == 2
-  static const int lookupzfor[4][9][2] = {
-  {{2,2},{1,2},{0,2},{0,1},{1,1},{2,1},{2,0},{1,0},{0,0}},
-    {{0,2},{1,2},{2,2},{2,1},{1,1},{0,1},{0,0},{1,0},{2,0}},
-    {{2,0},{1,0},{0,0},{0,1},{1,1},{2,1},{2,2},{1,2},{0,2}},
-    {{0,0},{1,0},{2,0},{2,1},{1,1},{0,1},{0,2},{1,2},{2,2}}
-  };
+ // first entry is direction, second entry is cell, third entry is tuples
+ static const int lookupzfor3[4][9][2] = {
+ {{2,2},{1,2},{0,2},{0,1},{1,1},{2,1},{2,0},{1,0},{0,0}},
+   {{0,2},{1,2},{2,2},{2,1},{1,1},{0,1},{0,0},{1,0},{2,0}},
+   {{2,0},{1,0},{0,0},{0,1},{1,1},{2,1},{2,2},{1,2},{0,2}},
+   {{0,0},{1,0},{2,0},{2,1},{1,1},{0,1},{0,2},{1,2},{2,2}}
+ };
 
-#define zfor3(counter, direction) \
+ #define zfor3(counter, direction) \
   { tarch::la::Vector<Dimensions,int> counter; \
-    int counter##initDir = static_cast<int>(direction.to_ulong()); \
-    for (int counter##i = 0; counter##i < 9; ++counter##i) { \
-      counter(0) = lookupzfor[counter##initDir][counter##i][0]; \
-      counter(1) = lookupzfor[counter##initDir][counter##i][1]; 
+   int counter##initDir = static_cast<int>(direction.to_ulong()); \
+   for (int counter##i = 0; counter##i < 9; ++counter##i) { \
+     counter(0) = lookupzfor3[counter##initDir][counter##i][0]; \
+     counter(1) = lookupzfor3[counter##initDir][counter##i][1];
 
 #elif Dimensions == 3
-  static const int lookupzfor[8][27][3] = {
+  static const int lookupzfor3[8][27][3] = {
   {{2,2,2},{1,2,2},{0,2,2},{0,1,2},{1,1,2},{2,1,2},{2,0,2},{1,0,2},{0,0,2},{0,0,1},{1,0,1},{2,0,1},{2,1,1},{1,1,1},{0,1,1},{0,2,1},{1,2,1},{2,2,1},{2,2,0},{1,2,0},{0,2,0},{0,1,0},{1,1,0},{2,1,0},{2,0,0},{1,0,0},{0,0,0}},
     {{0,2,2},{1,2,2},{2,2,2},{2,1,2},{1,1,2},{0,1,2},{0,0,2},{1,0,2},{2,0,2},{2,0,1},{1,0,1},{0,0,1},{0,1,1},{1,1,1},{2,1,1},{2,2,1},{1,2,1},{0,2,1},{0,2,0},{1,2,0},{2,2,0},{2,1,0},{1,1,0},{0,1,0},{0,0,0},{1,0,0},{2,0,0}},
     {{2,0,2},{1,0,2},{0,0,2},{0,1,2},{1,1,2},{2,1,2},{2,2,2},{1,2,2},{0,2,2},{0,2,1},{1,2,1},{2,2,1},{2,1,1},{1,1,1},{0,1,1},{0,0,1},{1,0,1},{2,0,1},{2,0,0},{1,0,0},{0,0,0},{0,1,0},{1,1,0},{2,1,0},{2,2,0},{1,2,0},{0,2,0}},
@@ -648,9 +650,9 @@ namespace peano4 {
   { tarch::la::Vector<Dimensions,int> counter; \
     int counter##initDir = static_cast<int>(direction.to_ulong()); \
     for (int counter##i = 0; counter##i < 27; ++counter##i) { \
-      counter(0) = lookupzfor[counter##initDir][counter##i][0]; \
-      counter(1) = lookupzfor[counter##initDir][counter##i][1]; \
-      counter(2) = lookupzfor[counter##initDir][counter##i][2]; 
+      counter(0) = lookupzfor3[counter##initDir][counter##i][0]; \
+      counter(1) = lookupzfor3[counter##initDir][counter##i][1]; \
+      counter(2) = lookupzfor3[counter##initDir][counter##i][2];
 
 #else
 #define zfor3(counter, direction) \

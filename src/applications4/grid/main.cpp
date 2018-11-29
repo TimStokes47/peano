@@ -38,8 +38,9 @@ int main(int argc, char** argv) {
     {1.0, 1.0}
   );
 
-  spacetree.traverse();
-//  spacetree.traverse();
+  for (int i=0; i<3; i++) {
+    spacetree.traverse();
+  }
 
   return 0;
 }

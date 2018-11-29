@@ -8,8 +8,8 @@ Constant: TwoPowerD;
 
 class peano4::grid::GridVertex {
   enum State {
-    HangingVertex,Unrefined,Refined,RefinementTriggered,
-    Refining,EraseTriggered,Erasing
+    HangingVertex,
+    Unrefined,Refined,RefinementTriggered,Refining,EraseTriggered,Erasing
   };
   
   persistent parallelise packed State  state;
