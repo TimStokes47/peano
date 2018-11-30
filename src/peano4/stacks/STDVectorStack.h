@@ -286,7 +286,10 @@ class peano4::stacks::STDVectorStack {
 
       _currentElement+=numberOfVertices;
 
-      assertion4( _currentElement < static_cast<int>(_container.size()), _currentElement, static_cast<int>(_container.size()), numberOfVertices, getMaxSize() );
+      if (static_cast<int>(_data.size())<_currentElement) {
+    	assertionMsg( false, "look up whether resize is the correct function" );
+    	_data.resize(_currentElement);
+      }
 
       return result;
     }

@@ -7,6 +7,7 @@
 
 #include "AutomatonState.h"
 #include "GridVertex.h"
+#include "GridStatistics.h"
 
 
 #include "tarch/logging/Log.h"
@@ -60,7 +61,11 @@ class peano4::grid::Spacetree {
      * traversal automaton. So we reuse the object here. It is basically the
      * bounding box.
      */
-    AutomatonState _root;
+    AutomatonState   _root;
+
+    GridStatistics   _statistics;
+
+    void clearStatistics();
 
     static constexpr int MaxNumberOfStacks = Dimensions*2+2;
     peano4::stacks::GridVertexStack  _vertexStack[MaxNumberOfStacks];
@@ -127,6 +132,8 @@ class peano4::grid::Spacetree {
      * stream, i.e. we touch it for the very first time.
      */
     void updateVertexAfterLoad( GridVertex& vertex );
+
+    static void updateVertexRanksWithinCell( GridVertex fineGridVertices[TwoPowerD] );
   public:
     Spacetree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width);
 

@@ -15,6 +15,7 @@ namespace peano4 {
   * <pre>
 java -jar DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator GridVertex.def  .
 java -jar DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator AutomatonState.def  .
+java -jar DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator GridStatistics.def  .
     </pre>
   *
   */

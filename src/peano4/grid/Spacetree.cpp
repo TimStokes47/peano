@@ -25,6 +25,8 @@ peano4::grid::Spacetree::Spacetree(const tarch::la::Vector<Dimensions,double>& o
 void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
   logTraceIn( "traverse()" );
 
+  clearStatistics();
+
   observer.beginTraversal();
 
   const bool isFirstTraversal = _vertexStack[0].empty() and _vertexStack[1].empty();
@@ -212,18 +214,31 @@ std::string peano4::grid::Spacetree::toString( VertexType type ) {
 
 void peano4::grid::Spacetree::updateVertexAfterLoad( GridVertex& vertex ) {
   logTraceInWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
+
   if (vertex.getState()==GridVertex::State::RefinementTriggered) {
     vertex.setState( GridVertex::State::Refining );
+    _statistics.setNumberOfRefiningVertices( _statistics.getNumberOfRefiningVertices()+1 );
   }
   else if (vertex.getState()==GridVertex::State::Refining) {
     vertex.setState( GridVertex::State::Refined );
   }
   else if (vertex.getState()==GridVertex::State::EraseTriggered) {
     vertex.setState( GridVertex::State::Erasing );
+    _statistics.setNumberOfErasingVertices( _statistics.getNumberOfErasingVertices()+1 );
   }
   else if (vertex.getState()==GridVertex::State::Erasing) {
     vertex.setState( GridVertex::State::Unrefined );
   }
+
+  if (vertex.getState()==GridVertex::State::Refined) {
+    _statistics.setNumberOfRefinedVertices( _statistics.getNumberOfRefinedVertices()+1 );
+  }
+  if (vertex.getState()==GridVertex::State::Unrefined) {
+    _statistics.setNumberOfUnrefinedVertices( _statistics.getNumberOfUnrefinedVertices()+1 );
+  }
+
+  vertex.setAdjacentRanksOfPreviousIteration( vertex.getAdjacentRanks() );
+
   logTraceOutWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
 }
 
@@ -373,6 +388,22 @@ void peano4::grid::Spacetree::storeVertices(
 }
 
 
+void peano4::grid::Spacetree::clearStatistics() {
+  _statistics.setNumberOfRefinedVertices( 0 );
+  _statistics.setNumberOfUnrefinedVertices( 0 );
+  _statistics.setNumberOfErasingVertices( 0 );
+  _statistics.setNumberOfRefiningVertices( 0 );
+}
+
+
+void peano4::grid::Spacetree::updateVertexRanksWithinCell( GridVertex fineGridVertices[TwoPowerD] ) {
+  const int myRank = 4;
+  dfor2(k)
+    fineGridVertices[kScalar].setAdjacentRanks(TwoPowerD-kScalar-1,myRank);
+  enddforx
+}
+
+
 void peano4::grid::Spacetree::descend(
   const AutomatonState& state,
   GridVertex            vertices[TwoPowerD],
@@ -404,8 +435,14 @@ void peano4::grid::Spacetree::descend(
     GridVertex fineGridVertices[TwoPowerD];
     loadVertices(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k);
 
+    updateVertexRanksWithinCell( fineGridVertices );
+
     // enter cell event
-    observer.enterCell( fineGridStates[peano4::utils::dLinearised(k,3)].getX(), fineGridStates[peano4::utils::dLinearised(k,3)].getH() );
+    observer.enterCell(
+      fineGridStates[peano4::utils::dLinearised(k,3)].getX(),
+	  fineGridStates[peano4::utils::dLinearised(k,3)].getH(),
+	  isSpacetreeNodeRefined(fineGridVertices)
+	);
 
     if (isSpacetreeNodeRefined(fineGridVertices)) {
       descend(

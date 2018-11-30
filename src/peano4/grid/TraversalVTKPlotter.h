@@ -31,12 +31,13 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
   private:
     static tarch::logging::Log  _log;
 
-    const std::string                                                              _filename;
-    int                                                                            _counter;
-    tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter*                _writer;
-    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*  _vertexWriter;
-    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*    _cellWriter;
-    tarch::plotter::griddata::VTUTimeSeriesWriter                                  _timeSeriesWriter;
+    const std::string                                                                _filename;
+    int                                                                              _counter;
+    tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter*                  _writer;
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*    _vertexWriter;
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*      _cellWriter;
+//    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*  _cellWriter;
+    tarch::plotter::griddata::VTUTimeSeriesWriter                                    _timeSeriesWriter;
   public:
     TraversalVTKPlotter( const std::string& filename );
 
@@ -45,7 +46,8 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 
 	void enterCell(
       const tarch::la::Vector<Dimensions,double>& x,
-      const tarch::la::Vector<Dimensions,double>& h
+      const tarch::la::Vector<Dimensions,double>& h,
+	  bool                                        isRefined
     ) override;
 };
 
