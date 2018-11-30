@@ -65,12 +65,12 @@ bool peano4::grid::Spacetree::isSpacetreeNodeRefined(GridVertex  vertices[TwoPow
 }
 
 
-void peano4::grid::Spacetree::refineState(const AutomatonState& coarseGrid, AutomatonState fineGrid[ThreePowerD], tarch::la::Vector<Dimensions,int>  fineGridPosition, int  axis ) {
+void peano4::grid::Spacetree::refineState(const AutomatonState& coarseGrid, AutomatonState fineGridStates[ThreePowerD], tarch::la::Vector<Dimensions,int>  fineGridStatesPosition, int  axis ) {
   if (axis == -1) {
-    int arrayIndex       = peano4::utils::dLinearised(fineGridPosition,3);
-	fineGrid[arrayIndex] = coarseGrid;
-	fineGrid[arrayIndex].setLevel( coarseGrid.getLevel()+1 );
-	fineGrid[arrayIndex].setH( coarseGrid.getH()/3.0 );
+    int arrayIndex       = peano4::utils::dLinearised(fineGridStatesPosition,3);
+	fineGridStates[arrayIndex] = coarseGrid;
+	fineGridStates[arrayIndex].setLevel( coarseGrid.getLevel()+1 );
+	fineGridStates[arrayIndex].setH( coarseGrid.getH()/3.0 );
   }
   else {
     assertion( axis >= 0 );
@@ -81,21 +81,21 @@ void peano4::grid::Spacetree::refineState(const AutomatonState& coarseGrid, Auto
     AutomatonState thirdCell  = coarseGrid;
 
     PeanoCurve::setExitFace( firstCell, axis );
-    fineGridPosition(axis) = PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis)? 0:2;
+    fineGridStatesPosition(axis) = PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis)? 0:2;
     firstCell.setX(axis,coarseGrid.getX(axis) + PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis) ? 0.0 : 2.0 * coarseGrid.getH(axis)/3.0);
-    refineState(firstCell,fineGrid,fineGridPosition,axis-1);
+    refineState(firstCell,fineGridStates,fineGridStatesPosition,axis-1);
 
     PeanoCurve::invertEvenFlag( secondCell, axis );
     PeanoCurve::setEntryFace(   secondCell, axis );
     PeanoCurve::setExitFace(    secondCell, axis );
-    fineGridPosition(axis)= 1;
+    fineGridStatesPosition(axis)= 1;
     secondCell.setX(axis,coarseGrid.getX(axis) + coarseGrid.getH(axis)/3.0);
-    refineState(secondCell,fineGrid,fineGridPosition,axis-1);
+    refineState(secondCell,fineGridStates,fineGridStatesPosition,axis-1);
 
     PeanoCurve::setEntryFace( thirdCell, axis );
-    fineGridPosition(axis) = PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis)? 2:0;
+    fineGridStatesPosition(axis) = PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis)? 2:0;
     thirdCell.setX(axis,coarseGrid.getX(axis) + PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis) ? 2.0 * coarseGrid.getH(axis)/3.0 : 0.0);
-    refineState(thirdCell,fineGrid,fineGridPosition,axis-1);
+    refineState(thirdCell,fineGridStates,fineGridStatesPosition,axis-1);
   }
 }
 
@@ -142,6 +142,7 @@ peano4::grid::Spacetree::VertexType peano4::grid::Spacetree::getVertexType(
     return getVertexType(coarseGridVertices,position,dimension-1);
   }
 
+  logTraceInWith2Arguments( "getVertexType(...)", position, dimension );
   position(dimension)=0;
   peano4::grid::Spacetree::VertexType lhs = getVertexType(coarseGridVertices,position,dimension-1);
 
@@ -180,6 +181,7 @@ peano4::grid::Spacetree::VertexType peano4::grid::Spacetree::getVertexType(
 	result = VertexType::Persistent;
   }
 
+  logTraceOutWith1Argument( "getVertexType(...)", toString(result) );
   return result;
 }
 
@@ -197,35 +199,54 @@ std::string peano4::grid::Spacetree::toString( VertexType type ) {
 }
 
 
+void peano4::grid::Spacetree::updateVertexAfterLoad( GridVertex& vertex ) {
+  logTraceInWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
+  if (vertex.getState()==GridVertex::State::RefinementTriggered) {
+    vertex.setState( GridVertex::State::Refining );
+  }
+  else if (vertex.getState()==GridVertex::State::Refining) {
+    vertex.setState( GridVertex::State::Refined );
+  }
+  else if (vertex.getState()==GridVertex::State::EraseTriggered) {
+    vertex.setState( GridVertex::State::Erasing );
+  }
+  else if (vertex.getState()==GridVertex::State::Erasing) {
+    vertex.setState( GridVertex::State::Unrefined );
+  }
+  logTraceOutWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
+}
+
+
 void peano4::grid::Spacetree::loadVertices(
-  const AutomatonState&                        fineGridState,
+  const AutomatonState&                        fineGridStatesState,
   GridVertex                                   coarseGridVertices[TwoPowerD],
   GridVertex                                   fineGridVertices[TwoPowerD],
   const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch
 ) {
-  logTraceInWith1Argument( "loadVertices(...)", fineGridState.toString() );
+  logTraceInWith1Argument( "loadVertices(...)", fineGridStatesState.toString() );
 
-  const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(fineGridState);
+  const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(fineGridStatesState);
   for (int i=0; i<TwoPowerD; i++) {
     const std::bitset<Dimensions>           localVertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
     const tarch::la::Vector<Dimensions,int> localVertexPositionWithinPatch = cellPositionWithin3x3Patch + convertToIntegerVector(localVertexIndex);
 
     #ifdef PeanoDebug
-    const tarch::la::Vector<Dimensions,double> x = fineGridState.getX()
+    const tarch::la::Vector<Dimensions,double> x = fineGridStatesState.getX()
       + tarch::la::multiplyComponents(
           convertToIntegerVector(localVertexIndex).convertScalar<double>(),
-		  fineGridState.getH()
+		  fineGridStatesState.getH()
 	    );
     #endif
 
     VertexType type        = getVertexType(coarseGridVertices,localVertexPositionWithinPatch);
-    const int  stackNumber = PeanoCurve::getReadStackNumber(fineGridState,localVertexIndex);
-    if (
-      stackNumber>=1 and type==VertexType::New
-	  or
-      stackNumber>=1 and type==VertexType::Hanging
-	) {
+    const int  stackNumber = PeanoCurve::getReadStackNumber(fineGridStatesState,localVertexIndex);
+
+    // reset to persistent, as new vertex already has been generated
+    if ( not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::New ) {
       type = VertexType::Persistent;
+      logDebug(
+        "loadVertices(...)",
+		"reset stack flag for local vertex " << localVertexPositionWithinPatch << " from new to persistent" );
     }
 
     switch (type) {
@@ -237,7 +258,7 @@ void peano4::grid::Spacetree::loadVertices(
           #ifdef PeanoDebug
           ,
           x,                                          // const tarch::la::Vector<Dimensions,double>& x
-		  fineGridState.getLevel()                    // level
+		  fineGridStatesState.getLevel()                    // level
           #endif
 		);
     	break;
@@ -248,17 +269,23 @@ void peano4::grid::Spacetree::loadVertices(
           #ifdef PeanoDebug
           ,
           x,                                          // const tarch::la::Vector<Dimensions,double>& x
-		  fineGridState.getLevel()                    // level
+		  fineGridStatesState.getLevel()                    // level
           #endif
   		);
       	break;
       case VertexType::Persistent:
       case VertexType::Delete:
         {
-          assertion3( not _vertexStack[stackNumber].empty(), stackNumber, localVertexIndex, localVertexPositionWithinPatch );
           logDebug( "readVertices(...)", "read vertex from stack " << stackNumber );
+          assertion3( not _vertexStack[stackNumber].empty(), stackNumber, localVertexIndex, localVertexPositionWithinPatch );
           fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ]  = _vertexStack[stackNumber].back();
           _vertexStack[stackNumber].pop_back();
+          if ( PeanoCurve::isInOutStack(stackNumber)
+          // @todo
+          //or from boundary
+          ) {
+            updateVertexAfterLoad( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
+          }
         }
         break;
     }
@@ -272,40 +299,45 @@ void peano4::grid::Spacetree::loadVertices(
     assertionNumericalEquals3(
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(), x,
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].toString(),
-	  fineGridState.toString(), localVertexIndex
+	  fineGridStatesState.toString(), localVertexIndex
 	);
     assertionEquals3(
-      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getLevel(), fineGridState.getLevel(),
+      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getLevel(), fineGridStatesState.getLevel(),
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].toString(),
-	  fineGridState.toString(), localVertexIndex
+	  fineGridStatesState.toString(), localVertexIndex
 	);
   }
 
-  logTraceOutWith1Argument( "loadVertices(...)", fineGridState.toString() );
+  logTraceOutWith1Argument( "loadVertices(...)", fineGridStatesState.toString() );
 }
 
 
 void peano4::grid::Spacetree::storeVertices(
-  const AutomatonState&                        fineGridState,
+  const AutomatonState&                        fineGridStatesState,
   GridVertex                                   coarseGridVertices[TwoPowerD],
   GridVertex                                   fineGridVertices[TwoPowerD],
   const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch
 ) {
-  logTraceInWith1Argument( "storeVertices(...)", fineGridState.toString() );
+  logTraceInWith1Argument( "storeVertices(...)", fineGridStatesState.toString() );
 
-  const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(fineGridState);
+  const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(fineGridStatesState);
   for (int i=0; i<TwoPowerD; i++) {
     const std::bitset<Dimensions>           localVertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
     const tarch::la::Vector<Dimensions,int> localVertexPositionWithinPatch = cellPositionWithin3x3Patch + convertToIntegerVector(localVertexIndex);
 
-    const int   stackNumber = PeanoCurve::getWriteStackNumber(fineGridState,localVertexIndex);
+    const int   stackNumber = PeanoCurve::getWriteStackNumber(fineGridStatesState,localVertexIndex);
     VertexType  type        = getVertexType(coarseGridVertices,localVertexPositionWithinPatch);
+
+    // @todo Raus
     if (
-      stackNumber>=1 and type==VertexType::New
-	  or
-      stackNumber>=1 and type==VertexType::Hanging
+      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(0)<0.2 and
+      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(1)<0.2 and
+      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(0)>0.1 and
+      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(1)>0.1 and
+	  fineGridStatesState.getLevel()<5 and fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getState()==GridVertex::State::Unrefined and
+	  stackNumber<=1
 	) {
-      type = VertexType::Persistent;
+      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].setState( GridVertex::State::RefinementTriggered );
     }
 
     switch (type) {
@@ -328,7 +360,7 @@ void peano4::grid::Spacetree::storeVertices(
     }
   }
 
-  logTraceOutWith1Argument( "storeVertices(...)", fineGridState.toString() );
+  logTraceOutWith1Argument( "storeVertices(...)", fineGridStatesState.toString() );
 }
 
 
@@ -339,21 +371,30 @@ void peano4::grid::Spacetree::descend(
   assertion( isSpacetreeNodeRefined(vertices) );
   logTraceInWith1Argument( "descend(...)", state.toString() );
 
+  dfor2(k)
+    logDebug( "descend(...)", "-" << vertices[kScalar].toString() );
+  enddforx
+
   peano4::utils::LoopDirection loopDirection = PeanoCurve::getLoopDirection(state);
 
-  AutomatonState fineGrid[ThreePowerD];
-  refineState(state, fineGrid );
+  AutomatonState fineGridStates[ThreePowerD];
+  refineState(state, fineGridStates );
 
   zfor3(k,loopDirection)
     // load cell's vertices
     GridVertex fineGridVertices[TwoPowerD];
-    loadVertices(fineGrid[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k);
+    loadVertices(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k);
 
     // enter cell event
-    // if (isSpacetreeNodeRefined(vertices)) {
+    if (isSpacetreeNodeRefined(fineGridVertices)) {
+      descend(
+        fineGridStates[peano4::utils::dLinearised(k,3)],
+        fineGridVertices
+      );
+    }
     // leave Cell
 
-    storeVertices(fineGrid[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k);
+    storeVertices(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k);
   endzfor
 
   logTraceOut( "descend(...)" );

@@ -110,6 +110,16 @@ class peano4::grid::Spacetree {
      * Little helper. Should likely go into la or utils.
      */
     static tarch::la::Vector<Dimensions,int> convertToIntegerVector( const std::bitset<Dimensions>& in );
+
+    /**
+     * Implements the standard refinement status transition, i.e. a triggered
+     * becomes actually ing. And if a vertex has been refining or erasing in
+     * the previous sweep, we finally update it to refined or unrefined.
+     *
+     * This operation has to be called whenever we load a vertex from the input
+     * stream, i.e. we touch it for the very first time.
+     */
+    void updateVertexAfterLoad( GridVertex& vertex );
   public:
     static Spacetree createTrivialTree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width);
 

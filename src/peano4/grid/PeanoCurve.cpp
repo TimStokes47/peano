@@ -149,6 +149,11 @@ int peano4::grid::PeanoCurve::getReadStackNumber(const AutomatonState& cell, con
 }
 
 
+bool peano4::grid::PeanoCurve::isInOutStack( int number ) {
+  assertion1(number>=0,number);
+  return number==0 or number==1;
+}
+
 int peano4::grid::PeanoCurve::getWriteStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex ) {
   int biggestValue = 2*Dimensions+1;
   int result       = cell.getInverted() ? -2 : -1;

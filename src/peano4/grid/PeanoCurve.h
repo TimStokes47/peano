@@ -69,6 +69,8 @@ class peano4::grid::PeanoCurve {
      * @return 0 or 1 if it is about in/out stacks
      */
     static int getWriteStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex );
+
+    static bool isInOutStack( int number );
 };
 
 #endif
