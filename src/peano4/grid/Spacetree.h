@@ -18,6 +18,7 @@
 namespace peano4 {
   namespace grid {
     class Spacetree;
+    class TraversalObserver;
   }
 }
 
@@ -64,7 +65,8 @@ class peano4::grid::Spacetree {
 
     void descend(
       const AutomatonState& state,
-	  GridVertex            vertices[TwoPowerD]
+	  GridVertex            vertices[TwoPowerD],
+	  TraversalObserver&    observer
     );
 
     /**
@@ -123,7 +125,7 @@ class peano4::grid::Spacetree {
   public:
     static Spacetree createTrivialTree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width);
 
-    void traverse();
+    void traverse(TraversalObserver& observer);
 };
 
 

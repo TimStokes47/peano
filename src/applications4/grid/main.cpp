@@ -5,6 +5,8 @@
 
 #include "peano4/peano.h"
 #include "peano4/grid/Spacetree.h"
+#include "peano4/grid/TraversalVTKPlotter.h"
+#include "peano4/grid/EmptyTraversalObserver.h"
 
 
 tarch::logging::Log _log("grid");
@@ -38,8 +40,10 @@ int main(int argc, char** argv) {
     {1.0, 1.0}
   );
 
+  //peano4::grid::EmptyTraversalObserver observer;
+  peano4::grid::TraversalVTKPlotter observer( "grid" );
   for (int i=0; i<4; i++) {
-    spacetree.traverse();
+    spacetree.traverse( observer );
   }
 
   return 0;

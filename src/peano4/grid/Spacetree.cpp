@@ -1,5 +1,6 @@
 #include "Spacetree.h"
 #include "PeanoCurve.h"
+#include "TraversalObserver.h"
 
 
 #include "peano4/utils/Loop.h"
@@ -27,8 +28,10 @@ peano4::grid::Spacetree peano4::grid::Spacetree::createTrivialTree(const tarch::
 }
 
 
-void peano4::grid::Spacetree::traverse() {
+void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
   logTraceIn( "traverse()" );
+
+  observer.beginTraversal();
 
   const bool isFirstTraversal = _vertexStack[0].empty() and _vertexStack[1].empty();
   GridVertex vertices[TwoPowerD];
@@ -47,9 +50,11 @@ void peano4::grid::Spacetree::traverse() {
     logInfo( "createTrivialTree(...)", "create " << vertices[kScalar].toString() );
   enddforx
 
-  descend(_root,vertices);
+  descend(_root,vertices,observer);
 
   _root.setInverted( not _root.getInverted() );
+
+  observer.endTraversal();
 
   logTraceOut( "traverse()" );
 }
@@ -330,8 +335,8 @@ void peano4::grid::Spacetree::storeVertices(
 
     // @todo Raus
     if (
-      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(0)<0.2 and
-      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(1)<0.2 and
+      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(0)<0.4 and
+      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(1)<0.4 and
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(0)>0.1 and
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(1)>0.1 and
 	  fineGridStatesState.getLevel()<5 and fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getState()==GridVertex::State::Unrefined and
@@ -366,7 +371,8 @@ void peano4::grid::Spacetree::storeVertices(
 
 void peano4::grid::Spacetree::descend(
   const AutomatonState& state,
-  GridVertex            vertices[TwoPowerD]
+  GridVertex            vertices[TwoPowerD],
+  TraversalObserver&    observer
 ) {
   assertion( isSpacetreeNodeRefined(vertices) );
   logTraceInWith1Argument( "descend(...)", state.toString() );
@@ -386,10 +392,13 @@ void peano4::grid::Spacetree::descend(
     loadVertices(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k);
 
     // enter cell event
+    observer.enterCell( fineGridStates[peano4::utils::dLinearised(k,3)].getX(), fineGridStates[peano4::utils::dLinearised(k,3)].getH() );
+
     if (isSpacetreeNodeRefined(fineGridVertices)) {
       descend(
         fineGridStates[peano4::utils::dLinearised(k,3)],
-        fineGridVertices
+        fineGridVertices,
+		observer
       );
     }
     // leave Cell
