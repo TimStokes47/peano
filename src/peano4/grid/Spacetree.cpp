@@ -75,7 +75,6 @@ void peano4::grid::Spacetree::refineState(const AutomatonState& coarseGrid, Auto
     int arrayIndex       = peano4::utils::dLinearised(fineGridStatesPosition,3);
 	fineGridStates[arrayIndex] = coarseGrid;
 	fineGridStates[arrayIndex].setLevel( coarseGrid.getLevel()+1 );
-	fineGridStates[arrayIndex].setH( coarseGrid.getH()/3.0 );
   }
   else {
     assertion( axis >= 0 );
@@ -85,21 +84,34 @@ void peano4::grid::Spacetree::refineState(const AutomatonState& coarseGrid, Auto
     AutomatonState secondCell = coarseGrid;
     AutomatonState thirdCell  = coarseGrid;
 
-    PeanoCurve::setExitFace( firstCell, axis );
-    fineGridStatesPosition(axis) = PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis)? 0:2;
-    firstCell.setX(axis,coarseGrid.getX(axis) + PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis) ? 0.0 : 2.0 * coarseGrid.getH(axis)/3.0);
+    if (PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis)) {
+      PeanoCurve::setExitFace( firstCell, axis );
+    }
+    else {
+      PeanoCurve::setEntryFace( firstCell, axis );
+    }
+    firstCell.setH(axis, coarseGrid.getH(axis)/3.0 );
+    fineGridStatesPosition(axis) = 0;
+    firstCell.setX(axis,coarseGrid.getX(axis));
     refineState(firstCell,fineGridStates,fineGridStatesPosition,axis-1);
 
     PeanoCurve::invertEvenFlag( secondCell, axis );
     PeanoCurve::setEntryFace(   secondCell, axis );
     PeanoCurve::setExitFace(    secondCell, axis );
+    secondCell.setH(axis, coarseGrid.getH(axis)/3.0 );
     fineGridStatesPosition(axis)= 1;
     secondCell.setX(axis,coarseGrid.getX(axis) + coarseGrid.getH(axis)/3.0);
     refineState(secondCell,fineGridStates,fineGridStatesPosition,axis-1);
 
-    PeanoCurve::setEntryFace( thirdCell, axis );
-    fineGridStatesPosition(axis) = PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis)? 2:0;
-    thirdCell.setX(axis,coarseGrid.getX(axis) + PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis) ? 2.0 * coarseGrid.getH(axis)/3.0 : 0.0);
+    if (PeanoCurve::isTraversePositiveAlongAxis(coarseGrid,axis)) {
+      PeanoCurve::setEntryFace( thirdCell, axis );
+    }
+    else {
+      PeanoCurve::setExitFace( thirdCell, axis );
+    }
+    thirdCell.setH(axis, coarseGrid.getH(axis)/3.0 );
+    fineGridStatesPosition(axis) = 2;
+    thirdCell.setX( axis, coarseGrid.getX(axis) + 2.0 * coarseGrid.getH(axis)/3.0 );
     refineState(thirdCell,fineGridStates,fineGridStatesPosition,axis-1);
   }
 }
@@ -228,7 +240,7 @@ void peano4::grid::Spacetree::loadVertices(
   GridVertex                                   fineGridVertices[TwoPowerD],
   const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch
 ) {
-  logTraceInWith1Argument( "loadVertices(...)", fineGridStatesState.toString() );
+  logTraceInWith2Arguments( "loadVertices(...)", fineGridStatesState.toString(), cellPositionWithin3x3Patch );
 
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(fineGridStatesState);
   for (int i=0; i<TwoPowerD; i++) {
@@ -377,14 +389,23 @@ void peano4::grid::Spacetree::descend(
   assertion( isSpacetreeNodeRefined(vertices) );
   logTraceInWith1Argument( "descend(...)", state.toString() );
 
+  #if PeanoDebug>=2
   dfor2(k)
     logDebug( "descend(...)", "-" << vertices[kScalar].toString() );
   enddforx
+  #endif
 
   peano4::utils::LoopDirection loopDirection = PeanoCurve::getLoopDirection(state);
+  logDebug( "descend(...)", "- direction=" << loopDirection );
 
   AutomatonState fineGridStates[ThreePowerD];
   refineState(state, fineGridStates );
+
+  #if PeanoDebug>=2
+  dfor3(k)
+    logDebug( "descend(...)", "-" << fineGridStates[kScalar].toString() );
+  enddforx
+  #endif
 
   zfor3(k,loopDirection)
     // load cell's vertices

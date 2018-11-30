@@ -81,6 +81,9 @@ class peano4::grid::Spacetree {
      * routine is basically the grammar generation of Bader et al. It relies
      * internally on a recursive call of the other refineState() routine
      * along the spatial dimensions.
+     *
+     * The array fineGrid is filled along the Peano SFC. So you don't have to
+     * traverse the array with a zfor - a simple for is sufficient.
      */
     static void refineState(
       const AutomatonState&              coarseGrid,

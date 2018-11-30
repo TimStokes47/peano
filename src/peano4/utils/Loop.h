@@ -275,7 +275,7 @@ namespace peano4 {
  *
  * You usually use this macro with
  * \code
- * #pragma unroll(THREE_POWER_D)
+ * #pragma unroll(ThreePowerD)
  * \endcode
  * or
  * \code
@@ -288,7 +288,7 @@ namespace peano4 {
  * kScalar giving you k's value linearised.
  */
 #define dfor3(counter) \
-  for( int counter##Scalar=0; counter##Scalar<THREE_POWER_D; counter##Scalar++) { \
+  for( int counter##Scalar=0; counter##Scalar<ThreePowerD; counter##Scalar++) { \
     tarch::la::Vector<Dimensions,int> counter; \
     { \
     int   copy##counter##Scalar = counter##Scalar; \

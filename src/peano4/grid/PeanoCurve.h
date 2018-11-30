@@ -22,6 +22,10 @@ class peano4::grid::PeanoCurve {
 	  int                    axis
 	);
 
+    /**
+     * Holds a set bit for each dimension along which the traversal is
+     * positive.
+     */
 	static peano4::utils::LoopDirection getLoopDirection(
 	  const AutomatonState&  state
     );
