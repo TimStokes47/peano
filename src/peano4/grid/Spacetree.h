@@ -12,6 +12,9 @@
 #include "tarch/logging/Log.h"
 
 
+#include "peano4/stacks/stacks.h"
+
+
 #include <vector>
 
 
@@ -59,9 +62,8 @@ class peano4::grid::Spacetree {
      */
     AutomatonState _root;
 
-    std::vector< GridVertex >  _vertexStack[Dimensions*2+2];
-
-    Spacetree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width);
+    static constexpr int MaxNumberOfStacks = Dimensions*2+2;
+    peano4::stacks::GridVertexStack  _vertexStack[MaxNumberOfStacks];
 
     void descend(
       const AutomatonState& state,
@@ -126,7 +128,7 @@ class peano4::grid::Spacetree {
      */
     void updateVertexAfterLoad( GridVertex& vertex );
   public:
-    static Spacetree createTrivialTree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width);
+    Spacetree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width);
 
     void traverse(TraversalObserver& observer);
 };

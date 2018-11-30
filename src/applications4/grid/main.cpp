@@ -35,14 +35,14 @@ int main(int argc, char** argv) {
 
   peano4::fillLookupTables();
 
-  peano4::grid::Spacetree spacetree = peano4::grid::Spacetree::createTrivialTree(
+  peano4::grid::Spacetree spacetree(
     {0.0, 0.0},
     {1.0, 1.0}
   );
 
   //peano4::grid::EmptyTraversalObserver observer;
   peano4::grid::TraversalVTKPlotter observer( "grid" );
-  for (int i=0; i<4; i++) {
+  for (int i=0; i<10; i++) {
     spacetree.traverse( observer );
   }
 

@@ -22,12 +22,6 @@ peano4::grid::Spacetree::Spacetree(const tarch::la::Vector<Dimensions,double>& o
 }
 
 
-peano4::grid::Spacetree peano4::grid::Spacetree::createTrivialTree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width) {
-  Spacetree result(offset,width);
-  return result;
-}
-
-
 void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
   logTraceIn( "traverse()" );
 
@@ -295,12 +289,8 @@ void peano4::grid::Spacetree::loadVertices(
         {
           logDebug( "readVertices(...)", "read vertex from stack " << stackNumber );
           assertion3( not _vertexStack[stackNumber].empty(), stackNumber, localVertexIndex, localVertexPositionWithinPatch );
-          fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ]  = _vertexStack[stackNumber].back();
-          _vertexStack[stackNumber].pop_back();
-          if ( PeanoCurve::isInOutStack(stackNumber)
-          // @todo
-          //or from boundary
-          ) {
+          fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ]  = _vertexStack[stackNumber].pop();
+          if ( PeanoCurve::isInOutStack(stackNumber) ) {
             updateVertexAfterLoad( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
           }
         }
@@ -349,9 +339,11 @@ void peano4::grid::Spacetree::storeVertices(
     if (
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(0)<0.4 and
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(1)<0.4 and
+/*
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(0)>0.1 and
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(1)>0.1 and
-	  fineGridStatesState.getLevel()<5 and fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getState()==GridVertex::State::Unrefined and
+*/
+	  fineGridStatesState.getLevel()<4 and fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getState()==GridVertex::State::Unrefined and
 	  stackNumber<=1
 	) {
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].setState( GridVertex::State::RefinementTriggered );
@@ -365,7 +357,7 @@ void peano4::grid::Spacetree::storeVertices(
             "storeVertices(...)",
 			"write vertex " << fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].toString() << " to stack " << stackNumber
 		  );
-      	  _vertexStack[stackNumber].push_back( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
+      	  _vertexStack[stackNumber].push( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
         }
         break;
       case VertexType::Hanging:
