@@ -17,6 +17,7 @@
 
 
 #include <vector>
+#include <map>
 
 
 namespace peano4 {
@@ -29,6 +30,8 @@ namespace peano4 {
 
 
 class peano4::grid::Spacetree {
+  public:
+	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = 2 + Dimensions*2;
   private:
     static tarch::logging::Log  _log;
 
@@ -67,8 +70,7 @@ class peano4::grid::Spacetree {
 
     void clearStatistics();
 
-    static constexpr int MaxNumberOfStacks = Dimensions*2+2;
-    peano4::stacks::GridVertexStack  _vertexStack[MaxNumberOfStacks];
+    std::map< int, peano4::stacks::GridVertexStack >    _vertexStack;
 
     void descend(
       const AutomatonState& state,
