@@ -4,8 +4,8 @@
 #include <chrono>
 #include <thread>
 
+#include "../../tarch/multicore/Tasks.h"
 
-#include "tarch/multicore/Jobs.h"
 #include "tarch/Assertions.h"
 
 

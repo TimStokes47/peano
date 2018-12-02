@@ -14,7 +14,6 @@
 #include "peano4/utils/Globals.h"
 
 #include "tarch/la/Vector.h"
-#include "tarch/multicore/Loop.h"
 
 
 #include <bitset>

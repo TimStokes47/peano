@@ -9,6 +9,9 @@
 #include "peano4/grid/EmptyTraversalObserver.h"
 
 
+#include "peano4/parallel/SpacetreeSet.h"
+
+
 tarch::logging::Log _log("grid");
 
 
@@ -40,10 +43,22 @@ int main(int argc, char** argv) {
     {1.0, 1.0}
   );
 
-  //peano4::grid::EmptyTraversalObserver observer;
+  // serial version
+/*
   peano4::grid::TraversalVTKPlotter observer( "grid" );
   for (int i=0; i<10; i++) {
     spacetree.traverse( observer );
+  }
+*/
+
+  // parallel version
+  peano4::parallel::SpacetreeSet spacetreeSet;
+  spacetreeSet.addSpacetree( spacetree );
+  spacetreeSet.addSpacetree( spacetree ); // @todo muss natuerlich split sein
+//  peano4::grid::TraversalVTKPlotter observer( "grid" );
+  peano4::grid::EmptyTraversalObserver observer;
+  for (int i=0; i<10; i++) {
+    spacetreeSet.traverse( observer );
   }
 
   return 0;

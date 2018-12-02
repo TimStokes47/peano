@@ -43,7 +43,7 @@ tarch::multicore::Core& tarch::multicore::Core::getInstance() {
   return instance;
 }
 
-void tarch::multicore::Core::configure( int numberOfThreads ) {
+void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConcurrentBackgroundTasks, int maxNumberOfConcurrentBandwidthBoundTasks ) {
 }
 
 
@@ -58,6 +58,11 @@ bool tarch::multicore::Core::isInitialised() const {
 
 int tarch::multicore::Core::getNumberOfThreads() const {
   return 1;
+}
+
+
+int tarch::multicore::Core::getThreadNumber() const {
+  return 0;
 }
 
 #endif

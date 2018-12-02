@@ -5,9 +5,6 @@
 
 #include <string>
 
-#include "tarch/multicore/MulticoreDefinitions.h"
-#include "tarch/multicore/tbb/BooleanSemaphore.h"
-
 
 namespace tarch {
   namespace multicore {

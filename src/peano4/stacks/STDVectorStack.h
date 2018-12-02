@@ -36,17 +36,23 @@ class peano4::stacks::STDVectorStack {
 
     int                _currentElement;
 
-    /**
-     * One is not allowed to clone a stack.
-     */
-    STDVectorStack<T>( const STDVectorStack<T>& stack ) = delete;
-
-    /**
-     * One is not allowed to clone a stack.
-     */
-    STDVectorStack<T>&  operator=( const STDVectorStack<T>& stack ) = delete;
-
   public:
+    /**
+     * One is allowed to clone/copy a stack, but it has to be empty.
+     */
+    STDVectorStack<T>( const STDVectorStack<T>& stack ):
+      _currentElement(0) {
+      assertion( _currentElement==0 );
+    }
+
+    /**
+     * One is not allowed to copy a stack but it has to be empty.
+     */
+    STDVectorStack<T>&  operator=( const STDVectorStack<T>& stack ) {
+      assertion( _currentElement==0 );
+      assertion( stack._currentElement==0 );
+    }
+
     class PopBlockVertexStackView {
       private:
         /**

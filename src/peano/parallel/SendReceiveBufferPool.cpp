@@ -9,8 +9,6 @@
 #include "tarch/multicore/RecursiveLock.h"
 
 
-#include "tarch/multicore/Jobs.h"
-
 #include "peano/datatraversal/TaskSet.h"
 
 
@@ -18,6 +16,7 @@
 #include <chrono>
 #include <thread>
 
+#include "../../tarch/multicore/Tasks.h"
 #include "tarch/services/ServiceFactory.h"
 registerService(peano::parallel::SendReceiveBufferPool)
 

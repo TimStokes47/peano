@@ -7,6 +7,7 @@
 #include <thread>
 
 
+
 namespace tarch {
   namespace multicore {
     class Core;
@@ -20,15 +21,6 @@ namespace tarch {
     std::thread::id getThreadNumber();
   }
 }
-
-
-#if defined(SharedTBB)
-#include "tarch/multicore/tbb/Core.h"
-#elif SharedOMP
-#include "tarch/multicore/omp/Core.h"
-#elif SharedCPP
-#include "tarch/multicore/cpp/Core.h"
-#else
 
 
 /**
@@ -78,12 +70,12 @@ class tarch::multicore::Core {
      * using the number of standard threads.
      *
      *
-     * @param numberOfThreads Numer of threads that shall be used. This
+     * @param numberOfThreads Number of threads that shall be used. This
      *        parameter either is greater than zero (which defines the number
      *        of threads) or it equals DefaultNumberOfThreads which means that the code should
      *        use the default number of threads.
      */
-    void configure( int numberOfThreads );
+    void configure( int numberOfThreads, int maxNumberOfConcurrentBackgroundTasks, int maxNumberOfConcurrentBandwidthBoundTasks );
 
     /**
      * Shutdown parallel environment.
@@ -104,8 +96,9 @@ class tarch::multicore::Core {
      * @return Number of threads available.
      */
     int getNumberOfThreads() const;
+
+    int getThreadNumber() const;
 };
 
 
-#endif
 #endif

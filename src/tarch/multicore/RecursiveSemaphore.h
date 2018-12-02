@@ -1,11 +1,6 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#include "tarch/multicore/MulticoreDefinitions.h"
-
-#include "tarch/multicore/tbb/RecursiveSemaphore.h"
-
-
-#if !defined(_TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_) && !defined(SharedMemoryParallelisation)
+#if !defined(_TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_)
 #define _TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_
 
 #include <string>

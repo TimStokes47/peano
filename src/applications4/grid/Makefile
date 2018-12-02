@@ -14,10 +14,14 @@ else
 endif
 
 
+CFLAGS += -DSharedCPP
+LFLAGS += -lpthread
+
+
 all:	compile
 
 compile:	$(OBJS)
-	$(CXX) -o Peano-$(PROJECT_NAME) $^
+	$(CXX) -o Peano-$(PROJECT_NAME) $(LFLAGS) $^
 
 %.o:	%.cpp
 	$(CXX) -DDimensions=$(DIMENSIONS) -I$(PEANO_ROOT) -c $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -o $@ $<

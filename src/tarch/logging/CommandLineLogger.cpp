@@ -330,13 +330,13 @@ void tarch::logging::CommandLineLogger::indent( bool indent, const std::string& 
       indent
     );
     _indentTraces.pop();
-    #endif
     assertion5(
       _indent >= NumberOfIndentSpaces,
       _indent, NumberOfIndentSpaces,
       "more logTraceOut calls than logTraceIn calls invoked before",
       trace, message
     );
+    #endif
     _indent-=NumberOfIndentSpaces;
   }
   #endif

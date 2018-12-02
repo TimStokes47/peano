@@ -1,6 +1,6 @@
 #include "tarch/multicore/BooleanSemaphore.h"
 
-#include "Jobs.h"
+#include "Tasks.h"
 
 
 // This implementation is valid iff neither OpenMP nor TBBs nor any other

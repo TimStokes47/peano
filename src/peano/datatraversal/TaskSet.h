@@ -5,13 +5,11 @@
 
 #include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/logging/Log.h"
-#include "tarch/multicore/Jobs.h"
-
-
 #include "peano/performanceanalysis/Analysis.h"
 
 
 #include <functional>
+#include "../../tarch/multicore/Tasks.h"
 
 
 #if defined(TBBInvade)
