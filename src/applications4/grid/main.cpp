@@ -39,6 +39,8 @@ int main(int argc, char** argv) {
 
   peano4::fillLookupTables();
 
+  tarch::multicore::Core::getInstance().configure(4,2,1);
+
   peano4::grid::Spacetree spacetree(
     {0.0, 0.0},
     {1.0, 1.0}

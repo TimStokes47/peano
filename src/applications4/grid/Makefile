@@ -17,7 +17,9 @@ endif
 
 
 CFLAGS += -DSharedCPP
+#CFLAGS += -DSharedTBB -I/opt/intel/tbb/include
 LFLAGS += -lpthread
+#LFLAGS += -lpthread -L/opt/intel/tbb/lib/intel64/gcc4.7 -ltbb
 
 
 all:	compile

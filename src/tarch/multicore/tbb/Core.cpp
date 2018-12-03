@@ -10,6 +10,21 @@
 
 #if defined(SharedTBB)
 #include <sstream>
+#include "tarch/Assertions.h"
+
+
+// This seems to be an Intel requirement as this feature isnt' released yet officially.
+#define TBB_PREVIEW_GLOBAL_CONTROL 1
+#include <tbb/global_control.h>
+#include <tbb/task_scheduler_init.h>
+
+
+#include "Tasks.h"
+
+namespace {
+  ::tbb::global_control*      __globalThreadCountControl;
+  int                         __numberOfThreads;
+}
 
 
 tarch::multicore::Core::Core() {
@@ -17,6 +32,7 @@ tarch::multicore::Core::Core() {
 
 
 tarch::multicore::Core::~Core() {
+  shutDown();
 }
 
 
@@ -26,10 +42,32 @@ tarch::multicore::Core& tarch::multicore::Core::getInstance() {
 }
 
 void tarch::multicore::Core::configure( int numberOfThreads, int maxNumberOfConcurrentBackgroundTasks, int maxNumberOfConcurrentBandwidthBoundTasks ) {
+  shutDown();
+
+  if (numberOfThreads==UseDefaultNumberOfThreads) {
+    __numberOfThreads = tbb::task_scheduler_init::default_num_threads();
+  }
+  else if (numberOfThreads==UseMaximumNumberOfAvailableThreads) {
+    __numberOfThreads = std::thread::hardware_concurrency();
+  }
+  else {
+    __numberOfThreads = numberOfThreads;
+  }
+
+  __globalThreadCountControl = new tbb::global_control(tbb::global_control::max_allowed_parallelism,__numberOfThreads);
+
+  internal::setMaxNumberOfConcurrentBackgroundTasks(maxNumberOfConcurrentBackgroundTasks);
+  internal::setMaxNumberOfConcurrentHighBandwidthTasks(maxNumberOfConcurrentBandwidthBoundTasks);
 }
 
 
 void tarch::multicore::Core::shutDown() {
+  if (__globalThreadCountControl!=nullptr) {
+    delete __globalThreadCountControl;
+    __globalThreadCountControl = nullptr;
+  }
+
+  __numberOfThreads = -1;
 }
 
 
@@ -39,8 +77,8 @@ bool tarch::multicore::Core::isInitialised() const {
 
 
 int tarch::multicore::Core::getNumberOfThreads() const {
-	// @todo
-  return std::thread::hardware_concurrency();
+  assertion( isInitialised() );
+  return __numberOfThreads;
 }
 
 
