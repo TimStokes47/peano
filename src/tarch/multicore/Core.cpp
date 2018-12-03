@@ -9,16 +9,6 @@
 
 
 
-int tarch::multicore::getCPUNumber() {
-  #ifdef CompilerHasSysinfo
-  return sched_getcpu();
-  #else
-  //  https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
-  return 1;
-  #endif
-}
-
-
 
 std::thread::id tarch::multicore::getThreadNumber() {
   return std::this_thread::get_id();
@@ -61,8 +51,18 @@ int tarch::multicore::Core::getNumberOfThreads() const {
 }
 
 
-int tarch::multicore::Core::getThreadNumber() const {
-  return 0;
+std::string tarch::multicore::Core::getThreadId() const {
+  return "master";
+}
+
+
+int tarch::multicore::Core::getCoreNumber() const {
+  #ifdef CompilerHasSysinfo
+  return sched_getcpu();
+  #else
+  //  https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
+  return 1;
+  #endif
 }
 
 #endif

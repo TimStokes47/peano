@@ -97,7 +97,12 @@ class tarch::multicore::Core {
      */
     int getNumberOfThreads() const;
 
-    int getThreadNumber() const;
+    std::string getThreadId() const;
+
+    /**
+     * @return Physical core the process is running on
+     */
+    int getCoreNumber() const;
 };
 
 
