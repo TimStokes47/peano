@@ -110,6 +110,7 @@ void tarch::multicore::jobs::internal::JobConsumerTask::enqueue() {
 tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
 #ifdef USE_ITAC
+   // static tarch::logging::Log _log( "tarch::multicore::jobs::internal" );
     static int event_execute = -1;
     std::string event_execute_name = "execute_consumer";
     if(event_execute == -1)
@@ -220,6 +221,8 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     and
 	internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) < internal::_minimalNumberOfJobsPerConsumerRun
   ) {
+    //if( internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber==0))
+    //logInfo("jobs","starving consumer size"<<internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)<<" consumers "<<internal::_numberOfRunningJobConsumerTasks.load()<< " old consumers"<<oldNumberOfConsumerTasks);
     // starve
   }
   // It is very important not to directly spawn a consumer here, as otherwise
@@ -231,7 +234,15 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 	internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)>0
   ) {
     enqueue();
+    //logInfo("jobs", "enqueued new consumer");
   }
+  else {
+    //logInfo("jobs", "starving for no if applies: hasProcessed "<<hasProcessedJobs<< " size "<<internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber));
+  }
+
+
+  //if(internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)==1 && internal::_numberOfRunningJobConsumerTasks.load()==0 )
+  // logInfo("jobs", " queue size: 1"<< " consumers 0"<<" oldConsumers "<<oldNumberOfConsumerTasks<<" hasProcessed "<<hasProcessedJobs);
 
   if (oldNumberOfConsumerTasks==1) {
     internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize    = internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize*0.9;
@@ -417,7 +428,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 
     const int currentlyRunningBackgroundThreads = internal::_numberOfRunningJobConsumerTasks.load();
     if (
-      currentlyRunningBackgroundThreads==0
+      currentlyRunningBackgroundThreads<=1
     ) {
       internal::JobConsumerTask::enqueue();
     }
@@ -530,6 +541,10 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
       }
     }
     #endif
+
+    if(result && internal::_numberOfRunningJobConsumerTasks.load()==0) {
+      internal::JobConsumerTask::enqueue();
+    }
 
     return result;
   }
