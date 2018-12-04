@@ -12,7 +12,6 @@
 #include <set>
 #include <stack>
 
-#include "tarch/services/Service.h"
 
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
@@ -49,7 +48,7 @@ namespace tarch {
  * @version $Revision: 1.19 $
  * @author  Tobias Weinzierl, Wolfgang Eckhardt
  */
-class tarch::logging::CommandLineLogger: public tarch::services::Service {
+class tarch::logging::CommandLineLogger {
   public:
     /**
      * Represents one entry of the filter list. Syntax:
@@ -118,6 +117,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     bool           _logTimeStamp;
     bool           _logTimeStampHumanReadable;
     bool           _logMachineName;
+    bool           _logThreadName;
     bool           _logMessageType;
     bool           _logTrace;
     std::ostream*  _outputStream;
@@ -188,6 +188,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
       double               timestamp,
       std::string          timestampHumanReadable,
       std::string          machineName,
+      std::string          threadName,
       std::string          trace,
       const std::string&   message
     );
@@ -215,7 +216,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
 
     void reopenOutputStream();
   public:
-    virtual ~CommandLineLogger();
+    ~CommandLineLogger();
 
     static CommandLineLogger& getInstance();
 
@@ -235,6 +236,12 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
      * features are switched on.
      */
     bool        getLogMachineName() const;
+
+    /**
+     * Is public as some analysis frameworks check explicitly whether these
+     * features are switched on.
+     */
+    bool        getLogThreadName() const;
 
     /**
      * Is public as some analysis frameworks check explicitly whether these
@@ -261,8 +268,8 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     void addFilterListEntries( const FilterList&    entries);
     void clearFilterList();
 
-    void debug(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
-    void info(       double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
+    void debug(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
+    void info(       double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
 
     /**
      * Write Warning
@@ -273,7 +280,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
      * occur, i.e. the application might shut down before the message is flushed
      * to the terminal.
      */
-    void warning(    double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
+    void warning(    double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
 
     /**
      * Write Error
@@ -284,7 +291,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
      * occur, i.e. the application might shut down before the message is flushed
      * to the terminal.
      */
-    void error(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& trace, const std::string& message);
+    void error(      double timestamp, const std::string& timestampHumanReadable, const std::string& machineName, const std::string& threadName, const std::string& trace, const std::string& message);
 
     /**
      * Tells the logger to increment/decrement the indent.
@@ -318,6 +325,7 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
     void setLogTimeStamp( bool value = true );
     void setLogTimeStampHumanReadable( bool value = true );
     void setLogMachineName( bool value = true );
+    void setLogThreadName( bool value = true );
     void setLogMessageType( bool value = true );
     void setLogTrace( bool value = true );
 
@@ -333,12 +341,11 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
       bool logTimeStamp,
       bool logTimeStampHumanReadable,
       bool logMachineName,
+      bool logThreadName,
       bool logMessageType,
       bool logTrace,
       const std::string&  outputLogFileName
     );
-
-    virtual void receiveDanglingMessages();
 
     void printFilterListToWarningDevice() const;
 

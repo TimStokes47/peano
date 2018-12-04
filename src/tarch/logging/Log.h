@@ -468,6 +468,8 @@ class tarch::logging::Log {
      */
     std::string getMachineInformation() const;
 
+    std::string getThreadInformation() const;
+
     /**
      * Constructor
      *

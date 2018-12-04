@@ -3,11 +3,11 @@
 
 #include <thread>
 #include <queue>
-#include "Tasks.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
 #ifdef SharedTBB
+#include "Tasks.h"
 
 #include "tarch/logging/Log.h"
 #include "tarch/Assertions.h"

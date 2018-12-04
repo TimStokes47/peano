@@ -2,6 +2,8 @@
 #include "tarch/logging/CommandLineLogger.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/Assertions.h"
+#include "tarch/multicore/Core.h"
+
 
 /**
  * For the machine name. If it doesn't work, switch it off in the file
@@ -58,26 +60,32 @@ tarch::logging::Log::~Log() {
 
 #if PeanoDebug>=1
 void tarch::logging::Log::debug(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().debug(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().debug(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
 }
 #endif
 
 
 void tarch::logging::Log::info(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().info(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().info(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
 }
 
 void tarch::logging::Log::warning(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().warning(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().warning(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
 }
 
 void tarch::logging::Log::error(const std::string& methodName, const std::string& message) const {
-  UsedLogService::getInstance().error(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getTraceInformation(methodName),message);
+  UsedLogService::getInstance().error(getTimeStampSeconds(),getTimeStampHumanReadable(),getMachineInformation(),getThreadInformation(),getTraceInformation(methodName),message);
 }
 
 void tarch::logging::Log::indent( bool indent, const std::string& trace, const std::string& message ) const {
   UsedLogService::getInstance().indent( indent, trace, message );
 }
+
+
+std::string tarch::logging::Log::getThreadInformation() const {
+  return tarch::multicore::Core::getInstance().getThreadId();
+}
+
 
 
 std::string tarch::logging::Log::getMachineInformation() const {

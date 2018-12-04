@@ -54,6 +54,12 @@ int main(int argc, char** argv) {
   }
 */
 
+/*
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
+    "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::grid::EmptyTraversalObserver", true
+  ));
+*/
+
   // parallel version
   peano4::parallel::SpacetreeSet spacetreeSet;
   spacetreeSet.addSpacetree( spacetree );
