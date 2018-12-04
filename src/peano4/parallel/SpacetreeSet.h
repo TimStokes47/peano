@@ -49,6 +49,11 @@ class peano4::parallel::SpacetreeSet {
      * Invoke traverse on all spacetrees in parallel.
      */
     void traverse(peano4::grid::TraversalObserver& observer);
+
+    /**
+     * Return statistics object for primary spacetree.
+     */
+    peano4::grid::GridStatistics getGridStatistics() const;
 };
 
 #endif

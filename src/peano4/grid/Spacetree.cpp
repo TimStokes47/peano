@@ -43,7 +43,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
        0                                           // level
        #endif
     );
-    logInfo( "createTrivialTree(...)", "create " << vertices[kScalar].toString() );
+    logInfo( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
 
   descend(_root,vertices,observer);
@@ -459,3 +459,7 @@ void peano4::grid::Spacetree::descend(
   logTraceOut( "descend(...)" );
 }
 
+
+peano4::grid::GridStatistics peano4::grid::Spacetree::getGridStatistics() const {
+  return _statistics;
+}

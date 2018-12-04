@@ -140,6 +140,8 @@ class peano4::grid::Spacetree {
     Spacetree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width);
 
     void traverse(TraversalObserver& observer);
+
+    GridStatistics getGridStatistics() const;
 };
 
 

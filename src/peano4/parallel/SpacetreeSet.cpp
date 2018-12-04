@@ -41,3 +41,8 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverse" );
   peano4::parallel::Tasks runTraversals(traverseTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion);
 }
+
+
+peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics() const {
+  return _spacetrees.begin()->getGridStatistics();
+}

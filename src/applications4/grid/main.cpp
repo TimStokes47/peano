@@ -54,11 +54,9 @@ int main(int argc, char** argv) {
   }
 */
 
-/*
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
     "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::grid::EmptyTraversalObserver", true
   ));
-*/
 
   // parallel version
   peano4::parallel::SpacetreeSet spacetreeSet;
@@ -68,6 +66,9 @@ int main(int argc, char** argv) {
   peano4::grid::EmptyTraversalObserver observer;
   for (int i=0; i<10; i++) {
     spacetreeSet.traverse( observer );
+
+    std::cout << "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() << std::endl;
+    std::cout << "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() << std::endl;
   }
 
   return 0;
