@@ -12,6 +12,7 @@
 
 
 #include <list>
+#include <map>
 
 
 namespace peano4 {
@@ -41,7 +42,19 @@ class peano4::parallel::SpacetreeSet {
      */
     static tarch::logging::Log _log;
 
+    void merge(
+      const peano4::grid::GridStatistics&   from,
+	  peano4::grid::GridStatistics&         to
+    );
+
     std::list< peano4::grid::Spacetree >  _spacetrees;
+
+    /**
+     * Links from worker to masters. We use the ids from the
+     * Node class, so we have unique numbers for rank+thread
+     * combinations.
+     */
+    std::map<int,int>  _master;
   public:
     void addSpacetree( const peano4::grid::Spacetree& spacetree );
 
@@ -53,7 +66,7 @@ class peano4::parallel::SpacetreeSet {
     /**
      * Return statistics object for primary spacetree.
      */
-    peano4::grid::GridStatistics getGridStatistics() const;
+    peano4::grid::GridStatistics  getGridStatistics() const;
 };
 
 #endif

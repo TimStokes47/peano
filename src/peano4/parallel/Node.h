@@ -7,11 +7,15 @@
 #include "tarch/logging/Log.h"
 
 
+#include <set>
+
+
 namespace peano4 {
   namespace parallel {
     class Node;
   }
 }
+
 
 /**
  * Node is Peano's abstraction for the hybrid of MPI/threads. It represents
@@ -25,6 +29,8 @@ class peano4::parallel::Node {
      * Logging device.
      */
     static tarch::logging::Log _log;
+
+    std::set<int>  _bookedLocalThreads;
 
     /**
      * The standard constructor assigns the attributes default values and
@@ -63,13 +69,19 @@ class peano4::parallel::Node {
      * this routine. To identify a global stack number, please use this
      * function and add it to your local stack number.
      */
-    int getGlobalId(int rank, int threadId) const;
+    int getId(int rank, int threadId) const;
 
     int getRank(int id) const;
 
-    int getThreadId( int id ) const;
+//    int getThreadNumber( int id ) const;
 
-    int getTag( int id ) const;
+    /**
+     * This operation is const, i.e. you have to bookmark it yourself. Is done
+     * by Spacetree.
+     */
+    int getNextFreeLocalId() const;
+
+    void registerId(int id);
 };
 
 #endif

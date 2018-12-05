@@ -4,21 +4,32 @@
 
 
 #include "peano4/utils/Loop.h"
+#include "peano4/parallel/Node.h"
 
 
 tarch::logging::Log  peano4::grid::Spacetree::_log( "peano4::grid::Spacetree" );
 
 
-peano4::grid::Spacetree::Spacetree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width):
+peano4::grid::Spacetree::Spacetree(
+  const int                                    id,
+  const tarch::la::Vector<Dimensions,double>&  offset,
+  const tarch::la::Vector<Dimensions,double>&  width
+):
+  _id(id),
   _root() {
   _root.setLevel( 0 );
   _root.setX( offset );
   _root.setH( width );
   _root.setInverted( false );
   _root.setEvenFlags( 0 );
-  for (int i=0; i<DimensionsTimesTwo; i++)
+
+  for (int i=0; i<DimensionsTimesTwo; i++) {
     _root.setAccessNumber( i,0 );
-  logInfo( "Spacetree(...)", "create spacetree with " << offset << "x" << width );
+  }
+
+  peano4::parallel::Node::getInstance().registerId(id);
+
+  logInfo( "Spacetree(...)", "create spacetree with " << offset << "x" << width << " and id " << _id);
 }
 
 
@@ -217,13 +228,27 @@ void peano4::grid::Spacetree::updateVertexAfterLoad( GridVertex& vertex ) {
 
   if (vertex.getState()==GridVertex::State::RefinementTriggered) {
     vertex.setState( GridVertex::State::Refining );
+  }
+  else if (vertex.getState()==GridVertex::State::EraseTriggered) {
+    vertex.setState( GridVertex::State::Erasing );
+  }
+
+  vertex.setAdjacentRanksOfPreviousIteration( vertex.getAdjacentRanks() );
+
+  logTraceOutWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
+}
+
+
+void peano4::grid::Spacetree::updateVertexBeforeStore( GridVertex& vertex ) {
+  logTraceInWith1Argument( "updateVertexBeforeStore(GridVertex&)", vertex.toString() );
+
+  if (vertex.getState()==GridVertex::State::RefinementTriggered) {
     _statistics.setNumberOfRefiningVertices( _statistics.getNumberOfRefiningVertices()+1 );
   }
   else if (vertex.getState()==GridVertex::State::Refining) {
     vertex.setState( GridVertex::State::Refined );
   }
   else if (vertex.getState()==GridVertex::State::EraseTriggered) {
-    vertex.setState( GridVertex::State::Erasing );
     _statistics.setNumberOfErasingVertices( _statistics.getNumberOfErasingVertices()+1 );
   }
   else if (vertex.getState()==GridVertex::State::Erasing) {
@@ -237,9 +262,7 @@ void peano4::grid::Spacetree::updateVertexAfterLoad( GridVertex& vertex ) {
     _statistics.setNumberOfUnrefinedVertices( _statistics.getNumberOfUnrefinedVertices()+1 );
   }
 
-  vertex.setAdjacentRanksOfPreviousIteration( vertex.getAdjacentRanks() );
-
-  logTraceOutWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
+  logTraceOutWith1Argument( "updateVertexBeforeStore", vertex.toString() );
 }
 
 
@@ -287,6 +310,7 @@ void peano4::grid::Spacetree::loadVertices(
 		  fineGridStatesState.getLevel()                    // level
           #endif
 		);
+        updateVertexAfterLoad( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
     	break;
       case VertexType::Hanging:
       	fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] = GridVertex(
@@ -372,6 +396,9 @@ void peano4::grid::Spacetree::storeVertices(
             "storeVertices(...)",
 			"write vertex " << fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].toString() << " to stack " << stackNumber
 		  );
+          if ( PeanoCurve::isInOutStack(stackNumber) ) {
+            updateVertexBeforeStore( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
+          }
       	  _vertexStack[stackNumber].push( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
         }
         break;
@@ -462,4 +489,14 @@ void peano4::grid::Spacetree::descend(
 
 peano4::grid::GridStatistics peano4::grid::Spacetree::getGridStatistics() const {
   return _statistics;
+}
+
+
+peano4::grid::Spacetree peano4::grid::Spacetree::split(int cells) {
+  Spacetree result(
+    peano4::parallel::Node::getInstance().getNextFreeLocalId(),
+	_root.getX(),
+	_root.getH()
+  );
+  return result;
 }

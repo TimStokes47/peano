@@ -25,15 +25,24 @@ namespace peano4 {
     class Spacetree;
     class TraversalObserver;
   }
+
+  namespace parallel {
+    class SpacetreeSet;
+  }
 }
 
 
 
+/**
+ * Represents one tree
+ */
 class peano4::grid::Spacetree {
   public:
 	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = 2 + Dimensions*2;
   private:
     static tarch::logging::Log  _log;
+
+    friend class peano4::parallel::SpacetreeSet;
 
     enum class VertexType {
       New,
@@ -59,6 +68,8 @@ class peano4::grid::Spacetree {
 	  int                                dimension = Dimensions-1
     );
 
+    const int        _id;
+
     /**
      * The root of a spacetree corresponds to the initial state of the tree
      * traversal automaton. So we reuse the object here. It is basically the
@@ -68,6 +79,9 @@ class peano4::grid::Spacetree {
 
     GridStatistics   _statistics;
 
+    /**
+     * Clear the statistics
+     */
     void clearStatistics();
 
     std::map< int, peano4::stacks::GridVertexStack >    _vertexStack;
@@ -134,14 +148,28 @@ class peano4::grid::Spacetree {
      * stream, i.e. we touch it for the very first time.
      */
     void updateVertexAfterLoad( GridVertex& vertex );
+    void updateVertexBeforeStore( GridVertex& vertex );
 
     static void updateVertexRanksWithinCell( GridVertex fineGridVertices[TwoPowerD] );
+
   public:
-    Spacetree(const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width);
+    Spacetree(
+      const int                                    id,
+	  const tarch::la::Vector<Dimensions,double>&  offset,
+	  const tarch::la::Vector<Dimensions,double>&  width
+    );
 
     void traverse(TraversalObserver& observer);
 
     GridStatistics getGridStatistics() const;
+
+    /**
+     * Takes the local tree and removes cells cells from it. They are
+     * pushed into a new tree which is returned. If you use this operation,
+     * you usually use a SpacetreeSet and you push the result into this
+     * very set.
+     */
+    Spacetree split(int cells);
 };
 
 

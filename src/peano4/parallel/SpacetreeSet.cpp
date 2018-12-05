@@ -1,4 +1,5 @@
 #include "SpacetreeSet.h"
+#include "Node.h"
 
 
 tarch::logging::Log peano4::parallel::SpacetreeSet::_log( "peano4::parallel::SpacetreeSet" );
@@ -38,8 +39,29 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
     ));
   }
 
+
   static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverse" );
   peano4::parallel::Tasks runTraversals(traverseTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion);
+
+
+  // Merge local copies
+  for (const auto& from: _spacetrees)
+  for (auto& to: _spacetrees) {
+    if (_master.count(from._id)>0 and _master[from._id]==to._id) {
+      merge(from._statistics, to._statistics);
+    }
+  }
+}
+
+
+void peano4::parallel::SpacetreeSet::merge(
+  const peano4::grid::GridStatistics&   from,
+  peano4::grid::GridStatistics&         to
+) {
+  to.setNumberOfErasingVertices( to.getNumberOfErasingVertices() + from.getNumberOfErasingVertices() );
+  to.setNumberOfRefiningVertices( to.getNumberOfRefiningVertices() + from.getNumberOfRefiningVertices() );
+  to.setNumberOfUnrefinedVertices( to.getNumberOfUnrefinedVertices() + from.getNumberOfUnrefinedVertices() );
+  to.setNumberOfRefinedVertices( to.getNumberOfRefinedVertices() + from.getNumberOfRefinedVertices() );
 }
 
 

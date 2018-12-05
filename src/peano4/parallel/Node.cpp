@@ -33,26 +33,39 @@ peano4::parallel::Node& peano4::parallel::Node::getInstance() {
 }
 
 
-int peano4::parallel::Node::getGlobalId(int rank, int threadId) const {
+int peano4::parallel::Node::getId(int rank, int threadId) const {
   const int numberOfRanks = tarch::parallel::Node::getInstance().getNumberOfNodes();
-  return numberOfRanks * peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance * threadId
-	   + rank          * peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance;
+  return numberOfRanks * threadId + rank;
 }
 
 
 int peano4::parallel::Node::getRank(int id) const {
   const int numberOfRanks = tarch::parallel::Node::getInstance().getNumberOfNodes();
-  return id % (numberOfRanks * peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance);
+  return id % numberOfRanks;
 }
 
 
-int peano4::parallel::Node::getThreadId( int id ) const {
+/*
+int peano4::parallel::Node::getThreadNumber( int id ) const {
   const int numberOfRanks = tarch::parallel::Node::getInstance().getNumberOfNodes();
-  return id / (numberOfRanks * peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance);
+  return id / numberOfRanks;
+}
+*/
+
+
+
+int peano4::parallel::Node::getNextFreeLocalId() const {
+  int localThread = 0;
+  const int localRank = tarch::parallel::Node::getInstance().getRank();
+  while (true) {
+	if ( _bookedLocalThreads.count( getId(localRank,localThread) )==0 ) return getId(localRank,localThread);
+	localThread++;
+  }
+  return -1;
 }
 
 
-int peano4::parallel::Node::getTag( int id ) const {
-  assertionMsg(false, "not implemented ye");
-  return 0;
+void peano4::parallel::Node::registerId(int id) {
+  assertion( _bookedLocalThreads.count(id)==0 );
+  _bookedLocalThreads.insert(id);
 }

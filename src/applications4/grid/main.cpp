@@ -42,6 +42,7 @@ int main(int argc, char** argv) {
   tarch::multicore::Core::getInstance().configure(4,2,1);
 
   peano4::grid::Spacetree spacetree(
+    0,
     {0.0, 0.0},
     {1.0, 1.0}
   );
@@ -61,14 +62,27 @@ int main(int argc, char** argv) {
   // parallel version
   peano4::parallel::SpacetreeSet spacetreeSet;
   spacetreeSet.addSpacetree( spacetree );
-  spacetreeSet.addSpacetree( spacetree ); // @todo muss natuerlich split sein
 //  peano4::grid::TraversalVTKPlotter observer( "grid" );
   peano4::grid::EmptyTraversalObserver observer;
-  for (int i=0; i<10; i++) {
+  for (int i=0; i<4; i++) {
     spacetreeSet.traverse( observer );
 
     std::cout << "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() << std::endl;
     std::cout << "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() << std::endl;
+    std::cout << "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() << std::endl;
+    std::cout << "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() << std::endl;
+  }
+
+  std::cout << "== start split ==" << std::endl;
+
+  spacetreeSet.addSpacetree( spacetree.split(spacetreeSet.getGridStatistics().getNumberOfRefinedVertices()/2) );
+  for (int i=0; i<4; i++) {
+    spacetreeSet.traverse( observer );
+
+    std::cout << "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() << std::endl;
+    std::cout << "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() << std::endl;
+    std::cout << "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() << std::endl;
+    std::cout << "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() << std::endl;
   }
 
   return 0;
