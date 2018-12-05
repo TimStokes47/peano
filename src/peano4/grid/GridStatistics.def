@@ -3,8 +3,13 @@ Packed-Type: short int;
 
 
 class peano4::grid::GridStatistics {
-  persistent parallelise double  numberOfRefinedVertices;
-  persistent parallelise double  numberOfUnrefinedVertices;
-  persistent parallelise double  numberOfErasingVertices;
-  persistent parallelise double  numberOfRefiningVertices;
+  persistent parallelise int  numberOfRefinedVertices;
+  persistent parallelise int  numberOfUnrefinedVertices;
+  persistent parallelise int  numberOfErasingVertices;
+  persistent parallelise int  numberOfRefiningVertices;
+
+  persistent parallelise int  numberOfLocalUnrefinedCells;
+  persistent parallelise int  numberOfRemoteUnrefinedCells;
+  persistent parallelise int  numberOfLocalRefinedCells;
+  persistent parallelise int  numberOfRemoteRefinedCells;
 };

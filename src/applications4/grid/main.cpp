@@ -67,10 +67,14 @@ int main(int argc, char** argv) {
   for (int i=0; i<4; i++) {
     spacetreeSet.traverse( observer );
 
-    std::cout << "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() << std::endl;
-    std::cout << "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() << std::endl;
-    std::cout << "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() << std::endl;
-    std::cout << "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() << std::endl;
+    logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
+    logInfo( "main(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
+    logInfo( "main(...)", "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() );
+    logInfo( "main(...)", "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() );
+    logInfo( "main(...)", "local unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells());
+    logInfo( "main(...)", "local refined cell= " << spacetreeSet.getGridStatistics().getNumberOfLocalRefinedCells() );
+    logInfo( "main(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
+    logInfo( "main(...)", "remote refined cells= " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
 
   std::cout << "== start split ==" << std::endl;
@@ -79,10 +83,14 @@ int main(int argc, char** argv) {
   for (int i=0; i<4; i++) {
     spacetreeSet.traverse( observer );
 
-    std::cout << "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() << std::endl;
-    std::cout << "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() << std::endl;
-    std::cout << "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() << std::endl;
-    std::cout << "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() << std::endl;
+    logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
+    logInfo( "main(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
+    logInfo( "main(...)", "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() );
+    logInfo( "main(...)", "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() );
+    logInfo( "main(...)", "local unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells());
+    logInfo( "main(...)", "local refined cell= " << spacetreeSet.getGridStatistics().getNumberOfLocalRefinedCells() );
+    logInfo( "main(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
+    logInfo( "main(...)", "remote refined cells= " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
 
   return 0;

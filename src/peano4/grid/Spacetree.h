@@ -116,6 +116,16 @@ class peano4::grid::Spacetree {
 	);
 
     /**
+     * A spacetree node as 2^d adjacent vertices. So there are 2^d integers
+     * stored within these vertices that overlap with the current node. They
+     * all have to be the same. If they identify the local _id, then the
+     * node is local.
+     */
+    bool isSpacetreeNodeLocal(
+	  GridVertex            vertices[TwoPowerD]
+    ) const;
+
+    /**
      * Load the vertices of one cell
      *
      * The load process has to be done along the local order of the Peano
@@ -151,6 +161,12 @@ class peano4::grid::Spacetree {
     void updateVertexBeforeStore( GridVertex& vertex );
 
     static void updateVertexRanksWithinCell( GridVertex fineGridVertices[TwoPowerD] );
+
+    GridVertex createNewPersistentVertex(
+      GridVertex                                   fineGridVertices[TwoPowerD],
+	  const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level
+    );
 
   public:
     Spacetree(

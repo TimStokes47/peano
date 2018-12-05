@@ -13,9 +13,9 @@ namespace peano4 {
   *
   * <h2> Recreate all DaStGen objects </h2>
   * <pre>
-java -jar DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator GridVertex.def  .
-java -jar DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator AutomatonState.def  .
-java -jar DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator GridStatistics.def  .
+java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator GridVertex.def  .
+java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator AutomatonState.def  .
+java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator GridStatistics.def  .
     </pre>
   *
   */

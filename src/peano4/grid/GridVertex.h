@@ -28,7 +28,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   20/11/2018 19:30
+    * @date   05/12/2018 13:30
     */
    class peano4::grid::GridVertex { 
       
@@ -71,7 +71,6 @@ namespace peano4 {
          };
          private: 
             PersistentRecords _persistentRecords;
-            tarch::la::Vector<TwoPowerD,int> _adjacentRanksOfPreviousIteration;
             
          public:
             /**
@@ -88,11 +87,6 @@ namespace peano4 {
              * Generated
              */
             GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks);
-            
-            /**
-             * Generated
-             */
-            GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration);
             
             /**
              * Generated
@@ -116,14 +110,6 @@ namespace peano4 {
              int getAdjacentRanks(int elementIndex) const ;
             
              void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-            
-             tarch::la::Vector<TwoPowerD,int> getAdjacentRanksOfPreviousIteration() const ;
-            
-             void setAdjacentRanksOfPreviousIteration(const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration) ;
-            
-             int getAdjacentRanksOfPreviousIteration(int elementIndex) const ;
-            
-             void setAdjacentRanksOfPreviousIteration(int elementIndex, const int& adjacentRanksOfPreviousIteration) ;
             
             /**
              * Generated
@@ -198,7 +184,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   20/11/2018 19:30
+    * @date   05/12/2018 13:30
     */
    class peano4::grid::GridVertexPacked { 
       
@@ -243,7 +229,6 @@ namespace peano4 {
          };
          private: 
             PersistentRecords _persistentRecords;
-            tarch::la::Vector<TwoPowerD,int> _adjacentRanksOfPreviousIteration;
             
          public:
             /**
@@ -260,11 +245,6 @@ namespace peano4 {
              * Generated
              */
             GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks);
-            
-            /**
-             * Generated
-             */
-            GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration);
             
             /**
              * Generated
@@ -288,14 +268,6 @@ namespace peano4 {
              int getAdjacentRanks(int elementIndex) const ;
             
              void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-            
-             tarch::la::Vector<TwoPowerD,int> getAdjacentRanksOfPreviousIteration() const ;
-            
-             void setAdjacentRanksOfPreviousIteration(const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration) ;
-            
-             int getAdjacentRanksOfPreviousIteration(int elementIndex) const ;
-            
-             void setAdjacentRanksOfPreviousIteration(int elementIndex, const int& adjacentRanksOfPreviousIteration) ;
             
             /**
              * Generated
@@ -371,7 +343,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   20/11/2018 19:30
+       * @date   05/12/2018 13:30
        */
       class peano4::grid::GridVertex { 
          
@@ -430,7 +402,6 @@ namespace peano4 {
             };
             private: 
                PersistentRecords _persistentRecords;
-               tarch::la::Vector<TwoPowerD,int> _adjacentRanksOfPreviousIteration;
                
             public:
                /**
@@ -447,11 +418,6 @@ namespace peano4 {
                 * Generated
                 */
                GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<Dimensions,double>& x, const int& level);
-               
-               /**
-                * Generated
-                */
-               GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -475,14 +441,6 @@ namespace peano4 {
                 int getAdjacentRanks(int elementIndex) const ;
                
                 void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-               
-                tarch::la::Vector<TwoPowerD,int> getAdjacentRanksOfPreviousIteration() const ;
-               
-                void setAdjacentRanksOfPreviousIteration(const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration) ;
-               
-                int getAdjacentRanksOfPreviousIteration(int elementIndex) const ;
-               
-                void setAdjacentRanksOfPreviousIteration(int elementIndex, const int& adjacentRanksOfPreviousIteration) ;
                
                 tarch::la::Vector<Dimensions,double> getX() const ;
                
@@ -575,7 +533,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   20/11/2018 19:30
+       * @date   05/12/2018 13:30
        */
       class peano4::grid::GridVertexPacked { 
          
@@ -636,7 +594,6 @@ namespace peano4 {
             };
             private: 
                PersistentRecords _persistentRecords;
-               tarch::la::Vector<TwoPowerD,int> _adjacentRanksOfPreviousIteration;
                
             public:
                /**
@@ -653,11 +610,6 @@ namespace peano4 {
                 * Generated
                 */
                GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<Dimensions,double>& x, const int& level);
-               
-               /**
-                * Generated
-                */
-               GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -681,14 +633,6 @@ namespace peano4 {
                 int getAdjacentRanks(int elementIndex) const ;
                
                 void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
-               
-                tarch::la::Vector<TwoPowerD,int> getAdjacentRanksOfPreviousIteration() const ;
-               
-                void setAdjacentRanksOfPreviousIteration(const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration) ;
-               
-                int getAdjacentRanksOfPreviousIteration(int elementIndex) const ;
-               
-                void setAdjacentRanksOfPreviousIteration(int elementIndex, const int& adjacentRanksOfPreviousIteration) ;
                
                 tarch::la::Vector<Dimensions,double> getX() const ;
                

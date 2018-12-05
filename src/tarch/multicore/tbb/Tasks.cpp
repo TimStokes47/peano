@@ -215,6 +215,14 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   ) {
     enqueue();
   }
+  else if (
+    hasProcessedJobs
+    and
+    internal::_numberOfRunningJobConsumerTasks.load()==0
+  ) {
+    enqueue();
+  }
+
 
   if (oldNumberOfConsumerTasks==1) {
     internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize    = internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize*0.9;

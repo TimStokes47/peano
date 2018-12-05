@@ -5,11 +5,15 @@ peano4::grid::GridStatistics::PersistentRecords::PersistentRecords() {
 }
 
 
-peano4::grid::GridStatistics::PersistentRecords::PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices):
+peano4::grid::GridStatistics::PersistentRecords::PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells):
 _numberOfRefinedVertices(numberOfRefinedVertices),
 _numberOfUnrefinedVertices(numberOfUnrefinedVertices),
 _numberOfErasingVertices(numberOfErasingVertices),
-_numberOfRefiningVertices(numberOfRefiningVertices) {
+_numberOfRefiningVertices(numberOfRefiningVertices),
+_numberOfLocalUnrefinedCells(numberOfLocalUnrefinedCells),
+_numberOfRemoteUnrefinedCells(numberOfRemoteUnrefinedCells),
+_numberOfLocalRefinedCells(numberOfLocalRefinedCells),
+_numberOfRemoteRefinedCells(numberOfRemoteRefinedCells) {
    
 }
 
@@ -61,19 +65,67 @@ _numberOfRefiningVertices(numberOfRefiningVertices) {
 }
 
 
+
+ int peano4::grid::GridStatistics::PersistentRecords::getNumberOfLocalUnrefinedCells() const  {
+   return _numberOfLocalUnrefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatistics::PersistentRecords::setNumberOfLocalUnrefinedCells(const int& numberOfLocalUnrefinedCells)  {
+   _numberOfLocalUnrefinedCells = numberOfLocalUnrefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatistics::PersistentRecords::getNumberOfRemoteUnrefinedCells() const  {
+   return _numberOfRemoteUnrefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatistics::PersistentRecords::setNumberOfRemoteUnrefinedCells(const int& numberOfRemoteUnrefinedCells)  {
+   _numberOfRemoteUnrefinedCells = numberOfRemoteUnrefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatistics::PersistentRecords::getNumberOfLocalRefinedCells() const  {
+   return _numberOfLocalRefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatistics::PersistentRecords::setNumberOfLocalRefinedCells(const int& numberOfLocalRefinedCells)  {
+   _numberOfLocalRefinedCells = numberOfLocalRefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatistics::PersistentRecords::getNumberOfRemoteRefinedCells() const  {
+   return _numberOfRemoteRefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatistics::PersistentRecords::setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells)  {
+   _numberOfRemoteRefinedCells = numberOfRemoteRefinedCells;
+}
+
+
 peano4::grid::GridStatistics::GridStatistics() {
    
 }
 
 
 peano4::grid::GridStatistics::GridStatistics(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._numberOfRefinedVertices, persistentRecords._numberOfUnrefinedVertices, persistentRecords._numberOfErasingVertices, persistentRecords._numberOfRefiningVertices) {
+_persistentRecords(persistentRecords._numberOfRefinedVertices, persistentRecords._numberOfUnrefinedVertices, persistentRecords._numberOfErasingVertices, persistentRecords._numberOfRefiningVertices, persistentRecords._numberOfLocalUnrefinedCells, persistentRecords._numberOfRemoteUnrefinedCells, persistentRecords._numberOfLocalRefinedCells, persistentRecords._numberOfRemoteRefinedCells) {
    
 }
 
 
-peano4::grid::GridStatistics::GridStatistics(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices):
-_persistentRecords(numberOfRefinedVertices, numberOfUnrefinedVertices, numberOfErasingVertices, numberOfRefiningVertices) {
+peano4::grid::GridStatistics::GridStatistics(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells):
+_persistentRecords(numberOfRefinedVertices, numberOfUnrefinedVertices, numberOfErasingVertices, numberOfRefiningVertices, numberOfLocalUnrefinedCells, numberOfRemoteUnrefinedCells, numberOfLocalRefinedCells, numberOfRemoteRefinedCells) {
    
 }
 
@@ -129,6 +181,54 @@ peano4::grid::GridStatistics::~GridStatistics() { }
 
 
 
+ int peano4::grid::GridStatistics::getNumberOfLocalUnrefinedCells() const  {
+   return _persistentRecords._numberOfLocalUnrefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatistics::setNumberOfLocalUnrefinedCells(const int& numberOfLocalUnrefinedCells)  {
+   _persistentRecords._numberOfLocalUnrefinedCells = numberOfLocalUnrefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatistics::getNumberOfRemoteUnrefinedCells() const  {
+   return _persistentRecords._numberOfRemoteUnrefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatistics::setNumberOfRemoteUnrefinedCells(const int& numberOfRemoteUnrefinedCells)  {
+   _persistentRecords._numberOfRemoteUnrefinedCells = numberOfRemoteUnrefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatistics::getNumberOfLocalRefinedCells() const  {
+   return _persistentRecords._numberOfLocalRefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatistics::setNumberOfLocalRefinedCells(const int& numberOfLocalRefinedCells)  {
+   _persistentRecords._numberOfLocalRefinedCells = numberOfLocalRefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatistics::getNumberOfRemoteRefinedCells() const  {
+   return _persistentRecords._numberOfRemoteRefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatistics::setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells)  {
+   _persistentRecords._numberOfRemoteRefinedCells = numberOfRemoteRefinedCells;
+}
+
+
+
 
 std::string peano4::grid::GridStatistics::toString() const {
    std::ostringstream stringstr;
@@ -145,6 +245,14 @@ void peano4::grid::GridStatistics::toString (std::ostream& out) const {
    out << "numberOfErasingVertices:" << getNumberOfErasingVertices();
    out << ",";
    out << "numberOfRefiningVertices:" << getNumberOfRefiningVertices();
+   out << ",";
+   out << "numberOfLocalUnrefinedCells:" << getNumberOfLocalUnrefinedCells();
+   out << ",";
+   out << "numberOfRemoteUnrefinedCells:" << getNumberOfRemoteUnrefinedCells();
+   out << ",";
+   out << "numberOfLocalRefinedCells:" << getNumberOfLocalRefinedCells();
+   out << ",";
+   out << "numberOfRemoteRefinedCells:" << getNumberOfRemoteRefinedCells();
    out <<  ")";
 }
 
@@ -158,7 +266,11 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
       getNumberOfRefinedVertices(),
       getNumberOfUnrefinedVertices(),
       getNumberOfErasingVertices(),
-      getNumberOfRefiningVertices()
+      getNumberOfRefiningVertices(),
+      getNumberOfLocalUnrefinedCells(),
+      getNumberOfRemoteUnrefinedCells(),
+      getNumberOfLocalRefinedCells(),
+      getNumberOfRemoteRefinedCells()
    );
 }
 
@@ -174,15 +286,19 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          GridStatistics dummyGridStatistics[2];
          
          #ifdef MPI2
-         const int Attributes = 4;
+         const int Attributes = 8;
          #else
-         const int Attributes = 5;
+         const int Attributes = 9;
          #endif
          MPI_Datatype subtypes[Attributes] = {
               MPI_INT		 //numberOfRefinedVertices
             , MPI_INT		 //numberOfUnrefinedVertices
             , MPI_INT		 //numberOfErasingVertices
             , MPI_INT		 //numberOfRefiningVertices
+            , MPI_INT		 //numberOfLocalUnrefinedCells
+            , MPI_INT		 //numberOfRemoteUnrefinedCells
+            , MPI_INT		 //numberOfLocalRefinedCells
+            , MPI_INT		 //numberOfRemoteRefinedCells
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -194,6 +310,10 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , 1		 //numberOfUnrefinedVertices
             , 1		 //numberOfErasingVertices
             , 1		 //numberOfRefiningVertices
+            , 1		 //numberOfLocalUnrefinedCells
+            , 1		 //numberOfRemoteUnrefinedCells
+            , 1		 //numberOfLocalRefinedCells
+            , 1		 //numberOfRemoteRefinedCells
             #ifndef MPI2
             , 1
             #endif
@@ -228,6 +348,26 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[3] );
          #endif
          #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[4] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[4] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[5] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[5] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[6] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[6] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[7] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[7] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
          #else
          for (int i=1; i<Attributes-1; i++) {
@@ -243,9 +383,9 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             assertion4(disp[i]<static_cast<int>(sizeof(GridStatistics)), i, disp[i], Attributes, sizeof(GridStatistics));
          }
          #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), 		&disp[4] );
-         disp[4] -= base;
-         disp[4] += disp[0];
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), 		&disp[8] );
+         disp[8] -= base;
+         disp[8] += disp[0];
          #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
@@ -264,15 +404,19 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          GridStatistics dummyGridStatistics[2];
          
          #ifdef MPI2
-         const int Attributes = 4;
+         const int Attributes = 8;
          #else
-         const int Attributes = 5;
+         const int Attributes = 9;
          #endif
          MPI_Datatype subtypes[Attributes] = {
               MPI_INT		 //numberOfRefinedVertices
             , MPI_INT		 //numberOfUnrefinedVertices
             , MPI_INT		 //numberOfErasingVertices
             , MPI_INT		 //numberOfRefiningVertices
+            , MPI_INT		 //numberOfLocalUnrefinedCells
+            , MPI_INT		 //numberOfRemoteUnrefinedCells
+            , MPI_INT		 //numberOfLocalRefinedCells
+            , MPI_INT		 //numberOfRemoteRefinedCells
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -284,6 +428,10 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , 1		 //numberOfUnrefinedVertices
             , 1		 //numberOfErasingVertices
             , 1		 //numberOfRefiningVertices
+            , 1		 //numberOfLocalUnrefinedCells
+            , 1		 //numberOfRemoteUnrefinedCells
+            , 1		 //numberOfLocalRefinedCells
+            , 1		 //numberOfRemoteRefinedCells
             #ifndef MPI2
             , 1
             #endif
@@ -318,6 +466,26 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[3] );
          #endif
          #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[4] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[4] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[5] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[5] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[6] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[6] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[7] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[7] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
          #else
          for (int i=1; i<Attributes-1; i++) {
@@ -333,9 +501,9 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             assertion4(disp[i]<static_cast<int>(sizeof(GridStatistics)), i, disp[i], Attributes, sizeof(GridStatistics));
          }
          #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), 		&disp[4] );
-         disp[4] -= base;
-         disp[4] += disp[0];
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), 		&disp[8] );
+         disp[8] -= base;
+         disp[8] += disp[0];
          #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
@@ -619,11 +787,15 @@ peano4::grid::GridStatisticsPacked::PersistentRecords::PersistentRecords() {
 }
 
 
-peano4::grid::GridStatisticsPacked::PersistentRecords::PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices):
+peano4::grid::GridStatisticsPacked::PersistentRecords::PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells):
 _numberOfRefinedVertices(numberOfRefinedVertices),
 _numberOfUnrefinedVertices(numberOfUnrefinedVertices),
 _numberOfErasingVertices(numberOfErasingVertices),
-_numberOfRefiningVertices(numberOfRefiningVertices) {
+_numberOfRefiningVertices(numberOfRefiningVertices),
+_numberOfLocalUnrefinedCells(numberOfLocalUnrefinedCells),
+_numberOfRemoteUnrefinedCells(numberOfRemoteUnrefinedCells),
+_numberOfLocalRefinedCells(numberOfLocalRefinedCells),
+_numberOfRemoteRefinedCells(numberOfRemoteRefinedCells) {
    
 }
 
@@ -675,19 +847,67 @@ _numberOfRefiningVertices(numberOfRefiningVertices) {
 }
 
 
+
+ int peano4::grid::GridStatisticsPacked::PersistentRecords::getNumberOfLocalUnrefinedCells() const  {
+   return _numberOfLocalUnrefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatisticsPacked::PersistentRecords::setNumberOfLocalUnrefinedCells(const int& numberOfLocalUnrefinedCells)  {
+   _numberOfLocalUnrefinedCells = numberOfLocalUnrefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatisticsPacked::PersistentRecords::getNumberOfRemoteUnrefinedCells() const  {
+   return _numberOfRemoteUnrefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatisticsPacked::PersistentRecords::setNumberOfRemoteUnrefinedCells(const int& numberOfRemoteUnrefinedCells)  {
+   _numberOfRemoteUnrefinedCells = numberOfRemoteUnrefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatisticsPacked::PersistentRecords::getNumberOfLocalRefinedCells() const  {
+   return _numberOfLocalRefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatisticsPacked::PersistentRecords::setNumberOfLocalRefinedCells(const int& numberOfLocalRefinedCells)  {
+   _numberOfLocalRefinedCells = numberOfLocalRefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatisticsPacked::PersistentRecords::getNumberOfRemoteRefinedCells() const  {
+   return _numberOfRemoteRefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatisticsPacked::PersistentRecords::setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells)  {
+   _numberOfRemoteRefinedCells = numberOfRemoteRefinedCells;
+}
+
+
 peano4::grid::GridStatisticsPacked::GridStatisticsPacked() {
    
 }
 
 
 peano4::grid::GridStatisticsPacked::GridStatisticsPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._numberOfRefinedVertices, persistentRecords._numberOfUnrefinedVertices, persistentRecords._numberOfErasingVertices, persistentRecords._numberOfRefiningVertices) {
+_persistentRecords(persistentRecords._numberOfRefinedVertices, persistentRecords._numberOfUnrefinedVertices, persistentRecords._numberOfErasingVertices, persistentRecords._numberOfRefiningVertices, persistentRecords._numberOfLocalUnrefinedCells, persistentRecords._numberOfRemoteUnrefinedCells, persistentRecords._numberOfLocalRefinedCells, persistentRecords._numberOfRemoteRefinedCells) {
    
 }
 
 
-peano4::grid::GridStatisticsPacked::GridStatisticsPacked(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices):
-_persistentRecords(numberOfRefinedVertices, numberOfUnrefinedVertices, numberOfErasingVertices, numberOfRefiningVertices) {
+peano4::grid::GridStatisticsPacked::GridStatisticsPacked(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells):
+_persistentRecords(numberOfRefinedVertices, numberOfUnrefinedVertices, numberOfErasingVertices, numberOfRefiningVertices, numberOfLocalUnrefinedCells, numberOfRemoteUnrefinedCells, numberOfLocalRefinedCells, numberOfRemoteRefinedCells) {
    
 }
 
@@ -743,6 +963,54 @@ peano4::grid::GridStatisticsPacked::~GridStatisticsPacked() { }
 
 
 
+ int peano4::grid::GridStatisticsPacked::getNumberOfLocalUnrefinedCells() const  {
+   return _persistentRecords._numberOfLocalUnrefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatisticsPacked::setNumberOfLocalUnrefinedCells(const int& numberOfLocalUnrefinedCells)  {
+   _persistentRecords._numberOfLocalUnrefinedCells = numberOfLocalUnrefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatisticsPacked::getNumberOfRemoteUnrefinedCells() const  {
+   return _persistentRecords._numberOfRemoteUnrefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatisticsPacked::setNumberOfRemoteUnrefinedCells(const int& numberOfRemoteUnrefinedCells)  {
+   _persistentRecords._numberOfRemoteUnrefinedCells = numberOfRemoteUnrefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatisticsPacked::getNumberOfLocalRefinedCells() const  {
+   return _persistentRecords._numberOfLocalRefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatisticsPacked::setNumberOfLocalRefinedCells(const int& numberOfLocalRefinedCells)  {
+   _persistentRecords._numberOfLocalRefinedCells = numberOfLocalRefinedCells;
+}
+
+
+
+ int peano4::grid::GridStatisticsPacked::getNumberOfRemoteRefinedCells() const  {
+   return _persistentRecords._numberOfRemoteRefinedCells;
+}
+
+
+
+ void peano4::grid::GridStatisticsPacked::setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells)  {
+   _persistentRecords._numberOfRemoteRefinedCells = numberOfRemoteRefinedCells;
+}
+
+
+
 
 std::string peano4::grid::GridStatisticsPacked::toString() const {
    std::ostringstream stringstr;
@@ -759,6 +1027,14 @@ void peano4::grid::GridStatisticsPacked::toString (std::ostream& out) const {
    out << "numberOfErasingVertices:" << getNumberOfErasingVertices();
    out << ",";
    out << "numberOfRefiningVertices:" << getNumberOfRefiningVertices();
+   out << ",";
+   out << "numberOfLocalUnrefinedCells:" << getNumberOfLocalUnrefinedCells();
+   out << ",";
+   out << "numberOfRemoteUnrefinedCells:" << getNumberOfRemoteUnrefinedCells();
+   out << ",";
+   out << "numberOfLocalRefinedCells:" << getNumberOfLocalRefinedCells();
+   out << ",";
+   out << "numberOfRemoteRefinedCells:" << getNumberOfRemoteRefinedCells();
    out <<  ")";
 }
 
@@ -772,7 +1048,11 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
       getNumberOfRefinedVertices(),
       getNumberOfUnrefinedVertices(),
       getNumberOfErasingVertices(),
-      getNumberOfRefiningVertices()
+      getNumberOfRefiningVertices(),
+      getNumberOfLocalUnrefinedCells(),
+      getNumberOfRemoteUnrefinedCells(),
+      getNumberOfLocalRefinedCells(),
+      getNumberOfRemoteRefinedCells()
    );
 }
 
@@ -788,15 +1068,19 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          GridStatisticsPacked dummyGridStatisticsPacked[2];
          
          #ifdef MPI2
-         const int Attributes = 4;
+         const int Attributes = 8;
          #else
-         const int Attributes = 5;
+         const int Attributes = 9;
          #endif
          MPI_Datatype subtypes[Attributes] = {
               MPI_INT		 //numberOfRefinedVertices
             , MPI_INT		 //numberOfUnrefinedVertices
             , MPI_INT		 //numberOfErasingVertices
             , MPI_INT		 //numberOfRefiningVertices
+            , MPI_INT		 //numberOfLocalUnrefinedCells
+            , MPI_INT		 //numberOfRemoteUnrefinedCells
+            , MPI_INT		 //numberOfLocalRefinedCells
+            , MPI_INT		 //numberOfRemoteRefinedCells
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -808,6 +1092,10 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             , 1		 //numberOfUnrefinedVertices
             , 1		 //numberOfErasingVertices
             , 1		 //numberOfRefiningVertices
+            , 1		 //numberOfLocalUnrefinedCells
+            , 1		 //numberOfRemoteUnrefinedCells
+            , 1		 //numberOfLocalRefinedCells
+            , 1		 //numberOfRemoteRefinedCells
             #ifndef MPI2
             , 1
             #endif
@@ -842,6 +1130,26 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[3] );
          #endif
          #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[4] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[4] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[5] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[5] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[6] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[6] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[7] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[7] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
          #else
          for (int i=1; i<Attributes-1; i++) {
@@ -857,9 +1165,9 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             assertion4(disp[i]<static_cast<int>(sizeof(GridStatisticsPacked)), i, disp[i], Attributes, sizeof(GridStatisticsPacked));
          }
          #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), 		&disp[4] );
-         disp[4] -= base;
-         disp[4] += disp[0];
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), 		&disp[8] );
+         disp[8] -= base;
+         disp[8] += disp[0];
          #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
@@ -878,15 +1186,19 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          GridStatisticsPacked dummyGridStatisticsPacked[2];
          
          #ifdef MPI2
-         const int Attributes = 4;
+         const int Attributes = 8;
          #else
-         const int Attributes = 5;
+         const int Attributes = 9;
          #endif
          MPI_Datatype subtypes[Attributes] = {
               MPI_INT		 //numberOfRefinedVertices
             , MPI_INT		 //numberOfUnrefinedVertices
             , MPI_INT		 //numberOfErasingVertices
             , MPI_INT		 //numberOfRefiningVertices
+            , MPI_INT		 //numberOfLocalUnrefinedCells
+            , MPI_INT		 //numberOfRemoteUnrefinedCells
+            , MPI_INT		 //numberOfLocalRefinedCells
+            , MPI_INT		 //numberOfRemoteRefinedCells
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -898,6 +1210,10 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             , 1		 //numberOfUnrefinedVertices
             , 1		 //numberOfErasingVertices
             , 1		 //numberOfRefiningVertices
+            , 1		 //numberOfLocalUnrefinedCells
+            , 1		 //numberOfRemoteUnrefinedCells
+            , 1		 //numberOfLocalRefinedCells
+            , 1		 //numberOfRemoteRefinedCells
             #ifndef MPI2
             , 1
             #endif
@@ -932,6 +1248,26 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRefiningVertices))), 		&disp[3] );
          #endif
          #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[4] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalUnrefinedCells))), 		&disp[4] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[5] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteUnrefinedCells))), 		&disp[5] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[6] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfLocalRefinedCells))), 		&disp[6] );
+         #endif
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[7] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[7] );
+         #endif
+         #ifdef MPI2
          for (int i=1; i<Attributes; i++) {
          #else
          for (int i=1; i<Attributes-1; i++) {
@@ -947,9 +1283,9 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             assertion4(disp[i]<static_cast<int>(sizeof(GridStatisticsPacked)), i, disp[i], Attributes, sizeof(GridStatisticsPacked));
          }
          #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), 		&disp[4] );
-         disp[4] -= base;
-         disp[4] += disp[0];
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), 		&disp[8] );
+         disp[8] -= base;
+         disp[8] += disp[0];
          #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 

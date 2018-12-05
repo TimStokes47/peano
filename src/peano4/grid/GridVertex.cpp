@@ -53,11 +53,6 @@
    }
    
    
-   peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration):
-   _persistentRecords(state, adjacentRanks),_adjacentRanksOfPreviousIteration(adjacentRanksOfPreviousIteration) {
-      
-   }
-   
    peano4::grid::GridVertex::~GridVertex() { }
    
    
@@ -102,36 +97,6 @@
    }
    
    
-   
-    tarch::la::Vector<TwoPowerD,int> peano4::grid::GridVertex::getAdjacentRanksOfPreviousIteration() const  {
-      return _adjacentRanksOfPreviousIteration;
-   }
-   
-   
-   
-    void peano4::grid::GridVertex::setAdjacentRanksOfPreviousIteration(const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration)  {
-      _adjacentRanksOfPreviousIteration = (adjacentRanksOfPreviousIteration);
-   }
-   
-   
-   
-    int peano4::grid::GridVertex::getAdjacentRanksOfPreviousIteration(int elementIndex) const  {
-      assertion(elementIndex>=0);
-      assertion(elementIndex<TwoPowerD);
-      return _adjacentRanksOfPreviousIteration[elementIndex];
-      
-   }
-   
-   
-   
-    void peano4::grid::GridVertex::setAdjacentRanksOfPreviousIteration(int elementIndex, const int& adjacentRanksOfPreviousIteration)  {
-      assertion(elementIndex>=0);
-      assertion(elementIndex<TwoPowerD);
-      _adjacentRanksOfPreviousIteration[elementIndex]= adjacentRanksOfPreviousIteration;
-      
-   }
-   
-   
    std::string peano4::grid::GridVertex::toString(const State& param) {
       switch (param) {
          case HangingVertex: return "HangingVertex";
@@ -165,12 +130,6 @@
       out << getAdjacentRanks(i) << ",";
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
-      out << ",";
-      out << "adjacentRanksOfPreviousIteration:[";
-   for (int i = 0; i < TwoPowerD-1; i++) {
-      out << getAdjacentRanksOfPreviousIteration(i) << ",";
-   }
-   out << getAdjacentRanksOfPreviousIteration(TwoPowerD-1) << "]";
       out <<  ")";
    }
    
@@ -182,8 +141,7 @@
    peano4::grid::GridVertexPacked peano4::grid::GridVertex::convert() const{
       return GridVertexPacked(
          getState(),
-         getAdjacentRanks(),
-         getAdjacentRanksOfPreviousIteration()
+         getAdjacentRanks()
       );
    }
    
@@ -275,14 +233,13 @@
             GridVertex dummyGridVertex[2];
             
             #ifdef MPI2
-            const int Attributes = 3;
+            const int Attributes = 2;
             #else
-            const int Attributes = 4;
+            const int Attributes = 3;
             #endif
             MPI_Datatype subtypes[Attributes] = {
                  MPI_INT		 //state
                , MPI_INT		 //adjacentRanks
-               , MPI_INT		 //adjacentRanksOfPreviousIteration
                #ifndef MPI2
                , MPI_UB
                #endif
@@ -292,7 +249,6 @@
             int blocklen[Attributes] = {
                  1		 //state
                , TwoPowerD		 //adjacentRanks
-               , TwoPowerD		 //adjacentRanksOfPreviousIteration
                #ifndef MPI2
                , 1
                #endif
@@ -317,11 +273,6 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[1] );
             #endif
             #ifdef MPI2
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._adjacentRanksOfPreviousIteration[0]))), 		&disp[2] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._adjacentRanksOfPreviousIteration[0]))), 		&disp[2] );
-            #endif
-            #ifdef MPI2
             for (int i=1; i<Attributes; i++) {
             #else
             for (int i=1; i<Attributes-1; i++) {
@@ -337,9 +288,9 @@
                assertion4(disp[i]<static_cast<int>(sizeof(GridVertex)), i, disp[i], Attributes, sizeof(GridVertex));
             }
             #ifndef MPI2
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[3] );
-            disp[3] -= base;
-            disp[3] += disp[0];
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[2] );
+            disp[2] -= base;
+            disp[2] += disp[0];
             #endif
             #ifdef MPI2
             MPI_Datatype tmpType; 
@@ -709,17 +660,6 @@ switch (mode) {
    }
    
    
-   peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration):
-   _persistentRecords(state, adjacentRanks),_adjacentRanksOfPreviousIteration(adjacentRanksOfPreviousIteration) {
-      if ((3 >= (8 * sizeof(short int)))) {
-         std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
-         std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
-         std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
-      }
-      assertion((3 < (8 * sizeof(short int))));
-      
-   }
-   
    peano4::grid::GridVertexPacked::~GridVertexPacked() { }
    
    
@@ -773,36 +713,6 @@ switch (mode) {
    }
    
    
-   
-    tarch::la::Vector<TwoPowerD,int> peano4::grid::GridVertexPacked::getAdjacentRanksOfPreviousIteration() const  {
-      return _adjacentRanksOfPreviousIteration;
-   }
-   
-   
-   
-    void peano4::grid::GridVertexPacked::setAdjacentRanksOfPreviousIteration(const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration)  {
-      _adjacentRanksOfPreviousIteration = (adjacentRanksOfPreviousIteration);
-   }
-   
-   
-   
-    int peano4::grid::GridVertexPacked::getAdjacentRanksOfPreviousIteration(int elementIndex) const  {
-      assertion(elementIndex>=0);
-      assertion(elementIndex<TwoPowerD);
-      return _adjacentRanksOfPreviousIteration[elementIndex];
-      
-   }
-   
-   
-   
-    void peano4::grid::GridVertexPacked::setAdjacentRanksOfPreviousIteration(int elementIndex, const int& adjacentRanksOfPreviousIteration)  {
-      assertion(elementIndex>=0);
-      assertion(elementIndex<TwoPowerD);
-      _adjacentRanksOfPreviousIteration[elementIndex]= adjacentRanksOfPreviousIteration;
-      
-   }
-   
-   
    std::string peano4::grid::GridVertexPacked::toString(const State& param) {
       return peano4::grid::GridVertex::toString(param);
    }
@@ -828,12 +738,6 @@ switch (mode) {
       out << getAdjacentRanks(i) << ",";
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
-      out << ",";
-      out << "adjacentRanksOfPreviousIteration:[";
-   for (int i = 0; i < TwoPowerD-1; i++) {
-      out << getAdjacentRanksOfPreviousIteration(i) << ",";
-   }
-   out << getAdjacentRanksOfPreviousIteration(TwoPowerD-1) << "]";
       out <<  ")";
    }
    
@@ -845,8 +749,7 @@ switch (mode) {
    peano4::grid::GridVertex peano4::grid::GridVertexPacked::convert() const{
       return GridVertex(
          getState(),
-         getAdjacentRanks(),
-         getAdjacentRanksOfPreviousIteration()
+         getAdjacentRanks()
       );
    }
    
@@ -938,14 +841,13 @@ switch (mode) {
             GridVertexPacked dummyGridVertexPacked[2];
             
             #ifdef MPI2
-            const int Attributes = 3;
+            const int Attributes = 2;
             #else
-            const int Attributes = 4;
+            const int Attributes = 3;
             #endif
             MPI_Datatype subtypes[Attributes] = {
                  MPI_INT		 //adjacentRanks
                , MPI_SHORT		 //_packedRecords0
-               , MPI_INT		 //adjacentRanksOfPreviousIteration
                #ifndef MPI2
                , MPI_UB
                #endif
@@ -955,7 +857,6 @@ switch (mode) {
             int blocklen[Attributes] = {
                  TwoPowerD		 //adjacentRanks
                , 1		 //_packedRecords0
-               , TwoPowerD		 //adjacentRanksOfPreviousIteration
                #ifndef MPI2
                , 1
                #endif
@@ -980,11 +881,6 @@ switch (mode) {
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[1] );
             #endif
             #ifdef MPI2
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._adjacentRanksOfPreviousIteration[0]))), 		&disp[2] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._adjacentRanksOfPreviousIteration[0]))), 		&disp[2] );
-            #endif
-            #ifdef MPI2
             for (int i=1; i<Attributes; i++) {
             #else
             for (int i=1; i<Attributes-1; i++) {
@@ -1000,9 +896,9 @@ switch (mode) {
                assertion4(disp[i]<static_cast<int>(sizeof(GridVertexPacked)), i, disp[i], Attributes, sizeof(GridVertexPacked));
             }
             #ifndef MPI2
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), 		&disp[3] );
-            disp[3] -= base;
-            disp[3] += disp[0];
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), 		&disp[2] );
+            disp[2] -= base;
+            disp[2] += disp[0];
             #endif
             #ifdef MPI2
             MPI_Datatype tmpType; 
@@ -1360,11 +1256,6 @@ switch (mode) {
       }
       
       
-      peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration, const tarch::la::Vector<Dimensions,double>& x, const int& level):
-      _persistentRecords(state, adjacentRanks, x, level),_adjacentRanksOfPreviousIteration(adjacentRanksOfPreviousIteration) {
-         
-      }
-      
       peano4::grid::GridVertex::~GridVertex() { }
       
       
@@ -1405,36 +1296,6 @@ switch (mode) {
          assertion(elementIndex>=0);
          assertion(elementIndex<TwoPowerD);
          _persistentRecords._adjacentRanks[elementIndex]= adjacentRanks;
-         
-      }
-      
-      
-      
-       tarch::la::Vector<TwoPowerD,int> peano4::grid::GridVertex::getAdjacentRanksOfPreviousIteration() const  {
-         return _adjacentRanksOfPreviousIteration;
-      }
-      
-      
-      
-       void peano4::grid::GridVertex::setAdjacentRanksOfPreviousIteration(const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration)  {
-         _adjacentRanksOfPreviousIteration = (adjacentRanksOfPreviousIteration);
-      }
-      
-      
-      
-       int peano4::grid::GridVertex::getAdjacentRanksOfPreviousIteration(int elementIndex) const  {
-         assertion(elementIndex>=0);
-         assertion(elementIndex<TwoPowerD);
-         return _adjacentRanksOfPreviousIteration[elementIndex];
-         
-      }
-      
-      
-      
-       void peano4::grid::GridVertex::setAdjacentRanksOfPreviousIteration(int elementIndex, const int& adjacentRanksOfPreviousIteration)  {
-         assertion(elementIndex>=0);
-         assertion(elementIndex<TwoPowerD);
-         _adjacentRanksOfPreviousIteration[elementIndex]= adjacentRanksOfPreviousIteration;
          
       }
       
@@ -1515,12 +1376,6 @@ switch (mode) {
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
          out << ",";
-         out << "adjacentRanksOfPreviousIteration:[";
-   for (int i = 0; i < TwoPowerD-1; i++) {
-      out << getAdjacentRanksOfPreviousIteration(i) << ",";
-   }
-   out << getAdjacentRanksOfPreviousIteration(TwoPowerD-1) << "]";
-         out << ",";
          out << "x:[";
    for (int i = 0; i < Dimensions-1; i++) {
       out << getX(i) << ",";
@@ -1540,7 +1395,6 @@ switch (mode) {
          return GridVertexPacked(
             getState(),
             getAdjacentRanks(),
-            getAdjacentRanksOfPreviousIteration(),
             getX(),
             getLevel()
          );
@@ -1648,16 +1502,15 @@ switch (mode) {
                GridVertex dummyGridVertex[2];
                
                #ifdef MPI2
-               const int Attributes = 5;
+               const int Attributes = 4;
                #else
-               const int Attributes = 6;
+               const int Attributes = 5;
                #endif
                MPI_Datatype subtypes[Attributes] = {
                     MPI_INT		 //state
                   , MPI_INT		 //adjacentRanks
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
-                  , MPI_INT		 //adjacentRanksOfPreviousIteration
                   #ifndef MPI2
                   , MPI_UB
                   #endif
@@ -1669,7 +1522,6 @@ switch (mode) {
                   , TwoPowerD		 //adjacentRanks
                   , Dimensions		 //x
                   , 1		 //level
-                  , TwoPowerD		 //adjacentRanksOfPreviousIteration
                   #ifndef MPI2
                   , 1
                   #endif
@@ -1704,11 +1556,6 @@ switch (mode) {
                MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[3] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._adjacentRanksOfPreviousIteration[0]))), 		&disp[4] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._adjacentRanksOfPreviousIteration[0]))), 		&disp[4] );
-               #endif
-               #ifdef MPI2
                for (int i=1; i<Attributes; i++) {
                #else
                for (int i=1; i<Attributes-1; i++) {
@@ -1724,9 +1571,9 @@ switch (mode) {
                   assertion4(disp[i]<static_cast<int>(sizeof(GridVertex)), i, disp[i], Attributes, sizeof(GridVertex));
                }
                #ifndef MPI2
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[5] );
-               disp[5] -= base;
-               disp[5] += disp[0];
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[4] );
+               disp[4] -= base;
+               disp[4] += disp[0];
                #endif
                #ifdef MPI2
                MPI_Datatype tmpType; 
@@ -2122,17 +1969,6 @@ switch (mode) {
       }
       
       
-      peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration, const tarch::la::Vector<Dimensions,double>& x, const int& level):
-      _persistentRecords(state, adjacentRanks, x, level),_adjacentRanksOfPreviousIteration(adjacentRanksOfPreviousIteration) {
-         if ((3 >= (8 * sizeof(short int)))) {
-            std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
-            std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
-            std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
-         }
-         assertion((3 < (8 * sizeof(short int))));
-         
-      }
-      
       peano4::grid::GridVertexPacked::~GridVertexPacked() { }
       
       
@@ -2182,36 +2018,6 @@ switch (mode) {
          assertion(elementIndex>=0);
          assertion(elementIndex<TwoPowerD);
          _persistentRecords._adjacentRanks[elementIndex]= adjacentRanks;
-         
-      }
-      
-      
-      
-       tarch::la::Vector<TwoPowerD,int> peano4::grid::GridVertexPacked::getAdjacentRanksOfPreviousIteration() const  {
-         return _adjacentRanksOfPreviousIteration;
-      }
-      
-      
-      
-       void peano4::grid::GridVertexPacked::setAdjacentRanksOfPreviousIteration(const tarch::la::Vector<TwoPowerD,int>& adjacentRanksOfPreviousIteration)  {
-         _adjacentRanksOfPreviousIteration = (adjacentRanksOfPreviousIteration);
-      }
-      
-      
-      
-       int peano4::grid::GridVertexPacked::getAdjacentRanksOfPreviousIteration(int elementIndex) const  {
-         assertion(elementIndex>=0);
-         assertion(elementIndex<TwoPowerD);
-         return _adjacentRanksOfPreviousIteration[elementIndex];
-         
-      }
-      
-      
-      
-       void peano4::grid::GridVertexPacked::setAdjacentRanksOfPreviousIteration(int elementIndex, const int& adjacentRanksOfPreviousIteration)  {
-         assertion(elementIndex>=0);
-         assertion(elementIndex<TwoPowerD);
-         _adjacentRanksOfPreviousIteration[elementIndex]= adjacentRanksOfPreviousIteration;
          
       }
       
@@ -2284,12 +2090,6 @@ switch (mode) {
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
          out << ",";
-         out << "adjacentRanksOfPreviousIteration:[";
-   for (int i = 0; i < TwoPowerD-1; i++) {
-      out << getAdjacentRanksOfPreviousIteration(i) << ",";
-   }
-   out << getAdjacentRanksOfPreviousIteration(TwoPowerD-1) << "]";
-         out << ",";
          out << "x:[";
    for (int i = 0; i < Dimensions-1; i++) {
       out << getX(i) << ",";
@@ -2309,7 +2109,6 @@ switch (mode) {
          return GridVertex(
             getState(),
             getAdjacentRanks(),
-            getAdjacentRanksOfPreviousIteration(),
             getX(),
             getLevel()
          );
@@ -2417,16 +2216,15 @@ switch (mode) {
                GridVertexPacked dummyGridVertexPacked[2];
                
                #ifdef MPI2
-               const int Attributes = 5;
+               const int Attributes = 4;
                #else
-               const int Attributes = 6;
+               const int Attributes = 5;
                #endif
                MPI_Datatype subtypes[Attributes] = {
                     MPI_INT		 //adjacentRanks
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_SHORT		 //_packedRecords0
-                  , MPI_INT		 //adjacentRanksOfPreviousIteration
                   #ifndef MPI2
                   , MPI_UB
                   #endif
@@ -2438,7 +2236,6 @@ switch (mode) {
                   , Dimensions		 //x
                   , 1		 //level
                   , 1		 //_packedRecords0
-                  , TwoPowerD		 //adjacentRanksOfPreviousIteration
                   #ifndef MPI2
                   , 1
                   #endif
@@ -2473,11 +2270,6 @@ switch (mode) {
                MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._persistentRecords._packedRecords0))), 		&disp[3] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._adjacentRanksOfPreviousIteration[0]))), 		&disp[4] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[0]._adjacentRanksOfPreviousIteration[0]))), 		&disp[4] );
-               #endif
-               #ifdef MPI2
                for (int i=1; i<Attributes; i++) {
                #else
                for (int i=1; i<Attributes-1; i++) {
@@ -2493,9 +2285,9 @@ switch (mode) {
                   assertion4(disp[i]<static_cast<int>(sizeof(GridVertexPacked)), i, disp[i], Attributes, sizeof(GridVertexPacked));
                }
                #ifndef MPI2
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), 		&disp[5] );
-               disp[5] -= base;
-               disp[5] += disp[0];
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertexPacked[1]))), 		&disp[4] );
+               disp[4] -= base;
+               disp[4] += disp[0];
                #endif
                #ifdef MPI2
                MPI_Datatype tmpType; 

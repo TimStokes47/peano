@@ -14,7 +14,6 @@ class peano4::grid::GridVertex {
   
   persistent parallelise packed State  state;
   persistent parallelise int  adjacentRanks[TwoPowerD];
-  discard    int  adjacentRanksOfPreviousIteration[TwoPowerD];
 
   /**
    * A vertex is outside, if all @f$ 2^d @f$ adjacent cells are outside. In this

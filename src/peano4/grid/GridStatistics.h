@@ -26,7 +26,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   30/11/2018 12:03
+ * @date   05/12/2018 13:14
  */
 class peano4::grid::GridStatistics { 
    
@@ -39,6 +39,10 @@ class peano4::grid::GridStatistics {
          int _numberOfUnrefinedVertices;
          int _numberOfErasingVertices;
          int _numberOfRefiningVertices;
+         int _numberOfLocalUnrefinedCells;
+         int _numberOfRemoteUnrefinedCells;
+         int _numberOfLocalRefinedCells;
+         int _numberOfRemoteRefinedCells;
          /**
           * Generated
           */
@@ -47,7 +51,7 @@ class peano4::grid::GridStatistics {
          /**
           * Generated
           */
-         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices);
+         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells);
          
          /**
           * Generated
@@ -89,6 +93,46 @@ class peano4::grid::GridStatistics {
           */
           void setNumberOfRefiningVertices(const int& numberOfRefiningVertices) ;
          
+         /**
+          * Generated
+          */
+          int getNumberOfLocalUnrefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfLocalUnrefinedCells(const int& numberOfLocalUnrefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfRemoteUnrefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfRemoteUnrefinedCells(const int& numberOfRemoteUnrefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfLocalRefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfLocalRefinedCells(const int& numberOfLocalRefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfRemoteRefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells) ;
+         
          
       };
       private: 
@@ -108,7 +152,7 @@ class peano4::grid::GridStatistics {
          /**
           * Generated
           */
-         GridStatistics(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices);
+         GridStatistics(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells);
          
          /**
           * Generated
@@ -154,6 +198,46 @@ class peano4::grid::GridStatistics {
           * Generated
           */
           void setNumberOfRefiningVertices(const int& numberOfRefiningVertices) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfLocalUnrefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfLocalUnrefinedCells(const int& numberOfLocalUnrefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfRemoteUnrefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfRemoteUnrefinedCells(const int& numberOfRemoteUnrefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfLocalRefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfLocalRefinedCells(const int& numberOfLocalRefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfRemoteRefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells) ;
          
          /**
           * Generated
@@ -218,7 +302,7 @@ class peano4::grid::GridStatistics {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   30/11/2018 12:03
+ * @date   05/12/2018 13:14
  */
 class peano4::grid::GridStatisticsPacked { 
    
@@ -229,6 +313,10 @@ class peano4::grid::GridStatisticsPacked {
          int _numberOfUnrefinedVertices;
          int _numberOfErasingVertices;
          int _numberOfRefiningVertices;
+         int _numberOfLocalUnrefinedCells;
+         int _numberOfRemoteUnrefinedCells;
+         int _numberOfLocalRefinedCells;
+         int _numberOfRemoteRefinedCells;
          /**
           * Generated
           */
@@ -237,7 +325,7 @@ class peano4::grid::GridStatisticsPacked {
          /**
           * Generated
           */
-         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices);
+         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells);
          
          /**
           * Generated
@@ -279,6 +367,46 @@ class peano4::grid::GridStatisticsPacked {
           */
           void setNumberOfRefiningVertices(const int& numberOfRefiningVertices) ;
          
+         /**
+          * Generated
+          */
+          int getNumberOfLocalUnrefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfLocalUnrefinedCells(const int& numberOfLocalUnrefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfRemoteUnrefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfRemoteUnrefinedCells(const int& numberOfRemoteUnrefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfLocalRefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfLocalRefinedCells(const int& numberOfLocalRefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfRemoteRefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells) ;
+         
          
       };
       private: 
@@ -298,7 +426,7 @@ class peano4::grid::GridStatisticsPacked {
          /**
           * Generated
           */
-         GridStatisticsPacked(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices);
+         GridStatisticsPacked(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells);
          
          /**
           * Generated
@@ -344,6 +472,46 @@ class peano4::grid::GridStatisticsPacked {
           * Generated
           */
           void setNumberOfRefiningVertices(const int& numberOfRefiningVertices) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfLocalUnrefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfLocalUnrefinedCells(const int& numberOfLocalUnrefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfRemoteUnrefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfRemoteUnrefinedCells(const int& numberOfRemoteUnrefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfLocalRefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfLocalRefinedCells(const int& numberOfLocalRefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getNumberOfRemoteRefinedCells() const ;
+         
+         /**
+          * Generated
+          */
+          void setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells) ;
          
          /**
           * Generated
