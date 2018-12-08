@@ -22,3 +22,8 @@ void peano4::grid::EmptyTraversalObserver::enterCell(
   logInfo( "enterCell(...)", "x=" << x );
   logInfo( "enterCell(...)", "h=" << h );
 }
+
+
+peano4::grid::TraversalObserver*  peano4::grid::EmptyTraversalObserver::clone(int spacetreeId) {
+  return new EmptyTraversalObserver();
+}

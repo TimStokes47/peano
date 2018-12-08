@@ -80,6 +80,17 @@ class peano4::grid::Spacetree {
     GridStatistics   _statistics;
 
     /**
+     * A split is identified by a tuple of id and cell count which tells the
+     * code how many cells should go to a particular id. The actual split then
+     * is done in a second iteration, i.e. we first bookmark all split requests
+     * and then we roll over the requests in the subsequent iteration to be
+     * actually performed.
+     */
+    typedef std::map< int, int >  SplitSpecification;
+    SplitSpecification   _splitTriggered;
+    SplitSpecification   _splitting;
+
+    /**
      * Clear the statistics
      */
     void clearStatistics();
@@ -160,13 +171,27 @@ class peano4::grid::Spacetree {
     void updateVertexAfterLoad( GridVertex& vertex );
     void updateVertexBeforeStore( GridVertex& vertex );
 
-    static void updateVertexRanksWithinCell( GridVertex fineGridVertices[TwoPowerD] );
+    /**
+     * If a cell gets a new id, we have to update its vertices.
+     */
+    static void updateVertexRanksWithinCell(
+      GridVertex  fineGridVertices[TwoPowerD],
+	  int         newId
+    );
 
     GridVertex createNewPersistentVertex(
       GridVertex                                   fineGridVertices[TwoPowerD],
 	  const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level
     );
+
+    /**
+     * Takes the local tree and removes cells cells from it. They are
+     * pushed into a new tree which is returned. If you use this operation,
+     * you usually use a SpacetreeSet and you push the result into this
+     * very set.
+     */
+    Spacetree split(int cells);
 
   public:
     Spacetree(
@@ -178,14 +203,6 @@ class peano4::grid::Spacetree {
     void traverse(TraversalObserver& observer);
 
     GridStatistics getGridStatistics() const;
-
-    /**
-     * Takes the local tree and removes cells cells from it. They are
-     * pushed into a new tree which is returned. If you use this operation,
-     * you usually use a SpacetreeSet and you push the result into this
-     * very set.
-     */
-    Spacetree split(int cells);
 };
 
 

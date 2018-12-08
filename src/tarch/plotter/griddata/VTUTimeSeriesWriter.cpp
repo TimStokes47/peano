@@ -26,13 +26,7 @@ void tarch::plotter::griddata::VTUTimeSeriesWriter::addSnapshot(const std::strin
     _out << snapshotFileName;
   }
 
-  _out
-       #ifdef Parallel
-       << ".pvtu"
-       #else
-       << ".vtu"
-       #endif
-       << "\"/>" << std::endl;
+  _out << ".pvtu" << "\"/>" << std::endl;
 }
 
 

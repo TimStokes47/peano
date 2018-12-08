@@ -1,7 +1,5 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTKBinaryFileWriter.h"
 
-#include "tarch/parallel/NodePool.h"
-
 #include <stdio.h>
 #include <iomanip>
 #include <fstream>
@@ -55,9 +53,6 @@ bool tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::writeToFi
   }
   std::ostringstream filenameStream;
   filenameStream << filenamePrefix
-    #ifdef Parallel
-                 << "-rank-" << tarch::parallel::Node::getInstance().getRank()
-    #endif
                  << ".vtk";
   const std::string filename = filenameStream.str();
 

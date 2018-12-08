@@ -33,7 +33,13 @@ class peano4::parallel::SpacetreeSet {
 	    peano4::grid::TraversalObserver&  _observer;
 	  public:
 	    TraverseTask( peano4::grid::Spacetree&  tree, peano4::grid::TraversalObserver&  observer );
+
+	    /**
+	     * I create the copy of the observer, run the traversal on my local
+	     * tree _spacetree and finally destroy the local observer copy.
+	     */
 	    bool run() override;
+
 	    void prefetch() override;
 	};
 
@@ -56,6 +62,10 @@ class peano4::parallel::SpacetreeSet {
      */
     std::map<int,int>  _master;
   public:
+    /**
+     * Adds the spacetree to the set. The responsibility goes over to the
+     * set.
+     */
     void addSpacetree( const peano4::grid::Spacetree& spacetree );
 
     /**
@@ -67,6 +77,11 @@ class peano4::parallel::SpacetreeSet {
      * Return statistics object for primary spacetree.
      */
     peano4::grid::GridStatistics  getGridStatistics() const;
+
+    /**
+     * Does exist for debug reasons. Usually not used by codes.
+     */
+    void split(int treeId, int cells);
 };
 
 #endif

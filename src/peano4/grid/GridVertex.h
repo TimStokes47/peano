@@ -28,7 +28,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   05/12/2018 13:30
+    * @date   08/12/2018 13:46
     */
    class peano4::grid::GridVertex { 
       
@@ -184,7 +184,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   05/12/2018 13:30
+    * @date   08/12/2018 13:46
     */
    class peano4::grid::GridVertexPacked { 
       
@@ -343,7 +343,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   05/12/2018 13:30
+       * @date   08/12/2018 13:46
        */
       class peano4::grid::GridVertex { 
          
@@ -533,7 +533,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   05/12/2018 13:30
+       * @date   08/12/2018 13:46
        */
       class peano4::grid::GridVertexPacked { 
          

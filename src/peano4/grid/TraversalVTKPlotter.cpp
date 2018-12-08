@@ -2,48 +2,61 @@
 
 #include "peano4/utils/Loop.h"
 
+#include <string>
+
 
 tarch::logging::Log  peano4::grid::TraversalVTKPlotter::_log( "peano4::grid::TraversalVTKPlotter" );
 
 
-peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filename ):
+peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filename, int treeId, int counter ):
   _filename(filename),
-  _counter(0),
+  _spacetreeId(treeId),
+  _counter(counter),
   _writer(nullptr),
   _vertexWriter(nullptr),
   _cellWriter(nullptr),
   _timeSeriesWriter() {
-}
-
-
-void peano4::grid::TraversalVTKPlotter::beginTraversal() {
   _writer = new tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter();
   _vertexWriter = _writer->createVertexWriter();
   _cellWriter   = _writer->createCellWriter();
 }
 
 
+peano4::grid::TraversalVTKPlotter::~TraversalVTKPlotter() {
+  endTraversal();
+}
+
+
+void peano4::grid::TraversalVTKPlotter::beginTraversal() {
+}
+
+
 void peano4::grid::TraversalVTKPlotter::endTraversal() {
   logInfo( "beginTraversal(...)", "end traversal" );
 
-  _vertexWriter->close();
-  _cellWriter->close();
+  if (_writer!=nullptr) {
+    _vertexWriter->close();
+    _cellWriter->close();
 
-  delete _vertexWriter;
-  delete _cellWriter;
+    delete _vertexWriter;
+    delete _cellWriter;
 
-  _vertexWriter = nullptr;
-  _cellWriter   = nullptr;
+    _vertexWriter = nullptr;
+    _cellWriter   = nullptr;
 
-  std::string currentFile = _filename + "_" + std::to_string( _counter );
-  _writer->writeToFile( currentFile );
-  delete _writer;
-  _writer = nullptr;
+    std::string currentFile = _filename;
 
-  _timeSeriesWriter.addSnapshot( currentFile, _counter );
-  _timeSeriesWriter.writeFile( _filename );
-
-  _counter++;
+    // we run serially
+    if (_spacetreeId==-1) {
+      currentFile += "-" + std::to_string( _counter );
+    }
+    else {
+      currentFile += "-" + std::to_string(_spacetreeId) + "-" + std::to_string( _counter );
+    }
+    _writer->writeToFile( currentFile );
+    delete _writer;
+    _writer = nullptr;
+  }
 }
 
 
@@ -68,4 +81,39 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
     #warning Noch net implementiert
     #endif
   }
+}
+
+
+peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int spacetreeId) {
+  // This is the main plotter. In the parallel case, I will have to check whether I'm on the
+  // global rank as well.
+  if (_spacetreeId==-1) {
+	std::string newFile = _filename + "-" + std::to_string(spacetreeId) + "-" + std::to_string( _counter );
+    _clonedSpacetreeIds.push_back( newFile );
+
+    _writer->writeMetaDataFileForParallelSnapshot(
+      _filename + "-" + std::to_string( _counter ),
+	  _clonedSpacetreeIds
+	);
+  }
+  else {
+	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
+  }
+
+
+  return new peano4::grid::TraversalVTKPlotter(
+    _filename,
+	spacetreeId,
+	_counter
+  );
+}
+
+
+void peano4::grid::TraversalVTKPlotter::startNewSnapshot() {
+  _counter++;
+
+  _timeSeriesWriter.addSnapshot( _filename + "-" + std::to_string( _counter ), _counter );
+  _timeSeriesWriter.writeFile( _filename );
+
+  _clonedSpacetreeIds.clear();
 }

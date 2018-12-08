@@ -8,6 +8,10 @@
 #include "tarch/plotter/griddata/unstructured/UnstructuredGridWriter.h"
 
 
+#include <vector>
+#include <string>
+
+
 namespace tarch {
   namespace plotter {
     namespace griddata {
@@ -35,7 +39,7 @@ namespace tarch {
  * - Pass all the vertices to this writer (both hanging and persistent nodes).
  *   For each vertex you receive an unique number. Remember this number.
  * - For the elements you want to write, you have to create your own
- *   ElementWriter.
+ *   CellWriter.
  * - For each record create a data writer. There's two writers: One for the
  *   vertices and one for the cells.
  *
@@ -46,7 +50,6 @@ namespace tarch {
  * Peano, this is the mappings where some events could occur simultaneously.
  *
  * @author Tobias Weinzierl
- * @version $Revision: 1.1 $
  */
 class tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter:
   public tarch::plotter::griddata::unstructured::UnstructuredGridWriter {
@@ -87,6 +90,10 @@ class tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter:
 
     virtual bool isOpen();
 
+    /**
+     * @param filename Name of output file. Should be unique for each thread/rank combination
+     * @param parallelMetaFilename Meta file giving an overview over all files written simultaneously
+     */
     virtual bool writeToFile( const std::string& filename );
 
     virtual void clear();
@@ -95,6 +102,11 @@ class tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter:
     virtual CellWriter*        createCellWriter();
     virtual CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell );
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex );
+
+    void writeMetaDataFileForParallelSnapshot(
+      const std::string& metaDataFilename,
+	  const std::vector< std::string >& files
+    );
 
     /**
      * This is the vertex writer you have to create to plot the vertices.

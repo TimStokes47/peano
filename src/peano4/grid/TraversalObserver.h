@@ -25,6 +25,13 @@ class peano4::grid::TraversalObserver {
 	  const tarch::la::Vector<Dimensions,double>& h,
 	  bool                                        isRefined
     ) = 0;
+
+	/**
+	 * I use the clone to create one observer object per traversal thread. So
+	 * between different spacetrees of one spacetree set, there can be no race
+	 * condition.
+	 */
+	virtual TraversalObserver* clone(int spacetreeId) = 0;
 };
 
 #endif

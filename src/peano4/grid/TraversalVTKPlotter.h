@@ -26,20 +26,27 @@ namespace peano4 {
  *
  * While we use the up-to-date vtk format, the observer plots the whole thing
  * as a discontinuous unstructured mesh. It is not particular sophisticated.
+ *
+ * The plotter can write whole time series. For this, you have to invoke
+ * startNewSnapshot() prior to each plot.
  */
 class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver {
   private:
     static tarch::logging::Log  _log;
 
     const std::string                                                                _filename;
+    const int                                                                        _spacetreeId;
     int                                                                              _counter;
     tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter*                  _writer;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*    _vertexWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*      _cellWriter;
 //    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*  _cellWriter;
     tarch::plotter::griddata::VTUTimeSeriesWriter                                    _timeSeriesWriter;
+
+    std::vector<std::string>                                                         _clonedSpacetreeIds;
   public:
-    TraversalVTKPlotter( const std::string& filename );
+    TraversalVTKPlotter( const std::string& filename, int treeId=-1, int counter=0 );
+    virtual ~TraversalVTKPlotter();
 
 	void beginTraversal() override;
 	void endTraversal() override;
@@ -49,6 +56,10 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
       const tarch::la::Vector<Dimensions,double>& h,
 	  bool                                        isRefined
     ) override;
+
+	TraversalObserver* clone(int spacetreeId) override;
+
+	void startNewSnapshot();
 };
 
 #endif

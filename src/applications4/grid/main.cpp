@@ -62,9 +62,10 @@ int main(int argc, char** argv) {
   // parallel version
   peano4::parallel::SpacetreeSet spacetreeSet;
   spacetreeSet.addSpacetree( spacetree );
-//  peano4::grid::TraversalVTKPlotter observer( "grid" );
-  peano4::grid::EmptyTraversalObserver observer;
+  peano4::grid::TraversalVTKPlotter observer( "grid" );
+//  peano4::grid::EmptyTraversalObserver observer;
   for (int i=0; i<4; i++) {
+	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );
 
     logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
@@ -79,8 +80,11 @@ int main(int argc, char** argv) {
 
   std::cout << "== start split ==" << std::endl;
 
-  spacetreeSet.addSpacetree( spacetree.split(spacetreeSet.getGridStatistics().getNumberOfRefinedVertices()/2) );
+  // @todo This is wrong
+  spacetreeSet.split(0,102);
+  //spacetreeSet.addSpacetree( spacetree.split(spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/2) );
   for (int i=0; i<4; i++) {
+	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );
 
     logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );

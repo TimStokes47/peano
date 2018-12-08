@@ -42,22 +42,17 @@ void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::clear() {
 }
 
 
-bool tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeToFile( const std::string& filenamePrefix ) {
+bool tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeToFile(
+  const std::string& filename
+) {
   assertion( !_writtenToFile );
 
-  if (filenamePrefix.rfind(".vtu")!=std::string::npos) {
-    logWarning( "writeToFile()", "filename should not end with .vtu as routine adds extension automatically. Chosen filename prefix=" << filenamePrefix );
+  if (filename.rfind(".vtu")!=std::string::npos) {
+    logWarning( "writeToFile()", "filename should not end with .vtu as routine adds extension automatically. Chosen filename prefix=" << filename );
   }
-  std::ostringstream filenameStream;
-  filenameStream << filenamePrefix
-    #ifdef Parallel
-                 << "-rank-" << tarch::parallel::Node::getInstance().getRank()
-    #endif
-                 << ".vtu";
-  const std::string filename = filenameStream.str();
 
   std::ofstream out;
-  out.open( filename.c_str() );
+  out.open( (filename + ".vtu").c_str() );
   if ( (!out.fail()) && out.is_open() ) {
     _log.debug( "close()", "opened data file " + filename );
 
@@ -85,18 +80,27 @@ bool tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeToFile
   	return false;
   }
 
-  #ifdef Parallel
-  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
-    std::string parallelMetaFileName = filenamePrefix + ".pvtu";
+  return true;
+}
 
-    std::ofstream metaOut;
-    metaOut.open( parallelMetaFileName.c_str() );
-    if ( (!metaOut.fail()) && metaOut.is_open() ) {
-      _log.debug( "close()", "opened data file " + filename );
 
-      metaOut << "<?xml version=\"1.0\"?>" << std::endl
-              << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl
-              << "<PUnstructuredGrid GhostLevel=\"0\">" << std::endl
+
+void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeMetaDataFileForParallelSnapshot(
+  const std::string& metaDataFilename,
+  const std::vector< std::string >& files
+) {
+  if (metaDataFilename.rfind(".pvtu")!=std::string::npos) {
+    logWarning( "writeToFile()", "meta file name should not end with .pvtu as routine adds extension automatically. Chosen filename prefix=" << metaDataFilename );
+  }
+
+  std::ofstream metaOut;
+  metaOut.open( (metaDataFilename + ".pvtu").c_str() );
+  if ( (!metaOut.fail()) && metaOut.is_open() ) {
+    _log.debug( "close()", "opened data file " + metaDataFilename );
+
+    metaOut << "<?xml version=\"1.0\"?>" << std::endl
+            << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl
+            << "<PUnstructuredGrid GhostLevel=\"0\">" << std::endl
             << "<PPoints>" << std::endl
             << "<PDataArray type=\"" << _dataType << "\" Name=\"coordinates\" NumberOfComponents=\"3\"/>" << std::endl
             << "</PPoints>" << std::endl
@@ -110,47 +114,33 @@ bool tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeToFile
             << "</PPointData>" << std::endl
             << "<PCellData>" << std::endl
             << _parallelCellDataDescription << std::endl
-            << "</PCellData>" << std::endl
-      /*
-    <PPointData Scalars="composition">
-      <PDataArray type="Float32" Name="pressure" NumberOfComponents="1"/>
-      <PDataArray type="Float32" Name="composition"
-NumberOfComponents="1"/>
-      <PDataArray type="Float32" Name="velocity" NumberOfComponents="3"/>
-      <PDataArray type="Float32" Name="force" NumberOfComponents="3"/>
-    </PPointData>
-*/
-              ;
-//            << "Piece Source="circ_inc-0_0.vtu"/>
+            << "</PCellData>" << std::endl;
 
-      for (int i=0; i<tarch::parallel::Node::getInstance().getNumberOfNodes(); i++) {
-        if ( i==0 || !tarch::parallel::NodePool::getInstance().isIdleNode(i) ) {
-          std::ostringstream referencedFilename;
-          if (filenamePrefix.find("/")!=std::string::npos) {
-            referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
-          }
-          else {
-            referencedFilename << filenamePrefix;
-          }
-          referencedFilename << "-rank-" << i
-                             << ".vtu";
-          metaOut << "<Piece Source=\"" << referencedFilename.str() << "\"/>" << std::endl;
-        }
+    for (auto p: files) {
+      std::ostringstream referencedFilename;
+      if (p.find("/")!=std::string::npos) {
+        referencedFilename << p.substr( p.rfind("/")+1 );
+      }
+      else {
+        referencedFilename << p;
       }
 
-      metaOut << "</PUnstructuredGrid>" << std::endl
-                << "</VTKFile>" << std::endl;
+      if (p.rfind(".vtu")!=std::string::npos) {
+        logWarning( "writeToFile()", "file name passed to meta file writer should not end with .vtu as routine adds extension automatically. Chosen filename prefix=" << p );
+      }
 
-      metaOut.close();
+      referencedFilename << ".vtu";
+      metaOut << "<Piece Source=\"" << referencedFilename.str() << "\"/>" << std::endl;
     }
-    else {
-      _log.error( "close()", "unable to write meta data file " + parallelMetaFileName );
-      return false;
-    }
+
+    metaOut << "</PUnstructuredGrid>" << std::endl
+          << "</VTKFile>" << std::endl;
+
+    metaOut.close();
   }
-  #endif
-
-  return true;
+  else {
+    _log.error( "close()", "unable to write meta data file " + metaDataFilename );
+  }
 }
 
 

@@ -20,7 +20,9 @@ peano4::parallel::SpacetreeSet::TraverseTask::TraverseTask(
 
 
 bool peano4::parallel::SpacetreeSet::TraverseTask::run() {
-  _spacetree.traverse( _observer );
+  peano4::grid::TraversalObserver* localObserver = _observer.clone( _spacetree._id );
+  _spacetree.traverse( *localObserver );
+  delete localObserver;
   return false;
 }
 
@@ -67,4 +69,21 @@ void peano4::parallel::SpacetreeSet::merge(
 
 peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics() const {
   return _spacetrees.begin()->getGridStatistics();
+}
+
+
+void peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
+  peano4::grid::Spacetree* tree = nullptr;
+  for (auto& p: _spacetrees) {
+	if (p._id==treeId) tree = &p;
+  }
+  if (tree==nullptr) {
+	assertionMsg(false, "unknown tree Id");
+  }
+  assertion3(
+    cells < tree->getGridStatistics().getNumberOfLocalUnrefinedCells(),
+	cells, tree->getGridStatistics().getNumberOfLocalUnrefinedCells(), treeId
+  );
+  // @todo
+  tree->split(cells);
 }

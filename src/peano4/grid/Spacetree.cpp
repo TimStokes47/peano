@@ -38,10 +38,10 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
 ) const {
   bool isLocal = true;
   dfor2(k)
-    assertion1(
+    assertion2(
       !isLocal or kScalar==0 or
 	  vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==_id,
-	  vertices[kScalar].toString()
+	  vertices[kScalar].toString(), _id
 	);
     isLocal &= vertices[kScalar].getState()==GridVertex::State::HangingVertex
     		   or
@@ -55,6 +55,9 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
   logTraceIn( "traverse()" );
 
   clearStatistics();
+
+  _splitting.insert( _splitTriggered.begin(), _splitTriggered.end() );
+  _splitTriggered.clear();
 
   observer.beginTraversal();
 
@@ -80,6 +83,8 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
   _root.setInverted( not _root.getInverted() );
 
   observer.endTraversal();
+
+  assertion( _splitting.empty() );
 
   logTraceOut( "traverse()" );
 }
@@ -283,13 +288,20 @@ void peano4::grid::Spacetree::updateVertexBeforeStore( peano4::grid::GridVertex&
 
 
 peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
-  GridVertex                                   fineGridVertices[TwoPowerD],
+  GridVertex                                   coarseGridVertices[TwoPowerD],
   const tarch::la::Vector<Dimensions,double>&  x,
   int                                          level
 ) {
+  logTraceInWith2Arguments( "createNewPersistentVerte(...)", x, level );
+
+  tarch::la::Vector<TwoPowerD,int> adjacentRanks(-1);
+  dfor2(k)
+    adjacentRanks(kScalar) = coarseGridVertices[ kScalar ].getAdjacentRanks(TwoPowerD-1-kScalar);
+  enddforx
+
   GridVertex result(
     GridVertex::State::Unrefined,
-    tarch::la::Vector<TwoPowerD,int>(0)         // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
+    adjacentRanks
     #ifdef PeanoDebug
     ,
     x,                                          // const tarch::la::Vector<Dimensions,double>& x
@@ -297,8 +309,7 @@ peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
     #endif
   );
 
-  Hier muss richtig vererbt werden
-
+  logTraceOutWith1Argument( "createNewPersistentVerte(...)", result.toString() );
   return result;
 }
 
@@ -452,10 +463,9 @@ void peano4::grid::Spacetree::clearStatistics() {
 }
 
 
-void peano4::grid::Spacetree::updateVertexRanksWithinCell( GridVertex fineGridVertices[TwoPowerD] ) {
-  const int myRank = 4;
+void peano4::grid::Spacetree::updateVertexRanksWithinCell( GridVertex fineGridVertices[TwoPowerD], int newId ) {
   dfor2(k)
-    fineGridVertices[kScalar].setAdjacentRanks(TwoPowerD-kScalar-1,myRank);
+    fineGridVertices[kScalar].setAdjacentRanks(TwoPowerD-kScalar-1,newId);
   enddforx
 }
 
@@ -477,6 +487,9 @@ void peano4::grid::Spacetree::descend(
   peano4::utils::LoopDirection loopDirection = PeanoCurve::getLoopDirection(state);
   logDebug( "descend(...)", "- direction=" << loopDirection );
 
+  //
+  // Construct the 3^d new children states
+  //
   AutomatonState fineGridStates[ThreePowerD];
   refineState(state, fineGridStates );
 
@@ -486,22 +499,31 @@ void peano4::grid::Spacetree::descend(
   enddforx
   #endif
 
+  //
+  // Loop over children
+  //
   zfor3(k,loopDirection)
-    // load cell's vertices
+    //
+    // Load cell's vertices
+    //
     GridVertex fineGridVertices[TwoPowerD];
     loadVertices(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k);
 
-//    if ( isSpacetreeNodeLocal(fineGridVertices) ) {
-      updateVertexRanksWithinCell( fineGridVertices );
-//    }
+    //
+    // Enter cell
+    //
+    if ( isSpacetreeNodeLocal(fineGridVertices) ) {
+      observer.enterCell(
+        fineGridStates[peano4::utils::dLinearised(k,3)].getX(),
+	    fineGridStates[peano4::utils::dLinearised(k,3)].getH(),
+	    isSpacetreeNodeRefined(fineGridVertices)
+	  );
+    //      updateVertexRanksWithinCell( fineGridVertices );
+    }
 
-    // enter cell event
-    observer.enterCell(
-      fineGridStates[peano4::utils::dLinearised(k,3)].getX(),
-	  fineGridStates[peano4::utils::dLinearised(k,3)].getH(),
-	  isSpacetreeNodeRefined(fineGridVertices)
-	);
-
+    //
+    // DFS
+    //
     if (isSpacetreeNodeRefined(fineGridVertices)) {
       if ( isSpacetreeNodeLocal(fineGridVertices) ) {
         _statistics.setNumberOfLocalRefinedCells( _statistics.getNumberOfLocalRefinedCells()+1 );
@@ -523,8 +545,27 @@ void peano4::grid::Spacetree::descend(
         _statistics.setNumberOfRemoteUnrefinedCells( _statistics.getNumberOfRemoteUnrefinedCells()+1 );
       }
     }
-    // leave Cell
 
+    //
+    // Leave cell
+    //
+
+
+    //
+    // Decompose tree if split requested
+    //
+    if ( isSpacetreeNodeLocal(fineGridVertices) and !_splitting.empty() ) {
+      const int targetSpacetreeId = _splitting.begin()->first;
+      updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
+      _splitting.begin()->second--;
+      if (_splitting.begin()->second==0) {
+        _splitting.erase( _splitting.begin() );
+      }
+    }
+
+    //
+    // Store vertices
+    //
     storeVertices(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k);
   endzfor
 
@@ -538,10 +579,19 @@ peano4::grid::GridStatistics peano4::grid::Spacetree::getGridStatistics() const 
 
 
 peano4::grid::Spacetree peano4::grid::Spacetree::split(int cells) {
+  const int newSpacetreeId = peano4::parallel::Node::getInstance().getNextFreeLocalId();
   Spacetree result(
-    peano4::parallel::Node::getInstance().getNextFreeLocalId(),
+    newSpacetreeId,
 	_root.getX(),
 	_root.getH()
   );
+
+  // @todo Sollte jetzt mal einen Tree zurueckliefern, der aber in dem Status
+  //       intern den State 'not yet there' hat. Somit passiert also zunaechst
+  //       erst mal nix. Erst im naechsten Schritt wird ja dann auch tatsaechlich
+  //       zerteilt.
+  assertion( _splitTriggered.count(newSpacetreeId)==0 );
+  _splitTriggered.insert( std::pair<int,int>(newSpacetreeId,cells) );
+
   return result;
 }
