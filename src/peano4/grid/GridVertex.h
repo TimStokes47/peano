@@ -28,7 +28,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   08/12/2018 13:46
+    * @date   09/12/2018 16:09
     */
    class peano4::grid::GridVertex { 
       
@@ -43,6 +43,7 @@ namespace peano4 {
          struct PersistentRecords {
             State _state;
             tarch::la::Vector<TwoPowerD,int> _adjacentRanks;
+            bool _isAntecessorOfRefinedVertex;
             /**
              * Generated
              */
@@ -51,7 +52,7 @@ namespace peano4 {
             /**
              * Generated
              */
-            PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks);
+            PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex);
             
             /**
              * Generated
@@ -66,6 +67,16 @@ namespace peano4 {
              tarch::la::Vector<TwoPowerD,int> getAdjacentRanks() const ;
             
              void setAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& adjacentRanks) ;
+            
+            /**
+             * Generated
+             */
+             bool getIsAntecessorOfRefinedVertex() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
             
             
          };
@@ -86,7 +97,7 @@ namespace peano4 {
             /**
              * Generated
              */
-            GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks);
+            GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex);
             
             /**
              * Generated
@@ -110,6 +121,16 @@ namespace peano4 {
              int getAdjacentRanks(int elementIndex) const ;
             
              void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+            
+            /**
+             * Generated
+             */
+             bool getIsAntecessorOfRefinedVertex() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
             
             /**
              * Generated
@@ -184,7 +205,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   08/12/2018 13:46
+    * @date   09/12/2018 16:09
     */
    class peano4::grid::GridVertexPacked { 
       
@@ -194,6 +215,7 @@ namespace peano4 {
          
          struct PersistentRecords {
             tarch::la::Vector<TwoPowerD,int> _adjacentRanks;
+            bool _isAntecessorOfRefinedVertex;
             
             /** mapping of records:
             || Member 	|| startbit 	|| length
@@ -209,7 +231,7 @@ namespace peano4 {
             /**
              * Generated
              */
-            PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks);
+            PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex);
             
             /**
              * Generated
@@ -224,6 +246,16 @@ namespace peano4 {
              tarch::la::Vector<TwoPowerD,int> getAdjacentRanks() const ;
             
              void setAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& adjacentRanks) ;
+            
+            /**
+             * Generated
+             */
+             bool getIsAntecessorOfRefinedVertex() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
             
             
          };
@@ -244,7 +276,7 @@ namespace peano4 {
             /**
              * Generated
              */
-            GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks);
+            GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex);
             
             /**
              * Generated
@@ -268,6 +300,16 @@ namespace peano4 {
              int getAdjacentRanks(int elementIndex) const ;
             
              void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+            
+            /**
+             * Generated
+             */
+             bool getIsAntecessorOfRefinedVertex() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
             
             /**
              * Generated
@@ -343,7 +385,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   08/12/2018 13:46
+       * @date   09/12/2018 16:09
        */
       class peano4::grid::GridVertex { 
          
@@ -358,6 +400,7 @@ namespace peano4 {
             struct PersistentRecords {
                State _state;
                tarch::la::Vector<TwoPowerD,int> _adjacentRanks;
+               bool _isAntecessorOfRefinedVertex;
                tarch::la::Vector<Dimensions,double> _x;
                int _level;
                /**
@@ -368,7 +411,7 @@ namespace peano4 {
                /**
                 * Generated
                 */
-               PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -383,6 +426,16 @@ namespace peano4 {
                 tarch::la::Vector<TwoPowerD,int> getAdjacentRanks() const ;
                
                 void setAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsAntecessorOfRefinedVertex() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
                
                 tarch::la::Vector<Dimensions,double> getX() const ;
                
@@ -417,7 +470,7 @@ namespace peano4 {
                /**
                 * Generated
                 */
-               GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -441,6 +494,16 @@ namespace peano4 {
                 int getAdjacentRanks(int elementIndex) const ;
                
                 void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsAntecessorOfRefinedVertex() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
                
                 tarch::la::Vector<Dimensions,double> getX() const ;
                
@@ -533,7 +596,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   08/12/2018 13:46
+       * @date   09/12/2018 16:09
        */
       class peano4::grid::GridVertexPacked { 
          
@@ -543,6 +606,7 @@ namespace peano4 {
             
             struct PersistentRecords {
                tarch::la::Vector<TwoPowerD,int> _adjacentRanks;
+               bool _isAntecessorOfRefinedVertex;
                tarch::la::Vector<Dimensions,double> _x;
                int _level;
                
@@ -560,7 +624,7 @@ namespace peano4 {
                /**
                 * Generated
                 */
-               PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -575,6 +639,16 @@ namespace peano4 {
                 tarch::la::Vector<TwoPowerD,int> getAdjacentRanks() const ;
                
                 void setAdjacentRanks(const tarch::la::Vector<TwoPowerD,int>& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsAntecessorOfRefinedVertex() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
                
                 tarch::la::Vector<Dimensions,double> getX() const ;
                
@@ -609,7 +683,7 @@ namespace peano4 {
                /**
                 * Generated
                 */
-               GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -633,6 +707,16 @@ namespace peano4 {
                 int getAdjacentRanks(int elementIndex) const ;
                
                 void setAdjacentRanks(int elementIndex, const int& adjacentRanks) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsAntecessorOfRefinedVertex() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
                
                 tarch::la::Vector<Dimensions,double> getX() const ;
                

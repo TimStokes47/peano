@@ -102,7 +102,8 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
     vertices[kScalar] = GridVertex(
       isFirstTraversal ? GridVertex::State::Refining
     		           : GridVertex::State::Refined,     // const State& state
-       tarch::la::Vector<TwoPowerD,int>(_id)             // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
+       tarch::la::Vector<TwoPowerD,int>(_id),            // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
+	   true                                              // antecessor of refined vertex
        #ifdef PeanoDebug
        ,
        x,                                                // const tarch::la::Vector<Dimensions,double>& x
@@ -273,12 +274,18 @@ std::string peano4::grid::Spacetree::toString( VertexType type ) {
       return "hanging";
     case VertexType::Persistent:
       return "persistent";
+    case VertexType::Delete:
+      return "delete";
   }
   return "<undef>";
 }
 
 
-void peano4::grid::Spacetree::updateVertexAfterLoad( GridVertex& vertex ) {
+void peano4::grid::Spacetree::updateVertexAfterLoad(
+  GridVertex&                               vertex,
+  GridVertex                                fineGridVertices[TwoPowerD],
+  const tarch::la::Vector<Dimensions,int>&  position
+) {
   logTraceInWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
 
   if (
@@ -293,28 +300,58 @@ void peano4::grid::Spacetree::updateVertexAfterLoad( GridVertex& vertex ) {
 	and
 	isVertexAdjacentToLocalSpacetree(vertex)
   ) {
+	assertion1( not vertex.getIsAntecessorOfRefinedVertex(), vertex.toString() );
     vertex.setState( GridVertex::State::Erasing );
   }
+
+  // has to be here. Don't want to interfere with state splitting
+  if (
+    not isVertexAdjacentToLocalSpacetree(vertex)
+    and
+	not vertex.getIsAntecessorOfRefinedVertex()
+	and
+	vertex.getState()==GridVertex::State::Refined
+  ) {
+	logInfo( "updateVertexAfterLoad(GridVertex&)", "would like to erase " << vertex.toString() << " in spacetree " << _id );
+	  // @todo Nextx step
+//	vertex.setState( GridVertex::State::EraseTriggered );
+  }
+
+  vertex.setIsAntecessorOfRefinedVertex(false);
 
   logTraceOutWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
 }
 
 
-void peano4::grid::Spacetree::updateVertexBeforeStore( peano4::grid::GridVertex& vertex ) {
+bool peano4::grid::Spacetree::restrictToCoarseGrid(
+  const tarch::la::Vector<Dimensions,int>&  coarseVertexPosition,
+  const tarch::la::Vector<Dimensions,int>&  fineVertexPosition
+) {
+  bool result = true;
+  for (int d=0; d<Dimensions; d++) {
+    result &= (coarseVertexPosition(d)==1 and fineVertexPosition(d)>0);
+    result &= (coarseVertexPosition(d)==0 and fineVertexPosition(d)<3);
+  }
+  return result;
+}
+
+
+void peano4::grid::Spacetree::updateVertexBeforeStore(
+  GridVertex&                               vertex,
+  GridVertex                                coarseGridVertices[TwoPowerD],
+  const tarch::la::Vector<Dimensions,int>&  position
+) {
   logTraceInWith1Argument( "updateVertexBeforeStore(GridVertex&)", vertex.toString() );
 
-  // @todo: Erase darf nur einen Level gehen
-/*
-  if (not isVertexAdjacentToLocalSpacetree(vertex)) {
-	vertex.setState( GridVertex::State::EraseTriggered );
-  }
-*/
+  bool restrictIsAntecessorOfRefinedVertex = false;
 
   if (vertex.getState()==GridVertex::State::RefinementTriggered) {
     _statistics.setNumberOfRefiningVertices( _statistics.getNumberOfRefiningVertices()+1 );
+    restrictIsAntecessorOfRefinedVertex = true;
   }
   else if (vertex.getState()==GridVertex::State::Refining) {
     vertex.setState( GridVertex::State::Refined );
+    restrictIsAntecessorOfRefinedVertex = true;
   }
   else if (vertex.getState()==GridVertex::State::EraseTriggered) {
     _statistics.setNumberOfErasingVertices( _statistics.getNumberOfErasingVertices()+1 );
@@ -329,6 +366,15 @@ void peano4::grid::Spacetree::updateVertexBeforeStore( peano4::grid::GridVertex&
   if (vertex.getState()==GridVertex::State::Unrefined) {
     _statistics.setNumberOfUnrefinedVertices( _statistics.getNumberOfUnrefinedVertices()+1 );
   }
+
+  if (restrictIsAntecessorOfRefinedVertex) {
+	dfor2(k)
+      if (restrictToCoarseGrid(k,position)) {
+        coarseGridVertices[kScalar].setIsAntecessorOfRefinedVertex(true);
+      }
+	enddforx
+  }
+  //  vertex.setIsAntecessorOfRefinedVertex(false);
 
   logTraceOutWith1Argument( "updateVertexBeforeStore", vertex.toString() );
 }
@@ -348,11 +394,12 @@ peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
 
   GridVertex result(
     GridVertex::State::Unrefined,
-    adjacentRanks
+    adjacentRanks,
+    false                                       // antecessor of refined vertex
     #ifdef PeanoDebug
     ,
     x,                                          // const tarch::la::Vector<Dimensions,double>& x
-    level                    // level
+    level                                       // level
     #endif
   );
 
@@ -397,16 +444,21 @@ void peano4::grid::Spacetree::loadVertices(
       case VertexType::New:
     	logDebug( "loadVertices(...)", "stack no=" << stackNumber );
     	fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] = createNewPersistentVertex(coarseGridVertices,x,fineGridStatesState.getLevel());
-        updateVertexAfterLoad( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
+        updateVertexAfterLoad(
+          fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ],
+		  coarseGridVertices,
+		  localVertexPositionWithinPatch
+        );
     	break;
       case VertexType::Hanging:
       	fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] = GridVertex(
           GridVertex::State::HangingVertex,
-          tarch::la::Vector<TwoPowerD,int>(0)         // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
+          tarch::la::Vector<TwoPowerD,int>(0),        // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
+		  false                                       // antecessor of refined vertex
           #ifdef PeanoDebug
           ,
           x,                                          // const tarch::la::Vector<Dimensions,double>& x
-		  fineGridStatesState.getLevel()                    // level
+		  fineGridStatesState.getLevel()              // level
           #endif
   		);
       	break;
@@ -417,7 +469,11 @@ void peano4::grid::Spacetree::loadVertices(
           assertion3( not _vertexStack[stackNumber].empty(), stackNumber, localVertexIndex, localVertexPositionWithinPatch );
           fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ]  = _vertexStack[stackNumber].pop();
           if ( PeanoCurve::isInOutStack(stackNumber) ) {
-            updateVertexAfterLoad( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
+            updateVertexAfterLoad(
+	          fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ],
+			  coarseGridVertices,
+			  localVertexPositionWithinPatch
+			);
           }
         }
         break;
@@ -486,7 +542,11 @@ void peano4::grid::Spacetree::storeVertices(
 			"write vertex " << fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].toString() << " to stack " << stackNumber
 		  );
           if ( PeanoCurve::isInOutStack(stackNumber) ) {
-            updateVertexBeforeStore( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
+            updateVertexBeforeStore(
+              fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ],
+			  coarseGridVertices,
+			  localVertexPositionWithinPatch
+            );
           }
       	  _vertexStack[stackNumber].push( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
         }

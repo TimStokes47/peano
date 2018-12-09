@@ -173,8 +173,21 @@ class peano4::grid::Spacetree {
      * This operation has to be called whenever we load a vertex from the input
      * stream, i.e. we touch it for the very first time.
      */
-    void updateVertexAfterLoad( GridVertex& vertex );
-    void updateVertexBeforeStore( GridVertex& vertex );
+    void updateVertexAfterLoad(
+      GridVertex&                               vertex,
+      GridVertex                                fineGridVertices[TwoPowerD],
+	  const tarch::la::Vector<Dimensions,int>&  position
+    );
+    void updateVertexBeforeStore(
+      GridVertex&                               vertex,
+      GridVertex                                fineGridVertices[TwoPowerD],
+	  const tarch::la::Vector<Dimensions,int>&  position
+    );
+
+    static bool restrictToCoarseGrid(
+      const tarch::la::Vector<Dimensions,int>&  coarseVertexPosition,
+      const tarch::la::Vector<Dimensions,int>&  fineVertexPosition
+    );
 
     /**
      * If a cell gets a new id, we have to update its vertices.
