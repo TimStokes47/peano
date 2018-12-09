@@ -1,6 +1,10 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _TARCH_MULTICORE_BOOLEAN_SEMAPHORE_H_
+#if SharedCPP
+  #include "cpp/BooleanSemaphore.h"
+#elif SharedTBB
+  #include "tbb/BooleanSemaphore.h"
+#elif !defined(_TARCH_MULTICORE_BOOLEAN_SEMAPHORE_H_)
 #define _TARCH_MULTICORE_BOOLEAN_SEMAPHORE_H_
 
 #include <string>
@@ -129,7 +133,6 @@ namespace tarch {
  *
  * @author Tobias Weinzierl
  */
-#if !defined(SharedMemoryParallelisation)
 class tarch::multicore::BooleanSemaphore {
   private:
     friend class tarch::multicore::Lock;
@@ -158,7 +161,6 @@ class tarch::multicore::BooleanSemaphore {
     BooleanSemaphore();
     ~BooleanSemaphore();
 };
-#endif
 
 
 #endif

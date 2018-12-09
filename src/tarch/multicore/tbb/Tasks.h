@@ -1,6 +1,6 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _TARCH_MULTICORE_TBB_TASKS_H_
+#if !defined(_TARCH_MULTICORE_TBB_TASKS_H_) && defined(SharedTBB)
 #define _TARCH_MULTICORE_TBB_TASKS_H_
 
 #include "../Tasks.h"

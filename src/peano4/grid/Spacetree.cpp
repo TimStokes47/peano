@@ -5,6 +5,7 @@
 
 #include "peano4/utils/Loop.h"
 #include "peano4/parallel/Node.h"
+#include "peano4/parallel/SpacetreeSet.h"
 
 
 tarch::logging::Log  peano4::grid::Spacetree::_log( "peano4::grid::Spacetree" );
@@ -51,13 +52,35 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
 }
 
 
+void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::parallel::SpacetreeSet& spacetreeSet) {
+  logTraceIn( "traverse(TraversalObserver,SpacetreeSet)" );
+
+  // we need to backup them as the traversal removes the entries from the
+  // splitting container while it gives out cells
+  std::vector<int> newIds;
+  _splitting.insert( _splitTriggered.begin(), _splitTriggered.end() );
+  for (auto p: _splitting) {
+    newIds.push_back( p.first );
+  }
+  _splitTriggered.clear();
+
+  traverse(observer);
+
+  assertion( _splitting.empty() );
+  for (auto p: newIds) {
+	Spacetree newTree(*this);
+	newTree._id = p;
+	spacetreeSet.addSpacetree(newTree);
+  }
+
+  logTraceOut( "traverse(TraversalObserver,SpacetreeSet)" );
+}
+
+
 void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
-  logTraceIn( "traverse()" );
+  logTraceIn( "traverse(TraversalObserver)" );
 
   clearStatistics();
-
-  _splitting.insert( _splitTriggered.begin(), _splitTriggered.end() );
-  _splitTriggered.clear();
 
   observer.beginTraversal();
 
@@ -84,9 +107,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
 
   observer.endTraversal();
 
-  assertion( _splitting.empty() );
-
-  logTraceOut( "traverse()" );
+  logTraceOut( "traverse(TraversalObserver)" );
 }
 
 

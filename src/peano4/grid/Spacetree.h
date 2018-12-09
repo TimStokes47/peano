@@ -68,7 +68,7 @@ class peano4::grid::Spacetree {
 	  int                                dimension = Dimensions-1
     );
 
-    const int        _id;
+    int              _id;
 
     /**
      * The root of a spacetree corresponds to the initial state of the tree
@@ -193,6 +193,12 @@ class peano4::grid::Spacetree {
      */
     Spacetree split(int cells);
 
+    /**
+     * This is the parallel version of traverse() as it is used by the
+     * spacetree set. The latter passes in a callback. Through this, the
+     * tree can actually split and merge.
+     */
+    void traverse(TraversalObserver& observer, peano4::parallel::SpacetreeSet& spacetreeSet);
   public:
     Spacetree(
       const int                                    id,

@@ -2,26 +2,33 @@
 #include "Node.h"
 
 
+#include "tarch/multicore/Lock.h"
+
+
 tarch::logging::Log peano4::parallel::SpacetreeSet::_log( "peano4::parallel::SpacetreeSet" );
 
 
 void peano4::parallel::SpacetreeSet::addSpacetree( const peano4::grid::Spacetree&  spacetree ) {
+  tarch::multicore::Lock lock( _semaphore );
+
   _spacetrees.push_back( spacetree );
 }
 
 
 peano4::parallel::SpacetreeSet::TraverseTask::TraverseTask(
   peano4::grid::Spacetree&          tree,
+  SpacetreeSet& set,
   peano4::grid::TraversalObserver&  observer
 ):
   _spacetree(tree),
+  _spacetreeSet(set),
   _observer( observer ) {
 }
 
 
 bool peano4::parallel::SpacetreeSet::TraverseTask::run() {
   peano4::grid::TraversalObserver* localObserver = _observer.clone( _spacetree._id );
-  _spacetree.traverse( *localObserver );
+  _spacetree.traverse( *localObserver, _spacetreeSet );
   delete localObserver;
   return false;
 }
@@ -37,7 +44,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
   for (auto& p: _spacetrees) {
 	traverseTasks.push_back( new TraverseTask(
-      p, observer
+      p, *this, observer
     ));
   }
 

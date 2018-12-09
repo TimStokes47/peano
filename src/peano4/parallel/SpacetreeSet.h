@@ -8,6 +8,7 @@
 #include "peano4/grid/Spacetree.h"
 #include "peano4/grid/TraversalObserver.h"
 #include "tarch/multicore/Tasks.h"
+#include "tarch/multicore/BooleanSemaphore.h"
 #include "Tasks.h"
 
 
@@ -30,9 +31,10 @@ class peano4::parallel::SpacetreeSet {
 	class TraverseTask: public tarch::multicore::Task {
 	  private:
 	    peano4::grid::Spacetree&          _spacetree;
+	    SpacetreeSet&                     _spacetreeSet;
 	    peano4::grid::TraversalObserver&  _observer;
-	  public:
-	    TraverseTask( peano4::grid::Spacetree&  tree, peano4::grid::TraversalObserver&  observer );
+      public:
+	    TraverseTask( peano4::grid::Spacetree&  tree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
 
 	    /**
 	     * I create the copy of the observer, run the traversal on my local
@@ -61,6 +63,8 @@ class peano4::parallel::SpacetreeSet {
      * combinations.
      */
     std::map<int,int>  _master;
+
+    tarch::multicore::BooleanSemaphore  _semaphore;
   public:
     /**
      * Adds the spacetree to the set. The responsibility goes over to the
