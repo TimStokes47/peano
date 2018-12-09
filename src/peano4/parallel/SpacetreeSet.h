@@ -68,7 +68,9 @@ class peano4::parallel::SpacetreeSet {
   public:
     /**
      * Adds the spacetree to the set. The responsibility goes over to the
-     * set.
+     * set. Usually, users do invoke this operation only once when they
+     * pass the overall spacetree to the set. All the other, split off trees
+     * then are added by the Peano4 core internally.
      */
     void addSpacetree( const peano4::grid::Spacetree& spacetree );
 

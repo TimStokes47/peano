@@ -137,6 +137,11 @@ class peano4::grid::Spacetree {
     ) const;
 
     /**
+     * Study the adjacency flags and do ignore hanging nodes.
+     */
+    bool isVertexAdjacentToLocalSpacetree(GridVertex  vertex) const;
+
+    /**
      * Load the vertices of one cell
      *
      * The load process has to be done along the local order of the Peano
@@ -185,13 +190,7 @@ class peano4::grid::Spacetree {
 	  int                                          level
     );
 
-    /**
-     * Takes the local tree and removes cells cells from it. They are
-     * pushed into a new tree which is returned. If you use this operation,
-     * you usually use a SpacetreeSet and you push the result into this
-     * very set.
-     */
-    Spacetree split(int cells);
+    void split(int cells);
 
     /**
      * This is the parallel version of traverse() as it is used by the
@@ -201,7 +200,6 @@ class peano4::grid::Spacetree {
     void traverse(TraversalObserver& observer, peano4::parallel::SpacetreeSet& spacetreeSet);
   public:
     Spacetree(
-      const int                                    id,
 	  const tarch::la::Vector<Dimensions,double>&  offset,
 	  const tarch::la::Vector<Dimensions,double>&  width
     );

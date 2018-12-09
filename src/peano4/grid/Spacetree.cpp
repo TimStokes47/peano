@@ -12,11 +12,10 @@ tarch::logging::Log  peano4::grid::Spacetree::_log( "peano4::grid::Spacetree" );
 
 
 peano4::grid::Spacetree::Spacetree(
-  const int                                    id,
   const tarch::la::Vector<Dimensions,double>&  offset,
   const tarch::la::Vector<Dimensions,double>&  width
 ):
-  _id(id),
+  _id(0),
   _root() {
   _root.setLevel( 0 );
   _root.setX( offset );
@@ -28,9 +27,23 @@ peano4::grid::Spacetree::Spacetree(
     _root.setAccessNumber( i,0 );
   }
 
-  peano4::parallel::Node::getInstance().registerId(id);
+  peano4::parallel::Node::getInstance().registerId(_id);
 
   logInfo( "Spacetree(...)", "create spacetree with " << offset << "x" << width << " and id " << _id);
+}
+
+
+bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(GridVertex  vertex) const {
+  if (vertex.getState()==GridVertex::State::HangingVertex) {
+	return false;
+  }
+  else {
+	bool result = false;
+	for(int i=0; i<TwoPowerD; i++) {
+      result |= vertex.getAdjacentRanks(i)==_id;
+	}
+	return result;
+  }
 }
 
 
@@ -39,14 +52,11 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
 ) const {
   bool isLocal = true;
   dfor2(k)
-    assertion2(
-      !isLocal or kScalar==0 or
-	  vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==_id,
-	  vertices[kScalar].toString(), _id
+    isLocal &= (
+      (vertices[kScalar].getState()==GridVertex::State::HangingVertex)
+      or
+      ( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==_id )
 	);
-    isLocal &= vertices[kScalar].getState()==GridVertex::State::HangingVertex
-    		   or
-    		   ( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==_id );
   enddforx
   return isLocal;
 }
@@ -69,6 +79,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::para
   assertion( _splitting.empty() );
   for (auto p: newIds) {
 	Spacetree newTree(*this);
+	assertion( p!=_id );
 	newTree._id = p;
 	spacetreeSet.addSpacetree(newTree);
   }
@@ -270,10 +281,18 @@ std::string peano4::grid::Spacetree::toString( VertexType type ) {
 void peano4::grid::Spacetree::updateVertexAfterLoad( GridVertex& vertex ) {
   logTraceInWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
 
-  if (vertex.getState()==GridVertex::State::RefinementTriggered) {
+  if (
+    vertex.getState()==GridVertex::State::RefinementTriggered
+	and
+	isVertexAdjacentToLocalSpacetree(vertex)
+  ) {
     vertex.setState( GridVertex::State::Refining );
   }
-  else if (vertex.getState()==GridVertex::State::EraseTriggered) {
+  else if (
+    vertex.getState()==GridVertex::State::EraseTriggered
+	and
+	isVertexAdjacentToLocalSpacetree(vertex)
+  ) {
     vertex.setState( GridVertex::State::Erasing );
   }
 
@@ -283,6 +302,13 @@ void peano4::grid::Spacetree::updateVertexAfterLoad( GridVertex& vertex ) {
 
 void peano4::grid::Spacetree::updateVertexBeforeStore( peano4::grid::GridVertex& vertex ) {
   logTraceInWith1Argument( "updateVertexBeforeStore(GridVertex&)", vertex.toString() );
+
+  // @todo: Erase darf nur einen Level gehen
+/*
+  if (not isVertexAdjacentToLocalSpacetree(vertex)) {
+	vertex.setState( GridVertex::State::EraseTriggered );
+  }
+*/
 
   if (vertex.getState()==GridVertex::State::RefinementTriggered) {
     _statistics.setNumberOfRefiningVertices( _statistics.getNumberOfRefiningVertices()+1 );
@@ -445,6 +471,8 @@ void peano4::grid::Spacetree::storeVertices(
 */
 	  fineGridStatesState.getLevel()<4 and fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getState()==GridVertex::State::Unrefined and
 	  stackNumber<=1
+	  and
+	  isVertexAdjacentToLocalSpacetree(fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ])
 	) {
       fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].setState( GridVertex::State::RefinementTriggered );
     }
@@ -539,7 +567,9 @@ void peano4::grid::Spacetree::descend(
 	    fineGridStates[peano4::utils::dLinearised(k,3)].getH(),
 	    isSpacetreeNodeRefined(fineGridVertices)
 	  );
-    //      updateVertexRanksWithinCell( fineGridVertices );
+    }
+    else {
+      logDebug( "descend(...)", "node is not local on tree " << _id );
     }
 
     //
@@ -599,20 +629,9 @@ peano4::grid::GridStatistics peano4::grid::Spacetree::getGridStatistics() const 
 }
 
 
-peano4::grid::Spacetree peano4::grid::Spacetree::split(int cells) {
+void peano4::grid::Spacetree::split(int cells) {
   const int newSpacetreeId = peano4::parallel::Node::getInstance().getNextFreeLocalId();
-  Spacetree result(
-    newSpacetreeId,
-	_root.getX(),
-	_root.getH()
-  );
-
-  // @todo Sollte jetzt mal einen Tree zurueckliefern, der aber in dem Status
-  //       intern den State 'not yet there' hat. Somit passiert also zunaechst
-  //       erst mal nix. Erst im naechsten Schritt wird ja dann auch tatsaechlich
-  //       zerteilt.
   assertion( _splitTriggered.count(newSpacetreeId)==0 );
   _splitTriggered.insert( std::pair<int,int>(newSpacetreeId,cells) );
-
-  return result;
+  peano4::parallel::Node::getInstance().registerId(newSpacetreeId);
 }

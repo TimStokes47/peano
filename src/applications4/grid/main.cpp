@@ -42,7 +42,6 @@ int main(int argc, char** argv) {
   tarch::multicore::Core::getInstance().configure(4,2,1);
 
   peano4::grid::Spacetree spacetree(
-    0,
     {0.0, 0.0},
     {1.0, 1.0}
   );
@@ -82,7 +81,6 @@ int main(int argc, char** argv) {
 
   // @todo This is wrong
   spacetreeSet.split(0,102);
-  //spacetreeSet.addSpacetree( spacetree.split(spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/2) );
   for (int i=0; i<4; i++) {
 	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );
