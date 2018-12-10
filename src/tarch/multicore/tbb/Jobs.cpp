@@ -188,11 +188,7 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   ) {
     enqueue();
   }
-  else if (
-    hasProcessedJobs
-	and
-	internal::_numberOfRunningJobConsumerTasks.load()==0
-  ) {
+  else if (	internal::_numberOfRunningJobConsumerTasks.load()==0 ) {
     enqueue();
   }
 
