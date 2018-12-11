@@ -24,6 +24,10 @@ namespace peano4 {
   namespace grid {
     class Spacetree;
     class TraversalObserver;
+
+    namespace tests {
+      class SpacetreeTest;
+    }
   }
 
   namespace parallel {
@@ -43,6 +47,7 @@ class peano4::grid::Spacetree {
     static tarch::logging::Log  _log;
 
     friend class peano4::parallel::SpacetreeSet;
+    friend class peano4::grid::tests::SpacetreeTest;
 
     enum class VertexType {
       New,
@@ -172,16 +177,23 @@ class peano4::grid::Spacetree {
      *
      * This operation has to be called whenever we load a vertex from the input
      * stream, i.e. we touch it for the very first time.
+     *
+     * We don't do any statistics here. I've moved all the statistics into
+     * updateVertexBeforeStore().
      */
     void updateVertexAfterLoad(
       GridVertex&                               vertex,
       GridVertex                                fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,int>&  position
+	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch
     );
+
+    /**
+     * @param fineVertexPositionWithinPatch Position of vertex within 3x3 or 3x3x3 patch respectively
+     */
     void updateVertexBeforeStore(
       GridVertex&                               vertex,
       GridVertex                                fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,int>&  position
+	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch
     );
 
     static bool restrictToCoarseGrid(
