@@ -314,7 +314,7 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
 	and
 	vertex.getState()==GridVertex::State::Refined
   ) {
-	logInfo( "updateVertexAfterLoad(GridVertex&)", "would like to erase " << vertex.toString() << " in spacetree " << _id );
+	logDebug( "updateVertexAfterLoad(GridVertex&)", "would like to erase " << vertex.toString() << " in spacetree " << _id );
     vertex.setState( GridVertex::State::EraseTriggered );
   }
 
@@ -579,6 +579,11 @@ void peano4::grid::Spacetree::clearStatistics() {
   _statistics.setNumberOfUnrefinedVertices( 0 );
   _statistics.setNumberOfErasingVertices( 0 );
   _statistics.setNumberOfRefiningVertices( 0 );
+
+  _statistics.setNumberOfLocalUnrefinedCells( 0 );
+  _statistics.setNumberOfRemoteUnrefinedCells( 0 );
+  _statistics.setNumberOfLocalRefinedCells( 0 );
+  _statistics.setNumberOfRemoteRefinedCells( 0 );
 }
 
 
