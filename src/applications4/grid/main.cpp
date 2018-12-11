@@ -81,6 +81,7 @@ int main(int argc, char** argv) {
 
   // @todo This is wrong
   spacetreeSet.split(0,102);
+  spacetreeSet.split(0,102);
   for (int i=0; i<4; i++) {
 	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );

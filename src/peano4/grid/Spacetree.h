@@ -109,8 +109,17 @@ class peano4::grid::Spacetree {
     );
 
     /**
-     * A spacetree node is refined if any of its adjacent vertices holds a
-     * refining or refinement-triggered flag.
+     * A spacetree node is refined if any of its adjacent vertices holds one of
+     * the following flags:
+     *
+     * - refining If all vertices are refining or hanging or triggered, but
+     *     none of them has one of the flags discussed below, then we run into
+     *     a brand new cell of the tree.
+     * - refinement-triggered
+     * - erase-triggered We want to erase this spacetree node, but the erase
+     *     process is not triggered yet.
+     * - erasing If none of the other vertices holds another flag of this list,
+     *     then this cell is to be removed.
      */
     static bool isSpacetreeNodeRefined(GridVertex  vertices[TwoPowerD]);
 

@@ -128,6 +128,8 @@ bool peano4::grid::Spacetree::isSpacetreeNodeRefined(GridVertex  vertices[TwoPow
   dfor2(k)
     result |= vertices[kScalar].getState() == GridVertex::State::Refining;
     result |= vertices[kScalar].getState() == GridVertex::State::Refined;
+    result |= vertices[kScalar].getState() == GridVertex::State::EraseTriggered;
+    result |= vertices[kScalar].getState() == GridVertex::State::Erasing;
   enddforx
   return result;
 }
@@ -561,6 +563,9 @@ void peano4::grid::Spacetree::storeVertices(
     	break;
       case VertexType::Delete:
       	logDebug( "storeVertices(...)", "delete vertex " << fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].toString() );
+        if ( !PeanoCurve::isInOutStack(stackNumber) ) {
+       	  _vertexStack[stackNumber].push( fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] );
+        }
         break;
     }
   }
