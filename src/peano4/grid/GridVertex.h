@@ -28,7 +28,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   09/12/2018 16:09
+    * @date   12/12/2018 07:29
     */
    class peano4::grid::GridVertex { 
       
@@ -82,6 +82,7 @@ namespace peano4 {
          };
          private: 
             PersistentRecords _persistentRecords;
+            int _numberOfAdjacentRefinedLocalCells;
             
          public:
             /**
@@ -98,6 +99,11 @@ namespace peano4 {
              * Generated
              */
             GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex);
+            
+            /**
+             * Generated
+             */
+            GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells);
             
             /**
              * Generated
@@ -131,6 +137,16 @@ namespace peano4 {
              * Generated
              */
              void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+            
+            /**
+             * Generated
+             */
+             int getNumberOfAdjacentRefinedLocalCells() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfAdjacentRefinedLocalCells(const int& numberOfAdjacentRefinedLocalCells) ;
             
             /**
              * Generated
@@ -205,7 +221,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   09/12/2018 16:09
+    * @date   12/12/2018 07:29
     */
    class peano4::grid::GridVertexPacked { 
       
@@ -215,11 +231,11 @@ namespace peano4 {
          
          struct PersistentRecords {
             tarch::la::Vector<TwoPowerD,int> _adjacentRanks;
-            bool _isAntecessorOfRefinedVertex;
             
             /** mapping of records:
             || Member 	|| startbit 	|| length
              |  state	| startbit 0	| #bits 3
+             |  isAntecessorOfRefinedVertex	| startbit 3	| #bits 1
              */
             short int _packedRecords0;
             
@@ -261,6 +277,7 @@ namespace peano4 {
          };
          private: 
             PersistentRecords _persistentRecords;
+            int _numberOfAdjacentRefinedLocalCells;
             
          public:
             /**
@@ -277,6 +294,11 @@ namespace peano4 {
              * Generated
              */
             GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex);
+            
+            /**
+             * Generated
+             */
+            GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells);
             
             /**
              * Generated
@@ -310,6 +332,16 @@ namespace peano4 {
              * Generated
              */
              void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+            
+            /**
+             * Generated
+             */
+             int getNumberOfAdjacentRefinedLocalCells() const ;
+            
+            /**
+             * Generated
+             */
+             void setNumberOfAdjacentRefinedLocalCells(const int& numberOfAdjacentRefinedLocalCells) ;
             
             /**
              * Generated
@@ -385,7 +417,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   09/12/2018 16:09
+       * @date   12/12/2018 07:29
        */
       class peano4::grid::GridVertex { 
          
@@ -455,6 +487,7 @@ namespace peano4 {
             };
             private: 
                PersistentRecords _persistentRecords;
+               int _numberOfAdjacentRefinedLocalCells;
                
             public:
                /**
@@ -471,6 +504,11 @@ namespace peano4 {
                 * Generated
                 */
                GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               
+               /**
+                * Generated
+                */
+               GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -504,6 +542,16 @@ namespace peano4 {
                 * Generated
                 */
                 void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedLocalCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedLocalCells(const int& numberOfAdjacentRefinedLocalCells) ;
                
                 tarch::la::Vector<Dimensions,double> getX() const ;
                
@@ -596,7 +644,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   09/12/2018 16:09
+       * @date   12/12/2018 07:29
        */
       class peano4::grid::GridVertexPacked { 
          
@@ -606,13 +654,13 @@ namespace peano4 {
             
             struct PersistentRecords {
                tarch::la::Vector<TwoPowerD,int> _adjacentRanks;
-               bool _isAntecessorOfRefinedVertex;
                tarch::la::Vector<Dimensions,double> _x;
                int _level;
                
                /** mapping of records:
                || Member 	|| startbit 	|| length
                 |  state	| startbit 0	| #bits 3
+                |  isAntecessorOfRefinedVertex	| startbit 3	| #bits 1
                 */
                short int _packedRecords0;
                
@@ -668,6 +716,7 @@ namespace peano4 {
             };
             private: 
                PersistentRecords _persistentRecords;
+               int _numberOfAdjacentRefinedLocalCells;
                
             public:
                /**
@@ -684,6 +733,11 @@ namespace peano4 {
                 * Generated
                 */
                GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               
+               /**
+                * Generated
+                */
+               GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -717,6 +771,16 @@ namespace peano4 {
                 * Generated
                 */
                 void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+               
+               /**
+                * Generated
+                */
+                int getNumberOfAdjacentRefinedLocalCells() const ;
+               
+               /**
+                * Generated
+                */
+                void setNumberOfAdjacentRefinedLocalCells(const int& numberOfAdjacentRefinedLocalCells) ;
                
                 tarch::la::Vector<Dimensions,double> getX() const ;
                

@@ -12,10 +12,15 @@ class peano4::grid::GridVertex {
     Unrefined,Refined,RefinementTriggered,Refining,EraseTriggered,Erasing
   };
   
-  persistent parallelise packed State  state;
-  persistent parallelise int  adjacentRanks[TwoPowerD];
+  persistent packed parallelise packed State  state;
+  persistent        parallelise int  adjacentRanks[TwoPowerD];
 
-  persistent parallelise bool isAntecessorOfRefinedVertex;
+  persistent packed parallelise bool isAntecessorOfRefinedVertex;
+
+  /**
+   * Should be from 0 to TwoPowerD
+   */
+  discard    packed parallelise int  numberOfAdjacentRefinedLocalCells;
 
   /**
    * A vertex is outside, if all @f$ 2^d @f$ adjacent cells are outside. In this

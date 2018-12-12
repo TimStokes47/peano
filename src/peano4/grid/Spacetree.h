@@ -124,6 +124,13 @@ class peano4::grid::Spacetree {
     static bool isSpacetreeNodeRefined(GridVertex  vertices[TwoPowerD]);
 
     /**
+     * Every local refined cell should call this routine. We increment the
+     * respective counter. Upon storage, we then refine if the counter
+     * equals 2^d. This way we avoid hanging vertices within the domain.
+     */
+    static void incrementNumberOfAdjacentRefinedLocalCells(GridVertex  vertices[TwoPowerD]);
+
+    /**
      * Takes a state (describing a node in the tree) and returns the
      * @f$ 3^d @f$ states on the next finer level along the Peano SFC. This
      * routine is basically the grammar generation of Bader et al. It relies

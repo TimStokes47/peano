@@ -61,9 +61,9 @@ int main(int argc, char** argv) {
   // parallel version
   peano4::parallel::SpacetreeSet spacetreeSet;
   spacetreeSet.addSpacetree( spacetree );
-  peano4::grid::TraversalVTKPlotter observer( "grid" );
 //  peano4::grid::EmptyTraversalObserver observer;
-  for (int i=0; i<4; i++) {
+  peano4::grid::TraversalVTKPlotter observer( "grid" );
+  for (int i=0; i<10; i++) {
 	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );
 
@@ -80,9 +80,9 @@ int main(int argc, char** argv) {
   std::cout << "== start split ==" << std::endl;
 
   // @todo This is wrong
-  spacetreeSet.split(0,102);
-  spacetreeSet.split(0,102);
-  for (int i=0; i<4; i++) {
+  spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
+  spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
+  for (int i=0; i<10; i++) {
 	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );
 

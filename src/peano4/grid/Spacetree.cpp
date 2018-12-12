@@ -110,7 +110,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
        0                                                 // level
        #endif
     );
-    logInfo( "traverse()", "create " << vertices[kScalar].toString() );
+    logDebug( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
 
   descend(_root,vertices,observer);
@@ -319,6 +319,7 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
   }
 
   vertex.setIsAntecessorOfRefinedVertex(false);
+  vertex.setNumberOfAdjacentRefinedLocalCells(0);
 
   logTraceOutWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
 }
@@ -353,6 +354,15 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
   const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch
 ) {
   logTraceInWith1Argument( "updateVertexBeforeStore(GridVertex&)", vertex.toString() );
+
+  if (
+    vertex.getNumberOfAdjacentRefinedLocalCells()==TwoPowerD
+	and
+	vertex.getState()==GridVertex::State::Unrefined
+  ) {
+	vertex.setState( GridVertex::State::RefinementTriggered );
+	logInfo( "updateVertexBeforeStore(...)", "have to post-refine vertex " << vertex.toString() );
+  }
 
   bool restrictIsAntecessorOfRefinedVertex = false;
 
@@ -541,7 +551,12 @@ void peano4::grid::Spacetree::storeVertices(
         	    if (
         	      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(0)<0.4 and
         	      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(1)<0.4 and
-        		  fineGridStatesState.getLevel()<4 and fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getState()==GridVertex::State::Unrefined and
+                  #if PeanoDebug>0
+        		  fineGridStatesState.getLevel()<4 and
+                  #else
+        		  fineGridStatesState.getLevel()<6 and
+                  #endif
+				  fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getState()==GridVertex::State::Unrefined and
         		  stackNumber<=1
         		  and
         		  isVertexAdjacentToLocalSpacetree(fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ])
@@ -584,6 +599,13 @@ void peano4::grid::Spacetree::clearStatistics() {
   _statistics.setNumberOfRemoteUnrefinedCells( 0 );
   _statistics.setNumberOfLocalRefinedCells( 0 );
   _statistics.setNumberOfRemoteRefinedCells( 0 );
+}
+
+
+void peano4::grid::Spacetree::incrementNumberOfAdjacentRefinedLocalCells(GridVertex  vertices[TwoPowerD]) {
+  dfor2(k)
+    vertices[kScalar].setNumberOfAdjacentRefinedLocalCells( vertices[kScalar].getNumberOfAdjacentRefinedLocalCells()+1 );
+  enddforx
 }
 
 
@@ -653,6 +675,7 @@ void peano4::grid::Spacetree::descend(
     if (isSpacetreeNodeRefined(fineGridVertices)) {
       if ( isSpacetreeNodeLocal(fineGridVertices) ) {
         _statistics.setNumberOfLocalRefinedCells( _statistics.getNumberOfLocalRefinedCells()+1 );
+        incrementNumberOfAdjacentRefinedLocalCells( fineGridVertices );
       }
       else {
         _statistics.setNumberOfRemoteRefinedCells( _statistics.getNumberOfRemoteRefinedCells()+1 );
