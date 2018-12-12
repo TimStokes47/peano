@@ -8,10 +8,10 @@
 tarch::logging::Log peano4::parallel::SpacetreeSet::_log( "peano4::parallel::SpacetreeSet" );
 
 
-void peano4::parallel::SpacetreeSet::addSpacetree( const peano4::grid::Spacetree&  spacetree ) {
+void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree&&  spacetree ) {
   tarch::multicore::Lock lock( _semaphore );
 
-  _spacetrees.push_back( spacetree );
+  _spacetrees.push_back( std::move(spacetree) );
 }
 
 
@@ -89,6 +89,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
         // copieren -> message
         // loeschen
+        assertionMsg(false, "todo");
       }
     }
   }

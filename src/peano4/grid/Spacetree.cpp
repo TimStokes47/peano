@@ -33,6 +33,26 @@ peano4::grid::Spacetree::Spacetree(
 }
 
 
+peano4::grid::Spacetree::Spacetree(
+  const Spacetree& copy,
+  int              id
+):
+  _id(id),
+  _root( copy._root ) {
+
+  assertion1( _splitTriggered.count(_id)==0, _id );
+
+  for (auto& p: copy._vertexStack ) {
+    if ( PeanoCurve::isInOutStack(p.first) ) {
+      _vertexStack.insert( std::pair< int, peano4::stacks::GridVertexStack >(p.first,peano4::stacks::GridVertexStack()) );
+      _vertexStack[p.first].clone(p.second);
+	}
+  }
+
+  logInfo( "Spacetree(...)", "created spacetree " << _id << " from tree " << copy._id );
+}
+
+
 bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(GridVertex  vertex) const {
   if (vertex.getState()==GridVertex::State::HangingVertex) {
 	return false;
@@ -78,10 +98,9 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::para
 
   assertion( _splitting.empty() );
   for (auto p: newIds) {
-	Spacetree newTree(*this);
 	assertion( p!=_id );
-	newTree._id = p;
-	spacetreeSet.addSpacetree(newTree);
+	Spacetree newTree(*this, p);
+	spacetreeSet.addSpacetree(std::move(newTree));
   }
 
   logTraceOut( "traverse(TraversalObserver,SpacetreeSet)" );
@@ -596,8 +615,7 @@ void peano4::grid::Spacetree::storeVertices(
 void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex ) {
   if (isVertexAdjacentToLocalSpacetree(vertex)) {
     for (int i=0; i<TwoPowerD; i++) {
-    	// @todo
-      if ( false and vertex.getAdjacentRanks(i)!=_id ) {
+      if ( vertex.getAdjacentRanks(i)!=_id ) {
         GridVertex inVertex = _vertexStack[
           peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i))
         ].pop();
@@ -772,7 +790,7 @@ peano4::grid::GridStatistics peano4::grid::Spacetree::getGridStatistics() const 
 
 void peano4::grid::Spacetree::split(int cells) {
   const int newSpacetreeId = peano4::parallel::Node::getInstance().getNextFreeLocalId();
-  assertion( _splitTriggered.count(newSpacetreeId)==0 );
+  assertion1( _splitTriggered.count(newSpacetreeId)==0, newSpacetreeId );
   _splitTriggered.insert( std::pair<int,int>(newSpacetreeId,cells) );
-  peano4::parallel::Node::getInstance().registerId(newSpacetreeId);
+  peano4::parallel::Node::getInstance().registerId( newSpacetreeId );
 }

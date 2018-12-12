@@ -38,21 +38,35 @@ class peano4::stacks::STDVectorStack {
 
   public:
     /**
-     * One is allowed to clone/copy a stack, though this is done rarely -
-     * usually only when we cut the domain into pieces.
+     * One is allowed to clone/copy a stack, but it has to be empty.
+     * Usually only when we cut the domain into pieces.
      */
     STDVectorStack<T>( const STDVectorStack<T>& stack ):
-	  _data(stack._data),
-      _currentElement(stack._currentElement) {
+	  _data(),
+      _currentElement(0) {
+      assertionEquals( stack._currentElement, 0 );
     }
+
 
     /**
      * One is not allowed to copy a stack but it has to be empty.
      */
     STDVectorStack<T>&  operator=( const STDVectorStack<T>& stack ) {
-      _data = stack._data;
-      _currentElement = stack._currentElement;
+      assertionEquals( stack._currentElement, 0 );
+      assertionEquals( _currentElement, 0 );
+      assertion( _data.empty() );
     }
+
+
+    /**
+     * Clone data into the current object on which clone() is called.
+     */
+    void  clone( const STDVectorStack<T>&  data ) {
+      assertionEquals( _currentElement, 0 );
+      _currentElement = data._currentElement;
+      _data           = data._data;
+    }
+
 
     class PopBlockVertexStackView {
       private:

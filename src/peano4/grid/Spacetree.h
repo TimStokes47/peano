@@ -247,6 +247,27 @@ class peano4::grid::Spacetree {
     void sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex );
 
     void receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex );
+
+    /**
+     * The original tree registers itself. But we can't register the copied
+     * tree that late. We have to register its new id as soon as we trigger the
+     * split.
+     */
+    Spacetree( const Spacetree& otherTree, int newId);
+
+    /**
+     * Don't copy a tree as it is tied to some stacks.
+     *
+     * Unfortunately, this does not work, as we need it for the vector.
+     */
+    // Spacetree( const Spacetree& ) = delete;
+
+    /**
+     * Don't copy a tree as it is tied to some stacks.
+     *
+     * Unfortunately, this does not work, as we need it for the vector.
+     */
+    // Spacetree& operator=( const Spacetree& ) = delete;
   public:
     Spacetree(
 	  const tarch::la::Vector<Dimensions,double>&  offset,

@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 
   // parallel version
   peano4::parallel::SpacetreeSet spacetreeSet;
-  spacetreeSet.addSpacetree( spacetree );
+  spacetreeSet.addSpacetree( std::move(spacetree) );
 //  peano4::grid::EmptyTraversalObserver observer;
   peano4::grid::TraversalVTKPlotter observer( "grid" );
   for (int i=0; i<2; i++) {

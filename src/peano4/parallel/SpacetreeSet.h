@@ -79,8 +79,11 @@ class peano4::parallel::SpacetreeSet {
      * set. Usually, users do invoke this operation only once when they
      * pass the overall spacetree to the set. All the other, split off trees
      * then are added by the Peano4 core internally.
+     *
+     * As we may not copy spacetrees, the parameter has move semantics. So
+     * if you have a spacetree, use std::move around your argument.
      */
-    void addSpacetree( const peano4::grid::Spacetree& spacetree );
+    void addSpacetree( peano4::grid::Spacetree&& spacetree );
 
     /**
      * Invoke traverse on all spacetrees in parallel.
