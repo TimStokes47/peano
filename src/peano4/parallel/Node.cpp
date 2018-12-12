@@ -45,15 +45,6 @@ int peano4::parallel::Node::getRank(int id) const {
 }
 
 
-/*
-int peano4::parallel::Node::getThreadNumber( int id ) const {
-  const int numberOfRanks = tarch::parallel::Node::getInstance().getNumberOfNodes();
-  return id / numberOfRanks;
-}
-*/
-
-
-
 int peano4::parallel::Node::getNextFreeLocalId() const {
   int localThread = 0;
   const int localRank = tarch::parallel::Node::getInstance().getRank();
@@ -68,4 +59,34 @@ int peano4::parallel::Node::getNextFreeLocalId() const {
 void peano4::parallel::Node::registerId(int id) {
   assertion( _bookedLocalThreads.count(id)==0 );
   _bookedLocalThreads.insert(id);
+}
+
+
+int peano4::parallel::Node::getOutputStackNumberOfBoundaryExchange(int id) const {
+  return peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance + id * 2;
+}
+
+
+int peano4::parallel::Node::getInputStackNumberOfBoundaryExchange(int id) const {
+  return peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance + id * 2 + 1;
+}
+
+
+/*
+bool peano4::parallel::Node::isInputStackNumber(int id) const {
+  return id>=peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance
+     and ( (id-peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance) % 2 == 1 );
+}
+*/
+
+
+bool peano4::parallel::Node::isBoundaryExchangeOutputStackNumber(int id) const {
+  return id>=peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance
+     and ( (id-peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance) % 2 == 0 );
+}
+
+
+int peano4::parallel::Node::getIdOfBoundaryExchangeOutputStackNumber(int number) const {
+  assertion( isBoundaryExchangeOutputStackNumber(number) );
+  return (number-peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance) / 2;
 }

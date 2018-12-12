@@ -239,6 +239,14 @@ class peano4::grid::Spacetree {
      * tree can actually split and merge.
      */
     void traverse(TraversalObserver& observer, peano4::parallel::SpacetreeSet& spacetreeSet);
+
+    /**
+     * This one is to be invoked if and only if a vertex goes to the in/out
+     * stacks.
+     */
+    void sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex );
+
+    void receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex );
   public:
     Spacetree(
 	  const tarch::la::Vector<Dimensions,double>&  offset,

@@ -30,6 +30,9 @@ bool peano4::parallel::SpacetreeSet::TraverseTask::run() {
   peano4::grid::TraversalObserver* localObserver = _observer.clone( _spacetree._id );
   _spacetree.traverse( *localObserver, _spacetreeSet );
   delete localObserver;
+
+  // @todo Here are the MPI sends the very latest; but perhaps we do it completely different
+
   return false;
 }
 
@@ -39,6 +42,9 @@ void peano4::parallel::SpacetreeSet::TraverseTask::prefetch() {
 
 
 void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& observer) {
+  //
+  // Set up the traversal tasks and kick them off
+  //
   std::vector< tarch::multicore::Task* > traverseTasks;
   traverseTasks.reserve( _spacetrees.size() );
 
@@ -48,16 +54,42 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
     ));
   }
 
-
   static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverse" );
   peano4::parallel::Tasks runTraversals(traverseTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion);
 
-
-  // Merge local copies
+  //
+  // Merge local copies of the statistics
+  //
   for (const auto& from: _spacetrees)
   for (auto& to: _spacetrees) {
     if (_master.count(from._id)>0 and _master[from._id]==to._id) {
       merge(from._statistics, to._statistics);
+    }
+  }
+
+  //
+  // Do the local boundary data exchange
+  //
+  for (auto& sourceTree: _spacetrees) {
+    for (auto& sourceStack: sourceTree._vertexStack) {
+      if ( Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack.first) ) {
+        const int targetId = Node::getInstance().getIdOfBoundaryExchangeOutputStackNumber(sourceStack.first);
+
+        // @todo Id might not be local
+        peano4::grid::Spacetree& targetTree = getSpacetree( targetId );
+        const int targetStack = -1;
+        logInfo(
+          "traverse(Observer)",
+		  "map output stream " << sourceStack.first << " of tree " <<
+		  sourceTree._id << " onto input stream " << targetStack <<
+		  " of tree " << targetId
+		);
+
+        assertion4( sourceTree._id != targetId, sourceTree._id, targetId, sourceStack.first, targetStack);
+
+        // copieren -> message
+        // loeschen
+      }
     }
   }
 }
@@ -93,4 +125,13 @@ void peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
   );
   // @todo
   tree->split(cells);
+}
+
+
+peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
+  for (auto& p: _spacetrees) {
+	if (p._id==id) return p;
+  }
+  assertionMsg( false, "no spacetree found" );
+  _spacetrees.begin(); // just here to avoid warning
 }

@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
   spacetreeSet.addSpacetree( spacetree );
 //  peano4::grid::EmptyTraversalObserver observer;
   peano4::grid::TraversalVTKPlotter observer( "grid" );
-  for (int i=0; i<10; i++) {
+  for (int i=0; i<2; i++) {
 	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );
 

@@ -54,7 +54,7 @@ bool tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeToFile
   std::ofstream out;
   out.open( (filename + ".vtu").c_str() );
   if ( (!out.fail()) && out.is_open() ) {
-    _log.debug( "close()", "opened data file " + filename );
+    _log.debug( "writeToFile()", "opened data file " + filename );
 
     out << HEADER << std::endl << std::endl
         << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl
@@ -72,11 +72,11 @@ bool tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeToFile
       </UnstructuredGrid>\n\
     </VTKFile>\n";
 
-    _log.debug( "close()", "data written to " + filename );
+    _log.debug( "writeToFile()", "data written to " + filename );
     _writtenToFile = true;
   }
   else {
-  	_log.error( "close()", "unable to write output file " + filename );
+  	_log.error( "writeToFile()", "unable to write output file " + filename );
   	return false;
   }
 
@@ -90,13 +90,13 @@ void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeMetaDa
   const std::vector< std::string >& files
 ) {
   if (metaDataFilename.rfind(".pvtu")!=std::string::npos) {
-    logWarning( "writeToFile()", "meta file name should not end with .pvtu as routine adds extension automatically. Chosen filename prefix=" << metaDataFilename );
+    logWarning( "writeMetaDataFileForParallelSnapshot()", "meta file name should not end with .pvtu as routine adds extension automatically. Chosen filename prefix=" << metaDataFilename );
   }
 
   std::ofstream metaOut;
   metaOut.open( (metaDataFilename + ".pvtu").c_str() );
   if ( (!metaOut.fail()) && metaOut.is_open() ) {
-    _log.debug( "close()", "opened data file " + metaDataFilename );
+    _log.debug( "writeMetaDataFileForParallelSnapshot()", "opened data file " + metaDataFilename );
 
     metaOut << "<?xml version=\"1.0\"?>" << std::endl
             << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">" << std::endl
@@ -126,7 +126,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeMetaDa
       }
 
       if (p.rfind(".vtu")!=std::string::npos) {
-        logWarning( "writeToFile()", "file name passed to meta file writer should not end with .vtu as routine adds extension automatically. Chosen filename prefix=" << p );
+        logWarning( "writeMetaDataFileForParallelSnapshot()", "file name passed to meta file writer should not end with .vtu as routine adds extension automatically. Chosen filename prefix=" << p );
       }
 
       referencedFilename << ".vtu";
@@ -139,7 +139,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::writeMetaDa
     metaOut.close();
   }
   else {
-    _log.error( "close()", "unable to write meta data file " + metaDataFilename );
+    _log.error( "writeMetaDataFileForParallelSnapshot()", "unable to write meta data file " + metaDataFilename );
   }
 }
 

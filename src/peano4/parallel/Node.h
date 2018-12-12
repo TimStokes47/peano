@@ -43,7 +43,6 @@ class peano4::parallel::Node {
      * The copy constructor is private.
      */
     Node( const Node& node ) = delete;
-
   public:
     /**
      * This operation returns the singleton instance. Before using this
@@ -82,6 +81,29 @@ class peano4::parallel::Node {
     int getNextFreeLocalId() const;
 
     void registerId(int id);
+
+    /**
+     * Hand in a spacetree id and get back the number that we should use to
+     * send something to this tree.
+     */
+    int getOutputStackNumberOfBoundaryExchange(int id) const;
+
+    /**
+     * Counterpart of getOutputStackNumberOfBoundaryExchange(int)
+     */
+    int getInputStackNumberOfBoundaryExchange(int id) const;
+
+    /**
+     * See getOutputStackNumberOfBoundaryExchange().
+     */
+    bool isBoundaryExchangeOutputStackNumber(int number) const;
+
+    /**
+     * You may only call this opeartion if isBoundaryExchangeOutputStackNumber()
+     * holds. In this case, the routine tells you the id of the spacetree
+     * that corresponds to this stack number.
+     */
+    int getIdOfBoundaryExchangeOutputStackNumber(int number) const;
 };
 
 #endif

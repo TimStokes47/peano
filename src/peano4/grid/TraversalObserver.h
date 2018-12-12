@@ -29,7 +29,7 @@ class peano4::grid::TraversalObserver {
 	/**
 	 * I use the clone to create one observer object per traversal thread. So
 	 * between different spacetrees of one spacetree set, there can be no race
-	 * condition.
+	 * condition. Yet, the clone() itself could be called in parallel.
 	 */
 	virtual TraversalObserver* clone(int spacetreeId) = 0;
 };

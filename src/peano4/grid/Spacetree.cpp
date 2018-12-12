@@ -290,6 +290,8 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
 ) {
   logTraceInWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
 
+  receiveAndMergeVertexIfAdjacentToDomainBoundary( vertex );
+
   if (
     vertex.getState()==GridVertex::State::RefinementTriggered
 	and
@@ -396,6 +398,8 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
       }
 	enddforx
   }
+
+  sendOutVertexIfAdjacentToDomainBoundary( vertex );
 
   logTraceOutWith1Argument( "updateVertexBeforeStore()", vertex.toString() );
 }
@@ -547,7 +551,7 @@ void peano4::grid::Spacetree::storeVertices(
 			"write vertex " << fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].toString() << " to stack " << stackNumber
 		  );
           if ( PeanoCurve::isInOutStack(stackNumber) ) {
-        	    // @todo Raus
+        	 // @todo Raus
         	    if (
         	      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(0)<0.4 and
         	      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(1)<0.4 and
@@ -586,6 +590,46 @@ void peano4::grid::Spacetree::storeVertices(
   }
 
   logTraceOutWith1Argument( "storeVertices(...)", fineGridStatesState.toString() );
+}
+
+
+void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex ) {
+  if (isVertexAdjacentToLocalSpacetree(vertex)) {
+    for (int i=0; i<TwoPowerD; i++) {
+    	// @todo
+      if ( false and vertex.getAdjacentRanks(i)!=_id ) {
+        GridVertex inVertex = _vertexStack[
+          peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i))
+        ].pop();
+
+        if ( inVertex.getState()==GridVertex::State::EraseTriggered ) {
+          assertion2(
+            vertex.getState()==GridVertex::State::EraseTriggered or
+            vertex.getState()==GridVertex::State::Refined,
+			vertex.toString(), inVertex.toString()
+		  );
+        }
+      }
+    }
+  }
+}
+
+
+void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex ) {
+  if (isVertexAdjacentToLocalSpacetree(vertex)) {
+    for (int i=0; i<TwoPowerD; i++) {
+      if ( vertex.getAdjacentRanks(i)!=_id ) {
+    	const int stackNo = peano4::parallel::Node::getInstance().getOutputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i));
+        _vertexStack[ stackNo ].push( vertex );
+        logInfo(
+          "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)",
+		  "vertex " << vertex.toString() << " on tree " << _id <<
+		  " goes to stack " << stackNo << " associated with tree " <<
+		  vertex.getAdjacentRanks(i)
+		);
+      }
+    }
+  }
 }
 
 
@@ -631,7 +675,6 @@ void peano4::grid::Spacetree::descend(
   #endif
 
   peano4::utils::LoopDirection loopDirection = PeanoCurve::getLoopDirection(state);
-  logDebug( "descend(...)", "- direction=" << loopDirection );
 
   //
   // Construct the 3^d new children states

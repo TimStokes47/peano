@@ -2,6 +2,9 @@
 
 #include "peano4/utils/Loop.h"
 
+#include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/multicore/Lock.h"
+
 #include <string>
 
 
@@ -85,9 +88,10 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
 
 
 peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int spacetreeId) {
-  // This is the main plotter. In the parallel case, I will have to check whether I'm on the
-  // global rank as well.
   if (_spacetreeId==-1) {
+	static tarch::multicore::BooleanSemaphore semaphore;
+	tarch::multicore::Lock lock(semaphore);
+
 	std::string newFile = _filename + "-" + std::to_string(spacetreeId) + "-" + std::to_string( _counter );
     _clonedSpacetreeIds.push_back( newFile );
 

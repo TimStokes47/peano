@@ -57,6 +57,15 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 	  bool                                        isRefined
     ) override;
 
+	/**
+	 * This is the main plotter. In the parallel case, I will have to check
+	 * whether I'm on the global rank as well.
+	 *
+	 * <h2> Thread safety </h2>
+	 *
+	 * As clone() might be called by multiple threads in parallel, I need some
+	 * semaphore mechanism.
+	 */
 	TraversalObserver* clone(int spacetreeId) override;
 
 	void startNewSnapshot();

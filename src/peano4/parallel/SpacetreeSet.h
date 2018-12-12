@@ -28,12 +28,18 @@ namespace peano4 {
  */
 class peano4::parallel::SpacetreeSet {
   private:
+	/**
+	 * Each task triggers the traversal of one specific spacetree. After
+	 * that, we might directly trigger the data exchanges. Yet, this is not a
+	 * good idea as other tasks might linger in the background not have sent
+	 * the data out yet. So we don't to anything here.
+	 */
 	class TraverseTask: public tarch::multicore::Task {
 	  private:
 	    peano4::grid::Spacetree&          _spacetree;
 	    SpacetreeSet&                     _spacetreeSet;
 	    peano4::grid::TraversalObserver&  _observer;
-      public:
+	  public:
 	    TraverseTask( peano4::grid::Spacetree&  tree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
 
 	    /**
@@ -65,6 +71,8 @@ class peano4::parallel::SpacetreeSet {
     std::map<int,int>  _master;
 
     tarch::multicore::BooleanSemaphore  _semaphore;
+
+    peano4::grid::Spacetree& getSpacetree(int id);
   public:
     /**
      * Adds the spacetree to the set. The responsibility goes over to the
