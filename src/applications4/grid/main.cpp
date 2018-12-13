@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
   spacetreeSet.addSpacetree( std::move(spacetree) );
 //  peano4::grid::EmptyTraversalObserver observer;
   peano4::grid::TraversalVTKPlotter observer( "grid" );
-  for (int i=0; i<2; i++) {
+  for (int i=0; i<10; i++) {
 	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );
 
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 
   // @todo This is wrong
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
-  spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
+  //spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
   for (int i=0; i<10; i++) {
 	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );

@@ -94,6 +94,8 @@ class peano4::grid::Spacetree {
     typedef std::map< int, int >  SplitSpecification;
     SplitSpecification   _splitTriggered;
     SplitSpecification   _splitting;
+    SplitSpecification   _joinTriggered;
+    SplitSpecification   _joining;
 
     /**
      * Clear the statistics
@@ -162,8 +164,21 @@ class peano4::grid::Spacetree {
 
     /**
      * Study the adjacency flags and do ignore hanging nodes.
+     *
+     * A vertex is remote, if all its adjacent cells are handled by another
+     * rank. However, this rank may not have the attribute fork-triggered
+     * (because then it does not yet exist) or joining (because then it is
+     * already forwarding its work to its master), or forking. The latter
+     * case means that the rank is just about to forward all vertices to the
+     * new worker, i.e. it does not compute anything anymore on the local
+     * vertex, but it still has to do the send/receive stuff, i.e. it still
+     * has to handle the vertices.
      */
-    bool isVertexAdjacentToLocalSpacetree(GridVertex  vertex) const;
+    bool isVertexAdjacentToLocalSpacetree(
+      GridVertex  vertex,
+	  bool        splittingIsConsideredLocal,
+	  bool        joiningIsConsideredLocal
+	) const;
 
     /**
      * Load the vertices of one cell
@@ -231,7 +246,8 @@ class peano4::grid::Spacetree {
     GridVertex createNewPersistentVertex(
       GridVertex                                   fineGridVertices[TwoPowerD],
 	  const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level
+	  int                                          level,
+	  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
     );
 
     void split(int cells);

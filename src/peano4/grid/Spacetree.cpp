@@ -53,15 +53,27 @@ peano4::grid::Spacetree::Spacetree(
 }
 
 
-bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(GridVertex  vertex) const {
+bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(
+  GridVertex  vertex,
+  bool        splittingIsConsideredLocal,
+  bool        joiningIsConsideredLocal
+) const {
   if (vertex.getState()==GridVertex::State::HangingVertex) {
 	return false;
   }
   else {
 	bool result = false;
 	for(int i=0; i<TwoPowerD; i++) {
+      assertion( _splitTriggered.count( vertex.getAdjacentRanks(i) )<=1 );
+      assertion( _splitting.count( vertex.getAdjacentRanks(i) )<=1 );
+      assertion( _joinTriggered.count( vertex.getAdjacentRanks(i) )<=1 );
+      assertion( _joining.count( vertex.getAdjacentRanks(i) )<=1 );
+
       result |= vertex.getAdjacentRanks(i)==_id;
-      result |= _splitting.count( vertex.getAdjacentRanks(i) )==1;
+      //result |= (splittingIsConsideredLocal and _splitTriggered.count( vertex.getAdjacentRanks(i) )==1);
+      result |= (splittingIsConsideredLocal and _splitting.count( vertex.getAdjacentRanks(i) )==1);
+      //result |= (joiningIsConsideredLocal and _joinTriggered.count( vertex.getAdjacentRanks(i) )==1);
+      result |= (joiningIsConsideredLocal and _joining.count( vertex.getAdjacentRanks(i) )==1);
 	}
 	return result;
   }
@@ -124,7 +136,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
     vertices[kScalar] = GridVertex(
       isFirstTraversal ? GridVertex::State::Refining
     		           : GridVertex::State::Refined,     // const State& state
-       tarch::la::Vector<TwoPowerD,int>(_id),            // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
+       tarch::la::Vector<TwoPowerD,int>(-1),            // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
 	   true                                              // antecessor of refined vertex
        #ifdef PeanoDebug
        ,
@@ -132,6 +144,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
        0                                                 // level
        #endif
     );
+    vertices[kScalar].setAdjacentRanks(TwoPowerD-1-kScalar,_id);
     logDebug( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
 
@@ -317,14 +330,14 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
   if (
     vertex.getState()==GridVertex::State::RefinementTriggered
 	and
-	isVertexAdjacentToLocalSpacetree(vertex)
+	isVertexAdjacentToLocalSpacetree(vertex,true,true)
   ) {
     vertex.setState( GridVertex::State::Refining );
   }
   else if (
     vertex.getState()==GridVertex::State::EraseTriggered
 	and
-	isVertexAdjacentToLocalSpacetree(vertex)
+	isVertexAdjacentToLocalSpacetree(vertex,true,true)
   ) {
 	assertion1( not vertex.getIsAntecessorOfRefinedVertex(), vertex.toString() );
     vertex.setState( GridVertex::State::Erasing );
@@ -332,7 +345,7 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
 
   // has to be here. Don't want to interfere with state splitting
   if (
-    not isVertexAdjacentToLocalSpacetree(vertex)
+    not isVertexAdjacentToLocalSpacetree(vertex,true,true)
     and
 	not vertex.getIsAntecessorOfRefinedVertex()
 	and
@@ -430,13 +443,23 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
 peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
   GridVertex                                   coarseGridVertices[TwoPowerD],
   const tarch::la::Vector<Dimensions,double>&  x,
-  int                                          level
+  int                                          level,
+  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
 ) {
-  logTraceInWith2Arguments( "createNewPersistentVerte(...)", x, level );
+  logTraceInWith3Arguments( "createNewPersistentVertex(...)", x, level, vertexPositionWithin3x3Patch );
 
   tarch::la::Vector<TwoPowerD,int> adjacentRanks(-1);
   dfor2(k)
-    adjacentRanks(kScalar) = coarseGridVertices[ kScalar ].getAdjacentRanks(TwoPowerD-1-kScalar);
+    std::bitset<Dimensions> vertexToInherit;
+    std::bitset<Dimensions> indexToInherit;
+    for ( int d=0; d<Dimensions; d++ ) {
+      vertexToInherit.set(d, vertexPositionWithin3x3Patch(d)>0);
+      indexToInherit.set(d, vertexPositionWithin3x3Patch(d)>0);
+     // indexToInherit[k]  = vertexPositionWithin3x3Patch(d)==0 ? 0 : 1;
+      xxx
+    }
+    logDebug( "createNewPersistentVertex(...)", "inherit " << indexToInherit.to_ulong() << "th index from coarse vertex " << vertexToInherit );
+    adjacentRanks(kScalar) = coarseGridVertices[ vertexToInherit.to_ulong() ].getAdjacentRanks(indexToInherit.to_ulong());
   enddforx
 
   GridVertex result(
@@ -450,7 +473,7 @@ peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
     #endif
   );
 
-  logTraceOutWith1Argument( "createNewPersistentVerte(...)", result.toString() );
+  logTraceOutWith1Argument( "createNewPersistentVertex(...)", result.toString() );
   return result;
 }
 
@@ -490,7 +513,7 @@ void peano4::grid::Spacetree::loadVertices(
     switch (type) {
       case VertexType::New:
     	logDebug( "loadVertices(...)", "stack no=" << stackNumber );
-    	fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] = createNewPersistentVertex(coarseGridVertices,x,fineGridStatesState.getLevel());
+    	fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ] = createNewPersistentVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),localVertexPositionWithinPatch);
         updateVertexAfterLoad(
           fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ],
 		  coarseGridVertices,
@@ -585,7 +608,7 @@ void peano4::grid::Spacetree::storeVertices(
 				  fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getState()==GridVertex::State::Unrefined and
         		  stackNumber<=1
         		  and
-        		  isVertexAdjacentToLocalSpacetree(fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ])
+        		  isVertexAdjacentToLocalSpacetree(fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ],false,false)
         		) {
         	      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].setState( GridVertex::State::RefinementTriggered );
         	    }
@@ -616,7 +639,7 @@ void peano4::grid::Spacetree::storeVertices(
 
 
 void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex ) {
-  if (isVertexAdjacentToLocalSpacetree(vertex)) {
+  if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
     logTraceInWith1Argument( "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString() );
     for (int i=0; i<TwoPowerD; i++) {
       if (
@@ -640,13 +663,13 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 
         assertionEquals3( vertex.getState(), inVertex.getState(),   inVertex.toString(), vertex.toString(), _id );
 
-        if ( inVertex.getState()==GridVertex::State::EraseTriggered ) {
+/*        if ( inVertex.getState()==GridVertex::State::EraseTriggered ) {
           assertion2(
             vertex.getState()==GridVertex::State::EraseTriggered or
             vertex.getState()==GridVertex::State::Refined,
 			vertex.toString(), inVertex.toString()
 		  );
-        }
+        }*/
       }
     }
     logTraceOutWith1Argument( "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString() );
@@ -655,7 +678,7 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 
 
 void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex ) {
-  if (isVertexAdjacentToLocalSpacetree(vertex)) {
+  if (isVertexAdjacentToLocalSpacetree(vertex,false,false)) {
     for (int i=0; i<TwoPowerD; i++) {
       if ( vertex.getAdjacentRanks(i)!=_id ) {
     	const int stackNo = peano4::parallel::Node::getInstance().getOutputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i));

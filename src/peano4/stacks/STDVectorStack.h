@@ -125,7 +125,7 @@ class peano4::stacks::STDVectorStack {
           _currentElement--;
           assertion( _currentElement>=0 );
           assertion( _stack!=0 );
-          return _stack->_container[_currentElement];
+          return _stack->_data[_currentElement];
         }
 
         PopBlockVertexStackView popBlockFromInputStack(int numberOfVertices) {
@@ -204,7 +204,7 @@ class peano4::stacks::STDVectorStack {
           assertion( _remainingSize>0 );
           _remainingSize--;
           assertion( _stack!=0 );
-          _stack->_container[_currentElement] = value;
+          _stack->_data[_currentElement] = value;
           _currentElement++;
         }
 
