@@ -67,6 +67,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
     }
   }
 
+
+  // @todo Das sollte auch alles parallel gehen. In eigene Jobs auslagern
+
   //
   // Do the local boundary data exchange
   //
@@ -77,7 +80,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
         // @todo Id might not be local
         peano4::grid::Spacetree& targetTree = getSpacetree( targetId );
-        const int targetStack = -1;
+        const int targetStack = Node::getInstance().getInputStackNumberOfBoundaryExchange(sourceTree._id);
         logInfo(
           "traverse(Observer)",
 		  "map output stream " << sourceStack.first << " of tree " <<
@@ -87,9 +90,14 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
         assertion4( sourceTree._id != targetId, sourceTree._id, targetId, sourceStack.first, targetStack);
 
-        // copieren -> message
-        // loeschen
-        assertionMsg(false, "todo");
+        assertion( targetTree._vertexStack[targetStack].empty() );
+        logInfo(
+          "traverse(Observer)",
+		  "copy/clone " << sourceTree._vertexStack[sourceStack.first].size() << " entries"
+		);
+        targetTree._vertexStack[ targetStack ].clone( sourceStack.second );
+
+        sourceTree._vertexStack[sourceStack.first].clear();
       }
     }
   }

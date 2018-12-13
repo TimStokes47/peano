@@ -152,6 +152,9 @@ class peano4::grid::Spacetree {
      * stored within these vertices that overlap with the current node. They
      * all have to be the same. If they identify the local _id, then the
      * node is local.
+     *
+     * Throughout the splitting process, an id might be already set to a
+     * remote rank, but it still is technically local.
      */
     bool isSpacetreeNodeLocal(
 	  GridVertex            vertices[TwoPowerD]
@@ -246,6 +249,22 @@ class peano4::grid::Spacetree {
      */
     void sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex );
 
+    /**
+     * For a local vertex, i.e. one adjacent to the current active tree, which
+     * is neighbouring another tree, we do receive this tree's data copy and
+     * then merge it into the local tree.
+     *
+     * This approach doesn't work straightforwardly when we split: Lets assume
+     * tree 0 is triggered to split into 0 and 1. In a first step, tree 0 enters
+     * the state split triggered. It now updates all adjacency lists, so
+     * boundary data is already sent out to 1 - even though 1 is not instantiated
+     * yet. Once we are done, we copy over (parts of) tree 0 into tree 1, so
+     * tree 1 now does exist and is well-prepared to receive the data already
+     * dropped by 0. This second step is the actual splitting step. Now, other
+     * ranks have still sent in data to 0 which actually should go to 1. We
+     * receive those guys, but we have to eliminate explicitly any incoming data
+     * we'd expect from 1 as 1 didn't have the chance yet to send it out.
+     */
     void receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex );
 
     /**
