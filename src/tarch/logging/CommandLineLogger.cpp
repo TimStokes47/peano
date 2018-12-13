@@ -365,7 +365,7 @@ void tarch::logging::CommandLineLogger::reopenOutputStream() {
       for (int i=0; i<DigitsInFilenamesIterationNumer-1; i++) {
         leadingZeros*=10;
       }
-      fileName << "it-" ;
+      fileName << "grid-traversal-" ;
       while (_iterationCounter < leadingZeros) {
         fileName << "0";
         leadingZeros /= 10;
@@ -375,6 +375,24 @@ void tarch::logging::CommandLineLogger::reopenOutputStream() {
     fileName << _outputFileName;
     _outputStream = new std::ofstream( fileName.str().c_str() );
   }
+}
+
+
+void tarch::logging::CommandLineLogger::setOutputFile( const std::string&  outputLogFileName ) {
+  #ifdef Parallel
+  if (!outputLogFileName.empty()) {
+    std::ostringstream myOutputFileName;
+    myOutputFileName << "rank-" << tarch::parallel::Node::getInstance().getRank() << "-" << outputLogFileName;
+    _outputFileName = myOutputFileName.str();
+  }
+  else {
+    _outputFileName = outputLogFileName;
+  }
+  #else
+  _outputFileName = outputLogFileName;
+  #endif
+
+  reopenOutputStream();
 }
 
 
@@ -396,22 +414,7 @@ void tarch::logging::CommandLineLogger::setLogFormat(
   _logMessageType            = logMessageType;
   _logTrace                  = logTrace;
 
-
-
-  #ifdef Parallel
-  if (!outputLogFileName.empty()) {
-    std::ostringstream myOutputFileName;
-    myOutputFileName << "rank-" << tarch::parallel::Node::getInstance().getRank() << "-" << outputLogFileName;
-    _outputFileName = myOutputFileName.str();
-  }
-  else {
-    _outputFileName = outputLogFileName;
-  }
-  #else
-  _outputFileName = outputLogFileName;
-  #endif
-
-  reopenOutputStream();
+  setOutputFile( outputLogFileName );
 }
 
 

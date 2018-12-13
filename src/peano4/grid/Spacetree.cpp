@@ -38,8 +38,12 @@ peano4::grid::Spacetree::Spacetree(
   int              id
 ):
   _id(id),
-  _root( copy._root ) {
-
+  _root( copy._root ),
+  _statistics(),
+  _splitTriggered(),
+  _splitting(),
+  _joinTriggered(),
+  _joining() {
   assertion1( _splitTriggered.count(_id)==0, _id );
 
   for (auto& p: copy._vertexStack ) {
@@ -70,9 +74,9 @@ bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(
       assertion( _joining.count( vertex.getAdjacentRanks(i) )<=1 );
 
       result |= vertex.getAdjacentRanks(i)==_id;
-      //result |= (splittingIsConsideredLocal and _splitTriggered.count( vertex.getAdjacentRanks(i) )==1);
+      result |= _splitTriggered.count( vertex.getAdjacentRanks(i) )==1;
+      result |= _joinTriggered.count( vertex.getAdjacentRanks(i) )==1;
       result |= (splittingIsConsideredLocal and _splitting.count( vertex.getAdjacentRanks(i) )==1);
-      //result |= (joiningIsConsideredLocal and _joinTriggered.count( vertex.getAdjacentRanks(i) )==1);
       result |= (joiningIsConsideredLocal and _joining.count( vertex.getAdjacentRanks(i) )==1);
 	}
 	return result;
@@ -100,23 +104,22 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
 void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::parallel::SpacetreeSet& spacetreeSet) {
   logTraceIn( "traverse(TraversalObserver,SpacetreeSet)" );
 
-  // we need to backup them as the traversal removes the entries from the
-  // splitting container while it gives out cells
-  std::vector<int> newIds;
-  _splitting.insert( _splitTriggered.begin(), _splitTriggered.end() );
-  for (auto p: _splitting) {
-    newIds.push_back( p.first );
-  }
-  _splitTriggered.clear();
+  logInfo(
+    "traverse(TraversalObserver,SpacetreeSet)",
+	_splitTriggered.size() << " tree split triggered and " <<
+	_splitting.size() << " splitting trees on tree " << _id
+  );
 
   traverse(observer);
 
-  assertion( _splitting.empty() );
-  for (auto p: newIds) {
-	assertion( p!=_id );
-	Spacetree newTree(*this, p);
+  for (auto p: _splitTriggered) {
+	assertion( p.first!=_id );
+	Spacetree newTree(*this, p.first);
 	spacetreeSet.addSpacetree(std::move(newTree));
   }
+  _splitting.clear();
+  _splitting.insert( _splitTriggered.begin(), _splitTriggered.end() );
+  _splitTriggered.clear();
 
   logTraceOut( "traverse(TraversalObserver,SpacetreeSet)" );
 }
@@ -600,12 +603,12 @@ void peano4::grid::Spacetree::storeVertices(
 			"write vertex " << fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].toString() << " to stack " << stackNumber
 		  );
           if ( PeanoCurve::isInOutStack(stackNumber) ) {
-        	 // @todo Raus
+            // @todo Raus
         	    if (
         	      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(0)<0.4 and
         	      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].getX(1)<0.4 and
                   #if PeanoDebug>0
-        		  fineGridStatesState.getLevel()<4 and
+        		  fineGridStatesState.getLevel()<2 and
                   #else
         		  fineGridStatesState.getLevel()<6 and
                   #endif
@@ -652,10 +655,12 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
         vertex.getAdjacentRanks(i)!=InvalidRank
 		and
 		not _splitting.count(vertex.getAdjacentRanks(i))==1
+		and not new
+		Weil wenn new, dann werde ich ja von meinem Master gefuettert
       ) {
-    	assertion2(
+    	assertion5(
           !_vertexStack[ peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i)) ].empty(),
-		  _id,
+		  _id, vertex.toString(), vertex.getAdjacentRanks(i), i,
 		  peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i))
         );
         GridVertex inVertex = _vertexStack[
@@ -684,12 +689,21 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 
 
 void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex ) {
-  if (isVertexAdjacentToLocalSpacetree(vertex,false,false)) {
+  logTraceInWith2Arguments( "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString(), _id );
+  if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
+	  // @todo Remove
+	if (_id==1) {
+		logDebug( "test", "test vertex" << vertex.toString() );
+	}
     for (int i=0; i<TwoPowerD; i++) {
       if (
         vertex.getAdjacentRanks(i)!=_id
 		and
 		vertex.getAdjacentRanks(i)!=InvalidRank
+		and
+		_splitTriggered.count( vertex.getAdjacentRanks(i) )==0
+		and
+		_joinTriggered.count( vertex.getAdjacentRanks(i) )==0
       ) {
     	const int stackNo = peano4::parallel::Node::getInstance().getOutputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i));
         _vertexStack[ stackNo ].push( vertex );
@@ -702,6 +716,14 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
       }
     }
   }
+  else {
+    logDebug(
+      "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)",
+      "vertex " << vertex.toString() << " on tree " << _id <<
+      " is not local"
+    );
+  }
+  logTraceOutWith1Argument( "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)", isVertexAdjacentToLocalSpacetree(vertex,true,true) );
 }
 
 
@@ -818,12 +840,18 @@ void peano4::grid::Spacetree::descend(
     //
     // Decompose tree if split requested
     //
-    if ( isSpacetreeNodeLocal(fineGridVertices) and !_splitting.empty() ) {
-      const int targetSpacetreeId = _splitting.begin()->first;
-      updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
-      _splitting.begin()->second--;
-      if (_splitting.begin()->second==0) {
-        _splitting.erase( _splitting.begin() );
+    if ( isSpacetreeNodeLocal(fineGridVertices) and not _splitTriggered.empty() ) {
+      int targetSpacetreeId = -1;
+      for (auto& p: _splitTriggered) {
+    	if (p.second>0) {
+          p.second--;
+          targetSpacetreeId = p.first;
+          break;
+    	}
+      }
+      // still some splits left
+      if ( targetSpacetreeId>=0 ) {
+        updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
       }
     }
 

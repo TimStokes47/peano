@@ -18,7 +18,7 @@ class peano4::grid::GridVertex {
   persistent packed parallelise bool isAntecessorOfRefinedVertex;
 
   /**
-   * Should be from 0 to TwoPowerD
+ 	   * Should be from 0 to TwoPowerD
    */
   discard    packed parallelise int  numberOfAdjacentRefinedLocalCells;
 

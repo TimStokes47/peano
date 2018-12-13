@@ -52,7 +52,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 	traverseTasks.push_back( new TraverseTask(
       p, *this, observer
     ));
+	logInfo( "traverse(TraversalObserver&)", "issue task to traverse tree " << p._id );
   }
+  logInfo( "traverse(TraversalObserver&)", "spawn " << traverseTasks.size() << " concurrent traversal tasks" );
 
   static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverse" );
   peano4::parallel::Tasks runTraversals(traverseTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion);
@@ -71,7 +73,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   // @todo Das sollte auch alles parallel gehen. In eigene Jobs auslagern
 
   //
-  // Do the local boundary data exchange
+  // Do the local boundary data exchange.
   //
   for (auto& sourceTree: _spacetrees) {
     for (auto& sourceStack: sourceTree._vertexStack) {
@@ -96,6 +98,18 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 		  "copy/clone " << sourceTree._vertexStack[sourceStack.first].size() << " entries"
 		);
         targetTree._vertexStack[ targetStack ].clone( sourceStack.second );
+
+        #if PeanoDebug>0
+        const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfBoundaryExchange(sourceTree._id);
+        assertion5(
+          targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
+		  or
+		  targetTree._vertexStack[ comparisonStackForTarget ].empty(),
+          targetTree._vertexStack[ targetStack ].size(),
+          targetTree._vertexStack[ comparisonStackForTarget ].size(),
+		  targetStack, comparisonStackForTarget, targetTree._id
+        );
+        #endif
 
         sourceTree._vertexStack[sourceStack.first].clear();
       }
@@ -141,6 +155,6 @@ peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
   for (auto& p: _spacetrees) {
 	if (p._id==id) return p;
   }
-  assertionMsg( false, "no spacetree found" );
+  assertion2( false, "no spacetree found", id );
   _spacetrees.begin(); // just here to avoid warning
 }

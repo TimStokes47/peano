@@ -58,12 +58,17 @@ int main(int argc, char** argv) {
     "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::grid::EmptyTraversalObserver", true
   ));
 
+
+  tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
+
+
   // parallel version
   peano4::parallel::SpacetreeSet spacetreeSet;
   spacetreeSet.addSpacetree( std::move(spacetree) );
 //  peano4::grid::EmptyTraversalObserver observer;
   peano4::grid::TraversalVTKPlotter observer( "grid" );
   for (int i=0; i<10; i++) {
+	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );
 
@@ -83,6 +88,7 @@ int main(int argc, char** argv) {
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
   //spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
   for (int i=0; i<10; i++) {
+	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 	observer.startNewSnapshot();
     spacetreeSet.traverse( observer );
 

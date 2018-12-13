@@ -86,6 +86,12 @@ bool peano4::parallel::Node::isBoundaryExchangeOutputStackNumber(int id) const {
 }
 
 
+bool peano4::parallel::Node::isBoundaryExchangeInputStackNumber(int id) const {
+  return id>=peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance
+     and ( (id-peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance) % 2 == 1 );
+}
+
+
 int peano4::parallel::Node::getIdOfBoundaryExchangeOutputStackNumber(int number) const {
   assertion( isBoundaryExchangeOutputStackNumber(number) );
   return (number-peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance) / 2;

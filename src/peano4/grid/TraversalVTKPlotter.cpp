@@ -35,8 +35,6 @@ void peano4::grid::TraversalVTKPlotter::beginTraversal() {
 
 
 void peano4::grid::TraversalVTKPlotter::endTraversal() {
-  logInfo( "beginTraversal(...)", "end traversal" );
-
   if (_writer!=nullptr) {
     _vertexWriter->close();
     _cellWriter->close();
@@ -59,6 +57,8 @@ void peano4::grid::TraversalVTKPlotter::endTraversal() {
     _writer->writeToFile( currentFile );
     delete _writer;
     _writer = nullptr;
+
+    logInfo( "endTraversal(...)", "wrote to file " << currentFile );
   }
 }
 

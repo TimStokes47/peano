@@ -97,6 +97,7 @@ class peano4::parallel::Node {
      * See getOutputStackNumberOfBoundaryExchange().
      */
     bool isBoundaryExchangeOutputStackNumber(int number) const;
+    bool isBoundaryExchangeInputStackNumber(int number) const;
 
     /**
      * You may only call this opeartion if isBoundaryExchangeOutputStackNumber()

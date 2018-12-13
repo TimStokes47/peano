@@ -347,6 +347,13 @@ class tarch::logging::CommandLineLogger {
       const std::string&  outputLogFileName
     );
 
+    /**
+     * Is redundant, as you could use setLogFormat() instead. However, it is
+     * tedious to specify all of these parameters if the only thing you want
+     * is to establish an output file.
+     */
+    void setOutputFile( const std::string&  outputLogFileName );
+
     void printFilterListToWarningDevice() const;
 
     void setQuitOnError(bool value);
