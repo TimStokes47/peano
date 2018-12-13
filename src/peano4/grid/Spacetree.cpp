@@ -453,12 +453,16 @@ peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
     std::bitset<Dimensions> vertexToInherit;
     std::bitset<Dimensions> indexToInherit;
     for ( int d=0; d<Dimensions; d++ ) {
-      vertexToInherit.set(d, vertexPositionWithin3x3Patch(d)>0);
-      indexToInherit.set(d, vertexPositionWithin3x3Patch(d)>0);
-     // indexToInherit[k]  = vertexPositionWithin3x3Patch(d)==0 ? 0 : 1;
-      xxx
+      if (vertexPositionWithin3x3Patch(d)<=1) {
+        vertexToInherit.set(d,false);
+        indexToInherit.set(d,k(d)>0 or vertexPositionWithin3x3Patch(d)>0);
+      }
+      else {
+        vertexToInherit.set(d,true);
+        indexToInherit.set(d,not (k(d)<1 or vertexPositionWithin3x3Patch(d)<3) );
+      }
     }
-    logDebug( "createNewPersistentVertex(...)", "inherit " << indexToInherit.to_ulong() << "th index from coarse vertex " << vertexToInherit );
+    logDebug( "createNewPersistentVertex(...)", "inherit " << indexToInherit.to_ulong() << "th index from coarse vertex " << vertexToInherit << " into local index " << kScalar );
     adjacentRanks(kScalar) = coarseGridVertices[ vertexToInherit.to_ulong() ].getAdjacentRanks(indexToInherit.to_ulong());
   enddforx
 
@@ -473,7 +477,7 @@ peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
     #endif
   );
 
-  logTraceOutWith1Argument( "createNewPersistentVertex(...)", result.toString() );
+  logTraceOutWith2Arguments( "createNewPersistentVertex(...)", result.toString(), adjacentRanks );
   return result;
 }
 
@@ -645,6 +649,8 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
       if (
         vertex.getAdjacentRanks(i)!=_id
 		and
+        vertex.getAdjacentRanks(i)!=InvalidRank
+		and
 		not _splitting.count(vertex.getAdjacentRanks(i))==1
       ) {
     	assertion2(
@@ -680,7 +686,11 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex ) {
   if (isVertexAdjacentToLocalSpacetree(vertex,false,false)) {
     for (int i=0; i<TwoPowerD; i++) {
-      if ( vertex.getAdjacentRanks(i)!=_id ) {
+      if (
+        vertex.getAdjacentRanks(i)!=_id
+		and
+		vertex.getAdjacentRanks(i)!=InvalidRank
+      ) {
     	const int stackNo = peano4::parallel::Node::getInstance().getOutputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i));
         _vertexStack[ stackNo ].push( vertex );
         logInfo(

@@ -44,6 +44,8 @@ class peano4::grid::Spacetree {
   public:
 	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = 2 + Dimensions*2;
   private:
+	static constexpr int InvalidRank = -1;
+
     static tarch::logging::Log  _log;
 
     friend class peano4::parallel::SpacetreeSet;
@@ -243,6 +245,9 @@ class peano4::grid::Spacetree {
 	  int         newId
     );
 
+    /**
+     * @image html Spacetree_createNewPersistentVertex.png
+     */
     GridVertex createNewPersistentVertex(
       GridVertex                                   fineGridVertices[TwoPowerD],
 	  const tarch::la::Vector<Dimensions,double>&  x,
