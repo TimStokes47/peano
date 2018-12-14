@@ -18,10 +18,12 @@ peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filen
   _writer(nullptr),
   _vertexWriter(nullptr),
   _cellWriter(nullptr),
+  _spacetreeIdWriter(nullptr),
   _timeSeriesWriter() {
-  _writer = new tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter();
-  _vertexWriter = _writer->createVertexWriter();
-  _cellWriter   = _writer->createCellWriter();
+  _writer            = new tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter();
+  _vertexWriter      = _writer->createVertexWriter();
+  _cellWriter        = _writer->createCellWriter();
+  _spacetreeIdWriter = _writer->createCellDataWriter( "unique-global-thread-id", 1 );
 }
 
 
@@ -38,12 +40,15 @@ void peano4::grid::TraversalVTKPlotter::endTraversal() {
   if (_writer!=nullptr) {
     _vertexWriter->close();
     _cellWriter->close();
+    _spacetreeIdWriter->close();
 
     delete _vertexWriter;
     delete _cellWriter;
+    delete _spacetreeIdWriter;
 
-    _vertexWriter = nullptr;
-    _cellWriter   = nullptr;
+    _vertexWriter      = nullptr;
+    _cellWriter        = nullptr;
+    _spacetreeIdWriter = nullptr;
 
     std::string currentFile = _filename;
 
@@ -77,12 +82,15 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
       );
     enddforx
 
+	int cellIndex = -1;
     #if Dimensions==2
-    _cellWriter->plotQuadrangle(vertexIndices);
+    cellIndex = _cellWriter->plotQuadrangle(vertexIndices);
     #elif Dimensions==3
     #else
     #warning Noch net implementiert
     #endif
+
+    _spacetreeIdWriter->plotCell(cellIndex,4);
   }
 }
 
