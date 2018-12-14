@@ -21,6 +21,14 @@ tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellDataWriter::
        << "\" format=\"ascii\""
        << " NumberOfComponents=\"" << _recordsPerCell << "\" >"
        << std::endl;
+
+  _myWriter._parallelCellDataDescription += "<PDataArray type=\""
+                                          + _dataType
+                                          + "\" Name=\""
+                                          + _identifier
+                                          + "\" NumberOfComponents=\""
+                                          + std::to_string(_recordsPerCell)
+                                           + "\"/>";
 }
 
 
@@ -65,14 +73,6 @@ void tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::CellDataWri
   if (_lastWriteCommandCellNumber>=-1) {
     _out << "</DataArray>" << std::endl;
     _myWriter._cellDataDescription += _out.str();
-
-    _myWriter._parallelCellDataDescription += "<PDataArray type=\""
-                                            + _dataType
-                                            + "\" Name=\""
-                                            + _identifier
-                                            + "\" NumberOfComponents=\""
-                                            + std::to_string(_recordsPerCell)
-                                             + "\"/>";
   }
   _lastWriteCommandCellNumber = -2;
 }

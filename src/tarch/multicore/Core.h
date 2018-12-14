@@ -97,6 +97,9 @@ class tarch::multicore::Core {
      */
     int getNumberOfThreads() const;
 
+    /**
+     * This is a real string which identifies the (OS) thread.
+     */
     std::string getThreadId() const;
 
     /**

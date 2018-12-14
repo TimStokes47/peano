@@ -103,6 +103,9 @@ class tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter:
     virtual CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell );
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex );
 
+    /**
+     *
+     */
     void writeMetaDataFileForParallelSnapshot(
       const std::string& metaDataFilename,
 	  const std::vector< std::string >& files

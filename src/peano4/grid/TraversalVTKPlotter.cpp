@@ -4,6 +4,7 @@
 
 #include "tarch/multicore/BooleanSemaphore.h"
 #include "tarch/multicore/Lock.h"
+#include "tarch/multicore/Core.h"
 
 #include <string>
 
@@ -90,7 +91,7 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
     #warning Noch net implementiert
     #endif
 
-    _spacetreeIdWriter->plotCell(cellIndex,4);
+    _spacetreeIdWriter->plotCell(cellIndex,tarch::multicore::Core::getInstance().getCoreNumber());
   }
 }
 
