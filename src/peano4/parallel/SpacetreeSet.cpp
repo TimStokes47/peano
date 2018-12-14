@@ -71,6 +71,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
 
   // @todo Das sollte auch alles parallel gehen. In eigene Jobs auslagern
+  //       Eigentlich koennte man hier mit Conflicts arbeiten
 
   //
   // Do the local boundary data exchange.

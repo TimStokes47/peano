@@ -659,6 +659,7 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 
     }
     else {
+      std::set<int> receiveStacks;
       for (int i=0; i<TwoPowerD; i++) {
         if (
           vertex.getAdjacentRanks(i)!=_id
@@ -672,16 +673,18 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 		    _id, vertex.toString(), vertex.getAdjacentRanks(i), i,
 		    peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i))
           );
-          GridVertex inVertex = _vertexStack[
-            peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i))
-          ].pop();
+          receiveStacks.insert( peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i)) );
+        }
+      }
+      for (auto p: receiveStacks) {
+        GridVertex inVertex = _vertexStack[ p ].pop();
 
-          assertion3( vertex.getState()!=GridVertex::State::HangingVertex,   inVertex.toString(), vertex.toString(), _id );
-          assertion3( inVertex.getState()!=GridVertex::State::HangingVertex, inVertex.toString(), vertex.toString(), _id );
-          assertionVectorNumericalEquals3( vertex.getX(), inVertex.getX(),   inVertex.toString(), vertex.toString(), _id );
-          assertionEquals3( vertex.getLevel(), inVertex.getLevel(),          inVertex.toString(), vertex.toString(), _id );
+        assertion3( vertex.getState()!=GridVertex::State::HangingVertex,   inVertex.toString(), vertex.toString(), _id );
+        assertion3( inVertex.getState()!=GridVertex::State::HangingVertex, inVertex.toString(), vertex.toString(), _id );
+        assertionVectorNumericalEquals3( vertex.getX(), inVertex.getX(),   inVertex.toString(), vertex.toString(), _id );
+        assertionEquals3( vertex.getLevel(), inVertex.getLevel(),          inVertex.toString(), vertex.toString(), _id );
 
-          assertionEquals3( vertex.getState(), inVertex.getState(),   inVertex.toString(), vertex.toString(), _id );
+        assertionEquals3( vertex.getState(), inVertex.getState(),   inVertex.toString(), vertex.toString(), _id );
 
           // @todo
 /*        if ( inVertex.getState()==GridVertex::State::EraseTriggered ) {
@@ -691,7 +694,6 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 			vertex.toString(), inVertex.toString()
 		  );
           }*/
-        }
       }
     }
     logTraceOutWith1Argument( "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString() );
@@ -701,7 +703,7 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 
 void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex ) {
   logTraceInWith2Arguments( "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString(), _id );
-  if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
+  if (isVertexAdjacentToLocalSpacetree(vertex,false,true)) {
 	std::set<int>  outStacks;
     for (int i=0; i<TwoPowerD; i++) {
       if (
@@ -717,10 +719,9 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
     	outStacks.insert( stackNo );
       }
     }
-    // @todo Auch Empfang muss mit Sets arbeiten
     for (auto p: outStacks) {
       _vertexStack[ p ].push( vertex );
-      logInfo(
+      logDebug(
           "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)",
 		  "vertex " << vertex.toString() << " on tree " << _id <<
 		  " goes to stack " << p << " associated with tree " <<
