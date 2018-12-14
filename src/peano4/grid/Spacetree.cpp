@@ -16,6 +16,7 @@ peano4::grid::Spacetree::Spacetree(
   const tarch::la::Vector<Dimensions,double>&  width
 ):
   _id(0),
+  _spacetreeState( SpacetreeState::Running ),
   _root() {
   _root.setLevel( 0 );
   _root.setX( offset );
@@ -38,6 +39,7 @@ peano4::grid::Spacetree::Spacetree(
   int              id
 ):
   _id(id),
+  _spacetreeState( SpacetreeState::NewFromSplit ),
   _root( copy._root ),
   _statistics(),
   _splitTriggered(),
@@ -120,6 +122,10 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::para
   _splitting.clear();
   _splitting.insert( _splitTriggered.begin(), _splitTriggered.end() );
   _splitTriggered.clear();
+
+  if (_spacetreeState==SpacetreeState::NewFromSplit) {
+    _spacetreeState = SpacetreeState::Running;
+  }
 
   logTraceOut( "traverse(TraversalObserver,SpacetreeSet)" );
 }
@@ -648,39 +654,44 @@ void peano4::grid::Spacetree::storeVertices(
 void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex ) {
   if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
     logTraceInWith1Argument( "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString() );
-    for (int i=0; i<TwoPowerD; i++) {
-      if (
-        vertex.getAdjacentRanks(i)!=_id
-		and
-        vertex.getAdjacentRanks(i)!=InvalidRank
-		and
-		not _splitting.count(vertex.getAdjacentRanks(i))==1
-		and not new
-		Weil wenn new, dann werde ich ja von meinem Master gefuettert
-      ) {
-    	assertion5(
-          !_vertexStack[ peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i)) ].empty(),
-		  _id, vertex.toString(), vertex.getAdjacentRanks(i), i,
-		  peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i))
-        );
-        GridVertex inVertex = _vertexStack[
-          peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i))
-        ].pop();
+    // @todo Hier muss der In-Stream, also das geforwardede Datum, eingepflegt werden. In diesem Fall ist es ein einfacher overwrite
+    if (_spacetreeState==SpacetreeState::NewFromSplit) {
 
-        assertion3( vertex.getState()!=GridVertex::State::HangingVertex,   inVertex.toString(), vertex.toString(), _id );
-        assertion3( inVertex.getState()!=GridVertex::State::HangingVertex, inVertex.toString(), vertex.toString(), _id );
-        assertionVectorNumericalEquals3( vertex.getX(), inVertex.getX(),   inVertex.toString(), vertex.toString(), _id );
-        assertionEquals3( vertex.getLevel(), inVertex.getLevel(),          inVertex.toString(), vertex.toString(), _id );
+    }
+    else {
+      for (int i=0; i<TwoPowerD; i++) {
+        if (
+          vertex.getAdjacentRanks(i)!=_id
+          and
+          vertex.getAdjacentRanks(i)!=InvalidRank
+		  and
+		  not _splitting.count(vertex.getAdjacentRanks(i))==1
+        ) {
+          assertion5(
+            !_vertexStack[ peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i)) ].empty(),
+		    _id, vertex.toString(), vertex.getAdjacentRanks(i), i,
+		    peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i))
+          );
+          GridVertex inVertex = _vertexStack[
+            peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i))
+          ].pop();
 
-        assertionEquals3( vertex.getState(), inVertex.getState(),   inVertex.toString(), vertex.toString(), _id );
+          assertion3( vertex.getState()!=GridVertex::State::HangingVertex,   inVertex.toString(), vertex.toString(), _id );
+          assertion3( inVertex.getState()!=GridVertex::State::HangingVertex, inVertex.toString(), vertex.toString(), _id );
+          assertionVectorNumericalEquals3( vertex.getX(), inVertex.getX(),   inVertex.toString(), vertex.toString(), _id );
+          assertionEquals3( vertex.getLevel(), inVertex.getLevel(),          inVertex.toString(), vertex.toString(), _id );
 
+          assertionEquals3( vertex.getState(), inVertex.getState(),   inVertex.toString(), vertex.toString(), _id );
+
+          // @todo
 /*        if ( inVertex.getState()==GridVertex::State::EraseTriggered ) {
           assertion2(
             vertex.getState()==GridVertex::State::EraseTriggered or
             vertex.getState()==GridVertex::State::Refined,
 			vertex.toString(), inVertex.toString()
 		  );
-        }*/
+          }*/
+        }
       }
     }
     logTraceOutWith1Argument( "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString() );
@@ -691,10 +702,7 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex ) {
   logTraceInWith2Arguments( "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString(), _id );
   if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
-	  // @todo Remove
-	if (_id==1) {
-		logDebug( "test", "test vertex" << vertex.toString() );
-	}
+	std::set<int>  outStacks;
     for (int i=0; i<TwoPowerD; i++) {
       if (
         vertex.getAdjacentRanks(i)!=_id
@@ -706,14 +714,18 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
 		_joinTriggered.count( vertex.getAdjacentRanks(i) )==0
       ) {
     	const int stackNo = peano4::parallel::Node::getInstance().getOutputStackNumberOfBoundaryExchange(vertex.getAdjacentRanks(i));
-        _vertexStack[ stackNo ].push( vertex );
-        logInfo(
+    	outStacks.insert( stackNo );
+      }
+    }
+    // @todo Auch Empfang muss mit Sets arbeiten
+    for (auto p: outStacks) {
+      _vertexStack[ p ].push( vertex );
+      logInfo(
           "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)",
 		  "vertex " << vertex.toString() << " on tree " << _id <<
-		  " goes to stack " << stackNo << " associated with tree " <<
-		  vertex.getAdjacentRanks(i)
-		);
-      }
+		  " goes to stack " << p << " associated with tree " <<
+		  peano4::parallel::Node::getInstance().getIdOfBoundaryExchangeOutputStackNumber( p )
+      );
     }
   }
   else {

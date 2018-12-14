@@ -58,6 +58,21 @@ class peano4::grid::Spacetree {
 	  Delete
     };
 
+    enum class SpacetreeState {
+      /**
+       * Set if this tree results from a split and if this is the first
+       * grid sweep when the former owner actually is in the mode
+       * splitting.
+       */
+      NewFromSplit,
+	  Running,
+	  /**
+	   * Clean-up mode, i.e. last step when a tree has merged into
+	   * another tree.
+	   */
+	  CleanUp
+    };
+
     static std::string toString( VertexType type );
 
     /**
@@ -76,6 +91,8 @@ class peano4::grid::Spacetree {
     );
 
     int              _id;
+
+    SpacetreeState   _spacetreeState;
 
     /**
      * The root of a spacetree corresponds to the initial state of the tree
@@ -266,7 +283,14 @@ class peano4::grid::Spacetree {
 
     /**
      * This one is to be invoked if and only if a vertex goes to the in/out
-     * stacks.
+     * stacks. The routine should be called just before the vertex goes to
+     * the output stack. We call it in updateVertexBeforeStore() here, so
+     * this constraints automatically is followed.
+     *
+     * The routine builds up a set over integers into which it adds all ranks
+     * that have to receive a copy. Once this is done, it iterates over the
+     * set and sends out data. The two-step scheme becomes necessary, as we
+     * have to avoid that vertices are sent around multiple times.
      */
     void sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex );
 
