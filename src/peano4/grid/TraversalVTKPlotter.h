@@ -45,6 +45,10 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 
     std::vector<std::string>                                                         _clonedSpacetreeIds;
   public:
+    /**
+     * You have to invoke startNewSnapshot() if you wanna have a pvd file
+     * immediately after you've created this observer in the main code.
+     */
     TraversalVTKPlotter( const std::string& filename, int treeId=-1, int counter=0 );
     virtual ~TraversalVTKPlotter();
 

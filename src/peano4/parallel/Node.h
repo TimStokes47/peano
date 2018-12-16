@@ -5,9 +5,13 @@
 
 
 #include "tarch/logging/Log.h"
+#include "peano4/grid/GridVertex.h"
+#include "tarch/multicore/BooleanSemaphore.h"
 
 
 #include <set>
+#include <queue>
+#include <map>
 
 
 namespace peano4 {
@@ -31,6 +35,13 @@ class peano4::parallel::Node {
     static tarch::logging::Log _log;
 
     std::set<int>  _bookedLocalThreads;
+
+    tarch::multicore::BooleanSemaphore  _semaphore;
+
+    /**
+     * Key is from-to.
+     */
+    std::map< std::pair<int,int>, std::queue<peano4::grid::GridVertex> >  _sendReceiveBuffer;
 
     /**
      * The standard constructor assigns the attributes default values and
@@ -105,6 +116,9 @@ class peano4::parallel::Node {
      * that corresponds to this stack number.
      */
     int getIdOfBoundaryExchangeOutputStackNumber(int number) const;
+
+    void sendVertexSynchronously( const peano4::grid::GridVertex& vertex, int fromId, int toId );
+    peano4::grid::GridVertex getVertexSynchronously( int fromId, int toId );
 };
 
 #endif

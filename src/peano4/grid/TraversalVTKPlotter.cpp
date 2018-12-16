@@ -122,6 +122,7 @@ peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int s
 }
 
 
+// @todo Raus damit
 void peano4::grid::TraversalVTKPlotter::startNewSnapshot() {
   _counter++;
 

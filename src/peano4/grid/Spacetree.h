@@ -18,6 +18,7 @@
 
 #include <vector>
 #include <map>
+#include <set>
 
 
 namespace peano4 {
@@ -73,6 +74,7 @@ class peano4::grid::Spacetree {
 	  CleanUp
     };
 
+    static std::string toString( SpacetreeState state );
     static std::string toString( VertexType type );
 
     /**
@@ -111,6 +113,7 @@ class peano4::grid::Spacetree {
      * actually performed.
      */
     typedef std::map< int, int >  SplitSpecification;
+    int                  _masterId;
     SplitSpecification   _splitTriggered;
     SplitSpecification   _splitting;
     SplitSpecification   _joinTriggered;
@@ -274,6 +277,8 @@ class peano4::grid::Spacetree {
 
     void split(int cells);
 
+    std::set<int>  getAdjacentDomainIds( const GridVertex& vertex ) const;
+
     /**
      * This is the parallel version of traverse() as it is used by the
      * spacetree set. The latter passes in a callback. Through this, the
@@ -295,6 +300,21 @@ class peano4::grid::Spacetree {
     void sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex );
 
     /**
+     * Manage the data exchange after a vertex is loaded for the first time
+     *
+     * The operation has three jobs to do:
+     * - If this is the first sweep on a new tree, i.e. if we are in the
+     *   splitting phase, we have to recive data from the tree that is
+     *   splitting and merge them into the local data as it is forwarded.
+     * - Exchange vertices along domain boundary.
+     * - Send/stream data to another rank which is just splitting (see item
+     *   one).
+     *
+     * The order of these three steps is important.
+     *
+     *
+     * <h2> Boundary data exchange </h2>
+     *
      * For a local vertex, i.e. one adjacent to the current active tree, which
      * is neighbouring another tree, we do receive this tree's data copy and
      * then merge it into the local tree.

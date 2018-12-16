@@ -62,10 +62,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   //
   // Merge local copies of the statistics
   //
-  for (const auto& from: _spacetrees)
-  for (auto& to: _spacetrees) {
-    if (_master.count(from._id)>0 and _master[from._id]==to._id) {
-      merge(from._statistics, to._statistics);
+  for (auto&  from: _spacetrees) {
+    if ( from._id != _spacetrees.begin()->_id ) {
+      merge(from._statistics, _spacetrees.begin()->_statistics );
     }
   }
 
@@ -77,28 +76,30 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   // Do the local boundary data exchange.
   //
   for (auto& sourceTree: _spacetrees) {
-    for (auto& sourceStack: sourceTree._vertexStack) {
-      if ( Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack.first) ) {
-        const int targetId = Node::getInstance().getIdOfBoundaryExchangeOutputStackNumber(sourceStack.first);
+//  for (auto& sourceStack: sourceTree._vertexStack) {
+	for (auto sourceStack = sourceTree._vertexStack.begin(); sourceStack != sourceTree._vertexStack.end(); ) {
+      if (
+        Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack->first)
+		and
+		not sourceStack->second.empty()
+      ) {
+        const int targetId = Node::getInstance().getIdOfBoundaryExchangeOutputStackNumber(sourceStack->first);
 
         // @todo Id might not be local
         peano4::grid::Spacetree& targetTree = getSpacetree( targetId );
         const int targetStack = Node::getInstance().getInputStackNumberOfBoundaryExchange(sourceTree._id);
         logInfo(
           "traverse(Observer)",
-		  "map output stream " << sourceStack.first << " of tree " <<
+		  "map output stream " << sourceStack->first << " of tree " <<
 		  sourceTree._id << " onto input stream " << targetStack <<
-		  " of tree " << targetId
+		  " of tree " << targetId <<
+		  ". Copy/clone " << sourceTree._vertexStack[sourceStack->first].size() << " entries"
 		);
 
-        assertion4( sourceTree._id != targetId, sourceTree._id, targetId, sourceStack.first, targetStack);
-
+        assertion4( sourceTree._id != targetId, sourceTree._id, targetId, sourceStack->first, targetStack);
         assertion( targetTree._vertexStack[targetStack].empty() );
-        logInfo(
-          "traverse(Observer)",
-		  "copy/clone " << sourceTree._vertexStack[sourceStack.first].size() << " entries"
-		);
-        targetTree._vertexStack[ targetStack ].clone( sourceStack.second );
+
+        targetTree._vertexStack[ targetStack ].clone( sourceStack->second );
 
         #if PeanoDebug>0
         const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfBoundaryExchange(sourceTree._id);
@@ -112,9 +113,48 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
         );
         #endif
 
-        sourceTree._vertexStack[sourceStack.first].clear();
+        sourceTree._vertexStack[sourceStack->first].clear();
+
+        sourceStack++;
+      }
+      else if (
+       Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack->first)
+       and
+       sourceStack->second.empty()
+      ) {
+        sourceStack = sourceTree._vertexStack.erase(sourceStack);
+      }
+      else {
+        sourceStack++;
       }
     }
+  }
+
+  //
+  // Cleanup spacetrees
+  //
+  // std::list< peano4::grid::Spacetree >::iterator
+  for (auto p = _spacetrees.begin(); p!=_spacetrees.end(); ) {
+	if (
+      p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0
+	  and
+	  p->_splitTriggered.empty()
+	  and
+	  p->_splitting.empty()
+	  and
+	  p->_joinTriggered.empty()
+	  and
+	  p->_joining.empty()
+	  and
+	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
+	)  {
+      logWarning( "traverse(Observer)", "tree " << p->_id << " does not hold any local cells" );
+      p = _spacetrees.erase(p);
+      // @todo Eigentlich waere es viel schoener, den dann auf Merge zu setzen
+	}
+	else {
+      p++;
+	}
   }
 }
 
@@ -143,11 +183,11 @@ void peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
   if (tree==nullptr) {
 	assertionMsg(false, "unknown tree Id");
   }
-  assertion3(
-    cells < tree->getGridStatistics().getNumberOfLocalUnrefinedCells(),
-	cells, tree->getGridStatistics().getNumberOfLocalUnrefinedCells(), treeId
-  );
-  // @todo
+
+  if ( cells >= tree->getGridStatistics().getNumberOfLocalUnrefinedCells() ) {
+	logWarning( "split(int,int)", "tree " << treeId << " asked to split off " << cells << " cells though it holds only " << tree->getGridStatistics().getNumberOfLocalUnrefinedCells() << " local unrefined cells" );
+  }
+
   tree->split(cells);
 }
 

@@ -63,13 +63,6 @@ class peano4::parallel::SpacetreeSet {
 
     std::list< peano4::grid::Spacetree >  _spacetrees;
 
-    /**
-     * Links from worker to masters. We use the ids from the
-     * Node class, so we have unique numbers for rank+thread
-     * combinations.
-     */
-    std::map<int,int>  _master;
-
     tarch::multicore::BooleanSemaphore  _semaphore;
 
     peano4::grid::Spacetree& getSpacetree(int id);

@@ -65,12 +65,11 @@ int main(int argc, char** argv) {
   // parallel version
   peano4::parallel::SpacetreeSet spacetreeSet;
   spacetreeSet.addSpacetree( std::move(spacetree) );
-//  peano4::grid::EmptyTraversalObserver observer;
-  peano4::grid::TraversalVTKPlotter observer( "grid" );
-  for (int i=0; i<10; i++) {
+  peano4::grid::EmptyTraversalObserver emptyObserver;
+  for (int i=0; i<2; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-	observer.startNewSnapshot();
-    spacetreeSet.traverse( observer );
+	//observer.startNewSnapshot();
+    spacetreeSet.traverse( emptyObserver );
 
     logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
     logInfo( "main(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
@@ -82,15 +81,35 @@ int main(int argc, char** argv) {
     logInfo( "main(...)", "remote refined cells= " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
 
-  std::cout << "== start split ==" << std::endl;
-
-  // @todo This is wrong
+  std::cout << "== Split ==" << std::endl;
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
-  //spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
+  spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
+
   for (int i=0; i<10; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-	observer.startNewSnapshot();
-    spacetreeSet.traverse( observer );
+	//emptyObserver.startNewSnapshot();
+    spacetreeSet.traverse( emptyObserver );
+
+    logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
+    logInfo( "main(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
+    logInfo( "main(...)", "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() );
+    logInfo( "main(...)", "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() );
+    logInfo( "main(...)", "local unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells());
+    logInfo( "main(...)", "local refined cell = " << spacetreeSet.getGridStatistics().getNumberOfLocalRefinedCells() );
+    logInfo( "main(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
+    logInfo( "main(...)", "remote refined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
+  }
+
+
+//  std::cout << "== Split again ==" << std::endl;
+  spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2);
+  spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2);
+
+
+  for (int i=0; i<10; i++) {
+	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
+	//observer.startNewSnapshot();
+    spacetreeSet.traverse( emptyObserver );
 
     logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
     logInfo( "main(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
@@ -102,5 +121,8 @@ int main(int argc, char** argv) {
     logInfo( "main(...)", "remote refined cells= " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
 
-  return 0;
-}
+  peano4::grid::TraversalVTKPlotter plotterObserver( "grid" );
+  plotterObserver.startNewSnapshot();
+  spacetreeSet.traverse( plotterObserver );
+
+  return 0;}
