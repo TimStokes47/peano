@@ -329,6 +329,19 @@ class peano4::grid::Spacetree {
      * ranks have still sent in data to 0 which actually should go to 1. We
      * receive those guys, but we have to eliminate explicitly any incoming data
      * we'd expect from 1 as 1 didn't have the chance yet to send it out.
+     *
+     * The function is called directly
+     * after a vertex has been read from the input stream. Please note that
+     * an update of the refinement states (e.g. switch from
+     * refinement-triggered to refining) happens after the merge. Any update of the
+     * refinement state in this operation hence immediately affects the
+     * vertex updates in this very iteration.
+     *
+     * The update of the adjacency information is simple: If a neighbour tells us
+     * that it has changed an adjacency entry in one of its own fields, i.e. if
+     * it has changed its own entry, we copy this information over. Otherwise, we
+     * ignore any updates (there should not be any).
+     *
      */
     void receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex );
 

@@ -85,6 +85,11 @@ int main(int argc, char** argv) {
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
 
+  spacetreeSet.traverse( emptyObserver );
+
+  spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2);
+  spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2);
+
   for (int i=0; i<10; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 	//emptyObserver.startNewSnapshot();
@@ -102,8 +107,10 @@ int main(int argc, char** argv) {
 
 
 //  std::cout << "== Split again ==" << std::endl;
+/*
   spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2);
   spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2);
+*/
 
 
   for (int i=0; i<10; i++) {

@@ -641,6 +641,9 @@ void peano4::grid::Spacetree::storeVertices(
         		  stackNumber<=1
         		  and
         		  isVertexAdjacentToLocalSpacetree(fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ],false,false)
+        	    // und das killt ihn jetzt
+        	    and
+        	      _id ==1
         		) {
         	      fineGridVertices[ peano4::utils::dLinearised(localVertexIndex) ].setState( GridVertex::State::RefinementTriggered );
         	    }
@@ -718,6 +721,60 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
         }
       }
           // @todo
+
+
+      assertion3( localVertex.getRefinementControl()!=Vertex::Records::EnforceRefinementTriggered,     localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank() );
+      assertion3( neighbourVertex.getRefinementControl()!=Vertex::Records::EnforceRefinementTriggered, localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank() );
+
+      assertion3( localVertex.getRefinementControl()!=Vertex::Records::Erasing ,                                    localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
+      assertion3( localVertex.getRefinementControl()!=Vertex::Records::Refining,                                    localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
+      assertion3( localVertex.getRefinementControl()!=Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing, localVertex.toString(), neighbourVertex.toString(), tarch::parallel::Node::getInstance().getRank()  );
+
+      const bool OnlyNeighbourHasTriggeredRefinement =
+        neighbourVertex._vertexData.getRefinementControl()==Vertex::Records::RefinementTriggered &&
+        localVertex._vertexData.getRefinementControl()==Vertex::Records::Unrefined;
+      const bool OnlyNeighbourHasTriggeredErase =
+        neighbourVertex._vertexData.getRefinementControl()==Vertex::Records::EraseTriggered &&
+        localVertex._vertexData.getRefinementControl()==Vertex::Records::Refined;
+      const bool OnlyLocalHasTriggeredRefinement =
+        localVertex._vertexData.getRefinementControl()==Vertex::Records::RefinementTriggered &&
+        neighbourVertex._vertexData.getRefinementControl()==Vertex::Records::Unrefined;
+      const bool OnlyLocalHasTriggeredErase =
+        localVertex._vertexData.getRefinementControl()==Vertex::Records::EraseTriggered &&
+        neighbourVertex._vertexData.getRefinementControl()==Vertex::Records::Refined;
+
+      if (OnlyNeighbourHasTriggeredRefinement || OnlyLocalHasTriggeredRefinement) {
+        localVertex._vertexData.setRefinementControl( Vertex::Records::RefinementTriggered );
+      }
+      else if (OnlyNeighbourHasTriggeredErase || OnlyLocalHasTriggeredErase) {
+        localVertex._vertexData.setRefinementControl( Vertex::Records::EraseTriggered );
+      }
+      else {
+        assertion2(
+             (localVertex._vertexData.getRefinementControl()==neighbourVertex._vertexData.getRefinementControl())
+          || (localVertex._vertexData.getRefinementControl()==Vertex::Records::EraseTriggered && neighbourVertex._vertexData.getRefinementControl()==Vertex::Records::Refining)
+          || (localVertex._vertexData.getRefinementControl()==Vertex::Records::Refined && neighbourVertex._vertexData.getRefinementControl()==Vertex::Records::Refining)
+          || (localVertex._vertexData.getRefinementControl()==Vertex::Records::Unrefined && neighbourVertex._vertexData.getRefinementControl()==Vertex::Records::Erasing)
+          || (localVertex._vertexData.getRefinementControl()==Vertex::Records::Unrefined && neighbourVertex._vertexData.getRefinementControl()==Vertex::Records::RefineDueToJoinThoughWorkerIsAlreadyErasing)
+          , localVertex.toString(), neighbourVertex.toString()
+        );
+      }
+
+      localVertex._vertexData.setNumberOfAdjacentRefinedCells( neighbourVertex._vertexData.getNumberOfAdjacentRefinedCells() );
+      localVertex._vertexData.setAdjacentSubtreeForksIntoOtherRank(
+         neighbourVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank() |
+         localVertex._vertexData.getAdjacentSubtreeForksIntoOtherRank()
+      );
+      #ifdef PersistentRegularSubtrees
+      localVertex._vertexData.setParentRegularPersistentSubgrid(
+         neighbourVertex._vertexData.getParentRegularPersistentSubgrid() |
+         localVertex._vertexData.getParentRegularPersistentSubgrid()
+      );
+      #endif
+
+      // @todo End of Todo
+
+
 /*        if ( inVertex.getState()==GridVertex::State::EraseTriggered ) {
           assertion2(
             vertex.getState()==GridVertex::State::EraseTriggered or
