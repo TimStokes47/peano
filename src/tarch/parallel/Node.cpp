@@ -7,7 +7,7 @@
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
-
+#include "tarch/multicore/Jobs.h"
 
 /**
  * For the machine name. If it doesn't work, switch it off in the file
@@ -416,6 +416,8 @@ void tarch::parallel::Node::receiveDanglingMessages() {
       tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     #ifdef Parallel
     }
+    else
+      tarch::multicore::jobs::processBackgroundJobs(1);
     #endif
   }
 }

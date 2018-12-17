@@ -118,12 +118,6 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     VT_begin(event_execute);
 #endif
 
-
-  if ( _bandwidthTasksAreProcessed.compare_and_swap(true,false) ) {
-    processJobs(internal::HighBandwidthTasksJobClassNumber,std::numeric_limits<int>::max());
-	_bandwidthTasksAreProcessed = false;
-  }
-
   bool hasProcessedJobs = false;
 
   #if TBB_USE_THREADING_TOOLS>=1
@@ -147,6 +141,36 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   p->second += 1;
   p.release();
   #endif
+
+
+  const int oldNumberOfConsumerTasks = _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
+  const int totalTaskCount
+    = internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)
+    + internal::getJobQueueSize(internal::HighPriorityTasksJobClassNumber)
+    + internal::getJobQueueSize(internal::HighBandwidthTasksJobClassNumber);
+  const int optimalConsumerCounter = totalTaskCount / internal::_minimalNumberOfJobsPerConsumerRun;
+
+  bool rescheduleThisConsumer = false;
+  if (
+    oldNumberOfConsumerTasks<Job::_maxNumberOfRunningBackgroundThreads
+    and
+	oldNumberOfConsumerTasks<optimalConsumerCounter
+  ) {
+    enqueue();
+    rescheduleThisConsumer = true;
+  }
+  else if (
+    (oldNumberOfConsumerTasks<=1)
+  ) {
+    rescheduleThisConsumer = true;
+  }
+
+
+  if ( _bandwidthTasksAreProcessed.compare_and_swap(true,false) ) {
+    hasProcessedJobs |= processJobs(internal::HighBandwidthTasksJobClassNumber,std::numeric_limits<int>::max());
+	_bandwidthTasksAreProcessed = false;
+  }
+
 
   switch (_processHighPriorityJobsAlwaysFirst) {
     case HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARush:
@@ -179,48 +203,10 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
       break;
   }
 
-  const int oldNumberOfConsumerTasks = _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
 
-  tbb::task* result = nullptr;
-  if (
-    oldNumberOfConsumerTasks<Job::_maxNumberOfRunningBackgroundThreads
-    and
-    (
-      internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) >= internal::_minimalNumberOfJobsPerConsumerRun
-      or
-      internal::getJobQueueSize(internal::HighPriorityTasksJobClassNumber) > 1
-    )
-  ) {
-    enqueue();
+  if ( hasProcessedJobs or rescheduleThisConsumer ) {
     enqueue();
   }
-  else if (
-    oldNumberOfConsumerTasks>1
-    and
-	internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber) < internal::_minimalNumberOfJobsPerConsumerRun
-  ) {
-    //if( internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber==0))
-    //logInfo("jobs","starving consumer size"<<internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)<<" consumers "<<internal::_numberOfRunningJobConsumerTasks.load()<< " old consumers"<<oldNumberOfConsumerTasks);
-    // starve
-  }
-  // It is very important not to directly spawn a consumer here, as otherwise
-  // consumers tend to run into endless loops or somehow are not scheduled.
-  // Might be due to the background thing.
-  else if (
-    hasProcessedJobs
-	or
-	internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)>0
-  ) {
-    enqueue();
-    //logInfo("jobs", "enqueued new consumer");
-  }
-  else {
-    //logInfo("jobs", "starving for no if applies: hasProcessed "<<hasProcessedJobs<< " size "<<internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber));
-  }
-
-
-  //if(internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)==1 && internal::_numberOfRunningJobConsumerTasks.load()==0 )
-  // logInfo("jobs", " queue size: 1"<< " consumers 0"<<" oldConsumers "<<oldNumberOfConsumerTasks<<" hasProcessed "<<hasProcessedJobs);
 
   if (oldNumberOfConsumerTasks==1) {
     internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize    = internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize*0.9;
