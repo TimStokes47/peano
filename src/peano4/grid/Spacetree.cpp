@@ -442,6 +442,7 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
   }
   else if (vertex.getState()==GridVertex::State::EraseTriggered) {
     _statistics.setNumberOfErasingVertices( _statistics.getNumberOfErasingVertices()+1 );
+    restrictIsAntecessorOfRefinedVertex = true;
   }
   else if (vertex.getState()==GridVertex::State::Erasing) {
     vertex.setState( GridVertex::State::Unrefined );
@@ -626,6 +627,7 @@ void peano4::grid::Spacetree::storeVertices(
 			"write vertex " << fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString() << " to stack " << stackNumber
 		  );
           if ( PeanoCurve::isInOutStack(stackNumber) ) {
+        	static bool hasStartedToCoarsen = false;
             // @todo Raus
         	    if (
         	      fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getX(0)<0.4 and
@@ -639,16 +641,29 @@ void peano4::grid::Spacetree::storeVertices(
         		  and
         		  isVertexAdjacentToLocalSpacetree(fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],false,false)
         	    // und das killt ihn jetzt
-        	    and
-       	      _id ==1
-/*
-                and
-				_splitTriggered.empty()
-        	    and
-				_splitting.empty()
-*/
+                  and
+       	          _id ==1
+				  and not hasStartedToCoarsen
         		) {
         	      fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].setState( GridVertex::State::RefinementTriggered );
+        	    }
+
+        	    if (
+        	      fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getX(0)<0.6 and
+        	      fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getX(1)<0.6 and
+				  fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getState()==GridVertex::State::Refined and
+				  not fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getIsAntecessorOfRefinedVertex() and
+        		  isVertexAdjacentToLocalSpacetree(fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],false,false)
+        	    // und das killt ihn jetzt
+        	    and
+       	      _id ==1
+        		) {
+                  static int iterationCounter = 0;
+                  iterationCounter++;
+                  if (iterationCounter>500) {
+                    fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].setState( GridVertex::State::EraseTriggered );
+                  }
+                  hasStartedToCoarsen = true;
         	    }
 
             updateVertexBeforeStore(

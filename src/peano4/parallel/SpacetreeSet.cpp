@@ -76,7 +76,6 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   // Do the local boundary data exchange.
   //
   for (auto& sourceTree: _spacetrees) {
-//  for (auto& sourceStack: sourceTree._vertexStack) {
 	for (auto sourceStack = sourceTree._vertexStack.begin(); sourceStack != sourceTree._vertexStack.end(); ) {
       if (
         Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack->first)
@@ -133,11 +132,8 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   //
   // Cleanup spacetrees
   //
-  // std::list< peano4::grid::Spacetree >::iterator
   for (auto p = _spacetrees.begin(); p!=_spacetrees.end(); ) {
 	if (
-      p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0
-	  and
 	  p->_splitTriggered.empty()
 	  and
 	  p->_splitting.empty()
@@ -148,13 +144,19 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 	  and
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
 	)  {
-      logWarning( "traverse(Observer)", "tree " << p->_id << " does not hold any local cells" );
-      p = _spacetrees.erase(p);
-      // @todo Eigentlich waere es viel schoener, den dann auf Merge zu setzen
+	  if ( p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0 ) {
+        logInfo( "traverse(Observer)", "tree " << p->_id << " does not hold any local cells" );
+        p = _spacetrees.erase(p);
+	  }
+	  else if (
+        p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() <= ThreePowerD+1
+		and
+		p->_id!=0 // not if there's a child, e.g.
+      ) {
+        logWarning( "traverse(Observer)", "tree " << p->_id << " does not hold any local cells" );
+	  }
 	}
-	else {
-      p++;
-	}
+	p++;
   }
 }
 
