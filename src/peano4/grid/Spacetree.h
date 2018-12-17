@@ -232,7 +232,8 @@ class peano4::grid::Spacetree {
      * the previous sweep, we finally update it to refined or unrefined.
      *
      * This operation has to be called whenever we load a vertex from the input
-     * stream, i.e. we touch it for the very first time.
+     * stream, i.e. we touch it for the very first time. We are not allowed to
+     * invoke it after we've created a new vertex.
      *
      * We don't do any statistics here. I've moved all the statistics into
      * updateVertexBeforeStore().

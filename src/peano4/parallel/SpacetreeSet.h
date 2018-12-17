@@ -90,6 +90,11 @@ class peano4::parallel::SpacetreeSet {
 
     /**
      * Does exist for debug reasons. Usually not used by codes.
+     *
+     * If yo split a tree, please note that trees go through two states: split
+     * triggered and splitting. In the latter case, you may split again once
+     * more. Throughout the split-triggered, the tree does not physically exist
+     * yet and you are thus not allowed to split it further.
      */
     void split(int treeId, int cells);
 };

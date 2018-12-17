@@ -65,10 +65,19 @@ int main(int argc, char** argv) {
   // parallel version
   peano4::parallel::SpacetreeSet spacetreeSet;
   spacetreeSet.addSpacetree( std::move(spacetree) );
+
+  #if PeanoDebug>0
+  peano4::grid::TraversalVTKPlotter emptyObserver( "grid-construction" );
+  #else
   peano4::grid::EmptyTraversalObserver emptyObserver;
+  #endif
+
   for (int i=0; i<2; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-	//observer.startNewSnapshot();
+    #if PeanoDebug>0
+	emptyObserver.startNewSnapshot();
+    #endif
+
     spacetreeSet.traverse( emptyObserver );
 
     logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
@@ -88,11 +97,15 @@ int main(int argc, char** argv) {
   spacetreeSet.traverse( emptyObserver );
 
   spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2);
-  spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2);
+  spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3);
+  spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3);
 
   for (int i=0; i<10; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-	//emptyObserver.startNewSnapshot();
+    #if PeanoDebug>0
+	emptyObserver.startNewSnapshot();
+    #endif
+
     spacetreeSet.traverse( emptyObserver );
 
     logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
@@ -115,7 +128,10 @@ int main(int argc, char** argv) {
 
   for (int i=0; i<10; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-	//observer.startNewSnapshot();
+    #if PeanoDebug>0
+	emptyObserver.startNewSnapshot();
+    #endif
+
     spacetreeSet.traverse( emptyObserver );
 
     logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );

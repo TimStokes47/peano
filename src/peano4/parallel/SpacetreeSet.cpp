@@ -88,7 +88,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
         // @todo Id might not be local
         peano4::grid::Spacetree& targetTree = getSpacetree( targetId );
         const int targetStack = Node::getInstance().getInputStackNumberOfBoundaryExchange(sourceTree._id);
-        logInfo(
+        logDebug(
           "traverse(Observer)",
 		  "map output stream " << sourceStack->first << " of tree " <<
 		  sourceTree._id << " onto input stream " << targetStack <<
@@ -182,10 +182,6 @@ void peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
   }
   if (tree==nullptr) {
 	assertionMsg(false, "unknown tree Id");
-  }
-
-  if ( cells >= tree->getGridStatistics().getNumberOfLocalUnrefinedCells() ) {
-	logWarning( "split(int,int)", "tree " << treeId << " asked to split off " << cells << " cells though it holds only " << tree->getGridStatistics().getNumberOfLocalUnrefinedCells() << " local unrefined cells" );
   }
 
   tree->split(cells);

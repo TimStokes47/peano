@@ -24,7 +24,7 @@ peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filen
   _writer            = new tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter();
   _vertexWriter      = _writer->createVertexWriter();
   _cellWriter        = _writer->createCellWriter();
-  _spacetreeIdWriter = _writer->createCellDataWriter( "unique-global-thread-id", 1 );
+  _spacetreeIdWriter = _writer->createCellDataWriter( "core-number", 1 );
 }
 
 
