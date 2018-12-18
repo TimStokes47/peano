@@ -365,21 +365,25 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
   if (
     vertex.getState()==GridVertex::State::RefinementTriggered
   ) {
-//    if ( isVertexAdjacentToLocalSpacetree(vertex,true,true)
-
-    vertex.setState( GridVertex::State::Refining );
+    if ( isVertexAdjacentToLocalSpacetree(vertex,true,true) ) {
+      vertex.setState( GridVertex::State::Refining );
+    }
+    else {
+      vertex.setState( GridVertex::State::Unrefined );
+    }
   }
   else if (
     vertex.getState()==GridVertex::State::EraseTriggered
-	and
-	isVertexAdjacentToLocalSpacetree(vertex,true,true)
   ) {
 	if ( vertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() ) {
       logWarning( "updateVertexAfterLoad(...)", "vertex " << vertex.toString() << " may not be erased as it is father or further refined vertices. Unroll flag" );
-      vertex.setState( GridVertex::State::Unrefined );
+      vertex.setState( GridVertex::State::Refined );
  	}
-	else {
+	else if ( isVertexAdjacentToLocalSpacetree(vertex,true,true) ){
       vertex.setState( GridVertex::State::Erasing );
+	}
+	else {
+      vertex.setState( GridVertex::State::Refined );
 	}
   }
 
@@ -442,10 +446,7 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
   bool restrictIsAntecessorOfRefinedVertex = vertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
 
   if (vertex.getState()==GridVertex::State::RefinementTriggered) {
-	  // @todo Docu warum das keinen Unterschied hat
-    if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
-      _statistics.setNumberOfRefiningVertices( _statistics.getNumberOfRefiningVertices()+1 );
-    }
+    _statistics.setNumberOfRefiningVertices( _statistics.getNumberOfRefiningVertices()+1 );
     restrictIsAntecessorOfRefinedVertex = true;
   }
   else if (vertex.getState()==GridVertex::State::Refining) {
@@ -453,9 +454,7 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
     restrictIsAntecessorOfRefinedVertex = true;
   }
   else if (vertex.getState()==GridVertex::State::EraseTriggered) {
-    if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
-      _statistics.setNumberOfErasingVertices( _statistics.getNumberOfErasingVertices()+1 );
-    }
+    _statistics.setNumberOfErasingVertices( _statistics.getNumberOfErasingVertices()+1 );
     restrictIsAntecessorOfRefinedVertex = true;
   }
   else if (vertex.getState()==GridVertex::State::Erasing) {

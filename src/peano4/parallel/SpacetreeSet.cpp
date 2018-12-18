@@ -144,9 +144,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 	  and
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
 	)  {
-      logDebug( "traverse(Observer)", "tree " << p->_id << ": " << p->getGridStatistics().getNumberOfLocalRefinedCells() );
-      logDebug( "traverse(Observer)", "tree " << p->_id << ": " << p->getGridStatistics().getNumberOfLocalUnrefinedCells() );
-	  if ( p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0 ) {
+      logDebug( "traverse(Observer)", "tree " << p->_id << "'s local refined cells: " << p->getGridStatistics().getNumberOfLocalRefinedCells() );
+      logDebug( "traverse(Observer)", "tree " << p->_id << "'s local unrefined cells: " << p->getGridStatistics().getNumberOfLocalUnrefinedCells() );
+      if ( p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0 ) {
         logInfo( "traverse(Observer)", "tree " << p->_id << " does not hold any local cells" );
         p = _spacetrees.erase(p);
 	  }
@@ -155,7 +155,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 		and
 		p->getGridStatistics().getNumberOfRefiningVertices()==0
       ) {
-        logWarning( "traverse(Observer)", "tree " << p->_id << " is a generated tree with only one cell. Trigger join with tree " << p->_masterId );
+        logWarning( "traverse(Observer)", "tree " << p->_id << " is a degenerated tree with only one cell. Trigger join with tree " << p->_masterId );
 	  }
 	}
 	p++;

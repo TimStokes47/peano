@@ -292,15 +292,6 @@ class peano4::grid::Spacetree {
      * and a flag from the previous solution. This flag is rolled over. If the
      * flag is set, it undoes any erase trigger.
      *
-     *
-     * <h2> Statistics </h2>
-     *
-     * A forked tree obtains the tree stream from its master 1:1. However, the
-     * routine updateVertexBeforeLoad() does not switch any triggered vertices
-     * which are outside. Therefore, these guys
-     *
-     * @todo
-     *
      * @param fineVertexPositionWithinPatch Position of vertex within 3x3 or 3x3x3 patch respectively
      */
     void updateVertexBeforeStore(
