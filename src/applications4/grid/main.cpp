@@ -100,6 +100,11 @@ int main(int argc, char** argv) {
   spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3);
   spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3);
 
+  spacetreeSet.traverse( emptyObserver );
+  spacetreeSet.traverse( emptyObserver );
+
+  spacetreeSet.split(1,1);
+
   for (int i=0; i<10; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     #if PeanoDebug>0

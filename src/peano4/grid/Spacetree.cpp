@@ -927,6 +927,15 @@ void peano4::grid::Spacetree::descend(
       }
       else {
         _statistics.setNumberOfRemoteRefinedCells( _statistics.getNumberOfRemoteRefinedCells()+1 );
+
+        //
+        // Tree fathers another tree
+        //
+        if (isSpacetreeNodeLocal(vertices)) {
+          dfor2(k)
+            fineGridVertices[ kScalar ].setIsAntecessorOfRefinedVertex( true );
+          enddforx
+        }
       }
       descend(
         fineGridStates[peano4::utils::dLinearised(k,3)],
@@ -940,6 +949,18 @@ void peano4::grid::Spacetree::descend(
       }
       else {
         _statistics.setNumberOfRemoteUnrefinedCells( _statistics.getNumberOfRemoteUnrefinedCells()+1 );
+
+        //
+        // Tree fathers another tree
+        // @todo redundant
+        //
+        if (isSpacetreeNodeLocal(vertices)) {
+          dfor2(k)
+            fineGridVertices[ kScalar ].setIsAntecessorOfRefinedVertex( true );
+          enddforx
+        }
+// @todo
+//        Alles falsch. Es muss die Transition von einem Status in den anderen an sich sein
       }
     }
 

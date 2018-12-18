@@ -153,7 +153,10 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 		and
 		p->_id!=0 // not if there's a child, e.g.
       ) {
-        logWarning( "traverse(Observer)", "tree " << p->_id << " does not hold any local cells" );
+//		  wie find ich das raus?
+        logWarning( "traverse(Observer)", "tree " << p->_id << " barely holds any local cells" );
+        logWarning( "traverse(Observer)", "tree " << p->_id << ": " << p->getGridStatistics().getNumberOfLocalRefinedCells() );
+        logWarning( "traverse(Observer)", "tree " << p->_id << ": " << p->getGridStatistics().getNumberOfLocalUnrefinedCells() );
 	  }
 	}
 	p++;
