@@ -227,6 +227,18 @@ class peano4::grid::Spacetree {
     static tarch::la::Vector<Dimensions,int> convertToIntegerVector( const std::bitset<Dimensions>& in );
 
     /**
+     * This operation has multiple purposes
+     *
+     * - Merge with neighbour vertices. See
+     *   receiveAndMergeVertexIfAdjacentToDomainBoundary().
+     * - Roll over the flags. These guys now are merged already. See
+     *   receiveAndMergeVertexIfAdjacentToDomainBoundary().
+     * - Do the refinement flag (state) update.
+     * - Erase non-local flags if they do not carry a veto flag.
+     *
+     *
+     * <h2> Flag update </h2>
+     *
      * Implements the standard refinement status transition, i.e. a triggered
      * becomes actually ing. And if a vertex has been refining or erasing in
      * the previous sweep, we finally update it to refined or unrefined.
@@ -245,6 +257,33 @@ class peano4::grid::Spacetree {
     );
 
     /**
+     *
+     *
+     * <h2> Restriction of veto flags </h2>
+     *
+     * We make each vertex hold a flag isAntecessorOfRefinedVertex. If it is
+     * set, we veto any erasing here. This way, we can ensure that the trees
+     * remove at most one level at a time. We illustrate all further
+     * explanations with a simple example:
+     *
+     * @image html Spacetree_updateVertexBeforeStore_restrictIsAntecessorOfRefinedVertex.png
+     *
+     * Let the red vertices be refined. In a serial code, the tree is not
+     * split. You have to glue together the left and right tree. As the middle
+     * level's vertex holds the refinement flag, the top level vertex carries
+     * the flag isAntecessorOfRefinedVertex. It consequently never is erased.
+     * Users first have to remove the finer level.
+     *
+     * If we split up tree into two threads, this approach fails if the flag
+     * is restricted per core in the bottom-up steps. By the end of the sweep,
+     * the flag is set on the right tree, but it is not set on the left tree.
+     * We consequently might decide to erase on the left tree but veto this on
+     * the right tree.
+     *
+     * To eliminate this behaviour, we split up the flag into a current flag
+     * and a flag from the previous solution. This flag is rolled over. If the
+     * flag is set, it undoes any erase trigger.
+     *
      * @param fineVertexPositionWithinPatch Position of vertex within 3x3 or 3x3x3 patch respectively
      */
     void updateVertexBeforeStore(

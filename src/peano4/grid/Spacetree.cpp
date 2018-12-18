@@ -152,6 +152,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
       isFirstTraversal ? GridVertex::State::Refining
     		           : GridVertex::State::Refined,     // const State& state
        tarch::la::Vector<TwoPowerD,int>(-1),            // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
+	   true,
 	   true                                              // antecessor of refined vertex
        #ifdef PeanoDebug
        ,
@@ -355,6 +356,12 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
 
   receiveAndMergeVertexIfAdjacentToDomainBoundary( vertex );
 
+
+  vertex.setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep( vertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep() );
+  vertex.setIsAntecessorOfRefinedVertexInCurrentTreeSweep( false );
+  vertex.setNumberOfAdjacentRefinedLocalCells(0);
+
+
   if (
     vertex.getState()==GridVertex::State::RefinementTriggered
 	and
@@ -367,8 +374,13 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
 	and
 	isVertexAdjacentToLocalSpacetree(vertex,true,true)
   ) {
-	assertion1( not vertex.getIsAntecessorOfRefinedVertex(), vertex.toString() );
-    vertex.setState( GridVertex::State::Erasing );
+	if ( vertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() ) {
+      logWarning( "updateVertexAfterLoad(...)", "vertex " << vertex.toString() << " may not be erased as it is father or further refined vertices. Unroll flag" );
+      vertex.setState( GridVertex::State::Unrefined );
+ 	}
+	else {
+      vertex.setState( GridVertex::State::Erasing );
+	}
   }
 
 
@@ -376,16 +388,13 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
   if (
     not isVertexAdjacentToLocalSpacetree(vertex,true,true)
     and
-	not vertex.getIsAntecessorOfRefinedVertex()
+	not vertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep()
 	and
 	vertex.getState()==GridVertex::State::Refined
   ) {
 	logDebug( "updateVertexAfterLoad(GridVertex&)", "would like to erase " << vertex.toString() << " in spacetree " << _id );
     vertex.setState( GridVertex::State::EraseTriggered );
   }
-
-  vertex.setIsAntecessorOfRefinedVertex(false);
-  vertex.setNumberOfAdjacentRefinedLocalCells(0);
 
   logTraceOutWith1Argument( "updateVertexAfterLoad(GridVertex&)", vertex.toString() );
 }
@@ -459,7 +468,7 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
   if (restrictIsAntecessorOfRefinedVertex) {
 	dfor2(k)
       if (restrictToCoarseGrid(k,fineVertexPositionWithinPatch)) {
-        coarseGridVertices[kScalar].setIsAntecessorOfRefinedVertex(true);
+        coarseGridVertices[kScalar].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
       }
 	enddforx
   }
@@ -499,6 +508,7 @@ peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
   GridVertex result(
     GridVertex::State::Unrefined,
     adjacentRanks,
+	false,
     false                                       // antecessor of refined vertex
     #ifdef PeanoDebug
     ,
@@ -555,7 +565,8 @@ void peano4::grid::Spacetree::loadVertices(
       	fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = GridVertex(
           GridVertex::State::HangingVertex,
           tarch::la::Vector<TwoPowerD,int>(0),        // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
-		  false                                       // antecessor of refined vertex
+		  false,                                      // antecessor of refined vertex
+		  false
           #ifdef PeanoDebug
           ,
           x,                                          // const tarch::la::Vector<Dimensions,double>& x
@@ -652,7 +663,7 @@ void peano4::grid::Spacetree::storeVertices(
         	      fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getX(0)<0.6 and
         	      fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getX(1)<0.6 and
 				  fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getState()==GridVertex::State::Refined and
-				  not fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getIsAntecessorOfRefinedVertex() and
+				  not fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() and
         		  isVertexAdjacentToLocalSpacetree(fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],false,false)
         	    // und das killt ihn jetzt
         	    and
@@ -742,7 +753,7 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
       //
       // Merge helper flags
       //
-      vertex.setIsAntecessorOfRefinedVertex( vertex.getIsAntecessorOfRefinedVertex() | inVertex.getIsAntecessorOfRefinedVertex() );
+      vertex.setIsAntecessorOfRefinedVertexInCurrentTreeSweep( vertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep() | inVertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep() );
 
       //
       // Update refinement flags
@@ -927,15 +938,6 @@ void peano4::grid::Spacetree::descend(
       }
       else {
         _statistics.setNumberOfRemoteRefinedCells( _statistics.getNumberOfRemoteRefinedCells()+1 );
-
-        //
-        // Tree fathers another tree
-        //
-        if (isSpacetreeNodeLocal(vertices)) {
-          dfor2(k)
-            fineGridVertices[ kScalar ].setIsAntecessorOfRefinedVertex( true );
-          enddforx
-        }
       }
       descend(
         fineGridStates[peano4::utils::dLinearised(k,3)],
@@ -949,18 +951,6 @@ void peano4::grid::Spacetree::descend(
       }
       else {
         _statistics.setNumberOfRemoteUnrefinedCells( _statistics.getNumberOfRemoteUnrefinedCells()+1 );
-
-        //
-        // Tree fathers another tree
-        // @todo redundant
-        //
-        if (isSpacetreeNodeLocal(vertices)) {
-          dfor2(k)
-            fineGridVertices[ kScalar ].setIsAntecessorOfRefinedVertex( true );
-          enddforx
-        }
-// @todo
-//        Alles falsch. Es muss die Transition von einem Status in den anderen an sich sein
       }
     }
 

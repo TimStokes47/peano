@@ -15,7 +15,7 @@ class peano4::grid::GridVertex {
   persistent packed parallelise packed State  state;
   persistent        parallelise int  adjacentRanks[TwoPowerD];
 
-  persistent packed parallelise bool hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
+  persistent packed             bool hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
   persistent packed parallelise bool isAntecessorOfRefinedVertexInCurrentTreeSweep;
 
   /**
