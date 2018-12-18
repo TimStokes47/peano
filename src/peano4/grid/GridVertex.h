@@ -28,7 +28,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   12/12/2018 07:29
+    * @date   18/12/2018 11:34
     */
    class peano4::grid::GridVertex { 
       
@@ -43,7 +43,8 @@ namespace peano4 {
          struct PersistentRecords {
             State _state;
             tarch::la::Vector<TwoPowerD,int> _adjacentRanks;
-            bool _isAntecessorOfRefinedVertex;
+            bool _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
+            bool _isAntecessorOfRefinedVertexInCurrentTreeSweep;
             /**
              * Generated
              */
@@ -52,7 +53,7 @@ namespace peano4 {
             /**
              * Generated
              */
-            PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex);
+            PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep);
             
             /**
              * Generated
@@ -71,12 +72,22 @@ namespace peano4 {
             /**
              * Generated
              */
-             bool getIsAntecessorOfRefinedVertex() const ;
+             bool getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const ;
             
             /**
              * Generated
              */
-             void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+             void setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep) ;
+            
+            /**
+             * Generated
+             */
+             bool getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep) ;
             
             
          };
@@ -98,12 +109,12 @@ namespace peano4 {
             /**
              * Generated
              */
-            GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex);
+            GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep);
             
             /**
              * Generated
              */
-            GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells);
+            GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells);
             
             /**
              * Generated
@@ -131,12 +142,22 @@ namespace peano4 {
             /**
              * Generated
              */
-             bool getIsAntecessorOfRefinedVertex() const ;
+             bool getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const ;
             
             /**
              * Generated
              */
-             void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+             void setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep) ;
+            
+            /**
+             * Generated
+             */
+             bool getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep) ;
             
             /**
              * Generated
@@ -221,7 +242,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   12/12/2018 07:29
+    * @date   18/12/2018 11:34
     */
    class peano4::grid::GridVertexPacked { 
       
@@ -235,7 +256,8 @@ namespace peano4 {
             /** mapping of records:
             || Member 	|| startbit 	|| length
              |  state	| startbit 0	| #bits 3
-             |  isAntecessorOfRefinedVertex	| startbit 3	| #bits 1
+             |  hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep	| startbit 3	| #bits 1
+             |  isAntecessorOfRefinedVertexInCurrentTreeSweep	| startbit 4	| #bits 1
              */
             short int _packedRecords0;
             
@@ -247,7 +269,7 @@ namespace peano4 {
             /**
              * Generated
              */
-            PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex);
+            PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep);
             
             /**
              * Generated
@@ -266,12 +288,22 @@ namespace peano4 {
             /**
              * Generated
              */
-             bool getIsAntecessorOfRefinedVertex() const ;
+             bool getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const ;
             
             /**
              * Generated
              */
-             void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+             void setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep) ;
+            
+            /**
+             * Generated
+             */
+             bool getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep) ;
             
             
          };
@@ -293,12 +325,12 @@ namespace peano4 {
             /**
              * Generated
              */
-            GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex);
+            GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep);
             
             /**
              * Generated
              */
-            GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells);
+            GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells);
             
             /**
              * Generated
@@ -326,12 +358,22 @@ namespace peano4 {
             /**
              * Generated
              */
-             bool getIsAntecessorOfRefinedVertex() const ;
+             bool getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const ;
             
             /**
              * Generated
              */
-             void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+             void setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep) ;
+            
+            /**
+             * Generated
+             */
+             bool getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const ;
+            
+            /**
+             * Generated
+             */
+             void setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep) ;
             
             /**
              * Generated
@@ -417,7 +459,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   12/12/2018 07:29
+       * @date   18/12/2018 11:34
        */
       class peano4::grid::GridVertex { 
          
@@ -432,7 +474,8 @@ namespace peano4 {
             struct PersistentRecords {
                State _state;
                tarch::la::Vector<TwoPowerD,int> _adjacentRanks;
-               bool _isAntecessorOfRefinedVertex;
+               bool _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
+               bool _isAntecessorOfRefinedVertexInCurrentTreeSweep;
                tarch::la::Vector<Dimensions,double> _x;
                int _level;
                /**
@@ -443,7 +486,7 @@ namespace peano4 {
                /**
                 * Generated
                 */
-               PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -462,12 +505,22 @@ namespace peano4 {
                /**
                 * Generated
                 */
-                bool getIsAntecessorOfRefinedVertex() const ;
+                bool getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const ;
                
                /**
                 * Generated
                 */
-                void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+                void setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep) ;
                
                 tarch::la::Vector<Dimensions,double> getX() const ;
                
@@ -503,12 +556,12 @@ namespace peano4 {
                /**
                 * Generated
                 */
-               GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
                 */
-               GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -536,12 +589,22 @@ namespace peano4 {
                /**
                 * Generated
                 */
-                bool getIsAntecessorOfRefinedVertex() const ;
+                bool getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const ;
                
                /**
                 * Generated
                 */
-                void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+                void setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep) ;
                
                /**
                 * Generated
@@ -644,7 +707,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   12/12/2018 07:29
+       * @date   18/12/2018 11:34
        */
       class peano4::grid::GridVertexPacked { 
          
@@ -660,7 +723,8 @@ namespace peano4 {
                /** mapping of records:
                || Member 	|| startbit 	|| length
                 |  state	| startbit 0	| #bits 3
-                |  isAntecessorOfRefinedVertex	| startbit 3	| #bits 1
+                |  hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep	| startbit 3	| #bits 1
+                |  isAntecessorOfRefinedVertexInCurrentTreeSweep	| startbit 4	| #bits 1
                 */
                short int _packedRecords0;
                
@@ -672,7 +736,7 @@ namespace peano4 {
                /**
                 * Generated
                 */
-               PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -691,12 +755,22 @@ namespace peano4 {
                /**
                 * Generated
                 */
-                bool getIsAntecessorOfRefinedVertex() const ;
+                bool getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const ;
                
                /**
                 * Generated
                 */
-                void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+                void setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep) ;
                
                 tarch::la::Vector<Dimensions,double> getX() const ;
                
@@ -732,12 +806,12 @@ namespace peano4 {
                /**
                 * Generated
                 */
-               GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
                 */
-               GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level);
+               GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level);
                
                /**
                 * Generated
@@ -765,12 +839,22 @@ namespace peano4 {
                /**
                 * Generated
                 */
-                bool getIsAntecessorOfRefinedVertex() const ;
+                bool getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const ;
                
                /**
                 * Generated
                 */
-                void setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex) ;
+                void setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep) ;
+               
+               /**
+                * Generated
+                */
+                bool getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const ;
+               
+               /**
+                * Generated
+                */
+                void setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep) ;
                
                /**
                 * Generated

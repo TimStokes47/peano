@@ -6,10 +6,11 @@
    }
    
    
-   peano4::grid::GridVertex::PersistentRecords::PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex):
+   peano4::grid::GridVertex::PersistentRecords::PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep):
    _state(state),
    _adjacentRanks(adjacentRanks),
-   _isAntecessorOfRefinedVertex(isAntecessorOfRefinedVertex) {
+   _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep),
+   _isAntecessorOfRefinedVertexInCurrentTreeSweep(isAntecessorOfRefinedVertexInCurrentTreeSweep) {
       
    }
    
@@ -38,14 +39,26 @@
    
    
    
-    bool peano4::grid::GridVertex::PersistentRecords::getIsAntecessorOfRefinedVertex() const  {
-      return _isAntecessorOfRefinedVertex;
+    bool peano4::grid::GridVertex::PersistentRecords::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
+      return _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
    }
    
    
    
-    void peano4::grid::GridVertex::PersistentRecords::setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex)  {
-      _isAntecessorOfRefinedVertex = isAntecessorOfRefinedVertex;
+    void peano4::grid::GridVertex::PersistentRecords::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
+      _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep = hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
+   }
+   
+   
+   
+    bool peano4::grid::GridVertex::PersistentRecords::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
+      return _isAntecessorOfRefinedVertexInCurrentTreeSweep;
+   }
+   
+   
+   
+    void peano4::grid::GridVertex::PersistentRecords::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
+      _isAntecessorOfRefinedVertexInCurrentTreeSweep = isAntecessorOfRefinedVertexInCurrentTreeSweep;
    }
    
    
@@ -55,19 +68,19 @@
    
    
    peano4::grid::GridVertex::GridVertex(const PersistentRecords& persistentRecords):
-   _persistentRecords(persistentRecords._state, persistentRecords._adjacentRanks, persistentRecords._isAntecessorOfRefinedVertex) {
+   _persistentRecords(persistentRecords._state, persistentRecords._adjacentRanks, persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep) {
       
    }
    
    
-   peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex):
-   _persistentRecords(state, adjacentRanks, isAntecessorOfRefinedVertex) {
+   peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep):
+   _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep) {
       
    }
    
    
-   peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells):
-   _persistentRecords(state, adjacentRanks, isAntecessorOfRefinedVertex),_numberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells) {
+   peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells):
+   _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep),_numberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells) {
       
    }
    
@@ -116,14 +129,26 @@
    
    
    
-    bool peano4::grid::GridVertex::getIsAntecessorOfRefinedVertex() const  {
-      return _persistentRecords._isAntecessorOfRefinedVertex;
+    bool peano4::grid::GridVertex::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
+      return _persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
    }
    
    
    
-    void peano4::grid::GridVertex::setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex)  {
-      _persistentRecords._isAntecessorOfRefinedVertex = isAntecessorOfRefinedVertex;
+    void peano4::grid::GridVertex::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
+      _persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep = hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
+   }
+   
+   
+   
+    bool peano4::grid::GridVertex::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
+      return _persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep;
+   }
+   
+   
+   
+    void peano4::grid::GridVertex::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
+      _persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep = isAntecessorOfRefinedVertexInCurrentTreeSweep;
    }
    
    
@@ -173,7 +198,9 @@
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
       out << ",";
-      out << "isAntecessorOfRefinedVertex:" << getIsAntecessorOfRefinedVertex();
+      out << "hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep:" << getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep();
+      out << ",";
+      out << "isAntecessorOfRefinedVertexInCurrentTreeSweep:" << getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
       out << ",";
       out << "numberOfAdjacentRefinedLocalCells:" << getNumberOfAdjacentRefinedLocalCells();
       out <<  ")";
@@ -188,7 +215,8 @@
       return GridVertexPacked(
          getState(),
          getAdjacentRanks(),
-         getIsAntecessorOfRefinedVertex(),
+         getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(),
+         getIsAntecessorOfRefinedVertexInCurrentTreeSweep(),
          getNumberOfAdjacentRefinedLocalCells()
       );
    }
@@ -205,14 +233,15 @@
             GridVertex dummyGridVertex[2];
             
             #ifdef MPI2
-            const int Attributes = 4;
-            #else
             const int Attributes = 5;
+            #else
+            const int Attributes = 6;
             #endif
             MPI_Datatype subtypes[Attributes] = {
                  MPI_INT		 //state
                , MPI_INT		 //adjacentRanks
-               , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertex
+               , MPI_CXX_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+               , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
                , MPI_UB
@@ -223,7 +252,8 @@
             int blocklen[Attributes] = {
                  1		 //state
                , TwoPowerD		 //adjacentRanks
-               , 1		 //isAntecessorOfRefinedVertex
+               , 1		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+               , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , 1		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
                , 1
@@ -249,14 +279,19 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[1] );
             #endif
             #ifdef MPI2
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertex))), 		&disp[2] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
             #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertex))), 		&disp[2] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
             #endif
             #ifdef MPI2
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[3] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
             #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[3] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[4] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[4] );
             #endif
             #ifdef MPI2
             for (int i=1; i<Attributes; i++) {
@@ -274,9 +309,9 @@
                assertion4(disp[i]<static_cast<int>(sizeof(GridVertex)), i, disp[i], Attributes, sizeof(GridVertex));
             }
             #ifndef MPI2
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[4] );
-            disp[4] -= base;
-            disp[4] += disp[0];
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[5] );
+            disp[5] -= base;
+            disp[5] += disp[0];
             #endif
             #ifdef MPI2
             MPI_Datatype tmpType; 
@@ -295,14 +330,15 @@
             GridVertex dummyGridVertex[2];
             
             #ifdef MPI2
-            const int Attributes = 4;
-            #else
             const int Attributes = 5;
+            #else
+            const int Attributes = 6;
             #endif
             MPI_Datatype subtypes[Attributes] = {
                  MPI_INT		 //state
                , MPI_INT		 //adjacentRanks
-               , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertex
+               , MPI_CXX_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+               , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
                , MPI_UB
@@ -313,7 +349,8 @@
             int blocklen[Attributes] = {
                  1		 //state
                , TwoPowerD		 //adjacentRanks
-               , 1		 //isAntecessorOfRefinedVertex
+               , 1		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+               , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , 1		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
                , 1
@@ -339,14 +376,19 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[1] );
             #endif
             #ifdef MPI2
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertex))), 		&disp[2] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
             #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertex))), 		&disp[2] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
             #endif
             #ifdef MPI2
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[3] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
             #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[3] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
+            #endif
+            #ifdef MPI2
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[4] );
+            #else
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[4] );
             #endif
             #ifdef MPI2
             for (int i=1; i<Attributes; i++) {
@@ -364,9 +406,9 @@
                assertion4(disp[i]<static_cast<int>(sizeof(GridVertex)), i, disp[i], Attributes, sizeof(GridVertex));
             }
             #ifndef MPI2
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[4] );
-            disp[4] -= base;
-            disp[4] += disp[0];
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[5] );
+            disp[5] -= base;
+            disp[5] += disp[0];
             #endif
             #ifdef MPI2
             MPI_Datatype tmpType; 
@@ -646,26 +688,27 @@ switch (mode) {
    
    
    peano4::grid::GridVertexPacked::PersistentRecords::PersistentRecords() {
-      if ((4 >= (8 * sizeof(short int)))) {
+      if ((5 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((4 < (8 * sizeof(short int))));
+      assertion((5 < (8 * sizeof(short int))));
       
    }
    
    
-   peano4::grid::GridVertexPacked::PersistentRecords::PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex):
+   peano4::grid::GridVertexPacked::PersistentRecords::PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep):
    _adjacentRanks(adjacentRanks) {
       setState(state);
-      setIsAntecessorOfRefinedVertex(isAntecessorOfRefinedVertex);
-      if ((4 >= (8 * sizeof(short int)))) {
+      setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep);
+      setIsAntecessorOfRefinedVertexInCurrentTreeSweep(isAntecessorOfRefinedVertexInCurrentTreeSweep);
+      if ((5 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((4 < (8 * sizeof(short int))));
+      assertion((5 < (8 * sizeof(short int))));
       
    }
    
@@ -703,7 +746,7 @@ switch (mode) {
    
    
    
-    bool peano4::grid::GridVertexPacked::PersistentRecords::getIsAntecessorOfRefinedVertex() const  {
+    bool peano4::grid::GridVertexPacked::PersistentRecords::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
       short int mask = 1 << (3);
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    return (tmp != 0);
@@ -711,56 +754,71 @@ switch (mode) {
    
    
    
-    void peano4::grid::GridVertexPacked::PersistentRecords::setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex)  {
+    void peano4::grid::GridVertexPacked::PersistentRecords::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
       short int mask = 1 << (3);
-   _packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertex ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+   _packedRecords0 = static_cast<short int>( hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+   }
+   
+   
+   
+    bool peano4::grid::GridVertexPacked::PersistentRecords::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
+      short int mask = 1 << (4);
+   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+   return (tmp != 0);
+   }
+   
+   
+   
+    void peano4::grid::GridVertexPacked::PersistentRecords::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
+      short int mask = 1 << (4);
+   _packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertexInCurrentTreeSweep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
    }
    
    
    peano4::grid::GridVertexPacked::GridVertexPacked() {
-      if ((4 >= (8 * sizeof(short int)))) {
+      if ((5 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((4 < (8 * sizeof(short int))));
+      assertion((5 < (8 * sizeof(short int))));
       
    }
    
    
    peano4::grid::GridVertexPacked::GridVertexPacked(const PersistentRecords& persistentRecords):
-   _persistentRecords(persistentRecords.getState(), persistentRecords._adjacentRanks, persistentRecords.getIsAntecessorOfRefinedVertex()) {
-      if ((4 >= (8 * sizeof(short int)))) {
+   _persistentRecords(persistentRecords.getState(), persistentRecords._adjacentRanks, persistentRecords.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(), persistentRecords.getIsAntecessorOfRefinedVertexInCurrentTreeSweep()) {
+      if ((5 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((4 < (8 * sizeof(short int))));
+      assertion((5 < (8 * sizeof(short int))));
       
    }
    
    
-   peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex):
-   _persistentRecords(state, adjacentRanks, isAntecessorOfRefinedVertex) {
-      if ((4 >= (8 * sizeof(short int)))) {
+   peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep):
+   _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep) {
+      if ((5 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((4 < (8 * sizeof(short int))));
+      assertion((5 < (8 * sizeof(short int))));
       
    }
    
    
-   peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells):
-   _persistentRecords(state, adjacentRanks, isAntecessorOfRefinedVertex) {
+   peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells):
+   _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep) {
       setNumberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells);
-      if ((4 >= (8 * sizeof(short int)))) {
+      if ((5 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((4 < (8 * sizeof(short int))));
+      assertion((5 < (8 * sizeof(short int))));
       
    }
    
@@ -818,7 +876,7 @@ switch (mode) {
    
    
    
-    bool peano4::grid::GridVertexPacked::getIsAntecessorOfRefinedVertex() const  {
+    bool peano4::grid::GridVertexPacked::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
       short int mask = 1 << (3);
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
@@ -826,9 +884,24 @@ switch (mode) {
    
    
    
-    void peano4::grid::GridVertexPacked::setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex)  {
+    void peano4::grid::GridVertexPacked::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
       short int mask = 1 << (3);
-   _persistentRecords._packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertex ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+   _persistentRecords._packedRecords0 = static_cast<short int>( hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+   }
+   
+   
+   
+    bool peano4::grid::GridVertexPacked::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
+      short int mask = 1 << (4);
+   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+   }
+   
+   
+   
+    void peano4::grid::GridVertexPacked::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
+      short int mask = 1 << (4);
+   _persistentRecords._packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertexInCurrentTreeSweep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
    }
    
    
@@ -870,7 +943,9 @@ switch (mode) {
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
       out << ",";
-      out << "isAntecessorOfRefinedVertex:" << getIsAntecessorOfRefinedVertex();
+      out << "hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep:" << getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep();
+      out << ",";
+      out << "isAntecessorOfRefinedVertexInCurrentTreeSweep:" << getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
       out << ",";
       out << "numberOfAdjacentRefinedLocalCells:" << getNumberOfAdjacentRefinedLocalCells();
       out <<  ")";
@@ -885,7 +960,8 @@ switch (mode) {
       return GridVertex(
          getState(),
          getAdjacentRanks(),
-         getIsAntecessorOfRefinedVertex(),
+         getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(),
+         getIsAntecessorOfRefinedVertexInCurrentTreeSweep(),
          getNumberOfAdjacentRefinedLocalCells()
       );
    }
@@ -1334,10 +1410,11 @@ switch (mode) {
       }
       
       
-      peano4::grid::GridVertex::PersistentRecords::PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level):
+      peano4::grid::GridVertex::PersistentRecords::PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const tarch::la::Vector<Dimensions,double>& x, const int& level):
       _state(state),
       _adjacentRanks(adjacentRanks),
-      _isAntecessorOfRefinedVertex(isAntecessorOfRefinedVertex),
+      _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep),
+      _isAntecessorOfRefinedVertexInCurrentTreeSweep(isAntecessorOfRefinedVertexInCurrentTreeSweep),
       _x(x),
       _level(level) {
          
@@ -1368,14 +1445,26 @@ switch (mode) {
       
       
       
-       bool peano4::grid::GridVertex::PersistentRecords::getIsAntecessorOfRefinedVertex() const  {
-         return _isAntecessorOfRefinedVertex;
+       bool peano4::grid::GridVertex::PersistentRecords::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
+         return _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
       }
       
       
       
-       void peano4::grid::GridVertex::PersistentRecords::setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex)  {
-         _isAntecessorOfRefinedVertex = isAntecessorOfRefinedVertex;
+       void peano4::grid::GridVertex::PersistentRecords::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
+         _hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep = hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
+      }
+      
+      
+      
+       bool peano4::grid::GridVertex::PersistentRecords::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
+         return _isAntecessorOfRefinedVertexInCurrentTreeSweep;
+      }
+      
+      
+      
+       void peano4::grid::GridVertex::PersistentRecords::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
+         _isAntecessorOfRefinedVertexInCurrentTreeSweep = isAntecessorOfRefinedVertexInCurrentTreeSweep;
       }
       
       
@@ -1409,19 +1498,19 @@ switch (mode) {
       
       
       peano4::grid::GridVertex::GridVertex(const PersistentRecords& persistentRecords):
-      _persistentRecords(persistentRecords._state, persistentRecords._adjacentRanks, persistentRecords._isAntecessorOfRefinedVertex, persistentRecords._x, persistentRecords._level) {
+      _persistentRecords(persistentRecords._state, persistentRecords._adjacentRanks, persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep, persistentRecords._x, persistentRecords._level) {
          
       }
       
       
-      peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level):
-      _persistentRecords(state, adjacentRanks, isAntecessorOfRefinedVertex, x, level) {
+      peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const tarch::la::Vector<Dimensions,double>& x, const int& level):
+      _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep, x, level) {
          
       }
       
       
-      peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level):
-      _persistentRecords(state, adjacentRanks, isAntecessorOfRefinedVertex, x, level),_numberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells) {
+      peano4::grid::GridVertex::GridVertex(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level):
+      _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep, x, level),_numberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells) {
          
       }
       
@@ -1470,14 +1559,26 @@ switch (mode) {
       
       
       
-       bool peano4::grid::GridVertex::getIsAntecessorOfRefinedVertex() const  {
-         return _persistentRecords._isAntecessorOfRefinedVertex;
+       bool peano4::grid::GridVertex::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
+         return _persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
       }
       
       
       
-       void peano4::grid::GridVertex::setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex)  {
-         _persistentRecords._isAntecessorOfRefinedVertex = isAntecessorOfRefinedVertex;
+       void peano4::grid::GridVertex::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
+         _persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep = hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep;
+      }
+      
+      
+      
+       bool peano4::grid::GridVertex::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
+         return _persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep;
+      }
+      
+      
+      
+       void peano4::grid::GridVertex::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
+         _persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep = isAntecessorOfRefinedVertexInCurrentTreeSweep;
       }
       
       
@@ -1569,7 +1670,9 @@ switch (mode) {
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
          out << ",";
-         out << "isAntecessorOfRefinedVertex:" << getIsAntecessorOfRefinedVertex();
+         out << "hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep:" << getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep();
+         out << ",";
+         out << "isAntecessorOfRefinedVertexInCurrentTreeSweep:" << getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
          out << ",";
          out << "numberOfAdjacentRefinedLocalCells:" << getNumberOfAdjacentRefinedLocalCells();
          out << ",";
@@ -1592,7 +1695,8 @@ switch (mode) {
          return GridVertexPacked(
             getState(),
             getAdjacentRanks(),
-            getIsAntecessorOfRefinedVertex(),
+            getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(),
+            getIsAntecessorOfRefinedVertexInCurrentTreeSweep(),
             getNumberOfAdjacentRefinedLocalCells(),
             getX(),
             getLevel()
@@ -1611,14 +1715,15 @@ switch (mode) {
                GridVertex dummyGridVertex[2];
                
                #ifdef MPI2
-               const int Attributes = 6;
-               #else
                const int Attributes = 7;
+               #else
+               const int Attributes = 8;
                #endif
                MPI_Datatype subtypes[Attributes] = {
                     MPI_INT		 //state
                   , MPI_INT		 //adjacentRanks
-                  , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertex
+                  , MPI_CXX_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+                  , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_INT		 //numberOfAdjacentRefinedLocalCells
@@ -1631,7 +1736,8 @@ switch (mode) {
                int blocklen[Attributes] = {
                     1		 //state
                   , TwoPowerD		 //adjacentRanks
-                  , 1		 //isAntecessorOfRefinedVertex
+                  , 1		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+                  , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , Dimensions		 //x
                   , 1		 //level
                   , 1		 //numberOfAdjacentRefinedLocalCells
@@ -1659,24 +1765,29 @@ switch (mode) {
                MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[1] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertex))), 		&disp[2] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertex))), 		&disp[2] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[3] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[3] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[4] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[4] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[4] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[4] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[5] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[5] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[5] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[5] );
+               #endif
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[6] );
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[6] );
                #endif
                #ifdef MPI2
                for (int i=1; i<Attributes; i++) {
@@ -1694,9 +1805,9 @@ switch (mode) {
                   assertion4(disp[i]<static_cast<int>(sizeof(GridVertex)), i, disp[i], Attributes, sizeof(GridVertex));
                }
                #ifndef MPI2
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[6] );
-               disp[6] -= base;
-               disp[6] += disp[0];
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[7] );
+               disp[7] -= base;
+               disp[7] += disp[0];
                #endif
                #ifdef MPI2
                MPI_Datatype tmpType; 
@@ -1715,14 +1826,15 @@ switch (mode) {
                GridVertex dummyGridVertex[2];
                
                #ifdef MPI2
-               const int Attributes = 6;
-               #else
                const int Attributes = 7;
+               #else
+               const int Attributes = 8;
                #endif
                MPI_Datatype subtypes[Attributes] = {
                     MPI_INT		 //state
                   , MPI_INT		 //adjacentRanks
-                  , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertex
+                  , MPI_CXX_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+                  , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
                   , MPI_INT		 //numberOfAdjacentRefinedLocalCells
@@ -1735,7 +1847,8 @@ switch (mode) {
                int blocklen[Attributes] = {
                     1		 //state
                   , TwoPowerD		 //adjacentRanks
-                  , 1		 //isAntecessorOfRefinedVertex
+                  , 1		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
+                  , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , Dimensions		 //x
                   , 1		 //level
                   , 1		 //numberOfAdjacentRefinedLocalCells
@@ -1763,24 +1876,29 @@ switch (mode) {
                MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[1] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertex))), 		&disp[2] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertex))), 		&disp[2] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[3] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[3] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[4] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[4] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[4] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[4] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[5] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[5] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[5] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[5] );
+               #endif
+               #ifdef MPI2
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[6] );
+               #else
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[6] );
                #endif
                #ifdef MPI2
                for (int i=1; i<Attributes; i++) {
@@ -1798,9 +1916,9 @@ switch (mode) {
                   assertion4(disp[i]<static_cast<int>(sizeof(GridVertex)), i, disp[i], Attributes, sizeof(GridVertex));
                }
                #ifndef MPI2
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[6] );
-               disp[6] -= base;
-               disp[6] += disp[0];
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[7] );
+               disp[7] -= base;
+               disp[7] += disp[0];
                #endif
                #ifdef MPI2
                MPI_Datatype tmpType; 
@@ -2080,28 +2198,29 @@ switch (mode) {
       
       
       peano4::grid::GridVertexPacked::PersistentRecords::PersistentRecords() {
-         if ((4 >= (8 * sizeof(short int)))) {
+         if ((5 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((4 < (8 * sizeof(short int))));
+         assertion((5 < (8 * sizeof(short int))));
          
       }
       
       
-      peano4::grid::GridVertexPacked::PersistentRecords::PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level):
+      peano4::grid::GridVertexPacked::PersistentRecords::PersistentRecords(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const tarch::la::Vector<Dimensions,double>& x, const int& level):
       _adjacentRanks(adjacentRanks),
       _x(x),
       _level(level) {
          setState(state);
-         setIsAntecessorOfRefinedVertex(isAntecessorOfRefinedVertex);
-         if ((4 >= (8 * sizeof(short int)))) {
+         setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep);
+         setIsAntecessorOfRefinedVertexInCurrentTreeSweep(isAntecessorOfRefinedVertexInCurrentTreeSweep);
+         if ((5 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((4 < (8 * sizeof(short int))));
+         assertion((5 < (8 * sizeof(short int))));
          
       }
       
@@ -2139,7 +2258,7 @@ switch (mode) {
       
       
       
-       bool peano4::grid::GridVertexPacked::PersistentRecords::getIsAntecessorOfRefinedVertex() const  {
+       bool peano4::grid::GridVertexPacked::PersistentRecords::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
          short int mask = 1 << (3);
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    return (tmp != 0);
@@ -2147,9 +2266,24 @@ switch (mode) {
       
       
       
-       void peano4::grid::GridVertexPacked::PersistentRecords::setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex)  {
+       void peano4::grid::GridVertexPacked::PersistentRecords::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
          short int mask = 1 << (3);
-   _packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertex ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+   _packedRecords0 = static_cast<short int>( hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+      }
+      
+      
+      
+       bool peano4::grid::GridVertexPacked::PersistentRecords::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
+         short int mask = 1 << (4);
+   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+   return (tmp != 0);
+      }
+      
+      
+      
+       void peano4::grid::GridVertexPacked::PersistentRecords::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
+         short int mask = 1 << (4);
+   _packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertexInCurrentTreeSweep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
       }
       
       
@@ -2178,49 +2312,49 @@ switch (mode) {
       
       
       peano4::grid::GridVertexPacked::GridVertexPacked() {
-         if ((4 >= (8 * sizeof(short int)))) {
+         if ((5 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((4 < (8 * sizeof(short int))));
+         assertion((5 < (8 * sizeof(short int))));
          
       }
       
       
       peano4::grid::GridVertexPacked::GridVertexPacked(const PersistentRecords& persistentRecords):
-      _persistentRecords(persistentRecords.getState(), persistentRecords._adjacentRanks, persistentRecords.getIsAntecessorOfRefinedVertex(), persistentRecords._x, persistentRecords._level) {
-         if ((4 >= (8 * sizeof(short int)))) {
+      _persistentRecords(persistentRecords.getState(), persistentRecords._adjacentRanks, persistentRecords.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(), persistentRecords.getIsAntecessorOfRefinedVertexInCurrentTreeSweep(), persistentRecords._x, persistentRecords._level) {
+         if ((5 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((4 < (8 * sizeof(short int))));
+         assertion((5 < (8 * sizeof(short int))));
          
       }
       
       
-      peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const tarch::la::Vector<Dimensions,double>& x, const int& level):
-      _persistentRecords(state, adjacentRanks, isAntecessorOfRefinedVertex, x, level) {
-         if ((4 >= (8 * sizeof(short int)))) {
+      peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const tarch::la::Vector<Dimensions,double>& x, const int& level):
+      _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep, x, level) {
+         if ((5 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((4 < (8 * sizeof(short int))));
+         assertion((5 < (8 * sizeof(short int))));
          
       }
       
       
-      peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& isAntecessorOfRefinedVertex, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level):
-      _persistentRecords(state, adjacentRanks, isAntecessorOfRefinedVertex, x, level) {
+      peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level):
+      _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep, x, level) {
          setNumberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells);
-         if ((4 >= (8 * sizeof(short int)))) {
+         if ((5 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((4 < (8 * sizeof(short int))));
+         assertion((5 < (8 * sizeof(short int))));
          
       }
       
@@ -2278,7 +2412,7 @@ switch (mode) {
       
       
       
-       bool peano4::grid::GridVertexPacked::getIsAntecessorOfRefinedVertex() const  {
+       bool peano4::grid::GridVertexPacked::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
          short int mask = 1 << (3);
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
@@ -2286,9 +2420,24 @@ switch (mode) {
       
       
       
-       void peano4::grid::GridVertexPacked::setIsAntecessorOfRefinedVertex(const bool& isAntecessorOfRefinedVertex)  {
+       void peano4::grid::GridVertexPacked::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
          short int mask = 1 << (3);
-   _persistentRecords._packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertex ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+   _persistentRecords._packedRecords0 = static_cast<short int>( hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+      }
+      
+      
+      
+       bool peano4::grid::GridVertexPacked::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
+         short int mask = 1 << (4);
+   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+      }
+      
+      
+      
+       void peano4::grid::GridVertexPacked::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
+         short int mask = 1 << (4);
+   _persistentRecords._packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertexInCurrentTreeSweep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
       }
       
       
@@ -2372,7 +2521,9 @@ switch (mode) {
    }
    out << getAdjacentRanks(TwoPowerD-1) << "]";
          out << ",";
-         out << "isAntecessorOfRefinedVertex:" << getIsAntecessorOfRefinedVertex();
+         out << "hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep:" << getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep();
+         out << ",";
+         out << "isAntecessorOfRefinedVertexInCurrentTreeSweep:" << getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
          out << ",";
          out << "numberOfAdjacentRefinedLocalCells:" << getNumberOfAdjacentRefinedLocalCells();
          out << ",";
@@ -2395,7 +2546,8 @@ switch (mode) {
          return GridVertex(
             getState(),
             getAdjacentRanks(),
-            getIsAntecessorOfRefinedVertex(),
+            getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(),
+            getIsAntecessorOfRefinedVertexInCurrentTreeSweep(),
             getNumberOfAdjacentRefinedLocalCells(),
             getX(),
             getLevel()
