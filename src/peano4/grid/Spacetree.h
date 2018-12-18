@@ -259,6 +259,14 @@ class peano4::grid::Spacetree {
     /**
      *
      *
+     * <h2> Domain decomposition </h2>
+     *
+     * Some of the steps of this routine have to be done totally agnostic of
+     * whether the vertex is inside the domain or not. The coarsening for
+     * example has to be done outside of the domain as well.
+     *
+     *
+     *
      * <h2> Restriction of veto flags </h2>
      *
      * We make each vertex hold a flag isAntecessorOfRefinedVertex. If it is
@@ -283,6 +291,15 @@ class peano4::grid::Spacetree {
      * To eliminate this behaviour, we split up the flag into a current flag
      * and a flag from the previous solution. This flag is rolled over. If the
      * flag is set, it undoes any erase trigger.
+     *
+     *
+     * <h2> Statistics </h2>
+     *
+     * A forked tree obtains the tree stream from its master 1:1. However, the
+     * routine updateVertexBeforeLoad() does not switch any triggered vertices
+     * which are outside. Therefore, these guys
+     *
+     * @todo
      *
      * @param fineVertexPositionWithinPatch Position of vertex within 3x3 or 3x3x3 patch respectively
      */

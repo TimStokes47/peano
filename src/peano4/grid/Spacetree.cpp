@@ -364,9 +364,9 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
 
   if (
     vertex.getState()==GridVertex::State::RefinementTriggered
-	and
-	isVertexAdjacentToLocalSpacetree(vertex,true,true)
   ) {
+//    if ( isVertexAdjacentToLocalSpacetree(vertex,true,true)
+
     vertex.setState( GridVertex::State::Refining );
   }
   else if (
@@ -439,11 +439,13 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
 	logInfo( "updateVertexBeforeStore(...)", "have to post-refine vertex " << vertex.toString() );
   }
 
-
   bool restrictIsAntecessorOfRefinedVertex = vertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
 
   if (vertex.getState()==GridVertex::State::RefinementTriggered) {
-    _statistics.setNumberOfRefiningVertices( _statistics.getNumberOfRefiningVertices()+1 );
+	  // @todo Docu warum das keinen Unterschied hat
+    if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
+      _statistics.setNumberOfRefiningVertices( _statistics.getNumberOfRefiningVertices()+1 );
+    }
     restrictIsAntecessorOfRefinedVertex = true;
   }
   else if (vertex.getState()==GridVertex::State::Refining) {
@@ -451,7 +453,9 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
     restrictIsAntecessorOfRefinedVertex = true;
   }
   else if (vertex.getState()==GridVertex::State::EraseTriggered) {
-    _statistics.setNumberOfErasingVertices( _statistics.getNumberOfErasingVertices()+1 );
+    if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
+      _statistics.setNumberOfErasingVertices( _statistics.getNumberOfErasingVertices()+1 );
+    }
     restrictIsAntecessorOfRefinedVertex = true;
   }
   else if (vertex.getState()==GridVertex::State::Erasing) {
@@ -459,11 +463,15 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
   }
 
   if (vertex.getState()==GridVertex::State::Refined) {
-    _statistics.setNumberOfRefinedVertices( _statistics.getNumberOfRefinedVertices()+1 );
+    if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
+      _statistics.setNumberOfRefinedVertices( _statistics.getNumberOfRefinedVertices()+1 );
+    }
     restrictIsAntecessorOfRefinedVertex = true;
   }
   if (vertex.getState()==GridVertex::State::Unrefined) {
-    _statistics.setNumberOfUnrefinedVertices( _statistics.getNumberOfUnrefinedVertices()+1 );
+    if (isVertexAdjacentToLocalSpacetree(vertex,true,true)) {
+      _statistics.setNumberOfUnrefinedVertices( _statistics.getNumberOfUnrefinedVertices()+1 );
+    }
   }
 
   if (restrictIsAntecessorOfRefinedVertex) {
