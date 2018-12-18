@@ -102,13 +102,13 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
         #if PeanoDebug>0
         const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfBoundaryExchange(sourceTree._id);
-        assertion5(
+        assertion6(
           targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
 		  or
 		  targetTree._vertexStack[ comparisonStackForTarget ].empty(),
           targetTree._vertexStack[ targetStack ].size(),
           targetTree._vertexStack[ comparisonStackForTarget ].size(),
-		  targetStack, comparisonStackForTarget, targetTree._id
+		  targetStack, comparisonStackForTarget, targetTree._id, sourceTree._id
         );
         #endif
 

@@ -439,7 +439,8 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
 	logInfo( "updateVertexBeforeStore(...)", "have to post-refine vertex " << vertex.toString() );
   }
 
-  bool restrictIsAntecessorOfRefinedVertex = false;
+
+  bool restrictIsAntecessorOfRefinedVertex = vertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
 
   if (vertex.getState()==GridVertex::State::RefinementTriggered) {
     _statistics.setNumberOfRefiningVertices( _statistics.getNumberOfRefiningVertices()+1 );
@@ -734,6 +735,12 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
     std::set<int> neighbourIds = getAdjacentDomainIds(vertex);
     for (auto neighbour: neighbourIds) {
       const int  inStack  = peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(neighbour);
+
+      assertion3(
+        not _vertexStack[ inStack ].empty(),
+		vertex.toString(), _id, inStack
+      );
+
       GridVertex inVertex = _vertexStack[ inStack ].pop();
 
       assertion4( vertex.getState()!=GridVertex::State::HangingVertex,   inVertex.toString(), vertex.toString(), _id, neighbour );
@@ -923,9 +930,19 @@ void peano4::grid::Spacetree::descend(
 	    fineGridStates[peano4::utils::dLinearised(k,3)].getH(),
 	    isSpacetreeNodeRefined(fineGridVertices)
 	  );
+      if ( not isSpacetreeNodeLocal(vertices) ) {
+    	dfor2(k)
+		  fineGridVertices[kScalar].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
+        enddforx
+      }
     }
     else {
       logDebug( "descend(...)", "node is not local on tree " << _id );
+      if ( isSpacetreeNodeLocal(vertices) ) {
+    	dfor2(k)
+		  fineGridVertices[kScalar].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
+        enddforx
+      }
     }
 
     //
