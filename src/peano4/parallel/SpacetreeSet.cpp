@@ -95,8 +95,8 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 		  ". Copy/clone " << sourceTree._vertexStack[sourceStack->first].size() << " entries"
 		);
 
-        assertion4( sourceTree._id != targetId, sourceTree._id, targetId, sourceStack->first, targetStack);
-        assertion( targetTree._vertexStack[targetStack].empty() );
+        assertion4( sourceTree._id != targetId,                   sourceTree._id, targetId, sourceStack->first, targetStack);
+        assertion4( targetTree._vertexStack[targetStack].empty(), sourceTree._id, targetId, sourceStack->first, targetStack);
 
         targetTree._vertexStack[ targetStack ].clone( sourceStack->second );
 
@@ -151,11 +151,10 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
         p = _spacetrees.erase(p);
 	  }
 	  else if (
-        p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 1
-		and
-		p->getGridStatistics().getNumberOfRefiningVertices()==0
+        p->mayJoinWithMaster()
       ) {
-        logWarning( "traverse(Observer)", "tree " << p->_id << " is a degenerated tree with only one cell. Trigger join with tree " << p->_masterId );
+        logWarning( "traverse(Observer)", "tree " << p->_id << " is a degenerated tree. Trigger join with tree " << p->_masterId );
+        join(p->_id);
 	  }
 	}
 	p++;
@@ -176,6 +175,32 @@ void peano4::parallel::SpacetreeSet::merge(
 
 peano4::grid::GridStatistics peano4::parallel::SpacetreeSet::getGridStatistics() const {
   return _spacetrees.begin()->getGridStatistics();
+}
+
+
+void peano4::parallel::SpacetreeSet::join(int treeId) {
+  peano4::grid::Spacetree* tree = nullptr;
+  for (auto& p: _spacetrees) {
+	if (p._id==treeId) tree = &p;
+  }
+  if (tree==nullptr) {
+	assertionMsg(false, "unknown tree Id");
+  }
+  assertion1( tree->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running, treeId);
+  assertion1( tree->mayJoinWithMaster(), treeId );
+
+  tree->joinWithMaster();
+  const int fatherId = tree->_masterId;
+
+  tree = nullptr;
+  for (auto& p: _spacetrees) {
+	if (p._id==fatherId) tree = &p;
+  }
+  if (tree==nullptr) {
+	assertionMsg(false, "unknown father tree Id");
+  }
+  assertion1( tree->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running, treeId);
+  tree->joinWithWorker(treeId);
 }
 
 

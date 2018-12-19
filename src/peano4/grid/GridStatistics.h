@@ -26,7 +26,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   05/12/2018 13:14
+ * @date   19/12/2018 18:59
  */
 class peano4::grid::GridStatistics { 
    
@@ -43,6 +43,7 @@ class peano4::grid::GridStatistics {
          int _numberOfRemoteUnrefinedCells;
          int _numberOfLocalRefinedCells;
          int _numberOfRemoteRefinedCells;
+         int _stationarySweeps;
          /**
           * Generated
           */
@@ -51,7 +52,7 @@ class peano4::grid::GridStatistics {
          /**
           * Generated
           */
-         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells);
+         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps);
          
          /**
           * Generated
@@ -133,6 +134,16 @@ class peano4::grid::GridStatistics {
           */
           void setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells) ;
          
+         /**
+          * Generated
+          */
+          int getStationarySweeps() const ;
+         
+         /**
+          * Generated
+          */
+          void setStationarySweeps(const int& stationarySweeps) ;
+         
          
       };
       private: 
@@ -152,7 +163,7 @@ class peano4::grid::GridStatistics {
          /**
           * Generated
           */
-         GridStatistics(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells);
+         GridStatistics(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps);
          
          /**
           * Generated
@@ -242,6 +253,16 @@ class peano4::grid::GridStatistics {
          /**
           * Generated
           */
+          int getStationarySweeps() const ;
+         
+         /**
+          * Generated
+          */
+          void setStationarySweeps(const int& stationarySweeps) ;
+         
+         /**
+          * Generated
+          */
          std::string toString() const;
          
          /**
@@ -302,7 +323,7 @@ class peano4::grid::GridStatistics {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   05/12/2018 13:14
+ * @date   19/12/2018 18:59
  */
 class peano4::grid::GridStatisticsPacked { 
    
@@ -317,6 +338,7 @@ class peano4::grid::GridStatisticsPacked {
          int _numberOfRemoteUnrefinedCells;
          int _numberOfLocalRefinedCells;
          int _numberOfRemoteRefinedCells;
+         int _stationarySweeps;
          /**
           * Generated
           */
@@ -325,7 +347,7 @@ class peano4::grid::GridStatisticsPacked {
          /**
           * Generated
           */
-         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells);
+         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps);
          
          /**
           * Generated
@@ -407,6 +429,16 @@ class peano4::grid::GridStatisticsPacked {
           */
           void setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells) ;
          
+         /**
+          * Generated
+          */
+          int getStationarySweeps() const ;
+         
+         /**
+          * Generated
+          */
+          void setStationarySweeps(const int& stationarySweeps) ;
+         
          
       };
       private: 
@@ -426,7 +458,7 @@ class peano4::grid::GridStatisticsPacked {
          /**
           * Generated
           */
-         GridStatisticsPacked(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells);
+         GridStatisticsPacked(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps);
          
          /**
           * Generated
@@ -512,6 +544,16 @@ class peano4::grid::GridStatisticsPacked {
           * Generated
           */
           void setNumberOfRemoteRefinedCells(const int& numberOfRemoteRefinedCells) ;
+         
+         /**
+          * Generated
+          */
+          int getStationarySweeps() const ;
+         
+         /**
+          * Generated
+          */
+          void setStationarySweeps(const int& stationarySweeps) ;
          
          /**
           * Generated

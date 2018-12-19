@@ -68,10 +68,20 @@ class peano4::grid::Spacetree {
       NewFromSplit,
 	  Running,
 	  /**
-	   * Clean-up mode, i.e. last step when a tree has merged into
-	   * another tree.
+	   * Trigger the join. Nothing is happening yet. It is only the worker
+	   * that updates all adjacency lists. These updates however are not
+	   * yet given to the master.
 	   */
-	  CleanUp
+	  JoinTriggered,
+	  /**
+	   * Merge the actual data into the master.
+	   */
+	  Joining,
+	  /**
+	   * Joined means that this tree is basically dead and should be cleaned
+	   * up.
+	   */
+	  Joined
     };
 
     static std::string toString( SpacetreeState state );
@@ -106,6 +116,12 @@ class peano4::grid::Spacetree {
     GridStatistics   _statistics;
 
     /**
+     * This is not a static master. There's only a real master-worker relation
+     * built into this part of the code when we actually split or join.
+     */
+    const int        _masterId;
+
+    /**
      * A split is identified by a tuple of id and cell count which tells the
      * code how many cells should go to a particular id. The actual split then
      * is done in a second iteration, i.e. we first bookmark all split requests
@@ -113,11 +129,11 @@ class peano4::grid::Spacetree {
      * actually performed.
      */
     typedef std::map< int, int >  SplitSpecification;
-    int                  _masterId;
     SplitSpecification   _splitTriggered;
     SplitSpecification   _splitting;
-    SplitSpecification   _joinTriggered;
-    SplitSpecification   _joining;
+
+    std::set< int >      _joinTriggered;
+    std::set< int >      _joining;
 
     /**
      * Clear the statistics
@@ -306,7 +322,12 @@ class peano4::grid::Spacetree {
     );
 
     /**
-     * If a cell gets a new id, we have to update its vertices.
+     * If a cell gets a new id, we have to update its vertices. This routine is
+     * only used for splits. I originally thought I might use it for joins as
+     * well. Indeed I can. But I can only do this on the master. The worker may
+     * not update any cell immediately. If I do this, then the adjacency
+     * information of the adjacent vertices is overwritten and I loose this
+     * clue that these vertices are adjacent to the local, joining rank.
      */
     static void updateVertexRanksWithinCell(
       GridVertex  fineGridVertices[TwoPowerD],
@@ -413,6 +434,22 @@ class peano4::grid::Spacetree {
      * Unfortunately, this does not work, as we need it for the vector.
      */
     // Spacetree& operator=( const Spacetree& ) = delete;
+
+    /**
+     * Join with master. Call this routine only for degenerated trees,
+     * i.e. for trees without any refined local cells.
+     *
+     * We have to be careful with the merges. Often when we fork a tree,
+     * this tree first is not refined further. We need a couple of sweeps
+     * to see whether a tree is refined further or not.
+     */
+    void joinWithMaster();
+    void joinWithWorker(int id);
+
+    /**
+     * @see join()
+     */
+    bool mayJoinWithMaster() const;
   public:
     Spacetree(
 	  const tarch::la::Vector<Dimensions,double>&  offset,

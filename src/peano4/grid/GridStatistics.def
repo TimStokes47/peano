@@ -12,4 +12,9 @@ class peano4::grid::GridStatistics {
   persistent parallelise int  numberOfRemoteUnrefinedCells;
   persistent parallelise int  numberOfLocalRefinedCells;
   persistent parallelise int  numberOfRemoteRefinedCells;
+  
+  /**
+   * Stores the number of sweeps till the last grid sweep.
+   */ 
+  persistent             int  stationarySweeps;
 };

@@ -97,6 +97,12 @@ class peano4::parallel::SpacetreeSet {
      * yet and you are thus not allowed to split it further.
      */
     void split(int treeId, int cells);
+
+    /**
+     * Join the tree into its master. You are not allowed to run this
+     * routine unless the tree with treeId holds mayJoinWithMaster().
+     */
+    void join(int treeId);
 };
 
 #endif
