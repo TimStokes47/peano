@@ -152,7 +152,7 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
   switch (_processHighPriorityJobsAlwaysFirst) {
     case HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARush:
-      hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,std::numeric_limits<int>::max());
+      hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,_maxJobs);
       hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
       break;
     case HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARushAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft:
