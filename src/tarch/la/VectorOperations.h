@@ -145,6 +145,12 @@ namespace tarch {
     double maxImag(
       const Vector<Size,std::complex<double> >&  vector
     );
+
+    template<int Size, typename Scalar>
+    bool contains(
+      const Vector<Size,Scalar >&  vector,
+	  const Scalar&                value
+    );
   }
 }
 

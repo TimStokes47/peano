@@ -2,6 +2,20 @@
 
 
 template<int Size, typename Scalar>
+bool tarch::la::contains(
+  const Vector<Size,Scalar >&  vector,
+  const Scalar&                value
+) {
+  bool result = false;
+  for (int d=0; d<Size; d++) {
+	result |= vector(d)==value;
+  }
+  return result;
+}
+
+
+
+template<int Size, typename Scalar>
 tarch::la::Vector<Size,Scalar> tarch::la::invertEntries (
   const Vector<Size,Scalar>&  vector
 ) {
