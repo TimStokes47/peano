@@ -138,9 +138,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 	  and
 	  p->_splitting.empty()
 	  and
-	  p->_joinTriggered.empty()
+	  p->_joinTriggered<0
 	  and
-	  p->_joining.empty()
+	  p->_joining<0
 	  and
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
 	)  {
@@ -148,13 +148,14 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
       logDebug( "traverse(Observer)", "tree " << p->_id << "'s local unrefined cells: " << p->getGridStatistics().getNumberOfLocalUnrefinedCells() );
       if ( p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0 ) {
         logInfo( "traverse(Observer)", "tree " << p->_id << " does not hold any local cells" );
+        Node::getInstance().deregisterId(p->_id);
         p = _spacetrees.erase(p);
 	  }
 	  else if (
         p->mayJoinWithMaster()
       ) {
         logWarning( "traverse(Observer)", "tree " << p->_id << " is a degenerated tree. Trigger join with tree " << p->_masterId );
-        join(p->_id);
+        //join(p->_id);
 	  }
 	}
 	p++;

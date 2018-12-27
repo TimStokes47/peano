@@ -92,6 +92,7 @@ class peano4::parallel::Node {
     int getNextFreeLocalId() const;
 
     void registerId(int id);
+    void deregisterId(int id);
 
     /**
      * Hand in a spacetree id and get back the number that we should use to

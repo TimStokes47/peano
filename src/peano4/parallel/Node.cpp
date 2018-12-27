@@ -69,6 +69,12 @@ void peano4::parallel::Node::registerId(int id) {
 }
 
 
+
+void peano4::parallel::Node::deregisterId(int id) {
+  assertion( _bookedLocalThreads.count(id)==1 );
+  _bookedLocalThreads.erase(id);
+}
+
 int peano4::parallel::Node::getOutputStackNumberOfBoundaryExchange(int id) const {
   return peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance + id * 2;
 }
