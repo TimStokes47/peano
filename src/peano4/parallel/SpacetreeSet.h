@@ -51,6 +51,22 @@ class peano4::parallel::SpacetreeSet {
 	    void prefetch() override;
 	};
 
+	class DataExchangeTask: public tarch::multicore::Task {
+	  private:
+	    peano4::grid::Spacetree&          _spacetree;
+	    SpacetreeSet&                     _spacetreeSet;
+	  public:
+	    DataExchangeTask( peano4::grid::Spacetree&  tree, SpacetreeSet& set );
+
+	    /**
+	     * I create the copy of the observer, run the traversal on my local
+	     * tree _spacetree and finally destroy the local observer copy.
+	     */
+	    bool run() override;
+
+	    void prefetch() override;
+	};
+
     /**
      * Logging device.
      */
@@ -66,6 +82,10 @@ class peano4::parallel::SpacetreeSet {
     tarch::multicore::BooleanSemaphore  _semaphore;
 
     peano4::grid::Spacetree& getSpacetree(int id);
+
+    void traverseTreeSet(peano4::grid::TraversalObserver& observer);
+    void exchangeDataBetweenTrees();
+
   public:
     /**
      * Adds the spacetree to the set. The responsibility goes over to the

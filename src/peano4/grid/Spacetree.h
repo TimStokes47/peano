@@ -50,6 +50,7 @@ class peano4::grid::Spacetree {
 	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = 3 + Dimensions*2;
   private:
 	static constexpr int InvalidRank = -1;
+	static constexpr int NumberOfStationarySweepsToWaitAtLeastTillJoin = 4;
 
     static tarch::logging::Log  _log;
 
@@ -496,6 +497,8 @@ class peano4::grid::Spacetree {
     void traverse(TraversalObserver& observer);
 
     GridStatistics getGridStatistics() const;
+
+    std::string toString() const;
 };
 
 

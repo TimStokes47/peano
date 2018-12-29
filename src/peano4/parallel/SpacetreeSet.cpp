@@ -41,10 +41,7 @@ void peano4::parallel::SpacetreeSet::TraverseTask::prefetch() {
 }
 
 
-void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& observer) {
-  //
-  // Set up the traversal tasks and kick them off
-  //
+void peano4::parallel::SpacetreeSet::traverseTreeSet(peano4::grid::TraversalObserver& observer) {
   std::vector< tarch::multicore::Task* > traverseTasks;
   traverseTasks.reserve( _spacetrees.size() );
 
@@ -56,8 +53,97 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   }
   logInfo( "traverse(TraversalObserver&)", "spawn " << traverseTasks.size() << " concurrent traversal tasks" );
 
-  static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverse" );
+  static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverseTreeSet" );
   peano4::parallel::Tasks runTraversals(traverseTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion);
+}
+
+
+peano4::parallel::SpacetreeSet::DataExchangeTask::DataExchangeTask( peano4::grid::Spacetree&  tree, SpacetreeSet& set ):
+  _spacetree( tree ),
+  _spacetreeSet( set ) {
+
+}
+
+
+bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
+  for (auto sourceStack = _spacetree._vertexStack.begin(); sourceStack != _spacetree._vertexStack.end(); ) {
+    if (
+      Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack->first)
+      and
+      not sourceStack->second.empty()
+    ) {
+	  const int targetId = Node::getInstance().getIdOfBoundaryExchangeOutputStackNumber(sourceStack->first);
+
+      // @todo Id might not be local
+      peano4::grid::Spacetree& targetTree = _spacetreeSet.getSpacetree( targetId );
+      const int targetStack = Node::getInstance().getInputStackNumberOfBoundaryExchange(_spacetree._id);
+      logDebug(
+         "traverse(Observer)",
+         "map output stream " << sourceStack->first << " of tree " <<
+		 _spacetree._id << " onto input stream " << targetStack <<
+         " of tree " << targetId <<
+         ". Copy/clone " << _spacetree._vertexStack[sourceStack->first].size() << " entries"
+      );
+
+      assertion3( _spacetree._id != targetId,                   _spacetree._id, targetId, targetStack);
+      assertion3( targetTree._vertexStack[targetStack].empty(), _spacetree._id, targetId, targetStack);
+
+      targetTree._vertexStack[ targetStack ].clone( sourceStack->second );
+
+      #if PeanoDebug>0
+      const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfBoundaryExchange(_spacetree._id);
+      assertion6(
+        targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
+        or
+        targetTree._vertexStack[ comparisonStackForTarget ].empty(),
+        targetTree._vertexStack[ targetStack ].size(),
+        targetTree._vertexStack[ comparisonStackForTarget ].size(),
+        targetStack, comparisonStackForTarget, targetTree._id, _spacetree._id
+      );
+      #endif
+
+      _spacetree._vertexStack[sourceStack->first].clear();
+
+      sourceStack++;
+    }
+    else if (
+      Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack->first)
+	  and
+	  sourceStack->second.empty()
+    ) {
+      sourceStack = _spacetree._vertexStack.erase(sourceStack);
+    }
+    else {
+      sourceStack++;
+    }
+  }
+  return false;
+}
+
+
+void peano4::parallel::SpacetreeSet::DataExchangeTask::prefetch() {
+}
+
+
+void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
+  std::vector< tarch::multicore::Task* > dataExchangeTasks;
+  dataExchangeTasks.reserve( _spacetrees.size() );
+
+  for (auto& p: _spacetrees) {
+	dataExchangeTasks.push_back( new DataExchangeTask(
+      p, *this
+    ));
+	logInfo( "traverse(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id );
+  }
+  logInfo( "traverse(TraversalObserver&)", "spawn " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
+
+  static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees" );
+  peano4::parallel::Tasks runTraversals(dataExchangeTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion);
+}
+
+
+void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& observer) {
+  traverseTreeSet(observer);
 
   //
   // Merge local copies of the statistics
@@ -68,66 +154,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
     }
   }
 
-
-  // @todo Das sollte auch alles parallel gehen. In eigene Jobs auslagern
-  //       Eigentlich koennte man hier mit Conflicts arbeiten
-
-  //
-  // Do the local boundary data exchange.
-  //
-  for (auto& sourceTree: _spacetrees) {
-	for (auto sourceStack = sourceTree._vertexStack.begin(); sourceStack != sourceTree._vertexStack.end(); ) {
-      if (
-        Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack->first)
-		and
-		not sourceStack->second.empty()
-      ) {
-        const int targetId = Node::getInstance().getIdOfBoundaryExchangeOutputStackNumber(sourceStack->first);
-
-        // @todo Id might not be local
-        peano4::grid::Spacetree& targetTree = getSpacetree( targetId );
-        const int targetStack = Node::getInstance().getInputStackNumberOfBoundaryExchange(sourceTree._id);
-        logDebug(
-          "traverse(Observer)",
-		  "map output stream " << sourceStack->first << " of tree " <<
-		  sourceTree._id << " onto input stream " << targetStack <<
-		  " of tree " << targetId <<
-		  ". Copy/clone " << sourceTree._vertexStack[sourceStack->first].size() << " entries"
-		);
-
-        assertion4( sourceTree._id != targetId,                   sourceTree._id, targetId, sourceStack->first, targetStack);
-        assertion4( targetTree._vertexStack[targetStack].empty(), sourceTree._id, targetId, sourceStack->first, targetStack);
-
-        targetTree._vertexStack[ targetStack ].clone( sourceStack->second );
-
-        #if PeanoDebug>0
-        const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfBoundaryExchange(sourceTree._id);
-        assertion6(
-          targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
-		  or
-		  targetTree._vertexStack[ comparisonStackForTarget ].empty(),
-          targetTree._vertexStack[ targetStack ].size(),
-          targetTree._vertexStack[ comparisonStackForTarget ].size(),
-		  targetStack, comparisonStackForTarget, targetTree._id, sourceTree._id
-        );
-        #endif
-
-        sourceTree._vertexStack[sourceStack->first].clear();
-
-        sourceStack++;
-      }
-      else if (
-       Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack->first)
-       and
-       sourceStack->second.empty()
-      ) {
-        sourceStack = sourceTree._vertexStack.erase(sourceStack);
-      }
-      else {
-        sourceStack++;
-      }
-    }
-  }
+  exchangeDataBetweenTrees();
 
   //
   // Cleanup spacetrees
@@ -138,16 +165,15 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 	  and
 	  p->_splitting.empty()
 	  and
-	  p->_joinTriggered<0
+	  p->_joinTriggered==peano4::grid::Spacetree::NoJoin
 	  and
-	  p->_joining<0
+	  p->_joining==peano4::grid::Spacetree::NoJoin
 	  and
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
 	)  {
-      logDebug( "traverse(Observer)", "tree " << p->_id << "'s local refined cells: " << p->getGridStatistics().getNumberOfLocalRefinedCells() );
-      logDebug( "traverse(Observer)", "tree " << p->_id << "'s local unrefined cells: " << p->getGridStatistics().getNumberOfLocalUnrefinedCells() );
+      logDebug( "traverse(Observer)", "tree " << p->_id << "'s statistics: " << p->toString() );
       if ( p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0 ) {
-        logInfo( "traverse(Observer)", "tree " << p->_id << " does not hold any local cells" );
+        logInfo( "traverse(Observer)", "tree " << p->_id << " is degenerated as it does not hold any local cells. Remove" );
         Node::getInstance().deregisterId(p->_id);
         p = _spacetrees.erase(p);
         p--;
@@ -155,7 +181,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 	  else if (
         p->mayJoinWithMaster()
       ) {
-        logWarning( "traverse(Observer)", "tree " << p->_id << " is a degenerated tree (only leaves). Trigger join with tree " << p->_masterId );
+        logInfo( "traverse(Observer)", "tree " << p->_id << " is a degenerated tree (only leaves). Trigger join with tree " << p->_masterId );
         join(p->_id);
 	  }
 	}
