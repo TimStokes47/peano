@@ -104,18 +104,22 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
 }
 
 
+void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
+  static tarch::multicore::BooleanSemaphore semaphore;
+  tarch::multicore::Lock lock(semaphore);
+
+  std::string newFile = _filename + "-" + std::to_string(spacetreeId) + "-" + std::to_string( _counter );
+  _clonedSpacetreeIds.push_back( newFile );
+  _writer->writeMetaDataFileForParallelSnapshot(
+     _filename + "-" + std::to_string( _counter ),
+    _clonedSpacetreeIds
+  );
+}
+
+
 peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int spacetreeId) {
   if (_spacetreeId==-1) {
-	static tarch::multicore::BooleanSemaphore semaphore;
-	tarch::multicore::Lock lock(semaphore);
-
-	std::string newFile = _filename + "-" + std::to_string(spacetreeId) + "-" + std::to_string( _counter );
-    _clonedSpacetreeIds.push_back( newFile );
-
-    _writer->writeMetaDataFileForParallelSnapshot(
-      _filename + "-" + std::to_string( _counter ),
-	  _clonedSpacetreeIds
-	);
+	updateMetaFile( spacetreeId );
   }
   else {
 	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );

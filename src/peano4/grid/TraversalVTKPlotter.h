@@ -31,12 +31,16 @@ namespace peano4 {
  * startNewSnapshot() prior to each plot.
  */
 class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver {
-  private:
+  protected:
     static tarch::logging::Log  _log;
 
     const std::string                                                                _filename;
     const int                                                                        _spacetreeId;
     int                                                                              _counter;
+
+    void updateMetaFile(int spacetreeId);
+
+  private:
     tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter*                  _writer;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*    _vertexWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*      _cellWriter;
@@ -71,6 +75,12 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 	 *
 	 * As clone() might be called by multiple threads in parallel, I need some
 	 * semaphore mechanism.
+	 *
+	 * <h2> Inheriting </h2>
+	 *
+	 * If you inherit from the plotter, please call updateMetaFile() whenever
+	 * you clone. However, do this only on spacetreeId==-1, i.e. on the
+	 * original observer.
 	 */
 	TraversalObserver* clone(int spacetreeId) override;
 

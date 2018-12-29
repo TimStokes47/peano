@@ -71,9 +71,7 @@ int main(int argc, char** argv) {
 
   for (int i=0; i<2; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-    #if PeanoDebug>0
 	emptyObserver.startNewSnapshot();
-    #endif
 
     spacetreeSet.traverse( emptyObserver );
 
@@ -104,9 +102,7 @@ int main(int argc, char** argv) {
 
   for (int i=0; i<10; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-    #if PeanoDebug>0
 	emptyObserver.startNewSnapshot();
-    #endif
 
     spacetreeSet.traverse( emptyObserver );
 
@@ -130,9 +126,7 @@ int main(int argc, char** argv) {
 
   for (int i=0; i<10; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-    #if PeanoDebug>0
 	emptyObserver.startNewSnapshot();
-    #endif
 
     spacetreeSet.traverse( emptyObserver );
 
