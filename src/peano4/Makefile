@@ -4,6 +4,7 @@ OBJS += $(PEANO_ROOT)/peano4/grid/AutomatonState.o
 OBJS += $(PEANO_ROOT)/peano4/grid/Spacetree.o
 OBJS += $(PEANO_ROOT)/peano4/grid/PeanoCurve.o
 OBJS += $(PEANO_ROOT)/peano4/grid/EmptyTraversalObserver.o
+OBJS += $(PEANO_ROOT)/peano4/grid/GridControlEvent.o
 OBJS += $(PEANO_ROOT)/peano4/grid/TraversalVTKPlotter.o
 OBJS += $(PEANO_ROOT)/peano4/grid/GridStatistics.o
 OBJS += $(PEANO_ROOT)/peano4/grid/tests/SpacetreeTest.o

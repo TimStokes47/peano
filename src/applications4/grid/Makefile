@@ -1,6 +1,7 @@
 PROJECT_NAME = grid
 PEANO_ROOT   = /home/tobias/git/Peano/src
-OBJS         = applications4/grid/main.o
+OBJS        += applications4/grid/main.o
+OBJS        += applications4/grid/MyObserver.o
 DIMENSIONS   = 2
 
 -include $(PEANO_ROOT)/peano4/Makefile

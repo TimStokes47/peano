@@ -8,9 +8,13 @@
 #include "tarch/la/Vector.h"
 
 
+#include <vector>
+
+
 namespace peano4 {
   namespace grid {
     class TraversalObserver;
+    class GridControlEvent;
   }
 }
 
@@ -33,6 +37,8 @@ class peano4::grid::TraversalObserver {
 	 * condition. Yet, the clone() itself could be called in parallel.
 	 */
 	virtual TraversalObserver* clone(int spacetreeId) = 0;
+
+	virtual std::vector< GridControlEvent > getGridControlEvents() = 0;
 };
 
 #endif

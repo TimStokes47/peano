@@ -1,4 +1,5 @@
 #include "EmptyTraversalObserver.h"
+#include "GridControlEvent.h"
 
 
 tarch::logging::Log  peano4::grid::EmptyTraversalObserver::_log( "peano4::grid::EmptyTraversalObserver" );
@@ -28,3 +29,9 @@ void peano4::grid::EmptyTraversalObserver::enterCell(
 peano4::grid::TraversalObserver*  peano4::grid::EmptyTraversalObserver::clone(int spacetreeId) {
   return new EmptyTraversalObserver();
 }
+
+
+std::vector< peano4::grid::GridControlEvent > peano4::grid::EmptyTraversalObserver::getGridControlEvents() {
+  return std::vector< peano4::grid::GridControlEvent >();
+}
+

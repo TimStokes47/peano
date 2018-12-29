@@ -705,11 +705,12 @@ void peano4::grid::Spacetree::storeVertices(
         	      fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getX(0)<0.6 and
         	      fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getX(1)<0.6 and
 				  fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getState()==GridVertex::State::Refined and
-				  not fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() and
+//				  not fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() and
         		  isVertexAdjacentToLocalSpacetree(fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],false,false)
         	    // und das killt ihn jetzt
         	    and
        	      _id ==1
+			  and fineGridStatesState.getLevel()==1
         		) {
                   static int iterationCounter = 0;
                   iterationCounter++;

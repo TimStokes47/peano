@@ -6,8 +6,9 @@
 
 #include "peano4/peano.h"
 #include "peano4/grid/Spacetree.h"
-#include "peano4/grid/TraversalVTKPlotter.h"
-#include "peano4/grid/EmptyTraversalObserver.h"
+
+
+#include "MyObserver.h"
 
 
 #include "peano4/parallel/SpacetreeSet.h"
@@ -66,11 +67,7 @@ int main(int argc, char** argv) {
   peano4::parallel::SpacetreeSet spacetreeSet;
   spacetreeSet.addSpacetree( std::move(spacetree) );
 
-  #if PeanoDebug>0
-  peano4::grid::TraversalVTKPlotter emptyObserver( "grid-construction" );
-  #else
-  peano4::grid::EmptyTraversalObserver emptyObserver;
-  #endif
+  applications4::grid::MyObserver emptyObserver;
 
   for (int i=0; i<2; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();

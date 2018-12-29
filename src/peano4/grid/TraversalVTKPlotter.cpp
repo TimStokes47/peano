@@ -1,4 +1,5 @@
 #include "TraversalVTKPlotter.h"
+#include "GridControlEvent.h"
 
 #include "peano4/utils/Loop.h"
 
@@ -129,7 +130,6 @@ peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int s
 }
 
 
-// @todo Raus damit
 void peano4::grid::TraversalVTKPlotter::startNewSnapshot() {
   _counter++;
 
@@ -137,4 +137,9 @@ void peano4::grid::TraversalVTKPlotter::startNewSnapshot() {
   _timeSeriesWriter.writeFile( _filename );
 
   _clonedSpacetreeIds.clear();
+}
+
+
+std::vector< peano4::grid::GridControlEvent > peano4::grid::TraversalVTKPlotter::getGridControlEvents() {
+  return std::vector< peano4::grid::GridControlEvent >();
 }

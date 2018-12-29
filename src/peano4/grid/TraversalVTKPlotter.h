@@ -75,6 +75,7 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 	TraversalObserver* clone(int spacetreeId) override;
 
 	void startNewSnapshot();
+	std::vector< GridControlEvent > getGridControlEvents() override;
 };
 
 #endif
