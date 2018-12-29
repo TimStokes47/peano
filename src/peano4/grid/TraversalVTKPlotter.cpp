@@ -20,11 +20,13 @@ peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filen
   _vertexWriter(nullptr),
   _cellWriter(nullptr),
   _spacetreeIdWriter(nullptr),
+  _coreWriter(nullptr),
   _timeSeriesWriter() {
   _writer            = new tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter();
   _vertexWriter      = _writer->createVertexWriter();
   _cellWriter        = _writer->createCellWriter();
-  _spacetreeIdWriter = _writer->createCellDataWriter( "core-number", 1 );
+  _spacetreeIdWriter = _writer->createCellDataWriter( "tree-id", 1 );
+  _coreWriter        = _writer->createCellDataWriter( "core-number", 1 );
 }
 
 
@@ -42,14 +44,17 @@ void peano4::grid::TraversalVTKPlotter::endTraversal() {
     _vertexWriter->close();
     _cellWriter->close();
     _spacetreeIdWriter->close();
+    _coreWriter->close();
 
     delete _vertexWriter;
     delete _cellWriter;
     delete _spacetreeIdWriter;
+    delete _coreWriter;
 
     _vertexWriter      = nullptr;
     _cellWriter        = nullptr;
     _spacetreeIdWriter = nullptr;
+    _coreWriter        = nullptr;
 
     std::string currentFile = _filename;
 
@@ -72,7 +77,8 @@ void peano4::grid::TraversalVTKPlotter::endTraversal() {
 void peano4::grid::TraversalVTKPlotter::enterCell(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  bool                                         isRefined
+  bool                                         isRefined,
+  int                                          treeId
 ) {
   if (not isRefined) {
     int vertexIndices[TwoPowerD];
@@ -91,7 +97,8 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
     #warning Noch net implementiert
     #endif
 
-    _spacetreeIdWriter->plotCell(cellIndex,tarch::multicore::Core::getInstance().getCoreNumber());
+    _spacetreeIdWriter->plotCell(cellIndex,treeId);
+    _coreWriter->plotCell(cellIndex,tarch::multicore::Core::getInstance().getCoreNumber());
   }
 }
 

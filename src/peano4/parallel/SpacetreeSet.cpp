@@ -150,14 +150,24 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
         logInfo( "traverse(Observer)", "tree " << p->_id << " does not hold any local cells" );
         Node::getInstance().deregisterId(p->_id);
         p = _spacetrees.erase(p);
+        p--;
 	  }
 	  else if (
         p->mayJoinWithMaster()
       ) {
-        logWarning( "traverse(Observer)", "tree " << p->_id << " is a degenerated tree. Trigger join with tree " << p->_masterId );
-        //join(p->_id);
+        logWarning( "traverse(Observer)", "tree " << p->_id << " is a degenerated tree (only leaves). Trigger join with tree " << p->_masterId );
+        join(p->_id);
 	  }
 	}
+	else if (
+	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Joined
+	)  {
+      logInfo( "traverse(Observer)", "tree " << p->_id << " has joined, so remove" );
+      Node::getInstance().deregisterId(p->_id);
+      p = _spacetrees.erase(p);
+      p--;
+	}
+
 	p++;
   }
 }

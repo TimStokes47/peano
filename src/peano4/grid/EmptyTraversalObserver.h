@@ -34,7 +34,8 @@ class peano4::grid::EmptyTraversalObserver: public peano4::grid::TraversalObserv
 	void enterCell(
       const tarch::la::Vector<Dimensions,double>& x,
 	  const tarch::la::Vector<Dimensions,double>& h,
-	  bool                                        isRefined
+	  bool                                        isRefined,
+	  int                                         spacetreeId
     ) override;
 
 	TraversalObserver* clone(int spacetreeId) override;

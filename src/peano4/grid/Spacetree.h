@@ -43,7 +43,11 @@ namespace peano4 {
  */
 class peano4::grid::Spacetree {
   public:
-	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = 2 + Dimensions*2;
+	/**
+	 * We need an input and an output stack. Then we need the 2d temporary
+	 * stacks. Finally, we need one more stack for joining trees.
+	 */
+	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = 3 + Dimensions*2;
   private:
 	static constexpr int InvalidRank = -1;
 
@@ -132,8 +136,13 @@ class peano4::grid::Spacetree {
     SplitSpecification   _splitTriggered;
     SplitSpecification   _splitting;
 
-    std::set< int >      _joinTriggered;
-    std::set< int >      _joining;
+    constexpr static int NoJoin = -1;
+    /**
+     * This should be -1 if no join is triggered. Otherwise it holds the id of
+     * the joining rank.
+     */
+    int       _joinTriggered;
+    int       _joining;
 
     /**
      * Clear the statistics
@@ -344,6 +353,34 @@ class peano4::grid::Spacetree {
 	  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
     );
 
+    /**
+     *
+     *
+     * <h2> Admissible splits </h2>
+     *
+     * Splits must preserve a master-worker, i.e. a tree topology. In the
+     * example below, a grey rank is the worker of a blue rank (left). If
+     * the grey rank splits up, there always has to be a layer in-between
+     * the blue and green rank to preserve a unique master-worker topology.
+     * Therefore, the middle layout is not admissible whereas the right one
+     * is.
+     *
+     * @image html Spacetree_split.png
+     *
+     * There are many reasons to enforce this constraints. The two most
+     * important ones are:
+     *
+     * - I want to have a clear tree topology on the MPI ranks.
+     * - These splits make joins easier. Joins are allowed between
+     *   masters and workers (in the very tree topology) and only for
+     *   ranks which hold no refined local cells. However, to be able to
+     *   realise the join, the master has to cover the whole area (on a
+     *   coarser level) joining into its area. If we did not enforce the
+     *   tree topology, i.e. the level in-between two ranks, then the
+     *   greyish rank in the example above would fork away a subdomain and
+     *   consequently coarsen its grid where the green rank now steps in.
+     *   So this grid is "lost" and it can't join these data in anymore.
+     */
     void split(int cells);
 
     std::set<int>  getAdjacentDomainIds( const GridVertex& vertex ) const;

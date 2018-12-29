@@ -41,6 +41,7 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*    _vertexWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*      _cellWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*  _spacetreeIdWriter;
+    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*  _coreWriter;
     tarch::plotter::griddata::VTUTimeSeriesWriter                                    _timeSeriesWriter;
 
     std::vector<std::string>                                                         _clonedSpacetreeIds;
@@ -58,7 +59,8 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 	void enterCell(
       const tarch::la::Vector<Dimensions,double>& x,
       const tarch::la::Vector<Dimensions,double>& h,
-	  bool                                        isRefined
+	  bool                                        isRefined,
+	  int                                         spacetreeId
     ) override;
 
 	/**
