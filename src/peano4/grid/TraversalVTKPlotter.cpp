@@ -104,6 +104,16 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
 }
 
 
+
+void peano4::grid::TraversalVTKPlotter::leaveCell(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  const tarch::la::Vector<Dimensions,double>&  h,
+  bool                                         isRefined,
+  int                                          treeId
+) {
+}
+
+
 void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
   static tarch::multicore::BooleanSemaphore semaphore;
   tarch::multicore::Lock lock(semaphore);

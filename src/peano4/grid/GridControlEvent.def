@@ -6,16 +6,13 @@ Constant: Dimensions hint-value 4;
 class peano4::grid::GridControlEvent {
   enum RefinementControl {
     Refine,
-    Erase,
-    Keep
+    Erase
   };
   
   persistent parallelise RefinementControl  refinementControl;
   
-  #ifdef PeanoDebug
-  persistent parallelise packed int     level;
-  persistent parallelise packed double  x[Dimensions];
+  persistent parallelise packed double  offset[Dimensions];
+  persistent parallelise packed double  width[Dimensions];
   persistent parallelise packed double  h[Dimensions];
-  #endif
 };
 

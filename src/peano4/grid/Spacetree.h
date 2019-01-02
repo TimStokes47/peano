@@ -8,6 +8,7 @@
 #include "AutomatonState.h"
 #include "GridVertex.h"
 #include "GridStatistics.h"
+#include "GridControlEvent.h"
 
 
 #include "tarch/logging/Log.h"
@@ -145,12 +146,28 @@ class peano4::grid::Spacetree {
     int       _joinTriggered;
     int       _joining;
 
+    std::map< int, peano4::stacks::GridVertexStack >    _vertexStack;
+
+    /**
+     * We get these control events when we kick off the traversal and then
+     * realise/interpret them.
+     */
+    std::vector< peano4::grid::GridControlEvent >       _gridControlEvents;
+
+    void evaluateGridControlEvents(
+      const AutomatonState& fineGridState,
+      GridVertex            coarseGridVertices[TwoPowerD],
+      GridVertex            fineGridVertices[TwoPowerD]
+    ) const;
+
     /**
      * Clear the statistics
      */
     void clearStatistics();
 
-    std::map< int, peano4::stacks::GridVertexStack >    _vertexStack;
+    void updateVerticesAroundForkedCell(
+      GridVertex            fineGridVertices[TwoPowerD]
+    ) const;
 
     void descend(
       const AutomatonState& state,

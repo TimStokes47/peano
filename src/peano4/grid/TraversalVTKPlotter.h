@@ -67,6 +67,13 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 	  int                                         spacetreeId
     ) override;
 
+	void leaveCell(
+      const tarch::la::Vector<Dimensions,double>& x,
+	  const tarch::la::Vector<Dimensions,double>& h,
+	  bool                                        isRefined,
+	  int                                         spacetreeId
+    ) override;
+
 	/**
 	 * This is the main plotter. In the parallel case, I will have to check
 	 * whether I'm on the global rank as well.
