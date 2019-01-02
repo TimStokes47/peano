@@ -527,15 +527,38 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
 }
 
 
-peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
+
+peano4::grid::GridVertex peano4::grid::Spacetree::createHangingVertex(
   GridVertex                                   coarseGridVertices[TwoPowerD],
   const tarch::la::Vector<Dimensions,double>&  x,
   int                                          level,
   const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
-) {
-  logTraceInWith3Arguments( "createNewPersistentVertex(...)", x, level, vertexPositionWithin3x3Patch );
+) const {
+  logTraceInWith3Arguments( "createHangingVertex(...)", x, level, vertexPositionWithin3x3Patch );
 
+  GridVertex result(
+    GridVertex::State::HangingVertex,
+	getAdjacentRanksForNewVertex(coarseGridVertices,vertexPositionWithin3x3Patch),
+	false,
+    false                                       // antecessor of refined vertex
+    #ifdef PeanoDebug
+    ,
+    x,                                          // const tarch::la::Vector<Dimensions,double>& x
+    level                                       // level
+    #endif
+  );
+
+  logTraceOutWith1Argument( "createHangingVertex(...)", result.toString() );
+  return result;
+}
+
+
+tarch::la::Vector<TwoPowerD,int> peano4::grid::Spacetree::getAdjacentRanksForNewVertex(
+  GridVertex                                   coarseGridVertices[TwoPowerD],
+  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
+) const {
   tarch::la::Vector<TwoPowerD,int> adjacentRanks(InvalidRank);
+
   dfor2(k)
     std::bitset<Dimensions> vertexToInherit;
     std::bitset<Dimensions> indexToInherit;
@@ -553,9 +576,21 @@ peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
     adjacentRanks(kScalar) = coarseGridVertices[ vertexToInherit.to_ulong() ].getAdjacentRanks(indexToInherit.to_ulong());
   enddforx
 
+  return adjacentRanks;
+}
+
+
+peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
+  GridVertex                                   coarseGridVertices[TwoPowerD],
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
+) const {
+  logTraceInWith3Arguments( "createNewPersistentVertex(...)", x, level, vertexPositionWithin3x3Patch );
+
   GridVertex result(
     GridVertex::State::Unrefined,
-    adjacentRanks,
+	getAdjacentRanksForNewVertex(coarseGridVertices,vertexPositionWithin3x3Patch),
 	false,
     false                                       // antecessor of refined vertex
     #ifdef PeanoDebug
@@ -565,7 +600,7 @@ peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
     #endif
   );
 
-  logTraceOutWith2Arguments( "createNewPersistentVertex(...)", result.toString(), adjacentRanks );
+  logTraceOutWith1Argument( "createNewPersistentVertex(...)", result.toString() );
   return result;
 }
 
@@ -610,17 +645,7 @@ void peano4::grid::Spacetree::loadVertices(
         }
     	break;
       case VertexType::Hanging:
-      	fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = GridVertex(
-          GridVertex::State::HangingVertex,
-          tarch::la::Vector<TwoPowerD,int>(0),        // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
-		  false,                                      // antecessor of refined vertex
-		  false
-          #ifdef PeanoDebug
-          ,
-          x,                                          // const tarch::la::Vector<Dimensions,double>& x
-		  fineGridStatesState.getLevel()              // level
-          #endif
-  		);
+      	fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createHangingVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
       	break;
       case VertexType::Persistent:
       case VertexType::Delete:
@@ -991,26 +1016,29 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
   if (mayChangeGrid) {
     for (auto p: _gridControlEvents) {
       if (
+        tarch::la::allGreater( state.getX() + state.getH(), p.getOffset() )
+        and
+        tarch::la::allSmaller( state.getX(), p.getOffset()+p.getWidth() )
+        and
+        p.getRefinementControl()==GridControlEvent::RefinementControl::Refine
+        and
+ 	    tarch::la::allGreaterEquals( state.getH(), p.getH() )
+	  ) {
+        erase  = false;
+        refine = true;
+      }
+
+      if (
         tarch::la::allGreaterEquals( state.getX(), p.getOffset() )
         and
         tarch::la::allSmallerEquals( state.getX() + state.getH(), p.getOffset()+p.getWidth() )
-      ) {
-        if (
-          p.getRefinementControl()==GridControlEvent::RefinementControl::Refine
-	      and
-	 	  tarch::la::allGreaterEquals( state.getH(), p.getH() )
-	    ) {
-          refine = true;
-          break;
-        }
-        if (
-          p.getRefinementControl()==GridControlEvent::RefinementControl::Erase
-	      and
-		  tarch::la::allSmallerEquals( state.getH(), p.getH() )
-	    ) {
-          erase = true;
-          break;
-        }
+        and
+        p.getRefinementControl()==GridControlEvent::RefinementControl::Erase
+        and
+   	    tarch::la::allSmaller( state.getH(), p.getH()*3.0 )
+  	  ) {
+        erase  = true;
+        refine = false;
       }
     }
   }
@@ -1018,11 +1046,11 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
   if (refine) {
     for (int i=0; i<TwoPowerD; i++) {
       if (
-        not fineGridVertices[i].getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep()
-		and
 		isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
         and
 	    fineGridVertices[i].getState()==GridVertex::State::Unrefined
+		//and
+		//not fineGridVertices[i].getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep()
       ) {
   	    fineGridVertices[i].setState( GridVertex::State::RefinementTriggered );
       }
@@ -1030,9 +1058,20 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
   }
 
   if (erase) {
-	  assertionMsg( false, "not implemented yet");
+    for (int i=0; i<TwoPowerD; i++) {
+      if (
+		isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
+        and
+	    fineGridVertices[i].getState()==GridVertex::State::Refined
+		and
+		not fineGridVertices[i].getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep()
+      ) {
+  	    fineGridVertices[i].setState( GridVertex::State::EraseTriggered );
+      }
+    }
   }
 
+  logInfo( "evaluateGridControlEvents(...)", "state=" << state.toString() << ", erase=" << erase );
   logTraceOutWith3Arguments( "evaluateGridControlEvents(...)", state.toString(), refine, erase );
 }
 

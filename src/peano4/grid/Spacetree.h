@@ -361,6 +361,11 @@ class peano4::grid::Spacetree {
 	  int         newId
     );
 
+    tarch::la::Vector<TwoPowerD,int> getAdjacentRanksForNewVertex(
+      GridVertex                                   coarseGridVertices[TwoPowerD],
+      const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
+    ) const;
+
     /**
      * @image html Spacetree_createNewPersistentVertex.png
      */
@@ -369,7 +374,17 @@ class peano4::grid::Spacetree {
 	  const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
 	  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
-    );
+    ) const;
+
+    /**
+     * @image html Spacetree_createNewPersistentVertex.png
+     */
+    GridVertex createHangingVertex(
+      GridVertex                                   fineGridVertices[TwoPowerD],
+	  const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+	  const tarch::la::Vector<Dimensions,int>&     vertexPositionWithin3x3Patch
+    ) const;
 
     /**
      *
