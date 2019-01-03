@@ -125,8 +125,8 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
   if (_iterationCounter>12) {
     peano4::grid::GridControlEvent newEvent;
 	newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Erase );
-	newEvent.setOffset( {0.1,0.1} );
-	newEvent.setWidth( {0.9,0.9} );
+	newEvent.setOffset( {0.01,0.01} );
+	newEvent.setWidth( {0.99,0.99} );
 	newEvent.setH( {0.4,0.4} );
     controlEvents.push_back(newEvent);
   }

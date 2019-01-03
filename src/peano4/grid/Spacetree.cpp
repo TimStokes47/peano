@@ -112,6 +112,7 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
       ( _joining==vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) and _joining!=NoJoin )
 	);
   enddforx
+
   return isLocal;
 }
 
@@ -191,7 +192,9 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
        0                                                 // level
        #endif
     );
-    vertices[kScalar].setAdjacentRanks(TwoPowerD-1-kScalar,_id);
+    if (_id==0) {
+      vertices[kScalar].setAdjacentRanks(TwoPowerD-1-kScalar,_id);
+    }
     logDebug( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
 
@@ -417,16 +420,11 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
       logDebug( "updateVertexAfterLoad(...)", "vertex " << vertex.toString() << " may not be erased as it is father or further refined vertices. Unroll flag" );
       vertex.setState( GridVertex::State::Refined );
  	}
-	else if ( isVertexAdjacentToLocalSpacetree(vertex,true,true) ){
-      vertex.setState( GridVertex::State::Erasing );
-      _statistics.setStationarySweeps( 0 );
-	}
 	else {
-      vertex.setState( GridVertex::State::Refined );
-      _statistics.setStationarySweeps( 0 );
+      logDebug( "updateVertexAfterLoad(...)", "erase vertex " << vertex.toString() << " outside of domain on tree " << _id );
+      vertex.setState( GridVertex::State::Erasing );
 	}
   }
-
 
   // has to be here. Don't want to interfere with state splitting
   if (
@@ -480,7 +478,7 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
 	vertex.getState()==GridVertex::State::Unrefined
   ) {
 	vertex.setState( GridVertex::State::RefinementTriggered );
-	logInfo( "updateVertexBeforeStore(...)", "have to post-refine vertex " << vertex.toString() );
+	logDebug( "updateVertexBeforeStore(...)", "have to post-refine vertex " << vertex.toString() );
   }
 
   bool restrictIsAntecessorOfRefinedVertex = vertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
@@ -653,6 +651,7 @@ void peano4::grid::Spacetree::loadVertices(
           logDebug( "readVertices(...)", "read vertex from stack " << stackNumber );
           assertion3( not _vertexStack[stackNumber].empty(), stackNumber, vertexIndex, vertexPositionWithinPatch );
           fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ]  = _vertexStack[stackNumber].pop();
+
           if ( PeanoCurve::isInOutStack(stackNumber) ) {
             updateVertexAfterLoad(
 	          fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ],
@@ -1002,12 +1001,20 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
 
   bool mayChangeGrid = true;
   for (int i=0; i<TwoPowerD; i++) {
+    // excluding refinement triggered and refining ensures that we have no immediate
+	// refine anymore. This is imporptant for the adjacency lists. We have to allow
+	// erase triggered, as the grid control events are evaluated top-down, i.e. data
+	// might be set.
     mayChangeGrid &= (
       coarseGridVertices[i].getState()==GridVertex::State::HangingVertex
 	  or
       coarseGridVertices[i].getState()==GridVertex::State::Unrefined
 	  or
       coarseGridVertices[i].getState()==GridVertex::State::Refined
+	  or
+      coarseGridVertices[i].getState()==GridVertex::State::EraseTriggered
+	  or
+	  not isVertexAdjacentToLocalSpacetree(coarseGridVertices[i],true,true)
     );
   }
 
@@ -1028,6 +1035,8 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
         refine = true;
       }
 
+      //Es gibt viel zu viele Zellen in toto! Da wird net sauber weggeloescht ausserhalb der Domaene
+
       if (
         tarch::la::allGreaterEquals( state.getX(), p.getOffset() )
         and
@@ -1035,7 +1044,7 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
         and
         p.getRefinementControl()==GridControlEvent::RefinementControl::Erase
         and
-   	    tarch::la::allSmaller( state.getH(), p.getH()*3.0 )
+   	    tarch::la::allSmaller( state.getH(), p.getH() )
   	  ) {
         erase  = true;
         refine = false;
@@ -1049,8 +1058,6 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
 		isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
         and
 	    fineGridVertices[i].getState()==GridVertex::State::Unrefined
-		//and
-		//not fineGridVertices[i].getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep()
       ) {
   	    fineGridVertices[i].setState( GridVertex::State::RefinementTriggered );
       }
@@ -1063,15 +1070,16 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
 		isVertexAdjacentToLocalSpacetree( fineGridVertices[i], true, true )
         and
 	    fineGridVertices[i].getState()==GridVertex::State::Refined
-		and
-		not fineGridVertices[i].getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep()
       ) {
   	    fineGridVertices[i].setState( GridVertex::State::EraseTriggered );
       }
     }
   }
 
-  logInfo( "evaluateGridControlEvents(...)", "state=" << state.toString() << ", erase=" << erase );
+  if (_id==3 and state.getLevel()==2) {
+	logInfo( "evaluateGridControlEvents(...)", "state=" << state.toString() << ",refine=" << refine << ",erase=" << erase << ",mayChangeGrid=" << mayChangeGrid );
+  }
+
   logTraceOutWith3Arguments( "evaluateGridControlEvents(...)", state.toString(), refine, erase );
 }
 
@@ -1129,12 +1137,8 @@ void peano4::grid::Spacetree::descend(
 	    isSpacetreeNodeRefined(fineGridVertices),
 		_id
 	  );
-      if ( not isSpacetreeNodeLocal(vertices) ) {
-        updateVerticesAroundForkedCell(fineGridVertices);
-      }
     }
     else {
-      logDebug( "descend(...)", "node is not local on tree " << _id );
       if ( isSpacetreeNodeLocal(vertices) ) {
         updateVerticesAroundForkedCell(fineGridVertices);
       }

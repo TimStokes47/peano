@@ -165,6 +165,12 @@ class peano4::grid::Spacetree {
      */
     void clearStatistics();
 
+    /**
+     * If a cell is given away to another rank, we have to mark its vertices
+     * manually with our veto flag, such that we do not coarsen above it. I
+     * originally also thought I had to do it the other way round, i.e. if a
+     * cell is not local but its master is local. However,
+     */
     void updateVerticesAroundForkedCell(
       GridVertex            fineGridVertices[TwoPowerD]
     ) const;
@@ -277,7 +283,7 @@ class peano4::grid::Spacetree {
      * - Roll over the flags. These guys now are merged already. See
      *   receiveAndMergeVertexIfAdjacentToDomainBoundary().
      * - Do the refinement flag (state) update.
-     * - Erase non-local flags if they do not carry a veto flag.
+     * - Erase non-local vertices if they do not carry a veto flag.
      *
      *
      * <h2> Flag update </h2>
@@ -302,12 +308,16 @@ class peano4::grid::Spacetree {
     /**
      *
      *
-     * <h2> Domain decomposition </h2>
+     * <h2> Computational domain </h2>
      *
      * Some of the steps of this routine have to be done totally agnostic of
      * whether the vertex is inside the domain or not. The coarsening for
      * example has to be done outside of the domain as well.
      *
+     * For the post-refinement, we also have to take into account outer
+     * vertices. A vertex is to be refined, if it is unrefined and surrounded
+     * by $2^d$ refined cells. In this case, it still technically is a hanging
+     * vertex which should be avoided. This notably can happen outside.
      *
      *
      * <h2> Restriction of veto flags </h2>
@@ -336,6 +346,8 @@ class peano4::grid::Spacetree {
      * flag is set, it undoes any erase trigger.
      *
      * @param fineVertexPositionWithinPatch Position of vertex within 3x3 or 3x3x3 patch respectively
+     *
+     * @see updateVertexAfterLoad()
      */
     void updateVertexBeforeStore(
       GridVertex&                               vertex,
