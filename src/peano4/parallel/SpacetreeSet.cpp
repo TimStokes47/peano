@@ -86,7 +86,10 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       );
 
       assertion3( _spacetree._id != targetId,                   _spacetree._id, targetId, targetStack);
-      assertion3( targetTree._vertexStack[targetStack].empty(), _spacetree._id, targetId, targetStack);
+      if( not targetTree._vertexStack[targetStack].empty() ) {
+        assertion4( targetTree._vertexStack[targetStack].empty(), _spacetree._id, targetId, targetStack, targetTree._vertexStack[targetStack].pop().toString() );
+      }
+      assertion3( targetTree._vertexStack[targetStack].empty(), _spacetree._id, targetId, targetStack );
 
       targetTree._vertexStack[ targetStack ].clone( sourceStack->second );
 

@@ -170,13 +170,10 @@ class peano4::grid::Spacetree {
 
     /**
      * If a cell is given away to another rank, we have to mark its vertices
-     * manually with our veto flag, such that we do not coarsen above it. I
-     * originally thought it would be reasonable to mark only vertices above
-     * the actually deployed vertices, but that is a poor choice if four ranks
-     * meet as we might loose all information of this vertex.
+     * manually with our veto flag, such that we do not coarsen above it.
      */
     void updateVerticesAroundForkedCell(
-      GridVertex            fineGridVertices[TwoPowerD]
+      GridVertex            coarseGridVertices[TwoPowerD]
     ) const;
 
     void descend(
