@@ -186,13 +186,12 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     enqueue();
   }
 
-
-  if (oldNumberOfConsumerTasks==1) {
+  // we have to be careful not to update/shrink these counters too often
+  if (oldNumberOfConsumerTasks==1 and hasProcessedJobs) {
     internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize    = internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize*0.9;
     internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize  = internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize*0.9;
     internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize = internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize*0.9;
   }
-
 
   return nullptr;
 }
