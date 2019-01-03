@@ -69,6 +69,8 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
 }
 	 </pre>
 	 *
+	 * The entries are logically ordered. The later the entry, the more
+	 * important it is. So entry 2 overrules entry 1.
 	 */
 	virtual std::vector< GridControlEvent > getGridControlEvents() = 0;
 };

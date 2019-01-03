@@ -417,8 +417,8 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
     vertex.getState()==GridVertex::State::EraseTriggered
   ) {
 	if ( vertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() ) {
-      logDebug( "updateVertexAfterLoad(...)", "vertex " << vertex.toString() << " may not be erased as it is father or further refined vertices. Unroll flag" );
-      vertex.setState( GridVertex::State::Refined );
+      logDebug( "updateVertexAfterLoad(...)", "vertex " << vertex.toString() << " may not be erased on tree " << _id << " as it is father of further refined vertices. Unroll flag" );
+	  vertex.setState( GridVertex::State::Refined );
  	}
 	else {
       logDebug( "updateVertexAfterLoad(...)", "erase vertex " << vertex.toString() << " outside of domain on tree " << _id );
@@ -852,6 +852,7 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
     assertion2( vertex.getState() != GridVertex::Refining,   vertex.toString(), _id );
     assertion2( vertex.getState() != GridVertex::Erasing,    vertex.toString(), _id );
     assertion2( vertex.getState() == GridVertex::Unrefined,  vertex.toString(), _id );
+
     // alter ranks, i.e. replace joining id with this tree's id
     for (int i=0; i<TwoPowerD; i++) {
       if ( vertex.getAdjacentRanks(i)==_joining) {
@@ -996,7 +997,7 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
   const AutomatonState& state,
   GridVertex            coarseGridVertices[TwoPowerD],
   GridVertex            fineGridVertices[TwoPowerD]
-) const {
+) {
   logTraceInWith1Argument( "evaluateGridControlEvents(...)", state.toString() );
 
   bool mayChangeGrid = true;
@@ -1013,8 +1014,6 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
       coarseGridVertices[i].getState()==GridVertex::State::Refined
 	  or
       coarseGridVertices[i].getState()==GridVertex::State::EraseTriggered
-	  or
-	  not isVertexAdjacentToLocalSpacetree(coarseGridVertices[i],true,true)
     );
   }
 
@@ -1072,12 +1071,11 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
 	    fineGridVertices[i].getState()==GridVertex::State::Refined
       ) {
   	    fineGridVertices[i].setState( GridVertex::State::EraseTriggered );
+  	    if (not isSpacetreeNodeLocal(coarseGridVertices)) {
+          logDebug( "evaluateGridControlEvents(...)", "emergency flag set on tree " << _id << ": seems to be unable to erase because of domain decomposition");
+  	    }
       }
     }
-  }
-
-  if (_id==3 and state.getLevel()==2) {
-	logInfo( "evaluateGridControlEvents(...)", "state=" << state.toString() << ",refine=" << refine << ",erase=" << erase << ",mayChangeGrid=" << mayChangeGrid );
   }
 
   logTraceOutWith3Arguments( "evaluateGridControlEvents(...)", state.toString(), refine, erase );
@@ -1124,13 +1122,10 @@ void peano4::grid::Spacetree::descend(
 
     //
     // Mesh refinement
-    //
-    evaluateGridControlEvents(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices);
-
-    //
     // Enter cell
     //
     if ( isSpacetreeNodeLocal(fineGridVertices) ) {
+      evaluateGridControlEvents(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices);
       observer.enterCell(
         fineGridStates[peano4::utils::dLinearised(k,3)].getX(),
 	    fineGridStates[peano4::utils::dLinearised(k,3)].getH(),
@@ -1261,8 +1256,8 @@ std::string peano4::grid::Spacetree::toString() const {
 
 
 bool peano4::grid::Spacetree::mayJoinWithMaster() const {
-  return _statistics.getNumberOfLocalRefinedCells()==0
-     and _statistics.getNumberOfRefiningVertices()==0
+  bool mandatoryCriteria =
+         _statistics.getNumberOfRefiningVertices()==0
 	 and _spacetreeState==SpacetreeState::Running
 	 and _masterId>0
      and _statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin
@@ -1270,6 +1265,10 @@ bool peano4::grid::Spacetree::mayJoinWithMaster() const {
 	 and _joining==NoJoin
 	 and _splitTriggered.empty()
 	 and _splitting.empty();
+
+  bool degeneratedTree = _statistics.getNumberOfLocalRefinedCells()==0;
+
+  return mandatoryCriteria and degeneratedTree;
 }
 
 

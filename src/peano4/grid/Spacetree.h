@@ -154,11 +154,14 @@ class peano4::grid::Spacetree {
      */
     std::vector< peano4::grid::GridControlEvent >       _gridControlEvents;
 
+    /**
+     * Should only be called for inner cells
+     */
     void evaluateGridControlEvents(
       const AutomatonState& fineGridState,
       GridVertex            coarseGridVertices[TwoPowerD],
       GridVertex            fineGridVertices[TwoPowerD]
-    ) const;
+    );
 
     /**
      * Clear the statistics
@@ -168,8 +171,9 @@ class peano4::grid::Spacetree {
     /**
      * If a cell is given away to another rank, we have to mark its vertices
      * manually with our veto flag, such that we do not coarsen above it. I
-     * originally also thought I had to do it the other way round, i.e. if a
-     * cell is not local but its master is local. However,
+     * originally thought it would be reasonable to mark only vertices above
+     * the actually deployed vertices, but that is a poor choice if four ranks
+     * meet as we might loose all information of this vertex.
      */
     void updateVerticesAroundForkedCell(
       GridVertex            fineGridVertices[TwoPowerD]

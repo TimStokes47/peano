@@ -181,7 +181,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 	  else if (
         p->mayJoinWithMaster()
       ) {
-        logInfo( "traverse(Observer)", "tree " << p->_id << " is a degenerated tree (only leaves). Trigger join with tree " << p->_masterId );
+        logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId );
         join(p->_id);
 	  }
 	}
