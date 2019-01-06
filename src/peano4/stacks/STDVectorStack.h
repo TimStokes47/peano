@@ -44,7 +44,7 @@ class peano4::stacks::STDVectorStack {
     STDVectorStack<T>( const STDVectorStack<T>& stack ):
 	  _data(),
       _currentElement(0) {
-      assertionEquals( stack._currentElement, 0 );
+      assertionMsg( stack._currentElement==0, "may not copy non-empty stack" );
     }
 
 
