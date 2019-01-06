@@ -28,6 +28,8 @@ namespace peano4 {
  */
 class peano4::parallel::SpacetreeSet {
   private:
+	friend class peano4::grid::Spacetree;
+
 	/**
 	 * Each task triggers the traversal of one specific spacetree. After
 	 * that, we might directly trigger the data exchanges. Yet, this is not a
@@ -86,7 +88,6 @@ class peano4::parallel::SpacetreeSet {
     void traverseTreeSet(peano4::grid::TraversalObserver& observer);
     void exchangeDataBetweenTrees();
 
-  public:
     /**
      * Adds the spacetree to the set. The responsibility goes over to the
      * set. Usually, users do invoke this operation only once when they
@@ -97,6 +98,17 @@ class peano4::parallel::SpacetreeSet {
      * if you have a spacetree, use std::move around your argument.
      */
     void addSpacetree( peano4::grid::Spacetree&& spacetree );
+
+    /**
+     * Join the tree into its master. You are not allowed to run this
+     * routine unless the tree with treeId holds mayJoinWithMaster().
+     */
+    void join(int treeId);
+  public:
+    SpacetreeSet(
+      const tarch::la::Vector<Dimensions,double>&  offset,
+      const tarch::la::Vector<Dimensions,double>&  width
+    );
 
     /**
      * Invoke traverse on all spacetrees in parallel.
@@ -118,11 +130,10 @@ class peano4::parallel::SpacetreeSet {
      */
     void split(int treeId, int cells);
 
-    /**
-     * Join the tree into its master. You are not allowed to run this
-     * routine unless the tree with treeId holds mayJoinWithMaster().
-     */
-    void join(int treeId);
+    // @todo Remove/hide
+    // Users should be allowed to move around trees to different ranks but not
+    // to particular ids
+    void move(int sourceTreeId, int targetTreeId);
 };
 
 #endif

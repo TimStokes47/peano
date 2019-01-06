@@ -8,6 +8,16 @@
 tarch::logging::Log peano4::parallel::SpacetreeSet::_log( "peano4::parallel::SpacetreeSet" );
 
 
+peano4::parallel::SpacetreeSet::SpacetreeSet(
+  const tarch::la::Vector<Dimensions,double>&  offset,
+  const tarch::la::Vector<Dimensions,double>&  width
+) {
+  peano4::grid::Spacetree spacetree( offset, width );
+
+  addSpacetree( std::move(spacetree) );
+}
+
+
 void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree&&  spacetree ) {
   tarch::multicore::Lock lock( _semaphore );
 
@@ -49,7 +59,7 @@ void peano4::parallel::SpacetreeSet::traverseTreeSet(peano4::grid::TraversalObse
 	traverseTasks.push_back( new TraverseTask(
       p, *this, observer
     ));
-	logInfo( "traverse(TraversalObserver&)", "issue task to traverse tree " << p._id );
+	logInfo( "traverse(TraversalObserver&)", "issue task to traverse tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
   }
   logInfo( "traverse(TraversalObserver&)", "spawn " << traverseTasks.size() << " concurrent traversal tasks" );
 
@@ -86,10 +96,11 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       );
 
       assertion3( _spacetree._id != targetId,                   _spacetree._id, targetId, targetStack);
+      // @todo Der ging schief
       if( not targetTree._vertexStack[targetStack].empty() ) {
-        assertion4( targetTree._vertexStack[targetStack].empty(), _spacetree._id, targetId, targetStack, targetTree._vertexStack[targetStack].pop().toString() );
+        assertion6( targetTree._vertexStack[targetStack].empty(), _spacetree._id, targetId, targetStack,  targetTree._vertexStack[targetStack].size(), targetTree._vertexStack[targetStack].pop().toString(), sourceStack->second.size() );
       }
-      assertion3( targetTree._vertexStack[targetStack].empty(), _spacetree._id, targetId, targetStack );
+      assertion5( targetTree._vertexStack[targetStack].empty(), _spacetree._id, targetId, targetStack,  targetTree._vertexStack[targetStack].size(), sourceStack->second.size() );
 
       targetTree._vertexStack[ targetStack ].clone( sourceStack->second );
 
@@ -133,10 +144,14 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
   dataExchangeTasks.reserve( _spacetrees.size() );
 
   for (auto& p: _spacetrees) {
-	dataExchangeTasks.push_back( new DataExchangeTask(
-      p, *this
-    ));
-	logInfo( "traverse(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id );
+	if (
+      p._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::Joined
+	) {
+  	  dataExchangeTasks.push_back( new DataExchangeTask(
+        p, *this
+      ));
+      logInfo( "traverse(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
+	}
   }
   logInfo( "traverse(TraversalObserver&)", "spawn " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
 
@@ -192,6 +207,31 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Joined
 	)  {
       logInfo( "traverse(Observer)", "tree " << p->_id << " has joined, so remove" );
+
+      // Has to be a reference. Otherwise, access to the iterator copies the
+      // stack which is not allowed
+      for (auto& s: p->_vertexStack) {
+    	assertion3(
+          not Node::getInstance().isBoundaryExchangeOutputStackNumber(s.first)
+		  or
+          s.second.empty(),
+		  p->_id, s.first, s.second.size()
+        );
+    	if (not (
+          not Node::getInstance().isBoundaryExchangeInputStackNumber(s.first)
+		  or
+          s.second.empty()
+    	)) {
+    	  logWarning( "traverse(Observer)", s.second.pop().toString() );
+    	}
+    	assertion3(
+          not Node::getInstance().isBoundaryExchangeInputStackNumber(s.first)
+		  or
+          s.second.empty(),
+		  p->_id, s.first, s.second.size()
+        );
+      }
+
       Node::getInstance().deregisterId(p->_id);
       p = _spacetrees.erase(p);
       p--;
@@ -246,14 +286,20 @@ void peano4::parallel::SpacetreeSet::join(int treeId) {
 
 void peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
   peano4::grid::Spacetree* tree = nullptr;
+
   for (auto& p: _spacetrees) {
 	if (p._id==treeId) tree = &p;
   }
   if (tree==nullptr) {
-	assertionMsg(false, "unknown tree Id");
+	assertion2(false, "unknown tree Id", treeId);
   }
 
-  tree->split(cells);
+  const int newSpacetreeId = peano4::parallel::Node::getInstance().getNextFreeLocalId();
+
+  tree->split(newSpacetreeId, cells);
+  peano4::parallel::Node::getInstance().registerId( newSpacetreeId );
+
+  logInfo( "split(int,int)", "trigger split of tree " << treeId << " into tree " << newSpacetreeId << " with " << cells << " fine grid cells" );
 }
 
 
@@ -263,4 +309,19 @@ peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
   }
   assertion2( false, "no spacetree found", id );
   _spacetrees.begin(); // just here to avoid warning
+}
+
+
+void peano4::parallel::SpacetreeSet::move(int sourceTreeId, int targetTreeId) {
+  for (auto& p: _spacetrees) {
+	assertion2(p._id!=targetTreeId,sourceTreeId,targetTreeId);
+  }
+
+  // @todo Muss jetzt noch unterstuetzt werden
+
+  peano4::grid::Spacetree&  sourceTree = getSpacetree( sourceTreeId );
+  assertion3( sourceTree.mayMove(),sourceTreeId,targetTreeId,sourceTree.toString() );
+
+  sourceTree.split(targetTreeId, std::numeric_limits<int>::max());
+  peano4::parallel::Node::getInstance().registerId( targetTreeId );
 }

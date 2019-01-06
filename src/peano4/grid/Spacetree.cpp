@@ -176,6 +176,8 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
   _gridControlEvents = observer.getGridControlEvents();
   observer.beginTraversal();
 
+  _splittedCells.clear();
+
   const bool isFirstTraversal = _vertexStack[0].empty() and _vertexStack[1].empty();
   GridVertex vertices[TwoPowerD];
   dfor2(k)
@@ -735,18 +737,39 @@ void peano4::grid::Spacetree::storeVertices(
 }
 
 
-std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& vertex ) const {
+std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& vertex, bool calledByReceivingProcess ) const {
+  const bool isLocalVertex =
+	  calledByReceivingProcess ?
+      isVertexAdjacentToLocalSpacetree(vertex,true,false) :
+      isVertexAdjacentToLocalSpacetree(vertex,false,true);
+
   std::set<int> neighbourIds;
   for (int i=0; i<TwoPowerD; i++) {
-    if (
-      vertex.getAdjacentRanks(i)!=_id
-      and
-      vertex.getAdjacentRanks(i)!=InvalidRank
-      and
-      not _splitting.count(vertex.getAdjacentRanks(i))==1
-	  and
-	  (_joining==NoJoin or _joining!=vertex.getAdjacentRanks(i))
-    ) {
+    const bool mandatoryCriteria =
+		      vertex.getAdjacentRanks(i)!=_id
+		      and
+		      vertex.getAdjacentRanks(i)!=InvalidRank;
+
+    // I should not try to receive anything from a node that we just are
+    // splitting into.
+    const bool receiverCriteria = (_spacetreeState!=SpacetreeState::NewFromSplit or _masterId!=vertex.getAdjacentRanks(i))
+    		                 and (_splitting.count(vertex.getAdjacentRanks(i))==0);
+    // I should not send out anything to a node that I will split into in
+    // the next sweep
+    const bool senderCriteria   = (_joining==NoJoin or _joining!=vertex.getAdjacentRanks(i))
+    		                  and (_splitTriggered.count(vertex.getAdjacentRanks(i))==0);
+
+    const bool insertCriteria = calledByReceivingProcess ?
+      (mandatoryCriteria and isLocalVertex and receiverCriteria) :
+      (mandatoryCriteria and isLocalVertex and senderCriteria);
+
+    // @todo remove
+/*
+    if (_id==1) {
+    	logInfo( "getAdjacentDomainIds", "a=" << mandatoryCriteria << ",b=" << isLocalVertex << ",c=" << receiverCriteria << ",v=" << vertex.toString() << ",receiving-process=" << calledByReceivingProcess);
+    }
+*/
+    if (insertCriteria) {
       neighbourIds.insert( vertex.getAdjacentRanks(i) );
     }
   }
@@ -765,22 +788,17 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 	assertion2( vertex.getState() != GridVertex::Erasing,  vertex.toString(), _id );
   }
 
-
-  if (
-    (_spacetreeState==SpacetreeState::Running or _spacetreeState==SpacetreeState::JoinTriggered)
-	and
-	// @todo mjuss false sein, denn waehrend wir mergen ist ein Vertex ja noch net local
-	isVertexAdjacentToLocalSpacetree(vertex,true,false)
-  ) {
-    std::set<int> neighbourIds = getAdjacentDomainIds(vertex);
+  if ( _spacetreeState!=SpacetreeState::NewFromSplit ) {
+    std::set<int> neighbourIds = getAdjacentDomainIds(vertex,true);
 
     for (auto neighbour: neighbourIds) {
       assertion1( neighbour>=0, neighbour );
       const int  inStack  = peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(neighbour);
 
-      assertion6(
+      assertion8(
         not _vertexStack[ inStack ].empty(),
 		vertex.toString(), _id, inStack,
+		_splitTriggered.size(), _splitting.size(),
 		_joinTriggered, _joining, neighbour
       );
 
@@ -902,26 +920,10 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
   logTraceInWith2Arguments( "sendOutVertexIfAdjacentToDomainBoundary(GridVertex)", vertex.toString(), _id );
 
   if (
-    isVertexAdjacentToLocalSpacetree(vertex,false,true)
-	and
 	_spacetreeState != SpacetreeState::Joining
   ) {
-	std::set<int>  outRanks;
-    for (int i=0; i<TwoPowerD; i++) {
-      if (
-        vertex.getAdjacentRanks(i)!=_id
-		and
-		vertex.getAdjacentRanks(i)!=InvalidRank
-		and
-		_splitTriggered.count( vertex.getAdjacentRanks(i) )==0
-/*
-		and
-		_joinTriggered.count( vertex.getAdjacentRanks(i) )==0
-*/
-      ) {
-    	outRanks.insert( vertex.getAdjacentRanks(i) );
-      }
-    }
+    std::set<int> outRanks = getAdjacentDomainIds(vertex,false);
+
     for (auto p: outRanks) {
       //
       // Boundary exchange
@@ -1183,27 +1185,11 @@ void peano4::grid::Spacetree::descend(
 	  );
     }
 
+    splitOrMoveNode(
+      vertices,
+	  fineGridVertices
+    );
 
-    // For a discussion of admissible splits, see split()
-    if (
-      not _splitTriggered.empty() and
-      isSpacetreeNodeLocal(fineGridVertices) and
-      isSpacetreeNodeLocal(vertices)
-	) {
-      int targetSpacetreeId = -1;
-      for (auto& p: _splitTriggered) {
-    	if (p.second>0) {
-          p.second--;
-          targetSpacetreeId = p.first;
-          break;
-    	}
-      }
-      // still some splits left
-      if ( targetSpacetreeId>=0 ) {
-    	logDebug( "descend(...)", "deploy cell " << fineGridStates[peano4::utils::dLinearised(k,3)].toString() << " to tree " << targetSpacetreeId );
-        updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
-      }
-    }
 
     //
     // Store vertices
@@ -1212,6 +1198,71 @@ void peano4::grid::Spacetree::descend(
   endzfor
 
   logTraceOut( "descend(...)" );
+}
+
+
+
+void peano4::grid::Spacetree::splitOrMoveNode(
+  GridVertex  vertices[TwoPowerD],
+  GridVertex  fineGridVertices[TwoPowerD]
+) {
+  int targetSpacetreeId = -1;
+  for (auto& p: _splitTriggered) {
+    if (p.second>0) {
+	  targetSpacetreeId = p.first;
+	  break;
+	}
+  }
+
+  bool split = false;
+
+  if (targetSpacetreeId>=0) {
+	bool isSplitCandidate =
+      isSpacetreeNodeLocal(fineGridVertices) and
+	  isSpacetreeNodeLocal(vertices);
+
+    if (isSpacetreeNodeRefined(fineGridVertices)) {
+      assertion1( _splittedCells.size()>=ThreePowerD, _splittedCells.size() );
+
+      int reducedMarker = targetSpacetreeId;
+      for (int i=0; i<ThreePowerD; i++) {
+    	int topMarker = _splittedCells.back();
+    	_splittedCells.pop_back();
+    	if (topMarker!=targetSpacetreeId) {
+          reducedMarker = -1;
+        }
+      }
+
+      if (reducedMarker==targetSpacetreeId and isSplitCandidate) {
+	    updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
+	    split = true;
+      }
+      else {
+    	reducedMarker = -1;
+      }
+
+      _splittedCells.push_back(reducedMarker);
+    }
+    else { // not refined
+      if (isSplitCandidate) {
+	    updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
+	    split = true;
+	    _splittedCells.push_back(targetSpacetreeId);
+	  }
+	  else {
+	    _splittedCells.push_back(-1);
+	  }
+	}
+  }
+
+  if (split) {
+    for (auto& p: _splitTriggered) {
+	  if (p.first==targetSpacetreeId) {
+	    p.second--;
+        break;
+	  }
+    }
+  }
 }
 
 
@@ -1229,14 +1280,12 @@ void peano4::grid::Spacetree::updateVerticesAroundForkedCell(
 }
 
 
-void peano4::grid::Spacetree::split(int cells) {
+void peano4::grid::Spacetree::split(int newSpacetreeId, int cells) {
   assertion( _joinTriggered==NoJoin );
   assertion( _joining==NoJoin );
 
-  const int newSpacetreeId = peano4::parallel::Node::getInstance().getNextFreeLocalId();
   assertion1( _splitTriggered.count(newSpacetreeId)==0, newSpacetreeId );
   _splitTriggered.insert( std::pair<int,int>(newSpacetreeId,cells) );
-  peano4::parallel::Node::getInstance().registerId( newSpacetreeId );
 }
 
 
@@ -1258,6 +1307,20 @@ std::string peano4::grid::Spacetree::toString() const {
   }
   msg << ")";
   return msg.str();
+}
+
+
+bool peano4::grid::Spacetree::mayMove() const {
+	assertionMsg(false,"no kids");
+  return
+        _statistics.getNumberOfRefiningVertices()==0
+    and _spacetreeState==SpacetreeState::Running
+    and _masterId>0
+    and _statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin
+    and _joinTriggered==NoJoin
+    and _joining==NoJoin
+    and _splitTriggered.empty()
+    and _splitting.empty();
 }
 
 
@@ -1292,3 +1355,4 @@ void peano4::grid::Spacetree::joinWithWorker(int id) {
   assertion( _splitTriggered.empty() );
   assertion( _splitting.empty() );
 }
+

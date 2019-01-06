@@ -42,37 +42,22 @@ int main(int argc, char** argv) {
 
   tarch::multicore::Core::getInstance().configure(4,2,1);
 
-  peano4::grid::Spacetree spacetree(
-    {0.0, 0.0},
-    {1.0, 1.0}
-  );
-
-  // serial version
-/*
-  peano4::grid::TraversalVTKPlotter observer( "grid" );
-  for (int i=0; i<10; i++) {
-    spacetree.traverse( observer );
-  }
-*/
 
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
     "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::grid::EmptyTraversalObserver", true
   ));
-
-
   tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
 
-
-  // parallel version
-  peano4::parallel::SpacetreeSet spacetreeSet;
-  spacetreeSet.addSpacetree( std::move(spacetree) );
+  peano4::parallel::SpacetreeSet spacetreeSet(
+    {0.0, 0.0},
+    {1.0, 1.0}
+  );
 
   applications4::grid::MyObserver emptyObserver;
 
-  for (int i=0; i<2; i++) {
+  for (int i=0; i<3; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 	emptyObserver.startNewSnapshot();
-
     spacetreeSet.traverse( emptyObserver );
 
     logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
@@ -88,16 +73,39 @@ int main(int argc, char** argv) {
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
 
+  emptyObserver.startNewSnapshot();
+  spacetreeSet.traverse( emptyObserver );
+  emptyObserver.startNewSnapshot();
   spacetreeSet.traverse( emptyObserver );
 
   spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2);
   spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3);
   spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3);
 
+  emptyObserver.startNewSnapshot();
+  spacetreeSet.traverse( emptyObserver );
+  emptyObserver.startNewSnapshot();
+  spacetreeSet.traverse( emptyObserver );
+  emptyObserver.startNewSnapshot();
+  spacetreeSet.traverse( emptyObserver );
+  emptyObserver.startNewSnapshot();
+  spacetreeSet.traverse( emptyObserver );
+
+  spacetreeSet.split(1,10);
+
+  emptyObserver.startNewSnapshot();
+  spacetreeSet.traverse( emptyObserver );
+  emptyObserver.startNewSnapshot();
+  spacetreeSet.traverse( emptyObserver );
+
+
+  // My test
+  // @todo Wieder rein
+  //spacetreeSet.move(1, 10);
+
   spacetreeSet.traverse( emptyObserver );
   spacetreeSet.traverse( emptyObserver );
 
-  spacetreeSet.split(1,1);
 
   for (int i=0; i<30; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
@@ -114,6 +122,7 @@ int main(int argc, char** argv) {
     logInfo( "main(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
     logInfo( "main(...)", "remote refined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
+
 
   peano4::grid::TraversalVTKPlotter plotterObserver( "grid" );
   plotterObserver.startNewSnapshot();

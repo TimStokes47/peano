@@ -264,6 +264,7 @@ class peano4::grid::Spacetree {
 	  GridVertex                                   fineGridVertices[TwoPowerD],
 	  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch
 	);
+
     void storeVertices(
       const AutomatonState&                        fineGridState,
 	  GridVertex                                   coarseGridVertices[TwoPowerD],
@@ -304,6 +305,42 @@ class peano4::grid::Spacetree {
       GridVertex&                               vertex,
       GridVertex                                fineGridVertices[TwoPowerD],
 	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch
+    );
+
+    /**
+     * @see splitOrMoveNode()
+     */
+    std::vector<int>  _splittedCells;
+
+    /**
+     * We do realise a @f$LR(3^d)@f$ grammar to identify admissible splits.
+     * First, this routine checks whether splits are active. If so, we do
+     * study the split condition or we run into the move branch (which is
+     * essentially a split of the whole tree to a different tree).
+     *
+     * <h2> Split </h2>
+     *
+     * A node may be split if the parent is still no the same node (so we
+     * always have an intermediate mesh layer and preserve the tree topology)
+     * and if the node does not act as parent to another rank. If we did
+     * omit the latter check, a split might alter the tree topology. Which
+     * we don't like.
+     *
+     * The first check is trivial. The second check is realised through a
+     * pushback container and an LR(k) lookup.
+     *
+     * - Every leaf pushes a marker into this container: _id if it is and
+     *   remains local, the new id if the node has been split, and a -1
+     *   otherwise.
+     * - A refined cell induces a reduce on the container. @f$ 3^d@f$ markers
+     *   are removed and analysed: If they all have the same ip as the next
+     *   split marker to be used, we add it.
+     *
+     * - A refined cell finally adds its marker again.
+     */
+    void splitOrMoveNode(
+      GridVertex                                vertex[TwoPowerD],
+      GridVertex                                fineGridVertices[TwoPowerD]
     );
 
     /**
@@ -427,9 +464,18 @@ class peano4::grid::Spacetree {
      *   consequently coarsen its grid where the green rank now steps in.
      *   So this grid is "lost" and it can't join these data in anymore.
      */
-    void split(int cells);
+    void split(int treeId, int fineGridCells);
 
-    std::set<int>  getAdjacentDomainIds( const GridVertex& vertex ) const;
+    /**
+     * Get the ids of the surrounding cells.
+     *
+     * This operation studies the vertex only, i.e. it is your responsibility
+     * to take the tree state (new, running, joining, ...) into account: The
+     * operation is called on the receiver side if and only if the spacetree is
+     * not new. On the sender side, the routine is used to analyse outflowing data if and
+     * only if the state is not joining.
+     */
+    std::set<int>  getAdjacentDomainIds( const GridVertex& vertex, bool calledByReceivingProcess ) const;
 
     /**
      * This is the parallel version of traverse() as it is used by the
@@ -530,9 +576,17 @@ class peano4::grid::Spacetree {
     void joinWithWorker(int id);
 
     /**
+     *
+     * No kids policy
+     *
+     * Only ranks that have no kids are allowed to join. This is
+     * implicitly ensured as we have only degenerated trees here.
+     *
      * @see join()
      */
     bool mayJoinWithMaster() const;
+
+    bool mayMove() const;
   public:
     Spacetree(
 	  const tarch::la::Vector<Dimensions,double>&  offset,
