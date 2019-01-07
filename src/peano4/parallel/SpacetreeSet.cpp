@@ -174,33 +174,31 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
   exchangeDataBetweenTrees();
 
-  //
-  // Cleanup spacetrees
-  //
+  cleanUpTrees();
+}
+
+
+void peano4::parallel::SpacetreeSet::cleanUpTrees() {
+  std::set< int > treeThatHaventBeenAbleToCoarsenBecauseOfVetos;
+  treeThatHaventBeenAbleToCoarsenBecauseOfVetos.insert( _treesThatCantCoarsenBecauseOfVetos.begin(), _treesThatCantCoarsenBecauseOfVetos.end() );
+  _treesThatCantCoarsenBecauseOfVetos.clear();
+
   for (auto p = _spacetrees.begin(); p!=_spacetrees.end(); ) {
   	if (
-      p->_splitTriggered.empty()
+      treeThatHaventBeenAbleToCoarsenBecauseOfVetos.count(p->_masterId)==1
 	  and
-	  p->_splitting.empty()
-	  and
-      p->_joinTriggered.empty()
-	  and
-      p->_joining.empty()
-	  and
-	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
-	  and
-	  p->_coarseningHasBeenVetoed
-/*
-	  and
-      p->mayJoinWithMaster()
-*/
+	  p->mayJoinWithMaster()
     ) {
-  	  if ( p->mayJoinWithMaster() ) {
-      logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
-      join(p->_id);
-  	  }
-  	  else
-  	      logInfo( "traverse(Observer)", "can't join of tree " << p->_id << " with its master tree " << p->_masterId << " even though I'd like to enable further erases. tree=" << p->toString() );
+  	  logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
+  	  join(p->_id);
+  	}
+  	else if (
+	  p->_coarseningHasBeenVetoed
+	  and
+	  not p->mayJoinWithMaster()
+    ) {
+      logInfo( "traverse(Observer)", "can't join of tree " << p->_id << " with its master tree " << p->_masterId );
+      _treesThatCantCoarsenBecauseOfVetos.insert( p->_id );
     }
     else if (
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running

@@ -1334,7 +1334,9 @@ bool peano4::grid::Spacetree::mayJoinWithMaster() const {
 	 and _masterId>=0
      and _statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin
 	 and _splitTriggered.empty()
-	 and _splitting.empty();
+	 and _splitting.empty()
+	 and _joinTriggered.empty()
+	 and _joining.empty();
 
   bool degeneratedTree = _statistics.getNumberOfLocalRefinedCells()==0;
 
