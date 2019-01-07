@@ -105,12 +105,25 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
     isLocal &= (
       (vertices[kScalar].getState()==GridVertex::State::HangingVertex)
       or
-      ( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==_id )
-      or
-      ( _splitting.count( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) )==1 )
+      (
+        vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==_id
+        and
+        _splitting.count( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) )==0
+      )
       or
       ( _joining==vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) and _joining!=NoJoin )
 	);
+/*
+  isLocal &= (
+    (vertices[kScalar].getState()==GridVertex::State::HangingVertex)
+    or
+    ( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==_id )
+    or
+    ( _splitting.count( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) )==1 )
+    or
+    ( _joining==vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) and _joining!=NoJoin )
+	);
+*/
   enddforx
 
   return isLocal;
@@ -1233,12 +1246,6 @@ void peano4::grid::Spacetree::splitOrMoveNode(
 
       if (reducedMarker==targetSpacetreeId and isSplitCandidate) {
 	    updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
-	    for (auto& p: _splitTriggered) {
-		  if (p.first==targetSpacetreeId) {
-		    p.second--;
-	        break;
-		  }
-	    }
       }
       else {
     	reducedMarker = -1;
@@ -1249,6 +1256,12 @@ void peano4::grid::Spacetree::splitOrMoveNode(
     else { // not refined
       if (isSplitCandidate) {
 	    updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
+	    for (auto& p: _splitTriggered) {
+		  if (p.first==targetSpacetreeId) {
+		    p.second--;
+	        break;
+		  }
+	    }
 	    _splittedCells.push_back(targetSpacetreeId);
 	  }
 	  else {
