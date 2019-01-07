@@ -1214,8 +1214,6 @@ void peano4::grid::Spacetree::splitOrMoveNode(
 	}
   }
 
-  bool split = false;
-
   if (targetSpacetreeId>=0) {
 	bool isSplitCandidate =
       isSpacetreeNodeLocal(fineGridVertices) and
@@ -1235,7 +1233,12 @@ void peano4::grid::Spacetree::splitOrMoveNode(
 
       if (reducedMarker==targetSpacetreeId and isSplitCandidate) {
 	    updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
-	    split = true;
+	    for (auto& p: _splitTriggered) {
+		  if (p.first==targetSpacetreeId) {
+		    p.second--;
+	        break;
+		  }
+	    }
       }
       else {
     	reducedMarker = -1;
@@ -1246,22 +1249,12 @@ void peano4::grid::Spacetree::splitOrMoveNode(
     else { // not refined
       if (isSplitCandidate) {
 	    updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
-	    split = true;
 	    _splittedCells.push_back(targetSpacetreeId);
 	  }
 	  else {
 	    _splittedCells.push_back(-1);
 	  }
 	}
-  }
-
-  if (split) {
-    for (auto& p: _splitTriggered) {
-	  if (p.first==targetSpacetreeId) {
-	    p.second--;
-        break;
-	  }
-    }
   }
 }
 
