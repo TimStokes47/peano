@@ -75,37 +75,40 @@ int main(int argc, char** argv) {
 
   emptyObserver.startNewSnapshot();
   spacetreeSet.traverse( emptyObserver );
-  emptyObserver.startNewSnapshot();
-  spacetreeSet.traverse( emptyObserver );
 
-  spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2);
-  spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3);
-  spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3);
+  while (
+    not spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2)
+  ) {
+    emptyObserver.startNewSnapshot();
+    spacetreeSet.traverse( emptyObserver );
+  }
 
-  emptyObserver.startNewSnapshot();
-  spacetreeSet.traverse( emptyObserver );
-  emptyObserver.startNewSnapshot();
-  spacetreeSet.traverse( emptyObserver );
-  emptyObserver.startNewSnapshot();
-  spacetreeSet.traverse( emptyObserver );
-  emptyObserver.startNewSnapshot();
-  spacetreeSet.traverse( emptyObserver );
+  while (
+    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3)
+  ) {
+    emptyObserver.startNewSnapshot();
+    spacetreeSet.traverse( emptyObserver );
+  }
 
-  spacetreeSet.split(1,10);
+  while (
+    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3)
+  ) {
+    emptyObserver.startNewSnapshot();
+    spacetreeSet.traverse( emptyObserver );
+  }
 
-  emptyObserver.startNewSnapshot();
-  spacetreeSet.traverse( emptyObserver );
-  emptyObserver.startNewSnapshot();
-  spacetreeSet.traverse( emptyObserver );
-
+/*
+  while (
+    not spacetreeSet.split(1,10)
+  ) {
+    emptyObserver.startNewSnapshot();
+    spacetreeSet.traverse( emptyObserver );
+  }
+*/
 
   // My test
   // @todo Wieder rein
-  //spacetreeSet.move(1, 10);
-
-  spacetreeSet.traverse( emptyObserver );
-  spacetreeSet.traverse( emptyObserver );
-
+//  spacetreeSet.move(1, 10);
 
   for (int i=0; i<30; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();

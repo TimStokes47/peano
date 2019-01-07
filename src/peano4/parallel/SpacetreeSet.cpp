@@ -211,7 +211,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
       // Has to be a reference. Otherwise, access to the iterator copies the
       // stack which is not allowed
       for (auto& s: p->_vertexStack) {
-    	assertion3(
+        assertion3(
           not Node::getInstance().isBoundaryExchangeOutputStackNumber(s.first)
 		  or
           s.second.empty(),
@@ -224,11 +224,12 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
     	)) {
     	  logWarning( "traverse(Observer)", s.second.pop().toString() );
     	}
-    	assertion3(
+    	assertion4(
           not Node::getInstance().isBoundaryExchangeInputStackNumber(s.first)
 		  or
           s.second.empty(),
-		  p->_id, s.first, s.second.size()
+		  p->_id, s.first, s.second.size(),
+		  p->toString()
         );
       }
 
@@ -280,26 +281,28 @@ void peano4::parallel::SpacetreeSet::join(int treeId) {
 	assertionMsg(false, "unknown father tree Id");
   }
   assertion1( tree->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running, treeId);
+
+  @todo Das koennte aber schief gehen
+
   tree->joinWithWorker(treeId);
 }
 
 
-void peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
-  peano4::grid::Spacetree* tree = nullptr;
+bool peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
+  peano4::grid::Spacetree&  tree = getSpacetree( treeId );
 
-  for (auto& p: _spacetrees) {
-	if (p._id==treeId) tree = &p;
-  }
-  if (tree==nullptr) {
-	assertion2(false, "unknown tree Id", treeId);
-  }
+  // @todo Updpate
 
+  logWarning( "move(int,int)", "have to check whether there are new ids available; introduce upper limit on trees per rank; parallel Node knows" );
+
+  // @todo Das koennte auch -1 sein und dann waere Split nicht erfolgreich
   const int newSpacetreeId = peano4::parallel::Node::getInstance().getNextFreeLocalId();
 
-  tree->split(newSpacetreeId, cells);
+  tree.split(newSpacetreeId, cells);
   peano4::parallel::Node::getInstance().registerId( newSpacetreeId );
 
   logInfo( "split(int,int)", "trigger split of tree " << treeId << " into tree " << newSpacetreeId << " with " << cells << " fine grid cells" );
+  return true;
 }
 
 
@@ -312,16 +315,22 @@ peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
 }
 
 
-void peano4::parallel::SpacetreeSet::move(int sourceTreeId, int targetTreeId) {
+bool peano4::parallel::SpacetreeSet::move(int sourceTreeId, int targetTreeId) {
   for (auto& p: _spacetrees) {
 	assertion2(p._id!=targetTreeId,sourceTreeId,targetTreeId);
   }
 
+  logWarning( "move(int,int)", "have to check whether there are kids; parallel Node knows" );
+
   // @todo Muss jetzt noch unterstuetzt werden
 
   peano4::grid::Spacetree&  sourceTree = getSpacetree( sourceTreeId );
-  assertion3( sourceTree.mayMove(),sourceTreeId,targetTreeId,sourceTree.toString() );
 
-  sourceTree.split(targetTreeId, std::numeric_limits<int>::max());
-  peano4::parallel::Node::getInstance().registerId( targetTreeId );
+  if (sourceTree.mayMove()) {
+    sourceTree.split(targetTreeId, std::numeric_limits<int>::max());
+    // @todo Das muessen wir auch noch anpassen, denn wir wollen ja nur den Rank angeben
+    peano4::parallel::Node::getInstance().registerId( targetTreeId );
+    return true;
+  }
+  else return false;
 }

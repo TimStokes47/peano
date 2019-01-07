@@ -127,13 +127,19 @@ class peano4::parallel::SpacetreeSet {
      * triggered and splitting. In the latter case, you may split again once
      * more. Throughout the split-triggered, the tree does not physically exist
      * yet and you are thus not allowed to split it further.
+     *
+     * @todo Should there be something alike a target rank?
      */
-    void split(int treeId, int cells);
+    bool split(int treeId, int cells);
 
     // @todo Remove/hide
     // Users should be allowed to move around trees to different ranks but not
     // to particular ids
-    void move(int sourceTreeId, int targetTreeId);
+    /**
+     *
+     * @todo Should there be something alike a target rank?
+     */
+    bool move(int sourceTreeId, int targetTreeId);
 };
 
 #endif

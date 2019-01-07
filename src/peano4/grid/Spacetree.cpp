@@ -113,17 +113,7 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
       or
       ( _joining==vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) and _joining!=NoJoin )
 	);
-/*
-  isLocal &= (
-    (vertices[kScalar].getState()==GridVertex::State::HangingVertex)
-    or
-    ( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==_id )
-    or
-    ( _splitting.count( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) )==1 )
-    or
-    ( _joining==vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) and _joining!=NoJoin )
-	);
-*/
+    isLocal &= _spacetreeState!=SpacetreeState::Joining;
   enddforx
 
   return isLocal;
@@ -378,6 +368,8 @@ std::string peano4::grid::Spacetree::toString( SpacetreeState state ) {
       return "join-triggered";
     case SpacetreeState::Joining:
       return "joining";
+    case SpacetreeState::Joined:
+      return "joined";
   }
   return "<undef>";
 }
@@ -766,7 +758,7 @@ std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& 
     // I should not try to receive anything from a node that we just are
     // splitting into.
     const bool receiverCriteria = (_spacetreeState!=SpacetreeState::NewFromSplit or _masterId!=vertex.getAdjacentRanks(i))
-    		                 and (_splitting.count(vertex.getAdjacentRanks(i))==0);
+    		                  and (_splitting.count(vertex.getAdjacentRanks(i))==0);
     // I should not send out anything to a node that I will split into in
     // the next sweep
     const bool senderCriteria   = (_joining==NoJoin or _joining!=vertex.getAdjacentRanks(i))
@@ -776,16 +768,11 @@ std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& 
       (mandatoryCriteria and isLocalVertex and receiverCriteria) :
       (mandatoryCriteria and isLocalVertex and senderCriteria);
 
-    // @todo remove
-/*
-    if (_id==1) {
-    	logInfo( "getAdjacentDomainIds", "a=" << mandatoryCriteria << ",b=" << isLocalVertex << ",c=" << receiverCriteria << ",v=" << vertex.toString() << ",receiving-process=" << calledByReceivingProcess);
-    }
-*/
     if (insertCriteria) {
       neighbourIds.insert( vertex.getAdjacentRanks(i) );
     }
   }
+
   return neighbourIds;
 }
 
@@ -1300,16 +1287,28 @@ std::string peano4::grid::Spacetree::toString() const {
   msg << "(" << toString(_spacetreeState)
 	  << "," << _statistics.toString();
   if (_joinTriggered!=NoJoin) {
-	msg << ",join-triggered-width=" << _joinTriggered;
+	msg << ",join-triggered-with=" << _joinTriggered;
   }
   else {
-	msg << ",no-join-triggered-width";
+	msg << ",no-join-triggered-with-any-tree";
   }
   if (_joining!=NoJoin) {
-	msg << ",joining-width=" << _joinTriggered;
+	msg << ",joining-with=" << _joinTriggered;
   }
   else {
 	msg << ",not-joining";
+  }
+  if (_splitTriggered.empty()) {
+	msg << ",no-split-triggered";
+  }
+  else {
+	msg << ",split-triggered-with-trees=" << _splitTriggered.size();
+  }
+  if (_splitting.empty()) {
+	msg << ",not-splitting";
+  }
+  else {
+	msg << ",splitting-with-trees=" << _splitting.size();
   }
   msg << ")";
   return msg.str();
@@ -1317,12 +1316,8 @@ std::string peano4::grid::Spacetree::toString() const {
 
 
 bool peano4::grid::Spacetree::mayMove() const {
-	assertionMsg(false,"no kids");
   return
-        _statistics.getNumberOfRefiningVertices()==0
-    and _spacetreeState==SpacetreeState::Running
-    and _masterId>0
-    and _statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin
+        _spacetreeState==SpacetreeState::Running
     and _joinTriggered==NoJoin
     and _joining==NoJoin
     and _splitTriggered.empty()
@@ -1332,9 +1327,8 @@ bool peano4::grid::Spacetree::mayMove() const {
 
 bool peano4::grid::Spacetree::mayJoinWithMaster() const {
   bool mandatoryCriteria =
-         _statistics.getNumberOfRefiningVertices()==0
-	 and _spacetreeState==SpacetreeState::Running
-	 and _masterId>0
+	     _spacetreeState==SpacetreeState::Running
+	 and _masterId>=0
      and _statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin
 	 and _joinTriggered==NoJoin
 	 and _joining==NoJoin

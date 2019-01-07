@@ -586,6 +586,10 @@ class peano4::grid::Spacetree {
      */
     bool mayJoinWithMaster() const;
 
+    /**
+     * A spacetree may be moved if this attribute holds and there are no
+     * kids.
+     */
     bool mayMove() const;
   public:
     Spacetree(
