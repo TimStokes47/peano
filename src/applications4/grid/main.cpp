@@ -84,27 +84,25 @@ int main(int argc, char** argv) {
   }
 
   while (
-    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3)
+    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3)
   ) {
     emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
 
   while (
-    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/3)
+    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3)
   ) {
     emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
 
-/*
   while (
     not spacetreeSet.split(1,10)
   ) {
     emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
-*/
 
   // My test
   // @todo Wieder rein

@@ -178,31 +178,40 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
   // Cleanup spacetrees
   //
   for (auto p = _spacetrees.begin(); p!=_spacetrees.end(); ) {
-	if (
-	  p->_splitTriggered.empty()
+  	if (
+      p->_splitTriggered.empty()
 	  and
 	  p->_splitting.empty()
 	  and
-	  p->_joinTriggered==peano4::grid::Spacetree::NoJoin
+      p->_joinTriggered.empty()
 	  and
-	  p->_joining==peano4::grid::Spacetree::NoJoin
+      p->_joining.empty()
 	  and
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
+	  and
+	  p->_coarseningHasBeenVetoed
+/*
+	  and
+      p->mayJoinWithMaster()
+*/
+    ) {
+  	  if ( p->mayJoinWithMaster() ) {
+      logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
+      join(p->_id);
+  	  }
+  	  else
+  	      logInfo( "traverse(Observer)", "can't join of tree " << p->_id << " with its master tree " << p->_masterId << " even though I'd like to enable further erases. tree=" << p->toString() );
+    }
+    else if (
+	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
+	  and
+	  p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0
 	)  {
-      logDebug( "traverse(Observer)", "tree " << p->_id << "'s statistics: " << p->toString() );
-      if ( p->getGridStatistics().getNumberOfLocalRefinedCells() + p->getGridStatistics().getNumberOfLocalUnrefinedCells() == 0 ) {
-        logInfo( "traverse(Observer)", "tree " << p->_id << " is degenerated as it does not hold any local cells. Remove" );
-        Node::getInstance().deregisterId(p->_id);
-        p = _spacetrees.erase(p);
-        p--;
-	  }
-	  else if (
-        p->mayJoinWithMaster()
-      ) {
-        logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId );
-        join(p->_id);
-	  }
-	}
+      logInfo( "traverse(Observer)", "tree " << p->_id << " is degenerated as it does not hold any local cells. Remove" );
+      Node::getInstance().deregisterId(p->_id);
+      p = _spacetrees.erase(p);
+      p--;
+    }
 	else if (
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Joined
 	)  {
@@ -282,7 +291,7 @@ void peano4::parallel::SpacetreeSet::join(int treeId) {
   }
   assertion1( tree->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running, treeId);
 
-  @todo Das koennte aber schief gehen
+//  @todo Das koennte aber schief gehen
 
   tree->joinWithWorker(treeId);
 }

@@ -143,8 +143,8 @@ class peano4::grid::Spacetree {
      * This should be -1 if no join is triggered. Otherwise it holds the id of
      * the joining rank.
      */
-    int       _joinTriggered;
-    int       _joining;
+    std::set< int >      _joinTriggered;
+    std::set< int >      _joining;
 
     std::map< int, peano4::stacks::GridVertexStack >    _vertexStack;
 
@@ -337,6 +337,11 @@ class peano4::grid::Spacetree {
      *   split marker to be used, we add it.
      *
      * - A refined cell finally adds its marker again.
+     *
+     * It is important that I evaluate the reduce analysis even if no splits
+     * are do be done anymore. Because it might happen that I have just done
+     * exactly 9 splits for example (2d) and thus, the parent of these 9
+     * guys should go to the remote node, too.
      */
     void splitOrMoveNode(
       GridVertex                                vertex[TwoPowerD],
@@ -591,6 +596,8 @@ class peano4::grid::Spacetree {
      * kids.
      */
     bool mayMove() const;
+
+    bool _coarseningHasBeenVetoed;
   public:
     Spacetree(
 	  const tarch::la::Vector<Dimensions,double>&  offset,

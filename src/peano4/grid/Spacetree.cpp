@@ -18,9 +18,7 @@ peano4::grid::Spacetree::Spacetree(
   _id(0),
   _spacetreeState( SpacetreeState::Running ),
   _root(),
-  _masterId(-1),
-  _joinTriggered(NoJoin),
-  _joining(NoJoin) {
+  _masterId(-1) {
   _root.setLevel( 0 );
   _root.setX( offset );
   _root.setH( width );
@@ -49,9 +47,7 @@ peano4::grid::Spacetree::Spacetree(
   _statistics(),
   _masterId(copy._id),
   _splitTriggered(),
-  _splitting(),
-  _joinTriggered(NoJoin),
-  _joining(NoJoin) {
+  _splitting() {
   assertion1( _splitTriggered.count(_id)==0, _id );
 
   for (auto& p: copy._vertexStack ) {
@@ -90,7 +86,7 @@ bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(
       // ranks about the updated id, but we do not alter the id locally yet. This is done on
       // the receiver side.
       //result |= (_spacetreeState==SpacetreeState::Joining and vertex.getAdjacentRanks(i)==_masterId );
-      result |= (joiningIsConsideredLocal and _joining==vertex.getAdjacentRanks(i) and _joining!=NoJoin);
+      result |= (joiningIsConsideredLocal and _joining.count( vertex.getAdjacentRanks(i) )==1);
 	}
 	return result;
   }
@@ -109,9 +105,9 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
         vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==_id
         and
         _splitting.count( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) )==0
+		and
+        _joining.count( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) )==0
       )
-      or
-      ( _joining==vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) and _joining!=NoJoin )
 	);
     isLocal &= _spacetreeState!=SpacetreeState::Joining;
   enddforx
@@ -123,10 +119,10 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
 void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::parallel::SpacetreeSet& spacetreeSet) {
   logTraceIn( "traverse(TraversalObserver,SpacetreeSet)" );
 
-  assertion( _joinTriggered==NoJoin or _splitTriggered.empty() );
-  assertion( _joinTriggered==NoJoin or _splitting.empty() );
-  assertion( _joining==NoJoin       or _splitTriggered.empty() );
-  assertion( _joining==NoJoin       or _splitting.empty() );
+  assertion( _joinTriggered.empty() or _splitTriggered.empty() );
+  assertion( _joinTriggered.empty() or _splitting.empty() );
+  assertion( _joining.empty()       or _splitTriggered.empty() );
+  assertion( _joining.empty()       or _splitting.empty() );
 
   logDebug(
     "traverse(TraversalObserver,SpacetreeSet)",
@@ -148,8 +144,9 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::para
   _splitting.insert( _splitTriggered.begin(), _splitTriggered.end() );
   _splitTriggered.clear();
 
-  _joining       = _joinTriggered;
-  _joinTriggered = NoJoin;
+  _joining.clear();
+  _joining.insert( _joinTriggered.begin(), _joinTriggered.end() );
+  _joinTriggered.clear();
 
   switch (_spacetreeState) {
     case SpacetreeState::NewFromSplit:
@@ -180,6 +177,8 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
   observer.beginTraversal();
 
   _splittedCells.clear();
+
+  _coarseningHasBeenVetoed = false;
 
   const bool isFirstTraversal = _vertexStack[0].empty() and _vertexStack[1].empty();
   GridVertex vertices[TwoPowerD];
@@ -426,6 +425,7 @@ void peano4::grid::Spacetree::updateVertexAfterLoad(
 	if ( vertex.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() ) {
       logDebug( "updateVertexAfterLoad(...)", "vertex " << vertex.toString() << " may not be erased on tree " << _id << " as it is father of further refined vertices. Unroll flag" );
 	  vertex.setState( GridVertex::State::Refined );
+	  _coarseningHasBeenVetoed = true;
  	}
 	else {
       logDebug( "updateVertexAfterLoad(...)", "erase vertex " << vertex.toString() << " outside of domain on tree " << _id );
@@ -761,7 +761,7 @@ std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& 
     		                  and (_splitting.count(vertex.getAdjacentRanks(i))==0);
     // I should not send out anything to a node that I will split into in
     // the next sweep
-    const bool senderCriteria   = (_joining==NoJoin or _joining!=vertex.getAdjacentRanks(i))
+    const bool senderCriteria   = (_joining.count( vertex.getAdjacentRanks(i)) ==0 )
     		                  and (_splitTriggered.count(vertex.getAdjacentRanks(i))==0);
 
     const bool insertCriteria = calledByReceivingProcess ?
@@ -799,7 +799,7 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
         not _vertexStack[ inStack ].empty(),
 		vertex.toString(), _id, inStack,
 		_splitTriggered.size(), _splitting.size(),
-		_joinTriggered, _joining, neighbour
+		_joinTriggered.size(), _joining.size(), neighbour
       );
 
       GridVertex inVertex = _vertexStack[ inStack ].pop();
@@ -859,38 +859,41 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
   // @todo Reihenfolge: Muss danach kommen, denn net dass wir erst reinmergen, indices umsetzen, dadurch wird
   // vertex local und dann versuchen wir auch noch zu empfangen
   if (
-    _joining!=NoJoin and
-    tarch::la::contains( vertex.getAdjacentRanks(), _joining)
+    not _joining.empty()
   ) {
-    logDebug(
-      "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)",
-      "receive updated copy of vertex " << vertex.toString() << " from worker tree " << _joining << " synchronously on tree " << _id
-    );
-    GridVertex inVertex = peano4::parallel::Node::getInstance().getVertexSynchronously(_joining,_id);
-    assertionVectorNumericalEquals4( vertex.getX(), inVertex.getX(),   inVertex.toString(), vertex.toString(), _id, _joining );
-    assertionEquals4( vertex.getLevel(), inVertex.getLevel(),          inVertex.toString(), vertex.toString(), _id, _joining );
-    vertex = inVertex;
-    assertion2( vertex.getState() != GridVertex::Refining,   vertex.toString(), _id );
-    assertion2( vertex.getState() != GridVertex::Erasing,    vertex.toString(), _id );
-    assertion2( vertex.getState() == GridVertex::Unrefined,  vertex.toString(), _id );
-
-    // alter ranks, i.e. replace joining id with this tree's id
-    for (int i=0; i<TwoPowerD; i++) {
-      if ( vertex.getAdjacentRanks(i)==_joining) {
-        vertex.setAdjacentRanks(i,_id);
+	std::set<int> targetIds;
+	for (int i=0; i<TwoPowerD; i++) {
+      if ( _joining.count( vertex.getAdjacentRanks(i) )>0 ) {
+    	targetIds.insert( vertex.getAdjacentRanks(i) );
       }
-    }
-    logDebug(
-      "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)",
-      "new vertex is " << vertex.toString()
-    );
+	}
+	for (auto p: targetIds ) {
+      logDebug(
+        "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)",
+        "receive updated copy of vertex " << vertex.toString() << " from worker tree " << p << " synchronously on tree " << _id
+      );
+      GridVertex inVertex = peano4::parallel::Node::getInstance().getVertexSynchronously(p,_id);
+      assertionVectorNumericalEquals4( vertex.getX(), inVertex.getX(),   inVertex.toString(), vertex.toString(), _id, p );
+      assertionEquals4( vertex.getLevel(), inVertex.getLevel(),          inVertex.toString(), vertex.toString(), _id, p );
+      vertex = inVertex;
+      assertion2( vertex.getState() != GridVertex::Refining,   vertex.toString(), _id );
+      assertion2( vertex.getState() != GridVertex::Erasing,    vertex.toString(), _id );
+      assertion2( vertex.getState() == GridVertex::Unrefined,  vertex.toString(), _id );
+
+      // alter ranks, i.e. replace joining id with this tree's id
+      for (int i=0; i<TwoPowerD; i++) {
+        if ( vertex.getAdjacentRanks(i)==p) {
+          vertex.setAdjacentRanks(i,_id);
+        }
+      }
+      logDebug(
+        "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)",
+        "new vertex is " << vertex.toString()
+      );
+	}
   }
 
-  if (
-    not _splitting.empty()
-    and
-    isVertexAdjacentToLocalSpacetree(vertex,true,true)
-  ) {
+  if ( not _splitting.empty() and isVertexAdjacentToLocalSpacetree(vertex,true,true) ) {
 	std::set<int> targetIds;
 	for (int i=0; i<TwoPowerD; i++) {
       if ( _splitting.count( vertex.getAdjacentRanks(i) )>0 ) {
@@ -1206,54 +1209,54 @@ void peano4::grid::Spacetree::splitOrMoveNode(
   GridVertex  vertices[TwoPowerD],
   GridVertex  fineGridVertices[TwoPowerD]
 ) {
-  int targetSpacetreeId = -1;
-  for (auto& p: _splitTriggered) {
-    if (p.second>0) {
-	  targetSpacetreeId = p.first;
-	  break;
-	}
-  }
+  if (_splitTriggered.empty()) return;
 
-  if (targetSpacetreeId>=0) {
-	bool isSplitCandidate =
+  bool isSplitCandidate =
       isSpacetreeNodeLocal(fineGridVertices) and
 	  isSpacetreeNodeLocal(vertices);
 
-    if (isSpacetreeNodeRefined(fineGridVertices)) {
-      assertion1( _splittedCells.size()>=ThreePowerD, _splittedCells.size() );
+  if (isSpacetreeNodeRefined(fineGridVertices)) {
+    assertion1( _splittedCells.size()>=ThreePowerD, _splittedCells.size() );
 
-      int reducedMarker = targetSpacetreeId;
-      for (int i=0; i<ThreePowerD; i++) {
-    	int topMarker = _splittedCells.back();
-    	_splittedCells.pop_back();
-    	if (topMarker!=targetSpacetreeId) {
-          reducedMarker = -1;
-        }
+    int reducedMarker = _splittedCells.back();
+    for (int i=0; i<ThreePowerD; i++) {
+      int topMarker = _splittedCells.back();
+      _splittedCells.pop_back();
+      if (topMarker!=reducedMarker) {
+        reducedMarker = -1;
       }
-
-      if (reducedMarker==targetSpacetreeId and isSplitCandidate) {
-	    updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
-      }
-      else {
-    	reducedMarker = -1;
-      }
-
-      _splittedCells.push_back(reducedMarker);
     }
-    else { // not refined
-      if (isSplitCandidate) {
-	    updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
-	    for (auto& p: _splitTriggered) {
-		  if (p.first==targetSpacetreeId) {
-		    p.second--;
-	        break;
-		  }
+
+    if (reducedMarker>=0 and isSplitCandidate) {
+      updateVertexRanksWithinCell( fineGridVertices, reducedMarker );
+    }
+    else {
+      reducedMarker = -1;
+    }
+
+    _splittedCells.push_back(reducedMarker);
+  }
+  else { // not refined
+    int targetSpacetreeId = -1;
+    for (auto& p: _splitTriggered) {
+      if (p.second>0) {
+        targetSpacetreeId = p.first;
+        break;
+      }
+    }
+
+    if (isSplitCandidate and targetSpacetreeId>=0) {
+      updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
+      for (auto& p: _splitTriggered) {
+        if (p.first==targetSpacetreeId) {
+	      p.second--;
+          break;
 	    }
-	    _splittedCells.push_back(targetSpacetreeId);
-	  }
-	  else {
-	    _splittedCells.push_back(-1);
-	  }
+      }
+	  _splittedCells.push_back(targetSpacetreeId);
+	}
+	else {
+	  _splittedCells.push_back(-1);
 	}
   }
 }
@@ -1274,8 +1277,8 @@ void peano4::grid::Spacetree::updateVerticesAroundForkedCell(
 
 
 void peano4::grid::Spacetree::split(int newSpacetreeId, int cells) {
-  assertion( _joinTriggered==NoJoin );
-  assertion( _joining==NoJoin );
+  assertion( _joinTriggered.empty() );
+  assertion( _joining.empty() );
 
   assertion1( _splitTriggered.count(newSpacetreeId)==0, newSpacetreeId );
   _splitTriggered.insert( std::pair<int,int>(newSpacetreeId,cells) );
@@ -1286,29 +1289,29 @@ std::string peano4::grid::Spacetree::toString() const {
   std::ostringstream msg;
   msg << "(" << toString(_spacetreeState)
 	  << "," << _statistics.toString();
-  if (_joinTriggered!=NoJoin) {
-	msg << ",join-triggered-with=" << _joinTriggered;
-  }
-  else {
+  if (_joinTriggered.empty()) {
 	msg << ",no-join-triggered-with-any-tree";
   }
-  if (_joining!=NoJoin) {
-	msg << ",joining-with=" << _joinTriggered;
+  else {
+	msg << ",join-triggered=" << _joinTriggered.size();
+  }
+  if (_joining.empty()) {
+	msg << ",not-joining";
   }
   else {
-	msg << ",not-joining";
+    msg << ",joining=" << _joining.size();
   }
   if (_splitTriggered.empty()) {
 	msg << ",no-split-triggered";
   }
   else {
-	msg << ",split-triggered-with-trees=" << _splitTriggered.size();
+	msg << ",split-triggered=" << _splitTriggered.size();
   }
   if (_splitting.empty()) {
 	msg << ",not-splitting";
   }
   else {
-	msg << ",splitting-with-trees=" << _splitting.size();
+	msg << ",splitting=" << _splitting.size();
   }
   msg << ")";
   return msg.str();
@@ -1318,8 +1321,8 @@ std::string peano4::grid::Spacetree::toString() const {
 bool peano4::grid::Spacetree::mayMove() const {
   return
         _spacetreeState==SpacetreeState::Running
-    and _joinTriggered==NoJoin
-    and _joining==NoJoin
+    and _joinTriggered.empty()
+    and _joining.empty()
     and _splitTriggered.empty()
     and _splitting.empty();
 }
@@ -1330,8 +1333,6 @@ bool peano4::grid::Spacetree::mayJoinWithMaster() const {
 	     _spacetreeState==SpacetreeState::Running
 	 and _masterId>=0
      and _statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin
-	 and _joinTriggered==NoJoin
-	 and _joining==NoJoin
 	 and _splitTriggered.empty()
 	 and _splitting.empty();
 
@@ -1351,7 +1352,8 @@ void peano4::grid::Spacetree::joinWithMaster() {
 
 void peano4::grid::Spacetree::joinWithWorker(int id) {
   logInfo( "joinWithWorker(int)", "add tree " << id << " to tree " << _id );
-  _joinTriggered = id;
+  assertion2( _joinTriggered.count(id)==0, id, _id );
+  _joinTriggered.insert( id );
   assertion( _splitTriggered.empty() );
   assertion( _splitting.empty() );
 }
