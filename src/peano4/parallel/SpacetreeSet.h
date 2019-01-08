@@ -83,8 +83,6 @@ class peano4::parallel::SpacetreeSet {
 
     tarch::multicore::BooleanSemaphore  _semaphore;
 
-    std::set< int >                     _treesThatCantCoarsenBecauseOfVetos;
-
     peano4::grid::Spacetree& getSpacetree(int id);
 
     void traverseTreeSet(peano4::grid::TraversalObserver& observer);

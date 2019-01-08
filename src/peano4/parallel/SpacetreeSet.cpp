@@ -179,26 +179,18 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
 
 void peano4::parallel::SpacetreeSet::cleanUpTrees() {
-  std::set< int > treeThatHaventBeenAbleToCoarsenBecauseOfVetos;
-  treeThatHaventBeenAbleToCoarsenBecauseOfVetos.insert( _treesThatCantCoarsenBecauseOfVetos.begin(), _treesThatCantCoarsenBecauseOfVetos.end() );
-  _treesThatCantCoarsenBecauseOfVetos.clear();
+  std::set< int > childrenThatShouldMerge;
 
   for (auto p = _spacetrees.begin(); p!=_spacetrees.end(); ) {
   	if (
-      treeThatHaventBeenAbleToCoarsenBecauseOfVetos.count(p->_masterId)==1
-	  and
-	  p->mayJoinWithMaster()
-    ) {
-  	  logInfo( "traverse(Observer)", "trigger join of tree " << p->_id << " with its master tree " << p->_masterId << " to enable further grid erases");
-  	  join(p->_id);
-  	}
-  	else if (
 	  p->_coarseningHasBeenVetoed
 	  and
 	  not p->mayJoinWithMaster()
     ) {
       logInfo( "traverse(Observer)", "can't join of tree " << p->_id << " with its master tree " << p->_masterId );
-      _treesThatCantCoarsenBecauseOfVetos.insert( p->_id );
+
+      std::set< int > children = peano4::parallel::Node::getInstance().getChildren( p->_id );
+      childrenThatShouldMerge.insert( children.begin(), children.end() );
     }
     else if (
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
@@ -247,6 +239,18 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
 
 	p++;
   }
+
+
+  for (auto& p: _spacetrees ) {
+  	if (
+      childrenThatShouldMerge.count(p._id)==1
+	  and
+	  p.mayJoinWithMaster()
+    ) {
+  	  logInfo( "traverse(Observer)", "trigger join of tree " << p._id << " with its master tree " << p._masterId << " to enable further grid erases");
+  	  join(p._id);
+  	}
+  }
 }
 
 
@@ -289,8 +293,6 @@ void peano4::parallel::SpacetreeSet::join(int treeId) {
   }
   assertion1( tree->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running, treeId);
 
-//  @todo Das koennte aber schief gehen
-
   tree->joinWithWorker(treeId);
 }
 
@@ -298,18 +300,17 @@ void peano4::parallel::SpacetreeSet::join(int treeId) {
 bool peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
   peano4::grid::Spacetree&  tree = getSpacetree( treeId );
 
-  // @todo Updpate
+  const int newSpacetreeId = peano4::parallel::Node::getInstance().reserveId(
+    peano4::parallel::Node::getInstance().getRank(treeId),
+    treeId
+  );
 
-  logWarning( "move(int,int)", "have to check whether there are new ids available; introduce upper limit on trees per rank; parallel Node knows" );
-
-  // @todo Das koennte auch -1 sein und dann waere Split nicht erfolgreich
-  const int newSpacetreeId = peano4::parallel::Node::getInstance().getNextFreeLocalId();
-
-  tree.split(newSpacetreeId, cells);
-  peano4::parallel::Node::getInstance().registerId( newSpacetreeId );
-
-  logInfo( "split(int,int)", "trigger split of tree " << treeId << " into tree " << newSpacetreeId << " with " << cells << " fine grid cells" );
-  return true;
+  if (newSpacetreeId>=0) {
+	tree.split(newSpacetreeId, cells);
+    logInfo( "split(int,int)", "trigger split of tree " << treeId << " into tree " << newSpacetreeId << " with " << cells << " fine grid cells" );
+    return true;
+  }
+  else return false;
 }
 
 
@@ -336,7 +337,7 @@ bool peano4::parallel::SpacetreeSet::move(int sourceTreeId, int targetTreeId) {
   if (sourceTree.mayMove()) {
     sourceTree.split(targetTreeId, std::numeric_limits<int>::max());
     // @todo Das muessen wir auch noch anpassen, denn wir wollen ja nur den Rank angeben
-    peano4::parallel::Node::getInstance().registerId( targetTreeId );
+//    peano4::parallel::Node::getInstance().registerId( targetTreeId );
     return true;
   }
   else return false;

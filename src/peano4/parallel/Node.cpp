@@ -29,8 +29,8 @@ peano4::parallel::Node::~Node() {
 }
 
 
-bool peano4::parallel::Node::isGlobalMaster(int rank, int threadId) const {
-  return rank==0 and threadId==0;
+bool peano4::parallel::Node::isGlobalMaster(int treeId) const {
+  return treeId==0;
 }
 
 
@@ -52,28 +52,45 @@ int peano4::parallel::Node::getRank(int id) const {
 }
 
 
-int peano4::parallel::Node::getNextFreeLocalId() const {
+int peano4::parallel::Node::reserveId(int rank, int forTreeId)  {
   int localThread = 0;
-  const int localRank = tarch::parallel::Node::getInstance().getRank();
-  while (true) {
-	if ( _bookedLocalThreads.count( getId(localRank,localThread) )==0 ) return getId(localRank,localThread);
+  // @todo There's a limited number of threads per rank
+  int result = -1;
+  while (result==-1) {
+	if ( _treeEntries.count( getId(rank,localThread) )==0 ) result = getId(rank,localThread);
 	localThread++;
   }
-  return -1;
+
+  registerId( result, forTreeId );
+
+  return result;
 }
 
 
-void peano4::parallel::Node::registerId(int id) {
-  assertion( _bookedLocalThreads.count(id)==0 );
-  _bookedLocalThreads.insert(id);
+void peano4::parallel::Node::registerId(int id, int masterId) {
+  tarch::multicore::Lock lock(_semaphore);
+  assertion( _treeEntries.count(id)==0 );
+  assertion( id!=masterId );
+  assertion( isGlobalMaster(id) or _treeEntries.count(masterId)==1 );
+
+  TreeEntry newEntry;
+
+  newEntry.setId( id );
+  newEntry.setMaster( masterId );
+
+  _treeEntries.insert( std::pair<int,TreeEntry>(id, newEntry) );
 }
 
 
 
 void peano4::parallel::Node::deregisterId(int id) {
-  assertion( _bookedLocalThreads.count(id)==1 );
-  _bookedLocalThreads.erase(id);
+  assertion( _treeEntries.count(id)==1 );
+  assertion( not hasChildrenTree(id) );
+
+  tarch::multicore::Lock lock(_semaphore);
+  _treeEntries.erase(id);
 }
+
 
 int peano4::parallel::Node::getOutputStackNumberOfBoundaryExchange(int id) const {
   return peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance + id * 2;
@@ -83,14 +100,6 @@ int peano4::parallel::Node::getOutputStackNumberOfBoundaryExchange(int id) const
 int peano4::parallel::Node::getInputStackNumberOfBoundaryExchange(int id) const {
   return peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance + id * 2 + 1;
 }
-
-
-/*
-bool peano4::parallel::Node::isInputStackNumber(int id) const {
-  return id>=peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance
-     and ( (id-peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance) % 2 == 1 );
-}
-*/
 
 
 bool peano4::parallel::Node::isBoundaryExchangeOutputStackNumber(int id) const {
@@ -142,6 +151,45 @@ peano4::grid::GridVertex peano4::parallel::Node::getVertexSynchronously( int fro
   _sendReceiveBuffer[key].pop();
 
   logDebug( "getVertexSynchronously(int,int)", "deploy " << result.toString() << " from " << fromId << " to tree " << toId );
+
+  return result;
+}
+
+
+void peano4::parallel::Node::treesCantCoarsenBecauseOfVetos( int treeId ) {
+  tarch::multicore::Lock lock(_semaphore);
+
+}
+
+
+int peano4::parallel::Node::getParentTree( int treeId ) {
+  tarch::multicore::Lock lock(_semaphore);
+
+  assertion( _treeEntries.count(treeId) );
+  return _treeEntries[treeId].getMaster();
+}
+
+
+bool peano4::parallel::Node::hasChildrenTree( int treeId ) {
+  tarch::multicore::Lock lock(_semaphore);
+
+  bool result = false;
+  for (const auto& p: _treeEntries) {
+	result |= p.second.getMaster()==treeId;
+  }
+
+  return result;
+}
+
+
+std::set< int > peano4::parallel::Node::getChildren( int treeId ) {
+  std::set< int > result;
+
+  for (const auto& p: _treeEntries) {
+    if ( p.second.getMaster()==treeId ) {
+      result.insert( p.first);
+    }
+  }
 
   return result;
 }

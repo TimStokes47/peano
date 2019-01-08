@@ -10,5 +10,6 @@ OBJS += $(PEANO_ROOT)/peano4/grid/GridStatistics.o
 OBJS += $(PEANO_ROOT)/peano4/grid/tests/SpacetreeTest.o
 OBJS += $(PEANO_ROOT)/peano4/parallel/Node.o
 OBJS += $(PEANO_ROOT)/peano4/parallel/Tasks.o
+OBJS += $(PEANO_ROOT)/peano4/parallel/TreeEntry.o
 OBJS += $(PEANO_ROOT)/peano4/parallel/SpacetreeSet.o
 OBJS += $(PEANO_ROOT)/peano4/utils/Loop.o

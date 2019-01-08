@@ -1,0 +1,13 @@
+#include "peano4/utils/Globals.h"
+
+Packed-Type: short int;
+
+Constant: Dimensions hint-value 4;
+Constant: TwoPowerD;
+
+
+class peano4::parallel::TreeEntry {
+  persistent        parallelise int  id;
+  persistent        parallelise int  master;
+  persistent        parallelise int  treesCantCoarsenBecauseOfVetos;
+};

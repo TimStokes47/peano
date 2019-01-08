@@ -29,7 +29,7 @@ peano4::grid::Spacetree::Spacetree(
     _root.setAccessNumber( i,0 );
   }
 
-  peano4::parallel::Node::getInstance().registerId(_id);
+  peano4::parallel::Node::getInstance().registerId(_id, -1);
 
   clearStatistics();
 

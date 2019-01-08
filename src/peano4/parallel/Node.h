@@ -9,6 +9,9 @@
 #include "tarch/multicore/BooleanSemaphore.h"
 
 
+#include "TreeEntry.h"
+
+
 #include <set>
 #include <queue>
 #include <map>
@@ -34,14 +37,15 @@ class peano4::parallel::Node {
      */
     static tarch::logging::Log _log;
 
-    std::set<int>  _bookedLocalThreads;
-
     tarch::multicore::BooleanSemaphore  _semaphore;
 
     /**
      * Key is from-to.
      */
     std::map< std::pair<int,int>, std::queue<peano4::grid::GridVertex> >  _sendReceiveBuffer;
+
+
+    std::map< int, TreeEntry >  _treeEntries;
 
     /**
      * The standard constructor assigns the attributes default values and
@@ -54,7 +58,22 @@ class peano4::parallel::Node {
      * The copy constructor is private.
      */
     Node( const Node& node ) = delete;
+
+    /**
+     * Peano maps grid instance threads + mpi ranks onto global IDs through
+     * this routine. To identify a global stack number, please use this
+     * function and add it to your local stack number.
+     */
+    int getId(int rank, int threadId) const;
+
   public:
+    /**
+     * The operation is not thread-safe as we call it only internally,
+     * i.e. you are not supposed to call this function directly.
+     */
+    // @todo Make private again once the move it successfully done.
+    void registerId(int id, int masterId);
+
     /**
      * This operation returns the singleton instance. Before using this
      * instance, one has to call the init() operation on the instance returned.
@@ -69,29 +88,24 @@ class peano4::parallel::Node {
     virtual ~Node();
 
     /**
-     * Is this node the global master process, i.e. does its rank equal get
-     * MasterProcessRank()?
+     * Is this the global master?
      */
-    bool isGlobalMaster(int rank, int threadId) const;
+    bool isGlobalMaster(int treeId) const;
 
     /**
-     * Peano maps grid instance threads + mpi ranks onto global IDs through
-     * this routine. To identify a global stack number, please use this
-     * function and add it to your local stack number.
+     * This operation is not const as it does some internal bookkeeping. It
+     * internally invokes  registerId() on the result.
+     *
+     *
+     * @return -1 If there are no ids left anymore
      */
-    int getId(int rank, int threadId) const;
+    int reserveId(int rank, int forTreeId);
 
     int getRank(int id) const;
 
-//    int getThreadNumber( int id ) const;
-
     /**
-     * This operation is const, i.e. you have to bookmark it yourself. Is done
-     * by Spacetree.
+     * Only the SpacetreeSet should call this operation.
      */
-    int getNextFreeLocalId() const;
-
-    void registerId(int id);
     void deregisterId(int id);
 
     /**
@@ -120,6 +134,20 @@ class peano4::parallel::Node {
 
     void sendVertexSynchronously( const peano4::grid::GridVertex& vertex, int fromId, int toId );
     peano4::grid::GridVertex getVertexSynchronously( int fromId, int toId );
+
+    void treesCantCoarsenBecauseOfVetos( int treeId );
+
+    /**
+     * Not const as we need a semaphore to make it thread-safe
+     */
+    int getParentTree( int treeId );
+
+    /**
+     * Not const as we need a semaphore to make it thread-safe
+     */
+    bool hasChildrenTree( int treeId );
+
+    std::set< int > getChildren( int treeId );
 };
 
 #endif
