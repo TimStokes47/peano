@@ -22,6 +22,7 @@ tarch::logging::Log  peano4::parallel::Node::_log("peano4::parallel::Node");
 
 
 peano4::parallel::Node::Node() {
+  registerId( 0, -1);
 }
 
 

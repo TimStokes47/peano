@@ -300,17 +300,20 @@ void peano4::parallel::SpacetreeSet::join(int treeId) {
 bool peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
   peano4::grid::Spacetree&  tree = getSpacetree( treeId );
 
-  const int newSpacetreeId = peano4::parallel::Node::getInstance().reserveId(
-    peano4::parallel::Node::getInstance().getRank(treeId),
-    treeId
-  );
+  if ( tree.maySplit() ) {
+    const int newSpacetreeId = peano4::parallel::Node::getInstance().reserveId(
+      peano4::parallel::Node::getInstance().getRank(treeId),
+      treeId
+    );
 
-  if (newSpacetreeId>=0) {
-	tree.split(newSpacetreeId, cells);
-    logInfo( "split(int,int)", "trigger split of tree " << treeId << " into tree " << newSpacetreeId << " with " << cells << " fine grid cells" );
-    return true;
+    if (newSpacetreeId>=0) {
+      tree.split(newSpacetreeId, cells);
+      logInfo( "split(int,int)", "trigger split of tree " << treeId << " into tree " << newSpacetreeId << " with " << cells << " fine grid cells" );
+      return true;
+    }
   }
-  else return false;
+
+  return false;
 }
 
 
@@ -323,22 +326,20 @@ peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
 }
 
 
-bool peano4::parallel::SpacetreeSet::move(int sourceTreeId, int targetTreeId) {
-  for (auto& p: _spacetrees) {
-	assertion2(p._id!=targetTreeId,sourceTreeId,targetTreeId);
-  }
-
-  logWarning( "move(int,int)", "have to check whether there are kids; parallel Node knows" );
-
+bool peano4::parallel::SpacetreeSet::move(int sourceTreeId, int targetRank) {
   peano4::grid::Spacetree&  sourceTree = getSpacetree( sourceTreeId );
 
-  // if and only if there are no children
-
-  if (sourceTree.mayMove()) {
-    sourceTree.split(targetTreeId, std::numeric_limits<int>::max());
-    // @todo Das muessen wir auch noch anpassen, denn wir wollen ja nur den Rank angeben
-//    peano4::parallel::Node::getInstance().registerId( targetTreeId );
-    return true;
+  int result = -1;
+  if (
+    not peano4::parallel::Node::getInstance().hasChildrenTree(sourceTreeId)
+    and
+	sourceTree.mayMove()
+  ) {
+	int result = peano4::parallel::Node::getInstance().reserveId(targetRank,sourceTree._masterId);
+	if ( result>=0 ) {
+      sourceTree.split(result, std::numeric_limits<int>::max());
+      logInfo( "move(int,int)", "move tree " << sourceTreeId << " to tree " << result );
+	}
   }
-  else return false;
+  return result>=0;
 }

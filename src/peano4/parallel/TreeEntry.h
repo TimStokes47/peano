@@ -27,7 +27,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   08/01/2019 19:28
+ * @date   08/01/2019 21:09
  */
 class peano4::parallel::TreeEntry { 
    
@@ -177,7 +177,7 @@ class peano4::parallel::TreeEntry {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   08/01/2019 19:28
+ * @date   08/01/2019 21:09
  */
 class peano4::parallel::TreeEntryPacked { 
    

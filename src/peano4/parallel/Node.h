@@ -66,7 +66,6 @@ class peano4::parallel::Node {
      */
     int getId(int rank, int threadId) const;
 
-  public:
     /**
      * The operation is not thread-safe as we call it only internally,
      * i.e. you are not supposed to call this function directly.
@@ -74,6 +73,7 @@ class peano4::parallel::Node {
     // @todo Make private again once the move it successfully done.
     void registerId(int id, int masterId);
 
+  public:
     /**
      * This operation returns the singleton instance. Before using this
      * instance, one has to call the init() operation on the instance returned.
@@ -96,6 +96,10 @@ class peano4::parallel::Node {
      * This operation is not const as it does some internal bookkeeping. It
      * internally invokes  registerId() on the result.
      *
+     * @param forTreeId If we run a split, this is the rank that wants to
+     *          split. In general, this always is the parent/master of the
+     *          new rank. So if you move a rank, you have to ensure that
+     *          the master is preserved.
      *
      * @return -1 If there are no ids left anymore
      */

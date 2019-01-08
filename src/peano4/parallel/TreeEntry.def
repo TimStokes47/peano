@@ -9,5 +9,4 @@ Constant: TwoPowerD;
 class peano4::parallel::TreeEntry {
   persistent        parallelise int  id;
   persistent        parallelise int  master;
-  persistent        parallelise int  treesCantCoarsenBecauseOfVetos;
 };

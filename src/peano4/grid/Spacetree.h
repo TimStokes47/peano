@@ -597,6 +597,8 @@ class peano4::grid::Spacetree {
      */
     bool mayMove() const;
 
+    bool maySplit() const;
+
     bool _coarseningHasBeenVetoed;
   public:
     Spacetree(

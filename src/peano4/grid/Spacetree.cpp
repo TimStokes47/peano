@@ -29,8 +29,6 @@ peano4::grid::Spacetree::Spacetree(
     _root.setAccessNumber( i,0 );
   }
 
-  peano4::parallel::Node::getInstance().registerId(_id, -1);
-
   clearStatistics();
 
   logInfo( "Spacetree(...)", "create spacetree with " << offset << "x" << width << " and id " << _id);
@@ -1277,18 +1275,16 @@ void peano4::grid::Spacetree::updateVerticesAroundForkedCell(
 
 
 void peano4::grid::Spacetree::split(int newSpacetreeId, int cells) {
-  assertion( _joinTriggered.empty() );
-  assertion( _joining.empty() );
+  assertion3(
+    cells==std::numeric_limits<int>::max() or maySplit(),
+	newSpacetreeId, cells, toString()
+  );
+  assertion3(
+    cells!=std::numeric_limits<int>::max() or mayMove(),
+	newSpacetreeId, cells, toString()
+  );
 
-  assertion1( _splitTriggered.count(newSpacetreeId)==0, newSpacetreeId );
-
-  if (cells<std::numeric_limits<int>::max()) {
-    _splitTriggered.insert( std::pair<int,int>(newSpacetreeId,cells) );
-  }
-  else {
-    assertion1( _splitTriggered.count(newSpacetreeId)==0, newSpacetreeId );
-    assertionMsg(false, "not implemented yet" );
-  }
+  _splitTriggered.insert( std::pair<int,int>(newSpacetreeId,cells) );
 }
 
 
@@ -1335,6 +1331,16 @@ bool peano4::grid::Spacetree::mayMove() const {
 }
 
 
+bool peano4::grid::Spacetree::maySplit() const {
+  return
+        _spacetreeState==SpacetreeState::Running
+    and _joinTriggered.empty()
+    and _joining.empty()
+    and _splitting.empty()
+	and ( _splitTriggered.empty() or _splitTriggered.begin()->second < std::numeric_limits<int>::max() );
+}
+
+
 bool peano4::grid::Spacetree::mayJoinWithMaster() const {
   bool mandatoryCriteria =
 	     _spacetreeState==SpacetreeState::Running
@@ -1363,7 +1369,7 @@ void peano4::grid::Spacetree::joinWithWorker(int id) {
   logInfo( "joinWithWorker(int)", "add tree " << id << " to tree " << _id );
   assertion2( _joinTriggered.count(id)==0, id, _id );
   _joinTriggered.insert( id );
-  assertion( _splitTriggered.empty() );
-  assertion( _splitting.empty() );
+  assertion2( _splitTriggered.empty(), id, toString() );
+  assertion2( _splitting.empty(), id, toString() );
 }
 
