@@ -1281,7 +1281,14 @@ void peano4::grid::Spacetree::split(int newSpacetreeId, int cells) {
   assertion( _joining.empty() );
 
   assertion1( _splitTriggered.count(newSpacetreeId)==0, newSpacetreeId );
-  _splitTriggered.insert( std::pair<int,int>(newSpacetreeId,cells) );
+
+  if (cells<std::numeric_limits<int>::max()) {
+    _splitTriggered.insert( std::pair<int,int>(newSpacetreeId,cells) );
+  }
+  else {
+    assertion1( _splitTriggered.count(newSpacetreeId)==0, newSpacetreeId );
+    assertionMsg(false, "not implemented yet" );
+  }
 }
 
 

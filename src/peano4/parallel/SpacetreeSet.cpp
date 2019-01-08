@@ -329,9 +329,9 @@ bool peano4::parallel::SpacetreeSet::move(int sourceTreeId, int targetTreeId) {
 
   logWarning( "move(int,int)", "have to check whether there are kids; parallel Node knows" );
 
-  // @todo Muss jetzt noch unterstuetzt werden
-
   peano4::grid::Spacetree&  sourceTree = getSpacetree( sourceTreeId );
+
+  // if and only if there are no children
 
   if (sourceTree.mayMove()) {
     sourceTree.split(targetTreeId, std::numeric_limits<int>::max());

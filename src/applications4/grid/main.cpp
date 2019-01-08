@@ -104,9 +104,10 @@ int main(int argc, char** argv) {
     spacetreeSet.traverse( emptyObserver );
   }
 
-  // My test
-  // @todo Wieder rein
-//  spacetreeSet.move(1, 10);
+  while ( not spacetreeSet.move(1, 10) ) {
+    emptyObserver.startNewSnapshot();
+    spacetreeSet.traverse( emptyObserver );
+  }
 
   for (int i=0; i<30; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
