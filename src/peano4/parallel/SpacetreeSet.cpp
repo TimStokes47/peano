@@ -187,7 +187,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
 	  and
 	  not p->mayJoinWithMaster()
     ) {
-      logInfo( "traverse(Observer)", "can't join of tree " << p->_id << " with its master tree " << p->_masterId );
+      logInfo( "traverse(Observer)", "can't join of tree " << p->_id << " with its master tree " << p->_masterId << ": " << p->toString() );
 
       std::set< int > children = peano4::parallel::Node::getInstance().getChildren( p->_id );
       childrenThatShouldMerge.insert( children.begin(), children.end() );

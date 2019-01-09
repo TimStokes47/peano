@@ -50,8 +50,8 @@ class peano4::grid::Spacetree {
 	 */
 	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = 3 + Dimensions*2;
   private:
-	static constexpr int InvalidRank = -1;
-	static constexpr int NumberOfStationarySweepsToWaitAtLeastTillJoin = 4;
+	static const int InvalidRank;
+	static const int NumberOfStationarySweepsToWaitAtLeastTillJoin;
 
     static tarch::logging::Log  _log;
 
@@ -388,6 +388,20 @@ class peano4::grid::Spacetree {
      * and a flag from the previous solution. This flag is rolled over. If the
      * flag is set, it undoes any erase trigger.
      *
+     * <h2> Clean-up of vertices </h2>
+     *
+     * I originally had the following idea:
+     *
+     * If a vertex is remote, we manually clear all of its adjacency flags.
+     * This is a security thing. It might happen that such a vertex refers to
+     * a tree x and that this index x is later re-used (for a new local subtree
+     * for example). In this case, a left-over index might suddenly suggest that
+     * a totally irrelevant vertex is adjacent to the newish x tree.
+     *
+     * However, this is wrong. We have to keep our adjacency. Because if we merge
+     * later on, we rely on this adjacency to find out which vertices we have to
+     * join.
+     *
      * @param fineVertexPositionWithinPatch Position of vertex within 3x3 or 3x3x3 patch respectively
      *
      * @see updateVertexAfterLoad()
@@ -593,7 +607,8 @@ class peano4::grid::Spacetree {
 
     /**
      * A spacetree may be moved if this attribute holds and there are no
-     * kids.
+     * kids. It is the reponsibility of the calling operation to check for
+     * this master/child thing as well.
      */
     bool mayMove() const;
 

@@ -9,6 +9,8 @@
 
 
 tarch::logging::Log  peano4::grid::Spacetree::_log( "peano4::grid::Spacetree" );
+const int peano4::grid::Spacetree::InvalidRank(-1);
+const int peano4::grid::Spacetree::NumberOfStationarySweepsToWaitAtLeastTillJoin(4);
 
 
 peano4::grid::Spacetree::Spacetree(
@@ -486,6 +488,11 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
 	logDebug( "updateVertexBeforeStore(...)", "have to post-refine vertex " << vertex.toString() );
   }
 
+  // @todo Hilft das?
+  if (not _joinTriggered.empty() or not _joining.empty()) {
+    vertex.setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
+  }
+
   bool restrictIsAntecessorOfRefinedVertex = vertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
 
   if (vertex.getState()==GridVertex::State::RefinementTriggered) {
@@ -525,6 +532,12 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
   }
 
   sendOutVertexIfAdjacentToDomainBoundary( vertex );
+/*
+  if ( not isVertexAdjacentToLocalSpacetree(vertex,false,false)) {
+	for (int i=0; i<TwoPowerD; i++) {
+      vertex.setAdjacentRanks(i,InvalidRank);
+	}
+  }*/
 
   logTraceOutWith2Arguments( "updateVertexBeforeStore()", vertex.toString(), _id );
 }
@@ -793,11 +806,10 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
       assertion1( neighbour>=0, neighbour );
       const int  inStack  = peano4::parallel::Node::getInstance().getInputStackNumberOfBoundaryExchange(neighbour);
 
-      assertion8(
+      assertion5(
         not _vertexStack[ inStack ].empty(),
-		vertex.toString(), _id, inStack,
-		_splitTriggered.size(), _splitting.size(),
-		_joinTriggered.size(), _joining.size(), neighbour
+		vertex.toString(), inStack, neighbour, _id,
+		toString()
       );
 
       GridVertex inVertex = _vertexStack[ inStack ].pop();
@@ -1291,30 +1303,46 @@ void peano4::grid::Spacetree::split(int newSpacetreeId, int cells) {
 std::string peano4::grid::Spacetree::toString() const {
   std::ostringstream msg;
   msg << "(" << toString(_spacetreeState)
-	  << "," << _statistics.toString();
+	  << ",statistics=" << _statistics.toString();
   if (_joinTriggered.empty()) {
 	msg << ",no-join-triggered-with-any-tree";
   }
   else {
-	msg << ",join-triggered=" << _joinTriggered.size();
+	msg << ",join-triggered={";
+	for (const auto& p: _joinTriggered) {
+	  msg << "(" << p << ")";
+	}
+	msg << "}";
   }
   if (_joining.empty()) {
 	msg << ",not-joining";
   }
   else {
-    msg << ",joining=" << _joining.size();
+    msg << ",joining={";
+	for (const auto& p: _joining) {
+	  msg << "(" << p << ")";
+	}
+	msg << "}";
   }
   if (_splitTriggered.empty()) {
 	msg << ",no-split-triggered";
   }
   else {
-	msg << ",split-triggered=" << _splitTriggered.size();
+	msg << ",split-triggered={";
+	for (const auto& p: _splitTriggered) {
+	  msg << "(" << p.first << "," << p.second << ")";
+	}
+	msg << "}";
   }
   if (_splitting.empty()) {
 	msg << ",not-splitting";
   }
   else {
-	msg << ",splitting=" << _splitting.size();
+	msg << ",splitting={";
+	for (const auto& p: _splitting) {
+	  msg << "(" << p.first << "," << p.second << ")";
+	}
+	msg << "}";
   }
   msg << ")";
   return msg.str();
@@ -1324,6 +1352,7 @@ std::string peano4::grid::Spacetree::toString() const {
 bool peano4::grid::Spacetree::mayMove() const {
   return
         _spacetreeState==SpacetreeState::Running
+    and _statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin
     and _joinTriggered.empty()
     and _joining.empty()
     and _splitTriggered.empty()

@@ -83,12 +83,10 @@ int main(int argc, char** argv) {
     spacetreeSet.traverse( emptyObserver );
   }
 
-/*
   while ( not spacetreeSet.move(2, 0) ) {
     emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
-*/
 
   while (
     not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3)
