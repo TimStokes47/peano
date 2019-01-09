@@ -398,9 +398,13 @@ class peano4::grid::Spacetree {
      * for example). In this case, a left-over index might suddenly suggest that
      * a totally irrelevant vertex is adjacent to the newish x tree.
      *
-     * However, this is wrong. We have to keep our adjacency. Because if we merge
-     * later on, we rely on this adjacency to find out which vertices we have to
-     * join.
+     * However, this is wrong in some cases: We have to keep our adjacency.
+     * Because if we merge later on, we rely on this adjacency to find out
+     * which vertices we have to join.
+     *
+     * So we have to run for the middle way: We erase all adjacency data but
+     * if ad only if a vertex is not adjacent to any kid.
+     *
      *
      * @param fineVertexPositionWithinPatch Position of vertex within 3x3 or 3x3x3 patch respectively
      *

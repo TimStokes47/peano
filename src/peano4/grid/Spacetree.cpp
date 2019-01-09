@@ -488,11 +488,6 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
 	logDebug( "updateVertexBeforeStore(...)", "have to post-refine vertex " << vertex.toString() );
   }
 
-  // @todo Hilft das?
-  if (not _joinTriggered.empty() or not _joining.empty()) {
-    vertex.setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
-  }
-
   bool restrictIsAntecessorOfRefinedVertex = vertex.getIsAntecessorOfRefinedVertexInCurrentTreeSweep();
 
   if (vertex.getState()==GridVertex::State::RefinementTriggered) {
@@ -532,12 +527,23 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
   }
 
   sendOutVertexIfAdjacentToDomainBoundary( vertex );
-/*
+
   if ( not isVertexAdjacentToLocalSpacetree(vertex,false,false)) {
+	std::set<int> children = peano4::parallel::Node::getInstance().getChildren(_id);
 	for (int i=0; i<TwoPowerD; i++) {
-      vertex.setAdjacentRanks(i,InvalidRank);
+	  if (
+			  /*
+        vertex.getAdjacentRanks(i)!=_id
+		and
+        vertex.getAdjacentRanks(i)!=_masterId
+		and
+*/
+		children.count( vertex.getAdjacentRanks(i) )==0
+      ) {
+        vertex.setAdjacentRanks(i,InvalidRank);
+	  }
 	}
-  }*/
+  }
 
   logTraceOutWith2Arguments( "updateVertexBeforeStore()", vertex.toString(), _id );
 }

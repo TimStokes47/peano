@@ -134,9 +134,6 @@ class peano4::parallel::SpacetreeSet {
      */
     bool split(int treeId, int cells);
 
-    // @todo Remove/hide
-    // Users should be allowed to move around trees to different ranks but not
-    // to particular ids
     /**
      *
      * @todo Should there be something alike a target rank?

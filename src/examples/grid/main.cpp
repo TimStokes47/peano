@@ -1,3 +1,4 @@
+#include "../../examples/grid/MyObserver.h"
 #include "tarch/logging/Log.h"
 #include "tarch/tests/TestCaseRegistry.h"
 #include "tarch/logging/CommandLineLogger.h"
@@ -6,9 +7,6 @@
 
 #include "peano4/peano.h"
 #include "peano4/grid/Spacetree.h"
-
-
-#include "MyObserver.h"
 
 
 #include "peano4/parallel/SpacetreeSet.h"

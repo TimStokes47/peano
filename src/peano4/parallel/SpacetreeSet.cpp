@@ -186,8 +186,11 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
 	  p->_coarseningHasBeenVetoed
 	  and
 	  not p->mayJoinWithMaster()
+	  and
+	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
     ) {
-      logInfo( "traverse(Observer)", "can't join of tree " << p->_id << " with its master tree " << p->_masterId << ": " << p->toString() );
+      logInfo( "traverse(Observer)", "can't join of tree " << p->_id << " with its master tree " << p->_masterId );
+      logDebug( "traverse(Observer)", "tree: " << p->toString() );
 
       std::set< int > children = peano4::parallel::Node::getInstance().getChildren( p->_id );
       childrenThatShouldMerge.insert( children.begin(), children.end() );
@@ -335,7 +338,7 @@ bool peano4::parallel::SpacetreeSet::move(int sourceTreeId, int targetRank) {
     and
 	sourceTree.mayMove()
   ) {
-	int result = peano4::parallel::Node::getInstance().reserveId(targetRank,sourceTree._masterId);
+	result = peano4::parallel::Node::getInstance().reserveId(targetRank,sourceTree._masterId);
 	if ( result>=0 ) {
       sourceTree.split(result, std::numeric_limits<int>::max());
       logInfo( "move(int,int)", "move tree " << sourceTreeId << " to tree " << result );

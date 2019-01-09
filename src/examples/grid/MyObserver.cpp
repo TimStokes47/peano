@@ -1,5 +1,4 @@
-#include "MyObserver.h"
-
+#include "../../examples/grid/MyObserver.h"
 
 #include "peano4/grid/GridControlEvent.h"
 

@@ -70,7 +70,6 @@ class peano4::parallel::Node {
      * The operation is not thread-safe as we call it only internally,
      * i.e. you are not supposed to call this function directly.
      */
-    // @todo Make private again once the move it successfully done.
     void registerId(int id, int masterId);
 
   public:
