@@ -217,7 +217,7 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 #ifdef USE_ITAC
   VT_end(event_execute);
 #endif
-  return result;
+  return nullptr;
 }
 
 
@@ -392,7 +392,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 
     const int currentlyRunningBackgroundThreads = internal::_numberOfRunningJobConsumerTasks.load();
     if (
-      currentlyRunningBackgroundThreads<=1
+      currentlyRunningBackgroundThreads==0
     ) {
       internal::JobConsumerTask::enqueue();
     }
