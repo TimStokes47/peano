@@ -8,6 +8,8 @@
 #   automake --add-missing
 #
 #
+# Summary:
+#   libtoolize; aclocal; autoconf; autoheader; automake --add-missing
 #
 #
 # Cleanup
@@ -50,14 +52,11 @@ AC_CONFIG_MACRO_DIRS([m4])
 
 # 
 # Checks for libraries.
-# @todo Replace main with a function in `-lpthread':
+#
 AC_CHECK_LIB([pthread], [main])
 
-# Checks for header files.
 
-# Checks for typedefs, structures, and compiler characteristics.
-#AC_CHECK_HEADER_STDBOOL
-
-#AC_CONFIG_FILES([src/Makefile Makefile])
-
+#
+# Kick out makefiles
+#
 AC_OUTPUT(Makefile src/Makefile)
