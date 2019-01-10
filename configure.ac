@@ -2,10 +2,16 @@ AC_PREREQ([2.69])
 AC_INIT([peano], [4.0])
 
 
+#AM_INIT_AUTOMAKE( [foreign -Wall -Werror] )
+
 #
 # This is just a sanity check whether the right files/directories do exist
 #
 AC_CONFIG_SRCDIR([src/peano4/peano.cpp])
+
+#
+# Pipe system-specific findings into a file config.h
+#
 AC_CONFIG_HEADERS([config.h])
 
 # 
