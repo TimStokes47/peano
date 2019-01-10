@@ -132,13 +132,13 @@ class peano4::parallel::SpacetreeSet {
      *
      * @todo Should there be something alike a target rank?
      */
-    bool split(int treeId, int cells);
+    bool split(int treeId, int cells, int targetRank);
 
     /**
      *
      * @todo Should there be something alike a target rank?
      */
-    bool move(int sourceTreeId, int rank);
+    bool move(int sourceTreeId, int targetRank);
 };
 
 #endif

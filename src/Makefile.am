@@ -1,8 +1,8 @@
-pkglib_LTLIBRARIES =  libPeano.la
-
 AUTOMAKE_OPTIONS = subdir-objects
 
-libPeano_la_LDFLAGS = -DPeanoDebug=0
+lib_LTLIBRARIES =  libPeano.la
+
+libPeano_la_LDFLAGS = -DPeanoDebug=0 -static
 
 libPeano_la_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/la/tests/MatrixTest.cpp \
