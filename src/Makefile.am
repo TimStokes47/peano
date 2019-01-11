@@ -1,44 +1,54 @@
 AUTOMAKE_OPTIONS = subdir-objects
+SUBDIRS = examples
 
-lib_LTLIBRARIES =  libTarch.la libTarch_debug.la libPeano4Core.la libPeano4Core_debug.la
 
-#libPeano_la_LDFLAGS = -static
-#libPeano_la_CXXFLAGS = -static
+lib_LTLIBRARIES =  libTarch.la libTarch_debug.la libPeano4Core2d.la libPeano4Core2d_debug.la libPeano4Core3d.la libPeano4Core3d_debug.la
 
-libTarch_la_LDFLAGS = 
+
 libTarch_la_CXXFLAGS = 
+libTarch_la_LDFLAGS = 
 
-libTarch_debug_la_LDFLAGS = 
 libTarch_debug_la_CXXFLAGS = -DPeanoDebug=1 
+libTarch_debug_la_LDFLAGS = 
 
-libPeano4Core_la_LDFLAGS = 
-libPeano4Core_la_CXXFLAGS = 
+libPeano4Core2d_la_CXXFLAGS = -DDimensions=2
+libPeano4Core2d_la_LDFLAGS = 
 
-libPeano4Core_debug_la_LDFLAGS = 
-libPeano4Core_debug_la_CXXFLAGS = -DPeanoDebug=1 
+libPeano4Core2d_debug_la_CXXFLAGS = -DDimensions=2 -DPeanoDebug=1 
+libPeano4Core2d_debug_la_LDFLAGS = 
 
+libPeano4Core3d_la_CXXFLAGS = -DDimensions=3
+libPeano4Core3d_la_LDFLAGS = 
 
-
-
-libPeano4Core_la_SOURCES= OBJS += peano.cpp \
-  grid/GridVertex.cpp \
-  grid/AutomatonState.cpp \
-  grid/Spacetree.cpp \
-  grid/PeanoCurve.cpp \
-  grid/EmptyTraversalObserver.cpp \
-  grid/GridControlEvent.cpp \
-  grid/TraversalVTKPlotter.cpp \
-  grid/GridStatistics.cpp \
-  grid/tests/SpacetreeTest.cpp \
-  parallel/Node.cpp \
-  parallel/Tasks.cpp \
-  parallel/TreeEntry.cpp \
-  parallel/SpacetreeSet.cpp \
-  utils/Loop.cpp
+libPeano4Core3d_debug_la_CXXFLAGS = -DDimensions=3 -DPeanoDebug=1 
+libPeano4Core3d_debug_la_LDFLAGS = 
 
 
 
-libPeano4Core_debug_la_SOURCES= $(libPeano4Core_la_SOURCES)
+
+Peano4Core_SOURCES = peano4/peano.cpp \
+  peano4/grid/GridVertex.cpp \
+  peano4/grid/AutomatonState.cpp \
+  peano4/grid/Spacetree.cpp \
+  peano4/grid/PeanoCurve.cpp \
+  peano4/grid/EmptyTraversalObserver.cpp \
+  peano4/grid/GridControlEvent.cpp \
+  peano4/grid/TraversalVTKPlotter.cpp \
+  peano4/grid/GridStatistics.cpp \
+  peano4/grid/tests/SpacetreeTest.cpp \
+  peano4/parallel/Node.cpp \
+  peano4/parallel/Tasks.cpp \
+  peano4/parallel/TreeEntry.cpp \
+  peano4/parallel/SpacetreeSet.cpp \
+  peano4/utils/Loop.cpp
+
+
+
+libPeano4Core2d_la_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core2d_debug_la_SOURCES = $(Peano4Core_SOURCES)
+
+libPeano4Core3d_la_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core3d_debug_la_SOURCES = $(Peano4Core_SOURCES)
 
 
 libTarch_la_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
