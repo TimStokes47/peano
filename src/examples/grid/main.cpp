@@ -68,14 +68,14 @@ int main(int argc, char** argv) {
     logInfo( "main(...)", "remote refined cells= " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
 
-  spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
-  spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3);
+  spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
+  spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
 
   emptyObserver.startNewSnapshot();
   spacetreeSet.traverse( emptyObserver );
 
   while (
-    not spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2)
+    not spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2,0)
   ) {
     emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
@@ -87,21 +87,21 @@ int main(int argc, char** argv) {
   }
 
   while (
-    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3)
+    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
   ) {
     emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
 
   while (
-    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3)
+    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
   ) {
     emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
 
   while (
-    not spacetreeSet.split(1,10)
+    not spacetreeSet.split(1,10,0)
   ) {
     emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );

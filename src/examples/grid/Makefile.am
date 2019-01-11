@@ -1,37 +1,21 @@
-AUTOMAKE_OPTIONS = subdir-objects
+bin_PROGRAMS = PeanoGrid2d_debug PeanoGrid2d PeanoGrid3d_debug PeanoGrid3d
 
-PROJECT_NAME = grid
-PEANO_ROOT   = /home/tobias/git/Peano/src
-OBJS        += examples/grid/main.o
-OBJS        += examples/grid/MyObserver.o
-DIMENSIONS   = 2
+SOURCES = \
+  main.cpp \
+  MyObserver.cpp
 
--include $(PEANO_ROOT)/peano4/Makefile
--include $(PEANO_ROOT)/tarch/Makefile
+PeanoGrid2d_debug_CXXFLAGS  = -I$(top_builddir)/src -DPeanoDebug=1 -DDimensions=2
+PeanoGrid2d_debug_LDFLAGS   = -L$(top_builddir)/src -lTarch_debug -lPeano4Core2d_debug
+PeanoGrid2d_debug_SOURCES   = $(SOURCES)
 
+PeanoGrid2d_CXXFLAGS  = -I$(top_builddir)/src -DDimensions=2
+PeanoGrid2d_LDFLAGS   = -L$(top_builddir)/src -lTarch -lPeano4Core2d
+PeanoGrid2d_SOURCES   = $(SOURCES)
 
-ifeq ($(BUILD_MODE),release)
-	CFLAGS += --std=c++14 -O3 
-else ifeq ($(BUILD_MODE),profile)
-	CFLAGS += --std=c++14 -O3 -DPeanoDebug=0 -g
-else 
-	CFLAGS += --std=c++14 -g -O3 -DPeanoDebug=2
-endif
+PeanoGrid3d_debug_CXXFLAGS  = -I$(top_builddir)/src -DPeanoDebug=1 -DDimensions=3
+PeanoGrid3d_debug_LDFLAGS   = -L$(top_builddir)/src -lTarch_debug -lPeano4Core3d_debug
+PeanoGrid3d_debug_SOURCES   = $(SOURCES)
 
-
-CFLAGS += -DSharedCPP
-#CFLAGS += -DSharedTBB -I/opt/intel/tbb/include
-LFLAGS += -lpthread
-#LFLAGS += -lpthread -L/opt/intel/tbb/lib/intel64/gcc4.7 -ltbb
-
-
-all:	compile
-
-compile:	$(OBJS)
-	$(CXX) -o Peano-$(PROJECT_NAME) $(LFLAGS) $^
-
-%.o:	%.cpp
-	$(CXX) -DDimensions=$(DIMENSIONS) -I$(PEANO_ROOT) -c $(CFLAGS) $(CXXFLAGS) $(CPPFLAGS) -o $@ $<
-
-clean:
-	rm -fr $(OBJS)
+PeanoGrid3d_CXXFLAGS  = -I$(top_builddir)/src -DDimensions=3
+PeanoGrid3d_LDFLAGS   = -L$(top_builddir)/src -lTarch -lPeano4Core3d
+PeanoGrid3d_SOURCES   = $(SOURCES)

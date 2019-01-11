@@ -1,5 +1,9 @@
 AUTOMAKE_OPTIONS = subdir-objects
-SUBDIRS = examples
+#
+# By default, automake does dfs. We need the libs to be built first however.
+# So we add the . explicitly.
+#
+SUBDIRS = . examples/grid
 
 
 lib_LTLIBRARIES =  libTarch.la libTarch_debug.la libPeano4Core2d.la libPeano4Core2d_debug.la libPeano4Core3d.la libPeano4Core3d_debug.la
