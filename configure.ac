@@ -21,7 +21,7 @@
 AC_PREREQ([2.69])
 AC_INIT(Peano, 4.0)
 
-AM_INIT_AUTOMAKE(foreign -Wall -Werror)
+AM_INIT_AUTOMAKE(foreign -Wall -Werror tar-ustar)
 
 
 #
@@ -59,4 +59,6 @@ AC_CHECK_LIB([pthread], [main])
 #
 # Kick out makefiles
 #
-AC_OUTPUT(Makefile src/Makefile)
+#AC_OUTPUT(Makefile src/Makefile src/peano4/Makefile src/examples/grid/Makefile)
+AC_OUTPUT(src/examples/grid/Makefile src/peano4/Makefile src/Makefile Makefile)
+
