@@ -45,6 +45,17 @@ the directory.
 
 
 
+\section{Debugging}
+\begin{itemize}
+  \item \textbf{gdb says ``not in executable format: file format not
+  recognized''}. automake puts the actual executable into a \texttt{.libs}
+  directory and creates bash scripts invoking those guys. Change into
+  \texttt{.libs} and run gdb directly on the executable.
+  \item To be continued \dots
+\end{itemize}
+
+
+
 
 \section{Programming}
 
