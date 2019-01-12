@@ -14,6 +14,7 @@
 // @todo parallel should be called mpi as namespace
 #include "tarch/parallel/Node.h"
 
+#include "tarch/multicore/Tasks.h"
 
 #include "tarch/multicore/Lock.h"
 
@@ -30,7 +31,7 @@ peano4::parallel::Node::~Node() {
 }
 
 
-bool peano4::parallel::Node::isGlobalMaster(int treeId) const {
+bool peano4::parallel::Node::isGlobalMaster(int treeId) {
   return treeId==0;
 }
 
@@ -141,7 +142,7 @@ peano4::grid::GridVertex peano4::parallel::Node::getVertexSynchronously( int fro
   lock.free();
 
   while ( isEmpty ) {
-    std::this_thread::sleep_for (std::chrono::seconds(1));
+    tarch::multicore::yield();
     lock.lock();
     isEmpty = _sendReceiveBuffer[key].empty();
 	lock.free();

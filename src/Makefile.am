@@ -10,22 +10,22 @@ lib_LTLIBRARIES =  libTarch.la libTarch_debug.la libPeano4Core2d.la libPeano4Cor
 
 
 libTarch_la_CXXFLAGS = 
-libTarch_la_LDFLAGS = 
+libTarch_la_LDFLAGS =  
 
-libTarch_debug_la_CXXFLAGS = -DPeanoDebug=1 
-libTarch_debug_la_LDFLAGS = 
+libTarch_debug_la_CXXFLAGS = -DPeanoDebug=1 -g3 
+libTarch_debug_la_LDFLAGS =  -g3
 
 libPeano4Core2d_la_CXXFLAGS = -DDimensions=2
-libPeano4Core2d_la_LDFLAGS = 
+libPeano4Core2d_la_LDFLAGS =  
 
-libPeano4Core2d_debug_la_CXXFLAGS = -DDimensions=2 -DPeanoDebug=1 
-libPeano4Core2d_debug_la_LDFLAGS = 
+libPeano4Core2d_debug_la_CXXFLAGS = -DDimensions=2 -DPeanoDebug=1 -g3
+libPeano4Core2d_debug_la_LDFLAGS =   -g3
 
 libPeano4Core3d_la_CXXFLAGS = -DDimensions=3
 libPeano4Core3d_la_LDFLAGS = 
 
-libPeano4Core3d_debug_la_CXXFLAGS = -DDimensions=3 -DPeanoDebug=1 
-libPeano4Core3d_debug_la_LDFLAGS = 
+libPeano4Core3d_debug_la_CXXFLAGS = -DDimensions=3 -DPeanoDebug=1 -g3
+libPeano4Core3d_debug_la_LDFLAGS =  -g3
 
 
 

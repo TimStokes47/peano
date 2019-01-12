@@ -125,12 +125,20 @@ class peano4::parallel::SpacetreeSet {
     /**
      * Does exist for debug reasons. Usually not used by codes.
      *
-     * If yo split a tree, please note that trees go through two states: split
+     * If you split a tree, please note that trees go through two states: split
      * triggered and splitting. In the latter case, you may split again once
      * more. Throughout the split-triggered, the tree does not physically exist
      * yet and you are thus not allowed to split it further.
      *
-     * @todo Should there be something alike a target rank?
+     * If the target tree shall be stored on the local node, then you
+     * may wanna pass
+     *
+     * <pre>
+      peano4::parallel::Node::getInstance().getRank(treeId)
+       </pre>
+     * as last argument. Splits on the local node allow Peano to exploit more
+     * cores on the node.
+     *
      */
     bool split(int treeId, int cells, int targetRank);
 

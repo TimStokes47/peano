@@ -1,9 +1,8 @@
 #include "../../examples/grid/MyObserver.h"
 
 #include "peano4/grid/GridControlEvent.h"
+#include "peano4/parallel/Node.h"
 
-
-//    TraversalVTKPlotter( const std::string& filename, int treeId=-1, int counter=0 );
 
 applications4::grid::MyObserver::MyObserver(int spacetreeId, int counter):
   #if PeanoDebug>0
@@ -11,7 +10,6 @@ applications4::grid::MyObserver::MyObserver(int spacetreeId, int counter):
   #endif
   _iterationCounter(counter)
   {
-
 }
 
 
@@ -101,6 +99,10 @@ peano4::grid::TraversalObserver* applications4::grid::MyObserver::clone(int spac
   #if PeanoDebug>0
   if (_spacetreeId==-1) {
 	updateMetaFile( spacetreeId );
+  }
+
+  if (peano4::parallel::Node::isGlobalMaster(spacetreeId)) {
+    startNewSnapshot();
   }
 
   return new MyObserver( spacetreeId, TraversalVTKPlotter::_counter );

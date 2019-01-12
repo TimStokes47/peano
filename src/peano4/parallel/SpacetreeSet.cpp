@@ -300,7 +300,7 @@ void peano4::parallel::SpacetreeSet::join(int treeId) {
 }
 
 
-bool peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
+bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank) {
   peano4::grid::Spacetree&  tree = getSpacetree( treeId );
 
   if ( tree.maySplit() ) {
@@ -308,6 +308,12 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells) {
       peano4::parallel::Node::getInstance().getRank(treeId),
       treeId
     );
+
+    #if !defined(SharedMemoryPallelisation)
+    if ( peano4::parallel::Node::getInstance().getRank(treeId) == targetRank ) {
+      logWarning( "split(int,int)", "code tries to split up tree into two trees on rank " << targetRank << " even though no multithreading enabled. This might lead to deadlocks" );
+    }
+    #endif
 
     if (newSpacetreeId>=0) {
       tree.split(newSpacetreeId, cells);
@@ -325,7 +331,7 @@ peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
 	if (p._id==id) return p;
   }
   assertion2( false, "no spacetree found", id );
-  _spacetrees.begin(); // just here to avoid warning
+  return *_spacetrees.begin(); // just here to avoid warning
 }
 
 

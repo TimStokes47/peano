@@ -50,7 +50,12 @@ the directory.
   \item \textbf{gdb says ``not in executable format: file format not
   recognized''}. automake puts the actual executable into a \texttt{.libs}
   directory and creates bash scripts invoking those guys. Change into
-  \texttt{.libs} and run gdb directly on the executable.
+  \texttt{.libs} and run gdb directly on the executable. Before you do so,
+  ensure that \texttt{LD\_LIBRARY\_Path} points to the directory containing the
+  libraries. Again, those guys are stored in a \texttt{.libs} subdirectory, so
+  the library path should point to that subdirectory. Most of these tweaks
+  should not be necessary if you install Peano properly through \texttt{make
+  install}.
   \item To be continued \dots
 \end{itemize}
 

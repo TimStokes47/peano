@@ -55,7 +55,6 @@ int main(int argc, char** argv) {
 
   for (int i=0; i<3; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-	emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
 
     logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
@@ -71,45 +70,38 @@ int main(int argc, char** argv) {
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
 
-  emptyObserver.startNewSnapshot();
   spacetreeSet.traverse( emptyObserver );
 
   while (
     not spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2,0)
   ) {
-    emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
 
   while ( not spacetreeSet.move(2, 0) ) {
-    emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
 
   while (
     not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
   ) {
-    emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
 
   while (
     not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
   ) {
-    emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
 
   while (
     not spacetreeSet.split(1,10,0)
   ) {
-    emptyObserver.startNewSnapshot();
     spacetreeSet.traverse( emptyObserver );
   }
 
   for (int i=0; i<30; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
-	emptyObserver.startNewSnapshot();
 
     spacetreeSet.traverse( emptyObserver );
 

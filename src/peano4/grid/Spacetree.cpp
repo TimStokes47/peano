@@ -477,7 +477,7 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
   GridVertex                                coarseGridVertices[TwoPowerD],
   const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch
 ) {
-  logTraceInWith2Arguments( "updateVertexBeforeStore(GridVertex&)", vertex.toString(), _id );
+  logTraceInWith2Arguments( "updateVertexBeforeStore()", vertex.toString(), _id );
 
   if (
     vertex.getNumberOfAdjacentRefinedLocalCells()==TwoPowerD
@@ -640,13 +640,11 @@ void peano4::grid::Spacetree::loadVertices(
     const std::bitset<Dimensions>           vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
     const tarch::la::Vector<Dimensions,int> vertexPositionWithinPatch = cellPositionWithin3x3Patch + convertToIntegerVector(vertexIndex);
 
-    #ifdef PeanoDebug
     const tarch::la::Vector<Dimensions,double> x = fineGridStatesState.getX()
       + tarch::la::multiplyComponents(
           convertToIntegerVector(vertexIndex).convertScalar<double>(),
 		  fineGridStatesState.getH()
 	    );
-    #endif
 
     VertexType type        = getVertexType(coarseGridVertices,vertexPositionWithinPatch);
     const int  stackNumber = PeanoCurve::getReadStackNumber(fineGridStatesState,vertexIndex);

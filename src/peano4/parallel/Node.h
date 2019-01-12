@@ -89,7 +89,7 @@ class peano4::parallel::Node {
     /**
      * Is this the global master?
      */
-    bool isGlobalMaster(int treeId) const;
+    static bool isGlobalMaster(int treeId);
 
     /**
      * This operation is not const as it does some internal bookkeeping. It

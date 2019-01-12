@@ -19,6 +19,16 @@ namespace peano4 {
 }
 
 
+/**
+ *
+ * <h2> Copy behaviour </h2>
+ *
+ * There is one observer by grid traversal thread and per rank. The observers
+ * are generated from the original observer via the clone() operator.
+ * Therefore, you never should be required to write a copy constructor. If you
+ * run without multithreading but with MPI, you still have to use a
+ * SpacetreeSet. The code therefore continues to copy observers.
+ */
 class peano4::grid::TraversalObserver {
   public:
 	virtual void beginTraversal() = 0;
@@ -43,6 +53,22 @@ class peano4::grid::TraversalObserver {
 	 * I use the clone to create one observer object per traversal thread. So
 	 * between different spacetrees of one spacetree set, there can be no race
 	 * condition. Yet, the clone() itself could be called in parallel.
+	 *
+	 * <h2> Global per-sweep actions </h2>
+	 *
+	 * If you want to implement an operation once per sweep in a parallel
+	 * environment, then you can exploit the fact that the spacetree set also
+	 * creates an observer for the global master thread, i.e. tree no 0. So if
+	 * you add a statement alike
+	 *
+	 * <pre>
+  if (peano4::parallel::Node::isGlobalMaster(spacetreeId)) {
+    ...
+  }
+	   </pre>
+	 *
+	 * then you can be sure that the branch body is executed only once globally
+	 * per grid sweep.
 	 */
 	virtual TraversalObserver* clone(int spacetreeId) = 0;
 

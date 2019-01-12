@@ -10,6 +10,13 @@
 
 namespace tarch {
   namespace multicore {
+
+    /**
+     * Tells task/thread to yield, i.e. to allow other tasks/threads to run.
+     * Typically to be used within busy-waiting/polling loops.
+     */
+    void yield();
+
     /**
      * Jobs are Peano's abstraction of tasks. They generalise the
      * term tasks. A task in Peano's notion follows Intel's TBB and is an
