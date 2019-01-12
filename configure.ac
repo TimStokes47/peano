@@ -80,8 +80,19 @@ AC_ARG_ENABLE(
   ]
 )
 
+
+
+#AC_CHECK_HEADERS([limits.h unistd.h])
+
+
 if test "$multithreading" == cpp; then
   AC_DEFINE([SharedCPP], ["Shared memory parallelisation"], [SharedCPP])
+  AC_SEARCH_LIBS(pthread_create,pthread)
+  #AC_LDFLAGS += -lpthreads
+  #PKG_CHECK_MODULES([GLIB],[])
+  #AC_SEARCH_LIBS([], [pthreads], [], [
+  #  AC_MSG_ERROR([library pthreads not found]), [])
+  #AC_DEFINE([SharedCPP], [], [SharedCPP])
 fi
 
 if test "$multithreading" == tbb; then
