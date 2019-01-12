@@ -1,8 +1,9 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#if SharedCPP
+#include "tarch/multicore/MulticoreDefinitions.h"
+#if defined(SharedCPP)
   #include "cpp/BooleanSemaphore.h"
-#elif SharedTBB
+#elif defined(SharedTBB)
   #include "tbb/BooleanSemaphore.h"
 #elif !defined(_TARCH_MULTICORE_BOOLEAN_SEMAPHORE_H_)
 #define _TARCH_MULTICORE_BOOLEAN_SEMAPHORE_H_

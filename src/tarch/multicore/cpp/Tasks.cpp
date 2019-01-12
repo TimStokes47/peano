@@ -1,18 +1,18 @@
 #include "tarch/Assertions.h"
-
-
-#include <thread>
-#include <queue>
 #include "../Tasks.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 
 
 #ifdef SharedCPP
+#include <thread>
+#include <queue>
 
 namespace {
   std::queue<tarch::multicore::Task* > backgroundJobs;
 }
 
+
+yield fehlt noch
 
 bool tarch::multicore::processPendingTasks() {
   // Note: Only invoked if no shared memory parallelisation activated. If

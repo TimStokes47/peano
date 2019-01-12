@@ -1,3 +1,12 @@
 *.o
 /build/
 /Makefile
+/config.h
+/config.h.in
+/libPeano4Core2d.la
+/libPeano4Core2d_debug.la
+/libPeano4Core3d.la
+/libPeano4Core3d_debug.la
+/libTarch.la
+/libTarch_debug.la
+/Makefile.in

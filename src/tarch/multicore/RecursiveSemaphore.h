@@ -1,8 +1,8 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#if SharedCPP
+#if defined(SharedCPP)
   #include "cpp/RecursiveSemaphore.h"
-#elif SharedTBB
+#elif defined(SharedTBB)
   #include "tbb/RecursiveSemaphore.h"
 #elif !defined(_TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_)
 #define _TARCH_MULTICORE_RECURSIVE_SEMAPHORE_H_

@@ -7,7 +7,6 @@
 // shared memory parallelisation are active
 
 #if !defined(SharedMemoryParallelisation)
-
 tarch::multicore::BooleanSemaphore::BooleanSemaphore() {
 }
 

@@ -5,6 +5,7 @@
 #include "tarch/Assertions.h"
 
 #include "tarch/multicore/Lock.h"
+#include "tarch/multicore/MulticoreDefinitions.h"
 
 #include <sstream>
 #include <fstream>

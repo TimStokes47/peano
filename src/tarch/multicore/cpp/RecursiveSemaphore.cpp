@@ -1,6 +1,7 @@
-#ifdef SharedCPP
 #include "RecursiveSemaphore.h"
 
+
+#ifdef SharedCPP
 
 tarch::multicore::RecursiveSemaphore::RecursiveSemaphore() {
 }

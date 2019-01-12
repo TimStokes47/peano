@@ -3,6 +3,8 @@
 #ifndef _TARCH_MULTICORE_DEFINITIONS_H_
 #define _TARCH_MULTICORE_DEFINITIONS_H_
 
+#include "config.h"
+
 #if defined(SharedOMP) || defined(SharedTBB) || defined(SharedCPP)
   #define SharedMemoryParallelisation
 #endif
