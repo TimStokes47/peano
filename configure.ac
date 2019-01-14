@@ -53,7 +53,6 @@ AC_CONFIG_MACRO_DIRS([m4])
 # Checks for programs.
 #
 AC_PROG_CXX
-AX_CXX_COMPILE_STDCXX_11(,mandatory)
 
 
 # Think I do not need a C compiler
@@ -65,16 +64,16 @@ AX_CXX_COMPILE_STDCXX_11(,mandatory)
 #
 # The result is stored in a variable multithreading
 #
-AC_ARG_ENABLE(
+AC_ARG_WITH(
   multithreading, 
-  AC_HELP_STRING([--enable-multithreading], [switch on multithreading [default=no,cpp,tbb,openmp]]),
+  AC_HELP_STRING([--with-multithreading], [switch on multithreading [default=no,cpp,tbb,openmp]]),
   [
     AC_MSG_CHECKING(for multithreading)
-    case "${enableval}" in
+    case "${withval}" in
       no)     AC_MSG_RESULT([no multithreading]);                    multithreading=false ;;
       cpp)    AC_MSG_RESULT([cpp (C++11)]);                          multithreading=cpp ;;
       tbb)    AC_MSG_RESULT([tbb (Intel Threading Building Blocks]); multithreading=tbb ;;
-      *)      AC_MSG_RESULT([default=no (no multithreading). Use cpp or tbb to define target]);            multithreading=false ;;
+      *)      AC_MSG_FAILURE([default=no (no multithreading). Use cpp or tbb to define target]);            multithreading=false ;;
     esac
   ], 
   [ 
@@ -96,31 +95,24 @@ fi
 
 
 
-
-AC_ARG_ENABLE(mpi,
-  AC_HELP_STRING([--enable-mpi], [switch on distributed memory parallelisation [default=false, true]]),
-  [ AC_MSG_CHECKING(for MPI)
-    case "${enableval}" in
-      no)    AC_MSG_RESULT(no);  mpi=false ;;
-      yes)   AC_MSG_RESULT(yes); mpi=true ;;
-      *)     AC_MSG_RESULT([default=no (no mpi). Use yes or no]);            mpi=false ;;
+AC_ARG_WITH(mpi,
+  AC_HELP_STRING([--with-mpi], [switch on distributed memory parallelisation [default=no, mpiCC command]]),
+  [ AC_MSG_CHECKING(for mpi)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);                              mpi=false ;;
+      *)     AC_MSG_RESULT(use mpi c++ command ${withval});  mpi=${withval}  ;;
     esac ],
-  [ AC_MSG_CHECKING(for MPI); AC_MSG_RESULT(no); mpi=false ])
+  [ AC_MSG_CHECKING(for mpi); AC_MSG_RESULT(no); mpi=false ])
+  
 
-
-if test "$mpi" == true; then
+if test "$mpi" != false; then
+  CXX=$mpi
   AC_DEFINE([Parallel], ["Distributed memory parallelisation"], [Parallel])
-  AC_DEFINE([USING__MPI], "1", [using MPI])
-  AX_PROG_CXX_MPI([test "$mpi" == true], [use_mpi=yes],
-    [AC_MSG_FAILURE([MPI compiler not found.])])
-  #AS_AC_EXPAND(LOADMPIFORPY,from mpi4py import MPI)
-else
-  AC_PROG_CXX
-  #AS_AC_EXPAND(LOADMPIFORPY,)
 fi
-#AM_CONDITIONAL(USING__MPI, test "$mpi" = "true" )
 
+# CXX=
 
+  
 #
 # Kick out makefiles
 #
