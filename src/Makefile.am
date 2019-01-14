@@ -6,26 +6,27 @@ AUTOMAKE_OPTIONS = subdir-objects
 SUBDIRS = . examples/grid
 
 
-lib_LTLIBRARIES =  libTarch.la libTarch_debug.la libPeano4Core2d.la libPeano4Core2d_debug.la libPeano4Core3d.la libPeano4Core3d_debug.la
+lib_LIBRARIES =  libTarch.a libTarch_debug.a libPeano4Core2d.a libPeano4Core2d_debug.a libPeano4Core3d.a libPeano4Core3d_debug.a
+#lib_LTLIBRARIES =  libTarch.a libTarch_debug.a libPeano4Core2d.a libPeano4Core2d_debug.a libPeano4Core3d.a libPeano4Core3d_debug.a
 
 
-libTarch_la_CXXFLAGS = 
-libTarch_la_LDFLAGS =  
+libTarch_a_CXXFLAGS = 
+#libTarch_a_LDFLAGS =  
 
-libTarch_debug_la_CXXFLAGS = -DPeanoDebug=1 -g3 
-libTarch_debug_la_LDFLAGS =  -g3
+libTarch_debug_a_CXXFLAGS = -DPeanoDebug=1 -g3 
+#libTarch_debug_a_LDFLAGS =  -g3
 
-libPeano4Core2d_la_CXXFLAGS = -DDimensions=2
-libPeano4Core2d_la_LDFLAGS =  
+libPeano4Core2d_a_CXXFLAGS = -DDimensions=2
+#libPeano4Core2d_a_LDFLAGS =  
 
-libPeano4Core2d_debug_la_CXXFLAGS = -DDimensions=2 -DPeanoDebug=1 -g3
-libPeano4Core2d_debug_la_LDFLAGS =   -g3
+libPeano4Core2d_debug_a_CXXFLAGS = -DDimensions=2 -DPeanoDebug=1 -g3
+#libPeano4Core2d_debug_a_LDFLAGS =   -g3
 
-libPeano4Core3d_la_CXXFLAGS = -DDimensions=3
-libPeano4Core3d_la_LDFLAGS = 
+libPeano4Core3d_a_CXXFLAGS = -DDimensions=3
+#libPeano4Core3d_a_LDFLAGS = 
 
-libPeano4Core3d_debug_la_CXXFLAGS = -DDimensions=3 -DPeanoDebug=1 -g3
-libPeano4Core3d_debug_la_LDFLAGS =  -g3
+libPeano4Core3d_debug_a_CXXFLAGS = -DDimensions=3 -DPeanoDebug=1 -g3
+#libPeano4Core3d_debug_a_LDFLAGS =  -g3
 
 
 
@@ -48,14 +49,14 @@ Peano4Core_SOURCES = peano4/peano.cpp \
 
 
 
-libPeano4Core2d_la_SOURCES = $(Peano4Core_SOURCES)
-libPeano4Core2d_debug_la_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core2d_a_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core2d_debug_a_SOURCES = $(Peano4Core_SOURCES)
 
-libPeano4Core3d_la_SOURCES = $(Peano4Core_SOURCES)
-libPeano4Core3d_debug_la_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core3d_a_SOURCES = $(Peano4Core_SOURCES)
+libPeano4Core3d_debug_a_SOURCES = $(Peano4Core_SOURCES)
 
 
-libTarch_la_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
+libTarch_a_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/la/tests/MatrixTest.cpp \
  tarch/la/tests/ScalarTest.cpp \
  tarch/la/tests/GramSchmidtTest.cpp \
@@ -133,6 +134,6 @@ libTarch_la_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/services/ServiceRepository.cpp 
 
 
-libTarch_debug_la_SOURCES= $(libTarch_la_SOURCES)
+libTarch_debug_a_SOURCES= $(libTarch_la_SOURCES)
 
 
