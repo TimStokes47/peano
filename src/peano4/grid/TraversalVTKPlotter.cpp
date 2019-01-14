@@ -23,11 +23,6 @@ peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filen
   _spacetreeIdWriter(nullptr),
   _coreWriter(nullptr),
   _timeSeriesWriter() {
-  _writer            = new tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter();
-  _vertexWriter      = _writer->createVertexWriter();
-  _cellWriter        = _writer->createCellWriter();
-  _spacetreeIdWriter = _writer->createCellDataWriter( "tree-id", 1 );
-  _coreWriter        = _writer->createCellDataWriter( "core-number", 1 );
 }
 
 
@@ -36,11 +31,28 @@ peano4::grid::TraversalVTKPlotter::~TraversalVTKPlotter() {
 }
 
 
+void peano4::grid::TraversalVTKPlotter::openFile() {
+  if (_writer==nullptr) {
+    _writer            = new tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter();
+    _vertexWriter      = _writer->createVertexWriter();
+    _cellWriter        = _writer->createCellWriter();
+    _spacetreeIdWriter = _writer->createCellDataWriter( "tree-id", 1 );
+    _coreWriter        = _writer->createCellDataWriter( "core-number", 1 );
+  }
+}
+
+
 void peano4::grid::TraversalVTKPlotter::beginTraversal() {
+  openFile();
 }
 
 
 void peano4::grid::TraversalVTKPlotter::endTraversal() {
+  closeFile();
+}
+
+
+void peano4::grid::TraversalVTKPlotter::closeFile() {
   if (_writer!=nullptr) {
     _vertexWriter->close();
     _cellWriter->close();
@@ -85,19 +97,23 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
     int vertexIndices[TwoPowerD];
 
     dfor2(k)
+      assertion( _vertexWriter!=nullptr );
       vertexIndices[kScalar] = _vertexWriter->plotVertex(
         x + tarch::la::multiplyComponents( k.convertScalar<double>(), h )
       );
     enddforx
 
+	assertion( _cellWriter!=nullptr );
 	int cellIndex = -1;
     #if Dimensions==2
     cellIndex = _cellWriter->plotQuadrangle(vertexIndices);
     #elif Dimensions==3
     #else
-    #warning Noch net implementiert
+    cellIndex = _cellWriter->plotHexahedron(vertexIndices);
     #endif
 
+    assertion( _spacetreeIdWriter!=nullptr );
+    assertion( _coreWriter!=nullptr );
     _spacetreeIdWriter->plotCell(cellIndex,treeId);
     _coreWriter->plotCell(cellIndex,tarch::multicore::Core::getInstance().getCoreNumber());
   }
@@ -114,12 +130,13 @@ void peano4::grid::TraversalVTKPlotter::leaveCell(
 }
 
 
-void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
+void peano4::grid::TraversalVTKPlotter::updateMetaFile() {
   static tarch::multicore::BooleanSemaphore semaphore;
   tarch::multicore::Lock lock(semaphore);
 
-  std::string newFile = _filename + "-" + std::to_string(spacetreeId) + "-" + std::to_string( _counter );
+  std::string newFile = _filename + "-" + std::to_string(_spacetreeId) + "-" + std::to_string( _counter );
   _clonedSpacetreeIds.push_back( newFile );
+  assertion1( _writer!=nullptr, _spacetreeId );
   _writer->writeMetaDataFileForParallelSnapshot(
      _filename + "-" + std::to_string( _counter ),
     _clonedSpacetreeIds
@@ -128,26 +145,27 @@ void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
 
 
 peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int spacetreeId) {
-  if (_spacetreeId==-1) {
-	updateMetaFile( spacetreeId );
-  }
-  else {
-	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
-  }
-
-
-  return new peano4::grid::TraversalVTKPlotter(
+  peano4::grid::TraversalVTKPlotter* result = new peano4::grid::TraversalVTKPlotter(
     _filename,
 	spacetreeId,
 	_counter
   );
+
+  if (_spacetreeId!=-1) {
+	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
+  }
+
+  result->openFile();
+  result->updateMetaFile();
+
+  return result;
 }
 
 
-void peano4::grid::TraversalVTKPlotter::startNewSnapshot() {
+void peano4::grid::TraversalVTKPlotter::startNewSnapshot(bool isParallelRun) {
   _counter++;
 
-  _timeSeriesWriter.addSnapshot( _filename + "-" + std::to_string( _counter ), _counter );
+  _timeSeriesWriter.addSnapshot( _filename + "-" + std::to_string( _counter ), _counter, isParallelRun );
   _timeSeriesWriter.writeFile( _filename );
 
   _clonedSpacetreeIds.clear();

@@ -104,7 +104,9 @@ class tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter:
     virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex );
 
     /**
-     *
+     * This can be called on any writer (if there are multiple ones in a
+     * parallel run), but it cannot be static, as I have to know the unknown
+     * identifiers, e.g.
      */
     void writeMetaDataFileForParallelSnapshot(
       const std::string& metaDataFilename,

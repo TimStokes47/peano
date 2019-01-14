@@ -12,7 +12,11 @@ namespace {
 }
 
 
-yield fehlt noch
+
+void tarch::multicore::yield() {
+  std::this_thread::yield();
+}
+
 
 bool tarch::multicore::processPendingTasks() {
   // Note: Only invoked if no shared memory parallelisation activated. If

@@ -97,15 +97,20 @@ void applications4::grid::MyObserver::leaveCell(
 
 peano4::grid::TraversalObserver* applications4::grid::MyObserver::clone(int spacetreeId) {
   #if PeanoDebug>0
-  if (_spacetreeId==-1) {
-	updateMetaFile( spacetreeId );
+  MyObserver* result = new MyObserver( spacetreeId, TraversalVTKPlotter::_counter );
+
+  if (_spacetreeId!=-1) {
+	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
   }
+
+  result->openFile();
+  result->updateMetaFile();
 
   if (peano4::parallel::Node::isGlobalMaster(spacetreeId)) {
-    startNewSnapshot();
+    startNewSnapshot(true);
   }
 
-  return new MyObserver( spacetreeId, TraversalVTKPlotter::_counter );
+  return result;
   #else
   return new MyObserver( spacetreeId, 0 );
   #endif

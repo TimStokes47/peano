@@ -90,6 +90,11 @@ void tarch::multicore::spawnAndWait(
 }
 
 
+/**
+ * This has to be the standard C++ implementation. Even if multithreading is
+ * disabled, the code might logically run with multiple threads, and then we
+ * have to switch the thread context from time to time.
+ */
 void tarch::multicore::yield() {
   std::this_thread::yield();
 }

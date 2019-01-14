@@ -16,7 +16,7 @@ tarch::plotter::griddata::VTUTimeSeriesWriter::VTUTimeSeriesWriter() {
 }
 
 
-void tarch::plotter::griddata::VTUTimeSeriesWriter::addSnapshot(const std::string& snapshotFileName, double time) {
+void tarch::plotter::griddata::VTUTimeSeriesWriter::addSnapshot(const std::string& snapshotFileName, double time, bool parallelRun) {
   _out << "<DataSet timestep=\"" << time << "\" group=\"\" part=\"0\" file=\"";
 
   if (snapshotFileName.find("/")!=std::string::npos) {
@@ -26,7 +26,12 @@ void tarch::plotter::griddata::VTUTimeSeriesWriter::addSnapshot(const std::strin
     _out << snapshotFileName;
   }
 
-  _out << ".pvtu" << "\"/>" << std::endl;
+  if (parallelRun) {
+    _out << ".pvtu" << "\"/>" << std::endl;
+  }
+  else {
+    _out << ".vtu" << "\"/>" << std::endl;
+  }
 }
 
 

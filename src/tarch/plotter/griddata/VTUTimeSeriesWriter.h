@@ -33,7 +33,7 @@ class tarch::plotter::griddata::VTUTimeSeriesWriter {
     /**
      * Add a new snapshot. Please pass full name incl. extension.
      */
-    void addSnapshot(const std::string& snapshotFileName, double time);
+    void addSnapshot(const std::string& snapshotFileName, double time, bool parallelRun);
 
     /**
      * This is the name of the VTU file. It has nothing to do with the actual

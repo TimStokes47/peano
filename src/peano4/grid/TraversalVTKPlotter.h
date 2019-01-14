@@ -38,7 +38,9 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
     const int                                                                        _spacetreeId;
     int                                                                              _counter;
 
-    void updateMetaFile(int spacetreeId);
+    void updateMetaFile();
+    void closeFile();
+    void openFile();
 
   private:
     tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter*                  _writer;
@@ -91,7 +93,10 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 	 */
 	TraversalObserver* clone(int spacetreeId) override;
 
-	void startNewSnapshot();
+	/**
+	 * @return Name of the meta file that has to link to all of the actual data files
+	 */
+	void startNewSnapshot(bool isParallelRun);
 	std::vector< GridControlEvent > getGridControlEvents() override;
 };
 
