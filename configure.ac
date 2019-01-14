@@ -9,24 +9,27 @@
 #
 #
 # Summary:
-#   libtoolize; aclocal; autoconf; autoheader; automake --add-missing
+#   libtoolize; aclocal; autoconf; autoheader; cp src/config.h.in .; automake --add-missing
 #
 #
 # Cleanup
 # -------
-#   rm -rf aclocal.m4 compile config.* configure *sh Makefile Makefile.in missing stamp* ar-lib autom4te.cache *.log libtool depcomp *.scan m4 
+#   rm -rf aclocal.m4 compile src/config.* configure *sh Makefile Makefile.in missing stamp* ar-lib autom4te.cache *.log libtool depcomp *.scan  
 #  
 #
 #
-AC_PREREQ([2.69])
 AC_INIT(Peano, 4.0)
+AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE(foreign -Wall -Werror tar-ustar)
-
+AM_INIT_AUTOMAKE(foreign -Wall -Werror)
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([src/config.h])
+
+AC_CANONICAL_BUILD
+
+AC_PROG_INSTALL
+AC_PROG_MAKE_SET
 
 #
 # This is just a sanity check whether the right files/directories do exist
@@ -50,8 +53,7 @@ AC_CONFIG_MACRO_DIRS([m4])
 # Checks for programs.
 #
 AC_PROG_CXX
-# Switches off my multithreading feature if I add it.
-#AX_CXX_COMPILE_STDCXX_11()
+AX_CXX_COMPILE_STDCXX_11(,mandatory)
 
 
 # Think I do not need a C compiler
@@ -65,19 +67,19 @@ AC_PROG_CXX
 #
 AC_ARG_ENABLE(
   multithreading, 
-  AC_HELP_STRING([--enable-multithreading], [switch on multithreading [default=false,cpp,tbb,openmp]]),
+  AC_HELP_STRING([--enable-multithreading], [switch on multithreading [default=no,cpp,tbb,openmp]]),
   [
     AC_MSG_CHECKING(for multithreading)
     case "${enableval}" in
-      false)  AC_MSG_RESULT([false (no multithreading)]);            multithreading=false ;;
+      no)     AC_MSG_RESULT([no multithreading]);                    multithreading=false ;;
       cpp)    AC_MSG_RESULT([cpp (C++11)]);                          multithreading=cpp ;;
       tbb)    AC_MSG_RESULT([tbb (Intel Threading Building Blocks]); multithreading=tbb ;;
-      *)      AC_MSG_RESULT([default=false (no multithreading). Use cpp or tbb to define target]);            multithreading=false ;;
+      *)      AC_MSG_RESULT([default=no (no multithreading). Use cpp or tbb to define target]);            multithreading=false ;;
     esac
   ], 
   [ 
     AC_MSG_CHECKING(for multithreading); 
-    AC_MSG_RESULT(false); multithreading=false
+    AC_MSG_RESULT(no); multithreading=false
   ]
 )
 
@@ -95,31 +97,28 @@ fi
 
 
 
-AC_ARG_ENABLE(
-  mpi, 
+AC_ARG_ENABLE(mpi,
   AC_HELP_STRING([--enable-mpi], [switch on distributed memory parallelisation [default=false, true]]),
-  [
-    AC_MSG_CHECKING(for mpi)
+  [ AC_MSG_CHECKING(for MPI)
     case "${enableval}" in
-      false)  AC_MSG_RESULT([no (no mpi)]);        mpi=false ;;
-      true)   AC_MSG_RESULT([true (with mpi)]);    mpi=true ;;
-      *)      AC_MSG_RESULT([true (with mpi)]);    mpi=true ;;
-    esac
-  ], 
-  [ 
-    AC_MSG_CHECKING(for mpi); 
-    AC_MSG_RESULT(false); mpi=false
-  ]
-)
+      no)    AC_MSG_RESULT(no);  mpi=false ;;
+      yes)   AC_MSG_RESULT(yes); mpi=true ;;
+      *)     AC_MSG_RESULT([default=no (no mpi). Use yes or no]);            mpi=false ;;
+    esac ],
+  [ AC_MSG_CHECKING(for MPI); AC_MSG_RESULT(no); mpi=false ])
 
 
 if test "$mpi" == true; then
   AC_DEFINE([Parallel], ["Distributed memory parallelisation"], [Parallel])
-  #AC_SEARCH_LIBS(MPI_Init,mpi)
-  #AX_PROG_CXX_MPI([test x"$mpi" = "true"], [],
-  #  [])
+  AC_DEFINE([USING__MPI], "1", [using MPI])
+  AX_PROG_CXX_MPI([test "$mpi" == true], [use_mpi=yes],
+    [AC_MSG_FAILURE([MPI compiler not found.])])
+  #AS_AC_EXPAND(LOADMPIFORPY,from mpi4py import MPI)
+else
+  AC_PROG_CXX
+  #AS_AC_EXPAND(LOADMPIFORPY,)
 fi
-
+#AM_CONDITIONAL(USING__MPI, test "$mpi" = "true" )
 
 
 #
