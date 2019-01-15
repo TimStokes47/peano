@@ -1,13 +1,13 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _TARCH_PARALLEL_NODE_H_
-#define _TARCH_PARALLEL_NODE_H_
+#ifndef _TARCH_MPI_RANK_H_
+#define _TARCH_MPI_RANK_H_
 
 
-#include "tarch/parallel/MPIConstants.h"
 #include "tarch/logging/Log.h"
 
 #include <ctime>
+#include "mpi.h"
 
 
 #ifdef Parallel
@@ -21,8 +21,8 @@
 
 
 namespace tarch {
-  namespace parallel {
-    class Node;
+  namespace mpi {
+    class Rank;
 
     /**
      * Returns a string representation of the mpi status. For a detailed
@@ -62,7 +62,7 @@ namespace tarch {
  * @author Tobias Weinzierl
  * @version $Revision: 1.51 $
  */
-class tarch::parallel::Node {
+class tarch::mpi::Rank {
   public:
     static const int DEADLOCK_EXIT_CODE = -2;
   private:
@@ -105,12 +105,12 @@ class tarch::parallel::Node {
      * checks whether the program is compiled using the -DParallel option.
      * If this is not the case, a warning is logged.
      */
-    Node();
+    Rank();
 
     /**
      * The copy constructor is private.
      */
-    Node( const Node& node );
+    Rank( const Rank& node );
 
     /**
      * Receive any Message Pending in the MPI/Receive Buffers
@@ -160,12 +160,12 @@ class tarch::parallel::Node {
      *
      * @return The singleton instance
      */
-    static Node& getInstance();
+    static Rank& getInstance();
 
     /**
      * The standard destructor calls MPI_Finalize().
      */
-    virtual ~Node();
+    virtual ~Rank();
 
     /**
      * This operation initializes the MPI environment and the program instance.

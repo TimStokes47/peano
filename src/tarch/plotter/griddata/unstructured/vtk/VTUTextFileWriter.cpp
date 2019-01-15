@@ -1,10 +1,10 @@
 #include "tarch/plotter/griddata/unstructured/vtk/VTUTextFileWriter.h"
 
-#include "tarch/parallel/NodePool.h"
-
 #include <stdio.h>
 #include <fstream>
 #include <iomanip>
+#include "tarch/mpi/Rank.h"
+
 
 tarch::logging::Log tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter::_log( "tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter" );
 

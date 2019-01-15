@@ -4,6 +4,8 @@
 #include "tarch/Assertions.h"
 #include "tarch/multicore/Core.h"
 
+#include "config.h"
+
 
 /**
  * For the machine name. If it doesn't work, switch it off in the file
@@ -13,9 +15,7 @@
 #include <sys/utsname.h>
 #endif
 
-#ifdef Parallel
-#include "tarch/parallel/Node.h"
-#endif
+#include "tarch/mpi/Rank.h"
 
 #include <time.h>
 
@@ -106,8 +106,8 @@ std::string tarch::logging::Log::getMachineInformation() const {
   #endif
 
   #ifdef Parallel
-  if (tarch::parallel::Node::getInstance().isInitialised()) {
-    message << "rank:" << tarch::parallel::Node::getInstance().getRank();
+  if (tarch::mpi::Rank::getInstance().isInitialised()) {
+    message << "rank:" << tarch::mpi::Rank::getInstance().getRank();
   }
   else {
     message << "rank:not-initialised-yet";

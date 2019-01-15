@@ -1,7 +1,7 @@
 #include "tarch/plotter/griddata/blockstructured/PeanoHDF5PatchFileWriter.h"
 #include <fstream>
 
-#include "tarch/parallel/Node.h"
+#include "../../../mpi/Rank.h"
 
 
 

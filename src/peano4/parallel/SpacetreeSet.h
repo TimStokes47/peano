@@ -99,6 +99,8 @@ class peano4::parallel::SpacetreeSet {
      */
     void addSpacetree( peano4::grid::Spacetree&& spacetree );
 
+    bool canJoinWorkerWithMaster( int workerId );
+
     /**
      * Join the tree into its master. You are not allowed to run this
      * routine unless the tree with treeId holds mayJoinWithMaster().

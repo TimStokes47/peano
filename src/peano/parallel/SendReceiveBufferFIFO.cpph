@@ -1,7 +1,7 @@
-#include "tarch/parallel/Node.h"
 #include "peano/utils/PeanoOptimisations.h"
 
 #include <sstream>
+#include "../../tarch/mpi/Node.h"
 
 
 template <class Vertex>

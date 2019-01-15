@@ -1,3 +1,4 @@
+#include "../../../tarch/mpi/Rank.h"
 #include "tarch/Assertions.h"
 #include "peano/utils/Loop.h"
 
@@ -20,8 +21,6 @@
 #include "peano/datatraversal/autotuning/Oracle.h"
 
 #include "peano/datatraversal/TaskSet.h"
-
-#include "tarch/parallel/Node.h"
 
 #include "tarch/multicore/Core.h"
 #include "tarch/multicore/MulticoreDefinitions.h"

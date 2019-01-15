@@ -1,10 +1,9 @@
 #include "peano/parallel/JoinDataBufferPool.h"
+
+#include "../../tarch/mpi/Node.h"
 #include "peano/parallel/JoinDataBufferImplementation.h"
 
 #include "tarch/Assertions.h"
-#include "tarch/parallel/Node.h"
-
-
 #include "tarch/services/ServiceFactory.h"
 registerService(peano::parallel::JoinDataBufferPool)
 

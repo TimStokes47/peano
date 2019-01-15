@@ -1,6 +1,5 @@
+#include "../../tarch/mpi/Rank.h"
 #include "tarch/Assertions.h"
-#include "tarch/parallel/Node.h"
-
 #include "peano/utils/Globals.h"
 #include "peano/parallel/JoinDataBufferImplementation.h"
 

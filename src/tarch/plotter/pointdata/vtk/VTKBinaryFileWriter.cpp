@@ -1,10 +1,10 @@
 #include "tarch/plotter/pointdata/vtk/VTKBinaryFileWriter.h"
 
-#include "tarch/parallel/NodePool.h"
-
 #include <stdio.h>
 #include <fstream>
 #include <iomanip>
+
+#include "../../../mpi/Rank.h"
 
 
 tarch::logging::Log tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::_log( "tarch::plotter::pointdata::vtk::VTKBinaryFileWriter" );
@@ -54,7 +54,7 @@ bool tarch::plotter::pointdata::vtk::VTKBinaryFileWriter::writeToFile( const std
   std::ostringstream filenameStream;
   filenameStream << filenamePrefix
     #ifdef Parallel
-                 << "-rank-" << tarch::parallel::Node::getInstance().getRank()
+                 << "-rank-" << tarch::mpi::Rank::getInstance().getRank()
     #endif
                  << ".vtk";
   const std::string filename = filenameStream.str();

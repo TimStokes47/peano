@@ -1374,6 +1374,15 @@ bool peano4::grid::Spacetree::maySplit() const {
 }
 
 
+bool peano4::grid::Spacetree::mayJoinWithWorker() const {
+  return
+	    _spacetreeState==SpacetreeState::Running
+    and _splitTriggered.empty()
+    and _joining.empty()
+    and _splitting.empty();
+}
+
+
 bool peano4::grid::Spacetree::mayJoinWithMaster() const {
   bool mandatoryCriteria =
 	     _spacetreeState==SpacetreeState::Running

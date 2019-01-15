@@ -1,6 +1,5 @@
+#include "../../tarch/mpi/Rank.h"
 #include "tarch/Assertions.h"
-#include "tarch/parallel/Node.h"
-
 #include "peano/datatraversal/TaskSet.h"
 
 #include "peano/parallel/SendReceiveBufferLIFO.h"

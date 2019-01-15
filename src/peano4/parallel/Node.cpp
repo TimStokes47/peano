@@ -7,13 +7,12 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>         // std::chrono::seconds
 
+#include "../../tarch/mpi/Rank.h"
 
 
 #include "tarch/Assertions.h"
 // @todo Node should be called Rank
 // @todo parallel should be called mpi as namespace
-#include "tarch/parallel/Node.h"
-
 #include "tarch/multicore/Tasks.h"
 
 #include "tarch/multicore/Lock.h"

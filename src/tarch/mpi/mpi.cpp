@@ -1,9 +1,9 @@
-#include "tarch/parallel/MPIConstants.h"
+#include "mpi.h"
 
 #include <sstream>
 
 
-std::string tarch::parallel::StringTools::convert(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& value ) {
+std::string tarch::mpi::StringTools::convert(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& value ) {
   std::ostringstream result;
 
   std::string::size_type i=0;
@@ -16,7 +16,7 @@ std::string tarch::parallel::StringTools::convert(const tarch::la::Vector<MPI_MA
 }
 
 
-tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> tarch::parallel::StringTools::convert( const std::string& value ) {
+tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> tarch::mpi::StringTools::convert( const std::string& value ) {
   tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> result;
   assertion( value.length() <= MPI_MAX_NAME_STRING );
   std::string::size_type i=0;

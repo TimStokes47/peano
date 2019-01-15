@@ -1,6 +1,7 @@
 #include "peano/parallel/loadbalancing/Oracle.h"
+
+#include "../../../tarch/mpi/Rank.h"
 #include "peano/datatraversal/autotuning/OracleForOnePhase.h"
-#include "tarch/parallel/Node.h"
 #include "tarch/Assertions.h"
 #include "peano/performanceanalysis/Analysis.h"
 

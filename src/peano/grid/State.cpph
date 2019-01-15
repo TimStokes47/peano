@@ -1,10 +1,10 @@
 #include <limits>
  
-#include "tarch/parallel/Node.h"
+#include "../../tarch/mpi/Rank.h"
 
 #ifdef Parallel
 #include "peano/parallel/loadbalancing/Oracle.h"
-#include "tarch/parallel/NodePool.h"
+#include "../../tarch/mpi/NodePool.h"
 #include "peano/parallel/SendReceiveBufferPool.h"
 #include "peano/parallel/messages/LoadBalancingMessage.h"
 #endif

@@ -8,7 +8,7 @@
 #include <mpi.h>
 #endif
 
-#include "tarch/parallel/NodePoolStrategy.h"
+#include "../../tarch/mpi/NodePoolStrategy.h"
 #include "tarch/logging/Log.h"
 
 #include <vector>

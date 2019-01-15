@@ -10,8 +10,7 @@
 #endif
 
 
-#include "tarch/parallel/Node.h"
-#include "tarch/parallel/NodePool.h"
+#include "tarch/mpi/Rank.h"
 
 
 void peano4::fillLookupTables() {
@@ -31,8 +30,7 @@ void peano4::fillLookupTables() {
 
 int peano4::initParallelEnvironment(int* argc, char*** argv) {
   #ifdef Parallel
-  if ( tarch::parallel::Node::getInstance().init(argc,argv) ) {
-    tarch::parallel::NodePool::getInstance().init();
+  if ( tarch::mpi::Rank::getInstance().init(argc,argv) ) {
     return 0;
   }
   else {

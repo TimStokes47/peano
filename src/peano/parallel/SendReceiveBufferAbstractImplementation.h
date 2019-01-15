@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include "tarch/parallel/MPIConstants.h"
+#include "../../tarch/mpi/MPIConstants.h"
 
 namespace peano {
   namespace parallel {

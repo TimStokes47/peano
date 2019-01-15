@@ -1,6 +1,14 @@
-/**
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www.peano-framework.org
 
- @dir "Multicore"
+
+
+namespace tarch {
+
+
+  /**
+ 
+ \namespace "Multicore"
 
  To compile with multicore support, we currently offer three variants:
  
@@ -22,4 +30,7 @@ and
  OpenMP or TBB.  
 
  */
- 
+  namespace multicore {
+  }
+}
+

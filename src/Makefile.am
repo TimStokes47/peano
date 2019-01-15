@@ -35,10 +35,10 @@ Peano4Core_SOURCES = peano4/peano.cpp \
   peano4/grid/TraversalVTKPlotter.cpp \
   peano4/grid/GridStatistics.cpp \
   peano4/grid/tests/SpacetreeTest.cpp \
-  peano4/parallel/Node.cpp \
-  peano4/parallel/Tasks.cpp \
-  peano4/parallel/TreeEntry.cpp \
-  peano4/parallel/SpacetreeSet.cpp \
+  peano4/mpi/Node.cpp \
+  peano4/mpi/Tasks.cpp \
+  peano4/mpi/TreeEntry.cpp \
+  peano4/mpi/SpacetreeSet.cpp \
   peano4/utils/Loop.cpp
 
 
@@ -102,15 +102,8 @@ Tarch_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/plotter/pointdata/vtk/VTKTextFileWriter.cpp \
  tarch/plotter/pointdata/vtk/VTKBinaryFileWriter.cpp \
  tarch/plotter/pointdata/vtk/VTKBinaryFileWriter_PointDataWriter.cpp \
- tarch/parallel/messages/ActivationMessage.cpp \
- tarch/parallel/messages/JobRequestMessage.cpp \
- tarch/parallel/messages/RegisterAtNodePoolMessage.cpp \
- tarch/parallel/messages/WorkerRequestMessage.cpp \
- tarch/parallel/messages/NodePoolAnswerMessage.cpp \
- tarch/parallel/Node.cpp \
- tarch/parallel/FCFSNodePoolStrategy.cpp \
- tarch/parallel/MPIConstants.cpp \
- tarch/parallel/NodePool.cpp \
+ tarch/mpi/Rank.cpp \
+ tarch/mpi/mpi.cpp \
  tarch/logging/CommandLineLogger.cpp \
  tarch/logging/Log.cpp \
  tarch/logging/LogFilterFileReader.cpp \
@@ -119,6 +112,13 @@ Tarch_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/timing/GlidingAverageMeasurement.cpp \
  tarch/services/Service.cpp \
  tarch/services/ServiceRepository.cpp 
+
+
+# tarch/mpi/messages/ActivationMessage.cpp \
+# tarch/mpi/messages/JobRequestMessage.cpp \
+# tarch/mpi/messages/RegisterAtNodePoolMessage.cpp \
+# tarch/mpi/messages/WorkerRequestMessage.cpp \
+# tarch/mpi/messages/NodePoolAnswerMessage.cpp 
 
 
 #

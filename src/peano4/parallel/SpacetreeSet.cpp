@@ -249,6 +249,8 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       childrenThatShouldMerge.count(p._id)==1
 	  and
 	  p.mayJoinWithMaster()
+  	  and
+	  getSpacetree(p._masterId).mayJoinWithWorker()
     ) {
   	  logInfo( "traverse(Observer)", "trigger join of tree " << p._id << " with its master tree " << p._masterId << " to enable further grid erases");
   	  join(p._id);

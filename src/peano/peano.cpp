@@ -12,8 +12,8 @@
 #endif
 
 
-#include "tarch/parallel/Node.h"
-#include "tarch/parallel/NodePool.h"
+#include "../tarch/mpi/Rank.h"
+#include "../tarch/mpi/NodePool.h"
 
 
 void peano4::fillLookupTables() {

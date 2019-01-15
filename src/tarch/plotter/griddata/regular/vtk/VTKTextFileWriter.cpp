@@ -1,11 +1,9 @@
 #include "tarch/plotter/griddata/regular/vtk/VTKTextFileWriter.h"
 
-#include "tarch/parallel/NodePool.h"
-
 #include <stdio.h>
 #include <fstream>
 #include <iomanip>
-
+#include "tarch/mpi/Rank.h"
 
 
 const std::string tarch::plotter::griddata::regular::vtk::VTKTextFileWriter::HEADER =
@@ -58,7 +56,7 @@ bool tarch::plotter::griddata::regular::vtk::VTKTextFileWriter::writeToFile( con
   std::ostringstream filenameStream;
   filenameStream << filenamePrefix
     #ifdef Parallel
-                 << "-rank-" << tarch::parallel::Node::getInstance().getRank()
+                 << "-rank-" << tarch::mpi::Rank::getInstance().getRank()
     #endif
                  << ".vtk";
   const std::string filename = filenameStream.str();

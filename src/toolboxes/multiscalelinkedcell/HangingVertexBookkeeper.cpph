@@ -1,4 +1,4 @@
-#include "tarch/parallel/Node.h"
+#include "../../tarch/mpi/Rank.h"
 #include "peano/utils/Loop.h"
 
 

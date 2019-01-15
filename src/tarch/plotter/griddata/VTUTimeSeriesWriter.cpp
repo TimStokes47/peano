@@ -1,8 +1,7 @@
 #include "tarch/plotter/griddata/VTUTimeSeriesWriter.h"
 
-#include "tarch/parallel/NodePool.h"
-
 #include <fstream>
+#include "tarch/mpi/Rank.h"
 
 tarch::logging::Log tarch::plotter::griddata::VTUTimeSeriesWriter::_log( "tarch::plotter::griddata::VTUTimeSeriesWriter" );
 
@@ -36,7 +35,7 @@ void tarch::plotter::griddata::VTUTimeSeriesWriter::addSnapshot(const std::strin
 
 
 bool tarch::plotter::griddata::VTUTimeSeriesWriter::writeFile(const std::string& filenamePrefix) {
-  if (!tarch::parallel::Node::getInstance().isGlobalMaster()) return true;
+  if (!tarch::mpi::Rank::getInstance().isGlobalMaster()) return true;
 
   if (filenamePrefix.rfind(".pvd")!=std::string::npos) {
     logWarning( "writeToFile()", "filename should not end with .pvd as routine adds extension automatically. Chosen filename prefix=" << filenamePrefix );

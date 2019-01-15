@@ -1,10 +1,10 @@
-#include "tarch/parallel/Node.h"
 #include "tarch/Assertions.h"
 #include "tarch/services/ServiceRepository.h"
 
 #include <sstream>
 #include <cstdlib>
 
+#include "Rank.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/multicore/MulticoreDefinitions.h"
 
@@ -18,24 +18,24 @@
 #endif
 
 
-tarch::logging::Log tarch::parallel::Node::_log("tarch::parallel::Node");
+tarch::logging::Log tarch::mpi::Rank::_log("tarch::mpi::Rank");
 
 
-bool tarch::parallel::Node::_initIsCalled = false;
+bool tarch::mpi::Rank::_initIsCalled = false;
 
 namespace {
   int tagCounter = 0;
 }
 
 
-void tarch::parallel::Node::releaseTag(int tag) {
+void tarch::mpi::Rank::releaseTag(int tag) {
   if (tag==tagCounter-1) {
     tagCounter--;
   }
 }
 
 
-int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessageName) {
+int tarch::mpi::Rank::reserveFreeTag(const std::string& fullQualifiedMessageName) {
   tagCounter++;
 
   // I protect the tag manually (not via log filter), as many tags are actually
@@ -46,7 +46,7 @@ int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessag
   // initialised, i.e. any tag booking prior to the MPI initialisation is not
   // logged properly.
   if ( getInstance()._rank==getGlobalMasterRank() ) {
-    tarch::logging::Log _log("tarch::parallel::Node<static>");
+    tarch::logging::Log _log("tarch::mpi::Rank<static>");
     logInfo(
       "reserveFreeTag()",
       "assigned message " << fullQualifiedMessageName
@@ -58,12 +58,12 @@ int tarch::parallel::Node::reserveFreeTag(const std::string& fullQualifiedMessag
 }
 
 
-bool tarch::parallel::Node::isInitialised() const {
+bool tarch::mpi::Rank::isInitialised() const {
   return _initIsCalled;
 }
 
 
-void tarch::parallel::Node::ensureThatMessageQueuesAreEmpty( int fromRank, int tag ) {
+void tarch::mpi::Rank::ensureThatMessageQueuesAreEmpty( int fromRank, int tag ) {
   #ifdef Parallel
   int          flag;
   MPI_Iprobe(fromRank, tag, _communicator, &flag, MPI_STATUS_IGNORE);
@@ -75,7 +75,7 @@ void tarch::parallel::Node::ensureThatMessageQueuesAreEmpty( int fromRank, int t
 }
 
 
-void tarch::parallel::Node::plotMessageQueues() {
+void tarch::mpi::Rank::plotMessageQueues() {
   #ifdef Parallel
   int          flag;
   MPI_Status   status;
@@ -95,7 +95,7 @@ void tarch::parallel::Node::plotMessageQueues() {
 }
 
 
-void tarch::parallel::Node::triggerDeadlockTimeOut(
+void tarch::mpi::Rank::triggerDeadlockTimeOut(
   const std::string&  className,
   const std::string&  methodName,
   int                 communicationPartnerRank,
@@ -117,7 +117,7 @@ void tarch::parallel::Node::triggerDeadlockTimeOut(
 }
 
 
-void tarch::parallel::Node::writeTimeOutWarning(
+void tarch::mpi::Rank::writeTimeOutWarning(
   const std::string&  className,
   const std::string&  methodName,
   int                 communicationPartnerRank,
@@ -135,7 +135,7 @@ void tarch::parallel::Node::writeTimeOutWarning(
 }
 
 
-clock_t tarch::parallel::Node::getDeadlockWarningTimeStamp() const {
+clock_t tarch::mpi::Rank::getDeadlockWarningTimeStamp() const {
   clock_t result = clock() + _timeOutWarning * CLOCKS_PER_SEC;
   assertion4( result>=0, result, clock(), _timeOutWarning, CLOCKS_PER_SEC);
 
@@ -143,7 +143,7 @@ clock_t tarch::parallel::Node::getDeadlockWarningTimeStamp() const {
 }
 
 
-clock_t tarch::parallel::Node::getDeadlockTimeOutTimeStamp() const {
+clock_t tarch::mpi::Rank::getDeadlockTimeOutTimeStamp() const {
   clock_t result = clock() + _deadlockTimeOut * CLOCKS_PER_SEC;
   assertion4( result>=0, result, clock(), _timeOutWarning, CLOCKS_PER_SEC);
 
@@ -151,22 +151,22 @@ clock_t tarch::parallel::Node::getDeadlockTimeOutTimeStamp() const {
 }
 
 
-bool tarch::parallel::Node::isTimeOutDeadlockEnabled() const {
+bool tarch::mpi::Rank::isTimeOutDeadlockEnabled() const {
   return _areTimeoutsEnabled and _deadlockTimeOut > 0;
 }
 
 
-bool tarch::parallel::Node::isTimeOutWarningEnabled() const {
+bool tarch::mpi::Rank::isTimeOutWarningEnabled() const {
   return _areTimeoutsEnabled and _timeOutWarning > 0;
 }
 
 
-void tarch::parallel::Node::suspendTimeouts( bool timeoutsDisabled ) {
+void tarch::mpi::Rank::suspendTimeouts( bool timeoutsDisabled ) {
   _areTimeoutsEnabled = !timeoutsDisabled;
 }
 
 
-std::string tarch::parallel::MPIReturnValueToString( int result ) {
+std::string tarch::mpi::MPIReturnValueToString( int result ) {
   std::ostringstream out;
 
   #ifdef Parallel
@@ -211,7 +211,7 @@ std::string tarch::parallel::MPIReturnValueToString( int result ) {
 }
 
 
-std::string tarch::parallel::MPIStatusToString( const MPI_Status& status ) {
+std::string tarch::mpi::MPIStatusToString( const MPI_Status& status ) {
   std::ostringstream out;
   #ifdef Parallel
   out << "status flag:"
@@ -227,7 +227,7 @@ std::string tarch::parallel::MPIStatusToString( const MPI_Status& status ) {
 
 
 #ifdef Parallel
-tarch::parallel::Node::Node():
+tarch::mpi::Rank::Rank():
   _rank(-1),
   _numberOfProcessors(-1),
   _communicator( MPI_COMM_WORLD),
@@ -236,7 +236,7 @@ tarch::parallel::Node::Node():
   _areTimeoutsEnabled(true) {
 }
 #else
-tarch::parallel::Node::Node():
+tarch::mpi::Rank::Rank():
   _rank(0),
   _numberOfProcessors(1),
   _communicator(-1),
@@ -248,13 +248,13 @@ tarch::parallel::Node::Node():
 
 
 #ifdef Parallel
-tarch::parallel::Node::Node(const parallel::Node& node):
+tarch::mpi::Rank::Rank(const Rank& node):
   _rank(-1),
   _numberOfProcessors(-1),
   _communicator( MPI_COMM_WORLD) {
 }
 #else
-tarch::parallel::Node::Node(const parallel::Node& node):
+tarch::mpi::Rank::Rank(const parallel::Rank& node):
   _rank(0),
   _numberOfProcessors(-1),
   _communicator(-1) {
@@ -262,11 +262,11 @@ tarch::parallel::Node::Node(const parallel::Node& node):
 #endif
 
 
-tarch::parallel::Node::~Node() {
+tarch::mpi::Rank::~Rank() {
 }
 
 
-void tarch::parallel::Node::shutdown() {
+void tarch::mpi::Rank::shutdown() {
   #ifdef Parallel
   assertion( _rank!=-1 );
 
@@ -279,12 +279,12 @@ void tarch::parallel::Node::shutdown() {
 }
 
 
-int tarch::parallel::Node::getGlobalMasterRank() {
+int tarch::mpi::Rank::getGlobalMasterRank() {
   return 0;
 }
 
 
-bool tarch::parallel::Node::isGlobalMaster() const {
+bool tarch::mpi::Rank::isGlobalMaster() const {
   #ifdef Parallel
   assertion(_initIsCalled);
   return getRank() == getGlobalMasterRank();
@@ -294,7 +294,7 @@ bool tarch::parallel::Node::isGlobalMaster() const {
 }
 
 
-void tarch::parallel::Node::logStatus() const {
+void tarch::mpi::Rank::logStatus() const {
   std::ostringstream statusMessage;
   statusMessage << "MPI status:";
 
@@ -316,7 +316,7 @@ void tarch::parallel::Node::logStatus() const {
 }
 
 
-bool tarch::parallel::Node::init(int* argc, char*** argv) {
+bool tarch::mpi::Rank::init(int* argc, char*** argv) {
   #ifdef Parallel
   int result = MPI_SUCCESS;
 
@@ -358,7 +358,7 @@ bool tarch::parallel::Node::init(int* argc, char*** argv) {
 }
 
 
-int tarch::parallel::Node::getRank() const {
+int tarch::mpi::Rank::getRank() const {
   #ifdef Parallel
   assertion(_initIsCalled);
   #endif
@@ -366,19 +366,19 @@ int tarch::parallel::Node::getRank() const {
 }
 
 
-tarch::parallel::Node& tarch::parallel::Node::getInstance() {
-  static Node singleton;
+tarch::mpi::Rank& tarch::mpi::Rank::getInstance() {
+  static Rank singleton;
   return singleton;
 }
 
 
-MPI_Comm tarch::parallel::Node::getCommunicator() const {
+MPI_Comm tarch::mpi::Rank::getCommunicator() const {
   assertion(_initIsCalled);
   return _communicator;
 }
 
 
-int tarch::parallel::Node::getNumberOfNodes() const {
+int tarch::mpi::Rank::getNumberOfNodes() const {
   #ifdef Parallel
   assertion(_initIsCalled);
   #endif
@@ -386,24 +386,24 @@ int tarch::parallel::Node::getNumberOfNodes() const {
 }
 
 
-void tarch::parallel::Node::setTimeOutWarning( const clock_t & value ) {
+void tarch::mpi::Rank::setTimeOutWarning( const clock_t & value ) {
   assertion( value>=0 );
   _timeOutWarning = value;
 }
 
 
-void tarch::parallel::Node::setDeadlockTimeOut( const clock_t & value ) {
+void tarch::mpi::Rank::setDeadlockTimeOut( const clock_t & value ) {
   assertion( value>=0 );
   _deadlockTimeOut = value;
 }
 
 
-void tarch::parallel::Node::setCommunicator( MPI_Comm communicator ) {
+void tarch::mpi::Rank::setCommunicator( MPI_Comm communicator ) {
   _communicator = communicator;
 }
 
 
-void tarch::parallel::Node::receiveDanglingMessages() {
+void tarch::mpi::Rank::receiveDanglingMessages() {
   #ifdef Parallel
   int          flag;
   MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, _communicator, &flag, MPI_STATUS_IGNORE);

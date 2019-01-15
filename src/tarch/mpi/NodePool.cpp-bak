@@ -1,16 +1,14 @@
-#include "tarch/parallel/NodePool.h"
-#include "tarch/parallel/Node.h"
-
+#include "../mpi/NodePool.h"
 
 #include "tarch/compiler/CompilerSpecificSettings.h"
 
 
-#include "tarch/parallel/messages/ActivationMessage.h"
-#include "tarch/parallel/messages/JobRequestMessage.h"
-#include "tarch/parallel/messages/NodePoolAnswerMessage.h"
-
 #include <sstream>
 
+#include "../mpi/messages/ActivationMessage.h"
+#include "../mpi/messages/JobRequestMessage.h"
+#include "../mpi/messages/NodePoolAnswerMessage.h"
+#include "../mpi/Node.h"
 #include "tarch/services/ServiceFactory.h"
 registerService(tarch::parallel::NodePool)
 

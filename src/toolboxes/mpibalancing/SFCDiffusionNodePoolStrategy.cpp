@@ -1,8 +1,6 @@
 #include "mpibalancing/SFCDiffusionNodePoolStrategy.h"
 
-#include "tarch/parallel/Node.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
-#include "tarch/parallel/NodePool.h"
 #include "peano/utils/PeanoOptimisations.h"
 
 #include "peano/utils/Globals.h"
@@ -10,6 +8,8 @@
 #include <sstream>
 #include <limits>
 #include <map>
+#include "../../tarch/mpi/NodePool.h"
+#include "../../tarch/mpi/Rank.h"
 
 
 tarch::logging::Log mpibalancing::SFCDiffusionNodePoolStrategy::_log( "mpibalancing::SFCDiffusionNodePoolStrategy" );

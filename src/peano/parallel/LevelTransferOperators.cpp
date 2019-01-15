@@ -1,9 +1,9 @@
 #include "peano/parallel/LevelTransferOperators.h"
 #include "peano/utils/Loop.h"
 
-#include "tarch/parallel/Node.h"
-
 #include <bitset>
+
+#include "../../tarch/mpi/Rank.h"
 
 namespace peano {
     namespace parallel {

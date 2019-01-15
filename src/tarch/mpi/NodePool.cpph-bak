@@ -1,4 +1,4 @@
-#include "tarch/parallel/Node.h"
+#include "../mpi/Node.h"
 
 
 template <class Message>

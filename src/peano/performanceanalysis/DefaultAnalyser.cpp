@@ -1,7 +1,7 @@
 #include "peano/performanceanalysis/DefaultAnalyser.h"
 
-#include "tarch/parallel/Node.h"
-#include "tarch/parallel/NodePool.h"
+#include "../../tarch/mpi/NodePool.h"
+#include "../../tarch/mpi/Rank.h"
 #include "tarch/logging/CommandLineLogger.h"
 
 #include "tarch/multicore/Lock.h"

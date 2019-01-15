@@ -1,7 +1,5 @@
 #include "tarch/logging/CommandLineLogger.h"
 
-#include "tarch/parallel/Node.h"
-
 #include "tarch/Assertions.h"
 
 #include "tarch/multicore/Lock.h"
@@ -10,6 +8,8 @@
 #include <sstream>
 #include <fstream>
 #include <stdlib.h>
+
+#include "../mpi/Rank.h"
 
 
 
@@ -383,7 +383,7 @@ void tarch::logging::CommandLineLogger::setOutputFile( const std::string&  outpu
   #ifdef Parallel
   if (!outputLogFileName.empty()) {
     std::ostringstream myOutputFileName;
-    myOutputFileName << "rank-" << tarch::parallel::Node::getInstance().getRank() << "-" << outputLogFileName;
+    myOutputFileName << "rank-" << tarch::mpi::Rank::getInstance().getRank() << "-" << outputLogFileName;
     _outputFileName = myOutputFileName.str();
   }
   else {
@@ -457,7 +457,7 @@ bool tarch::logging::CommandLineLogger::filterOut(
         (className.find(p->_namespaceName,0)==0)
         #ifdef Parallel
         &&
-        (p->_rank == FilterListEntry::AnyRank || p->_rank == tarch::parallel::Node::getInstance().getRank())
+        (p->_rank == FilterListEntry::AnyRank || p->_rank == tarch::mpi::Rank::getInstance().getRank())
         #endif
       ) {
         lengthActive = length;
@@ -468,7 +468,7 @@ bool tarch::logging::CommandLineLogger::filterOut(
   }
 
   if (!foundRule) {
-    logWarning( "filterOut(...)", "did not find filter rule for target \"" << targetName << "\" and class \"" << className << "\" on rank " << tarch::parallel::Node::getInstance().getRank() );
+    logWarning( "filterOut(...)", "did not find filter rule for target \"" << targetName << "\" and class \"" << className << "\" on rank " << tarch::mpi::Rank::getInstance().getRank() );
   }
   return result;
 }

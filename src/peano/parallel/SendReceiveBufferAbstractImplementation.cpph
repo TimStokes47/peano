@@ -1,4 +1,3 @@
-#include "tarch/parallel/Node.h"
 #include "peano/utils/PeanoOptimisations.h"
 #include "tarch/Assertions.h"
 #include "peano/parallel/SendReceiveBufferPool.h"
@@ -7,6 +6,7 @@
 
 #include <sstream>
 #include <cstring>
+#include "../../tarch/mpi/Node.h"
 
 
 template <class Vertex>

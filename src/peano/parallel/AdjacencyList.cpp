@@ -1,8 +1,8 @@
 #include "peano/parallel/AdjacencyList.h"
 
+#include "../../tarch/mpi/Node.h"
+#include "../../tarch/mpi/NodePool.h"
 #include "tarch/Assertions.h"
-#include "tarch/parallel/Node.h"
-#include "tarch/parallel/NodePool.h"
 
 
 void peano::parallel::getMergedAdjacencyLists(

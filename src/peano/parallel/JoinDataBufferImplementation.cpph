@@ -1,4 +1,4 @@
-#include "tarch/parallel/MPIConstants.h"
+#include "../../tarch/mpi/MPIConstants.h"
 
 
 template <class DataType>

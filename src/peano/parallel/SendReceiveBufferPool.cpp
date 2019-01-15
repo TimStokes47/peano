@@ -1,8 +1,6 @@
 #include "peano/parallel/SendReceiveBufferPool.h"
 
 
-#include "tarch/parallel/Node.h"
-#include "tarch/parallel/NodePool.h"
 #include "tarch/Assertions.h"
 #include "tarch/timing/Watch.h"
 #include "tarch/multicore/Lock.h"
@@ -16,6 +14,8 @@
 #include <chrono>
 #include <thread>
 
+#include "../../tarch/mpi/Node.h"
+#include "../../tarch/mpi/NodePool.h"
 #include "../../tarch/multicore/Tasks.h"
 #include "tarch/services/ServiceFactory.h"
 registerService(peano::parallel::SendReceiveBufferPool)

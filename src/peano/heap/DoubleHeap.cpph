@@ -1,13 +1,11 @@
 #include <limits>
 #include <memory.h>
 
+#include "../../tarch/mpi/Node.h"
 
 #include "tarch/Assertions.h"
 #include "tarch/services/ServiceRepository.h"
 #include "tarch/services/ServiceFactory.h"
-
-
-#include "tarch/parallel/Node.h"
 
 
 #include "peano/performanceanalysis/Analysis.h"

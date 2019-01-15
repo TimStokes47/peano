@@ -1,9 +1,9 @@
 #include "mpibalancing/GreedyBalancing.h"
 
+#include "../../tarch/mpi/NodePool.h"
+#include "../../tarch/mpi/Rank.h"
 #include "tarch/Assertions.h"
 #include "tarch/la/ScalarOperations.h"
-#include "tarch/parallel/Node.h"
-#include "tarch/parallel/NodePool.h"
 #include "peano/parallel/loadbalancing/Oracle.h"
 
 

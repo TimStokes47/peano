@@ -1,7 +1,7 @@
 #include "multiscalelinkedcell/HangingVertexBookkeeper.h"
 
+#include "../../tarch/mpi/Rank.h"
 #include "peano/utils/Loop.h"
-#include "tarch/parallel/Node.h"
 
 const int multiscalelinkedcell::HangingVertexBookkeeper::InvalidAdjacencyIndex         = -1;
 const int multiscalelinkedcell::HangingVertexBookkeeper::RemoteAdjacencyIndex          = -2;

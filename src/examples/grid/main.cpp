@@ -35,14 +35,21 @@ void runTests() {
 void runSerial() {
   applications4::grid::MyObserver emptyObserver;
   peano4::grid::Spacetree         spacetree(
+#if Dimensions==2
     {0.0, 0.0},
     {1.0, 1.0}
+#else
+    {0.0, 0.0, 0.0},
+    {1.0, 1.0, 1.0}
+#endif
   );
 
   for (int i=0; i<30; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 
+    #if PeanoDebug>0
 	emptyObserver.startNewSnapshot(false);
+    #endif
     spacetree.traverse( emptyObserver );
 
     logInfo( "main(...)", "refined vertices = " << spacetree.getGridStatistics().getNumberOfRefinedVertices() );
@@ -57,15 +64,19 @@ void runSerial() {
 
 
   peano4::grid::TraversalVTKPlotter plotterObserver( "grid-serial" );
-  plotterObserver.startNewSnapshot(false);
   spacetree.traverse( plotterObserver );
 }
 
 
 void runMultithreaded() {
   peano4::parallel::SpacetreeSet spacetreeSet(
+#if Dimensions==2
     {0.0, 0.0},
     {1.0, 1.0}
+#else
+    {0.0, 0.0, 0.0},
+    {1.0, 1.0, 1.0}
+#endif
   );
 
   applications4::grid::MyObserver emptyObserver;
@@ -138,6 +149,22 @@ void runMultithreaded() {
 }
 
 
+void runParallel() {
+  peano4::parallel::SpacetreeSet spacetreeSet(
+#if Dimensions==2
+    {0.0, 0.0},
+    {1.0, 1.0}
+#else
+    {0.0, 0.0, 0.0},
+    {1.0, 1.0, 1.0}
+#endif
+  );
+
+
+
+  peano4::grid::TraversalVTKPlotter plotterObserver( "grid-parallel" );
+  spacetreeSet.traverse( plotterObserver );
+}
 
 int main(int argc, char** argv) {
   const int ExitCodeSuccess         = 0;
@@ -151,9 +178,13 @@ int main(int argc, char** argv) {
   ));
   tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
 
+  initParallelEnvironment(argc,argv);
   peano4::fillLookupTables();
 
   tarch::multicore::Core::getInstance().configure(4,2,1);
+
+  // @todo move down
+  runParallel();
 
   runTests();
   runSerial();

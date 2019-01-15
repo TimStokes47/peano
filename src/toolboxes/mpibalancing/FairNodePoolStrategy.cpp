@@ -1,5 +1,4 @@
 #include "mpibalancing/FairNodePoolStrategy.h"
-#include "tarch/parallel/Node.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "peano/utils/PeanoOptimisations.h"
 
@@ -8,6 +7,8 @@
 
 #include <sstream>
 #include <limits>
+
+#include "../../tarch/mpi/Rank.h"
 
 
 tarch::logging::Log mpibalancing::FairNodePoolStrategy::_log( "mpibalancing::FairNodePoolStrategy" );

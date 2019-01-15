@@ -609,6 +609,8 @@ class peano4::grid::Spacetree {
      */
     bool mayJoinWithMaster() const;
 
+    bool mayJoinWithWorker() const;
+
     /**
      * A spacetree may be moved if this attribute holds and there are no
      * kids. It is the reponsibility of the calling operation to check for

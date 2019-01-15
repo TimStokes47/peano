@@ -1,9 +1,8 @@
 #include "peano/parallel/loadbalancing/OracleForOnePhase.h"
 #include "tarch/Assertions.h"
-#include "tarch/parallel/Node.h"
-
-
 #include <sstream>
+
+#include "../../../tarch/mpi/Rank.h"
 
 
 std::string peano::parallel::loadbalancing::convertLoadBalancingFlagToString(LoadBalancingFlag flag) {

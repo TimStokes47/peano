@@ -1,8 +1,8 @@
 #include <fstream>
 
 #include "PeanoTextPatchFileWriter.h"
-#include "tarch/parallel/Node.h"
-#include "tarch/parallel/NodePool.h"
+
+#include "tarch/mpi/Rank.h"
 
 tarch::logging::Log tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::_log( "tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter" );
 
@@ -168,22 +168,20 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoTextPatchFile
 bool tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::writeToFile( const std::string& filenamePrefix ) {
   assertion( !_writtenToFile );
 
-  if (tarch::parallel::Node::getInstance().isGlobalMaster()) {
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     _metaFileOut << std::endl << "begin dataset" << std::endl;
 
-    for (int i=0; i<tarch::parallel::Node::getInstance().getNumberOfNodes(); i++) {
-      if ( i==0 || !tarch::parallel::NodePool::getInstance().isIdleNode(i) ) {
-        std::ostringstream referencedFilename;
-        if (filenamePrefix.find("/")!=std::string::npos) {
-          referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
-        }
-        else {
-          referencedFilename << filenamePrefix;
-        }
-        referencedFilename << "-rank-" << i
-                           << ".peano-patch-file";
-        _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
+    for (int i=0; i<tarch::mpi::Rank::getInstance().getNumberOfNodes(); i++) {
+      std::ostringstream referencedFilename;
+      if (filenamePrefix.find("/")!=std::string::npos) {
+        referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
       }
+      else {
+        referencedFilename << filenamePrefix;
+      }
+      referencedFilename << "-rank-" << i
+                         << ".peano-patch-file";
+      _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
     }
 
     _metaFileOut << "end dataset" << std::endl;
@@ -195,7 +193,7 @@ bool tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::writeT
   std::ostringstream filenameStream;
   filenameStream << filenamePrefix
     #ifdef Parallel
-                 << "-rank-" << tarch::parallel::Node::getInstance().getRank()
+                 << "-rank-" << tarch::mpi::Rank::getInstance().getRank()
     #endif
                  << ".peano-patch-file";
   const std::string filename = filenameStream.str();
