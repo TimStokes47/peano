@@ -43,8 +43,7 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
 
 
 void peano4::shutdownParallelEnvironment() {
-  tarch::parallel::NodePool::getInstance().shutdown();
-  tarch::parallel::Node::getInstance().shutdown();
+  tarch::mpi::Rank::getInstance().shutdown();
 }
 
 

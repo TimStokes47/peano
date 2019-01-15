@@ -233,14 +233,13 @@
             GridVertex dummyGridVertex[2];
             
             #ifdef MPI2
-            const int Attributes = 5;
+            const int Attributes = 4;
             #else
-            const int Attributes = 6;
+            const int Attributes = 5;
             #endif
             MPI_Datatype subtypes[Attributes] = {
                  MPI_INT		 //state
                , MPI_INT		 //adjacentRanks
-               , MPI_CXX_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
                , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , MPI_INT		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
@@ -252,7 +251,6 @@
             int blocklen[Attributes] = {
                  1		 //state
                , TwoPowerD		 //adjacentRanks
-               , 1		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
                , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                , 1		 //numberOfAdjacentRefinedLocalCells
                #ifndef MPI2
@@ -279,19 +277,14 @@
             MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[1] );
             #endif
             #ifdef MPI2
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[2] );
             #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[2] );
             #endif
             #ifdef MPI2
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
+            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[3] );
             #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
-            #endif
-            #ifdef MPI2
-            MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[4] );
-            #else
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[4] );
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[3] );
             #endif
             #ifdef MPI2
             for (int i=1; i<Attributes; i++) {
@@ -309,9 +302,9 @@
                assertion4(disp[i]<static_cast<int>(sizeof(GridVertex)), i, disp[i], Attributes, sizeof(GridVertex));
             }
             #ifndef MPI2
-            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[5] );
-            disp[5] -= base;
-            disp[5] += disp[0];
+            MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[4] );
+            disp[4] -= base;
+            disp[4] += disp[0];
             #endif
             #ifdef MPI2
             MPI_Datatype tmpType; 
@@ -440,13 +433,13 @@
 switch (mode) { 
   case ExchangeMode::Blocking: 
     {
-      const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator()); 
+      const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::mpi::Rank::getInstance().getCommunicator()); 
        if  (result!=MPI_SUCCESS) { 
          std::ostringstream msg; 
          msg << "was not able to send message peano4::grid::GridVertex " 
              << toString() 
              << " to node " << destination 
-             << ": " << tarch::parallel::MPIReturnValueToString(result); 
+             << ": " << tarch::mpi::MPIReturnValueToString(result); 
          _log.error( "send(int)",msg.str() ); 
        } 
     } 
@@ -461,7 +454,7 @@ switch (mode) {
        bool         triggeredTimeoutWarning = false;  
        result = MPI_Isend(  
          this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination,  
-         tag, tarch::parallel::Node::getInstance().getCommunicator(), 
+         tag, tarch::mpi::Rank::getInstance().getCommunicator(), 
          sendRequestHandle  
        ); 
        if  (result!=MPI_SUCCESS) {  
@@ -469,43 +462,43 @@ switch (mode) {
          msg << "was not able to send message peano4::grid::GridVertex "  
              << toString() 
              << " to node " << destination 
-             << ": " << tarch::parallel::MPIReturnValueToString(result);  
+             << ": " << tarch::mpi::MPIReturnValueToString(result);  
          _log.error( "send(int)",msg.str() );  
        }  
        result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
        while (!flag) { 
-         if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-         if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+         if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+         if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
          result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
            std::ostringstream msg; 
            msg << "testing for finished send task for peano4::grid::GridVertex " 
                << toString() 
                << " sent to node " << destination 
-               << " failed: " << tarch::parallel::MPIReturnValueToString(result); 
+               << " failed: " << tarch::mpi::MPIReturnValueToString(result); 
            _log.error("send(int)", msg.str() ); 
          } 
          if ( 
-           tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+           tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
            (clock()>timeOutWarning) && 
            (!triggeredTimeoutWarning) 
          ) { 
-           tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+           tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
              "peano4::grid::GridVertex", 
              "send(int)", destination,tag,1 
            ); 
            triggeredTimeoutWarning = true; 
          } 
          if ( 
-           tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+           tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
            (clock()>timeOutShutdown) 
          ) { 
-           tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+           tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
              "peano4::grid::GridVertex", 
              "send(int)", destination,tag,1 
            ); 
          } 
- 	       tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
+ 	       tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
        } 
        delete sendRequestHandle; 
      }  
@@ -531,11 +524,11 @@ MPI_Status status;
 switch (mode) { 
   case ExchangeMode::Blocking: 
     { 
-      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
+      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertex from node " 
-            << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+            << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
     } 
@@ -550,44 +543,44 @@ switch (mode) {
       MPI_Request* sendRequestHandle = new MPI_Request(); 
        result = MPI_Irecv( 
         this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, 
-        tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle 
+        tarch::mpi::Rank::getInstance().getCommunicator(), sendRequestHandle 
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertex from node " 
-             << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
       result = MPI_Test( sendRequestHandle, &flag, source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       while (!flag) { 
-        if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+        if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
           (clock()>timeOutWarning) && 
           (!triggeredTimeoutWarning) 
         ) { 
-          tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+          tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
             "peano4::grid::GridVertex", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
         } 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
           (clock()>timeOutShutdown) 
         ) { 
-          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
             "peano4::grid::GridVertex", 
             "receive(int)", source,tag,1 
           ); 
         } 
-        tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
+        tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
         result = MPI_Test( sendRequestHandle, &flag, source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
         if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
           msg << "testing for finished receive task for peano4::grid::GridVertex failed: " 
-              << tarch::parallel::MPIReturnValueToString(result); 
+              << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
       } 
@@ -599,50 +592,50 @@ switch (mode) {
       clock_t      timeOutWarning   = -1; 
       clock_t      timeOutShutdown  = -1; 
       bool         triggeredTimeoutWarning = false; 
-      int result = MPI_Iprobe(source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
+      int result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
        if (result!=MPI_SUCCESS) { 
         std::ostringstream msg; 
         msg << "testing for finished receive task for peano4::grid::GridVertex failed: " 
-            << tarch::parallel::MPIReturnValueToString(result); 
+            << tarch::mpi::MPIReturnValueToString(result); 
         _log.error("receive(int)", msg.str() ); 
       } 
       while (!flag) { 
-        if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+        if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
           (clock()>timeOutWarning) && 
           (!triggeredTimeoutWarning) 
         ) { 
-          tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+          tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
             "peano4::grid::GridVertex", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
         } 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
           (clock()>timeOutShutdown) 
         ) { 
-          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
             "peano4::grid::GridVertex", 
             "receive(int)", source,tag,1 
           ); 
         } 
-        tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
-        result = MPI_Iprobe(source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
+        tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
+        result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
           msg << "testing for finished receive task for peano4::grid::GridVertex failed: " 
-              << tarch::parallel::MPIReturnValueToString(result); 
+              << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
       } 
-      result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
+      result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertex from node " 
-            << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+            << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
     }
@@ -663,7 +656,7 @@ switch (mode) {
          int  flag        = 0;
          MPI_Iprobe(
             MPI_ANY_SOURCE, tag,
-            tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
+            tarch::mpi::Rank::getInstance().getCommunicator(), &flag, &status
          );
          if (flag) {
             int  messageCounter;
@@ -1157,13 +1150,13 @@ switch (mode) {
 switch (mode) { 
   case ExchangeMode::Blocking: 
     {
-      const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator()); 
+      const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::mpi::Rank::getInstance().getCommunicator()); 
        if  (result!=MPI_SUCCESS) { 
          std::ostringstream msg; 
          msg << "was not able to send message peano4::grid::GridVertexPacked " 
              << toString() 
              << " to node " << destination 
-             << ": " << tarch::parallel::MPIReturnValueToString(result); 
+             << ": " << tarch::mpi::MPIReturnValueToString(result); 
          _log.error( "send(int)",msg.str() ); 
        } 
     } 
@@ -1178,7 +1171,7 @@ switch (mode) {
        bool         triggeredTimeoutWarning = false;  
        result = MPI_Isend(  
          this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination,  
-         tag, tarch::parallel::Node::getInstance().getCommunicator(), 
+         tag, tarch::mpi::Rank::getInstance().getCommunicator(), 
          sendRequestHandle  
        ); 
        if  (result!=MPI_SUCCESS) {  
@@ -1186,43 +1179,43 @@ switch (mode) {
          msg << "was not able to send message peano4::grid::GridVertexPacked "  
              << toString() 
              << " to node " << destination 
-             << ": " << tarch::parallel::MPIReturnValueToString(result);  
+             << ": " << tarch::mpi::MPIReturnValueToString(result);  
          _log.error( "send(int)",msg.str() );  
        }  
        result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
        while (!flag) { 
-         if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-         if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+         if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+         if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
          result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
            std::ostringstream msg; 
            msg << "testing for finished send task for peano4::grid::GridVertexPacked " 
                << toString() 
                << " sent to node " << destination 
-               << " failed: " << tarch::parallel::MPIReturnValueToString(result); 
+               << " failed: " << tarch::mpi::MPIReturnValueToString(result); 
            _log.error("send(int)", msg.str() ); 
          } 
          if ( 
-           tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+           tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
            (clock()>timeOutWarning) && 
            (!triggeredTimeoutWarning) 
          ) { 
-           tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+           tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
              "peano4::grid::GridVertexPacked", 
              "send(int)", destination,tag,1 
            ); 
            triggeredTimeoutWarning = true; 
          } 
          if ( 
-           tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+           tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
            (clock()>timeOutShutdown) 
          ) { 
-           tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+           tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
              "peano4::grid::GridVertexPacked", 
              "send(int)", destination,tag,1 
            ); 
          } 
- 	       tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
+ 	       tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
        } 
        delete sendRequestHandle; 
      }  
@@ -1248,11 +1241,11 @@ MPI_Status status;
 switch (mode) { 
   case ExchangeMode::Blocking: 
     { 
-      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
+      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertexPacked from node " 
-            << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+            << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
     } 
@@ -1267,44 +1260,44 @@ switch (mode) {
       MPI_Request* sendRequestHandle = new MPI_Request(); 
        result = MPI_Irecv( 
         this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, 
-        tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle 
+        tarch::mpi::Rank::getInstance().getCommunicator(), sendRequestHandle 
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertexPacked from node " 
-             << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
       result = MPI_Test( sendRequestHandle, &flag, source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       while (!flag) { 
-        if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+        if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
           (clock()>timeOutWarning) && 
           (!triggeredTimeoutWarning) 
         ) { 
-          tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+          tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
             "peano4::grid::GridVertexPacked", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
         } 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
           (clock()>timeOutShutdown) 
         ) { 
-          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
             "peano4::grid::GridVertexPacked", 
             "receive(int)", source,tag,1 
           ); 
         } 
-        tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
+        tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
         result = MPI_Test( sendRequestHandle, &flag, source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
         if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
           msg << "testing for finished receive task for peano4::grid::GridVertexPacked failed: " 
-              << tarch::parallel::MPIReturnValueToString(result); 
+              << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
       } 
@@ -1316,50 +1309,50 @@ switch (mode) {
       clock_t      timeOutWarning   = -1; 
       clock_t      timeOutShutdown  = -1; 
       bool         triggeredTimeoutWarning = false; 
-      int result = MPI_Iprobe(source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
+      int result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
        if (result!=MPI_SUCCESS) { 
         std::ostringstream msg; 
         msg << "testing for finished receive task for peano4::grid::GridVertexPacked failed: " 
-            << tarch::parallel::MPIReturnValueToString(result); 
+            << tarch::mpi::MPIReturnValueToString(result); 
         _log.error("receive(int)", msg.str() ); 
       } 
       while (!flag) { 
-        if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+        if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
           (clock()>timeOutWarning) && 
           (!triggeredTimeoutWarning) 
         ) { 
-          tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+          tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
             "peano4::grid::GridVertexPacked", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
         } 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
           (clock()>timeOutShutdown) 
         ) { 
-          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
             "peano4::grid::GridVertexPacked", 
             "receive(int)", source,tag,1 
           ); 
         } 
-        tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
-        result = MPI_Iprobe(source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
+        tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
+        result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
           msg << "testing for finished receive task for peano4::grid::GridVertexPacked failed: " 
-              << tarch::parallel::MPIReturnValueToString(result); 
+              << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
       } 
-      result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
+      result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertexPacked from node " 
-            << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+            << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
     }
@@ -1380,7 +1373,7 @@ switch (mode) {
          int  flag        = 0;
          MPI_Iprobe(
             MPI_ANY_SOURCE, tag,
-            tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
+            tarch::mpi::Rank::getInstance().getCommunicator(), &flag, &status
          );
          if (flag) {
             int  messageCounter;
@@ -1715,14 +1708,13 @@ switch (mode) {
                GridVertex dummyGridVertex[2];
                
                #ifdef MPI2
-               const int Attributes = 7;
+               const int Attributes = 6;
                #else
-               const int Attributes = 8;
+               const int Attributes = 7;
                #endif
                MPI_Datatype subtypes[Attributes] = {
                     MPI_INT		 //state
                   , MPI_INT		 //adjacentRanks
-                  , MPI_CXX_BOOL		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
                   , MPI_CXX_BOOL		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , MPI_DOUBLE		 //x
                   , MPI_INT		 //level
@@ -1736,7 +1728,6 @@ switch (mode) {
                int blocklen[Attributes] = {
                     1		 //state
                   , TwoPowerD		 //adjacentRanks
-                  , 1		 //hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep
                   , 1		 //isAntecessorOfRefinedVertexInCurrentTreeSweep
                   , Dimensions		 //x
                   , 1		 //level
@@ -1765,29 +1756,24 @@ switch (mode) {
                MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._adjacentRanks[0]))), 		&disp[1] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[2] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep))), 		&disp[2] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[2] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[3] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._isAntecessorOfRefinedVertexInCurrentTreeSweep))), 		&disp[3] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[3] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[4] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[4] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._x[0]))), 		&disp[4] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[4] );
                #endif
                #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[5] );
+               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[5] );
                #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._persistentRecords._level))), 		&disp[5] );
-               #endif
-               #ifdef MPI2
-               MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[6] );
-               #else
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[6] );
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[0]._numberOfAdjacentRefinedLocalCells))), 		&disp[5] );
                #endif
                #ifdef MPI2
                for (int i=1; i<Attributes; i++) {
@@ -1805,9 +1791,9 @@ switch (mode) {
                   assertion4(disp[i]<static_cast<int>(sizeof(GridVertex)), i, disp[i], Attributes, sizeof(GridVertex));
                }
                #ifndef MPI2
-               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[7] );
-               disp[7] -= base;
-               disp[7] += disp[0];
+               MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridVertex[1]))), 		&disp[6] );
+               disp[6] -= base;
+               disp[6] += disp[0];
                #endif
                #ifdef MPI2
                MPI_Datatype tmpType; 
@@ -1950,13 +1936,13 @@ switch (mode) {
 switch (mode) { 
   case ExchangeMode::Blocking: 
     {
-      const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator()); 
+      const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::mpi::Rank::getInstance().getCommunicator()); 
        if  (result!=MPI_SUCCESS) { 
          std::ostringstream msg; 
          msg << "was not able to send message peano4::grid::GridVertex " 
              << toString() 
              << " to node " << destination 
-             << ": " << tarch::parallel::MPIReturnValueToString(result); 
+             << ": " << tarch::mpi::MPIReturnValueToString(result); 
          _log.error( "send(int)",msg.str() ); 
        } 
     } 
@@ -1971,7 +1957,7 @@ switch (mode) {
        bool         triggeredTimeoutWarning = false;  
        result = MPI_Isend(  
          this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination,  
-         tag, tarch::parallel::Node::getInstance().getCommunicator(), 
+         tag, tarch::mpi::Rank::getInstance().getCommunicator(), 
          sendRequestHandle  
        ); 
        if  (result!=MPI_SUCCESS) {  
@@ -1979,43 +1965,43 @@ switch (mode) {
          msg << "was not able to send message peano4::grid::GridVertex "  
              << toString() 
              << " to node " << destination 
-             << ": " << tarch::parallel::MPIReturnValueToString(result);  
+             << ": " << tarch::mpi::MPIReturnValueToString(result);  
          _log.error( "send(int)",msg.str() );  
        }  
        result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
        while (!flag) { 
-         if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-         if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+         if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+         if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
          result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
            std::ostringstream msg; 
            msg << "testing for finished send task for peano4::grid::GridVertex " 
                << toString() 
                << " sent to node " << destination 
-               << " failed: " << tarch::parallel::MPIReturnValueToString(result); 
+               << " failed: " << tarch::mpi::MPIReturnValueToString(result); 
            _log.error("send(int)", msg.str() ); 
          } 
          if ( 
-           tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+           tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
            (clock()>timeOutWarning) && 
            (!triggeredTimeoutWarning) 
          ) { 
-           tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+           tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
              "peano4::grid::GridVertex", 
              "send(int)", destination,tag,1 
            ); 
            triggeredTimeoutWarning = true; 
          } 
          if ( 
-           tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+           tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
            (clock()>timeOutShutdown) 
          ) { 
-           tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+           tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
              "peano4::grid::GridVertex", 
              "send(int)", destination,tag,1 
            ); 
          } 
- 	       tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
+ 	       tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
        } 
        delete sendRequestHandle; 
      }  
@@ -2041,11 +2027,11 @@ MPI_Status status;
 switch (mode) { 
   case ExchangeMode::Blocking: 
     { 
-      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
+      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertex from node " 
-            << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+            << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
     } 
@@ -2060,44 +2046,44 @@ switch (mode) {
       MPI_Request* sendRequestHandle = new MPI_Request(); 
        result = MPI_Irecv( 
         this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, 
-        tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle 
+        tarch::mpi::Rank::getInstance().getCommunicator(), sendRequestHandle 
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertex from node " 
-             << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
       result = MPI_Test( sendRequestHandle, &flag, source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       while (!flag) { 
-        if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+        if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
           (clock()>timeOutWarning) && 
           (!triggeredTimeoutWarning) 
         ) { 
-          tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+          tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
             "peano4::grid::GridVertex", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
         } 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
           (clock()>timeOutShutdown) 
         ) { 
-          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
             "peano4::grid::GridVertex", 
             "receive(int)", source,tag,1 
           ); 
         } 
-        tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
+        tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
         result = MPI_Test( sendRequestHandle, &flag, source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
         if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
           msg << "testing for finished receive task for peano4::grid::GridVertex failed: " 
-              << tarch::parallel::MPIReturnValueToString(result); 
+              << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
       } 
@@ -2109,50 +2095,50 @@ switch (mode) {
       clock_t      timeOutWarning   = -1; 
       clock_t      timeOutShutdown  = -1; 
       bool         triggeredTimeoutWarning = false; 
-      int result = MPI_Iprobe(source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
+      int result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
        if (result!=MPI_SUCCESS) { 
         std::ostringstream msg; 
         msg << "testing for finished receive task for peano4::grid::GridVertex failed: " 
-            << tarch::parallel::MPIReturnValueToString(result); 
+            << tarch::mpi::MPIReturnValueToString(result); 
         _log.error("receive(int)", msg.str() ); 
       } 
       while (!flag) { 
-        if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+        if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
           (clock()>timeOutWarning) && 
           (!triggeredTimeoutWarning) 
         ) { 
-          tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+          tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
             "peano4::grid::GridVertex", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
         } 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
           (clock()>timeOutShutdown) 
         ) { 
-          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
             "peano4::grid::GridVertex", 
             "receive(int)", source,tag,1 
           ); 
         } 
-        tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
-        result = MPI_Iprobe(source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
+        tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
+        result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
           msg << "testing for finished receive task for peano4::grid::GridVertex failed: " 
-              << tarch::parallel::MPIReturnValueToString(result); 
+              << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
       } 
-      result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
+      result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertex from node " 
-            << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+            << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
     }
@@ -2173,7 +2159,7 @@ switch (mode) {
             int  flag        = 0;
             MPI_Iprobe(
                MPI_ANY_SOURCE, tag,
-               tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
+               tarch::mpi::Rank::getInstance().getCommunicator(), &flag, &status
             );
             if (flag) {
                int  messageCounter;
@@ -2773,13 +2759,13 @@ switch (mode) {
 switch (mode) { 
   case ExchangeMode::Blocking: 
     {
-      const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::parallel::Node::getInstance().getCommunicator()); 
+      const int result = MPI_Send(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination, tag, tarch::mpi::Rank::getInstance().getCommunicator()); 
        if  (result!=MPI_SUCCESS) { 
          std::ostringstream msg; 
          msg << "was not able to send message peano4::grid::GridVertexPacked " 
              << toString() 
              << " to node " << destination 
-             << ": " << tarch::parallel::MPIReturnValueToString(result); 
+             << ": " << tarch::mpi::MPIReturnValueToString(result); 
          _log.error( "send(int)",msg.str() ); 
        } 
     } 
@@ -2794,7 +2780,7 @@ switch (mode) {
        bool         triggeredTimeoutWarning = false;  
        result = MPI_Isend(  
          this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, destination,  
-         tag, tarch::parallel::Node::getInstance().getCommunicator(), 
+         tag, tarch::mpi::Rank::getInstance().getCommunicator(), 
          sendRequestHandle  
        ); 
        if  (result!=MPI_SUCCESS) {  
@@ -2802,43 +2788,43 @@ switch (mode) {
          msg << "was not able to send message peano4::grid::GridVertexPacked "  
              << toString() 
              << " to node " << destination 
-             << ": " << tarch::parallel::MPIReturnValueToString(result);  
+             << ": " << tarch::mpi::MPIReturnValueToString(result);  
          _log.error( "send(int)",msg.str() );  
        }  
        result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
        while (!flag) { 
-         if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-         if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+         if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+         if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
          result = MPI_Test( sendRequestHandle, &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
            std::ostringstream msg; 
            msg << "testing for finished send task for peano4::grid::GridVertexPacked " 
                << toString() 
                << " sent to node " << destination 
-               << " failed: " << tarch::parallel::MPIReturnValueToString(result); 
+               << " failed: " << tarch::mpi::MPIReturnValueToString(result); 
            _log.error("send(int)", msg.str() ); 
          } 
          if ( 
-           tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+           tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
            (clock()>timeOutWarning) && 
            (!triggeredTimeoutWarning) 
          ) { 
-           tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+           tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
              "peano4::grid::GridVertexPacked", 
              "send(int)", destination,tag,1 
            ); 
            triggeredTimeoutWarning = true; 
          } 
          if ( 
-           tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+           tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
            (clock()>timeOutShutdown) 
          ) { 
-           tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+           tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
              "peano4::grid::GridVertexPacked", 
              "send(int)", destination,tag,1 
            ); 
          } 
- 	       tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
+ 	       tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
        } 
        delete sendRequestHandle; 
      }  
@@ -2864,11 +2850,11 @@ MPI_Status status;
 switch (mode) { 
   case ExchangeMode::Blocking: 
     { 
-      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
+      const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertexPacked from node " 
-            << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+            << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
     } 
@@ -2883,44 +2869,44 @@ switch (mode) {
       MPI_Request* sendRequestHandle = new MPI_Request(); 
        result = MPI_Irecv( 
         this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, 
-        tarch::parallel::Node::getInstance().getCommunicator(), sendRequestHandle 
+        tarch::mpi::Rank::getInstance().getCommunicator(), sendRequestHandle 
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertexPacked from node " 
-             << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
       result = MPI_Test( sendRequestHandle, &flag, source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       while (!flag) { 
-        if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+        if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
           (clock()>timeOutWarning) && 
           (!triggeredTimeoutWarning) 
         ) { 
-          tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+          tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
             "peano4::grid::GridVertexPacked", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
         } 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
           (clock()>timeOutShutdown) 
         ) { 
-          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
             "peano4::grid::GridVertexPacked", 
             "receive(int)", source,tag,1 
           ); 
         } 
-        tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
+        tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
         result = MPI_Test( sendRequestHandle, &flag, source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
         if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
           msg << "testing for finished receive task for peano4::grid::GridVertexPacked failed: " 
-              << tarch::parallel::MPIReturnValueToString(result); 
+              << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
       } 
@@ -2932,50 +2918,50 @@ switch (mode) {
       clock_t      timeOutWarning   = -1; 
       clock_t      timeOutShutdown  = -1; 
       bool         triggeredTimeoutWarning = false; 
-      int result = MPI_Iprobe(source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
+      int result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
        if (result!=MPI_SUCCESS) { 
         std::ostringstream msg; 
         msg << "testing for finished receive task for peano4::grid::GridVertexPacked failed: " 
-            << tarch::parallel::MPIReturnValueToString(result); 
+            << tarch::mpi::MPIReturnValueToString(result); 
         _log.error("receive(int)", msg.str() ); 
       } 
       while (!flag) { 
-        if (timeOutWarning==-1)   timeOutWarning   = tarch::parallel::Node::getInstance().getDeadlockWarningTimeStamp(); 
-        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::parallel::Node::getInstance().getDeadlockTimeOutTimeStamp(); 
+        if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp(); 
+        if (timeOutShutdown==-1)  timeOutShutdown  = tarch::mpi::Rank::getInstance().getDeadlockTimeOutTimeStamp(); 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutWarningEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutWarningEnabled() && 
           (clock()>timeOutWarning) && 
           (!triggeredTimeoutWarning) 
         ) { 
-          tarch::parallel::Node::getInstance().writeTimeOutWarning( 
+          tarch::mpi::Rank::getInstance().writeTimeOutWarning( 
             "peano4::grid::GridVertexPacked", 
             "receive(int)", source,tag,1 
           ); 
           triggeredTimeoutWarning = true; 
         } 
         if ( 
-          tarch::parallel::Node::getInstance().isTimeOutDeadlockEnabled() && 
+          tarch::mpi::Rank::getInstance().isTimeOutDeadlockEnabled() && 
           (clock()>timeOutShutdown) 
         ) { 
-          tarch::parallel::Node::getInstance().triggerDeadlockTimeOut( 
+          tarch::mpi::Rank::getInstance().triggerDeadlockTimeOut( 
             "peano4::grid::GridVertexPacked", 
             "receive(int)", source,tag,1 
           ); 
         } 
-        tarch::parallel::Node::getInstance().receiveDanglingMessages(); 
-        result = MPI_Iprobe(source, tag, tarch::parallel::Node::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
+        tarch::mpi::Rank::getInstance().receiveDanglingMessages(); 
+        result = MPI_Iprobe(source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), &flag, MPI_STATUS_IGNORE ); 
          if (result!=MPI_SUCCESS) { 
           std::ostringstream msg; 
           msg << "testing for finished receive task for peano4::grid::GridVertexPacked failed: " 
-              << tarch::parallel::MPIReturnValueToString(result); 
+              << tarch::mpi::MPIReturnValueToString(result); 
           _log.error("receive(int)", msg.str() ); 
         } 
       } 
-      result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::parallel::Node::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
+      result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
         msg << "failed to start to receive peano4::grid::GridVertexPacked from node " 
-            << source << ": " << tarch::parallel::MPIReturnValueToString(result); 
+            << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
     }
@@ -2996,7 +2982,7 @@ switch (mode) {
             int  flag        = 0;
             MPI_Iprobe(
                MPI_ANY_SOURCE, tag,
-               tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
+               tarch::mpi::Rank::getInstance().getCommunicator(), &flag, &status
             );
             if (flag) {
                int  messageCounter;

@@ -30,11 +30,20 @@ namespace peano4 {
    * arguments directly without calling initParallelEnvironment() they
    * might contain MPI values not important to the program.
    *
-   * !!! Rationale
+   * <h2> Rationale </h2>
    *
    * You may not use the trace macros before this operation has invoked the init
    * operation. Otherwise, the getRank() assertion fails, as the node has not
    * been configured correctly.
+   *
+   * <h2> Usage </h2>
+   *
+   * Invoke with an address operator before that.
+   * <pre>
+  peano4::initParallelEnvironment(&argc,&argv);
+     </pre>
+   * This has to be done as one of the very first things, i.e. before you init
+   * the logging, or run tests, or ...
    */
   int initParallelEnvironment(int* argc, char*** argv);
 

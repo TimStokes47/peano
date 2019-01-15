@@ -170,6 +170,10 @@ int main(int argc, char** argv) {
   const int ExitCodeSuccess         = 0;
   const int ExitCodeUnitTestsFailed = 1;
 
+  peano4::initParallelEnvironment(&argc,&argv);
+  peano4::initSharedMemoryEnvironment();
+  peano4::fillLookupTables();
+
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
     "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "tarch::multicore", true
   ));
@@ -177,9 +181,6 @@ int main(int argc, char** argv) {
     "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::grid::EmptyTraversalObserver", true
   ));
   tarch::logging::CommandLineLogger::getInstance().setOutputFile( "trace.txt" );
-
-  initParallelEnvironment(argc,argv);
-  peano4::fillLookupTables();
 
   tarch::multicore::Core::getInstance().configure(4,2,1);
 
@@ -189,6 +190,9 @@ int main(int argc, char** argv) {
   runTests();
   runSerial();
   runMultithreaded();
+
+  peano4::shutdownSharedMemoryEnvironment();
+  peano4::shutdownParallelEnvironment();
 
   return 0;
 }

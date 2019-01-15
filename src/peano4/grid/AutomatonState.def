@@ -8,8 +8,8 @@ Constant: DimensionsTimesTwo;
 
 class peano4::grid::AutomatonState {
   persistent parallelise packed int     level;
-  persistent parallelise packed double  x[Dimensions];
-  persistent parallelise packed double  h[Dimensions];
+  persistent parallelise double         x[Dimensions];
+  persistent parallelise double         h[Dimensions];
 
   persistent packed bool inverted;
 

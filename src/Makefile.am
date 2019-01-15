@@ -35,10 +35,10 @@ Peano4Core_SOURCES = peano4/peano.cpp \
   peano4/grid/TraversalVTKPlotter.cpp \
   peano4/grid/GridStatistics.cpp \
   peano4/grid/tests/SpacetreeTest.cpp \
-  peano4/mpi/Node.cpp \
-  peano4/mpi/Tasks.cpp \
-  peano4/mpi/TreeEntry.cpp \
-  peano4/mpi/SpacetreeSet.cpp \
+  peano4/parallel/Node.cpp \
+  peano4/parallel/Tasks.cpp \
+  peano4/parallel/TreeEntry.cpp \
+  peano4/parallel/SpacetreeSet.cpp \
   peano4/utils/Loop.cpp
 
 

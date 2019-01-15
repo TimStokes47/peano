@@ -3,7 +3,7 @@
 
 #include "peano4/utils/Globals.h"
 #ifdef Parallel
-	#include "tarch/parallel/Node.h"
+	#include "tarch/mpi/Rank.h"
 #endif
 #include "tarch/logging/Log.h"
 #include "tarch/la/Vector.h"
@@ -27,7 +27,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   08/01/2019 21:09
+ * @date   15/01/2019 20:01
  */
 class peano4::parallel::TreeEntry { 
    
@@ -177,7 +177,7 @@ class peano4::parallel::TreeEntry {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   08/01/2019 21:09
+ * @date   15/01/2019 20:01
  */
 class peano4::parallel::TreeEntryPacked { 
    

@@ -42,13 +42,13 @@ peano4::parallel::Node& peano4::parallel::Node::getInstance() {
 
 
 int peano4::parallel::Node::getId(int rank, int threadId) const {
-  const int numberOfRanks = tarch::parallel::Node::getInstance().getNumberOfNodes();
+  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfNodes();
   return numberOfRanks * threadId + rank;
 }
 
 
 int peano4::parallel::Node::getRank(int id) const {
-  const int numberOfRanks = tarch::parallel::Node::getInstance().getNumberOfNodes();
+  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfNodes();
   return id % numberOfRanks;
 }
 

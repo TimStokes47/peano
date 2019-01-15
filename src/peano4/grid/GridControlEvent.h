@@ -2,7 +2,7 @@
 #define _PEANO4_GRID_GRIDCONTROLEVENT_H
 
 #ifdef Parallel
-	#include "tarch/parallel/Node.h"
+	#include "tarch/mpi/Rank.h"
 #endif
 #include "tarch/logging/Log.h"
 #include "tarch/la/Vector.h"
@@ -26,7 +26,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   02/01/2019 15:45
+ * @date   15/01/2019 20:02
  */
 class peano4::grid::GridControlEvent { 
    
@@ -208,7 +208,7 @@ class peano4::grid::GridControlEvent {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   02/01/2019 15:45
+ * @date   15/01/2019 20:02
  */
 class peano4::grid::GridControlEventPacked { 
    
