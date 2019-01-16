@@ -1,0 +1,8 @@
+#include "peano4/utils/Globals.h"
+
+Packed-Type: short int;
+
+
+class peano4::parallel::StartTraversalMessage {
+  persistent parallelise int   stepIdentifier;
+};
