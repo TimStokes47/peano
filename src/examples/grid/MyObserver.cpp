@@ -56,9 +56,9 @@ peano4::grid::TraversalObserver* applications4::grid::MyObserver::clone(int spac
   if (_spacetreeId!=-1) {
 	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
   }
-
-  result->openFile();
-  result->updateMetaFile();
+  else {
+    updateMetaFile(spacetreeId);
+  }
 
   if (peano4::parallel::Node::isGlobalMaster(spacetreeId)) {
     startNewSnapshot(true);

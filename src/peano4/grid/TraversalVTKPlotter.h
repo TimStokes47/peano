@@ -38,7 +38,12 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
     const int                                                                        _spacetreeId;
     int                                                                              _counter;
 
-    void updateMetaFile();
+    /**
+     * In a parallel environment, please invoke this operation only on the main
+     * writer. This guy himself will be empty, but it has to build up the vector
+     * of existing data files.
+     */
+    void updateMetaFile(int spacetreeId);
     void closeFile();
     void openFile();
 
@@ -55,6 +60,8 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
     /**
      * You have to invoke startNewSnapshot() if you wanna have a pvd file
      * immediately after you've created this observer in the main code.
+     *
+     * If this guy is ran on the global master,
      */
     TraversalVTKPlotter( const std::string& filename, int treeId=-1, int counter=0 );
     virtual ~TraversalVTKPlotter();

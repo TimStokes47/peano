@@ -23,6 +23,9 @@ peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filen
   _spacetreeIdWriter(nullptr),
   _coreWriter(nullptr),
   _timeSeriesWriter() {
+  if (treeId==-1) {
+	openFile();
+  }
 }
 
 
@@ -108,8 +111,9 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
     #if Dimensions==2
     cellIndex = _cellWriter->plotQuadrangle(vertexIndices);
     #elif Dimensions==3
-    #else
     cellIndex = _cellWriter->plotHexahedron(vertexIndices);
+    #else
+    logError( "enterCell(...)", "supports only 2d and 3d" );
     #endif
 
     assertion( _spacetreeIdWriter!=nullptr );
@@ -130,11 +134,11 @@ void peano4::grid::TraversalVTKPlotter::leaveCell(
 }
 
 
-void peano4::grid::TraversalVTKPlotter::updateMetaFile() {
+void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
   static tarch::multicore::BooleanSemaphore semaphore;
   tarch::multicore::Lock lock(semaphore);
 
-  std::string newFile = _filename + "-" + std::to_string(_spacetreeId) + "-" + std::to_string( _counter );
+  std::string newFile = _filename + "-" + std::to_string(spacetreeId) + "-" + std::to_string( _counter );
   _clonedSpacetreeIds.push_back( newFile );
   assertion1( _writer!=nullptr, _spacetreeId );
   _writer->writeMetaDataFileForParallelSnapshot(
@@ -154,9 +158,9 @@ peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int s
   if (_spacetreeId!=-1) {
 	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
   }
-
-  result->openFile();
-  result->updateMetaFile();
+  else {
+    updateMetaFile(spacetreeId);
+  }
 
   return result;
 }
