@@ -1,0 +1,11 @@
+**/*.lo
+**/.deps
+**/.cproject
+**/.libs
+**/.project
+**/.dirstamp
+**/.settings
+**/.externalToolBuilders
+**/.o
+src/stamp-h1
+
