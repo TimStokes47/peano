@@ -94,8 +94,11 @@ class peano4::parallel::SpacetreeSet {
      * pass the overall spacetree to the set. All the other, split off trees
      * then are added by the Peano4 core internally.
      *
-     * As we may not copy spacetrees, the parameter has move semantics. So
-     * if you have a spacetree, use std::move around your argument.
+     * I have to use the move semantics here, as spacetrees hold stacks.
+     * Stacks in return may not be copied. In the implementation, I use the
+     * std::move() command to explicitly move the argument into the vector.
+     * This should not be necessary, as C++ overloads the std::vector::push_back()
+     * but I want to be on the safe side.
      */
     void addSpacetree( peano4::grid::Spacetree&& spacetree );
 
@@ -113,6 +116,8 @@ class peano4::parallel::SpacetreeSet {
       const tarch::la::Vector<Dimensions,double>&  offset,
       const tarch::la::Vector<Dimensions,double>&  width
     );
+
+    ~SpacetreeSet();
 
     /**
      * Invoke traverse on all spacetrees in parallel.

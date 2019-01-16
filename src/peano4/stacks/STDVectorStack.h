@@ -8,10 +8,10 @@
 
 
 namespace peano4 {
- namespace stacks {
-   template <class T>
-   class STDVectorStack;
- }
+  namespace stacks {
+    template <class T>
+    class STDVectorStack;
+  }
 }
 
 
@@ -37,6 +37,19 @@ class peano4::stacks::STDVectorStack {
     int                _currentElement;
 
   public:
+    /**
+     * Constructor.
+     *
+     * @see EventStack::EventStack()
+     */
+    STDVectorStack():
+      _data(),
+	  _currentElement(0) {
+    }
+
+    ~STDVectorStack() {
+    }
+
     /**
      * One is allowed to clone/copy a stack, but it has to be empty.
      * Usually only when we cut the domain into pieces.
@@ -229,25 +242,6 @@ class peano4::stacks::STDVectorStack {
           return msg.str();
         }
     };
-
-
-    /**
-     * Constructor.
-     *
-     * @see EventStack::EventStack()
-     */
-    STDVectorStack():
-      _data(),
-	  _currentElement(0) {
-    }
-
-    ~STDVectorStack() {
-    }
-
-    /**
-     * One is not allowed to clone a stack.
-     */
-//    STDVectorStack( const STDVectorStack<T>&& stack ) = default;
 
     /**
      * Pops element from a stack.

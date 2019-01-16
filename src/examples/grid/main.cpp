@@ -166,6 +166,7 @@ void runParallel() {
   spacetreeSet.traverse( plotterObserver );
 }
 
+
 int main(int argc, char** argv) {
   const int ExitCodeSuccess         = 0;
   const int ExitCodeUnitTestsFailed = 1;
@@ -184,11 +185,10 @@ int main(int argc, char** argv) {
 
   tarch::multicore::Core::getInstance().configure(4,2,1);
 
-  // @todo move down
-  runParallel();
-
   runTests();
-  runSerial();
+  // @todo move down
+  //runParallel();
+  //runSerial();
   runMultithreaded();
 
   peano4::shutdownSharedMemoryEnvironment();

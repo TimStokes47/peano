@@ -576,16 +576,18 @@ class peano4::grid::Spacetree {
     /**
      * Don't copy a tree as it is tied to some stacks.
      *
+     * @todo
+     *
      * Unfortunately, this does not work, as we need it for the vector.
      */
-    // Spacetree( const Spacetree& ) = delete;
+    Spacetree( const Spacetree& ) = delete;
 
     /**
      * Don't copy a tree as it is tied to some stacks.
      *
      * Unfortunately, this does not work, as we need it for the vector.
      */
-    // Spacetree& operator=( const Spacetree& ) = delete;
+    Spacetree& operator=( const Spacetree& ) = delete;
 
     /**
      * Join with master. Call this routine only for degenerated trees,
@@ -626,6 +628,10 @@ class peano4::grid::Spacetree {
 	  const tarch::la::Vector<Dimensions,double>&  offset,
 	  const tarch::la::Vector<Dimensions,double>&  width
     );
+
+    ~Spacetree();
+
+    Spacetree( Spacetree&& );
 
     void traverse(TraversalObserver& observer);
 

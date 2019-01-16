@@ -18,6 +18,10 @@ peano4::parallel::SpacetreeSet::SpacetreeSet(
 }
 
 
+peano4::parallel::SpacetreeSet::~SpacetreeSet() {
+}
+
+
 void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree&&  spacetree ) {
   tarch::multicore::Lock lock( _semaphore );
 

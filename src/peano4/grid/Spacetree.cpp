@@ -63,6 +63,24 @@ peano4::grid::Spacetree::Spacetree(
 }
 
 
+peano4::grid::Spacetree::Spacetree( Spacetree&& other ):
+  _id(other._id),
+  _spacetreeState( SpacetreeState::NewFromSplit ),
+  _root( std::move(other._root) ),
+  _statistics(),
+  _masterId(other._masterId),
+  _splitTriggered(),
+  _splitting(),
+  _joinTriggered(),
+  _joining(),
+  _vertexStack( std::move(other._vertexStack)) {
+}
+
+
+peano4::grid::Spacetree::~Spacetree() {
+}
+
+
 bool peano4::grid::Spacetree::isVertexAdjacentToLocalSpacetree(
   GridVertex  vertex,
   bool        splittingIsConsideredLocal,
