@@ -29,3 +29,7 @@
  * I basically need these settings only in the plotters
  */
 #define LittleEndian
+
+#if !defined(noMPI2) && !defined(MPI2)
+#define MPI2
+#endif
