@@ -1,15 +1,15 @@
 #include "../../examples/grid/MyObserver.h"
+
 #include "tarch/logging/Log.h"
 #include "tarch/tests/TestCaseRegistry.h"
 #include "tarch/logging/CommandLineLogger.h"
 #include "tarch/multicore/Core.h"
-
+#include "tarch/mpi/Rank.h"
 
 #include "peano4/peano.h"
 #include "peano4/grid/Spacetree.h"
-
-
 #include "peano4/parallel/SpacetreeSet.h"
+#include "peano4/parallel/Node.h"
 
 
 tarch::logging::Log _log("grid");
@@ -150,20 +150,26 @@ void runMultithreaded() {
 
 
 void runParallel() {
-  peano4::parallel::SpacetreeSet spacetreeSet(
-#if Dimensions==2
-    {0.0, 0.0},
-    {1.0, 1.0}
-#else
-    {0.0, 0.0, 0.0},
-    {1.0, 1.0, 1.0}
-#endif
-  );
-
-
-
-  peano4::grid::TraversalVTKPlotter plotterObserver( "grid-parallel" );
-  spacetreeSet.traverse( plotterObserver );
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
+    peano4::parallel::Node::getInstance().setNextProgramStep(14);
+    runMultithreaded();
+  }
+  else {
+	while (peano4::parallel::Node::getInstance().continueToRun()) {
+      peano4::parallel::SpacetreeSet spacetreeSet(
+	  #if Dimensions==2
+	    {0.0, 0.0},
+	    {1.0, 1.0}
+	  #else
+ 	    {0.0, 0.0, 0.0},
+	    {1.0, 1.0, 1.0}
+      #endif
+	  );
+      assertion( peano4::parallel::Node::getInstance().getCurrentProgramStep()==14 );
+      applications4::grid::MyObserver emptyObserver;
+      spacetreeSet.traverse(emptyObserver);
+	}
+  }
 }
 
 

@@ -19,6 +19,10 @@ peano4::parallel::SpacetreeSet::SpacetreeSet(
 
 
 peano4::parallel::SpacetreeSet::~SpacetreeSet() {
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    peano4::parallel::Node::getInstance().setNextProgramStep(peano4::parallel::Node::Terminate);
+    peano4::parallel::Node::getInstance().continueToRun();
+  }
 }
 
 
@@ -165,6 +169,10 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
 
 
 void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& observer) {
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    peano4::parallel::Node::getInstance().continueToRun();
+  }
+
   traverseTreeSet(observer);
 
   //

@@ -1,4 +1,6 @@
 #include "peano4/utils/Globals.h"
+// have to know whether we are using MPI
+#include "config.h"
 
 Packed-Type: short int;
 

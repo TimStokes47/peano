@@ -171,7 +171,7 @@ bool tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::writeT
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     _metaFileOut << std::endl << "begin dataset" << std::endl;
 
-    for (int i=0; i<tarch::mpi::Rank::getInstance().getNumberOfNodes(); i++) {
+    for (int i=0; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++) {
       std::ostringstream referencedFilename;
       if (filenamePrefix.find("/")!=std::string::npos) {
         referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );

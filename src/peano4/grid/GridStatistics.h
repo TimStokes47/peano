@@ -1,6 +1,7 @@
 #ifndef _PEANO4_GRID_GRIDSTATISTICS_H
 #define _PEANO4_GRID_GRIDSTATISTICS_H
 
+#include "config.h"
 #ifdef Parallel
 	#include "tarch/mpi/Rank.h"
 #endif
@@ -26,7 +27,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/01/2019 20:02
+ * @date   16/01/2019 19:36
  */
 class peano4::grid::GridStatistics { 
    
@@ -323,7 +324,7 @@ class peano4::grid::GridStatistics {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/01/2019 20:02
+ * @date   16/01/2019 19:36
  */
 class peano4::grid::GridStatisticsPacked { 
    

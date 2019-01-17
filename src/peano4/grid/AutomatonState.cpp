@@ -785,10 +785,10 @@ peano4::grid::AutomatonStatePacked::PersistentRecords::PersistentRecords() {
 
 
 peano4::grid::AutomatonStatePacked::PersistentRecords::PersistentRecords(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber):
+_x(x),
+_h(h),
 _accessNumber(accessNumber) {
    setLevel(level);
-   setX(x);
-   setH(h);
    setInverted(inverted);
    setEvenFlags(evenFlags);
    if ((Dimensions+1 >= (8 * sizeof(short int)))) {
@@ -895,7 +895,7 @@ peano4::grid::AutomatonStatePacked::AutomatonStatePacked() {
 
 
 peano4::grid::AutomatonStatePacked::AutomatonStatePacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getLevel(), persistentRecords.getX(), persistentRecords.getH(), persistentRecords.getInverted(), persistentRecords.getEvenFlags(), persistentRecords._accessNumber) {
+_persistentRecords(persistentRecords.getLevel(), persistentRecords._x, persistentRecords._h, persistentRecords.getInverted(), persistentRecords.getEvenFlags(), persistentRecords._accessNumber) {
    if ((Dimensions+1 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;

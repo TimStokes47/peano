@@ -236,7 +236,7 @@ class tarch::mpi::Rank {
     /**
      * @return Number of Nodes Available
      */
-    int getNumberOfNodes() const;
+    int getNumberOfRanks() const;
 
     /**
      * Is this node the global master process, i.e. does its rank equal get
@@ -297,20 +297,20 @@ class tarch::mpi::Rank {
      * \code
      *   MPI_Status  status;
      *   int         flag = 0;
-     *   clock_t     timeOutWarning   = Node::getInstance().getDeadlockWarningTimeStamp();
-     *   clock_t     timeOutShutdown  = Node::getInstance().getDeadlockTimeOutTimeStamp();
+     *   clock_t     timeOutWarning   = Rank::getInstance().getDeadlockWarningTimeStamp();
+     *   clock_t     timeOutShutdown  = Rank::getInstance().getDeadlockTimeOutTimeStamp();
      *   bool        triggeredTimeoutWarning = false;
-     *   MPI_Iprobe( source, CommunicationTag, Node::getInstance().getCommunicator(), &flag, &status );
+     *   MPI_Iprobe( source, CommunicationTag, Rank::getInstance().getCommunicator(), &flag, &status );
      *
      *   while (!flag) {
-     *     if ( Node::getInstance().isTimeOutWarningEnabled() && (clock()>timeOutWarning) && (!triggeredTimeoutWarning)) {
-     *       Node::getInstance().writeTimeOutWarning( "parallel::SendReceiveBuffer", "receiveAllMessages()", source );
+     *     if ( Rank::getInstance().isTimeOutWarningEnabled() && (clock()>timeOutWarning) && (!triggeredTimeoutWarning)) {
+     *       Rank::getInstance().writeTimeOutWarning( "parallel::SendReceiveBuffer", "receiveAllMessages()", source );
      *       triggeredTimeoutWarning = true;
      *     }
-     *     if ( Node::getInstance().isTimeOutDeadlockEnabled() && (clock()>timeOutShutdown)) {
-     *       Node::getInstance().triggerDeadlockTimeOut( "parallel::SendReceiveBuffer", "receiveAllMessages()", source );
+     *     if ( Rank::getInstance().isTimeOutDeadlockEnabled() && (clock()>timeOutShutdown)) {
+     *       Rank::getInstance().triggerDeadlockTimeOut( "parallel::SendReceiveBuffer", "receiveAllMessages()", source );
      *     }
-     *     MPI_Iprobe( source, CommunicationTag, Node::getInstance().getCommunicator(), &flag, &status );
+     *     MPI_Iprobe( source, CommunicationTag, Rank::getInstance().getCommunicator(), &flag, &status );
      *   }
      * \endcode
      *

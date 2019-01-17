@@ -697,10 +697,10 @@ peano4::grid::GridControlEventPacked::PersistentRecords::PersistentRecords() {
 
 
 peano4::grid::GridControlEventPacked::PersistentRecords::PersistentRecords(const RefinementControl& refinementControl, const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width, const tarch::la::Vector<Dimensions,double>& h):
-_refinementControl(refinementControl) {
-   setOffset(offset);
-   setWidth(width);
-   setH(h);
+_refinementControl(refinementControl),
+_offset(offset),
+_width(width),
+_h(h) {
    
 }
 
@@ -758,7 +758,7 @@ peano4::grid::GridControlEventPacked::GridControlEventPacked() {
 
 
 peano4::grid::GridControlEventPacked::GridControlEventPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._refinementControl, persistentRecords.getOffset(), persistentRecords.getWidth(), persistentRecords.getH()) {
+_persistentRecords(persistentRecords._refinementControl, persistentRecords._offset, persistentRecords._width, persistentRecords._h) {
    
 }
 

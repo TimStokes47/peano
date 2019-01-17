@@ -1,13 +1,12 @@
 #include "Node.h"
-
+#include "StartTraversalMessage.h"
 
 #include "peano4/grid/Spacetree.h"
-
 
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>         // std::chrono::seconds
 
-#include "../../tarch/mpi/Rank.h"
+#include "tarch/mpi/Rank.h"
 
 
 #include "tarch/Assertions.h"
@@ -21,12 +20,16 @@
 tarch::logging::Log  peano4::parallel::Node::_log("peano4::parallel::Node");
 
 
-peano4::parallel::Node::Node() {
+peano4::parallel::Node::Node():
+  _currentProgramStep(UndefProgramStep),
+  _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ) {
   registerId( 0, -1);
+  StartTraversalMessage::initDatatype();
 }
 
 
 peano4::parallel::Node::~Node() {
+  assertionMsg( _currentProgramStep==Terminate, "forgot to terminate node properly" );
 }
 
 
@@ -42,13 +45,13 @@ peano4::parallel::Node& peano4::parallel::Node::getInstance() {
 
 
 int peano4::parallel::Node::getId(int rank, int threadId) const {
-  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfNodes();
+  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
   return numberOfRanks * threadId + rank;
 }
 
 
 int peano4::parallel::Node::getRank(int id) const {
-  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfNodes();
+  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
   return id % numberOfRanks;
 }
 
@@ -193,4 +196,31 @@ std::set< int > peano4::parallel::Node::getChildren( int treeId ) {
   }
 
   return result;
+}
+
+
+bool peano4::parallel::Node::continueToRun() {
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+	for (int i=1; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++ ) {
+      StartTraversalMessage message;
+      message.send(i,_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+	}
+  }
+  else {
+	StartTraversalMessage message;
+	message.receive(tarch::mpi::Rank::getGlobalMasterRank(),_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+	_currentProgramStep = message.getStepIdentifier();
+  }
+  return _currentProgramStep!=Terminate;
+}
+
+
+void peano4::parallel::Node::setNextProgramStep( int number ) {
+  assertion1( number==Terminate or number>=0,  number);
+  _currentProgramStep = number;
+}
+
+
+int peano4::parallel::Node::getCurrentProgramStep() const {
+  return _currentProgramStep;
 }

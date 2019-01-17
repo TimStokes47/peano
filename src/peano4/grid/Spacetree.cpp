@@ -123,9 +123,9 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
         vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1)==_id
         and
         _splitting.count( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) )==0
-		and
-        _joining.count( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) )==0
       )
+	  or
+      (_joining.count( vertices[kScalar].getAdjacentRanks(TwoPowerD-kScalar-1) )==1)
 	);
     isLocal &= _spacetreeState!=SpacetreeState::Joining;
   enddforx

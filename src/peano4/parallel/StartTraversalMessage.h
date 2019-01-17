@@ -1,6 +1,7 @@
 #ifndef _PEANO4_PARALLEL_STARTTRAVERSALMESSAGE_H
 #define _PEANO4_PARALLEL_STARTTRAVERSALMESSAGE_H
 
+#include "config.h"
 #include "peano4/utils/Globals.h"
 #ifdef Parallel
 	#include "tarch/mpi/Rank.h"
@@ -27,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   16/01/2019 17:17
+ * @date   16/01/2019 19:35
  */
 class peano4::parallel::StartTraversalMessage { 
    
@@ -156,7 +157,7 @@ class peano4::parallel::StartTraversalMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   16/01/2019 17:17
+ * @date   16/01/2019 19:35
  */
 class peano4::parallel::StartTraversalMessagePacked { 
    

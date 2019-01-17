@@ -1,4 +1,6 @@
 Packed-Type: short int;
+// have to know whether we are using MPI
+#include "config.h"
 
 Constant: Dimensions hint-value 4;
 

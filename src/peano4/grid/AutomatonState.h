@@ -1,6 +1,7 @@
 #ifndef _PEANO4_GRID_AUTOMATONSTATE_H
 #define _PEANO4_GRID_AUTOMATONSTATE_H
 
+#include "config.h"
 #include "peano4/utils/Globals.h"
 #ifdef Parallel
 	#include "tarch/mpi/Rank.h"
@@ -27,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/01/2019 20:02
+ * @date   16/01/2019 19:36
  */
 class peano4::grid::AutomatonState { 
    
@@ -231,7 +232,7 @@ class peano4::grid::AutomatonState {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/01/2019 20:02
+ * @date   16/01/2019 19:36
  */
 class peano4::grid::AutomatonStatePacked { 
    
