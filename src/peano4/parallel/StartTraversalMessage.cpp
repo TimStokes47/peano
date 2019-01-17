@@ -88,60 +88,69 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
    void peano4::parallel::StartTraversalMessage::initDatatype() {
       {
          StartTraversalMessage dummyStartTraversalMessage[2];
-         
+
          #ifdef MPI2
          const int Attributes = 1;
          #else
-         const int Attributes = 2;
+         const int Attributes = 1+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+#ifndef MPI2
+MPI_LB, // lower bound
+#endif
               MPI_INT		 //stepIdentifier
             #ifndef MPI2
-            , MPI_UB
+            , MPI_UB // upper bound
             #endif
-            
+
          };
          
          int blocklen[Attributes] = {
+          #ifndef MPI2
+1, // lower bound
+#endif
               1		 //stepIdentifier
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage))), &base);
+         int currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &disp[currentAddress]);
          #endif
+
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), &disp[currentAddress]);
+         #endif
+
+
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
-            assertion1( disp[i] > disp[i-1], i );
+           assertion1( disp[i] > disp[i-1], i );
          }
-         #ifdef MPI2
+
          for (int i=0; i<Attributes; i++) {
-         #else
-         for (int i=0; i<Attributes-1; i++) {
-         #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(StartTraversalMessage)), i, disp[i], Attributes, sizeof(StartTraversalMessage));
+            disp[i] = disp[i] - disp[0];
          }
+
+/*
          #ifndef MPI2
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), 		&disp[1] );
          disp[1] -= base;
          disp[1] += disp[0];
          #endif
+*/
          #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
@@ -576,13 +585,17 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
    void peano4::parallel::StartTraversalMessagePacked::initDatatype() {
       {
          StartTraversalMessagePacked dummyStartTraversalMessagePacked[2];
-         
+
+
          #ifdef MPI2
          const int Attributes = 1;
          #else
-         const int Attributes = 2;
+         const int Attributes = 3;  // We need both uppepr bound and lower bound
          #endif
          MPI_Datatype subtypes[Attributes] = {
+#ifndef MPI2
+MPI_LB,
+#endif
               MPI_INT		 //stepIdentifier
             #ifndef MPI2
             , MPI_UB
@@ -591,6 +604,9 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
          };
          
          int blocklen[Attributes] = {
+#ifndef MPI2
+1,
+#endif
               1		 //stepIdentifier
             #ifndef MPI2
             , 1

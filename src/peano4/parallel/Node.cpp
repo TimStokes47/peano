@@ -203,12 +203,16 @@ bool peano4::parallel::Node::continueToRun() {
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
 	for (int i=1; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++ ) {
       StartTraversalMessage message;
+      message.setStepIdentifier(_currentProgramStep);
+      // @todo Switch to logDebug
+      logInfo( "continueToRun()", "send out " << message.toString() << " to rank " << i);
       message.send(i,_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 	}
   }
   else {
 	StartTraversalMessage message;
 	message.receive(tarch::mpi::Rank::getGlobalMasterRank(),_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    logInfo( "continueToRun()", "received message " << message.toString() );
 	_currentProgramStep = message.getStepIdentifier();
   }
   return _currentProgramStep!=Terminate;
