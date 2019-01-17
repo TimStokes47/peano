@@ -150,21 +150,36 @@ void runMultithreaded() {
 
 
 void runParallel() {
-  if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
-    peano4::parallel::Node::getInstance().setNextProgramStep(14);
-    runMultithreaded();
-  }
-  else {
-	while (peano4::parallel::Node::getInstance().continueToRun()) {
-      peano4::parallel::SpacetreeSet spacetreeSet(
+  peano4::parallel::SpacetreeSet spacetreeSet(
 	  #if Dimensions==2
 	    {0.0, 0.0},
 	    {1.0, 1.0}
 	  #else
- 	    {0.0, 0.0, 0.0},
+	    {0.0, 0.0, 0.0},
 	    {1.0, 1.0, 1.0}
-      #endif
-	  );
+    #endif
+  );
+
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
+    peano4::parallel::Node::getInstance().setNextProgramStep(14);
+
+    for (int i=0; i<30; i++) {
+  	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
+
+      spacetreeSet.traverse( emptyObserver );
+
+      logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
+      logInfo( "main(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
+      logInfo( "main(...)", "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() );
+      logInfo( "main(...)", "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() );
+      logInfo( "main(...)", "local unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells());
+      logInfo( "main(...)", "local refined cell = " << spacetreeSet.getGridStatistics().getNumberOfLocalRefinedCells() );
+      logInfo( "main(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
+      logInfo( "main(...)", "remote refined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
+    }
+  }
+  else {
+	while (peano4::parallel::Node::getInstance().continueToRun()) {
       assertion( peano4::parallel::Node::getInstance().getCurrentProgramStep()==14 );
       applications4::grid::MyObserver emptyObserver;
       spacetreeSet.traverse(emptyObserver);
@@ -192,10 +207,12 @@ int main(int argc, char** argv) {
   tarch::multicore::Core::getInstance().configure(4,2,1);
 
   runTests();
-  // @todo move down
-  //runParallel();
-  //runSerial();
+  #if Parallel
+  runParallel();
+  #else
+  runSerial();
   runMultithreaded();
+  #endif
 
   peano4::shutdownSharedMemoryEnvironment();
   peano4::shutdownParallelEnvironment();

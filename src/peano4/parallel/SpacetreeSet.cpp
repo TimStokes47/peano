@@ -344,7 +344,7 @@ peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
   for (auto& p: _spacetrees) {
 	if (p._id==id) return p;
   }
-  assertion2( false, "no spacetree found", id );
+  assertion3( false, "no spacetree found", id, tarch::mpi::Rank::getInstance().getRank() );
   return *_spacetrees.begin(); // just here to avoid warning
 }
 
