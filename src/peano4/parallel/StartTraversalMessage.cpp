@@ -137,7 +137,11 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &base);
+         #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &base);
+         #endif
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
@@ -145,10 +149,11 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
          }
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &StartTraversalMessage::Datatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &StartTraversalMessage::Datatype );
          MPI_Type_commit( &StartTraversalMessage::Datatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StartTraversalMessage::Datatype);
@@ -207,37 +212,22 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
-         // @todo Replace with other routine
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &base);
+         #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &base);
+         #endif
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
             
          }
          #ifdef MPI2
-         MPI_Datatype tmpType;
+         MPI_Datatype tmpType; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-/*
-         MPI_Aint extent;
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[2]))), &extent);
-         extent -= base;
-*/
-
-         // Is this perhaps an MPI-1 variant?
-//         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-
-         MPI_Aint lowerBound, typeExtent;
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &lowerBound);
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), &typeExtent);
-         typeExtent = MPI_Aint_diff(typeExtent, lowerBound);
-
-/*
-         MPI_Get_address(particle+1, &sizeofentry);
-         sizeofentry = MPI_Aint_diff(sizeofentry, base);
-*/
-
-
-         logWarning( "initDatatype()", "size=" << sizeof(StartTraversalMessage) << ", lowerBound=" << lowerBound << ", extent=" << typeExtent );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
          MPI_Type_create_resized( tmpType, 0, typeExtent, &StartTraversalMessage::FullDatatype );
          MPI_Type_commit( &StartTraversalMessage::FullDatatype );
          #else
@@ -647,7 +637,11 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]))), &base);
+         #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]))), &base);
+         #endif
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
@@ -655,10 +649,11 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
          }
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &StartTraversalMessagePacked::Datatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &StartTraversalMessagePacked::Datatype );
          MPI_Type_commit( &StartTraversalMessagePacked::Datatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StartTraversalMessagePacked::Datatype);
@@ -717,7 +712,11 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
             assertion1( disp[i] > disp[i-1], i );
          }
          MPI_Aint base;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]))), &base);
+         #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]))), &base);
+         #endif
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
@@ -725,10 +724,11 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
          }
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &StartTraversalMessagePacked::FullDatatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &StartTraversalMessagePacked::FullDatatype );
          MPI_Type_commit( &StartTraversalMessagePacked::FullDatatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StartTraversalMessagePacked::FullDatatype);
