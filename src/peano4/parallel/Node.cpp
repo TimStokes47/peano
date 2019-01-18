@@ -20,11 +20,20 @@
 tarch::logging::Log  peano4::parallel::Node::_log("peano4::parallel::Node");
 
 
+void peano4::parallel::Node::initMPIDatatypes() {
+  StartTraversalMessage::initDatatype();
+}
+
+
+void peano4::parallel::Node::shutdownMPIDatatypes() {
+  StartTraversalMessage::shutdownDatatype();
+}
+
+
 peano4::parallel::Node::Node():
   _currentProgramStep(UndefProgramStep),
   _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ) {
   registerId( 0, -1);
-  StartTraversalMessage::initDatatype();
 }
 
 

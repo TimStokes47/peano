@@ -84,6 +84,14 @@ class peano4::parallel::Node {
 
   public:
     /**
+     * I originally wanted to embed these guys into the singleton's
+     * constructor. However, the singleton might not yet be up when
+     * I run the (mpi) tests.
+     */
+    static void initMPIDatatypes();
+    static void shutdownMPIDatatypes();
+
+    /**
      * This operation returns the singleton instance. Before using this
      * instance, one has to call the init() operation on the instance returned.
      *
