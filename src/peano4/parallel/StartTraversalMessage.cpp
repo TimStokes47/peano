@@ -88,27 +88,27 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
    void peano4::parallel::StartTraversalMessage::initDatatype() {
       {
          StartTraversalMessage dummyStartTraversalMessage[2];
-
+         
          #ifdef MPI2
          const int Attributes = 1;
          #else
          const int Attributes = 1+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
-#ifndef MPI2
-MPI_LB, // lower bound
-#endif
+            #ifndef MPI2
+            MPI_LB,
+            #endif
               MPI_INT		 //stepIdentifier
             #ifndef MPI2
-            , MPI_UB // upper bound
+            , MPI_UB
             #endif
-
+            
          };
          
          int blocklen[Attributes] = {
-          #ifndef MPI2
-1, // lower bound
-#endif
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //stepIdentifier
             #ifndef MPI2
             , 1 // upper bound
@@ -117,40 +117,31 @@ MPI_LB, // lower bound
          };
          
          MPI_Aint  disp[Attributes];
-         int currentAddress = -1;
+         int       currentAddress = -1;
          #ifndef MPI2
          currentAddress++;
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &disp[currentAddress]);
          #endif
-
          currentAddress++;
          #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
          #endif
-
          #ifndef MPI2
          currentAddress++;
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), &disp[currentAddress]);
          #endif
-
-
          for (int i=1; i<Attributes; i++) {
-           assertion1( disp[i] > disp[i-1], i );
+         
+            assertion1( disp[i] > disp[i-1], i );
          }
-
+         auto base = disp[0];
          for (int i=0; i<Attributes; i++) {
-            disp[i] = disp[i] - disp[0];
+         
+            disp[i] = disp[i] - base;
+            
          }
-
-/*
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), 		&disp[1] );
-         disp[1] -= base;
-         disp[1] += disp[0];
-         #endif
-*/
          #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
@@ -165,14 +156,21 @@ MPI_LB, // lower bound
          
       }
       {
-         StartTraversalMessage dummyStartTraversalMessage[2];
+    	  // todo Blos so ne Idee
+         StartTraversalMessage dummyStartTraversalMessage[10];
          
          #ifdef MPI2
          const int Attributes = 1;
          #else
-         const int Attributes = 2;
+
+         const int Attributes = 1+2;
+         // todo
+//         const int Attributes = 1+1;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+            #ifndef MPI2
+            MPI_LB,
+            #endif
               MPI_INT		 //stepIdentifier
             #ifndef MPI2
             , MPI_UB
@@ -181,45 +179,51 @@ MPI_LB, // lower bound
          };
          
          int blocklen[Attributes] = {
+                 // todo
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //stepIdentifier
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage))), &base);
+         int       currentAddress = -1;
+         // todo
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &disp[currentAddress]);
          #endif
+
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), &disp[currentAddress]);
+         #endif
+
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
             assertion1( disp[i] > disp[i-1], i );
          }
-         #ifdef MPI2
-         for (int i=0; i<Attributes; i++) {
-         #else
-         for (int i=0; i<Attributes-1; i++) {
-         #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(StartTraversalMessage)), i, disp[i], Attributes, sizeof(StartTraversalMessage));
-         }
+
+         // @todo
          #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), 		&disp[1] );
-         disp[1] -= base;
-         disp[1] += disp[0];
+         MPI_Aint  base;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &base);
+         for (int i=0; i<Attributes; i++) {
+
+            disp[i] = disp[i] - base;
+
+         }
          #endif
+
          #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
@@ -230,6 +234,8 @@ MPI_LB, // lower bound
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StartTraversalMessage::FullDatatype);
          MPI_Type_commit( &StartTraversalMessage::FullDatatype );
+         // @todo
+         logInfo( "initDatatype()", "size of entry=" << sizeof(StartTraversalMessage) << ", disp[0]=" << disp[0] << ", disp[-1]=" << disp[Attributes-1] );
          #endif
          
       }
@@ -585,17 +591,16 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
    void peano4::parallel::StartTraversalMessagePacked::initDatatype() {
       {
          StartTraversalMessagePacked dummyStartTraversalMessagePacked[2];
-
-
+         
          #ifdef MPI2
          const int Attributes = 1;
          #else
-         const int Attributes = 3;  // We need both uppepr bound and lower bound
+         const int Attributes = 1+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
-#ifndef MPI2
-MPI_LB,
-#endif
+            #ifndef MPI2
+            MPI_LB,
+            #endif
               MPI_INT		 //stepIdentifier
             #ifndef MPI2
             , MPI_UB
@@ -604,48 +609,42 @@ MPI_LB,
          };
          
          int blocklen[Attributes] = {
-#ifndef MPI2
-1,
-#endif
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //stepIdentifier
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked))), &base);
+         int       currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]))), &disp[currentAddress]);
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]._persistentRecords._stepIdentifier))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]._persistentRecords._stepIdentifier))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[1]))), &disp[currentAddress]);
+         #endif
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
+         
             assertion1( disp[i] > disp[i-1], i );
          }
-         #ifdef MPI2
+         auto base = disp[0];
          for (int i=0; i<Attributes; i++) {
-         #else
-         for (int i=0; i<Attributes-1; i++) {
-         #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(StartTraversalMessagePacked)), i, disp[i], Attributes, sizeof(StartTraversalMessagePacked));
+         
+            disp[i] = disp[i] - base;
+            
          }
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[1]))), 		&disp[1] );
-         disp[1] -= base;
-         disp[1] += disp[0];
-         #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
@@ -665,9 +664,12 @@ MPI_LB,
          #ifdef MPI2
          const int Attributes = 1;
          #else
-         const int Attributes = 2;
+         const int Attributes = 1+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+            #ifndef MPI2
+            MPI_LB,
+            #endif
               MPI_INT		 //stepIdentifier
             #ifndef MPI2
             , MPI_UB
@@ -676,45 +678,42 @@ MPI_LB,
          };
          
          int blocklen[Attributes] = {
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //stepIdentifier
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked))), &base);
+         int       currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]))), &disp[currentAddress]);
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]._persistentRecords._stepIdentifier))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]._persistentRecords._stepIdentifier))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[1]))), &disp[currentAddress]);
+         #endif
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
+         
             assertion1( disp[i] > disp[i-1], i );
          }
-         #ifdef MPI2
+         auto base = disp[0];
          for (int i=0; i<Attributes; i++) {
-         #else
-         for (int i=0; i<Attributes-1; i++) {
-         #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(StartTraversalMessagePacked)), i, disp[i], Attributes, sizeof(StartTraversalMessagePacked));
+         
+            disp[i] = disp[i] - base;
+            
          }
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[1]))), 		&disp[1] );
-         disp[1] -= base;
-         disp[1] += disp[0];
-         #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
          MPI_Aint lowerBound, typeExtent; 
