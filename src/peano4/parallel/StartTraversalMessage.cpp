@@ -87,7 +87,7 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
    
    void peano4::parallel::StartTraversalMessage::initDatatype() {
       {
-         StartTraversalMessage dummyStartTraversalMessage[2];
+         StartTraversalMessage dummyStartTraversalMessage[16];
          
          #ifdef MPI2
          const int Attributes = 1;
@@ -96,7 +96,7 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
-            MPI_LB,
+              MPI_LB,
             #endif
               MPI_INT		 //stepIdentifier
             #ifndef MPI2
@@ -136,7 +136,8 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
          
             assertion1( disp[i] > disp[i-1], i );
          }
-         auto base = disp[0];
+         MPI_Aint base;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &base);
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
@@ -156,20 +157,16 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
          
       }
       {
-    	  // todo Blos so ne Idee
-         StartTraversalMessage dummyStartTraversalMessage[10];
+         StartTraversalMessage dummyStartTraversalMessage[16];
          
          #ifdef MPI2
          const int Attributes = 1;
          #else
-
          const int Attributes = 1+2;
-         // todo
-//         const int Attributes = 1+1;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
-            MPI_LB,
+              MPI_LB,
             #endif
               MPI_INT		 //stepIdentifier
             #ifndef MPI2
@@ -179,7 +176,6 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
          };
          
          int blocklen[Attributes] = {
-                 // todo
             #ifndef MPI2
             1, // lower bound
             #endif
@@ -192,12 +188,10 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
          
          MPI_Aint  disp[Attributes];
          int       currentAddress = -1;
-         // todo
          #ifndef MPI2
          currentAddress++;
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &disp[currentAddress]);
          #endif
-
          currentAddress++;
          #ifdef MPI2
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]._persistentRecords._stepIdentifier))), 		&disp[currentAddress] );
@@ -208,34 +202,47 @@ peano4::parallel::StartTraversalMessagePacked peano4::parallel::StartTraversalMe
          currentAddress++;
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), &disp[currentAddress]);
          #endif
-
          for (int i=1; i<Attributes; i++) {
+         
             assertion1( disp[i] > disp[i-1], i );
          }
-
-         // @todo
-         #ifndef MPI2
-         MPI_Aint  base;
+         MPI_Aint base;
+         // @todo Replace with other routine
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &base);
          for (int i=0; i<Attributes; i++) {
-
+         
             disp[i] = disp[i] - base;
-
+            
          }
-         #endif
-
          #ifdef MPI2
-         MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
+         MPI_Datatype tmpType;
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &StartTraversalMessage::FullDatatype );
+/*
+         MPI_Aint extent;
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[2]))), &extent);
+         extent -= base;
+*/
+
+         // Is this perhaps an MPI-1 variant?
+//         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
+
+         MPI_Aint lowerBound, typeExtent;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[0]))), &lowerBound);
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessage[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, lowerBound);
+
+/*
+         MPI_Get_address(particle+1, &sizeofentry);
+         sizeofentry = MPI_Aint_diff(sizeofentry, base);
+*/
+
+
+         logWarning( "initDatatype()", "size=" << sizeof(StartTraversalMessage) << ", lowerBound=" << lowerBound << ", extent=" << typeExtent );
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &StartTraversalMessage::FullDatatype );
          MPI_Type_commit( &StartTraversalMessage::FullDatatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &StartTraversalMessage::FullDatatype);
          MPI_Type_commit( &StartTraversalMessage::FullDatatype );
-         // @todo
-         logInfo( "initDatatype()", "size of entry=" << sizeof(StartTraversalMessage) << ", disp[0]=" << disp[0] << ", disp[-1]=" << disp[Attributes-1] );
          #endif
          
       }
@@ -590,7 +597,7 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
    
    void peano4::parallel::StartTraversalMessagePacked::initDatatype() {
       {
-         StartTraversalMessagePacked dummyStartTraversalMessagePacked[2];
+         StartTraversalMessagePacked dummyStartTraversalMessagePacked[16];
          
          #ifdef MPI2
          const int Attributes = 1;
@@ -599,7 +606,7 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
-            MPI_LB,
+              MPI_LB,
             #endif
               MPI_INT		 //stepIdentifier
             #ifndef MPI2
@@ -639,7 +646,8 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
          
             assertion1( disp[i] > disp[i-1], i );
          }
-         auto base = disp[0];
+         MPI_Aint base;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]))), &base);
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
@@ -659,7 +667,7 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
          
       }
       {
-         StartTraversalMessagePacked dummyStartTraversalMessagePacked[2];
+         StartTraversalMessagePacked dummyStartTraversalMessagePacked[16];
          
          #ifdef MPI2
          const int Attributes = 1;
@@ -668,7 +676,7 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
-            MPI_LB,
+              MPI_LB,
             #endif
               MPI_INT		 //stepIdentifier
             #ifndef MPI2
@@ -708,7 +716,8 @@ peano4::parallel::StartTraversalMessage peano4::parallel::StartTraversalMessageP
          
             assertion1( disp[i] > disp[i-1], i );
          }
-         auto base = disp[0];
+         MPI_Aint base;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyStartTraversalMessagePacked[0]))), &base);
          for (int i=0; i<Attributes; i++) {
          
             disp[i] = disp[i] - base;
