@@ -27,7 +27,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   16/01/2019 19:36
+ * @date   18/01/2019 12:11
  */
 class peano4::grid::GridStatistics { 
    
@@ -324,7 +324,7 @@ class peano4::grid::GridStatistics {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   16/01/2019 19:36
+ * @date   18/01/2019 12:11
  */
 class peano4::grid::GridStatisticsPacked { 
    
