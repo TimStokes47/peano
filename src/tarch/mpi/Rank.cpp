@@ -386,7 +386,7 @@ MPI_Comm tarch::mpi::Rank::getCommunicator() const {
 }
 
 
-int tarch::mpi::Rank::getNumberOfNodes() const {
+int tarch::mpi::Rank::getNumberOfRanks() const {
   #ifdef Parallel
   assertion(_initIsCalled);
   #endif

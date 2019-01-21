@@ -16,6 +16,7 @@ tarch::logging::Log peano4::grid::tests::SpacetreeTest::_log("peano4::grid::test
 
 
 void peano4::grid::tests::SpacetreeTest::testRestrictToCoarseGrid() {
+  #if Dimensions==2
   tarch::la::Vector<Dimensions,int>  positionInPatch;
   tarch::la::Vector<Dimensions,int>  coarsePosition;
 
@@ -46,6 +47,7 @@ void peano4::grid::tests::SpacetreeTest::testRestrictToCoarseGrid() {
   positionInPatch = 0,2;
   coarsePosition = 0,0;
   validateWithParams2( Spacetree::restrictToCoarseGrid(coarsePosition,positionInPatch), coarsePosition, positionInPatch );
+  #endif
 }
 
 

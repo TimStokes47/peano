@@ -1,0 +1,28 @@
+Packed-Type: long int hint-size 64;
+// have to know whether we are using MPI
+#include "config.h"
+#include "peano4/utils/Globals.h"
+
+
+Constant: Dimensions  hint-value 4;
+Constant: TwoPowerD   hint-value 16;
+Constant: TwoTimesD   hint-value 6;
+
+
+class peano4::grid::GridTraversalEvent {
+  enum RefinementControl {
+    Enter,
+    Leave
+  };
+  
+  persistent parallelise double         x[Dimensions];
+  persistent parallelise double         h[Dimensions];
+  persistent parallelise packed bool    isRefined;
+  /**
+   * Well too pessimistic upper bound.
+   */
+  persistent parallelise packed int     vertexData[TwoPowerD]  from 0 to 9;
+  persistent parallelise packed int     faceData[TwoTimesD]    from 0 to 7;
+  persistent parallelise packed int     cellData               from 0 to 1;
+};
+

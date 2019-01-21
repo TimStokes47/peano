@@ -1,5 +1,6 @@
 #include "TraversalVTKPlotter.h"
 #include "GridControlEvent.h"
+#include "GridTraversalEvent.h"
 
 #include "peano4/utils/Loop.h"
 
@@ -23,6 +24,9 @@ peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filen
   _spacetreeIdWriter(nullptr),
   _coreWriter(nullptr),
   _timeSeriesWriter() {
+  if (treeId==-1) {
+	openFile();
+  }
 }
 
 
@@ -88,18 +92,15 @@ void peano4::grid::TraversalVTKPlotter::closeFile() {
 
 
 void peano4::grid::TraversalVTKPlotter::enterCell(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  bool                                         isRefined,
-  int                                          treeId
+  const GridTraversalEvent&  event
 ) {
-  if (not isRefined) {
+  if (not event.getIsRefined()) {
     int vertexIndices[TwoPowerD];
 
     dfor2(k)
       assertion( _vertexWriter!=nullptr );
       vertexIndices[kScalar] = _vertexWriter->plotVertex(
-        x + tarch::la::multiplyComponents( k.convertScalar<double>(), h )
+        event.getX() + tarch::la::multiplyComponents( k.convertScalar<double>(), event.getH() )
       );
     enddforx
 
@@ -108,13 +109,14 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
     #if Dimensions==2
     cellIndex = _cellWriter->plotQuadrangle(vertexIndices);
     #elif Dimensions==3
-    #else
     cellIndex = _cellWriter->plotHexahedron(vertexIndices);
+    #else
+    logError( "enterCell(...)", "supports only 2d and 3d" );
     #endif
 
     assertion( _spacetreeIdWriter!=nullptr );
     assertion( _coreWriter!=nullptr );
-    _spacetreeIdWriter->plotCell(cellIndex,treeId);
+    _spacetreeIdWriter->plotCell(cellIndex,_spacetreeId);
     _coreWriter->plotCell(cellIndex,tarch::multicore::Core::getInstance().getCoreNumber());
   }
 }
@@ -122,19 +124,16 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
 
 
 void peano4::grid::TraversalVTKPlotter::leaveCell(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  bool                                         isRefined,
-  int                                          treeId
+  const GridTraversalEvent&  event
 ) {
 }
 
 
-void peano4::grid::TraversalVTKPlotter::updateMetaFile() {
+void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
   static tarch::multicore::BooleanSemaphore semaphore;
   tarch::multicore::Lock lock(semaphore);
 
-  std::string newFile = _filename + "-" + std::to_string(_spacetreeId) + "-" + std::to_string( _counter );
+  std::string newFile = _filename + "-" + std::to_string(spacetreeId) + "-" + std::to_string( _counter );
   _clonedSpacetreeIds.push_back( newFile );
   assertion1( _writer!=nullptr, _spacetreeId );
   _writer->writeMetaDataFileForParallelSnapshot(
@@ -154,9 +153,9 @@ peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int s
   if (_spacetreeId!=-1) {
 	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
   }
-
-  result->openFile();
-  result->updateMetaFile();
+  else {
+    updateMetaFile(spacetreeId);
+  }
 
   return result;
 }

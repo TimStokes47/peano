@@ -1,13 +1,14 @@
 #include "Node.h"
-
+#include "StartTraversalMessage.h"
+#include "TreeManagementMessage.h"
 
 #include "peano4/grid/Spacetree.h"
-
+#include "peano4/grid/PeanoCurve.h"
 
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>         // std::chrono::seconds
 
-#include "../../tarch/mpi/Rank.h"
+#include "tarch/mpi/Rank.h"
 
 
 #include "tarch/Assertions.h"
@@ -21,12 +22,32 @@
 tarch::logging::Log  peano4::parallel::Node::_log("peano4::parallel::Node");
 
 
-peano4::parallel::Node::Node() {
+void peano4::parallel::Node::initMPIDatatypes() {
+  #ifdef Parallel
+  StartTraversalMessage::initDatatype();
+  TreeManagementMessage::initDatatype();
+  #endif
+}
+
+
+void peano4::parallel::Node::shutdownMPIDatatypes() {
+  #ifdef Parallel
+  StartTraversalMessage::shutdownDatatype();
+  TreeManagementMessage::shutdownDatatype();
+  #endif
+}
+
+
+peano4::parallel::Node::Node():
+  _currentProgramStep(UndefProgramStep),
+  _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
+  _treeManagementTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ) {
   registerId( 0, -1);
 }
 
 
 peano4::parallel::Node::~Node() {
+  assertionMsg( _currentProgramStep==Terminate, "forgot to terminate node properly" );
 }
 
 
@@ -42,13 +63,13 @@ peano4::parallel::Node& peano4::parallel::Node::getInstance() {
 
 
 int peano4::parallel::Node::getId(int rank, int threadId) const {
-  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfNodes();
+  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
   return numberOfRanks * threadId + rank;
 }
 
 
 int peano4::parallel::Node::getRank(int id) const {
-  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfNodes();
+  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
   return id % numberOfRanks;
 }
 
@@ -94,31 +115,31 @@ void peano4::parallel::Node::deregisterId(int id) {
 
 
 int peano4::parallel::Node::getOutputStackNumberOfBoundaryExchange(int id) const {
-  return peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance + id * 2;
+  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * 2;
 }
 
 
 int peano4::parallel::Node::getInputStackNumberOfBoundaryExchange(int id) const {
-  return peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance + id * 2 + 1;
+  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * 2 + 1;
 }
 
 
 bool peano4::parallel::Node::isBoundaryExchangeOutputStackNumber(int id) const {
-  return id>=peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance
-     and ( (id-peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance) % 2 == 0 );
+  return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
+     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % 2 == 0 );
 }
 
 
 bool peano4::parallel::Node::isBoundaryExchangeInputStackNumber(int id) const {
-  return id>=peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance
-     and ( (id-peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance) % 2 == 1 );
+  return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
+     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % 2 == 1 );
 }
 
 
 int peano4::parallel::Node::getIdOfBoundaryExchangeOutputStackNumber(int number) const {
   assertion( isBoundaryExchangeOutputStackNumber(number) );
-  assertion2( (number-peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance)%2==0, number, peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance );
-  return (number-peano4::grid::Spacetree::MaxNumberOfStacksPerSpacetreeInstance) / 2;
+  assertion2( (number-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance)%2==0, number, peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance );
+  return (number-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) / 2;
 }
 
 
@@ -193,4 +214,42 @@ std::set< int > peano4::parallel::Node::getChildren( int treeId ) {
   }
 
   return result;
+}
+
+
+bool peano4::parallel::Node::continueToRun() {
+  #ifdef Parallel
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+	for (int i=1; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++ ) {
+      StartTraversalMessage message;
+      message.setStepIdentifier(_currentProgramStep);
+      // @todo Switch to logDebug
+      logInfo( "continueToRun()", "send out " << message.toString() << " to rank " << i);
+      message.send(i,_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+	}
+  }
+  else {
+	StartTraversalMessage message;
+	message.receive(tarch::mpi::Rank::getGlobalMasterRank(),_rankOrchestrationTag,false,StartTraversalMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    logInfo( "continueToRun()", "received message " << message.toString() );
+	_currentProgramStep = message.getStepIdentifier();
+  }
+  #endif
+  return _currentProgramStep!=Terminate;
+}
+
+
+void peano4::parallel::Node::setNextProgramStep( int number ) {
+  assertion1( number==Terminate or number>=0,  number);
+  _currentProgramStep = number;
+}
+
+
+int peano4::parallel::Node::getCurrentProgramStep() const {
+  return _currentProgramStep;
+}
+
+
+int peano4::parallel::Node::getTreeManagementTag() const {
+  return _treeManagementTag;
 }

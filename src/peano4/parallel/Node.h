@@ -31,6 +31,8 @@ namespace peano4 {
  * @author Tobias Weinzierl
  */
 class peano4::parallel::Node {
+  public:
+    static constexpr int        Terminate = -2;
   private:
     /**
      * Logging device.
@@ -38,6 +40,15 @@ class peano4::parallel::Node {
     static tarch::logging::Log _log;
 
     tarch::multicore::BooleanSemaphore  _semaphore;
+
+    /**
+     * Value for _currentProgramStep.
+     */
+    static constexpr int        UndefProgramStep = -1;
+    int                         _currentProgramStep;
+
+    int                         _rankOrchestrationTag;
+    int                         _treeManagementTag;
 
     /**
      * Key is from-to.
@@ -73,6 +84,14 @@ class peano4::parallel::Node {
     void registerId(int id, int masterId);
 
   public:
+    /**
+     * I originally wanted to embed these guys into the singleton's
+     * constructor. However, the singleton might not yet be up when
+     * I run the (mpi) tests.
+     */
+    static void initMPIDatatypes();
+    static void shutdownMPIDatatypes();
+
     /**
      * This operation returns the singleton instance. Before using this
      * instance, one has to call the init() operation on the instance returned.
@@ -151,6 +170,25 @@ class peano4::parallel::Node {
     bool hasChildrenTree( int treeId );
 
     std::set< int > getChildren( int treeId );
+
+    /**
+     * You should call this operation only on the ranks >0 to find out whether
+     * you should do more iteration/sweeps. The spacetree set internally
+     * hijacks this operation also on rank 0 to trigger the send out of startup
+     * messages. Therefore, the operation is not const.
+     */
+    bool continueToRun();
+
+    /**
+     * The user tells the set which program step to use, i.e. which adapter
+     * to use for the next grid run or which step to run next. Should only
+     * be called on global master.
+     */
+    void setNextProgramStep( int number );
+
+    int getCurrentProgramStep() const;
+
+    int getTreeManagementTag() const;
 };
 
 #endif

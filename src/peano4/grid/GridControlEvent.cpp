@@ -248,14 +248,17 @@ peano4::grid::GridControlEventPacked peano4::grid::GridControlEvent::convert() c
    
    void peano4::grid::GridControlEvent::initDatatype() {
       {
-         GridControlEvent dummyGridControlEvent[2];
+         GridControlEvent dummyGridControlEvent[16];
          
          #ifdef MPI2
          const int Attributes = 4;
          #else
-         const int Attributes = 5;
+         const int Attributes = 4+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+            #ifndef MPI2
+              MPI_LB,
+            #endif
               MPI_INT		 //refinementControl
             , MPI_DOUBLE		 //offset
             , MPI_DOUBLE		 //width
@@ -267,69 +270,75 @@ peano4::grid::GridControlEventPacked peano4::grid::GridControlEvent::convert() c
          };
          
          int blocklen[Attributes] = {
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //refinementControl
             , Dimensions		 //offset
             , Dimensions		 //width
             , Dimensions		 //h
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent))), &base);
+         int       currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]))), &disp[currentAddress]);
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._refinementControl))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._refinementControl))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._refinementControl))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._refinementControl))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._offset[0]))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._offset[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._offset[0]))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._offset[0]))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._width[0]))), 		&disp[2] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._width[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._width[0]))), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._width[0]))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._h[0]))), 		&disp[3] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._h[0]))), 		&disp[3] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[1]))), &disp[currentAddress]);
+         #endif
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
+         
             assertion1( disp[i] > disp[i-1], i );
          }
+         MPI_Aint base;
          #ifdef MPI2
-         for (int i=0; i<Attributes; i++) {
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]))), &base);
          #else
-         for (int i=0; i<Attributes-1; i++) {
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]))), &base);
          #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(GridControlEvent)), i, disp[i], Attributes, sizeof(GridControlEvent));
+         for (int i=0; i<Attributes; i++) {
+         
+            disp[i] = disp[i] - base;
+            
          }
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[1]))), 		&disp[4] );
-         disp[4] -= base;
-         disp[4] += disp[0];
-         #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &GridControlEvent::Datatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEvent::Datatype );
          MPI_Type_commit( &GridControlEvent::Datatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEvent::Datatype);
@@ -338,14 +347,17 @@ peano4::grid::GridControlEventPacked peano4::grid::GridControlEvent::convert() c
          
       }
       {
-         GridControlEvent dummyGridControlEvent[2];
+         GridControlEvent dummyGridControlEvent[16];
          
          #ifdef MPI2
          const int Attributes = 4;
          #else
-         const int Attributes = 5;
+         const int Attributes = 4+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+            #ifndef MPI2
+              MPI_LB,
+            #endif
               MPI_INT		 //refinementControl
             , MPI_DOUBLE		 //offset
             , MPI_DOUBLE		 //width
@@ -357,69 +369,75 @@ peano4::grid::GridControlEventPacked peano4::grid::GridControlEvent::convert() c
          };
          
          int blocklen[Attributes] = {
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //refinementControl
             , Dimensions		 //offset
             , Dimensions		 //width
             , Dimensions		 //h
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent))), &base);
+         int       currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]))), &disp[currentAddress]);
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._refinementControl))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._refinementControl))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._refinementControl))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._refinementControl))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._offset[0]))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._offset[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._offset[0]))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._offset[0]))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._width[0]))), 		&disp[2] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._width[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._width[0]))), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._width[0]))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._h[0]))), 		&disp[3] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._h[0]))), 		&disp[3] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[1]))), &disp[currentAddress]);
+         #endif
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
+         
             assertion1( disp[i] > disp[i-1], i );
          }
+         MPI_Aint base;
          #ifdef MPI2
-         for (int i=0; i<Attributes; i++) {
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]))), &base);
          #else
-         for (int i=0; i<Attributes-1; i++) {
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[0]))), &base);
          #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(GridControlEvent)), i, disp[i], Attributes, sizeof(GridControlEvent));
+         for (int i=0; i<Attributes; i++) {
+         
+            disp[i] = disp[i] - base;
+            
          }
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[1]))), 		&disp[4] );
-         disp[4] -= base;
-         disp[4] += disp[0];
-         #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &GridControlEvent::FullDatatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEvent[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEvent::FullDatatype );
          MPI_Type_commit( &GridControlEvent::FullDatatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEvent::FullDatatype);
@@ -697,10 +715,10 @@ peano4::grid::GridControlEventPacked::PersistentRecords::PersistentRecords() {
 
 
 peano4::grid::GridControlEventPacked::PersistentRecords::PersistentRecords(const RefinementControl& refinementControl, const tarch::la::Vector<Dimensions,double>& offset, const tarch::la::Vector<Dimensions,double>& width, const tarch::la::Vector<Dimensions,double>& h):
-_refinementControl(refinementControl) {
-   setOffset(offset);
-   setWidth(width);
-   setH(h);
+_refinementControl(refinementControl),
+_offset(offset),
+_width(width),
+_h(h) {
    
 }
 
@@ -758,7 +776,7 @@ peano4::grid::GridControlEventPacked::GridControlEventPacked() {
 
 
 peano4::grid::GridControlEventPacked::GridControlEventPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._refinementControl, persistentRecords.getOffset(), persistentRecords.getWidth(), persistentRecords.getH()) {
+_persistentRecords(persistentRecords._refinementControl, persistentRecords._offset, persistentRecords._width, persistentRecords._h) {
    
 }
 
@@ -936,14 +954,17 @@ peano4::grid::GridControlEvent peano4::grid::GridControlEventPacked::convert() c
    
    void peano4::grid::GridControlEventPacked::initDatatype() {
       {
-         GridControlEventPacked dummyGridControlEventPacked[2];
+         GridControlEventPacked dummyGridControlEventPacked[16];
          
          #ifdef MPI2
          const int Attributes = 4;
          #else
-         const int Attributes = 5;
+         const int Attributes = 4+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+            #ifndef MPI2
+              MPI_LB,
+            #endif
               MPI_INT		 //refinementControl
             , MPI_DOUBLE		 //offset
             , MPI_DOUBLE		 //width
@@ -955,69 +976,75 @@ peano4::grid::GridControlEvent peano4::grid::GridControlEventPacked::convert() c
          };
          
          int blocklen[Attributes] = {
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //refinementControl
             , Dimensions		 //offset
             , Dimensions		 //width
             , Dimensions		 //h
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked))), &base);
+         int       currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]))), &disp[currentAddress]);
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._refinementControl))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._refinementControl))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._refinementControl))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._refinementControl))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._offset[0]))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._offset[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._offset[0]))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._offset[0]))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._width[0]))), 		&disp[2] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._width[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._width[0]))), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._width[0]))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._h[0]))), 		&disp[3] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._h[0]))), 		&disp[3] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[1]))), &disp[currentAddress]);
+         #endif
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
+         
             assertion1( disp[i] > disp[i-1], i );
          }
+         MPI_Aint base;
          #ifdef MPI2
-         for (int i=0; i<Attributes; i++) {
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]))), &base);
          #else
-         for (int i=0; i<Attributes-1; i++) {
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]))), &base);
          #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(GridControlEventPacked)), i, disp[i], Attributes, sizeof(GridControlEventPacked));
+         for (int i=0; i<Attributes; i++) {
+         
+            disp[i] = disp[i] - base;
+            
          }
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[1]))), 		&disp[4] );
-         disp[4] -= base;
-         disp[4] += disp[0];
-         #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &GridControlEventPacked::Datatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEventPacked::Datatype );
          MPI_Type_commit( &GridControlEventPacked::Datatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEventPacked::Datatype);
@@ -1026,14 +1053,17 @@ peano4::grid::GridControlEvent peano4::grid::GridControlEventPacked::convert() c
          
       }
       {
-         GridControlEventPacked dummyGridControlEventPacked[2];
+         GridControlEventPacked dummyGridControlEventPacked[16];
          
          #ifdef MPI2
          const int Attributes = 4;
          #else
-         const int Attributes = 5;
+         const int Attributes = 4+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+            #ifndef MPI2
+              MPI_LB,
+            #endif
               MPI_INT		 //refinementControl
             , MPI_DOUBLE		 //offset
             , MPI_DOUBLE		 //width
@@ -1045,69 +1075,75 @@ peano4::grid::GridControlEvent peano4::grid::GridControlEventPacked::convert() c
          };
          
          int blocklen[Attributes] = {
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //refinementControl
             , Dimensions		 //offset
             , Dimensions		 //width
             , Dimensions		 //h
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked))), &base);
+         int       currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]))), &disp[currentAddress]);
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._refinementControl))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._refinementControl))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._refinementControl))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._refinementControl))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._offset[0]))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._offset[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._offset[0]))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._offset[0]))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._width[0]))), 		&disp[2] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._width[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._width[0]))), 		&disp[2] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._width[0]))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._h[0]))), 		&disp[3] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._h[0]))), 		&disp[3] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[1]))), &disp[currentAddress]);
+         #endif
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
+         
             assertion1( disp[i] > disp[i-1], i );
          }
+         MPI_Aint base;
          #ifdef MPI2
-         for (int i=0; i<Attributes; i++) {
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]))), &base);
          #else
-         for (int i=0; i<Attributes-1; i++) {
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[0]))), &base);
          #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(GridControlEventPacked)), i, disp[i], Attributes, sizeof(GridControlEventPacked));
+         for (int i=0; i<Attributes; i++) {
+         
+            disp[i] = disp[i] - base;
+            
          }
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[1]))), 		&disp[4] );
-         disp[4] -= base;
-         disp[4] += disp[0];
-         #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &GridControlEventPacked::FullDatatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridControlEventPacked[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &GridControlEventPacked::FullDatatype );
          MPI_Type_commit( &GridControlEventPacked::FullDatatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &GridControlEventPacked::FullDatatype);

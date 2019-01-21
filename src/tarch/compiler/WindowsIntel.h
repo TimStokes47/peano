@@ -34,3 +34,7 @@
 #endif
 
 #define LittleEndian
+
+#if !defined(noMPI2) && !defined(MPI2)
+#define MPI2
+#endif

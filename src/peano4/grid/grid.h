@@ -17,6 +17,7 @@ java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Pean
 java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator AutomatonState.def  .
 java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator GridStatistics.def  .
 java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator GridControlEvent.def  .
+java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator GridTraversalEvent.def  .
     </pre>
   *
   */

@@ -1,6 +1,7 @@
 #ifndef _PEANO4_GRID_GRIDVERTEX_H
 #define _PEANO4_GRID_GRIDVERTEX_H
 
+#include "config.h"
 #include "peano4/utils/Globals.h"
 #ifdef Parallel
 	#include "tarch/mpi/Rank.h"
@@ -28,7 +29,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   15/01/2019 20:02
+    * @date   18/01/2019 12:11
     */
    class peano4::grid::GridVertex { 
       
@@ -242,7 +243,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   15/01/2019 20:02
+    * @date   18/01/2019 12:11
     */
    class peano4::grid::GridVertexPacked { 
       
@@ -459,7 +460,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   15/01/2019 20:02
+       * @date   18/01/2019 12:11
        */
       class peano4::grid::GridVertex { 
          
@@ -707,7 +708,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   15/01/2019 20:02
+       * @date   18/01/2019 12:11
        */
       class peano4::grid::GridVertexPacked { 
          

@@ -31,18 +31,12 @@ class applications4::grid::MyObserver: public
 	virtual void endTraversal() override;
 
 	virtual void enterCell(
-      const tarch::la::Vector<Dimensions,double>& x,
-	  const tarch::la::Vector<Dimensions,double>& h,
-	  bool                                        isRefined,
-	  int                                         spacetreeId
+      const peano4::grid::GridTraversalEvent&  event
     ) override;
 
 
 	virtual void leaveCell(
-      const tarch::la::Vector<Dimensions,double>& x,
-	  const tarch::la::Vector<Dimensions,double>& h,
-	  bool                                        isRefined,
-	  int                                         spacetreeId
+	  const peano4::grid::GridTraversalEvent&  event
     ) override;
 
 	/**

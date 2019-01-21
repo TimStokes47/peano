@@ -115,14 +115,17 @@ peano4::parallel::TreeEntryPacked peano4::parallel::TreeEntry::convert() const{
    
    void peano4::parallel::TreeEntry::initDatatype() {
       {
-         TreeEntry dummyTreeEntry[2];
+         TreeEntry dummyTreeEntry[16];
          
          #ifdef MPI2
          const int Attributes = 2;
          #else
-         const int Attributes = 3;
+         const int Attributes = 2+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+            #ifndef MPI2
+              MPI_LB,
+            #endif
               MPI_INT		 //id
             , MPI_INT		 //master
             #ifndef MPI2
@@ -132,57 +135,61 @@ peano4::parallel::TreeEntryPacked peano4::parallel::TreeEntry::convert() const{
          };
          
          int blocklen[Attributes] = {
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //id
             , 1		 //master
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry))), &base);
+         int       currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]))), &disp[currentAddress]);
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._id))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._id))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._id))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._id))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._master))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._master))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._master))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._master))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[1]))), &disp[currentAddress]);
+         #endif
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
+         
             assertion1( disp[i] > disp[i-1], i );
          }
+         MPI_Aint base;
          #ifdef MPI2
-         for (int i=0; i<Attributes; i++) {
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]))), &base);
          #else
-         for (int i=0; i<Attributes-1; i++) {
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]))), &base);
          #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(TreeEntry)), i, disp[i], Attributes, sizeof(TreeEntry));
+         for (int i=0; i<Attributes; i++) {
+         
+            disp[i] = disp[i] - base;
+            
          }
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[1]))), 		&disp[2] );
-         disp[2] -= base;
-         disp[2] += disp[0];
-         #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TreeEntry::Datatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeEntry::Datatype );
          MPI_Type_commit( &TreeEntry::Datatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeEntry::Datatype);
@@ -191,14 +198,17 @@ peano4::parallel::TreeEntryPacked peano4::parallel::TreeEntry::convert() const{
          
       }
       {
-         TreeEntry dummyTreeEntry[2];
+         TreeEntry dummyTreeEntry[16];
          
          #ifdef MPI2
          const int Attributes = 2;
          #else
-         const int Attributes = 3;
+         const int Attributes = 2+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+            #ifndef MPI2
+              MPI_LB,
+            #endif
               MPI_INT		 //id
             , MPI_INT		 //master
             #ifndef MPI2
@@ -208,57 +218,61 @@ peano4::parallel::TreeEntryPacked peano4::parallel::TreeEntry::convert() const{
          };
          
          int blocklen[Attributes] = {
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //id
             , 1		 //master
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry))), &base);
+         int       currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]))), &disp[currentAddress]);
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._id))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._id))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._id))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._id))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._master))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._master))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._master))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]._persistentRecords._master))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[1]))), &disp[currentAddress]);
+         #endif
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
+         
             assertion1( disp[i] > disp[i-1], i );
          }
+         MPI_Aint base;
          #ifdef MPI2
-         for (int i=0; i<Attributes; i++) {
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]))), &base);
          #else
-         for (int i=0; i<Attributes-1; i++) {
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[0]))), &base);
          #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(TreeEntry)), i, disp[i], Attributes, sizeof(TreeEntry));
+         for (int i=0; i<Attributes; i++) {
+         
+            disp[i] = disp[i] - base;
+            
          }
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[1]))), 		&disp[2] );
-         disp[2] -= base;
-         disp[2] += disp[0];
-         #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TreeEntry::FullDatatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntry[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeEntry::FullDatatype );
          MPI_Type_commit( &TreeEntry::FullDatatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeEntry::FullDatatype);
@@ -645,14 +659,17 @@ peano4::parallel::TreeEntry peano4::parallel::TreeEntryPacked::convert() const{
    
    void peano4::parallel::TreeEntryPacked::initDatatype() {
       {
-         TreeEntryPacked dummyTreeEntryPacked[2];
+         TreeEntryPacked dummyTreeEntryPacked[16];
          
          #ifdef MPI2
          const int Attributes = 2;
          #else
-         const int Attributes = 3;
+         const int Attributes = 2+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+            #ifndef MPI2
+              MPI_LB,
+            #endif
               MPI_INT		 //id
             , MPI_INT		 //master
             #ifndef MPI2
@@ -662,57 +679,61 @@ peano4::parallel::TreeEntry peano4::parallel::TreeEntryPacked::convert() const{
          };
          
          int blocklen[Attributes] = {
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //id
             , 1		 //master
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked))), &base);
+         int       currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]))), &disp[currentAddress]);
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._id))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._id))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._id))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._id))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._master))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._master))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._master))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._master))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[1]))), &disp[currentAddress]);
+         #endif
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
+         
             assertion1( disp[i] > disp[i-1], i );
          }
+         MPI_Aint base;
          #ifdef MPI2
-         for (int i=0; i<Attributes; i++) {
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]))), &base);
          #else
-         for (int i=0; i<Attributes-1; i++) {
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]))), &base);
          #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(TreeEntryPacked)), i, disp[i], Attributes, sizeof(TreeEntryPacked));
+         for (int i=0; i<Attributes; i++) {
+         
+            disp[i] = disp[i] - base;
+            
          }
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[1]))), 		&disp[2] );
-         disp[2] -= base;
-         disp[2] += disp[0];
-         #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TreeEntryPacked::Datatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeEntryPacked::Datatype );
          MPI_Type_commit( &TreeEntryPacked::Datatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeEntryPacked::Datatype);
@@ -721,14 +742,17 @@ peano4::parallel::TreeEntry peano4::parallel::TreeEntryPacked::convert() const{
          
       }
       {
-         TreeEntryPacked dummyTreeEntryPacked[2];
+         TreeEntryPacked dummyTreeEntryPacked[16];
          
          #ifdef MPI2
          const int Attributes = 2;
          #else
-         const int Attributes = 3;
+         const int Attributes = 2+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
+            #ifndef MPI2
+              MPI_LB,
+            #endif
               MPI_INT		 //id
             , MPI_INT		 //master
             #ifndef MPI2
@@ -738,57 +762,61 @@ peano4::parallel::TreeEntry peano4::parallel::TreeEntryPacked::convert() const{
          };
          
          int blocklen[Attributes] = {
+            #ifndef MPI2
+            1, // lower bound
+            #endif
               1		 //id
             , 1		 //master
             #ifndef MPI2
-            , 1
+            , 1 // upper bound
             #endif
             
          };
          
          MPI_Aint  disp[Attributes];
-         MPI_Aint  base;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked))), &base);
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked))), &base);
+         int       currentAddress = -1;
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]))), &disp[currentAddress]);
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._id))), 		&disp[0] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._id))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._id))), 		&disp[0] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._id))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._master))), 		&disp[1] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._master))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._master))), 		&disp[1] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]._persistentRecords._master))), 		&disp[currentAddress] );
          #endif
-         #ifdef MPI2
+         #ifndef MPI2
+         currentAddress++;
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[1]))), &disp[currentAddress]);
+         #endif
          for (int i=1; i<Attributes; i++) {
-         #else
-         for (int i=1; i<Attributes-1; i++) {
-         #endif
+         
             assertion1( disp[i] > disp[i-1], i );
          }
+         MPI_Aint base;
          #ifdef MPI2
-         for (int i=0; i<Attributes; i++) {
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]))), &base);
          #else
-         for (int i=0; i<Attributes-1; i++) {
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[0]))), &base);
          #endif
-            disp[i] = disp[i] - base; // should be MPI_Aint_diff(disp[i], base); but this is not supported by most MPI-2 implementations
-            assertion4(disp[i]<static_cast<int>(sizeof(TreeEntryPacked)), i, disp[i], Attributes, sizeof(TreeEntryPacked));
+         for (int i=0; i<Attributes; i++) {
+         
+            disp[i] = disp[i] - base;
+            
          }
-         #ifndef MPI2
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[1]))), 		&disp[2] );
-         disp[2] -= base;
-         disp[2] += disp[0];
-         #endif
          #ifdef MPI2
          MPI_Datatype tmpType; 
-         MPI_Aint lowerBound, typeExtent; 
          MPI_Type_create_struct( Attributes, blocklen, disp, subtypes, &tmpType );
-         MPI_Type_get_extent( tmpType, &lowerBound, &typeExtent );
-         MPI_Type_create_resized( tmpType, lowerBound, typeExtent, &TreeEntryPacked::FullDatatype );
+         MPI_Aint typeExtent; 
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeEntryPacked[1]))), &typeExtent);
+         typeExtent = MPI_Aint_diff(typeExtent, base);
+         MPI_Type_create_resized( tmpType, 0, typeExtent, &TreeEntryPacked::FullDatatype );
          MPI_Type_commit( &TreeEntryPacked::FullDatatype );
          #else
          MPI_Type_struct( Attributes, blocklen, disp, subtypes, &TreeEntryPacked::FullDatatype);

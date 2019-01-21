@@ -1,15 +1,10 @@
 #include "peano.h"
 
 #include "peano4/utils/Loop.h"
+#include "peano4/parallel/Node.h"
 
 #include "tarch/multicore/MulticoreDefinitions.h"
-
-
-#ifdef SharedMemoryParallelisation
 #include "tarch/multicore/Core.h"
-#endif
-
-
 #include "tarch/mpi/Rank.h"
 
 
@@ -31,6 +26,12 @@ void peano4::fillLookupTables() {
 int peano4::initParallelEnvironment(int* argc, char*** argv) {
   #ifdef Parallel
   if ( tarch::mpi::Rank::getInstance().init(argc,argv) ) {
+	peano4::parallel::Node::initMPIDatatypes();
+
+	// @todo Dummy values
+	clock_t timeout = 60;
+	tarch::mpi::Rank::getInstance().setTimeOutWarning(timeout/4);
+	tarch::mpi::Rank::getInstance().setDeadlockTimeOut(timeout);
     return 0;
   }
   else {
@@ -43,6 +44,7 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
 
 
 void peano4::shutdownParallelEnvironment() {
+  peano4::parallel::Node::shutdownMPIDatatypes();
   tarch::mpi::Rank::getInstance().shutdown();
 }
 

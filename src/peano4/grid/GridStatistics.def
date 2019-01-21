@@ -1,3 +1,5 @@
+// have to know whether we are using MPI
+#include "config.h"
 
 Packed-Type: short int;
 

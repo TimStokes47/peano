@@ -1,6 +1,7 @@
 #ifndef _PEANO4_PARALLEL_TREEENTRY_H
 #define _PEANO4_PARALLEL_TREEENTRY_H
 
+#include "config.h"
 #include "peano4/utils/Globals.h"
 #ifdef Parallel
 	#include "tarch/mpi/Rank.h"
@@ -27,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/01/2019 20:01
+ * @date   18/01/2019 12:10
  */
 class peano4::parallel::TreeEntry { 
    
@@ -177,7 +178,7 @@ class peano4::parallel::TreeEntry {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   15/01/2019 20:01
+ * @date   18/01/2019 12:10
  */
 class peano4::parallel::TreeEntryPacked { 
    

@@ -15,6 +15,8 @@ namespace peano4 {
   * <h2> Recreate all DaStGen objects </h2>
   * <pre>
 java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator TreeEntry.def  .
+java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator StartTraversalMessage.def  .
+java -jar ~/git/DaStGen/DaStGen.jar --plugin PeanoSnippetGenerator --naming Peano4NameTranslator TreeManagementMessage.def  .
     </pre>
   *
   */

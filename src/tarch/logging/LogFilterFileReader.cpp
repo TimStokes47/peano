@@ -56,6 +56,7 @@ bool tarch::logging::LogFilterFileReader::parseLine(std::ifstream& file, const s
     const bool bufferIsWhiteSpace =
       buffer == ' '  ||
       buffer == '\t' ||
+      buffer == '\r' ||
       buffer == '\n';
     if (bufferIsWhiteSpace && !tokens[currentToken].empty()) {
       currentToken++;

@@ -1,8 +1,10 @@
 #include "SpacetreeSet.h"
 #include "Node.h"
+#include "peano4/parallel/TreeManagementMessage.h"
 
 
 #include "tarch/multicore/Lock.h"
+#include "tarch/mpi/Rank.h"
 
 
 tarch::logging::Log peano4::parallel::SpacetreeSet::_log( "peano4::parallel::SpacetreeSet" );
@@ -12,13 +14,20 @@ peano4::parallel::SpacetreeSet::SpacetreeSet(
   const tarch::la::Vector<Dimensions,double>&  offset,
   const tarch::la::Vector<Dimensions,double>&  width
 ) {
-  peano4::grid::Spacetree spacetree( offset, width );
-
-  addSpacetree( std::move(spacetree) );
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    peano4::grid::Spacetree spacetree( offset, width );
+    addSpacetree( std::move(spacetree) );
+  }
 }
 
 
 peano4::parallel::SpacetreeSet::~SpacetreeSet() {
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    peano4::parallel::Node::getInstance().setNextProgramStep(peano4::parallel::Node::Terminate);
+    peano4::parallel::Node::getInstance().continueToRun();
+  }
+
+  // @todo Free all the tags
 }
 
 
@@ -165,6 +174,10 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
 
 
 void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& observer) {
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    peano4::parallel::Node::getInstance().continueToRun();
+  }
+
   traverseTreeSet(observer);
 
   //
@@ -310,16 +323,42 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
   peano4::grid::Spacetree&  tree = getSpacetree( treeId );
 
   if ( tree.maySplit() ) {
-    const int newSpacetreeId = peano4::parallel::Node::getInstance().reserveId(
+    int newSpacetreeId = peano4::parallel::Node::getInstance().reserveId(
       peano4::parallel::Node::getInstance().getRank(treeId),
       treeId
     );
 
-    #if !defined(SharedMemoryPallelisation)
-    if ( peano4::parallel::Node::getInstance().getRank(treeId) == targetRank ) {
-      logWarning( "split(int,int)", "code tries to split up tree into two trees on rank " << targetRank << " even though no multithreading enabled. This might lead to deadlocks" );
+    // @todo xxx
+    // sende message raus an anderen Rank, ob wir splitten duerfen
+    // der gibt die id zurueck
+    // jetzt geht es los
+    // Oder wir machen es eben doch so, dass man net splitten darf direkt auf einen anderen Rank
+    // Der insert ist dann aber ne separate Message, also die gleiche Message aber anderer Content
+    if (tarch::mpi::Rank::getInstance().getRank()!=targetRank) {
+      #ifdef Parallel
+      peano4::parallel::TreeManagementMessage message(treeId,peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree);
+      message.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+
+      message.receive(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+      assertion(message.getAction()==TreeManagementMessage::Action::BookedNewRemoteTree);
+      newSpacetreeId = message.getSpacetreeId();
+      #else
+      newSpacetreeId = -1;
+      assertionMsg( false, "can't split into tree on a different rank if not compiled with mpi");
+      #endif
     }
-    #endif
+    else {
+      #if !defined(SharedMemoryPallelisation)
+      if ( peano4::parallel::Node::getInstance().getRank(treeId) == targetRank ) {
+        logWarning( "split(int,int)", "code tries to split up tree into two trees on rank " << targetRank << " even though no multithreading enabled. This might lead to deadlocks" );
+      }
+      #endif
+
+      newSpacetreeId = peano4::parallel::Node::getInstance().reserveId(
+        peano4::parallel::Node::getInstance().getRank(treeId),
+        treeId
+      );
+    }
 
     if (newSpacetreeId>=0) {
       tree.split(newSpacetreeId, cells);
@@ -336,7 +375,7 @@ peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
   for (auto& p: _spacetrees) {
 	if (p._id==id) return p;
   }
-  assertion2( false, "no spacetree found", id );
+  assertion3( false, "no spacetree found", id, tarch::mpi::Rank::getInstance().getRank() );
   return *_spacetrees.begin(); // just here to avoid warning
 }
 

@@ -84,13 +84,13 @@ AC_ARG_WITH(
 
 
 if test "$multithreading" == cpp; then
-  AC_DEFINE([SharedCPP], ["Shared memory parallelisation"], [SharedCPP])
+  AC_DEFINE([SharedCPP], [1], [SharedCPP])
   AC_SEARCH_LIBS(pthread_create,pthread)
 fi
 
 if test "$multithreading" == tbb; then
   AC_CHECK_HEADERS([tbb.h],[],[AC_MSG_ERROR([header <tbb.h> not found])])
-  AC_DEFINE([SharedTBB], ["Shared memory parallelisation"], [SharedTBB])
+  AC_DEFINE([SharedTBB], [1], [SharedTBB])
 fi
 
 
@@ -107,7 +107,7 @@ AC_ARG_WITH(mpi,
 
 if test "$mpi" != false; then
   CXX=$mpi
-  AC_DEFINE([Parallel], ["Distributed memory parallelisation"], [Parallel])
+  AC_DEFINE([Parallel], [1], [Parallel])
 fi
 
 # CXX=

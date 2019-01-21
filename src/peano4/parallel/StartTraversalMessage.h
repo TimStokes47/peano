@@ -1,14 +1,10 @@
-#ifndef _TARCH_PARALLEL_MESSAGES_REGISTERATNODEPOOLMESSAGE_H
-#define _TARCH_PARALLEL_MESSAGES_REGISTERATNODEPOOLMESSAGE_H
+#ifndef _PEANO4_PARALLEL_STARTTRAVERSALMESSAGE_H
+#define _PEANO4_PARALLEL_STARTTRAVERSALMESSAGE_H
 
-#include "tarch/parallel/MPIConstants.h"
-#include "tarch/compiler/CompilerSpecificSettings.h"
-#include "peano/utils/PeanoOptimisations.h"
+#include "config.h"
+#include "peano4/utils/Globals.h"
 #ifdef Parallel
-	#include "tarch/parallel/Node.h"
-#endif
-#ifdef Parallel
-	#include <mpi.h>
+	#include "tarch/mpi/Rank.h"
 #endif
 #include "tarch/logging/Log.h"
 #include "tarch/la/Vector.h"
@@ -17,12 +13,10 @@
 #include <string>
 #include <iostream>
 
-namespace tarch {
+namespace peano4 {
    namespace parallel {
-      namespace messages {
-         class RegisterAtNodePoolMessage;
-         class RegisterAtNodePoolMessagePacked;
-      }
+      class StartTraversalMessage;
+      class StartTraversalMessagePacked;
    }
 }
 
@@ -34,16 +28,16 @@ namespace tarch {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   31/03/2018 19:30
+ * @date   18/01/2019 12:10
  */
-class tarch::parallel::messages::RegisterAtNodePoolMessage { 
+class peano4::parallel::StartTraversalMessage { 
    
    public:
       
-      typedef tarch::parallel::messages::RegisterAtNodePoolMessagePacked Packed;
+      typedef peano4::parallel::StartTraversalMessagePacked Packed;
       
       struct PersistentRecords {
-         tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> _nodeName;
+         int _stepIdentifier;
          /**
           * Generated
           */
@@ -52,11 +46,17 @@ class tarch::parallel::messages::RegisterAtNodePoolMessage {
          /**
           * Generated
           */
-         PersistentRecords(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& nodeName);
+         PersistentRecords(const int& stepIdentifier);
          
-          tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> getNodeName() const ;
+         /**
+          * Generated
+          */
+          int getStepIdentifier() const ;
          
-          void setNodeName(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& nodeName) ;
+         /**
+          * Generated
+          */
+          void setStepIdentifier(const int& stepIdentifier) ;
          
          
       };
@@ -67,30 +67,32 @@ class tarch::parallel::messages::RegisterAtNodePoolMessage {
          /**
           * Generated
           */
-         RegisterAtNodePoolMessage();
+         StartTraversalMessage();
          
          /**
           * Generated
           */
-         RegisterAtNodePoolMessage(const PersistentRecords& persistentRecords);
+         StartTraversalMessage(const PersistentRecords& persistentRecords);
          
          /**
           * Generated
           */
-         RegisterAtNodePoolMessage(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& nodeName);
+         StartTraversalMessage(const int& stepIdentifier);
          
          /**
           * Generated
           */
-         virtual ~RegisterAtNodePoolMessage();
+         virtual ~StartTraversalMessage();
          
-          tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> getNodeName() const ;
+         /**
+          * Generated
+          */
+          int getStepIdentifier() const ;
          
-          void setNodeName(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& nodeName) ;
-         
-          short int getNodeName(int elementIndex) const ;
-         
-          void setNodeName(int elementIndex, const short int& nodeName) ;
+         /**
+          * Generated
+          */
+          void setStepIdentifier(const int& stepIdentifier) ;
          
          /**
           * Generated
@@ -107,7 +109,7 @@ class tarch::parallel::messages::RegisterAtNodePoolMessage {
          /**
           * Generated
           */
-         RegisterAtNodePoolMessagePacked convert() const;
+         StartTraversalMessagePacked convert() const;
          
          
       #ifdef Parallel
@@ -155,14 +157,14 @@ class tarch::parallel::messages::RegisterAtNodePoolMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   31/03/2018 19:30
+ * @date   18/01/2019 12:10
  */
-class tarch::parallel::messages::RegisterAtNodePoolMessagePacked { 
+class peano4::parallel::StartTraversalMessagePacked { 
    
    public:
       
       struct PersistentRecords {
-         tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> _nodeName;
+         int _stepIdentifier;
          /**
           * Generated
           */
@@ -171,11 +173,17 @@ class tarch::parallel::messages::RegisterAtNodePoolMessagePacked {
          /**
           * Generated
           */
-         PersistentRecords(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& nodeName);
+         PersistentRecords(const int& stepIdentifier);
          
-          tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> getNodeName() const ;
+         /**
+          * Generated
+          */
+          int getStepIdentifier() const ;
          
-          void setNodeName(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& nodeName) ;
+         /**
+          * Generated
+          */
+          void setStepIdentifier(const int& stepIdentifier) ;
          
          
       };
@@ -186,30 +194,32 @@ class tarch::parallel::messages::RegisterAtNodePoolMessagePacked {
          /**
           * Generated
           */
-         RegisterAtNodePoolMessagePacked();
+         StartTraversalMessagePacked();
          
          /**
           * Generated
           */
-         RegisterAtNodePoolMessagePacked(const PersistentRecords& persistentRecords);
+         StartTraversalMessagePacked(const PersistentRecords& persistentRecords);
          
          /**
           * Generated
           */
-         RegisterAtNodePoolMessagePacked(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& nodeName);
+         StartTraversalMessagePacked(const int& stepIdentifier);
          
          /**
           * Generated
           */
-         virtual ~RegisterAtNodePoolMessagePacked();
+         virtual ~StartTraversalMessagePacked();
          
-          tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int> getNodeName() const ;
+         /**
+          * Generated
+          */
+          int getStepIdentifier() const ;
          
-          void setNodeName(const tarch::la::Vector<MPI_MAX_NAME_STRING_ADDED_ONE,short int>& nodeName) ;
-         
-          short int getNodeName(int elementIndex) const ;
-         
-          void setNodeName(int elementIndex, const short int& nodeName) ;
+         /**
+          * Generated
+          */
+          void setStepIdentifier(const int& stepIdentifier) ;
          
          /**
           * Generated
@@ -226,7 +236,7 @@ class tarch::parallel::messages::RegisterAtNodePoolMessagePacked {
          /**
           * Generated
           */
-         RegisterAtNodePoolMessage convert() const;
+         StartTraversalMessage convert() const;
          
          
       #ifdef Parallel
