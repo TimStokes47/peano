@@ -33,6 +33,9 @@
   #define TwoPowerDPlusTwo   (BasePowerExponent<2,Dimensions>::value+2)
 
   #define ThreePowerD        (BasePowerExponent<3,Dimensions>::value)
+
+  #define TwoTimesD          (2*Dimensions)
+
 /*
   #define TwoPowerDTimesD   (BasePowerExponent<2,Dimensions>::value*Dimensions)
   #define TwoPowerD_MINUS_ONE (BasePowerExponent<2,Dimensions>::value-1)

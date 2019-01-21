@@ -18,6 +18,7 @@ tarch::logging::Log peano4::parallel::tests::PingPongTest::_log("peano4::paralle
 
 
 void peano4::parallel::tests::PingPongTest::testBuiltInType() {
+  #ifdef Parallel
   int out = 23;
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
     MPI_Send(&out,1,MPI_INT,1,0,MPI_COMM_WORLD);
@@ -28,10 +29,12 @@ void peano4::parallel::tests::PingPongTest::testBuiltInType() {
     validateEquals( in, out );
   }
   MPI_Barrier(MPI_COMM_WORLD);
+  #endif
 }
 
 
 void peano4::parallel::tests::PingPongTest::testDaStGenType() {
+  #ifdef Parallel
   StartTraversalMessage out;
   out.setStepIdentifier(23);
   if ( tarch::mpi::Rank::getInstance().getNumberOfRanks()>=2 and tarch::mpi::Rank::getInstance().getRank()==0) {
@@ -43,10 +46,12 @@ void peano4::parallel::tests::PingPongTest::testDaStGenType() {
     validateEqualsWithParams2( in.getStepIdentifier(), out.getStepIdentifier(), in.toString(), out.toString() );
   }
   MPI_Barrier(MPI_COMM_WORLD);
+  #endif
 }
 
 
 void peano4::parallel::tests::PingPongTest::testDaStGenArray() {
+  #ifdef Parallel
   StartTraversalMessage out[10];
   out[0].setStepIdentifier(23);
   out[1].setStepIdentifier(24);
@@ -88,6 +93,7 @@ void peano4::parallel::tests::PingPongTest::testDaStGenArray() {
 	);
   }
   MPI_Barrier(MPI_COMM_WORLD);
+  #endif
 }
 
 

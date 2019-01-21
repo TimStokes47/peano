@@ -1,5 +1,6 @@
 #include "EmptyTraversalObserver.h"
 #include "GridControlEvent.h"
+#include "GridTraversalEvent.h"
 
 
 tarch::logging::Log  peano4::grid::EmptyTraversalObserver::_log( "peano4::grid::EmptyTraversalObserver" );
@@ -16,24 +17,18 @@ void peano4::grid::EmptyTraversalObserver::endTraversal() {
 
 
 void peano4::grid::EmptyTraversalObserver::enterCell(
-  const tarch::la::Vector<Dimensions,double>& x,
-  const tarch::la::Vector<Dimensions,double>& h,
-  bool                                        isRefined,
-  int                                         spacetreeId
+  const GridTraversalEvent&  event
 ) {
-  logTraceInWith2Arguments( "enterCell(...)", x, h );
+  logTraceInWith1Argument( "enterCell(...)", event.toString() );
   logTraceOut( "enterCell(...)" );
 }
 
 
 
 void peano4::grid::EmptyTraversalObserver::leaveCell(
-  const tarch::la::Vector<Dimensions,double>& x,
-  const tarch::la::Vector<Dimensions,double>& h,
-  bool                                        isRefined,
-  int                                         spacetreeId
+  const GridTraversalEvent&  event
 ) {
-  logTraceInWith2Arguments( "leaveCell(...)", x, h );
+  logTraceInWith1Argument( "leaveCell(...)", event.toString() );
   logTraceOut( "leaveCell(...)" );
 }
 

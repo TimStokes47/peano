@@ -26,20 +26,22 @@ libPeano4Core3d_debug_la_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=1 -g3
 # All sources below
 #
 Peano4Core_SOURCES = peano4/peano.cpp \
-  peano4/grid/GridVertex.cpp \
   peano4/grid/AutomatonState.cpp \
-  peano4/grid/Spacetree.cpp \
-  peano4/grid/PeanoCurve.cpp \
   peano4/grid/EmptyTraversalObserver.cpp \
   peano4/grid/GridControlEvent.cpp \
-  peano4/grid/TraversalVTKPlotter.cpp \
+  peano4/grid/GridVertex.cpp \
   peano4/grid/GridStatistics.cpp \
+  peano4/grid/GridTraversalEvent.cpp \
+  peano4/grid/PeanoCurve.cpp \
+  peano4/grid/Spacetree.cpp \
+  peano4/grid/TraversalVTKPlotter.cpp \
   peano4/grid/tests/SpacetreeTest.cpp \
   peano4/parallel/Node.cpp \
-  peano4/parallel/Tasks.cpp \
-  peano4/parallel/TreeEntry.cpp \
   peano4/parallel/SpacetreeSet.cpp \
   peano4/parallel/StartTraversalMessage.cpp \
+  peano4/parallel/Tasks.cpp \
+  peano4/parallel/TreeEntry.cpp \
+  peano4/parallel/TreeManagementMessage.cpp \
   peano4/parallel/tests/PingPongTest.cpp \
   peano4/utils/Loop.cpp
 

@@ -17,6 +17,24 @@ namespace peano4 {
 
 class peano4::grid::PeanoCurve {
   public:
+	/**
+	 * By setting the value to something bigger than 2, we effectively reserve
+	 * NumberOfBaseStacks - 2 as callstack.
+	 */
+	static constexpr int NumberOfBaseStacks = 3;
+
+	/**
+	 * Standard (serial) number of stacks required per spacetree
+	 *
+	 * We need an input and an output stack. Then we need the 2d temporary
+	 * stacks. Finally, we need another stack to represent the call stack.
+	 * Inside the spacetree, this one is not required - we use the real
+	 * call stack of the recursive formulation - but if we manage the call
+	 * stack explicitly, i.e. through grid traversal events, then we have
+	 * also to manage the stack explicitly.
+	 */
+	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = NumberOfBaseStacks + Dimensions*2;
+
 	static bool isTraversePositiveAlongAxis(
 	  const AutomatonState&  state,
 	  int                    axis
@@ -67,12 +85,30 @@ class peano4::grid::PeanoCurve {
      *
      * @return 0 or 1 if it is about in/out stacks
      */
-    static int getReadStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex );
+    static int getVertexReadStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex );
 
     /**
      * @return 0 or 1 if it is about in/out stacks
      */
-    static int getWriteStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex );
+    static int getVertexWriteStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex );
+
+    /**
+     * Faces are enumerated following the same paradigm as the vertices. Face 0
+     * is the face with a x_0 as normal which runs through the origin (left
+     * bottom point), face 1 is the face with x_1 as normal, ... Face 0+d is the
+     * face parallel to face 0 but on the opposite side of the cell. In the SFC
+     * context, we obviously need a different enumeration scheme. With vertices,
+     * deriving this scheme is simple: you get the first vertex and then you xor
+     * the vertex numbers. Here, this is not possible, i.e. for faces users have
+     * to go through this routine.
+     */
+    static int getFaceNumberAlongCurve(const AutomatonState& cell, int logicalFaceNumber );
+
+    static int getFaceReadStackNumber(const AutomatonState& cell, int face );
+    static int getFaceWriteStackNumber(const AutomatonState& cell, int face );
+
+    static int getCellReadStackNumber(const AutomatonState& cell);
+    static int getCellWriteStackNumber(const AutomatonState& cell);
 
     static bool isInOutStack( int number );
 };

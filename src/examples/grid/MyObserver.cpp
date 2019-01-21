@@ -29,22 +29,16 @@ void applications4::grid::MyObserver::endTraversal() {
 
 
 void applications4::grid::MyObserver::enterCell(
-  const tarch::la::Vector<Dimensions,double>& x,
-  const tarch::la::Vector<Dimensions,double>& h,
-  bool                                        isRefined,
-  int                                         spacetreeId
+  const peano4::grid::GridTraversalEvent&  event
 ) {
   #if PeanoDebug>0
-  TraversalVTKPlotter::enterCell(x,h,isRefined,spacetreeId);
+  TraversalVTKPlotter::enterCell(event);
   #endif
 }
 
 
 void applications4::grid::MyObserver::leaveCell(
-  const tarch::la::Vector<Dimensions,double>& x,
-  const tarch::la::Vector<Dimensions,double>& h,
-  bool                                        isRefined,
-  int                                         spacetreeId
+  const peano4::grid::GridTraversalEvent&  event
 ) {
 }
 

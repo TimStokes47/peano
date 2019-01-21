@@ -126,7 +126,7 @@ void peano4::grid::PeanoCurve::setFaceAccessNumber(AutomatonState& cell, int fac
 }
 
 
-int peano4::grid::PeanoCurve::getReadStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex ) {
+int peano4::grid::PeanoCurve::getVertexReadStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex ) {
   int smallestValue = -2*Dimensions-1;
   int result       = cell.getInverted() ? -1 : -2;
   int direction     = -1;
@@ -145,7 +145,7 @@ int peano4::grid::PeanoCurve::getReadStackNumber(const AutomatonState& cell, con
     result = result<Dimensions ? result+Dimensions : result-Dimensions;
   }
 
-  return result+2;
+  return result+NumberOfBaseStacks;
 }
 
 
@@ -154,7 +154,7 @@ bool peano4::grid::PeanoCurve::isInOutStack( int number ) {
   return number==0 or number==1;
 }
 
-int peano4::grid::PeanoCurve::getWriteStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex ) {
+int peano4::grid::PeanoCurve::getVertexWriteStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex ) {
   int biggestValue = 2*Dimensions+1;
   int result       = cell.getInverted() ? -2 : -1;
   int direction    = -1;
@@ -173,5 +173,50 @@ int peano4::grid::PeanoCurve::getWriteStackNumber(const AutomatonState& cell, co
     result = result<Dimensions ? result+Dimensions : result-Dimensions;
   }
 
-  return result+2;
+  return result+NumberOfBaseStacks;
+}
+
+
+int peano4::grid::PeanoCurve::getFaceNumberAlongCurve(const AutomatonState& cell, int face ) {
+  int normal = face % Dimensions;
+  if (isTraversePositiveAlongAxis(cell,normal)) {
+	return (face+Dimensions) % (2*Dimensions);
+  }
+  else {
+    return face;
+  }
+}
+
+
+int peano4::grid::PeanoCurve::getFaceReadStackNumber(const AutomatonState& cell, int  face ) {
+  int result       = cell.getInverted() ? -2 : -1;
+  int direction    = face % Dimensions;
+
+  if (cell.getAccessNumber(face)<0) {
+	result = cell.getEvenFlags(direction) ? 0 : 1;
+  }
+
+  return result+NumberOfBaseStacks;
+}
+
+
+int peano4::grid::PeanoCurve::getFaceWriteStackNumber(const AutomatonState& cell, int  face ) {
+  int result       = cell.getInverted() ? -2 : -1;
+  int direction    = face % Dimensions;
+
+  if (cell.getAccessNumber(face)>0) {
+	result = cell.getEvenFlags(direction) ? 1 : 0;
+  }
+
+  return result+NumberOfBaseStacks;
+}
+
+
+int peano4::grid::PeanoCurve::getCellReadStackNumber(const AutomatonState& cell) {
+  return cell.getInverted() ? 2 : 1;
+}
+
+
+int peano4::grid::PeanoCurve::getCellWriteStackNumber(const AutomatonState& cell) {
+  return cell.getInverted() ? 1 : 2;
 }

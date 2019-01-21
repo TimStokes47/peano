@@ -26,6 +26,7 @@ namespace peano4 {
   namespace grid {
     class Spacetree;
     class TraversalObserver;
+    class GridTraversalEvent;
 
     namespace tests {
       class SpacetreeTest;
@@ -43,12 +44,6 @@ namespace peano4 {
  * Represents one tree
  */
 class peano4::grid::Spacetree {
-  public:
-	/**
-	 * We need an input and an output stack. Then we need the 2d temporary
-	 * stacks. Finally, we need one more stack for joining trees.
-	 */
-	static constexpr int MaxNumberOfStacksPerSpacetreeInstance = 3 + Dimensions*2;
   private:
 	static const int InvalidRank;
 	static const int NumberOfStationarySweepsToWaitAtLeastTillJoin;
@@ -306,6 +301,16 @@ class peano4::grid::Spacetree {
       GridVertex                                fineGridVertices[TwoPowerD],
 	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch
     );
+
+    GridTraversalEvent createEnterCellTraversalEvent(
+      GridVertex              fineGridVertices[TwoPowerD],
+	  const AutomatonState&   state
+    ) const;
+
+    GridTraversalEvent createLeaveCellTraversalEvent(
+      GridVertex              fineGridVertices[TwoPowerD],
+      const AutomatonState&   state
+    ) const;
 
     /**
      * @see splitOrMoveNode()

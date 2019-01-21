@@ -48,6 +48,7 @@ class peano4::parallel::Node {
     int                         _currentProgramStep;
 
     int                         _rankOrchestrationTag;
+    int                         _treeManagementTag;
 
     /**
      * Key is from-to.
@@ -186,6 +187,8 @@ class peano4::parallel::Node {
     void setNextProgramStep( int number );
 
     int getCurrentProgramStep() const;
+
+    int getTreeManagementTag() const;
 };
 
 #endif

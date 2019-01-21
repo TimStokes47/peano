@@ -70,17 +70,11 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 	void endTraversal() override;
 
 	void enterCell(
-      const tarch::la::Vector<Dimensions,double>& x,
-      const tarch::la::Vector<Dimensions,double>& h,
-	  bool                                        isRefined,
-	  int                                         spacetreeId
+      const GridTraversalEvent&  event
     ) override;
 
 	void leaveCell(
-      const tarch::la::Vector<Dimensions,double>& x,
-	  const tarch::la::Vector<Dimensions,double>& h,
-	  bool                                        isRefined,
-	  int                                         spacetreeId
+      const GridTraversalEvent&  event
     ) override;
 
 	/**

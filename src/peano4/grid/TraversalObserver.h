@@ -15,6 +15,7 @@ namespace peano4 {
   namespace grid {
     class TraversalObserver;
     class GridControlEvent;
+    class GridTraversalEvent;
   }
 }
 
@@ -35,18 +36,12 @@ class peano4::grid::TraversalObserver {
 	virtual void endTraversal() = 0;
 
 	virtual void enterCell(
-      const tarch::la::Vector<Dimensions,double>& x,
-	  const tarch::la::Vector<Dimensions,double>& h,
-	  bool                                        isRefined,
-	  int                                         spacetreeId
+      const GridTraversalEvent&  event
     ) = 0;
 
 
 	virtual void leaveCell(
-      const tarch::la::Vector<Dimensions,double>& x,
-	  const tarch::la::Vector<Dimensions,double>& h,
-	  bool                                        isRefined,
-	  int                                         spacetreeId
+	  const GridTraversalEvent&  event
     ) = 0;
 
 	/**

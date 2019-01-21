@@ -1,5 +1,6 @@
 #include "TraversalVTKPlotter.h"
 #include "GridControlEvent.h"
+#include "GridTraversalEvent.h"
 
 #include "peano4/utils/Loop.h"
 
@@ -91,18 +92,15 @@ void peano4::grid::TraversalVTKPlotter::closeFile() {
 
 
 void peano4::grid::TraversalVTKPlotter::enterCell(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  bool                                         isRefined,
-  int                                          treeId
+  const GridTraversalEvent&  event
 ) {
-  if (not isRefined) {
+  if (not event.getIsRefined()) {
     int vertexIndices[TwoPowerD];
 
     dfor2(k)
       assertion( _vertexWriter!=nullptr );
       vertexIndices[kScalar] = _vertexWriter->plotVertex(
-        x + tarch::la::multiplyComponents( k.convertScalar<double>(), h )
+        event.getX() + tarch::la::multiplyComponents( k.convertScalar<double>(), event.getH() )
       );
     enddforx
 
@@ -118,7 +116,7 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
 
     assertion( _spacetreeIdWriter!=nullptr );
     assertion( _coreWriter!=nullptr );
-    _spacetreeIdWriter->plotCell(cellIndex,treeId);
+    _spacetreeIdWriter->plotCell(cellIndex,_spacetreeId);
     _coreWriter->plotCell(cellIndex,tarch::multicore::Core::getInstance().getCoreNumber());
   }
 }
@@ -126,10 +124,7 @@ void peano4::grid::TraversalVTKPlotter::enterCell(
 
 
 void peano4::grid::TraversalVTKPlotter::leaveCell(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  bool                                         isRefined,
-  int                                          treeId
+  const GridTraversalEvent&  event
 ) {
 }
 

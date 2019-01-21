@@ -81,7 +81,7 @@ class peano4::parallel::SpacetreeSet {
 
     std::list< peano4::grid::Spacetree >  _spacetrees;
 
-    tarch::multicore::BooleanSemaphore  _semaphore;
+    tarch::multicore::BooleanSemaphore    _semaphore;
 
     peano4::grid::Spacetree& getSpacetree(int id);
 
@@ -112,6 +112,9 @@ class peano4::parallel::SpacetreeSet {
 
     void cleanUpTrees();
   public:
+    /**
+     *
+     */
     SpacetreeSet(
       const tarch::la::Vector<Dimensions,double>&  offset,
       const tarch::la::Vector<Dimensions,double>&  width

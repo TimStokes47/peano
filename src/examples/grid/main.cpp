@@ -162,6 +162,45 @@ void runParallel() {
 
   applications4::grid::MyObserver emptyObserver;
 
+  spacetreeSet.traverse( emptyObserver );
+  spacetreeSet.traverse( emptyObserver );
+
+  spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,1);
+  /*
+  spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,std::min(2,maxRanks));
+
+  spacetreeSet.traverse( emptyObserver );
+
+  while (
+    not spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2,0)
+  ) {
+    spacetreeSet.traverse( emptyObserver );
+  }
+
+  while ( not spacetreeSet.move(2, 0) ) {
+    spacetreeSet.traverse( emptyObserver );
+  }
+
+  while (
+    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
+  ) {
+    spacetreeSet.traverse( emptyObserver );
+  }
+
+  while (
+    not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
+  ) {
+    spacetreeSet.traverse( emptyObserver );
+  }
+
+  while (
+    not spacetreeSet.split(1,10,0)
+  ) {
+    spacetreeSet.traverse( emptyObserver );
+  }
+*/
+
+
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     peano4::parallel::Node::getInstance().setNextProgramStep(14);
 
@@ -179,34 +218,6 @@ void runParallel() {
       logInfo( "main(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
       logInfo( "main(...)", "remote refined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
     }
-
-
-
-
-
-
-    /*
-
-      @todo Ich weiss nicht, ob man hier die Differenzen braucht!
-
-
-             int count = 2;
-             int array_of_blocklengths[] = { 1, 1 };
-             MPI_Aint array_of_displacements[] = { offsetof( foo, value ),
-                                                   offsetof( foo, rank ) };
-             MPI_Datatype array_of_types[] = { MPI_FLOAT, MPI_CHAR };
-             MPI_Datatype tmp_type, my_mpi_type;
-             MPI_Aint lb, extent;
-
-             MPI_Type_create_struct( count, array_of_blocklengths, array_of_displacements,
-                                     array_of_types, &tmp_type );
-             MPI_Type_get_extent( tmp_type, &lb, &extent );
-             MPI_Type_create_resized( tmp_type, lb, extent, &my_mpi_type );
-             MPI_Type_commit( &my_mpi_type );
-    */
-
-
-
   }
   else {
 	while (peano4::parallel::Node::getInstance().continueToRun()) {

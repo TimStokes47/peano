@@ -1,6 +1,7 @@
 #include "Spacetree.h"
 #include "PeanoCurve.h"
 #include "TraversalObserver.h"
+#include "GridTraversalEvent.h"
 
 
 #include "peano4/utils/Loop.h"
@@ -665,7 +666,7 @@ void peano4::grid::Spacetree::loadVertices(
 	    );
 
     VertexType type        = getVertexType(coarseGridVertices,vertexPositionWithinPatch);
-    const int  stackNumber = PeanoCurve::getReadStackNumber(fineGridStatesState,vertexIndex);
+    const int  stackNumber = PeanoCurve::getVertexReadStackNumber(fineGridStatesState,vertexIndex);
 
     // reset to persistent, as new vertex already has been generated
     if ( not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::New ) {
@@ -738,7 +739,7 @@ void peano4::grid::Spacetree::storeVertices(
     const std::bitset<Dimensions>           vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
     const tarch::la::Vector<Dimensions,int> vertexPositionWithinPatch = cellPositionWithin3x3Patch + convertToIntegerVector(vertexIndex);
 
-    const int   stackNumber = PeanoCurve::getWriteStackNumber(fineGridStatesState,vertexIndex);
+    const int   stackNumber = PeanoCurve::getVertexWriteStackNumber(fineGridStatesState,vertexIndex);
     VertexType  type        = getVertexType(coarseGridVertices,vertexPositionWithinPatch);
 
     switch (type) {
@@ -1169,12 +1170,10 @@ void peano4::grid::Spacetree::descend(
         updateVerticesAroundForkedCell(vertices);
       }
       evaluateGridControlEvents(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices);
-      observer.enterCell(
-        fineGridStates[peano4::utils::dLinearised(k,3)].getX(),
-	    fineGridStates[peano4::utils::dLinearised(k,3)].getH(),
-	    isSpacetreeNodeRefined(fineGridVertices),
-		_id
-	  );
+
+      observer.enterCell(createEnterCellTraversalEvent(
+        fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)]
+      ));
     }
     else {
       if ( isSpacetreeNodeLocal(vertices) ) {
@@ -1212,12 +1211,9 @@ void peano4::grid::Spacetree::descend(
     // Leave cell
     //
     if ( isSpacetreeNodeLocal(fineGridVertices) ) {
-      observer.leaveCell(
-        fineGridStates[peano4::utils::dLinearised(k,3)].getX(),
-	    fineGridStates[peano4::utils::dLinearised(k,3)].getH(),
-	    isSpacetreeNodeRefined(fineGridVertices),
-		_id
-	  );
+      observer.leaveCell(createLeaveCellTraversalEvent(
+        fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)]
+      ));
     }
 
     splitOrMoveNode(
@@ -1235,6 +1231,61 @@ void peano4::grid::Spacetree::descend(
   logTraceOut( "descend(...)" );
 }
 
+
+peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTraversalEvent(
+  GridVertex              fineGridVertices[TwoPowerD],
+  const AutomatonState&   state
+) const {
+  GridTraversalEvent  event;
+
+  event.setX( state.getX() );
+  event.setH( state.getH() );
+  event.setIsRefined( isSpacetreeNodeRefined(fineGridVertices) );
+
+  const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
+  for (int i=0; i<TwoPowerD; i++) {
+    const std::bitset<Dimensions>  vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
+    const int  inStackNumber = PeanoCurve::getVertexReadStackNumber(state,vertexIndex);
+    event.setVertexData(vertexIndex.to_ulong(),inStackNumber);
+  }
+
+  for (int i=0; i<Dimensions*2; i++) {
+    int face   = PeanoCurve::getFaceNumberAlongCurve(state,i);
+	event.setFaceData(face,PeanoCurve::getFaceReadStackNumber(state,face));
+  }
+
+  event.setCellData(PeanoCurve::getCellReadStackNumber(state));
+
+  return event;
+}
+
+
+peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTraversalEvent(
+  GridVertex              fineGridVertices[TwoPowerD],
+  const AutomatonState&   state
+) const {
+  GridTraversalEvent  event;
+
+  event.setX( state.getX() );
+  event.setH( state.getH() );
+  event.setIsRefined( isSpacetreeNodeRefined(fineGridVertices) );
+
+  const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
+  for (int i=0; i<TwoPowerD; i++) {
+    const std::bitset<Dimensions>  vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
+    const int  inStackNumber = PeanoCurve::getVertexWriteStackNumber(state,vertexIndex);
+    event.setVertexData(vertexIndex.to_ulong(),inStackNumber);
+  }
+
+  for (int i=0; i<Dimensions*2; i++) {
+    int face   = PeanoCurve::getFaceNumberAlongCurve(state,i);
+	event.setFaceData(face,PeanoCurve::getFaceWriteStackNumber(state,face));
+  }
+
+  event.setCellData(PeanoCurve::getCellWriteStackNumber(state));
+
+  return event;
+}
 
 
 void peano4::grid::Spacetree::splitOrMoveNode(

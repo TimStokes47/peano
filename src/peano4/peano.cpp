@@ -27,6 +27,11 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
   #ifdef Parallel
   if ( tarch::mpi::Rank::getInstance().init(argc,argv) ) {
 	peano4::parallel::Node::initMPIDatatypes();
+
+	// @todo Dummy values
+	clock_t timeout = 60;
+	tarch::mpi::Rank::getInstance().setTimeOutWarning(timeout/4);
+	tarch::mpi::Rank::getInstance().setDeadlockTimeOut(timeout);
     return 0;
   }
   else {
