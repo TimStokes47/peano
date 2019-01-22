@@ -8,6 +8,8 @@
 #include "peano4/parallel/Node.h"
 #include "peano4/parallel/SpacetreeSet.h"
 
+#include "tarch/mpi/Rank.h"
+
 
 tarch::logging::Log  peano4::grid::Spacetree::_log( "peano4::grid::Spacetree" );
 const int peano4::grid::Spacetree::InvalidRank(-1);
@@ -193,18 +195,19 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
   clearStatistics();
 
   _gridControlEvents = observer.getGridControlEvents();
+  logDebug( "traverse(TraversalObserver&)", "got " << _gridControlEvents.size() << " grid control event(s)" );
   observer.beginTraversal();
 
   _splittedCells.clear();
 
   _coarseningHasBeenVetoed = false;
 
-  const bool isFirstTraversal = _vertexStack[0].empty() and _vertexStack[1].empty();
+  static bool isFirstTraversal = true;
   GridVertex vertices[TwoPowerD];
   dfor2(k)
     tarch::la::Vector<Dimensions,double> x = _root.getX() + k.convertScalar<double>();
     vertices[kScalar] = GridVertex(
-      isFirstTraversal ? GridVertex::State::Refining
+       isFirstTraversal ? GridVertex::State::Refining
     		           : GridVertex::State::Refined,     // const State& state
        tarch::la::Vector<TwoPowerD,int>(InvalidRank),            // const tarch::la::Vector<TwoPowerD,int>& adjacentRanks
 	   true,
@@ -220,6 +223,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
     }
     logDebug( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
+  isFirstTraversal = false;
 
   descend(_root,vertices,observer);
 
@@ -1002,15 +1006,23 @@ void peano4::grid::Spacetree::sendOutVertexIfAdjacentToDomainBoundary( const Gri
 
 
 void peano4::grid::Spacetree::clearStatistics() {
-  _statistics.setNumberOfRefinedVertices( 0 );
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    _statistics.setNumberOfRefinedVertices( TwoPowerD );
+    _statistics.setNumberOfLocalRefinedCells( 1 );
+    _statistics.setNumberOfRemoteRefinedCells( 0 );
+  }
+  else {
+    _statistics.setNumberOfRefinedVertices( 0 );
+    _statistics.setNumberOfLocalRefinedCells( 0 );
+    _statistics.setNumberOfRemoteRefinedCells( 1 );
+  }
+
   _statistics.setNumberOfUnrefinedVertices( 0 );
   _statistics.setNumberOfErasingVertices( 0 );
   _statistics.setNumberOfRefiningVertices( 0 );
 
   _statistics.setNumberOfLocalUnrefinedCells( 0 );
   _statistics.setNumberOfRemoteUnrefinedCells( 0 );
-  _statistics.setNumberOfLocalRefinedCells( 0 );
-  _statistics.setNumberOfRemoteRefinedCells( 0 );
 
   _statistics.setStationarySweeps( _statistics.getStationarySweeps()+1 );
   if (_statistics.getStationarySweeps()>NumberOfStationarySweepsToWaitAtLeastTillJoin+1) {
@@ -1044,7 +1056,7 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
   bool mayChangeGrid = true;
   for (int i=0; i<TwoPowerD; i++) {
     // excluding refinement triggered and refining ensures that we have no immediate
-	// refine anymore. This is imporptant for the adjacency lists. We have to allow
+	// refine anymore. This is important for the adjacency lists. We have to allow
 	// erase triggered, as the grid control events are evaluated top-down, i.e. data
 	// might be set.
     mayChangeGrid &= (

@@ -8,14 +8,10 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>         // std::chrono::seconds
 
-#include "tarch/mpi/Rank.h"
-
 
 #include "tarch/Assertions.h"
-// @todo Node should be called Rank
-// @todo parallel should be called mpi as namespace
+#include "tarch/mpi/Rank.h"
 #include "tarch/multicore/Tasks.h"
-
 #include "tarch/multicore/Lock.h"
 
 
@@ -42,7 +38,9 @@ peano4::parallel::Node::Node():
   _currentProgramStep(UndefProgramStep),
   _rankOrchestrationTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ),
   _treeManagementTag( tarch::mpi::Rank::reserveFreeTag("peano4::parallel::Node") ) {
-  registerId( 0, -1);
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    registerId( 0, -1);
+  }
 }
 
 
@@ -79,7 +77,12 @@ int peano4::parallel::Node::reserveId(int rank, int forTreeId)  {
   // @todo There's a limited number of threads per rank
   int result = -1;
   while (result==-1) {
-	if ( _treeEntries.count( getId(rank,localThread) )==0 ) result = getId(rank,localThread);
+	if ( _treeEntries.count( getId(rank,localThread) )==0 ) {
+	  result = getId(rank,localThread);
+	}
+	else {
+      logDebug( "reserveId(int,int)", "local tree " << localThread << " (global id=" << getId(rank,localThread) << ") on rank " << rank << " is already in use" );
+	}
 	localThread++;
   }
 
@@ -104,13 +107,19 @@ void peano4::parallel::Node::registerId(int id, int masterId) {
 }
 
 
+int peano4::parallel::Node::getNumberOfRegisteredTrees() const {
+  return _treeEntries.size();
+}
+
 
 void peano4::parallel::Node::deregisterId(int id) {
-  assertion( _treeEntries.count(id)==1 );
-  assertion( not hasChildrenTree(id) );
+  assertion1( _treeEntries.count(id)==1, id );
+  assertion1( not hasChildrenTree(id), id );
 
   tarch::multicore::Lock lock(_semaphore);
   _treeEntries.erase(id);
+
+  logDebug( "deregisterId(int)", "removed tree " << id << " from list of trees" );
 }
 
 

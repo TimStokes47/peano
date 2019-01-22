@@ -151,7 +151,7 @@ int peano4::grid::PeanoCurve::getVertexReadStackNumber(const AutomatonState& cel
 
 bool peano4::grid::PeanoCurve::isInOutStack( int number ) {
   assertion1(number>=0,number);
-  return number==0 or number==1;
+  return number < NumberOfBaseStacks;
 }
 
 int peano4::grid::PeanoCurve::getVertexWriteStackNumber(const AutomatonState& cell, const std::bitset<Dimensions>& vertex ) {

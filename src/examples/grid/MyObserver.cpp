@@ -54,10 +54,6 @@ peano4::grid::TraversalObserver* applications4::grid::MyObserver::clone(int spac
     updateMetaFile(spacetreeId);
   }
 
-  if (peano4::parallel::Node::isGlobalMaster(spacetreeId)) {
-    startNewSnapshot(true);
-  }
-
   return result;
   #else
   return new MyObserver( spacetreeId, 0 );

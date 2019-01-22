@@ -111,6 +111,11 @@ class peano4::parallel::Node {
     static bool isGlobalMaster(int treeId);
 
     /**
+     * @return Number of registered trees on this rank
+     */
+    int getNumberOfRegisteredTrees() const;
+
+    /**
      * This operation is not const as it does some internal bookkeeping. It
      * internally invokes  registerId() on the result.
      *

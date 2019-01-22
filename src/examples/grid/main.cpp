@@ -52,14 +52,14 @@ void runSerial() {
     #endif
     spacetree.traverse( emptyObserver );
 
-    logInfo( "main(...)", "refined vertices = " << spacetree.getGridStatistics().getNumberOfRefinedVertices() );
-    logInfo( "main(...)", "unrefined vertices = " << spacetree.getGridStatistics().getNumberOfUnrefinedVertices() );
-    logInfo( "main(...)", "refining vertices = " << spacetree.getGridStatistics().getNumberOfRefiningVertices() );
-    logInfo( "main(...)", "erasing vertices = " << spacetree.getGridStatistics().getNumberOfErasingVertices() );
-    logInfo( "main(...)", "local unrefined cells = " << spacetree.getGridStatistics().getNumberOfLocalUnrefinedCells());
-    logInfo( "main(...)", "local refined cell = " << spacetree.getGridStatistics().getNumberOfLocalRefinedCells() );
-    logInfo( "main(...)", "remote unrefined cells = " << spacetree.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
-    logInfo( "main(...)", "remote refined cells = " << spacetree.getGridStatistics().getNumberOfRemoteRefinedCells() );
+    logInfo( "runSerial(...)", "refined vertices = " << spacetree.getGridStatistics().getNumberOfRefinedVertices() );
+    logInfo( "runSerial(...)", "unrefined vertices = " << spacetree.getGridStatistics().getNumberOfUnrefinedVertices() );
+    logInfo( "runSerial(...)", "refining vertices = " << spacetree.getGridStatistics().getNumberOfRefiningVertices() );
+    logInfo( "runSerial(...)", "erasing vertices = " << spacetree.getGridStatistics().getNumberOfErasingVertices() );
+    logInfo( "runSerial(...)", "local unrefined cells = " << spacetree.getGridStatistics().getNumberOfLocalUnrefinedCells());
+    logInfo( "runSerial(...)", "local refined cell = " << spacetree.getGridStatistics().getNumberOfLocalRefinedCells() );
+    logInfo( "runSerial(...)", "remote unrefined cells = " << spacetree.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
+    logInfo( "runSerial(...)", "remote refined cells = " << spacetree.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
 
 
@@ -83,64 +83,88 @@ void runMultithreaded() {
 
   for (int i=0; i<3; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
+    #if PeanoDebug>0
+    emptyObserver.startNewSnapshot(true);
+    #endif
     spacetreeSet.traverse( emptyObserver );
 
-    logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
-    logInfo( "main(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
-    logInfo( "main(...)", "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() );
-    logInfo( "main(...)", "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() );
-    logInfo( "main(...)", "local unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells());
-    logInfo( "main(...)", "local refined cell= " << spacetreeSet.getGridStatistics().getNumberOfLocalRefinedCells() );
-    logInfo( "main(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
-    logInfo( "main(...)", "remote refined cells= " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
+    logInfo( "runMultithreaded(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
+    logInfo( "runMultithreaded(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
+    logInfo( "runMultithreaded(...)", "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() );
+    logInfo( "runMultithreaded(...)", "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() );
+    logInfo( "runMultithreaded(...)", "local unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells());
+    logInfo( "runMultithreaded(...)", "local refined cell= " << spacetreeSet.getGridStatistics().getNumberOfLocalRefinedCells() );
+    logInfo( "runMultithreaded(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
+    logInfo( "runMultithreaded(...)", "remote refined cells= " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
 
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0);
 
+  #if PeanoDebug>0
+  emptyObserver.startNewSnapshot(true);
+  #endif
   spacetreeSet.traverse( emptyObserver );
 
   while (
     not spacetreeSet.split(1,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2,0)
   ) {
+    #if PeanoDebug>0
+    emptyObserver.startNewSnapshot(true);
+    #endif
     spacetreeSet.traverse( emptyObserver );
   }
 
   while ( not spacetreeSet.move(2, 0) ) {
+    #if PeanoDebug>0
+    emptyObserver.startNewSnapshot(true);
+    #endif
     spacetreeSet.traverse( emptyObserver );
   }
 
   while (
     not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
   ) {
+    #if PeanoDebug>0
+    emptyObserver.startNewSnapshot(true);
+    #endif
     spacetreeSet.traverse( emptyObserver );
   }
 
   while (
     not spacetreeSet.split(2,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
   ) {
+    #if PeanoDebug>0
+    emptyObserver.startNewSnapshot(true);
+    #endif
     spacetreeSet.traverse( emptyObserver );
   }
 
   while (
     not spacetreeSet.split(1,10,0)
   ) {
+    #if PeanoDebug>0
+    emptyObserver.startNewSnapshot(true);
+    #endif
     spacetreeSet.traverse( emptyObserver );
   }
 
   for (int i=0; i<30; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 
+    #if PeanoDebug>0
+    emptyObserver.startNewSnapshot(true);
+    #endif
     spacetreeSet.traverse( emptyObserver );
 
-    logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
-    logInfo( "main(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
-    logInfo( "main(...)", "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() );
-    logInfo( "main(...)", "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() );
-    logInfo( "main(...)", "local unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells());
-    logInfo( "main(...)", "local refined cell = " << spacetreeSet.getGridStatistics().getNumberOfLocalRefinedCells() );
-    logInfo( "main(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
-    logInfo( "main(...)", "remote refined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
+    logInfo( "runMultithreaded(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
+    logInfo( "runMultithreaded(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
+    logInfo( "runMultithreaded(...)", "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() );
+    logInfo( "runMultithreaded(...)", "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() );
+    logInfo( "runMultithreaded(...)", "local unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells());
+    logInfo( "runMultithreaded(...)", "local refined cell = " << spacetreeSet.getGridStatistics().getNumberOfLocalRefinedCells() );
+    logInfo( "runMultithreaded(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
+    logInfo( "runMultithreaded(...)", "remote refined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
 
 
@@ -162,7 +186,14 @@ void runParallel() {
 
   applications4::grid::MyObserver emptyObserver;
 
+  #if PeanoDebug>0
+  emptyObserver.startNewSnapshot(false);
+  #endif
   spacetreeSet.traverse( emptyObserver );
+
+  #if PeanoDebug>0
+  emptyObserver.startNewSnapshot(false);
+  #endif
   spacetreeSet.traverse( emptyObserver );
 
   spacetreeSet.split(0,spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells()/3,1);
@@ -209,14 +240,14 @@ void runParallel() {
 
       spacetreeSet.traverse( emptyObserver );
 
-      logInfo( "main(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
-      logInfo( "main(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
-      logInfo( "main(...)", "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() );
-      logInfo( "main(...)", "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() );
-      logInfo( "main(...)", "local unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells());
-      logInfo( "main(...)", "local refined cell = " << spacetreeSet.getGridStatistics().getNumberOfLocalRefinedCells() );
-      logInfo( "main(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
-      logInfo( "main(...)", "remote refined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
+      logInfo( "runParallel(...)", "refined vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefinedVertices() );
+      logInfo( "runParallel(...)", "unrefined vertices = " << spacetreeSet.getGridStatistics().getNumberOfUnrefinedVertices() );
+      logInfo( "runParallel(...)", "refining vertices = " << spacetreeSet.getGridStatistics().getNumberOfRefiningVertices() );
+      logInfo( "runParallel(...)", "erasing vertices = " << spacetreeSet.getGridStatistics().getNumberOfErasingVertices() );
+      logInfo( "runParallel(...)", "local unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfLocalUnrefinedCells());
+      logInfo( "runParallel(...)", "local refined cell = " << spacetreeSet.getGridStatistics().getNumberOfLocalRefinedCells() );
+      logInfo( "runParallel(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
+      logInfo( "runParallel(...)", "remote refined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
     }
   }
   else {
@@ -247,11 +278,12 @@ int main(int argc, char** argv) {
   tarch::multicore::Core::getInstance().configure(4,2,1);
 
   runTests();
-  #if Parallel
+  #if defined(Parallel)
   runParallel();
+  #elif defined(SharedMemoryParallelisation)
+  runMultithreaded();
   #else
   runSerial();
-  runMultithreaded();
   #endif
 
   peano4::shutdownSharedMemoryEnvironment();

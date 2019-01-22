@@ -1,8 +1,11 @@
 #include "SpacetreeSet.h"
 #include "Node.h"
+
+
 #include "peano4/parallel/TreeManagementMessage.h"
 
 
+#include "tarch/multicore/MulticoreDefinitions.h"
 #include "tarch/multicore/Lock.h"
 #include "tarch/mpi/Rank.h"
 
@@ -14,6 +17,8 @@ peano4::parallel::SpacetreeSet::SpacetreeSet(
   const tarch::la::Vector<Dimensions,double>&  offset,
   const tarch::la::Vector<Dimensions,double>&  width
 ) {
+  assertionEquals( peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees(), 1 );
+
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     peano4::grid::Spacetree spacetree( offset, width );
     addSpacetree( std::move(spacetree) );
@@ -26,8 +31,6 @@ peano4::parallel::SpacetreeSet::~SpacetreeSet() {
     peano4::parallel::Node::getInstance().setNextProgramStep(peano4::parallel::Node::Terminate);
     peano4::parallel::Node::getInstance().continueToRun();
   }
-
-  // @todo Free all the tags
 }
 
 
@@ -323,10 +326,7 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
   peano4::grid::Spacetree&  tree = getSpacetree( treeId );
 
   if ( tree.maySplit() ) {
-    int newSpacetreeId = peano4::parallel::Node::getInstance().reserveId(
-      peano4::parallel::Node::getInstance().getRank(treeId),
-      treeId
-    );
+    int newSpacetreeId = -1;
 
     // @todo xxx
     // sende message raus an anderen Rank, ob wir splitten duerfen
@@ -348,9 +348,9 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
       #endif
     }
     else {
-      #if !defined(SharedMemoryPallelisation)
+      #if !defined(SharedMemoryParallelisation)
       if ( peano4::parallel::Node::getInstance().getRank(treeId) == targetRank ) {
-        logWarning( "split(int,int)", "code tries to split up tree into two trees on rank " << targetRank << " even though no multithreading enabled. This might lead to deadlocks" );
+        logWarning( "split(int,int)", "tree " << treeId << " tries to split up into another on rank " << targetRank << " even though no multithreading enabled. This might lead to deadlocks" );
       }
       #endif
 
