@@ -116,5 +116,5 @@ fi
 #
 # Kick out makefiles
 #
-AC_OUTPUT(src/examples/grid/Makefile src/Makefile Makefile)
+AC_OUTPUT(src/examples/grid/Makefile src/examples/facemarkerdiffusion/Makefile src/Makefile Makefile)
 
