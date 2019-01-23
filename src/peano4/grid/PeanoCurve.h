@@ -18,6 +18,11 @@ namespace peano4 {
 class peano4::grid::PeanoCurve {
   public:
 	/**
+	 * We reserve one number for the callstack.
+	 */
+	static constexpr int CallStack = 0;
+
+	/**
 	 * By setting the value to something bigger than 2, we effectively reserve
 	 * NumberOfBaseStacks - 2 as callstack.
 	 */

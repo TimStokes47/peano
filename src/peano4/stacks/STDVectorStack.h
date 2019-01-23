@@ -6,6 +6,8 @@
 
 #include <vector>
 
+#include "tarch/logging/Log.h"
+
 
 namespace peano4 {
   namespace stacks {

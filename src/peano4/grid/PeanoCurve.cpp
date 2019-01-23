@@ -145,7 +145,9 @@ int peano4::grid::PeanoCurve::getVertexReadStackNumber(const AutomatonState& cel
     result = result<Dimensions ? result+Dimensions : result-Dimensions;
   }
 
-  return result+NumberOfBaseStacks;
+  result += NumberOfBaseStacks;
+  assertion1( result>CallStack, result);
+  return result;
 }
 
 
@@ -173,7 +175,9 @@ int peano4::grid::PeanoCurve::getVertexWriteStackNumber(const AutomatonState& ce
     result = result<Dimensions ? result+Dimensions : result-Dimensions;
   }
 
-  return result+NumberOfBaseStacks;
+  result += NumberOfBaseStacks;
+  assertion1( result>CallStack, result);
+  return result;
 }
 
 
@@ -196,7 +200,10 @@ int peano4::grid::PeanoCurve::getFaceReadStackNumber(const AutomatonState& cell,
 	result = cell.getEvenFlags(direction) ? 0 : 1;
   }
 
-  return result+NumberOfBaseStacks;
+  result += NumberOfBaseStacks;
+
+  assertion1( result>CallStack, result);
+  return result;
 }
 
 
@@ -208,7 +215,9 @@ int peano4::grid::PeanoCurve::getFaceWriteStackNumber(const AutomatonState& cell
 	result = cell.getEvenFlags(direction) ? 1 : 0;
   }
 
-  return result+NumberOfBaseStacks;
+  result += NumberOfBaseStacks;
+  assertion1( result>CallStack, result);
+  return result;
 }
 
 

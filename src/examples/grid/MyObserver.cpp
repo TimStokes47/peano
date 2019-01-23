@@ -1,4 +1,4 @@
-#include "../../examples/grid/MyObserver.h"
+#include "MyObserver.h"
 
 #include "peano4/grid/GridControlEvent.h"
 #include "peano4/parallel/Node.h"
@@ -56,7 +56,7 @@ peano4::grid::TraversalObserver* examples::grid::MyObserver::clone(int spacetree
 
   return result;
   #else
-  return new MyObserver( spacetreeId, 0 );
+  return new MyObserver( spacetreeId, _iterationCounter );
   #endif
 }
 

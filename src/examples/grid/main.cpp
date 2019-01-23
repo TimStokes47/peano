@@ -1,4 +1,4 @@
-#include "../../examples/grid/MyObserver.h"
+#include "MyObserver.h"
 
 #include "tarch/logging/Log.h"
 #include "tarch/tests/TestCaseRegistry.h"
