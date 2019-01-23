@@ -33,7 +33,7 @@ void runTests() {
 
 
 void runSerial() {
-  applications4::grid::MyObserver emptyObserver;
+  examples::grid::MyObserver emptyObserver;
   peano4::grid::Spacetree         spacetree(
 #if Dimensions==2
     {0.0, 0.0},
@@ -79,7 +79,7 @@ void runMultithreaded() {
 #endif
   );
 
-  applications4::grid::MyObserver emptyObserver;
+  examples::grid::MyObserver emptyObserver;
 
   for (int i=0; i<3; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
@@ -184,7 +184,7 @@ void runParallel() {
     #endif
   );
 
-  applications4::grid::MyObserver emptyObserver;
+  examples::grid::MyObserver emptyObserver;
 
   #if PeanoDebug>0
   emptyObserver.startNewSnapshot(false);

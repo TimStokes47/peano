@@ -1,21 +1,21 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _APPLICATIONS4_GRID_MYOBSERVER_H_
-#define _APPLICATIONS4_GRID_MYOBSERVER_H_
+#ifndef _EXAMPLES_GRID_MYOBSERVER_H_
+#define _EXAMPLES_GRID_MYOBSERVER_H_
 
 
 #include "peano4/grid/TraversalObserver.h"
 #include "peano4/grid/TraversalVTKPlotter.h"
 
 
-namespace applications4 {
+namespace examples {
   namespace grid {
     class MyObserver;
   }
 }
 
 
-class applications4::grid::MyObserver: public
+class examples::grid::MyObserver: public
   #if PeanoDebug>0
   peano4::grid::TraversalVTKPlotter
   #else

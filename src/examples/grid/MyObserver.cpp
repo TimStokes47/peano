@@ -4,7 +4,7 @@
 #include "peano4/parallel/Node.h"
 
 
-applications4::grid::MyObserver::MyObserver(int spacetreeId, int counter):
+examples::grid::MyObserver::MyObserver(int spacetreeId, int counter):
   #if PeanoDebug>0
   TraversalVTKPlotter( "grid-construction", spacetreeId, counter ),
   #endif
@@ -13,7 +13,7 @@ applications4::grid::MyObserver::MyObserver(int spacetreeId, int counter):
 }
 
 
-void applications4::grid::MyObserver::beginTraversal() {
+void examples::grid::MyObserver::beginTraversal() {
   #if PeanoDebug>0
   TraversalVTKPlotter::beginTraversal();
   #endif
@@ -21,14 +21,14 @@ void applications4::grid::MyObserver::beginTraversal() {
 }
 
 
-void applications4::grid::MyObserver::endTraversal() {
+void examples::grid::MyObserver::endTraversal() {
   #if PeanoDebug>0
   TraversalVTKPlotter::endTraversal();
   #endif
 }
 
 
-void applications4::grid::MyObserver::enterCell(
+void examples::grid::MyObserver::enterCell(
   const peano4::grid::GridTraversalEvent&  event
 ) {
   #if PeanoDebug>0
@@ -37,13 +37,13 @@ void applications4::grid::MyObserver::enterCell(
 }
 
 
-void applications4::grid::MyObserver::leaveCell(
+void examples::grid::MyObserver::leaveCell(
   const peano4::grid::GridTraversalEvent&  event
 ) {
 }
 
 
-peano4::grid::TraversalObserver* applications4::grid::MyObserver::clone(int spacetreeId) {
+peano4::grid::TraversalObserver* examples::grid::MyObserver::clone(int spacetreeId) {
   #if PeanoDebug>0
   MyObserver* result = new MyObserver( spacetreeId, TraversalVTKPlotter::_counter );
 
@@ -61,7 +61,7 @@ peano4::grid::TraversalObserver* applications4::grid::MyObserver::clone(int spac
 }
 
 
-std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::getGridControlEvents() {
+std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGridControlEvents() {
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
   if (_iterationCounter<8) {
     peano4::grid::GridControlEvent newEvent;
