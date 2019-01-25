@@ -116,5 +116,5 @@ fi
 #
 # Kick out makefiles
 #
-AC_OUTPUT(Makefile src/Makefile src/examples/grid/Makefile src/examples/facemarkerdiffusion/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/examples/grid/Makefile src/examples/integerdiffusionthroughfaces/Makefile)
 
