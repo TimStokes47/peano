@@ -35,14 +35,23 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
 	 */
 	typedef std::pair<int,int>  DataKey;
 
-	typedef char FaceData;
-	typedef char CellData;
+	/**
+	 * In this simple example, we store exactly the same thing both in cells
+	 * and on faces. For most applications, that's not the case obviously.
+	 */
+	struct Data {
+      #if PeanoDebug>0
+      int                                    level;
+      tarch::la::Vector<Dimensions,double>   x;
+      #endif
+	  int                                    value;
+	};
 
-	typedef peano4::stacks::STDVectorStack< FaceData >   FaceDataContainer;
-	typedef peano4::stacks::STDVectorStack< CellData >   CellDataContainer;
+	typedef peano4::stacks::STDVectorStack< Data >   FaceDataContainer;
+	typedef peano4::stacks::STDVectorStack< Data >   CellDataContainer;
 
-	typedef std::map< DataKey, FaceDataContainer >   _faceData;
-	typedef std::map< DataKey, CellDataContainer >   _cellData;
+	std::map< DataKey, FaceDataContainer >   _faceData;
+	std::map< DataKey, CellDataContainer >   _cellData;
   public:
 	MyObserver(int spacetreeId = -1, int counter=0);
 

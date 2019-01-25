@@ -32,6 +32,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   int inStackCell  = event.getCellData();
   int outStackCell = peano4::grid::PeanoCurve::CallStack;
   logInfo( "enterCell(...)", "cell: " << inStackCell << "->" << outStackCell );
+  Data data = _cellData[ DataKey(_spacetreeId,inStackCell) ].pop();
 }
 
 

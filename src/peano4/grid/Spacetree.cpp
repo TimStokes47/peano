@@ -645,6 +645,10 @@ peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
     #endif
   );
 
+
+  xxxx Call Observer
+
+
   logTraceOutWith1Argument( "createNewPersistentVertex(...)", result.toString() );
   return result;
 }
@@ -725,6 +729,11 @@ void peano4::grid::Spacetree::loadVertices(
 	  fineGridStatesState.toString(), vertexIndex
 	);
   }
+
+  Hier kann das createFace rein
+  Hier kann das create Cell rein
+
+  Wo sind die Deletes?
 
   logTraceOutWith1Argument( "loadVertices(...)", fineGridStatesState.toString() );
 }
