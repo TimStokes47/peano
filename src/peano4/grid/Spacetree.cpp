@@ -674,13 +674,7 @@ void peano4::grid::Spacetree::loadVertices(
     const int  stackNumber = PeanoCurve::getVertexReadStackNumber(fineGridStatesState,vertexIndex);
 
     // reset to persistent, as new vertex already has been generated
-    if (
-      (not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::New )
-/*
-	  or
-      (not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::Hanging )
-*/
-	) {
+    if ( not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::New ) {
       type = VertexType::Persistent;
       logDebug(
         "loadVertices(...)",
@@ -696,7 +690,7 @@ void peano4::grid::Spacetree::loadVertices(
     	break;
       case VertexType::Hanging:
       	fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createHangingVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
-      	// @todo Koennen wir das nur 1x machen?
+        observer.createHangingVertexAndPushOnStack(x,fineGridStatesState.getLevel(),stackNumber);
       	break;
       case VertexType::Persistent:
       case VertexType::Delete:
@@ -735,6 +729,30 @@ void peano4::grid::Spacetree::loadVertices(
   }
 
 /*
+  for (int i=0; i<D; i++) {
+    const std::bitset<Dimensions>           vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
+    const tarch::la::Vector<Dimensions,int> vertexPositionWithinPatch = cellPositionWithin3x3Patch + convertToIntegerVector(vertexIndex);
+
+    const tarch::la::Vector<Dimensions,double> x = fineGridStatesState.getX()
+      + tarch::la::multiplyComponents(
+          convertToIntegerVector(vertexIndex).convertScalar<double>(),
+		  fineGridStatesState.getH()
+	    );
+
+    VertexType type        = getVertexType(coarseGridVertices,vertexPositionWithinPatch);
+    const int  stackNumber = PeanoCurve::getVertexReadStackNumber(fineGridStatesState,vertexIndex);
+
+    // reset to persistent, as new vertex already has been generated
+    if ( not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::New ) {
+      type = VertexType::Persistent;
+      logDebug(
+        "loadVertices(...)",
+		"reset stack flag for local vertex " << vertexPositionWithinPatch << " from new/hanging to persistent" );
+    }
+
+    switch (type) {
+*/
+/*
   Hier kann das createFace rein
   Hier kann das create Cell rein
 
@@ -759,11 +777,16 @@ void peano4::grid::Spacetree::storeVertices(
     const std::bitset<Dimensions>           vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
     const tarch::la::Vector<Dimensions,int> vertexPositionWithinPatch = cellPositionWithin3x3Patch + convertToIntegerVector(vertexIndex);
 
+    const tarch::la::Vector<Dimensions,double> x = fineGridStatesState.getX()
+      + tarch::la::multiplyComponents(
+          convertToIntegerVector(vertexIndex).convertScalar<double>(),
+		  fineGridStatesState.getH()
+	    );
+
     const int   stackNumber = PeanoCurve::getVertexWriteStackNumber(fineGridStatesState,vertexIndex);
     VertexType  type        = getVertexType(coarseGridVertices,vertexPositionWithinPatch);
 
-    if ( type==VertexType::Delete and !PeanoCurve::isInOutStack(stackNumber) ) {
-//   	  _vertexStack[stackNumber].push( fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] );
+    if ( not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::Delete) {
       type = VertexType::Persistent;
       logDebug(
         "storeVertices(...)",
@@ -790,10 +813,12 @@ void peano4::grid::Spacetree::storeVertices(
         break;
       case VertexType::Hanging:
     	logDebug( "storeVertices(...)", "discard vertex " << fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString() );
+        observer.destroyHangingVertexAndPopFromStack(x,fineGridStatesState.getLevel(),stackNumber);
     	break;
       case VertexType::Delete:
       	logDebug( "storeVertices(...)", "delete vertex " << fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString() );
         assertion( PeanoCurve::isInOutStack(stackNumber) );
+        observer.destroyPersistentVertexAndPopFromStack(x,fineGridStatesState.getLevel(),stackNumber);
         break;
     }
   }

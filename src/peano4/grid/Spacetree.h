@@ -252,6 +252,15 @@ class peano4::grid::Spacetree {
      *
      * The load process has to be done along the local order of the Peano
      * SFC. For this, I rely on PeanoCurve::getFirstVertexIndex().
+     *
+     * <h2> Hanging vertices </h2>
+     *
+     * I originally thought that I might be able to run hanging vertices
+     * through the in/out stacks, too. In Peano 3, I had such a feature.
+     * Yet, there I had a way more complicated logic. In Peano 4, I simplify
+     * the logic. As a consequence, I don't know how many adjacent cells a
+     * hanging vertex has and thus create a hanging vertex per adjacent
+     * cell.
      */
     void loadVertices(
       const AutomatonState&                        fineGridState,

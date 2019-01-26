@@ -105,6 +105,55 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 	  int                                          level,
       int                                          stackNumber
 	) override {};
+	void createHangingVertexAndPushOnStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+      int                                          stackNumber
+	) override {};
+	void destroyPersistentVertexAndPopFromStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+      int                                          stackNumber
+	) override {};
+	void destroyHangingVertexAndPopFromStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+      int                                          stackNumber
+	) override {};
+	void createPersistentFaceAndPushOnStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+	  int                                          normal,
+      int                                          stackNumber
+	) override {};
+	void createHangingFaceAndPushOnStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+	  int                                          normal,
+      int                                          stackNumber
+	) override {};
+	void destroyPersistentFaceAndPopFromStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+	  int                                          normal,
+      int                                          stackNumber
+	) override {};
+	void destroyHangingFaceAndPopFromStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+	  int                                          normal,
+      int                                          stackNumber
+	) override {};
+	void createCellAndPushOnStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+      int                                          stackNumber
+    ) override {};
+	void destroyCellAndPopFromStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+      int                                          stackNumber
+    ) override {};
 };
 
 #endif
