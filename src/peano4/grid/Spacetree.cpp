@@ -645,10 +645,6 @@ peano4::grid::GridVertex peano4::grid::Spacetree::createNewPersistentVertex(
     #endif
   );
 
-
-  xxxx Call Observer
-
-
   logTraceOutWith1Argument( "createNewPersistentVertex(...)", result.toString() );
   return result;
 }
@@ -658,7 +654,8 @@ void peano4::grid::Spacetree::loadVertices(
   const AutomatonState&                        fineGridStatesState,
   GridVertex                                   coarseGridVertices[TwoPowerD],
   GridVertex                                   fineGridVertices[TwoPowerD],
-  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch
+  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch,
+  TraversalObserver&                           observer
 ) {
   logTraceInWith3Arguments( "loadVertices(...)", fineGridStatesState.toString(), cellPositionWithin3x3Patch, _id );
 
@@ -677,22 +674,29 @@ void peano4::grid::Spacetree::loadVertices(
     const int  stackNumber = PeanoCurve::getVertexReadStackNumber(fineGridStatesState,vertexIndex);
 
     // reset to persistent, as new vertex already has been generated
-    if ( not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::New ) {
+    if (
+      (not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::New )
+/*
+	  or
+      (not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::Hanging )
+*/
+	) {
       type = VertexType::Persistent;
       logDebug(
         "loadVertices(...)",
-		"reset stack flag for local vertex " << vertexPositionWithinPatch << " from new to persistent" );
+		"reset stack flag for local vertex " << vertexPositionWithinPatch << " from new/hanging to persistent" );
     }
 
     switch (type) {
       case VertexType::New:
     	logDebug( "loadVertices(...)", "stack no=" << stackNumber );
-        if ( PeanoCurve::isInOutStack(stackNumber) ) {
-          fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createNewPersistentVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
-        }
+        assertion( PeanoCurve::isInOutStack(stackNumber) );
+        fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createNewPersistentVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
+        observer.createPersistentVertexAndPushOnStack(x,fineGridStatesState.getLevel(),stackNumber);
     	break;
       case VertexType::Hanging:
       	fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createHangingVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
+      	// @todo Koennen wir das nur 1x machen?
       	break;
       case VertexType::Persistent:
       case VertexType::Delete:
@@ -730,10 +734,12 @@ void peano4::grid::Spacetree::loadVertices(
 	);
   }
 
+/*
   Hier kann das createFace rein
   Hier kann das create Cell rein
 
   Wo sind die Deletes?
+*/
 
   logTraceOutWith1Argument( "loadVertices(...)", fineGridStatesState.toString() );
 }
@@ -743,7 +749,8 @@ void peano4::grid::Spacetree::storeVertices(
   const AutomatonState&                        fineGridStatesState,
   GridVertex                                   coarseGridVertices[TwoPowerD],
   GridVertex                                   fineGridVertices[TwoPowerD],
-  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch
+  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch,
+  TraversalObserver&                           observer
 ) {
   logTraceInWith1Argument( "storeVertices(...)", fineGridStatesState.toString() );
 
@@ -754,6 +761,14 @@ void peano4::grid::Spacetree::storeVertices(
 
     const int   stackNumber = PeanoCurve::getVertexWriteStackNumber(fineGridStatesState,vertexIndex);
     VertexType  type        = getVertexType(coarseGridVertices,vertexPositionWithinPatch);
+
+    if ( type==VertexType::Delete and !PeanoCurve::isInOutStack(stackNumber) ) {
+//   	  _vertexStack[stackNumber].push( fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] );
+      type = VertexType::Persistent;
+      logDebug(
+        "storeVertices(...)",
+		"reset stack flag for local vertex " << vertexPositionWithinPatch << " from new/hanging to persistent" );
+    }
 
     switch (type) {
       case VertexType::New:
@@ -778,9 +793,7 @@ void peano4::grid::Spacetree::storeVertices(
     	break;
       case VertexType::Delete:
       	logDebug( "storeVertices(...)", "delete vertex " << fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString() );
-        if ( !PeanoCurve::isInOutStack(stackNumber) ) {
-       	  _vertexStack[stackNumber].push( fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] );
-        }
+        assertion( PeanoCurve::isInOutStack(stackNumber) );
         break;
     }
   }
@@ -1180,7 +1193,7 @@ void peano4::grid::Spacetree::descend(
     // Load cell's vertices
     //
     GridVertex fineGridVertices[TwoPowerD];
-    loadVertices(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k);
+    loadVertices(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k, observer);
 
     //
     // Mesh refinement
@@ -1246,7 +1259,7 @@ void peano4::grid::Spacetree::descend(
     //
     // Store vertices
     //
-    storeVertices(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k);
+    storeVertices(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices, k, observer);
   endzfor
 
   logTraceOut( "descend(...)" );

@@ -99,6 +99,12 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 	 */
 	void startNewSnapshot(bool isParallelRun);
 	std::vector< GridControlEvent > getGridControlEvents() override;
+
+	void createPersistentVertexAndPushOnStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+      int                                          stackNumber
+	) override {};
 };
 
 #endif

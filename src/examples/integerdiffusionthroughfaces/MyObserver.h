@@ -75,6 +75,12 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
 	virtual TraversalObserver* clone(int spacetreeId) override;
 
 	virtual std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
+
+	void createPersistentVertexAndPushOnStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+      int                                          stackNumber
+	) override {};
 };
 
 #endif

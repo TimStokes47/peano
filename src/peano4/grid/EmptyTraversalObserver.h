@@ -41,6 +41,12 @@ class peano4::grid::EmptyTraversalObserver: public peano4::grid::TraversalObserv
 
 	TraversalObserver* clone(int spacetreeId) override;
 	std::vector< GridControlEvent > getGridControlEvents() override;
+
+	void createPersistentVertexAndPushOnStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+      int                                          stackNumber
+	) override {};
 };
 
 #endif

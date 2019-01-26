@@ -94,6 +94,12 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
 	 * important it is. So entry 2 overrules entry 1.
 	 */
 	virtual std::vector< GridControlEvent > getGridControlEvents() = 0;
+
+	virtual void createPersistentVertexAndPushOnStack(
+      const tarch::la::Vector<Dimensions,double>&  x,
+	  int                                          level,
+      int                                          stackNumber
+	) = 0;
 };
 
 #endif

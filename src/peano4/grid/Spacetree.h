@@ -257,14 +257,16 @@ class peano4::grid::Spacetree {
       const AutomatonState&                        fineGridState,
 	  GridVertex                                   coarseGridVertices[TwoPowerD],
 	  GridVertex                                   fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch
+	  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch,
+	  TraversalObserver&                           observer
 	);
 
     void storeVertices(
       const AutomatonState&                        fineGridState,
 	  GridVertex                                   coarseGridVertices[TwoPowerD],
 	  GridVertex                                   fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch
+	  const tarch::la::Vector<Dimensions,int>&     cellPositionWithin3x3Patch,
+	  TraversalObserver&                           observer
     );
 
     /**
