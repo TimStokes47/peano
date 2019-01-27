@@ -2,6 +2,21 @@
 
 
 template<int Size, typename Scalar>
+int tarch::la::count(
+  const Vector<Size,Scalar >&  vector,
+  const Scalar&                value
+) {
+  int result = 0;
+  for (int d=0; d<Size; d++) {
+	if ( tarch::la::equals(vector(d),value)) {
+	  result++;
+	}
+  }
+  return result;
+}
+
+
+template<int Size, typename Scalar>
 bool tarch::la::contains(
   const Vector<Size,Scalar >&  vector,
   const Scalar&                value
@@ -12,7 +27,6 @@ bool tarch::la::contains(
   }
   return result;
 }
-
 
 
 template<int Size, typename Scalar>

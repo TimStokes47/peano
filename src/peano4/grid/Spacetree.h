@@ -60,6 +60,19 @@ class peano4::grid::Spacetree {
 	  Delete
     };
 
+    enum class FaceType {
+      New,
+	  Hanging,
+	  Persistent,
+	  Delete
+    };
+
+    enum class CellType {
+      New,
+	  Persistent,
+	  Delete
+    };
+
     enum class SpacetreeState {
       /**
        * Set if this tree results from a split and if this is the first
@@ -87,6 +100,8 @@ class peano4::grid::Spacetree {
 
     static std::string toString( SpacetreeState state );
     static std::string toString( VertexType type );
+    static std::string toString( FaceType type );
+    static std::string toString( CellType type );
 
     /**
      * Simple recursive type analysis
@@ -101,6 +116,22 @@ class peano4::grid::Spacetree {
       GridVertex                         coarseGridVertices[TwoPowerD],
       tarch::la::Vector<Dimensions,int>  position,
 	  int                                dimension = Dimensions-1
+    );
+
+    /**
+     * When originally invoked, position should hold 1es in every single entry
+     * besides one (the one along the normal). Basically, we read the cell as a
+     * 2x2x2 patch and specify the face of interest through the discrete
+     * coordinates in this patch.
+     */
+    static FaceType getFaceType(
+      GridVertex                         coarseGridVertices[TwoPowerD],
+      tarch::la::Vector<Dimensions,int>  position,
+	  int                                dimension = Dimensions-1
+    );
+
+    static CellType getCellType(
+      GridVertex                         coarseGridVertices[TwoPowerD]
     );
 
     int              _id;

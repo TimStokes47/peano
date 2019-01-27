@@ -151,6 +151,12 @@ namespace tarch {
       const Vector<Size,Scalar >&  vector,
 	  const Scalar&                value
     );
+
+    template<int Size, typename Scalar>
+    int count(
+      const Vector<Size,Scalar >&  vector,
+	  const Scalar&                value
+    );
   }
 }
 

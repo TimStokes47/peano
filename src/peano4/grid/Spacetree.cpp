@@ -303,6 +303,131 @@ tarch::la::Vector<Dimensions,int> peano4::grid::Spacetree::convertToIntegerVecto
 }
 
 
+peano4::grid::Spacetree::CellType peano4::grid::Spacetree::getCellType(
+  GridVertex                         coarseGridVertices[TwoPowerD]
+) {
+  bool vertexDidExistBefore      = false;
+  bool vertexWillExistAfterwards = false;
+
+  for (int i=0; i<TwoPowerD; i++) {
+    switch (coarseGridVertices[ i ].getState()) {
+      case GridVertex::State::HangingVertex:
+    	break;
+      case GridVertex::State::Unrefined:
+    	break;
+      case GridVertex::State::Refined:
+    	vertexDidExistBefore      = true;
+        vertexWillExistAfterwards = true;
+    	break;
+      case GridVertex::State::RefinementTriggered:
+    	break;
+      case GridVertex::State::Refining:
+        vertexWillExistAfterwards = true;
+    	break;
+      case GridVertex::State::EraseTriggered:
+    	vertexDidExistBefore      = true;
+        vertexWillExistAfterwards = true;
+    	break;
+      case GridVertex::State::Erasing:
+    	vertexDidExistBefore      = true;
+    	break;
+    }
+  }
+
+  assertion( vertexDidExistBefore or vertexWillExistAfterwards );
+
+  if( not vertexDidExistBefore and vertexWillExistAfterwards ) {
+	return CellType::New;
+  }
+  else if( vertexDidExistBefore and not vertexWillExistAfterwards ) {
+	return CellType::Delete;
+  }
+  else return CellType::Persistent;
+}
+
+
+peano4::grid::Spacetree::FaceType peano4::grid::Spacetree::getFaceType(
+  GridVertex                         coarseGridVertices[TwoPowerD],
+  tarch::la::Vector<Dimensions,int>  position,
+  int                                dimension
+) {
+  assertion2( dimension<=Dimensions-1,     dimension, position );
+  assertion2( tarch::la::min(position)>=0, dimension, position );
+  assertion2( tarch::la::max(position)<=2, dimension, position );
+
+  if (dimension<0) {
+    switch (coarseGridVertices[ peano4::utils::dLinearised(position,2) ].getState()) {
+      case GridVertex::State::HangingVertex:
+    	return FaceType::Hanging;
+      case GridVertex::State::Unrefined:
+      	return FaceType::Hanging;
+      case GridVertex::State::Refined:
+      	return FaceType::Persistent;
+      case GridVertex::State::RefinementTriggered:
+      	return FaceType::Hanging;
+      case GridVertex::State::Refining:
+      	return FaceType::New;
+      case GridVertex::State::EraseTriggered:
+      	return FaceType::Persistent;
+      case GridVertex::State::Erasing:
+      	return FaceType::Delete;
+    }
+    assertion3(false, peano4::utils::dLinearised(position,2), position, coarseGridVertices[ peano4::utils::dLinearised(position,2) ].toString() );
+  }
+  else if (position(dimension)==0) {
+	position(dimension) = 0;
+	return getFaceType(coarseGridVertices,position,dimension-1);
+  }
+  else if (position(dimension)==2) {
+	position(dimension) = 1;
+	return getFaceType(coarseGridVertices,position,dimension-1);
+  }
+
+  logTraceInWith2Arguments( "getFaceType(...)", position, dimension );
+  position(dimension)=0;
+  peano4::grid::Spacetree::FaceType lhs = getFaceType(coarseGridVertices,position,dimension-1);
+
+  position(dimension)=1;
+  peano4::grid::Spacetree::FaceType rhs = getFaceType(coarseGridVertices,position,dimension-1);
+
+  FaceType result = lhs;
+  if (
+    lhs==FaceType::New and rhs==FaceType::Hanging or lhs==FaceType::Hanging and rhs==FaceType::New
+  ) {
+	result = FaceType::New;
+  }
+  if (
+    lhs==FaceType::New and rhs==FaceType::Persistent or lhs==FaceType::Persistent and rhs==FaceType::New
+  ) {
+	result = FaceType::Persistent;
+  }
+  if (
+    lhs==FaceType::New and rhs==FaceType::Delete or lhs==FaceType::Delete and rhs==FaceType::New
+  ) {
+	result = FaceType::Persistent;
+  }
+  if (
+    lhs==FaceType::Hanging and rhs==FaceType::Persistent or lhs==FaceType::Persistent and rhs==FaceType::Hanging
+  ) {
+	result = FaceType::Persistent;
+  }
+  if (
+    lhs==FaceType::Hanging and rhs==FaceType::Delete or lhs==FaceType::Delete and rhs==FaceType::Hanging
+  ) {
+	result = FaceType::Delete;
+  }
+  if (
+    lhs==FaceType::Persistent and rhs==FaceType::Delete or lhs==FaceType::Delete and rhs==FaceType::Persistent
+  ) {
+	result = FaceType::Persistent;
+  }
+
+  logTraceOutWith1Argument( "getFaceType(...)", toString(result) );
+  return result;
+}
+
+
+
 peano4::grid::Spacetree::VertexType peano4::grid::Spacetree::getVertexType(
   GridVertex                         coarseGridVertices[TwoPowerD],
   tarch::la::Vector<Dimensions,int>  position,
@@ -406,6 +531,34 @@ std::string peano4::grid::Spacetree::toString( VertexType type ) {
     case VertexType::Persistent:
       return "persistent";
     case VertexType::Delete:
+      return "delete";
+  }
+  return "<undef>";
+}
+
+
+std::string peano4::grid::Spacetree::toString( FaceType type ) {
+  switch (type) {
+    case FaceType::New:
+      return "new";
+    case FaceType::Hanging:
+      return "hanging";
+    case FaceType::Persistent:
+      return "persistent";
+    case FaceType::Delete:
+      return "delete";
+  }
+  return "<undef>";
+}
+
+
+std::string peano4::grid::Spacetree::toString( CellType type ) {
+  switch (type) {
+    case CellType::New:
+      return "new";
+    case CellType::Persistent:
+      return "persistent";
+    case CellType::Delete:
       return "delete";
   }
   return "<undef>";
@@ -728,36 +881,58 @@ void peano4::grid::Spacetree::loadVertices(
 	);
   }
 
-/*
-  for (int i=0; i<D; i++) {
-    const std::bitset<Dimensions>           vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
-    const tarch::la::Vector<Dimensions,int> vertexPositionWithinPatch = cellPositionWithin3x3Patch + convertToIntegerVector(vertexIndex);
+  for (int i=0; i<2*Dimensions; i++) {
+    int faceIndex   = PeanoCurve::getFaceNumberAlongCurve(fineGridStatesState,i);
+    int normal      = faceIndex % Dimensions;
 
-    const tarch::la::Vector<Dimensions,double> x = fineGridStatesState.getX()
-      + tarch::la::multiplyComponents(
-          convertToIntegerVector(vertexIndex).convertScalar<double>(),
-		  fineGridStatesState.getH()
-	    );
+    tarch::la::Vector<Dimensions,int>    facePositionWithinCell(1);
+    tarch::la::Vector<Dimensions,double> x = fineGridStatesState.getX() + 0.5 * fineGridStatesState.getH();
 
-    VertexType type        = getVertexType(coarseGridVertices,vertexPositionWithinPatch);
-    const int  stackNumber = PeanoCurve::getVertexReadStackNumber(fineGridStatesState,vertexIndex);
+    x(normal)                      += faceIndex<Dimensions ? -0.5 * fineGridStatesState.getH(normal) : 0.5 * fineGridStatesState.getH(normal);
+    facePositionWithinCell(normal) += faceIndex<Dimensions ? -1 : 1;
+
+    FaceType type = getFaceType(coarseGridVertices,facePositionWithinCell);
+    const int  stackNumber = PeanoCurve::getFaceReadStackNumber(fineGridStatesState,faceIndex);
 
     // reset to persistent, as new vertex already has been generated
-    if ( not PeanoCurve::isInOutStack(stackNumber) and type==VertexType::New ) {
-      type = VertexType::Persistent;
+    if ( not PeanoCurve::isInOutStack(stackNumber) and type==FaceType::New ) {
+      type = FaceType::Persistent;
       logDebug(
         "loadVertices(...)",
-		"reset stack flag for local vertex " << vertexPositionWithinPatch << " from new/hanging to persistent" );
+		"reset stack flag for local face " << facePositionWithinCell << " from new/hanging to persistent" );
     }
 
     switch (type) {
-*/
-/*
-  Hier kann das createFace rein
-  Hier kann das create Cell rein
+      case FaceType::New:
+    	logDebug( "loadVertices(...)", "stack no=" << stackNumber );
+        assertion( PeanoCurve::isInOutStack(stackNumber) );
+        observer.createPersistentFaceAndPushOnStack(x,fineGridStatesState.getLevel(),normal,stackNumber);
+    	break;
+      case FaceType::Hanging:
+        observer.createHangingFaceAndPushOnStack(x,fineGridStatesState.getLevel(),normal,stackNumber);
+      	break;
+      case FaceType::Persistent:
+        break;
+      case FaceType::Delete:
+        break;
+    }
+  }
 
-  Wo sind die Deletes?
-*/
+  {
+	const tarch::la::Vector<Dimensions,double> x = fineGridStatesState.getX() + 0.5*fineGridStatesState.getH();
+	CellType   type        = getCellType(coarseGridVertices);
+    const int  stackNumber = PeanoCurve::getCellReadStackNumber(fineGridStatesState);
+
+    switch (type) {
+      case CellType::New:
+        observer.createCellAndPushOnStack(x,fineGridStatesState.getLevel(),stackNumber);
+    	break;
+      case CellType::Persistent:
+    	break;
+      case CellType::Delete:
+    	break;
+    }
+  }
 
   logTraceOutWith1Argument( "loadVertices(...)", fineGridStatesState.toString() );
 }
@@ -819,6 +994,58 @@ void peano4::grid::Spacetree::storeVertices(
       	logDebug( "storeVertices(...)", "delete vertex " << fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString() );
         assertion( PeanoCurve::isInOutStack(stackNumber) );
         observer.destroyPersistentVertexAndPopFromStack(x,fineGridStatesState.getLevel(),stackNumber);
+        break;
+    }
+  }
+
+  for (int i=0; i<2*Dimensions; i++) {
+    int faceIndex   = PeanoCurve::getFaceNumberAlongCurve(fineGridStatesState,i);
+    int normal      = faceIndex % Dimensions;
+
+    tarch::la::Vector<Dimensions,int>    facePositionWithinCell(1);
+    tarch::la::Vector<Dimensions,double> x = fineGridStatesState.getX() + 0.5 * fineGridStatesState.getH();
+
+    x(normal)                      += faceIndex<Dimensions ? -0.5 * fineGridStatesState.getH(normal) : 0.5 * fineGridStatesState.getH(normal);
+    facePositionWithinCell(normal) += faceIndex<Dimensions ? -1 : 1;
+
+    FaceType type = getFaceType(coarseGridVertices,facePositionWithinCell);
+    const int  stackNumber = PeanoCurve::getFaceWriteStackNumber(fineGridStatesState,faceIndex);
+
+    // reset to persistent, as new vertex already has been generated
+    if ( not PeanoCurve::isInOutStack(stackNumber) and type==FaceType::Delete ) {
+      type = FaceType::Persistent;
+      logDebug(
+        "storeVertices(...)",
+		"reset stack flag for local face " << facePositionWithinCell << " from delete to persistent" );
+    }
+
+    switch (type) {
+      case FaceType::New:
+    	break;
+      case FaceType::Hanging:
+        observer.destroyHangingFaceAndPopFromStack(x,fineGridStatesState.getLevel(),normal,stackNumber);
+      	break;
+      case FaceType::Persistent:
+        break;
+      case FaceType::Delete:
+        assertion( PeanoCurve::isInOutStack(stackNumber) );
+        observer.destroyPersistentFaceAndPopFromStack(x,fineGridStatesState.getLevel(),normal,stackNumber);
+        break;
+    }
+  }
+
+  {
+	const tarch::la::Vector<Dimensions,double> x = fineGridStatesState.getX() + 0.5*fineGridStatesState.getH();
+	CellType   type        = getCellType(coarseGridVertices);
+    const int  stackNumber = PeanoCurve::getCellWriteStackNumber(fineGridStatesState);
+
+    switch (type) {
+      case CellType::New:
+    	break;
+      case CellType::Persistent:
+    	break;
+      case CellType::Delete:
+        observer.destroyCellAndPopFromStack(x,fineGridStatesState.getLevel(),stackNumber);
         break;
     }
   }
@@ -1297,7 +1524,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
 ) const {
   GridTraversalEvent  event;
 
-  event.setX( state.getX() );
+  event.setX( state.getX() + state.getH()*0.5 );
   event.setH( state.getH() );
   event.setIsRefined( isSpacetreeNodeRefined(fineGridVertices) );
 
@@ -1325,7 +1552,7 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
 ) const {
   GridTraversalEvent  event;
 
-  event.setX( state.getX() );
+  event.setX( state.getX() + state.getH()*0.5 );
   event.setH( state.getH() );
   event.setIsRefined( isSpacetreeNodeRefined(fineGridVertices) );
 
