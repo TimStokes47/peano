@@ -21,6 +21,14 @@ void examples::integerdiffusionthroughfaces::MyObserver::beginTraversal() {
 }
 
 
+//
+// @todo
+//
+// LOP: Wo ist Skeleton/Enclave Marker?
+//      Wie identifizeren fuer parallelen Code lokale vs. andere Vertices, Faces und Zellen
+//
+//
+
 void examples::integerdiffusionthroughfaces::MyObserver::endTraversal() {
 }
 
@@ -28,11 +36,12 @@ void examples::integerdiffusionthroughfaces::MyObserver::endTraversal() {
 void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   const peano4::grid::GridTraversalEvent&  event
 ) {
-	// @todo event braucht skeleton marker
-  int inStackCell  = event.getCellData();
-  int outStackCell = peano4::grid::PeanoCurve::CallStack;
-  logInfo( "enterCell(...)", "cell: " << inStackCell << "->" << outStackCell );
-  Data data = _cellData[ DataKey(_spacetreeId,inStackCell) ].pop();
+  int inCellStack  = event.getCellData();
+  int outCellStack = peano4::grid::PeanoCurve::CallStack;
+
+  logTraceInWith3Arguments("centerCell(...)",inCellStack,outCellStack,event.toString());
+  Data data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
+  logTraceOutWith3Arguments("centerCell(...)",inCellStack,outCellStack,event.toString());
 }
 
 
@@ -80,4 +89,100 @@ std::vector< peano4::grid::GridControlEvent > examples::integerdiffusionthroughf
   }
 
   return controlEvents;
+}
+
+void examples::integerdiffusionthroughfaces::MyObserver::createPersistentVertexAndPushOnStack(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  int                                          stackNumber
+) {
+
+}
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::createHangingVertexAndPushOnStack(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  int                                          stackNumber
+) {
+
+}
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::destroyPersistentVertexAndPopFromStack(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  int                                          stackNumber
+) {
+
+}
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::destroyHangingVertexAndPopFromStack(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  int                                          stackNumber
+) {
+
+}
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::createPersistentFaceAndPushOnStack(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  int                                          normal,
+  int                                          stackNumber
+) {
+  logTraceInWith4Arguments( "createPersistentFaceAndPushOnStack(...)", x, level, normal, stackNumber );
+  logTraceOutWith4Arguments( "createPersistentFaceAndPushOnStack(...)", x, level, normal, stackNumber );
+}
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::createHangingFaceAndPushOnStack(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  int                                          normal,
+  int                                          stackNumber
+) {
+
+}
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::destroyPersistentFaceAndPopFromStack(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  int                                          normal,
+  int                                          stackNumber
+) {
+
+}
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::destroyHangingFaceAndPopFromStack(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  int                                          normal,
+  int                                          stackNumber
+) {
+
+}
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::createCellAndPushOnStack(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  int                                          stackNumber
+) {
+  logTraceInWith3Arguments( "createCellAndPushOnStack(...)", x, level, stackNumber );
+  logTraceOutWith3Arguments( "createCellAndPushOnStack(...)", x, level, stackNumber );
+}
+
+
+void examples::integerdiffusionthroughfaces::MyObserver::destroyCellAndPopFromStack(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  int                                          level,
+  int                                          stackNumber
+) {
+  logTraceInWith3Arguments( "destroyCellAndPopFromStack(...)", x, level, stackNumber );
+  logTraceOutWith3Arguments( "destroyCellAndPopFromStack(...)", x, level, stackNumber );
 }

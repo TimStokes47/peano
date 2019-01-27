@@ -35,6 +35,10 @@ class peano4::grid::TraversalObserver {
 	virtual void beginTraversal() = 0;
 	virtual void endTraversal() = 0;
 
+	/**
+	 * Event is invoked per cell. It is however not called for the root cell,
+	 * i.e. for the cell with level 0 that does not have a parent.
+	 */
 	virtual void enterCell(
       const GridTraversalEvent&  event
     ) = 0;

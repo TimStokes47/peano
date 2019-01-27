@@ -80,56 +80,65 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
       const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
       int                                          stackNumber
-	) override {};
+	) override;
+
 	void createHangingVertexAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
       int                                          stackNumber
-	) override {};
+	) override;
+
 	void destroyPersistentVertexAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
       int                                          stackNumber
-	) override {};
+	) override;
+
 	void destroyHangingVertexAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
       int                                          stackNumber
-	) override {};
+	) override;
+
 	void createPersistentFaceAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
 	  int                                          normal,
       int                                          stackNumber
-	) override {};
+	) override;
+
 	void createHangingFaceAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
 	  int                                          normal,
       int                                          stackNumber
-	) override {};
+	) override;
+
 	void destroyPersistentFaceAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
 	  int                                          normal,
       int                                          stackNumber
-	) override {};
+	) override;
+
 	void destroyHangingFaceAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
 	  int                                          normal,
       int                                          stackNumber
-	) override {};
+	) override;
+
 	void createCellAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
       int                                          stackNumber
-    ) override {};
+    ) override;
+
 	void destroyCellAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
 	  int                                          level,
       int                                          stackNumber
-    ) override {};
+    ) override;
 };
 
 #endif

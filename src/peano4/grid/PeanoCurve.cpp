@@ -222,10 +222,10 @@ int peano4::grid::PeanoCurve::getFaceWriteStackNumber(const AutomatonState& cell
 
 
 int peano4::grid::PeanoCurve::getCellReadStackNumber(const AutomatonState& cell) {
-  return cell.getInverted() ? 2 : 1;
+  return cell.getInverted() ? 1 : 2;
 }
 
 
 int peano4::grid::PeanoCurve::getCellWriteStackNumber(const AutomatonState& cell) {
-  return cell.getInverted() ? 1 : 2;
+  return cell.getInverted() ? 2 : 1;
 }
