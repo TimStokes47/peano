@@ -208,7 +208,7 @@ int peano4::grid::PeanoCurve::getFaceReadStackNumber(const AutomatonState& cell,
 
 
 int peano4::grid::PeanoCurve::getFaceWriteStackNumber(const AutomatonState& cell, int  face ) {
-  int result       = cell.getInverted() ? -2 : -1;
+  int result       = cell.getInverted() ? -1 : -2;
   int direction    = face % Dimensions;
 
   if (cell.getAccessNumber(face)>0) {

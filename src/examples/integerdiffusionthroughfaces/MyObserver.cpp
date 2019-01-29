@@ -46,31 +46,52 @@ void examples::integerdiffusionthroughfaces::MyObserver::endTraversal() {
 void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   const peano4::grid::GridTraversalEvent&  event
 ) {
+  logTraceInWith1Argument("enterCell(...)",event.toString());
+
   int inCellStack  = event.getCellData();
   int outCellStack = peano4::grid::PeanoCurve::CallStack;
-
-  logTraceInWith3Arguments("enterCell(...)",inCellStack,outCellStack,event.toString());
+  logDebug("enterCell(...)", "cell " << inCellStack << "->" << outCellStack );
   CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
   assertionVectorNumericalEquals2(data.x,event.getX(),data.value,event.toString());
   assertionVectorNumericalEquals2(data.h,event.getH(),data.value,event.toString());
   _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
-//  for (int i=)
-  logTraceOutWith3Arguments("enterCell(...)",inCellStack,outCellStack,event.toString());
+
+  FaceDataContainer::PushBlockVertexStackView faceView = _faceData[ DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock(Dimensions*2);
+  for (int i=0; i<Dimensions*2; i++) {
+    int inFaceStack  = event.getFaceDataFrom(i);
+	int outFaceStack = event.getFaceDataTo(i);
+    FaceData data = _faceData[ DataKey(_spacetreeId,inFaceStack) ].pop();
+	logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStack << ": " << data.x << "x" << data.h );
+    faceView.set(outFaceStack,data);
+  }
+
+  logTraceOutWith1Argument("enterCell(...)",event.toString());
 }
 
 
 void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
   const peano4::grid::GridTraversalEvent&  event
 ) {
+  logTraceInWith1Argument("leaveCell(...)",event.toString());
+
   int inCellStack   = peano4::grid::PeanoCurve::CallStack;
   int outCellStack  = event.getCellData();
-
-  logTraceInWith3Arguments("leaveCell(...)",inCellStack,outCellStack,event.toString());
+  logDebug("leaveCell(...)", "cell " << inCellStack << "->" << outCellStack );
   CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
   assertionVectorNumericalEquals2(data.x,event.getX(),data.value,event.toString());
   assertionVectorNumericalEquals2(data.h,event.getH(),data.value,event.toString());
   _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
-  logTraceOutWith3Arguments("leaveCell(...)",inCellStack,outCellStack,event.toString());
+
+  FaceDataContainer::PopBlockVertexStackView faceView = _faceData[ DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].popBlock(Dimensions*2);
+  for (int i=0; i<Dimensions*2; i++) {
+    int inFaceStack  = event.getFaceDataFrom(i);
+	int outFaceStack = event.getFaceDataTo(i);
+    FaceData data = faceView.get(inFaceStack);
+	logDebug("leaveCell(...)", "face pos-" << inFaceStack << "->" << outFaceStack  << ": " << data.x << "x" << data.h);
+    _faceData[ DataKey(_spacetreeId,outFaceStack) ].push(data);
+  }
+
+  logTraceOutWith1Argument("leaveCell(...)",event.toString());
 }
 
 
@@ -263,7 +284,12 @@ void examples::integerdiffusionthroughfaces::MyObserver::destroyCellAndPopFromSt
   int                                          stackNumber
 ) {
   logTraceInWith3Arguments( "destroyCellAndPopFromStack(...)", x, h, stackNumber );
-  // @todo
-  assertion(false);
+  DataKey key(_spacetreeId,stackNumber);
+  CellData data = _cellData[key].pop();
+  #if PeanoDebug>0
+  data.x = x;
+  data.h = h;
+  #endif
+  _mapping.destroyCell( x, h, data.value );
   logTraceOutWith3Arguments( "destroyCellAndPopFromStack(...)", x, h, stackNumber );
 }

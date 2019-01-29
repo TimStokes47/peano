@@ -83,6 +83,11 @@ class peano4::stacks::STDVectorStack {
     }
 
 
+    /**
+     * This class represents a whole block of the tree. You can access all
+     * element within in random order, or you can pop/push elements. If we
+     * grab a block from the tree, it is logically removed from the main stack.
+     */
     class PopBlockVertexStackView {
       private:
         /**
@@ -90,76 +95,46 @@ class peano4::stacks::STDVectorStack {
          */
         friend class peano4::stacks::STDVectorStack<T>;
 
-        int         _currentElement;
-
-        /**
-         * Should be const, but gcc had some issues with this.
-         */
-        int         _size;
-
-        int         _remainingSize;
-
-        peano4::stacks::STDVectorStack<T>* _stack;
+        const int                           _size;
+        const int                           _baseElement;
+        peano4::stacks::STDVectorStack<T>*  _stack;
 
         /**
          * The default constructor creates an empty stack view
          */
+/*
         PopBlockVertexStackView():
           _currentElement(0),
           _size(0),
           _remainingSize(0),
           _stack(0) {
         }
+*/
 
         /**
          * Constructor
          */
-        PopBlockVertexStackView(int size, int currentElementBeforeViewIsOpened, peano4::stacks::STDVectorStack<T>* stack):
-          _currentElement(currentElementBeforeViewIsOpened),
+        PopBlockVertexStackView(int size, int base, peano4::stacks::STDVectorStack<T>* stack):
           _size(size),
-          _remainingSize(size),
+          _baseElement(base),
           _stack(stack) {
         }
 
       public:
-        int getTotalViewSize() const {
+        int size() const {
           return _size;
         }
 
-        int size() const {
-          return _remainingSize;
-        }
-
-        bool isEmpty() const {
-          return size()==0;
-        }
-
-        T pop() {
-          assertion( _remainingSize>0 );
-          _remainingSize--;
-          _currentElement--;
-          assertion( _currentElement>=0 );
-          assertion( _stack!=0 );
-          return _stack->_data[_currentElement];
-        }
-
-        PopBlockVertexStackView popBlockFromInputStack(int numberOfVertices) {
-          PopBlockVertexStackView result(numberOfVertices, _currentElement, _stack);
-
-          _remainingSize  -= numberOfVertices;
-          _currentElement -= numberOfVertices;
-
-          assertion( _remainingSize>=0 );
-          assertion( _currentElement>=0 );
-
-          return result;
+        T get(int index) {
+          assertion2( index>=0, index, _size );
+          assertion2( index<_size, index, _size );
+          return _stack->_data[_baseElement+index];
         }
 
         std::string toString() const {
           std::ostringstream msg;
           msg << "(size=" << _size
-              << ",currentElement=" << _currentElement
-              << ",remaining-size=" << _remainingSize
+              << ",baseElement=" << _baseElement
               << ")";
           return msg.str();
         }
@@ -172,74 +147,33 @@ class peano4::stacks::STDVectorStack {
          */
         friend class peano4::stacks::STDVectorStack<T>;
 
-        int         _currentElement;
-
-        /**
-         * Should be const, but gcc had some issues with this.
-         */
-        int         _size;
-
-        int         _remainingSize;
-
+        const int                           _size;
+        const int                           _baseElement;
         peano4::stacks::STDVectorStack<T>*  _stack;
-
-        /**
-         * The default constructor creates an empty stack view
-         */
-        PushBlockVertexStackView():
-          _currentElement(0),
-          _size(0),
-          _remainingSize(0),
-          _stack(0) {
-        }
 
         /**
          * Constructor
          */
-        PushBlockVertexStackView(int size, int currentElementBeforeViewIsOpened, peano4::stacks::STDVectorStack<T>* stack):
-          _currentElement(currentElementBeforeViewIsOpened),
+        PushBlockVertexStackView(int size, int base, peano4::stacks::STDVectorStack<T>* stack):
           _size(size),
-          _remainingSize(size),
+		  _baseElement(base),
           _stack(stack) {
         }
       public:
-        int getTotalViewSize() const {
+        int size() const {
           return _size;
         }
 
-        int size() const {
-          return _remainingSize;
+        void set(int index, const T& value) {
+          assertion2( index>=0, index, _size );
+          assertion2( index<_size, index, _size );
+          _stack->_data[_baseElement+index] = value;
         }
-
-        bool isOpen() const {
-          return size()!=0;
-        }
-
-        void push(const T& value) {
-          assertion( _remainingSize>0 );
-          _remainingSize--;
-          assertion( _stack!=0 );
-          _stack->_data[_currentElement] = value;
-          _currentElement++;
-        }
-
-        PushBlockVertexStackView pushBlockOnOutputStack(int numberOfVertices) {
-          PushBlockVertexStackView result(numberOfVertices, _currentElement, _stack);
-
-          _remainingSize  -= numberOfVertices;
-          _currentElement += numberOfVertices;
-
-          assertion3( _remainingSize>=0, numberOfVertices, _remainingSize, _currentElement );
-
-          return result;
-        }
-
 
         std::string toString() const {
           std::ostringstream msg;
           msg << "(size=" << _size
-              << ",currentElement=" << _currentElement
-              << ",remaining-size=" << _remainingSize
+              << ",baseElement=" << _baseElement
               << ")";
           return msg.str();
         }
@@ -275,7 +209,7 @@ class peano4::stacks::STDVectorStack {
      *
      * @return Pointer to block. Your are responsible to delete this view afterwards.
      */
-    PopBlockVertexStackView&&  popBlock(int numberOfVertices) {
+    PopBlockVertexStackView  popBlock(int numberOfVertices) {
       PopBlockVertexStackView result(numberOfVertices, _currentElement, this);
 
       _currentElement-=numberOfVertices;
@@ -298,13 +232,14 @@ class peano4::stacks::STDVectorStack {
      *
      * @param numberOfVertices Size of the view
      */
-    PushBlockVertexStackView&&  pushBlock(int numberOfVertices) {
+    PushBlockVertexStackView  pushBlock(int numberOfVertices) {
       PushBlockVertexStackView result(numberOfVertices, _currentElement, this);
 
       _currentElement+=numberOfVertices;
 
       if (static_cast<int>(_data.size())<_currentElement) {
-    	assertionMsg( false, "look up whether resize is the correct function" );
+    	//assertionMsg( false, "look up whether resize is the correct function" );
+    	// @todo A reserve might be correct here. Not sure
     	_data.resize(_currentElement);
       }
 
