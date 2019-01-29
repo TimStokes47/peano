@@ -2,6 +2,7 @@ bin_PROGRAMS = PeanoDiffusionThroughFaces2d_debug PeanoDiffusionThroughFaces2d P
 
 PeanoDiffusionThroughFacesSources = \
   main.cpp \
+  MyMapping.cpp \
   MyObserver.cpp
 
 PeanoDiffusionThroughFaces2d_debug_CXXFLAGS  = -I$(top_builddir)/src -DPeanoDebug=1 -DDimensions=2

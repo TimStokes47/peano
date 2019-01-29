@@ -101,56 +101,56 @@ std::vector< peano4::grid::GridControlEvent > applications4::grid::MyObserver::g
 
 	virtual void createPersistentVertexAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
 	) = 0;
 	virtual void createHangingVertexAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
 	) = 0;
 	virtual void destroyPersistentVertexAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
 	) = 0;
 	virtual void destroyHangingVertexAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
 	) = 0;
 	virtual void createPersistentFaceAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
 	  int                                          normal,
       int                                          stackNumber
 	) = 0;
 	virtual void createHangingFaceAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
 	  int                                          normal,
       int                                          stackNumber
 	) = 0;
 	virtual void destroyPersistentFaceAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
 	  int                                          normal,
       int                                          stackNumber
 	) = 0;
 	virtual void destroyHangingFaceAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
 	  int                                          normal,
       int                                          stackNumber
 	) = 0;
 	virtual void createCellAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
     ) = 0;
 	virtual void destroyCellAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
     ) = 0;
 };

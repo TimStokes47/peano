@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   20/01/2019 11:10
+ * @date   29/01/2019 18:42
  */
 class peano4::grid::GridTraversalEvent { 
    
@@ -44,8 +44,10 @@ class peano4::grid::GridTraversalEvent {
          tarch::la::Vector<Dimensions,double> _x;
          tarch::la::Vector<Dimensions,double> _h;
          bool _isRefined;
-         tarch::la::Vector<TwoPowerD,int> _vertexData;
-         tarch::la::Vector<TwoTimesD,int> _faceData;
+         tarch::la::Vector<TwoPowerD,int> _vertexDataFrom;
+         tarch::la::Vector<TwoTimesD,int> _faceDataFrom;
+         tarch::la::Vector<TwoPowerD,int> _vertexDataTo;
+         tarch::la::Vector<TwoTimesD,int> _faceDataTo;
          int _cellData;
          /**
           * Generated
@@ -55,7 +57,7 @@ class peano4::grid::GridTraversalEvent {
          /**
           * Generated
           */
-         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexData, const tarch::la::Vector<TwoTimesD,int>& faceData, const int& cellData);
+         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData);
          
           tarch::la::Vector<Dimensions,double> getX() const ;
          
@@ -75,13 +77,21 @@ class peano4::grid::GridTraversalEvent {
           */
           void setIsRefined(const bool& isRefined) ;
          
-          tarch::la::Vector<TwoPowerD,int> getVertexData() const ;
+          tarch::la::Vector<TwoPowerD,int> getVertexDataFrom() const ;
          
-          void setVertexData(const tarch::la::Vector<TwoPowerD,int>& vertexData) ;
+          void setVertexDataFrom(const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom) ;
          
-          tarch::la::Vector<TwoTimesD,int> getFaceData() const ;
+          tarch::la::Vector<TwoTimesD,int> getFaceDataFrom() const ;
          
-          void setFaceData(const tarch::la::Vector<TwoTimesD,int>& faceData) ;
+          void setFaceDataFrom(const tarch::la::Vector<TwoTimesD,int>& faceDataFrom) ;
+         
+          tarch::la::Vector<TwoPowerD,int> getVertexDataTo() const ;
+         
+          void setVertexDataTo(const tarch::la::Vector<TwoPowerD,int>& vertexDataTo) ;
+         
+          tarch::la::Vector<TwoTimesD,int> getFaceDataTo() const ;
+         
+          void setFaceDataTo(const tarch::la::Vector<TwoTimesD,int>& faceDataTo) ;
          
          /**
           * Generated
@@ -112,7 +122,7 @@ class peano4::grid::GridTraversalEvent {
          /**
           * Generated
           */
-         GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexData, const tarch::la::Vector<TwoTimesD,int>& faceData, const int& cellData);
+         GridTraversalEvent(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData);
          
          /**
           * Generated
@@ -145,21 +155,37 @@ class peano4::grid::GridTraversalEvent {
           */
           void setIsRefined(const bool& isRefined) ;
          
-          tarch::la::Vector<TwoPowerD,int> getVertexData() const ;
+          tarch::la::Vector<TwoPowerD,int> getVertexDataFrom() const ;
          
-          void setVertexData(const tarch::la::Vector<TwoPowerD,int>& vertexData) ;
+          void setVertexDataFrom(const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom) ;
          
-          int getVertexData(int elementIndex) const ;
+          int getVertexDataFrom(int elementIndex) const ;
          
-          void setVertexData(int elementIndex, const int& vertexData) ;
+          void setVertexDataFrom(int elementIndex, const int& vertexDataFrom) ;
          
-          tarch::la::Vector<TwoTimesD,int> getFaceData() const ;
+          tarch::la::Vector<TwoTimesD,int> getFaceDataFrom() const ;
          
-          void setFaceData(const tarch::la::Vector<TwoTimesD,int>& faceData) ;
+          void setFaceDataFrom(const tarch::la::Vector<TwoTimesD,int>& faceDataFrom) ;
          
-          int getFaceData(int elementIndex) const ;
+          int getFaceDataFrom(int elementIndex) const ;
          
-          void setFaceData(int elementIndex, const int& faceData) ;
+          void setFaceDataFrom(int elementIndex, const int& faceDataFrom) ;
+         
+          tarch::la::Vector<TwoPowerD,int> getVertexDataTo() const ;
+         
+          void setVertexDataTo(const tarch::la::Vector<TwoPowerD,int>& vertexDataTo) ;
+         
+          int getVertexDataTo(int elementIndex) const ;
+         
+          void setVertexDataTo(int elementIndex, const int& vertexDataTo) ;
+         
+          tarch::la::Vector<TwoTimesD,int> getFaceDataTo() const ;
+         
+          void setFaceDataTo(const tarch::la::Vector<TwoTimesD,int>& faceDataTo) ;
+         
+          int getFaceDataTo(int elementIndex) const ;
+         
+          void setFaceDataTo(int elementIndex, const int& faceDataTo) ;
          
          /**
           * Generated
@@ -244,7 +270,7 @@ class peano4::grid::GridTraversalEvent {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   20/01/2019 11:10
+ * @date   29/01/2019 18:42
  */
 class peano4::grid::GridTraversalEventPacked { 
    
@@ -259,17 +285,25 @@ class peano4::grid::GridTraversalEventPacked {
          /** mapping of records:
          || Member 	|| startbit 	|| length
           |  isRefined	| startbit 0	| #bits 1
-          |  faceData	| startbit 1	| #bits 18
-          |  cellData	| startbit 19	| #bits 1
+          |  faceDataFrom	| startbit 1	| #bits 18
+          |  faceDataTo	| startbit 19	| #bits 18
+          |  cellData	| startbit 37	| #bits 1
           */
          long int _packedRecords0;
          
          
          /** mapping of records:
          || Member 	|| startbit 	|| length
-          |  vertexData	| startbit 0	| #bits 64
+          |  vertexDataFrom	| startbit 0	| #bits 64
           */
          long int _packedRecords1;
+         
+         
+         /** mapping of records:
+         || Member 	|| startbit 	|| length
+          |  vertexDataTo	| startbit 0	| #bits 64
+          */
+         long int _packedRecords2;
          
          /**
           * Generated
@@ -279,7 +313,7 @@ class peano4::grid::GridTraversalEventPacked {
          /**
           * Generated
           */
-         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexData, const tarch::la::Vector<TwoTimesD,int>& faceData, const int& cellData);
+         PersistentRecords(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData);
          
           tarch::la::Vector<Dimensions,double> getX() const ;
          
@@ -299,13 +333,21 @@ class peano4::grid::GridTraversalEventPacked {
           */
           void setIsRefined(const bool& isRefined) ;
          
-          tarch::la::Vector<TwoPowerD,int> getVertexData() const ;
+          tarch::la::Vector<TwoPowerD,int> getVertexDataFrom() const ;
          
-          void setVertexData(const tarch::la::Vector<TwoPowerD,int>& vertexData) ;
+          void setVertexDataFrom(const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom) ;
          
-          tarch::la::Vector<TwoTimesD,int> getFaceData() const ;
+          tarch::la::Vector<TwoTimesD,int> getFaceDataFrom() const ;
          
-          void setFaceData(const tarch::la::Vector<TwoTimesD,int>& faceData) ;
+          void setFaceDataFrom(const tarch::la::Vector<TwoTimesD,int>& faceDataFrom) ;
+         
+          tarch::la::Vector<TwoPowerD,int> getVertexDataTo() const ;
+         
+          void setVertexDataTo(const tarch::la::Vector<TwoPowerD,int>& vertexDataTo) ;
+         
+          tarch::la::Vector<TwoTimesD,int> getFaceDataTo() const ;
+         
+          void setFaceDataTo(const tarch::la::Vector<TwoTimesD,int>& faceDataTo) ;
          
          /**
           * Generated
@@ -336,7 +378,7 @@ class peano4::grid::GridTraversalEventPacked {
          /**
           * Generated
           */
-         GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexData, const tarch::la::Vector<TwoTimesD,int>& faceData, const int& cellData);
+         GridTraversalEventPacked(const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& isRefined, const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom, const tarch::la::Vector<TwoTimesD,int>& faceDataFrom, const tarch::la::Vector<TwoPowerD,int>& vertexDataTo, const tarch::la::Vector<TwoTimesD,int>& faceDataTo, const int& cellData);
          
          /**
           * Generated
@@ -369,21 +411,37 @@ class peano4::grid::GridTraversalEventPacked {
           */
           void setIsRefined(const bool& isRefined) ;
          
-          tarch::la::Vector<TwoPowerD,int> getVertexData() const ;
+          tarch::la::Vector<TwoPowerD,int> getVertexDataFrom() const ;
          
-          void setVertexData(const tarch::la::Vector<TwoPowerD,int>& vertexData) ;
+          void setVertexDataFrom(const tarch::la::Vector<TwoPowerD,int>& vertexDataFrom) ;
          
-          int getVertexData(int elementIndex) const ;
+          int getVertexDataFrom(int elementIndex) const ;
          
-          void setVertexData(int elementIndex, const int& vertexData) ;
+          void setVertexDataFrom(int elementIndex, const int& vertexDataFrom) ;
          
-          tarch::la::Vector<TwoTimesD,int> getFaceData() const ;
+          tarch::la::Vector<TwoTimesD,int> getFaceDataFrom() const ;
          
-          void setFaceData(const tarch::la::Vector<TwoTimesD,int>& faceData) ;
+          void setFaceDataFrom(const tarch::la::Vector<TwoTimesD,int>& faceDataFrom) ;
          
-          int getFaceData(int elementIndex) const ;
+          int getFaceDataFrom(int elementIndex) const ;
          
-          void setFaceData(int elementIndex, const int& faceData) ;
+          void setFaceDataFrom(int elementIndex, const int& faceDataFrom) ;
+         
+          tarch::la::Vector<TwoPowerD,int> getVertexDataTo() const ;
+         
+          void setVertexDataTo(const tarch::la::Vector<TwoPowerD,int>& vertexDataTo) ;
+         
+          int getVertexDataTo(int elementIndex) const ;
+         
+          void setVertexDataTo(int elementIndex, const int& vertexDataTo) ;
+         
+          tarch::la::Vector<TwoTimesD,int> getFaceDataTo() const ;
+         
+          void setFaceDataTo(const tarch::la::Vector<TwoTimesD,int>& faceDataTo) ;
+         
+          int getFaceDataTo(int elementIndex) const ;
+         
+          void setFaceDataTo(int elementIndex, const int& faceDataTo) ;
          
          /**
           * Generated

@@ -12,6 +12,9 @@
 #include <map>
 
 
+#include "MyMapping.h"
+
+
 namespace examples {
   namespace integerdiffusionthroughfaces {
     class MyObserver;
@@ -39,19 +42,30 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
 	 * In this simple example, we store exactly the same thing both in cells
 	 * and on faces. For most applications, that's not the case obviously.
 	 */
-	struct Data {
+	struct FaceData {
       #if PeanoDebug>0
-      int                                    level;
       tarch::la::Vector<Dimensions,double>   x;
+      tarch::la::Vector<Dimensions,double>   h;
       #endif
 	  int                                    value;
 	};
 
-	typedef peano4::stacks::STDVectorStack< Data >   FaceDataContainer;
-	typedef peano4::stacks::STDVectorStack< Data >   CellDataContainer;
+	/**
+	 * They are the same, so I use an alias.
+	 */
+	typedef FaceData   CellData;
 
-	std::map< DataKey, FaceDataContainer >   _faceData;
-	std::map< DataKey, CellDataContainer >   _cellData;
+	typedef peano4::stacks::STDVectorStack< FaceData >   FaceDataContainer;
+	typedef peano4::stacks::STDVectorStack< CellData >   CellDataContainer;
+
+	/**
+	 * It is absolutely essential that these guys are static. They are global
+	 * repositories shared by all observers.
+	 */
+	static std::map< DataKey, FaceDataContainer >   _faceData;
+	static std::map< DataKey, CellDataContainer >   _cellData;
+
+	MyMapping                                _mapping;
   public:
 	MyObserver(int spacetreeId = -1, int counter=0);
 
@@ -78,65 +92,65 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
 
 	void createPersistentVertexAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
 	) override;
 
 	void createHangingVertexAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
 	) override;
 
 	void destroyPersistentVertexAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
 	) override;
 
 	void destroyHangingVertexAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
 	) override;
 
 	void createPersistentFaceAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
 	  int                                          normal,
       int                                          stackNumber
 	) override;
 
 	void createHangingFaceAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
 	  int                                          normal,
       int                                          stackNumber
 	) override;
 
 	void destroyPersistentFaceAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
 	  int                                          normal,
       int                                          stackNumber
 	) override;
 
 	void destroyHangingFaceAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
 	  int                                          normal,
       int                                          stackNumber
 	) override;
 
 	void createCellAndPushOnStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
     ) override;
 
 	void destroyCellAndPopFromStack(
       const tarch::la::Vector<Dimensions,double>&  x,
-	  int                                          level,
+	  const tarch::la::Vector<Dimensions,double>&  h,
       int                                          stackNumber
     ) override;
 };

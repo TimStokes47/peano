@@ -18,11 +18,22 @@ class peano4::grid::GridTraversalEvent {
   persistent parallelise double         x[Dimensions];
   persistent parallelise double         h[Dimensions];
   persistent parallelise packed bool    isRefined;
+  
   /**
+   * Per vertex, we specify from which stack the vertex comes from and where it
+   * goes to. Therefore, we need two entries per vertex and 2^d entries in 
+   * total. The order of these vertices is very important as all accesses are
+   * stack accesses, i.e. it could be that the upper left vertex is read/written
+   * prior to the lower left vertex.
+   *
    * Well too pessimistic upper bound.
    */
-  persistent parallelise packed int     vertexData[TwoPowerD]  from 0 to 9;
-  persistent parallelise packed int     faceData[TwoTimesD]    from 0 to 7;
-  persistent parallelise packed int     cellData               from 0 to 1;
+  persistent parallelise packed int     vertexDataFrom[TwoPowerD]  from 0 to 9;
+  persistent parallelise packed int     faceDataFrom[TwoTimesD]    from 0 to 7;
+
+  persistent parallelise packed int     vertexDataTo[TwoPowerD]    from 0 to 9;
+  persistent parallelise packed int     faceDataTo[TwoTimesD]      from 0 to 7;
+
+  persistent parallelise packed int     cellData                   from 0 to 1;
 };
 

@@ -839,11 +839,11 @@ void peano4::grid::Spacetree::loadVertices(
     	logDebug( "loadVertices(...)", "stack no=" << stackNumber );
         assertion( PeanoCurve::isInOutStack(stackNumber) );
         fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createNewPersistentVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
-        observer.createPersistentVertexAndPushOnStack(x,fineGridStatesState.getLevel(),stackNumber);
+        observer.createPersistentVertexAndPushOnStack(x,fineGridStatesState.getH(),stackNumber);
     	break;
       case VertexType::Hanging:
       	fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ] = createHangingVertex(coarseGridVertices,x,fineGridStatesState.getLevel(),vertexPositionWithinPatch);
-        observer.createHangingVertexAndPushOnStack(x,fineGridStatesState.getLevel(),stackNumber);
+        observer.createHangingVertexAndPushOnStack(x,fineGridStatesState.getH(),stackNumber);
       	break;
       case VertexType::Persistent:
       case VertexType::Delete:
@@ -906,10 +906,10 @@ void peano4::grid::Spacetree::loadVertices(
       case FaceType::New:
     	logDebug( "loadVertices(...)", "stack no=" << stackNumber );
         assertion( PeanoCurve::isInOutStack(stackNumber) );
-        observer.createPersistentFaceAndPushOnStack(x,fineGridStatesState.getLevel(),normal,stackNumber);
+        observer.createPersistentFaceAndPushOnStack(x,fineGridStatesState.getH(),normal,stackNumber);
     	break;
       case FaceType::Hanging:
-        observer.createHangingFaceAndPushOnStack(x,fineGridStatesState.getLevel(),normal,stackNumber);
+        observer.createHangingFaceAndPushOnStack(x,fineGridStatesState.getH(),normal,stackNumber);
       	break;
       case FaceType::Persistent:
         break;
@@ -925,7 +925,7 @@ void peano4::grid::Spacetree::loadVertices(
 
     switch (type) {
       case CellType::New:
-        observer.createCellAndPushOnStack(x,fineGridStatesState.getLevel(),stackNumber);
+        observer.createCellAndPushOnStack(x,fineGridStatesState.getH(),stackNumber);
     	break;
       case CellType::Persistent:
     	break;
@@ -988,12 +988,12 @@ void peano4::grid::Spacetree::storeVertices(
         break;
       case VertexType::Hanging:
     	logDebug( "storeVertices(...)", "discard vertex " << fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString() );
-        observer.destroyHangingVertexAndPopFromStack(x,fineGridStatesState.getLevel(),stackNumber);
+        observer.destroyHangingVertexAndPopFromStack(x,fineGridStatesState.getH(),stackNumber);
     	break;
       case VertexType::Delete:
       	logDebug( "storeVertices(...)", "delete vertex " << fineGridVertices[ peano4::utils::dLinearised(vertexIndex) ].toString() );
         assertion( PeanoCurve::isInOutStack(stackNumber) );
-        observer.destroyPersistentVertexAndPopFromStack(x,fineGridStatesState.getLevel(),stackNumber);
+        observer.destroyPersistentVertexAndPopFromStack(x,fineGridStatesState.getH(),stackNumber);
         break;
     }
   }
@@ -1023,13 +1023,13 @@ void peano4::grid::Spacetree::storeVertices(
       case FaceType::New:
     	break;
       case FaceType::Hanging:
-        observer.destroyHangingFaceAndPopFromStack(x,fineGridStatesState.getLevel(),normal,stackNumber);
+        observer.destroyHangingFaceAndPopFromStack(x,fineGridStatesState.getH(),normal,stackNumber);
       	break;
       case FaceType::Persistent:
         break;
       case FaceType::Delete:
         assertion( PeanoCurve::isInOutStack(stackNumber) );
-        observer.destroyPersistentFaceAndPopFromStack(x,fineGridStatesState.getLevel(),normal,stackNumber);
+        observer.destroyPersistentFaceAndPopFromStack(x,fineGridStatesState.getH(),normal,stackNumber);
         break;
     }
   }
@@ -1045,7 +1045,7 @@ void peano4::grid::Spacetree::storeVertices(
       case CellType::Persistent:
     	break;
       case CellType::Delete:
-        observer.destroyCellAndPopFromStack(x,fineGridStatesState.getLevel(),stackNumber);
+        observer.destroyCellAndPopFromStack(x,fineGridStatesState.getH(),stackNumber);
         break;
     }
   }
@@ -1532,12 +1532,14 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createEnterCellTravers
   for (int i=0; i<TwoPowerD; i++) {
     const std::bitset<Dimensions>  vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
     const int  inStackNumber = PeanoCurve::getVertexReadStackNumber(state,vertexIndex);
-    event.setVertexData(vertexIndex.to_ulong(),inStackNumber);
+    event.setVertexDataFrom(i,inStackNumber);
+    event.setVertexDataTo(i,vertexIndex.to_ulong());
   }
 
   for (int i=0; i<Dimensions*2; i++) {
     int face   = PeanoCurve::getFaceNumberAlongCurve(state,i);
-	event.setFaceData(face,PeanoCurve::getFaceReadStackNumber(state,face));
+	event.setFaceDataFrom(i,PeanoCurve::getFaceReadStackNumber(state,face));
+	event.setFaceDataTo(i,face);
   }
 
   event.setCellData(PeanoCurve::getCellReadStackNumber(state));
@@ -1559,13 +1561,15 @@ peano4::grid::GridTraversalEvent peano4::grid::Spacetree::createLeaveCellTravers
   const std::bitset<Dimensions> coordinates = PeanoCurve::getFirstVertexIndex(state);
   for (int i=0; i<TwoPowerD; i++) {
     const std::bitset<Dimensions>  vertexIndex( coordinates ^ std::bitset<Dimensions>(i) );
-    const int  inStackNumber = PeanoCurve::getVertexWriteStackNumber(state,vertexIndex);
-    event.setVertexData(vertexIndex.to_ulong(),inStackNumber);
+    const int  outStackNumber = PeanoCurve::getVertexWriteStackNumber(state,vertexIndex);
+    event.setVertexDataFrom(i,vertexIndex.to_ulong());
+    event.setVertexDataTo(i,outStackNumber);
   }
 
   for (int i=0; i<Dimensions*2; i++) {
     int face   = PeanoCurve::getFaceNumberAlongCurve(state,i);
-	event.setFaceData(face,PeanoCurve::getFaceWriteStackNumber(state,face));
+	event.setFaceDataFrom(i,face);
+	event.setFaceDataTo(i,PeanoCurve::getFaceWriteStackNumber(state,face));
   }
 
   event.setCellData(PeanoCurve::getCellWriteStackNumber(state));
