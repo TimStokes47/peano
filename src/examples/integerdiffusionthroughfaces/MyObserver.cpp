@@ -61,8 +61,13 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
     int inFaceStack  = event.getFaceDataFrom(i);
 	int outFaceStack = event.getFaceDataTo(i);
     FaceData data = _faceData[ DataKey(_spacetreeId,inFaceStack) ].pop();
-    assertion4( tarch::la::allGreaterEquals(data.x,event.getX()-event.getH()/2.0),data.x,data.h,event.toString(),event.getX()-event.getH()/2.0 );
-    assertion4( tarch::la::allSmallerEquals(data.x,event.getX()+event.getH()/2.0),data.x,data.h,event.toString(),event.getX()+event.getH()/2.0 );
+    assertion4( tarch::la::allGreaterEquals(data.x,event.getX()-event.getH()/2.0,tarch::la::relativeEps(tarch::la::max(data.x),tarch::la::max(event.getH()))),data.x,data.h,event.toString(),event.getX()-event.getH()/2.0 );
+    assertion6(
+      tarch::la::allSmallerEquals(data.x,event.getX()+event.getH()/2.0,tarch::la::relativeEps(tarch::la::max(data.x),tarch::la::max(event.getH()))),
+	  data.x,data.h,event.toString(),event.getX()+event.getH()/2.0,
+	  (data.x(0)-event.getX()(0)-event.getH()(0)/2.0),
+	  (data.x(1)-event.getX()(1)-event.getH()(1)/2.0)
+	);
 	logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStack << ": " << data.x << "x" << data.h );
     faceView.set(outFaceStack,data);
   }
@@ -89,8 +94,8 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
     int inFaceStack  = event.getFaceDataFrom(i);
 	int outFaceStack = event.getFaceDataTo(i);
     FaceData data = faceView.get(inFaceStack);
-    assertion3( tarch::la::allGreaterEquals(data.x,event.getX()-event.getH()/2.0),data.x,data.h,event.toString() );
-    assertion3( tarch::la::allSmallerEquals(data.x,event.getX()+event.getH()/2.0),data.x,data.h,event.toString() );
+    assertion3( tarch::la::allGreaterEquals(data.x,event.getX()-event.getH()/2.0,tarch::la::relativeEps(tarch::la::max(data.x),tarch::la::max(event.getH()))),data.x,data.h,event.toString() );
+    assertion3( tarch::la::allSmallerEquals(data.x,event.getX()+event.getH()/2.0,tarch::la::relativeEps(tarch::la::max(data.x),tarch::la::max(event.getH()))),data.x,data.h,event.toString() );
 	logDebug("leaveCell(...)", "face pos-" << inFaceStack << "->" << outFaceStack  << ": " << data.x << "x" << data.h);
     _faceData[ DataKey(_spacetreeId,outFaceStack) ].push(data);
   }

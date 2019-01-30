@@ -218,12 +218,11 @@ bool tarch::la::allGreater (
   const Vector<Size,Scalar>&  rhs,
   const Scalar                tolerance
 ) {
+  bool result = true;
   for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - rhs(i) <= tolerance ) {
-      return false;
-    }
+	result &= greater(lhs(i),rhs(i),tolerance);
   }
-  return true;
+  return result;
 }
 
 
@@ -233,12 +232,11 @@ bool tarch::la::allGreaterEquals (
   const Vector<Size,Scalar>&  rhs,
   const Scalar                tolerance
 ) {
+  bool result = true;
   for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - rhs(i) < -tolerance ) {
-      return false;
-    }
+	result &= greaterEquals(lhs(i),rhs(i),tolerance);
   }
-  return true;
+  return result;
 }
 
 
@@ -249,12 +247,11 @@ bool tarch::la::allSmaller (
   const Vector<Size,Scalar>&  rhs,
   const Scalar                tolerance
 ) {
+  bool result = true;
   for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - rhs(i) >= tolerance ) {
-      return false;
-    }
+	result &= smaller(lhs(i),rhs(i),tolerance);
   }
-  return true;
+  return result;
 }
 
 
@@ -264,12 +261,11 @@ bool tarch::la::allSmallerEquals (
   const Vector<Size,Scalar>&  rhs,
   const Scalar                tolerance
 ) {
+  bool result = true;
   for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - rhs(i) > -tolerance ) {
-      return false;
-    }
+	result &= smallerEquals(lhs(i),rhs(i),tolerance);
   }
-  return true;
+  return result;
 }
 
 

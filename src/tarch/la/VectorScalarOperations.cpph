@@ -312,22 +312,11 @@ bool tarch::la::allGreater (
   const Scalar&               cmp,
   const Scalar                tolerance
 ) {
-  #ifdef CompilerICC
   bool result = true;
   for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - cmp <= tolerance ) {
-      result =  false;
-    }
+	result &= greater( lhs(i),cmp, tolerance );
   }
   return result;
-  #else
-  for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - cmp <= tolerance ) {
-      return false;
-    }
-  }
-  return true;
-  #endif
 }
 
 
@@ -337,22 +326,11 @@ bool tarch::la::allGreaterEquals (
   const Scalar&               cmp,
   const Scalar                tolerance
 ) {
-  #ifdef CompilerICC
   bool result = true;
   for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - cmp < -tolerance ) {
-      result = false;
-    }
+	result &= greaterEquals( lhs(i),cmp, tolerance );
   }
   return result;
-  #else
-  for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - cmp < -tolerance ) {
-      return false;
-    }
-  }
-  return true;
-  #endif
 }
 
 
@@ -362,22 +340,11 @@ bool tarch::la::allSmaller (
   const Scalar&               cmp,
   const Scalar                tolerance 
 ) {
-  #ifdef CompilerICC
   bool result = true;
   for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - cmp >= -tolerance ) {
-      result = false;
-    }
+	result &= smaller( lhs(i),cmp, tolerance );
   }
   return result;
-  #else
-  for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - cmp >= -tolerance ) {
-      return false;
-    }
-  }
-  return true;
-  #endif
 }
 
 
@@ -387,24 +354,12 @@ bool tarch::la::allSmallerEquals (
   const Scalar&               cmp,
   const Scalar                tolerance 
 ) {
-  #ifdef CompilerICC
   bool result = true;
   for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - cmp > tolerance ) {
-      result = false;
-    }
+	result &= smallerEquals( lhs(i),cmp, tolerance );
   }
   return result;
-  #else
-  for ( int i=0; i < Size; i++ ) {
-    if ( lhs(i) - cmp > tolerance ) {
-      return false;
-    }
-  }
-  return true;
-  #endif
 }
-
 
 
 template<int Size>

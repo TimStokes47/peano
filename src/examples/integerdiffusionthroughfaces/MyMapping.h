@@ -78,6 +78,9 @@ class examples::integerdiffusionthroughfaces::MyMapping {
 	  int&                                         data
     );
 
+	/**
+	 * @todo Jetzt kommen aber die Enumeratoren rein hier fuer die Faces und Vertices
+	 */
 	void enterCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
