@@ -52,8 +52,8 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   int outCellStack = peano4::grid::PeanoCurve::CallStack;
   logDebug("enterCell(...)", "cell " << inCellStack << "->" << outCellStack );
   CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
-  assertionVectorNumericalEquals2(data.x,event.getX(),data.value,event.toString());
-  assertionVectorNumericalEquals2(data.h,event.getH(),data.value,event.toString());
+  assertionVectorNumericalEquals4(data.x,event.getX(),data.value,event.toString(),data.x,data.h);
+  assertionVectorNumericalEquals4(data.h,event.getH(),data.value,event.toString(),data.x,data.h);
   _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
 
   FaceDataContainer::PushBlockVertexStackView faceView = _faceData[ DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock(Dimensions*2);
@@ -61,6 +61,8 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
     int inFaceStack  = event.getFaceDataFrom(i);
 	int outFaceStack = event.getFaceDataTo(i);
     FaceData data = _faceData[ DataKey(_spacetreeId,inFaceStack) ].pop();
+    assertion4( tarch::la::allGreaterEquals(data.x,event.getX()-event.getH()/2.0),data.x,data.h,event.toString(),event.getX()-event.getH()/2.0 );
+    assertion4( tarch::la::allSmallerEquals(data.x,event.getX()+event.getH()/2.0),data.x,data.h,event.toString(),event.getX()+event.getH()/2.0 );
 	logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStack << ": " << data.x << "x" << data.h );
     faceView.set(outFaceStack,data);
   }
@@ -78,8 +80,8 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
   int outCellStack  = event.getCellData();
   logDebug("leaveCell(...)", "cell " << inCellStack << "->" << outCellStack );
   CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
-  assertionVectorNumericalEquals2(data.x,event.getX(),data.value,event.toString());
-  assertionVectorNumericalEquals2(data.h,event.getH(),data.value,event.toString());
+  assertionVectorNumericalEquals4(data.x,event.getX(),data.value,data.x,data.h,event.toString());
+  assertionVectorNumericalEquals4(data.h,event.getH(),data.value,data.x,data.h,event.toString());
   _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
 
   FaceDataContainer::PopBlockVertexStackView faceView = _faceData[ DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].popBlock(Dimensions*2);
@@ -87,6 +89,8 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
     int inFaceStack  = event.getFaceDataFrom(i);
 	int outFaceStack = event.getFaceDataTo(i);
     FaceData data = faceView.get(inFaceStack);
+    assertion3( tarch::la::allGreaterEquals(data.x,event.getX()-event.getH()/2.0),data.x,data.h,event.toString() );
+    assertion3( tarch::la::allSmallerEquals(data.x,event.getX()+event.getH()/2.0),data.x,data.h,event.toString() );
 	logDebug("leaveCell(...)", "face pos-" << inFaceStack << "->" << outFaceStack  << ": " << data.x << "x" << data.h);
     _faceData[ DataKey(_spacetreeId,outFaceStack) ].push(data);
   }
