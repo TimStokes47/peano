@@ -110,7 +110,12 @@ class peano4::grid::PeanoCurve {
      * Constructing a face enumeration is in principle similar to the vertex
      * numbers. We start with our normalised enumeration as sketched above. Then
      * we look at the even flags of the cell. For every even flag not set (odd
-     * numbers), we invert the enumerations along all other normals.
+     * numbers), we invert the enumerations along all other normals. If we run
+     * through the grid forward, we have, as pointed out above, first the face
+     * with normal 0 running through the origin, then the face with normal 1
+     * running through the origin, ... If we invert the traversal, we first have
+     * to handle the face with normal d not running through the origin, then
+     * the one with normal d-1, and so forth.
      */
     static int getFaceNumberAlongCurve(const AutomatonState& cell, int logicalFaceNumber );
 

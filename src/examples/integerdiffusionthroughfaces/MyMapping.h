@@ -4,6 +4,9 @@
 #define _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_MYMAPPING_H_
 
 
+#include "Mapping.h"
+
+
 #include "peano4/utils/Globals.h"
 #include "tarch/la/Vector.h"
 #include "tarch/logging/Log.h"
@@ -23,63 +26,67 @@ namespace examples {
  * invocations of this interface. On the long run, I want to generate
  * these mappings. Well, at least the header.
  */
-class examples::integerdiffusionthroughfaces::MyMapping {
+class examples::integerdiffusionthroughfaces::MyMapping: public Mapping {
   private:
 	static tarch::logging::Log   _log;
   public:
+
+	void beginTraversal() final;
+	void endTraversal() final;
+
 	void createPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
 	  int&                                         data
-    );
+    ) override;
 
 	void createHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
 	  int&                                         data
-    );
+    ) override;
 
 	void destroyPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
 	  int&                                         data
-    );
+    ) override;
 
 	void destroyHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
 	  int&                                         data
-    );
+    ) override;
 
 	void touchFaceFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
 	  int&                                         data
-    );
+    ) override;
 
 	void touchFaceLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
 	  int&                                         data
-    );
+    ) override;
 
 	void createCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  int&                                         data
-    );
+    ) override;
 
 	void destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  int&                                         data
-    );
+    ) override;
 
 	/**
 	 * @todo Jetzt kommen aber die Enumeratoren rein hier fuer die Faces und Vertices
@@ -88,13 +95,13 @@ class examples::integerdiffusionthroughfaces::MyMapping {
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  int&                                         data
-    );
+    ) override;
 
 	void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  int&                                         data
-    );
+    ) override;
 };
 
 #endif

@@ -2,6 +2,8 @@ bin_PROGRAMS = PeanoDiffusionThroughFaces2d_debug PeanoDiffusionThroughFaces2d P
 
 PeanoDiffusionThroughFacesSources = \
   main.cpp \
+  CellDataPlotter.cpp \
+  CompositeMapping.cpp \
   MyMapping.cpp \
   MyObserver.cpp
 

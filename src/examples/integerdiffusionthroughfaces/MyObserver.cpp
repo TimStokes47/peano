@@ -1,4 +1,5 @@
 #include "MyObserver.h"
+#include "CellDataPlotter.h"
 
 #include "peano4/grid/GridControlEvent.h"
 #include "peano4/grid/GridTraversalEvent.h"
@@ -17,11 +18,16 @@ examples::integerdiffusionthroughfaces::MyObserver::MyObserver(int spacetreeId, 
   _spacetreeId(spacetreeId),
   _iterationCounter(counter)
   {
+  #if PeanoDebug>0
+  _mapping.append( new MyMapping() );
+  _mapping.append( new CellDataPlotter() );
+  #endif
 }
 
 
 void examples::integerdiffusionthroughfaces::MyObserver::beginTraversal() {
   _iterationCounter++;
+  _mapping.beginTraversal();
 }
 
 
@@ -40,6 +46,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::endTraversal() {
 	logDebug( "endTraversal()", "cell stack (" << p.first.first << "," << p.first.second << "): " << p.second.size() << " entries" );
   }
   #endif
+  _mapping.endTraversal();
 }
 
 
@@ -204,6 +211,7 @@ peano4::grid::TraversalObserver* examples::integerdiffusionthroughfaces::MyObser
 
 
 std::vector< peano4::grid::GridControlEvent > examples::integerdiffusionthroughfaces::MyObserver::getGridControlEvents() {
+	// @todoo Das sollte natuerlich auch in mapping raus und muss dann dort u.U. gemerged werden
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
   if (_iterationCounter<8) {
     peano4::grid::GridControlEvent newEvent;

@@ -4,6 +4,17 @@
 tarch::logging::Log   examples::integerdiffusionthroughfaces::MyMapping::_log( "examples::integerdiffusionthroughfaces::MyMapping" );
 
 
+
+void examples::integerdiffusionthroughfaces::MyMapping::beginTraversal() {
+
+}
+
+
+void examples::integerdiffusionthroughfaces::MyMapping::endTraversal() {
+
+}
+
+
 void examples::integerdiffusionthroughfaces::MyMapping::createPersistentFace(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,

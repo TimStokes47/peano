@@ -13,6 +13,9 @@
 
 
 #include "MyMapping.h"
+#include "CompositeMapping.h"
+#include "FaceData.h"
+#include "CellData.h"
 
 
 namespace examples {
@@ -38,23 +41,6 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
 	 */
 	typedef std::pair<int,int>  DataKey;
 
-	/**
-	 * In this simple example, we store exactly the same thing both in cells
-	 * and on faces. For most applications, that's not the case obviously.
-	 */
-	struct FaceData {
-      #if PeanoDebug>0
-      tarch::la::Vector<Dimensions,double>   x;
-      tarch::la::Vector<Dimensions,double>   h;
-      #endif
-	  int                                    value;
-	};
-
-	/**
-	 * They are the same, so I use an alias.
-	 */
-	typedef FaceData   CellData;
-
 	typedef peano4::stacks::STDVectorStack< FaceData >   FaceDataContainer;
 	typedef peano4::stacks::STDVectorStack< CellData >   CellDataContainer;
 
@@ -65,7 +51,11 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
 	static std::map< DataKey, FaceDataContainer >   _faceData;
 	static std::map< DataKey, CellDataContainer >   _cellData;
 
+    #if PeanoDebug>0
+	CompositeMapping                         _mapping;
+    #else
 	MyMapping                                _mapping;
+    #endif
   public:
 	MyObserver(int spacetreeId = -1, int counter=0);
 

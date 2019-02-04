@@ -45,7 +45,7 @@ void runExample() {
 
   examples::integerdiffusionthroughfaces::MyObserver emptyObserver;
 
-  for (int i=0; i<3; i++) {
+  for (int i=0; i<10; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     spacetreeSet.traverse( emptyObserver );
 
@@ -58,6 +58,9 @@ void runExample() {
     logInfo( "main(...)", "remote unrefined cells = " << spacetreeSet.getGridStatistics().getNumberOfRemoteUnrefinedCells() );
     logInfo( "main(...)", "remote refined cells= " << spacetreeSet.getGridStatistics().getNumberOfRemoteRefinedCells() );
   }
+
+  // @todo Das muss halt auch alles mit Multicore tun
+
   logInfo( "main(...)", "quit successfully" );
 }
 
