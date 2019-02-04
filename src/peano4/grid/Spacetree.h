@@ -118,20 +118,22 @@ class peano4::grid::Spacetree {
 	  int                                dimension = Dimensions-1
     );
 
-    /**
-     * When originally invoked, position should hold 1es in every single entry
-     * besides one (the one along the normal). Basically, we read the cell as a
-     * 2x2x2 patch and specify the face of interest through the discrete
-     * coordinates in this patch.
-     */
     static FaceType getFaceType(
-      GridVertex                         coarseGridVertices[TwoPowerD],
-      tarch::la::Vector<Dimensions,int>  position,
-	  int                                dimension = Dimensions-1
+      GridVertex                         vertices[TwoPowerD],
+	  int                                faceNumber
     );
 
+    /**
+     * You pass in the fine grid vertices and it gives you back the cell type.
+     * This routine translates the 2^d vertices of a cell into a cell type.
+     * There's a counterpart for faces, too. For vertices, we need no
+     * counterpart, as the translation is 1:1, i.e. we handle it directly
+     * in one switch statement.
+     *
+     * @see getFaceType()
+     */
     static CellType getCellType(
-      GridVertex                         coarseGridVertices[TwoPowerD]
+      GridVertex                         vertices[TwoPowerD]
     );
 
     int              _id;

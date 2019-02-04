@@ -34,6 +34,7 @@ Peano4Core_SOURCES = peano4/peano.cpp \
   peano4/grid/GridTraversalEvent.cpp \
   peano4/grid/PeanoCurve.cpp \
   peano4/grid/Spacetree.cpp \
+  peano4/grid/TraversalObserver.cpp \
   peano4/grid/TraversalVTKPlotter.cpp \
   peano4/grid/tests/SpacetreeTest.cpp \
   peano4/parallel/Node.cpp \

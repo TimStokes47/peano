@@ -167,18 +167,20 @@
    std::string peano4::grid::GridVertex::toString(const State& param) {
       switch (param) {
          case HangingVertex: return "HangingVertex";
+         case New: return "New";
          case Unrefined: return "Unrefined";
          case Refined: return "Refined";
          case RefinementTriggered: return "RefinementTriggered";
          case Refining: return "Refining";
          case EraseTriggered: return "EraseTriggered";
          case Erasing: return "Erasing";
+         case Delete: return "Delete";
       }
       return "undefined";
    }
    
    std::string peano4::grid::GridVertex::getStateMapping() {
-      return "State(HangingVertex=0,Unrefined=1,Refined=2,RefinementTriggered=3,Refining=4,EraseTriggered=5,Erasing=6)";
+      return "State(HangingVertex=0,New=1,Unrefined=2,Refined=3,RefinementTriggered=4,Refining=5,EraseTriggered=6,Erasing=7,Delete=8)";
    }
    
    
@@ -700,12 +702,12 @@ switch (mode) {
    
    
    peano4::grid::GridVertexPacked::PersistentRecords::PersistentRecords() {
-      if ((5 >= (8 * sizeof(short int)))) {
+      if ((6 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((5 < (8 * sizeof(short int))));
+      assertion((6 < (8 * sizeof(short int))));
       
    }
    
@@ -715,30 +717,30 @@ switch (mode) {
       setState(state);
       setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep);
       setIsAntecessorOfRefinedVertexInCurrentTreeSweep(isAntecessorOfRefinedVertexInCurrentTreeSweep);
-      if ((5 >= (8 * sizeof(short int)))) {
+      if ((6 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((5 < (8 * sizeof(short int))));
+      assertion((6 < (8 * sizeof(short int))));
       
    }
    
    
     peano4::grid::GridVertex::State peano4::grid::GridVertexPacked::PersistentRecords::getState() const  {
-      short int mask =  (1 << (3)) - 1;
+      short int mask =  (1 << (4)) - 1;
    mask = static_cast<short int>(mask << (0));
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    tmp = static_cast<short int>(tmp >> (0));
-   assertion(( tmp >= 0 &&  tmp <= 6));
+   assertion(( tmp >= 0 &&  tmp <= 8));
    return (State) tmp;
    }
    
    
    
     void peano4::grid::GridVertexPacked::PersistentRecords::setState(const State& state)  {
-      assertion((state >= 0 && state <= 6));
-   short int mask =  (1 << (3)) - 1;
+      assertion((state >= 0 && state <= 8));
+   short int mask =  (1 << (4)) - 1;
    mask = static_cast<short int>(mask << (0));
    _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
    _packedRecords0 = static_cast<short int>(_packedRecords0 | static_cast<short int>(state) << (0));
@@ -759,7 +761,7 @@ switch (mode) {
    
    
     bool peano4::grid::GridVertexPacked::PersistentRecords::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
-      short int mask = 1 << (3);
+      short int mask = 1 << (4);
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    return (tmp != 0);
    }
@@ -767,14 +769,14 @@ switch (mode) {
    
    
     void peano4::grid::GridVertexPacked::PersistentRecords::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
-      short int mask = 1 << (3);
+      short int mask = 1 << (4);
    _packedRecords0 = static_cast<short int>( hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
    }
    
    
    
     bool peano4::grid::GridVertexPacked::PersistentRecords::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
-      short int mask = 1 << (4);
+      short int mask = 1 << (5);
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    return (tmp != 0);
    }
@@ -782,42 +784,42 @@ switch (mode) {
    
    
     void peano4::grid::GridVertexPacked::PersistentRecords::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
-      short int mask = 1 << (4);
+      short int mask = 1 << (5);
    _packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertexInCurrentTreeSweep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
    }
    
    
    peano4::grid::GridVertexPacked::GridVertexPacked() {
-      if ((5 >= (8 * sizeof(short int)))) {
+      if ((6 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((5 < (8 * sizeof(short int))));
+      assertion((6 < (8 * sizeof(short int))));
       
    }
    
    
    peano4::grid::GridVertexPacked::GridVertexPacked(const PersistentRecords& persistentRecords):
    _persistentRecords(persistentRecords.getState(), persistentRecords._adjacentRanks, persistentRecords.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(), persistentRecords.getIsAntecessorOfRefinedVertexInCurrentTreeSweep()) {
-      if ((5 >= (8 * sizeof(short int)))) {
+      if ((6 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((5 < (8 * sizeof(short int))));
+      assertion((6 < (8 * sizeof(short int))));
       
    }
    
    
    peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep):
    _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep) {
-      if ((5 >= (8 * sizeof(short int)))) {
+      if ((6 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((5 < (8 * sizeof(short int))));
+      assertion((6 < (8 * sizeof(short int))));
       
    }
    
@@ -825,12 +827,12 @@ switch (mode) {
    peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells):
    _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep) {
       setNumberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells);
-      if ((5 >= (8 * sizeof(short int)))) {
+      if ((6 >= (8 * sizeof(short int)))) {
          std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
          std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
          std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
       }
-      assertion((5 < (8 * sizeof(short int))));
+      assertion((6 < (8 * sizeof(short int))));
       
    }
    
@@ -838,19 +840,19 @@ switch (mode) {
    
    
     peano4::grid::GridVertex::State peano4::grid::GridVertexPacked::getState() const  {
-      short int mask =  (1 << (3)) - 1;
+      short int mask =  (1 << (4)) - 1;
    mask = static_cast<short int>(mask << (0));
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    tmp = static_cast<short int>(tmp >> (0));
-   assertion(( tmp >= 0 &&  tmp <= 6));
+   assertion(( tmp >= 0 &&  tmp <= 8));
    return (State) tmp;
    }
    
    
    
     void peano4::grid::GridVertexPacked::setState(const State& state)  {
-      assertion((state >= 0 && state <= 6));
-   short int mask =  (1 << (3)) - 1;
+      assertion((state >= 0 && state <= 8));
+   short int mask =  (1 << (4)) - 1;
    mask = static_cast<short int>(mask << (0));
    _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
    _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | static_cast<short int>(state) << (0));
@@ -889,7 +891,7 @@ switch (mode) {
    
    
     bool peano4::grid::GridVertexPacked::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
-      short int mask = 1 << (3);
+      short int mask = 1 << (4);
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
    }
@@ -897,14 +899,14 @@ switch (mode) {
    
    
     void peano4::grid::GridVertexPacked::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
-      short int mask = 1 << (3);
+      short int mask = 1 << (4);
    _persistentRecords._packedRecords0 = static_cast<short int>( hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
    }
    
    
    
     bool peano4::grid::GridVertexPacked::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
-      short int mask = 1 << (4);
+      short int mask = 1 << (5);
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
    }
@@ -912,7 +914,7 @@ switch (mode) {
    
    
     void peano4::grid::GridVertexPacked::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
-      short int mask = 1 << (4);
+      short int mask = 1 << (5);
    _persistentRecords._packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertexInCurrentTreeSweep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
    }
    
@@ -1667,18 +1669,20 @@ switch (mode) {
       std::string peano4::grid::GridVertex::toString(const State& param) {
          switch (param) {
             case HangingVertex: return "HangingVertex";
+            case New: return "New";
             case Unrefined: return "Unrefined";
             case Refined: return "Refined";
             case RefinementTriggered: return "RefinementTriggered";
             case Refining: return "Refining";
             case EraseTriggered: return "EraseTriggered";
             case Erasing: return "Erasing";
+            case Delete: return "Delete";
          }
          return "undefined";
       }
       
       std::string peano4::grid::GridVertex::getStateMapping() {
-         return "State(HangingVertex=0,Unrefined=1,Refined=2,RefinementTriggered=3,Refining=4,EraseTriggered=5,Erasing=6)";
+         return "State(HangingVertex=0,New=1,Unrefined=2,Refined=3,RefinementTriggered=4,Refining=5,EraseTriggered=6,Erasing=7,Delete=8)";
       }
       
       
@@ -2242,12 +2246,12 @@ switch (mode) {
       
       
       peano4::grid::GridVertexPacked::PersistentRecords::PersistentRecords() {
-         if ((5 >= (8 * sizeof(short int)))) {
+         if ((6 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((5 < (8 * sizeof(short int))));
+         assertion((6 < (8 * sizeof(short int))));
          
       }
       
@@ -2259,30 +2263,30 @@ switch (mode) {
          setState(state);
          setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep);
          setIsAntecessorOfRefinedVertexInCurrentTreeSweep(isAntecessorOfRefinedVertexInCurrentTreeSweep);
-         if ((5 >= (8 * sizeof(short int)))) {
+         if ((6 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((5 < (8 * sizeof(short int))));
+         assertion((6 < (8 * sizeof(short int))));
          
       }
       
       
        peano4::grid::GridVertex::State peano4::grid::GridVertexPacked::PersistentRecords::getState() const  {
-         short int mask =  (1 << (3)) - 1;
+         short int mask =  (1 << (4)) - 1;
    mask = static_cast<short int>(mask << (0));
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    tmp = static_cast<short int>(tmp >> (0));
-   assertion(( tmp >= 0 &&  tmp <= 6));
+   assertion(( tmp >= 0 &&  tmp <= 8));
    return (State) tmp;
       }
       
       
       
        void peano4::grid::GridVertexPacked::PersistentRecords::setState(const State& state)  {
-         assertion((state >= 0 && state <= 6));
-   short int mask =  (1 << (3)) - 1;
+         assertion((state >= 0 && state <= 8));
+   short int mask =  (1 << (4)) - 1;
    mask = static_cast<short int>(mask << (0));
    _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
    _packedRecords0 = static_cast<short int>(_packedRecords0 | static_cast<short int>(state) << (0));
@@ -2303,7 +2307,7 @@ switch (mode) {
       
       
        bool peano4::grid::GridVertexPacked::PersistentRecords::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
-         short int mask = 1 << (3);
+         short int mask = 1 << (4);
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    return (tmp != 0);
       }
@@ -2311,14 +2315,14 @@ switch (mode) {
       
       
        void peano4::grid::GridVertexPacked::PersistentRecords::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
-         short int mask = 1 << (3);
+         short int mask = 1 << (4);
    _packedRecords0 = static_cast<short int>( hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
       }
       
       
       
        bool peano4::grid::GridVertexPacked::PersistentRecords::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
-         short int mask = 1 << (4);
+         short int mask = 1 << (5);
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    return (tmp != 0);
       }
@@ -2326,7 +2330,7 @@ switch (mode) {
       
       
        void peano4::grid::GridVertexPacked::PersistentRecords::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
-         short int mask = 1 << (4);
+         short int mask = 1 << (5);
    _packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertexInCurrentTreeSweep ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
       }
       
@@ -2356,36 +2360,36 @@ switch (mode) {
       
       
       peano4::grid::GridVertexPacked::GridVertexPacked() {
-         if ((5 >= (8 * sizeof(short int)))) {
+         if ((6 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((5 < (8 * sizeof(short int))));
+         assertion((6 < (8 * sizeof(short int))));
          
       }
       
       
       peano4::grid::GridVertexPacked::GridVertexPacked(const PersistentRecords& persistentRecords):
       _persistentRecords(persistentRecords.getState(), persistentRecords._adjacentRanks, persistentRecords.getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(), persistentRecords.getIsAntecessorOfRefinedVertexInCurrentTreeSweep(), persistentRecords._x, persistentRecords._level) {
-         if ((5 >= (8 * sizeof(short int)))) {
+         if ((6 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((5 < (8 * sizeof(short int))));
+         assertion((6 < (8 * sizeof(short int))));
          
       }
       
       
       peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const tarch::la::Vector<Dimensions,double>& x, const int& level):
       _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep, x, level) {
-         if ((5 >= (8 * sizeof(short int)))) {
+         if ((6 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((5 < (8 * sizeof(short int))));
+         assertion((6 < (8 * sizeof(short int))));
          
       }
       
@@ -2393,12 +2397,12 @@ switch (mode) {
       peano4::grid::GridVertexPacked::GridVertexPacked(const State& state, const tarch::la::Vector<TwoPowerD,int>& adjacentRanks, const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep, const int& numberOfAdjacentRefinedLocalCells, const tarch::la::Vector<Dimensions,double>& x, const int& level):
       _persistentRecords(state, adjacentRanks, hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep, isAntecessorOfRefinedVertexInCurrentTreeSweep, x, level) {
          setNumberOfAdjacentRefinedLocalCells(numberOfAdjacentRefinedLocalCells);
-         if ((5 >= (8 * sizeof(short int)))) {
+         if ((6 >= (8 * sizeof(short int)))) {
             std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
             std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
             std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
          }
-         assertion((5 < (8 * sizeof(short int))));
+         assertion((6 < (8 * sizeof(short int))));
          
       }
       
@@ -2406,19 +2410,19 @@ switch (mode) {
       
       
        peano4::grid::GridVertex::State peano4::grid::GridVertexPacked::getState() const  {
-         short int mask =  (1 << (3)) - 1;
+         short int mask =  (1 << (4)) - 1;
    mask = static_cast<short int>(mask << (0));
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    tmp = static_cast<short int>(tmp >> (0));
-   assertion(( tmp >= 0 &&  tmp <= 6));
+   assertion(( tmp >= 0 &&  tmp <= 8));
    return (State) tmp;
       }
       
       
       
        void peano4::grid::GridVertexPacked::setState(const State& state)  {
-         assertion((state >= 0 && state <= 6));
-   short int mask =  (1 << (3)) - 1;
+         assertion((state >= 0 && state <= 8));
+   short int mask =  (1 << (4)) - 1;
    mask = static_cast<short int>(mask << (0));
    _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
    _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | static_cast<short int>(state) << (0));
@@ -2457,7 +2461,7 @@ switch (mode) {
       
       
        bool peano4::grid::GridVertexPacked::getHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep() const  {
-         short int mask = 1 << (3);
+         short int mask = 1 << (4);
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
       }
@@ -2465,14 +2469,14 @@ switch (mode) {
       
       
        void peano4::grid::GridVertexPacked::setHasBeenAntecessorOfRefinedVertexInPreviousTreeSweep(const bool& hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep)  {
-         short int mask = 1 << (3);
+         short int mask = 1 << (4);
    _persistentRecords._packedRecords0 = static_cast<short int>( hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
       }
       
       
       
        bool peano4::grid::GridVertexPacked::getIsAntecessorOfRefinedVertexInCurrentTreeSweep() const  {
-         short int mask = 1 << (4);
+         short int mask = 1 << (5);
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    return (tmp != 0);
       }
@@ -2480,7 +2484,7 @@ switch (mode) {
       
       
        void peano4::grid::GridVertexPacked::setIsAntecessorOfRefinedVertexInCurrentTreeSweep(const bool& isAntecessorOfRefinedVertexInCurrentTreeSweep)  {
-         short int mask = 1 << (4);
+         short int mask = 1 << (5);
    _persistentRecords._packedRecords0 = static_cast<short int>( isAntecessorOfRefinedVertexInCurrentTreeSweep ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
       }
       

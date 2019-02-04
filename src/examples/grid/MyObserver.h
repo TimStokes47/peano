@@ -47,61 +47,6 @@ class examples::grid::MyObserver: public
 	virtual TraversalObserver* clone(int spacetreeId) override;
 
 	virtual std::vector< peano4::grid::GridControlEvent > getGridControlEvents() override;
-
-	void createPersistentVertexAndPushOnStack(
-      const tarch::la::Vector<Dimensions,double>&  x,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          stackNumber
-	) override {};
-	void createHangingVertexAndPushOnStack(
-      const tarch::la::Vector<Dimensions,double>&  x,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          stackNumber
-	) override {};
-	void destroyPersistentVertexAndPopFromStack(
-      const tarch::la::Vector<Dimensions,double>&  x,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          stackNumber
-	) override {};
-	void destroyHangingVertexAndPopFromStack(
-      const tarch::la::Vector<Dimensions,double>&  x,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          stackNumber
-	) override {};
-	void createPersistentFaceAndPushOnStack(
-      const tarch::la::Vector<Dimensions,double>&  x,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-	  int                                          normal,
-      int                                          stackNumber
-	) override {};
-	void createHangingFaceAndPushOnStack(
-      const tarch::la::Vector<Dimensions,double>&  x,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-	  int                                          normal,
-      int                                          stackNumber
-	) override {};
-	void destroyPersistentFaceAndPopFromStack(
-      const tarch::la::Vector<Dimensions,double>&  x,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-	  int                                          normal,
-      int                                          stackNumber
-	) override {};
-	void destroyHangingFaceAndPopFromStack(
-      const tarch::la::Vector<Dimensions,double>&  x,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-	  int                                          normal,
-      int                                          stackNumber
-	) override {};
-	void createCellAndPushOnStack(
-      const tarch::la::Vector<Dimensions,double>&  x,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          stackNumber
-    ) override {};
-	void destroyCellAndPopFromStack(
-      const tarch::la::Vector<Dimensions,double>&  x,
-	  const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          stackNumber
-    ) override {};
 };
 
 #endif

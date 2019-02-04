@@ -48,29 +48,83 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
 ) {
   logTraceInWith1Argument("enterCell(...)",event.toString());
 
-  int inCellStack  = event.getCellData();
-  int outCellStack = peano4::grid::PeanoCurve::CallStack;
-  logDebug("enterCell(...)", "cell " << inCellStack << "->" << outCellStack );
-  CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
-  assertionVectorNumericalEquals4(data.x,event.getX(),data.value,event.toString(),data.x,data.h);
-  assertionVectorNumericalEquals4(data.h,event.getH(),data.value,event.toString(),data.x,data.h);
-  _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
+  // Vertex processing -> nop here
+  // =============================
 
+
+  // Face processing
+  // ===============
+  // @todo If there were vertices, then we would pass in vertices via an enumerator
   FaceDataContainer::PushBlockVertexStackView faceView = _faceData[ DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].pushBlock(Dimensions*2);
   for (int i=0; i<Dimensions*2; i++) {
     int inFaceStack  = event.getFaceDataFrom(i);
 	int outFaceStack = event.getFaceDataTo(i);
-    FaceData data = _faceData[ DataKey(_spacetreeId,inFaceStack) ].pop();
-    assertion4( tarch::la::allGreaterEquals(data.x,event.getX()-event.getH()/2.0,tarch::la::relativeEps(tarch::la::max(data.x),tarch::la::max(event.getH()))),data.x,data.h,event.toString(),event.getX()-event.getH()/2.0 );
-    assertion6(
-      tarch::la::allSmallerEquals(data.x,event.getX()+event.getH()/2.0,tarch::la::relativeEps(tarch::la::max(data.x),tarch::la::max(event.getH()))),
-	  data.x,data.h,event.toString(),event.getX()+event.getH()/2.0,
-	  (data.x(0)-event.getX()(0)-event.getH()(0)/2.0),
-	  (data.x(1)-event.getX()(1)-event.getH()(1)/2.0)
-	);
-	logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStack << ": " << data.x << "x" << data.h );
+    FaceData data;
+
+    tarch::la::Vector<Dimensions,double> x = event.getX();
+    int normal = outFaceStack % Dimensions;
+    x(normal) += outFaceStack >= Dimensions ? event.getH(normal)/2.0 : -event.getH(normal)/2.0;
+
+	logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStack );
+    if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {
+      _mapping.createPersistentFace(x,event.getH(),normal,data.value);
+      _mapping.touchFaceFirstTime(x,event.getH(),normal,data.value);
+      #if PeanoDebug>=1
+      data.x = x;
+      data.h = event.getH();
+      #endif
+    }
+    else if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {
+      _mapping.createHangingFace(x,event.getH(),normal,data.value);
+      _mapping.touchFaceFirstTime(x,event.getH(),normal,data.value);
+      #if PeanoDebug>=1
+      data.x = x;
+      data.h = event.getH();
+      #endif
+    }
+    else {
+      data = _faceData[ DataKey(_spacetreeId,inFaceStack) ].pop();
+      assertionVectorNumericalEquals4(data.x,x,event.toString(),normal,data.x,x );
+      assertionVectorNumericalEquals4(data.h,event.getH(),event.toString(),normal,data.x,x );
+      if (peano4::grid::PeanoCurve::isInOutStack(inFaceStack)) {
+        _mapping.touchFaceFirstTime(x,event.getH(),normal,data.value);
+      }
+    }
     faceView.set(outFaceStack,data);
   }
+
+  // @todo raus
+  for (int i=0; i<Dimensions*2; i++) {
+	logDebug( "enterCell()", "face " << i << ": " << faceView.get(i).x << "x" << faceView.get(i).h );
+  }
+
+  // Cell processing
+  // ===============
+  // @todo faces + enumerator
+  // @todo coarser level + enumerator
+  int inCellStack  = event.getCellData();
+  int outCellStack = peano4::grid::PeanoCurve::CallStack;
+  CellData data;
+  logDebug("enterCell(...)", "cell " << inCellStack << "->pos-" << outCellStack << ": " << data.x << "x" << data.h );
+  if (inCellStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {
+    _mapping.createCell(event.getX(),event.getH(),data.value);
+    #if PeanoDebug>=1
+    data.x = event.getX();
+    data.h = event.getH();
+    #endif
+  }
+  else {
+    data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
+  }
+  assertionVectorNumericalEquals4(data.x,event.getX(),data.value,event.toString(),data.x,data.h);
+  assertionVectorNumericalEquals4(data.h,event.getH(),data.value,event.toString(),data.x,data.h);
+  _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
+
+  // @todo Es gibt noch kein inside/outside hier, oder?
+  // @todo Enclaves fehlen halt auch noch
+
+  // @todo Ich will pointer durchreichen, aber nix auf dem Call-Stack
+  _mapping.touchCellFirstTime( event.getX(), event.getH(), data.value );
 
   logTraceOutWith1Argument("enterCell(...)",event.toString());
 }
@@ -81,23 +135,63 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
 ) {
   logTraceInWith1Argument("leaveCell(...)",event.toString());
 
+  // @todo Es gibt noch kein inside/outside hier, oder?
+  // @todo Enclaves fehlen halt auch noch
+
   int inCellStack   = peano4::grid::PeanoCurve::CallStack;
   int outCellStack  = event.getCellData();
   logDebug("leaveCell(...)", "cell " << inCellStack << "->" << outCellStack );
   CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
   assertionVectorNumericalEquals4(data.x,event.getX(),data.value,data.x,data.h,event.toString());
   assertionVectorNumericalEquals4(data.h,event.getH(),data.value,data.x,data.h,event.toString());
-  _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
 
+  // @todo Ich will pointer durchreichen, aber nix auf dem Call-Stack -> moves directly
+  _mapping.touchCellLastTime( event.getX(), event.getH(), data.value );
+
+  if (outCellStack==TraversalObserver::CreateOrDestroyPersistentGridEntity) {
+    _mapping.destroyCell(event.getX(),event.getH(),data.value);
+  }
+  else {
+    _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
+  }
+
+  // @todo Faces
   FaceDataContainer::PopBlockVertexStackView faceView = _faceData[ DataKey(_spacetreeId,peano4::grid::PeanoCurve::CallStack) ].popBlock(Dimensions*2);
+
+
+  // @todo raus
+  for (int i=0; i<Dimensions*2; i++) {
+	logDebug( "leaveCell()", "face " << i << ": " << faceView.get(i).x << "x" << faceView.get(i).h );
+  }
+
   for (int i=0; i<Dimensions*2; i++) {
     int inFaceStack  = event.getFaceDataFrom(i);
 	int outFaceStack = event.getFaceDataTo(i);
-    FaceData data = faceView.get(inFaceStack);
-    assertion3( tarch::la::allGreaterEquals(data.x,event.getX()-event.getH()/2.0,tarch::la::relativeEps(tarch::la::max(data.x),tarch::la::max(event.getH()))),data.x,data.h,event.toString() );
-    assertion3( tarch::la::allSmallerEquals(data.x,event.getX()+event.getH()/2.0,tarch::la::relativeEps(tarch::la::max(data.x),tarch::la::max(event.getH()))),data.x,data.h,event.toString() );
-	logDebug("leaveCell(...)", "face pos-" << inFaceStack << "->" << outFaceStack  << ": " << data.x << "x" << data.h);
-    _faceData[ DataKey(_spacetreeId,outFaceStack) ].push(data);
+
+	FaceData data = faceView.get(inFaceStack);
+	logDebug("leaveCell(...)", "face pos-" << inFaceStack << "->" << outFaceStack << ": " << data.x << "x" << data.h << "x" << data.value );
+
+    tarch::la::Vector<Dimensions,double> x = event.getX();
+    int normal = inFaceStack % Dimensions;
+    x(normal) += inFaceStack >= Dimensions ? event.getH(normal)/2.0 : -event.getH(normal)/2.0;
+
+    assertionVectorNumericalEquals4(data.x,x,event.toString(),normal,data.x,x );
+    assertionVectorNumericalEquals4(data.h,event.getH(),event.toString(),normal,data.x,x );
+
+    if (outFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {
+      _mapping.touchFaceLastTime(x,event.getH(),normal,data.value);
+      _mapping.destroyPersistentFace(x,event.getH(),normal,data.value);
+    }
+    else if (outFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {
+      _mapping.touchFaceLastTime(x,event.getH(),normal,data.value);
+      _mapping.destroyHangingFace(x,event.getH(),normal,data.value);
+    }
+    else {
+      if (peano4::grid::PeanoCurve::isInOutStack(outFaceStack)) {
+        _mapping.touchFaceLastTime(x,event.getH(),normal,data.value);
+      }
+      _faceData[ DataKey(_spacetreeId,outFaceStack) ].push(data);
+    }
   }
 
   logTraceOutWith1Argument("leaveCell(...)",event.toString());
@@ -144,161 +238,3 @@ std::vector< peano4::grid::GridControlEvent > examples::integerdiffusionthroughf
   return controlEvents;
 }
 
-void examples::integerdiffusionthroughfaces::MyObserver::createPersistentVertexAndPushOnStack(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          stackNumber
-) {
-
-}
-
-
-void examples::integerdiffusionthroughfaces::MyObserver::createHangingVertexAndPushOnStack(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          stackNumber
-) {
-
-}
-
-
-void examples::integerdiffusionthroughfaces::MyObserver::destroyPersistentVertexAndPopFromStack(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          stackNumber
-) {
-
-}
-
-
-void examples::integerdiffusionthroughfaces::MyObserver::destroyHangingVertexAndPopFromStack(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          stackNumber
-) {
-
-}
-
-
-void examples::integerdiffusionthroughfaces::MyObserver::createPersistentFaceAndPushOnStack(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          normal,
-  int                                          stackNumber
-) {
-  logTraceInWith4Arguments( "createPersistentFaceAndPushOnStack(...)", x, h, normal, stackNumber );
-
-  FaceData data;
-  #if PeanoDebug>0
-  data.x = x;
-  data.h = h;
-  #endif
-  _mapping.createPersistentFace( x, h, normal, data.value );
-  DataKey key(_spacetreeId,stackNumber);
-  if ( _faceData.count(key)==0 ) {
-    _faceData.insert( std::pair< DataKey, FaceDataContainer >(key, FaceDataContainer()) );
-  }
-  _faceData[key].push(data);
-
-  logTraceOutWith5Arguments( "createPersistentFaceAndPushOnStack(...)", x, h, normal, stackNumber, data.value );
-}
-
-
-void examples::integerdiffusionthroughfaces::MyObserver::createHangingFaceAndPushOnStack(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          normal,
-  int                                          stackNumber
-) {
-  logTraceInWith4Arguments( "createHangingFaceAndPushOnStack(...)", x, h, normal, stackNumber );
-
-  FaceData data;
-  #if PeanoDebug>0
-  data.x = x;
-  data.h = h;
-  #endif
-  _mapping.createHangingFace( x, h, normal, data.value );
-  DataKey key(_spacetreeId,stackNumber);
-  if ( _faceData.count(key)==0 ) {
-    _faceData.insert( std::pair< DataKey, FaceDataContainer >(key, FaceDataContainer()) );
-  }
-  _faceData[key].push(data);
-
-  logTraceOutWith5Arguments( "createHangingFaceAndPushOnStack(...)", x, h, normal, stackNumber, data.value );
-}
-
-
-void examples::integerdiffusionthroughfaces::MyObserver::destroyPersistentFaceAndPopFromStack(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          normal,
-  int                                          stackNumber
-) {
-  logTraceInWith4Arguments( "destroyPersistentFaceAndPopFromStack(...)", x, h, normal, stackNumber );
-  DataKey key(_spacetreeId,stackNumber);
-  FaceData data = _faceData[key].pop();
-  #if PeanoDebug>0
-  data.x = x;
-  data.h = h;
-  #endif
-  _mapping.destroyPersistentFace( x, h, normal, data.value );
-  logTraceOutWith4Arguments( "destroyPersistentFaceAndPopFromStack(...)", x, h, normal, stackNumber );
-}
-
-
-void examples::integerdiffusionthroughfaces::MyObserver::destroyHangingFaceAndPopFromStack(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          normal,
-  int                                          stackNumber
-) {
-  logTraceInWith4Arguments( "destroyHangingFaceAndPopFromStack(...)", x, h, normal, stackNumber );
-  DataKey key(_spacetreeId,stackNumber);
-  FaceData data = _faceData[key].pop();
-  #if PeanoDebug>0
-  data.x = x;
-  data.h = h;
-  #endif
-  _mapping.destroyHangingFace( x, h, normal, data.value );
-  logTraceOutWith4Arguments( "destroyHangingFaceAndPopFromStack(...)", x, h, normal, stackNumber );
-}
-
-
-void examples::integerdiffusionthroughfaces::MyObserver::createCellAndPushOnStack(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          stackNumber
-) {
-  logTraceInWith3Arguments( "createCellAndPushOnStack(...)", x, h, stackNumber );
-
-  CellData data;
-  #if PeanoDebug>0
-  data.x = x;
-  data.h = h;
-  #endif
-  _mapping.createCell( x, h, data.value );
-  DataKey key(_spacetreeId,stackNumber);
-  if ( _cellData.count(key)==0 ) {
-    _cellData.insert( std::pair< DataKey, FaceDataContainer >(key, FaceDataContainer()) );
-  }
-  _cellData[key].push(data);
-
-  logTraceOutWith4Arguments( "createCellAndPushOnStack(...)", x, h, stackNumber, data.value );
-}
-
-
-void examples::integerdiffusionthroughfaces::MyObserver::destroyCellAndPopFromStack(
-  const tarch::la::Vector<Dimensions,double>&  x,
-  const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          stackNumber
-) {
-  logTraceInWith3Arguments( "destroyCellAndPopFromStack(...)", x, h, stackNumber );
-  DataKey key(_spacetreeId,stackNumber);
-  CellData data = _cellData[key].pop();
-  #if PeanoDebug>0
-  data.x = x;
-  data.h = h;
-  #endif
-  _mapping.destroyCell( x, h, data.value );
-  logTraceOutWith3Arguments( "destroyCellAndPopFromStack(...)", x, h, stackNumber );
-}

@@ -6,6 +6,7 @@
 
 #include "peano4/utils/Globals.h"
 #include "tarch/la/Vector.h"
+#include "tarch/logging/Log.h"
 
 
 namespace examples {
@@ -23,6 +24,8 @@ namespace examples {
  * these mappings. Well, at least the header.
  */
 class examples::integerdiffusionthroughfaces::MyMapping {
+  private:
+	static tarch::logging::Log   _log;
   public:
 	void createPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
@@ -81,13 +84,13 @@ class examples::integerdiffusionthroughfaces::MyMapping {
 	/**
 	 * @todo Jetzt kommen aber die Enumeratoren rein hier fuer die Faces und Vertices
 	 */
-	void enterCell(
+	void touchCellFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  int&                                         data
     );
 
-	void leaveCell(
+	void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  int&                                         data

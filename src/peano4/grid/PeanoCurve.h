@@ -106,6 +106,11 @@ class peano4::grid::PeanoCurve {
      * deriving this scheme is simple: you get the first vertex and then you xor
      * the vertex numbers. Here, this is not possible, i.e. for faces users have
      * to go through this routine.
+     *
+     * Constructing a face enumeration is in principle similar to the vertex
+     * numbers. We start with our normalised enumeration as sketched above. Then
+     * we look at the even flags of the cell. For every even flag not set (odd
+     * numbers), we invert the enumerations along all other normals.
      */
     static int getFaceNumberAlongCurve(const AutomatonState& cell, int logicalFaceNumber );
 

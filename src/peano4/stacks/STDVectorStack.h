@@ -170,6 +170,14 @@ class peano4::stacks::STDVectorStack {
           _stack->_data[_baseElement+index] = value;
         }
 
+        #if PeanoDebug>=1
+        T get(int index) const {
+          assertion2( index>=0, index, _size );
+          assertion2( index<_size, index, _size );
+          return _stack->_data[_baseElement+index];
+        }
+        #endif
+
         std::string toString() const {
           std::ostringstream msg;
           msg << "(size=" << _size
@@ -210,11 +218,10 @@ class peano4::stacks::STDVectorStack {
      * @return Pointer to block. Your are responsible to delete this view afterwards.
      */
     PopBlockVertexStackView  popBlock(int numberOfVertices) {
-      PopBlockVertexStackView result(numberOfVertices, _currentElement, this);
-
       _currentElement-=numberOfVertices;
       assertion( _currentElement>=0 );
 
+      PopBlockVertexStackView result(numberOfVertices, _currentElement, this);
       return result;
     }
 

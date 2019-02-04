@@ -11,7 +11,7 @@ Constant: TwoPowerD;
 class peano4::grid::GridVertex {
   enum State {
     HangingVertex,
-    Unrefined,Refined,RefinementTriggered,Refining,EraseTriggered,Erasing
+    New,Unrefined,Refined,RefinementTriggered,Refining,EraseTriggered,Erasing,Delete
   };
   
   persistent packed parallelise packed State  state;

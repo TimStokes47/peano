@@ -11,6 +11,7 @@
 #include <string>
 
 
+
 tarch::logging::Log  peano4::grid::TraversalVTKPlotter::_log( "peano4::grid::TraversalVTKPlotter" );
 
 

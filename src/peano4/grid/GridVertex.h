@@ -29,7 +29,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   18/01/2019 12:11
+    * @date   31/01/2019 20:42
     */
    class peano4::grid::GridVertex { 
       
@@ -38,7 +38,7 @@ namespace peano4 {
          typedef peano4::grid::GridVertexPacked Packed;
          
          enum State {
-            HangingVertex = 0, Unrefined = 1, Refined = 2, RefinementTriggered = 3, Refining = 4, EraseTriggered = 5, Erasing = 6
+            HangingVertex = 0, New = 1, Unrefined = 2, Refined = 3, RefinementTriggered = 4, Refining = 5, EraseTriggered = 6, Erasing = 7, Delete = 8
          };
          
          struct PersistentRecords {
@@ -243,7 +243,7 @@ namespace peano4 {
     *
     * 		   build date: 09-02-2014 14:40
     *
-    * @date   18/01/2019 12:11
+    * @date   31/01/2019 20:42
     */
    class peano4::grid::GridVertexPacked { 
       
@@ -256,9 +256,9 @@ namespace peano4 {
             
             /** mapping of records:
             || Member 	|| startbit 	|| length
-             |  state	| startbit 0	| #bits 3
-             |  hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep	| startbit 3	| #bits 1
-             |  isAntecessorOfRefinedVertexInCurrentTreeSweep	| startbit 4	| #bits 1
+             |  state	| startbit 0	| #bits 4
+             |  hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep	| startbit 4	| #bits 1
+             |  isAntecessorOfRefinedVertexInCurrentTreeSweep	| startbit 5	| #bits 1
              */
             short int _packedRecords0;
             
@@ -460,7 +460,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   18/01/2019 12:11
+       * @date   31/01/2019 20:42
        */
       class peano4::grid::GridVertex { 
          
@@ -469,7 +469,7 @@ namespace peano4 {
             typedef peano4::grid::GridVertexPacked Packed;
             
             enum State {
-               HangingVertex = 0, Unrefined = 1, Refined = 2, RefinementTriggered = 3, Refining = 4, EraseTriggered = 5, Erasing = 6
+               HangingVertex = 0, New = 1, Unrefined = 2, Refined = 3, RefinementTriggered = 4, Refining = 5, EraseTriggered = 6, Erasing = 7, Delete = 8
             };
             
             struct PersistentRecords {
@@ -708,7 +708,7 @@ namespace peano4 {
        *
        * 		   build date: 09-02-2014 14:40
        *
-       * @date   18/01/2019 12:11
+       * @date   31/01/2019 20:42
        */
       class peano4::grid::GridVertexPacked { 
          
@@ -723,9 +723,9 @@ namespace peano4 {
                
                /** mapping of records:
                || Member 	|| startbit 	|| length
-                |  state	| startbit 0	| #bits 3
-                |  hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep	| startbit 3	| #bits 1
-                |  isAntecessorOfRefinedVertexInCurrentTreeSweep	| startbit 4	| #bits 1
+                |  state	| startbit 0	| #bits 4
+                |  hasBeenAntecessorOfRefinedVertexInPreviousTreeSweep	| startbit 4	| #bits 1
+                |  isAntecessorOfRefinedVertexInCurrentTreeSweep	| startbit 5	| #bits 1
                 */
                short int _packedRecords0;
                
