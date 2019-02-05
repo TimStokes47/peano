@@ -27,21 +27,16 @@ namespace tarch {
  * directly, but always via a proxy/accessor. This proxy either invokes the
  * service directly (if the services are on the local node) or it creates an
  * MPI call to the real service. Consequently, services have to poll the MPI
- * queue regulary. To enable them to do so, all services register at the
+ * queue regularly. To enable them to do so, all services register at the
  * service repository, and this service repository has a poll operation.
  * Services also have to be protected by semaphores in a multicore environment.
  *
  * If you wanna write a service yourself, you have to do two things:
- * - Implement this interface with a class that is a singleton, i.e. it only
- *   has private constructors and a static getInstance() operation.
- * - Add a statement \code
-#include "tarch/services/ServiceFactory.h"
-registerService(full-qualified-class-name-of-service)
-\endcode
- *   to your implementation file.
+ * - Implement this interface.
+ * - Register your object through tarch::services::ServiceRepository::getInstance().addService().
  *
- * The latter creates the singleton instance and registers the service at the
- * service repository.
+ * I usually make services singletons. I can then do the registration in the
+ * constructor.
  *
  * @author Tobias Weinzierl
  */

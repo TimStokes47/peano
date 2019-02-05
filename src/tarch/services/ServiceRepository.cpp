@@ -51,6 +51,7 @@ bool tarch::services::ServiceRepository::hasService( Service* service ) const {
 void tarch::services::ServiceRepository::receiveDanglingMessages() {
   tarch::multicore::RecursiveLock lock(Service::receiveDanglingMessagesSemaphore);
 
+  std::cout << "s:" << _services.size();
   for (
       ServiceContainer::iterator p = _services.begin();
       p != _services.end();

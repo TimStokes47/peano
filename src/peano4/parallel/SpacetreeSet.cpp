@@ -10,16 +10,14 @@
 #include "tarch/mpi/Rank.h"
 
 
-
-#include "tarch/services/ServiceFactory.h"
-registerService(peano4::parallel::SpacetreeSet)
+#include "tarch/services/ServiceRepository.h"
 
 
 tarch::logging::Log peano4::parallel::SpacetreeSet::_log( "peano4::parallel::SpacetreeSet" );
 
 
 peano4::parallel::SpacetreeSet::SpacetreeSet() {
-
+  tarch::services::ServiceRepository::getInstance().addService( this, "peano4::parallel::SpacetreeSet" );
 }
 
 
@@ -57,6 +55,15 @@ peano4::parallel::SpacetreeSet::~SpacetreeSet() {
 
 
 void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
+	  std::cout << "@";
+  if (peano4::parallel::TreeManagementMessage::isMessageInQueue(peano4::parallel::Node::getInstance().getTreeManagementTag(),true)) {
+	  // @todo Hier geht er net rein. Warum?
+    assertionMsg( false, "got a message" );
+  }
+/*
+    peano4::parallel::TreeManagementMessage message(treeId,peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree);
+    message.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+*/
 
 }
 
