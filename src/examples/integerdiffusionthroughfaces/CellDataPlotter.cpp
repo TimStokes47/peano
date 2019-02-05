@@ -29,7 +29,6 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::beginTraversal() {
 
 
 void examples::integerdiffusionthroughfaces::CellDataPlotter::endTraversal() {
-	std::cout  << std::endl<< "@@@@@@@@@" << std::endl;
   _vertexWriter->close();
   _cellWriter->close();
   _dataWriter->close();

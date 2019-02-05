@@ -12,8 +12,7 @@
 #include <map>
 
 
-#include "MyMapping.h"
-#include "CompositeMapping.h"
+#include "Mapping.h"
 #include "FaceData.h"
 #include "CellData.h"
 
@@ -51,13 +50,14 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
 	static std::map< DataKey, FaceDataContainer >   _faceData;
 	static std::map< DataKey, CellDataContainer >   _cellData;
 
-    #if PeanoDebug>0
-	CompositeMapping                         _mapping;
-    #else
-	MyMapping                                _mapping;
-    #endif
+	/**
+	 * All observers share one mapping, i.e. you have to make it thread-safe
+	 */
+	Mapping*                                _mapping;
   public:
-	MyObserver(int spacetreeId = -1, int counter=0);
+	MyObserver();
+	MyObserver(int spacetreeId, int counter, Mapping* mapping);
+	~MyObserver();
 
 	virtual void beginTraversal() override;
 	virtual void endTraversal() override;

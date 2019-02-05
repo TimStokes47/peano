@@ -1,5 +1,8 @@
 #include "MyObserver.h"
+
 #include "CellDataPlotter.h"
+#include "MyMapping.h"
+#include "CompositeMapping.h"
 
 #include "peano4/grid/GridControlEvent.h"
 #include "peano4/grid/GridTraversalEvent.h"
@@ -14,20 +17,35 @@ std::map< examples::integerdiffusionthroughfaces::MyObserver::DataKey, examples:
 std::map< examples::integerdiffusionthroughfaces::MyObserver::DataKey, examples::integerdiffusionthroughfaces::MyObserver::CellDataContainer >   examples::integerdiffusionthroughfaces::MyObserver::_cellData;
 
 
-examples::integerdiffusionthroughfaces::MyObserver::MyObserver(int spacetreeId, int counter):
-  _spacetreeId(spacetreeId),
-  _iterationCounter(counter)
-  {
+examples::integerdiffusionthroughfaces::MyObserver::MyObserver():
+  _spacetreeId(-1),
+  _iterationCounter(-1) {
   #if PeanoDebug>0
-  _mapping.append( new MyMapping() );
-  _mapping.append( new CellDataPlotter() );
+  CompositeMapping* mapping = new CompositeMapping();
+  mapping->append( new MyMapping() );
+  mapping->append( new CellDataPlotter() );
+  _mapping = mapping;
+  #else
+  _mapping = new MyMapping();
   #endif
+}
+
+
+examples::integerdiffusionthroughfaces::MyObserver::MyObserver(int spacetreeId, int counter, Mapping* mapping):
+  _spacetreeId(spacetreeId),
+  _iterationCounter(counter),
+  _mapping(mapping) {
+}
+
+
+examples::integerdiffusionthroughfaces::MyObserver::~MyObserver() {
+  delete _mapping;
 }
 
 
 void examples::integerdiffusionthroughfaces::MyObserver::beginTraversal() {
   _iterationCounter++;
-  _mapping.beginTraversal();
+  _mapping->beginTraversal();
 }
 
 
@@ -46,7 +64,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::endTraversal() {
 	logDebug( "endTraversal()", "cell stack (" << p.first.first << "," << p.first.second << "): " << p.second.size() << " entries" );
   }
   #endif
-  _mapping.endTraversal();
+  _mapping->endTraversal();
 }
 
 
@@ -74,16 +92,16 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
 
 	logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStack );
     if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {
-      _mapping.createPersistentFace(x,event.getH(),normal,data.value);
-      _mapping.touchFaceFirstTime(x,event.getH(),normal,data.value);
+      _mapping->createPersistentFace(x,event.getH(),normal,data.value);
+      _mapping->touchFaceFirstTime(x,event.getH(),normal,data.value);
       #if PeanoDebug>=1
       data.x = x;
       data.h = event.getH();
       #endif
     }
     else if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {
-      _mapping.createHangingFace(x,event.getH(),normal,data.value);
-      _mapping.touchFaceFirstTime(x,event.getH(),normal,data.value);
+      _mapping->createHangingFace(x,event.getH(),normal,data.value);
+      _mapping->touchFaceFirstTime(x,event.getH(),normal,data.value);
       #if PeanoDebug>=1
       data.x = x;
       data.h = event.getH();
@@ -94,7 +112,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
       assertionVectorNumericalEquals4(data.x,x,event.toString(),normal,data.x,x );
       assertionVectorNumericalEquals4(data.h,event.getH(),event.toString(),normal,data.x,x );
       if (peano4::grid::PeanoCurve::isInOutStack(inFaceStack)) {
-        _mapping.touchFaceFirstTime(x,event.getH(),normal,data.value);
+        _mapping->touchFaceFirstTime(x,event.getH(),normal,data.value);
       }
     }
     faceView.set(outFaceStack,data);
@@ -114,7 +132,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   CellData data;
   logDebug("enterCell(...)", "cell " << inCellStack << "->pos-" << outCellStack << ": " << data.x << "x" << data.h );
   if (inCellStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {
-    _mapping.createCell(event.getX(),event.getH(),data.value);
+    _mapping->createCell(event.getX(),event.getH(),data.value);
     #if PeanoDebug>=1
     data.x = event.getX();
     data.h = event.getH();
@@ -131,7 +149,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   // @todo Enclaves fehlen halt auch noch
 
   // @todo Ich will pointer durchreichen, aber nix auf dem Call-Stack
-  _mapping.touchCellFirstTime( event.getX(), event.getH(), data.value );
+  _mapping->touchCellFirstTime( event.getX(), event.getH(), data.value );
 
   logTraceOutWith1Argument("enterCell(...)",event.toString());
 }
@@ -153,10 +171,10 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
   assertionVectorNumericalEquals4(data.h,event.getH(),data.value,data.x,data.h,event.toString());
 
   // @todo Ich will pointer durchreichen, aber nix auf dem Call-Stack -> moves directly
-  _mapping.touchCellLastTime( event.getX(), event.getH(), data.value );
+  _mapping->touchCellLastTime( event.getX(), event.getH(), data.value );
 
   if (outCellStack==TraversalObserver::CreateOrDestroyPersistentGridEntity) {
-    _mapping.destroyCell(event.getX(),event.getH(),data.value);
+    _mapping->destroyCell(event.getX(),event.getH(),data.value);
   }
   else {
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
@@ -186,16 +204,16 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
     assertionVectorNumericalEquals4(data.h,event.getH(),event.toString(),normal,data.x,x );
 
     if (outFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {
-      _mapping.touchFaceLastTime(x,event.getH(),normal,data.value);
-      _mapping.destroyPersistentFace(x,event.getH(),normal,data.value);
+      _mapping->touchFaceLastTime(x,event.getH(),normal,data.value);
+      _mapping->destroyPersistentFace(x,event.getH(),normal,data.value);
     }
     else if (outFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {
-      _mapping.touchFaceLastTime(x,event.getH(),normal,data.value);
-      _mapping.destroyHangingFace(x,event.getH(),normal,data.value);
+      _mapping->touchFaceLastTime(x,event.getH(),normal,data.value);
+      _mapping->destroyHangingFace(x,event.getH(),normal,data.value);
     }
     else {
       if (peano4::grid::PeanoCurve::isInOutStack(outFaceStack)) {
-        _mapping.touchFaceLastTime(x,event.getH(),normal,data.value);
+        _mapping->touchFaceLastTime(x,event.getH(),normal,data.value);
       }
       _faceData[ DataKey(_spacetreeId,outFaceStack) ].push(data);
     }
@@ -206,7 +224,7 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
 
 
 peano4::grid::TraversalObserver* examples::integerdiffusionthroughfaces::MyObserver::clone(int spacetreeId) {
-  return new MyObserver( spacetreeId, _iterationCounter );
+  return new MyObserver( spacetreeId, _iterationCounter, _mapping );
 }
 
 
