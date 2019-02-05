@@ -5,6 +5,7 @@
 
 
 #include "tarch/logging/Log.h"
+#include "tarch/services/Service.h"
 #include "peano4/grid/Spacetree.h"
 #include "peano4/grid/TraversalObserver.h"
 #include "tarch/multicore/Tasks.h"
@@ -24,9 +25,12 @@ namespace peano4 {
 
 
 /**
+ * The spacetree set has to be a singleton, as it is reponsible to accept
+ * requests for new trees from remote ranks. So there is only one set.
+ *
  * @author Tobias Weinzierl
  */
-class peano4::parallel::SpacetreeSet {
+class peano4::parallel::SpacetreeSet: public tarch::services::Service {
   private:
 	friend class peano4::grid::Spacetree;
 
@@ -111,16 +115,23 @@ class peano4::parallel::SpacetreeSet {
     void join(int treeId);
 
     void cleanUpTrees();
+
+    SpacetreeSet();
+
   public:
+    ~SpacetreeSet();
+
+    static SpacetreeSet& getInstance();
+
+    void receiveDanglingMessages() override;
+
     /**
      *
      */
-    SpacetreeSet(
+    void init(
       const tarch::la::Vector<Dimensions,double>&  offset,
       const tarch::la::Vector<Dimensions,double>&  width
     );
-
-    ~SpacetreeSet();
 
     /**
      * Invoke traverse on all spacetrees in parallel.

@@ -10,14 +10,36 @@
 #include "tarch/mpi/Rank.h"
 
 
+
+#include "tarch/services/ServiceFactory.h"
+registerService(peano4::parallel::SpacetreeSet)
+
+
 tarch::logging::Log peano4::parallel::SpacetreeSet::_log( "peano4::parallel::SpacetreeSet" );
 
 
-peano4::parallel::SpacetreeSet::SpacetreeSet(
+peano4::parallel::SpacetreeSet::SpacetreeSet() {
+
+}
+
+
+peano4::parallel::SpacetreeSet&  peano4::parallel::SpacetreeSet::getInstance() {
+  static peano4::parallel::SpacetreeSet singleton;
+  return singleton;
+}
+
+
+void peano4::parallel::SpacetreeSet::init(
   const tarch::la::Vector<Dimensions,double>&  offset,
   const tarch::la::Vector<Dimensions,double>&  width
 ) {
-  assertionEquals( peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees(), 1 );
+  assertion4(
+    (peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees()==1 and tarch::mpi::Rank::getInstance().getRank()==0)
+	or
+    (peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees()==0 and tarch::mpi::Rank::getInstance().getRank()!=0),
+	peano4::parallel::Node::getInstance().getNumberOfRegisteredTrees(),
+	offset, width, tarch::mpi::Rank::getInstance().getRank()
+  );
 
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     peano4::grid::Spacetree spacetree( offset, width );
@@ -31,6 +53,11 @@ peano4::parallel::SpacetreeSet::~SpacetreeSet() {
     peano4::parallel::Node::getInstance().setNextProgramStep(peano4::parallel::Node::Terminate);
     peano4::parallel::Node::getInstance().continueToRun();
   }
+}
+
+
+void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
+
 }
 
 
@@ -112,7 +139,6 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       );
 
       assertion3( _spacetree._id != targetId,                   _spacetree._id, targetId, targetStack);
-      // @todo Der ging schief
       if( not targetTree._vertexStack[targetStack].empty() ) {
         assertion6( targetTree._vertexStack[targetStack].empty(), _spacetree._id, targetId, targetStack,  targetTree._vertexStack[targetStack].size(), targetTree._vertexStack[targetStack].pop().toString(), sourceStack->second.size() );
       }
@@ -336,6 +362,7 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
     // Der insert ist dann aber ne separate Message, also die gleiche Message aber anderer Content
     if (tarch::mpi::Rank::getInstance().getRank()!=targetRank) {
       #ifdef Parallel
+      logDebug( "split(int,int,int)", "request new tree on rank " << targetRank );
       peano4::parallel::TreeManagementMessage message(treeId,peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree);
       message.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
