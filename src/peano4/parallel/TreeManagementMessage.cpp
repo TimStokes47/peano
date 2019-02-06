@@ -5,21 +5,34 @@ peano4::parallel::TreeManagementMessage::PersistentRecords::PersistentRecords() 
 }
 
 
-peano4::parallel::TreeManagementMessage::PersistentRecords::PersistentRecords(const int& spacetreeId, const Action& action):
-_spacetreeId(spacetreeId),
+peano4::parallel::TreeManagementMessage::PersistentRecords::PersistentRecords(const int& masterSpacetreeId, const int& workerSpacetreeId, const Action& action):
+_masterSpacetreeId(masterSpacetreeId),
+_workerSpacetreeId(workerSpacetreeId),
 _action(action) {
    
 }
 
 
- int peano4::parallel::TreeManagementMessage::PersistentRecords::getSpacetreeId() const  {
-   return _spacetreeId;
+ int peano4::parallel::TreeManagementMessage::PersistentRecords::getMasterSpacetreeId() const  {
+   return _masterSpacetreeId;
 }
 
 
 
- void peano4::parallel::TreeManagementMessage::PersistentRecords::setSpacetreeId(const int& spacetreeId)  {
-   _spacetreeId = spacetreeId;
+ void peano4::parallel::TreeManagementMessage::PersistentRecords::setMasterSpacetreeId(const int& masterSpacetreeId)  {
+   _masterSpacetreeId = masterSpacetreeId;
+}
+
+
+
+ int peano4::parallel::TreeManagementMessage::PersistentRecords::getWorkerSpacetreeId() const  {
+   return _workerSpacetreeId;
+}
+
+
+
+ void peano4::parallel::TreeManagementMessage::PersistentRecords::setWorkerSpacetreeId(const int& workerSpacetreeId)  {
+   _workerSpacetreeId = workerSpacetreeId;
 }
 
 
@@ -41,13 +54,13 @@ peano4::parallel::TreeManagementMessage::TreeManagementMessage() {
 
 
 peano4::parallel::TreeManagementMessage::TreeManagementMessage(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._spacetreeId, persistentRecords._action) {
+_persistentRecords(persistentRecords._masterSpacetreeId, persistentRecords._workerSpacetreeId, persistentRecords._action) {
    
 }
 
 
-peano4::parallel::TreeManagementMessage::TreeManagementMessage(const int& spacetreeId, const Action& action):
-_persistentRecords(spacetreeId, action) {
+peano4::parallel::TreeManagementMessage::TreeManagementMessage(const int& masterSpacetreeId, const int& workerSpacetreeId, const Action& action):
+_persistentRecords(masterSpacetreeId, workerSpacetreeId, action) {
    
 }
 
@@ -55,14 +68,26 @@ _persistentRecords(spacetreeId, action) {
 peano4::parallel::TreeManagementMessage::~TreeManagementMessage() { }
 
 
- int peano4::parallel::TreeManagementMessage::getSpacetreeId() const  {
-   return _persistentRecords._spacetreeId;
+ int peano4::parallel::TreeManagementMessage::getMasterSpacetreeId() const  {
+   return _persistentRecords._masterSpacetreeId;
 }
 
 
 
- void peano4::parallel::TreeManagementMessage::setSpacetreeId(const int& spacetreeId)  {
-   _persistentRecords._spacetreeId = spacetreeId;
+ void peano4::parallel::TreeManagementMessage::setMasterSpacetreeId(const int& masterSpacetreeId)  {
+   _persistentRecords._masterSpacetreeId = masterSpacetreeId;
+}
+
+
+
+ int peano4::parallel::TreeManagementMessage::getWorkerSpacetreeId() const  {
+   return _persistentRecords._workerSpacetreeId;
+}
+
+
+
+ void peano4::parallel::TreeManagementMessage::setWorkerSpacetreeId(const int& workerSpacetreeId)  {
+   _persistentRecords._workerSpacetreeId = workerSpacetreeId;
 }
 
 
@@ -82,12 +107,13 @@ std::string peano4::parallel::TreeManagementMessage::toString(const Action& para
    switch (param) {
       case RequestNewRemoteTree: return "RequestNewRemoteTree";
       case BookedNewRemoteTree: return "BookedNewRemoteTree";
+      case CreateNewRemoteTree: return "CreateNewRemoteTree";
    }
    return "undefined";
 }
 
 std::string peano4::parallel::TreeManagementMessage::getActionMapping() {
-   return "Action(RequestNewRemoteTree=0,BookedNewRemoteTree=1)";
+   return "Action(RequestNewRemoteTree=0,BookedNewRemoteTree=1,CreateNewRemoteTree=2)";
 }
 
 
@@ -99,7 +125,9 @@ std::string peano4::parallel::TreeManagementMessage::toString() const {
 
 void peano4::parallel::TreeManagementMessage::toString (std::ostream& out) const {
    out << "("; 
-   out << "spacetreeId:" << getSpacetreeId();
+   out << "masterSpacetreeId:" << getMasterSpacetreeId();
+   out << ",";
+   out << "workerSpacetreeId:" << getWorkerSpacetreeId();
    out << ",";
    out << "action:" << toString(getAction());
    out <<  ")";
@@ -112,7 +140,8 @@ peano4::parallel::TreeManagementMessage::PersistentRecords peano4::parallel::Tre
 
 peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMessage::convert() const{
    return TreeManagementMessagePacked(
-      getSpacetreeId(),
+      getMasterSpacetreeId(),
+      getWorkerSpacetreeId(),
       getAction()
    );
 }
@@ -129,15 +158,16 @@ peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMe
          TreeManagementMessage dummyTreeManagementMessage[16];
          
          #ifdef MPI2
-         const int Attributes = 2;
+         const int Attributes = 3;
          #else
-         const int Attributes = 2+2;
+         const int Attributes = 3+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
               MPI_LB,
             #endif
-              MPI_INT		 //spacetreeId
+              MPI_INT		 //masterSpacetreeId
+            , MPI_INT		 //workerSpacetreeId
             , MPI_INT		 //action
             #ifndef MPI2
             , MPI_UB
@@ -149,7 +179,8 @@ peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMe
             #ifndef MPI2
             1, // lower bound
             #endif
-              1		 //spacetreeId
+              1		 //masterSpacetreeId
+            , 1		 //workerSpacetreeId
             , 1		 //action
             #ifndef MPI2
             , 1 // upper bound
@@ -165,9 +196,15 @@ peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMe
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._spacetreeId))), 		&disp[currentAddress] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._masterSpacetreeId))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._spacetreeId))), 		&disp[currentAddress] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._masterSpacetreeId))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._workerSpacetreeId))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._workerSpacetreeId))), 		&disp[currentAddress] );
          #endif
          currentAddress++;
          #ifdef MPI2
@@ -212,15 +249,16 @@ peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMe
          TreeManagementMessage dummyTreeManagementMessage[16];
          
          #ifdef MPI2
-         const int Attributes = 2;
+         const int Attributes = 3;
          #else
-         const int Attributes = 2+2;
+         const int Attributes = 3+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
               MPI_LB,
             #endif
-              MPI_INT		 //spacetreeId
+              MPI_INT		 //masterSpacetreeId
+            , MPI_INT		 //workerSpacetreeId
             , MPI_INT		 //action
             #ifndef MPI2
             , MPI_UB
@@ -232,7 +270,8 @@ peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMe
             #ifndef MPI2
             1, // lower bound
             #endif
-              1		 //spacetreeId
+              1		 //masterSpacetreeId
+            , 1		 //workerSpacetreeId
             , 1		 //action
             #ifndef MPI2
             , 1 // upper bound
@@ -248,9 +287,15 @@ peano4::parallel::TreeManagementMessagePacked peano4::parallel::TreeManagementMe
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._spacetreeId))), 		&disp[currentAddress] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._masterSpacetreeId))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._spacetreeId))), 		&disp[currentAddress] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._masterSpacetreeId))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._workerSpacetreeId))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessage[0]._persistentRecords._workerSpacetreeId))), 		&disp[currentAddress] );
          #endif
          currentAddress++;
          #ifdef MPI2
@@ -402,7 +447,7 @@ switch (mode) {
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::TreeManagementMessage from node " 
+        msg << "failed to start to receive peano4::parallel::TreeManagementMessage from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -422,7 +467,7 @@ switch (mode) {
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::TreeManagementMessage from node " 
+        msg << "failed to start to receive peano4::parallel::TreeManagementMessage from rank " 
              << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -509,7 +554,7 @@ switch (mode) {
       result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::TreeManagementMessage from node " 
+        msg << "failed to start to receive peano4::parallel::TreeManagementMessage from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -556,55 +601,68 @@ switch (mode) {
 
 
 peano4::parallel::TreeManagementMessagePacked::PersistentRecords::PersistentRecords() {
-   if ((1 >= (8 * sizeof(short int)))) {
+   if ((2 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((1 < (8 * sizeof(short int))));
+   assertion((2 < (8 * sizeof(short int))));
    
 }
 
 
-peano4::parallel::TreeManagementMessagePacked::PersistentRecords::PersistentRecords(const int& spacetreeId, const Action& action):
-_spacetreeId(spacetreeId) {
+peano4::parallel::TreeManagementMessagePacked::PersistentRecords::PersistentRecords(const int& masterSpacetreeId, const int& workerSpacetreeId, const Action& action):
+_masterSpacetreeId(masterSpacetreeId),
+_workerSpacetreeId(workerSpacetreeId) {
    setAction(action);
-   if ((1 >= (8 * sizeof(short int)))) {
+   if ((2 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((1 < (8 * sizeof(short int))));
+   assertion((2 < (8 * sizeof(short int))));
    
 }
 
 
- int peano4::parallel::TreeManagementMessagePacked::PersistentRecords::getSpacetreeId() const  {
-   return _spacetreeId;
+ int peano4::parallel::TreeManagementMessagePacked::PersistentRecords::getMasterSpacetreeId() const  {
+   return _masterSpacetreeId;
 }
 
 
 
- void peano4::parallel::TreeManagementMessagePacked::PersistentRecords::setSpacetreeId(const int& spacetreeId)  {
-   _spacetreeId = spacetreeId;
+ void peano4::parallel::TreeManagementMessagePacked::PersistentRecords::setMasterSpacetreeId(const int& masterSpacetreeId)  {
+   _masterSpacetreeId = masterSpacetreeId;
+}
+
+
+
+ int peano4::parallel::TreeManagementMessagePacked::PersistentRecords::getWorkerSpacetreeId() const  {
+   return _workerSpacetreeId;
+}
+
+
+
+ void peano4::parallel::TreeManagementMessagePacked::PersistentRecords::setWorkerSpacetreeId(const int& workerSpacetreeId)  {
+   _workerSpacetreeId = workerSpacetreeId;
 }
 
 
 
  peano4::parallel::TreeManagementMessage::Action peano4::parallel::TreeManagementMessagePacked::PersistentRecords::getAction() const  {
-   short int mask =  (1 << (1)) - 1;
+   short int mask =  (1 << (2)) - 1;
    mask = static_cast<short int>(mask << (0));
    short int tmp = static_cast<short int>(_packedRecords0 & mask);
    tmp = static_cast<short int>(tmp >> (0));
-   assertion(( tmp >= 0 &&  tmp <= 1));
+   assertion(( tmp >= 0 &&  tmp <= 2));
    return (Action) tmp;
 }
 
 
 
  void peano4::parallel::TreeManagementMessagePacked::PersistentRecords::setAction(const Action& action)  {
-   assertion((action >= 0 && action <= 1));
-   short int mask =  (1 << (1)) - 1;
+   assertion((action >= 0 && action <= 2));
+   short int mask =  (1 << (2)) - 1;
    mask = static_cast<short int>(mask << (0));
    _packedRecords0 = static_cast<short int>(_packedRecords0 & ~mask);
    _packedRecords0 = static_cast<short int>(_packedRecords0 | static_cast<short int>(action) << (0));
@@ -612,36 +670,36 @@ _spacetreeId(spacetreeId) {
 
 
 peano4::parallel::TreeManagementMessagePacked::TreeManagementMessagePacked() {
-   if ((1 >= (8 * sizeof(short int)))) {
+   if ((2 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((1 < (8 * sizeof(short int))));
+   assertion((2 < (8 * sizeof(short int))));
    
 }
 
 
 peano4::parallel::TreeManagementMessagePacked::TreeManagementMessagePacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._spacetreeId, persistentRecords.getAction()) {
-   if ((1 >= (8 * sizeof(short int)))) {
+_persistentRecords(persistentRecords._masterSpacetreeId, persistentRecords._workerSpacetreeId, persistentRecords.getAction()) {
+   if ((2 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((1 < (8 * sizeof(short int))));
+   assertion((2 < (8 * sizeof(short int))));
    
 }
 
 
-peano4::parallel::TreeManagementMessagePacked::TreeManagementMessagePacked(const int& spacetreeId, const Action& action):
-_persistentRecords(spacetreeId, action) {
-   if ((1 >= (8 * sizeof(short int)))) {
+peano4::parallel::TreeManagementMessagePacked::TreeManagementMessagePacked(const int& masterSpacetreeId, const int& workerSpacetreeId, const Action& action):
+_persistentRecords(masterSpacetreeId, workerSpacetreeId, action) {
+   if ((2 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((1 < (8 * sizeof(short int))));
+   assertion((2 < (8 * sizeof(short int))));
    
 }
 
@@ -649,32 +707,44 @@ _persistentRecords(spacetreeId, action) {
 peano4::parallel::TreeManagementMessagePacked::~TreeManagementMessagePacked() { }
 
 
- int peano4::parallel::TreeManagementMessagePacked::getSpacetreeId() const  {
-   return _persistentRecords._spacetreeId;
+ int peano4::parallel::TreeManagementMessagePacked::getMasterSpacetreeId() const  {
+   return _persistentRecords._masterSpacetreeId;
 }
 
 
 
- void peano4::parallel::TreeManagementMessagePacked::setSpacetreeId(const int& spacetreeId)  {
-   _persistentRecords._spacetreeId = spacetreeId;
+ void peano4::parallel::TreeManagementMessagePacked::setMasterSpacetreeId(const int& masterSpacetreeId)  {
+   _persistentRecords._masterSpacetreeId = masterSpacetreeId;
+}
+
+
+
+ int peano4::parallel::TreeManagementMessagePacked::getWorkerSpacetreeId() const  {
+   return _persistentRecords._workerSpacetreeId;
+}
+
+
+
+ void peano4::parallel::TreeManagementMessagePacked::setWorkerSpacetreeId(const int& workerSpacetreeId)  {
+   _persistentRecords._workerSpacetreeId = workerSpacetreeId;
 }
 
 
 
  peano4::parallel::TreeManagementMessage::Action peano4::parallel::TreeManagementMessagePacked::getAction() const  {
-   short int mask =  (1 << (1)) - 1;
+   short int mask =  (1 << (2)) - 1;
    mask = static_cast<short int>(mask << (0));
    short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
    tmp = static_cast<short int>(tmp >> (0));
-   assertion(( tmp >= 0 &&  tmp <= 1));
+   assertion(( tmp >= 0 &&  tmp <= 2));
    return (Action) tmp;
 }
 
 
 
  void peano4::parallel::TreeManagementMessagePacked::setAction(const Action& action)  {
-   assertion((action >= 0 && action <= 1));
-   short int mask =  (1 << (1)) - 1;
+   assertion((action >= 0 && action <= 2));
+   short int mask =  (1 << (2)) - 1;
    mask = static_cast<short int>(mask << (0));
    _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 & ~mask);
    _persistentRecords._packedRecords0 = static_cast<short int>(_persistentRecords._packedRecords0 | static_cast<short int>(action) << (0));
@@ -699,7 +769,9 @@ std::string peano4::parallel::TreeManagementMessagePacked::toString() const {
 
 void peano4::parallel::TreeManagementMessagePacked::toString (std::ostream& out) const {
    out << "("; 
-   out << "spacetreeId:" << getSpacetreeId();
+   out << "masterSpacetreeId:" << getMasterSpacetreeId();
+   out << ",";
+   out << "workerSpacetreeId:" << getWorkerSpacetreeId();
    out << ",";
    out << "action:" << toString(getAction());
    out <<  ")";
@@ -712,7 +784,8 @@ peano4::parallel::TreeManagementMessagePacked::PersistentRecords peano4::paralle
 
 peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessagePacked::convert() const{
    return TreeManagementMessage(
-      getSpacetreeId(),
+      getMasterSpacetreeId(),
+      getWorkerSpacetreeId(),
       getAction()
    );
 }
@@ -729,15 +802,16 @@ peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessageP
          TreeManagementMessagePacked dummyTreeManagementMessagePacked[16];
          
          #ifdef MPI2
-         const int Attributes = 2;
+         const int Attributes = 3;
          #else
-         const int Attributes = 2+2;
+         const int Attributes = 3+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
               MPI_LB,
             #endif
-              MPI_INT		 //spacetreeId
+              MPI_INT		 //masterSpacetreeId
+            , MPI_INT		 //workerSpacetreeId
             , MPI_SHORT		 //_packedRecords0
             #ifndef MPI2
             , MPI_UB
@@ -749,7 +823,8 @@ peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessageP
             #ifndef MPI2
             1, // lower bound
             #endif
-              1		 //spacetreeId
+              1		 //masterSpacetreeId
+            , 1		 //workerSpacetreeId
             , 1		 //_packedRecords0
             #ifndef MPI2
             , 1 // upper bound
@@ -765,9 +840,15 @@ peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessageP
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._spacetreeId))), 		&disp[currentAddress] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._masterSpacetreeId))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._spacetreeId))), 		&disp[currentAddress] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._masterSpacetreeId))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._workerSpacetreeId))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._workerSpacetreeId))), 		&disp[currentAddress] );
          #endif
          currentAddress++;
          #ifdef MPI2
@@ -812,15 +893,16 @@ peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessageP
          TreeManagementMessagePacked dummyTreeManagementMessagePacked[16];
          
          #ifdef MPI2
-         const int Attributes = 2;
+         const int Attributes = 3;
          #else
-         const int Attributes = 2+2;
+         const int Attributes = 3+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
               MPI_LB,
             #endif
-              MPI_INT		 //spacetreeId
+              MPI_INT		 //masterSpacetreeId
+            , MPI_INT		 //workerSpacetreeId
             , MPI_SHORT		 //_packedRecords0
             #ifndef MPI2
             , MPI_UB
@@ -832,7 +914,8 @@ peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessageP
             #ifndef MPI2
             1, // lower bound
             #endif
-              1		 //spacetreeId
+              1		 //masterSpacetreeId
+            , 1		 //workerSpacetreeId
             , 1		 //_packedRecords0
             #ifndef MPI2
             , 1 // upper bound
@@ -848,9 +931,15 @@ peano4::parallel::TreeManagementMessage peano4::parallel::TreeManagementMessageP
          #endif
          currentAddress++;
          #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._spacetreeId))), 		&disp[currentAddress] );
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._masterSpacetreeId))), 		&disp[currentAddress] );
          #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._spacetreeId))), 		&disp[currentAddress] );
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._masterSpacetreeId))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._workerSpacetreeId))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyTreeManagementMessagePacked[0]._persistentRecords._workerSpacetreeId))), 		&disp[currentAddress] );
          #endif
          currentAddress++;
          #ifdef MPI2
@@ -1002,7 +1091,7 @@ switch (mode) {
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::TreeManagementMessagePacked from node " 
+        msg << "failed to start to receive peano4::parallel::TreeManagementMessagePacked from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -1022,7 +1111,7 @@ switch (mode) {
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::TreeManagementMessagePacked from node " 
+        msg << "failed to start to receive peano4::parallel::TreeManagementMessagePacked from rank " 
              << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -1109,7 +1198,7 @@ switch (mode) {
       result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::TreeManagementMessagePacked from node " 
+        msg << "failed to start to receive peano4::parallel::TreeManagementMessagePacked from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 

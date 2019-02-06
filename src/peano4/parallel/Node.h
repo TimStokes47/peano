@@ -128,7 +128,11 @@ class peano4::parallel::Node {
      */
     int reserveId(int rank, int forTreeId);
 
-    int getRank(int id) const;
+    /**
+     * You hand in a tree number and the node tells you on which rank such a
+     * tree is hosted.
+     */
+    int getRank(int treeId) const;
 
     /**
      * Only the SpacetreeSet should call this operation.

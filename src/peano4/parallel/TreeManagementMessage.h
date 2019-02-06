@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   18/01/2019 15:59
+ * @date   06/02/2019 11:39
  */
 class peano4::parallel::TreeManagementMessage { 
    
@@ -37,11 +37,12 @@ class peano4::parallel::TreeManagementMessage {
       typedef peano4::parallel::TreeManagementMessagePacked Packed;
       
       enum Action {
-         RequestNewRemoteTree = 0, BookedNewRemoteTree = 1
+         RequestNewRemoteTree = 0, BookedNewRemoteTree = 1, CreateNewRemoteTree = 2
       };
       
       struct PersistentRecords {
-         int _spacetreeId;
+         int _masterSpacetreeId;
+         int _workerSpacetreeId;
          Action _action;
          /**
           * Generated
@@ -51,17 +52,27 @@ class peano4::parallel::TreeManagementMessage {
          /**
           * Generated
           */
-         PersistentRecords(const int& spacetreeId, const Action& action);
+         PersistentRecords(const int& masterSpacetreeId, const int& workerSpacetreeId, const Action& action);
          
          /**
           * Generated
           */
-          int getSpacetreeId() const ;
+          int getMasterSpacetreeId() const ;
          
          /**
           * Generated
           */
-          void setSpacetreeId(const int& spacetreeId) ;
+          void setMasterSpacetreeId(const int& masterSpacetreeId) ;
+         
+         /**
+          * Generated
+          */
+          int getWorkerSpacetreeId() const ;
+         
+         /**
+          * Generated
+          */
+          void setWorkerSpacetreeId(const int& workerSpacetreeId) ;
          
          /**
           * Generated
@@ -92,7 +103,7 @@ class peano4::parallel::TreeManagementMessage {
          /**
           * Generated
           */
-         TreeManagementMessage(const int& spacetreeId, const Action& action);
+         TreeManagementMessage(const int& masterSpacetreeId, const int& workerSpacetreeId, const Action& action);
          
          /**
           * Generated
@@ -102,12 +113,22 @@ class peano4::parallel::TreeManagementMessage {
          /**
           * Generated
           */
-          int getSpacetreeId() const ;
+          int getMasterSpacetreeId() const ;
          
          /**
           * Generated
           */
-          void setSpacetreeId(const int& spacetreeId) ;
+          void setMasterSpacetreeId(const int& masterSpacetreeId) ;
+         
+         /**
+          * Generated
+          */
+          int getWorkerSpacetreeId() const ;
+         
+         /**
+          * Generated
+          */
+          void setWorkerSpacetreeId(const int& workerSpacetreeId) ;
          
          /**
           * Generated
@@ -192,7 +213,7 @@ class peano4::parallel::TreeManagementMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   18/01/2019 15:59
+ * @date   06/02/2019 11:39
  */
 class peano4::parallel::TreeManagementMessagePacked { 
    
@@ -201,11 +222,12 @@ class peano4::parallel::TreeManagementMessagePacked {
       typedef peano4::parallel::TreeManagementMessage::Action Action;
       
       struct PersistentRecords {
-         int _spacetreeId;
+         int _masterSpacetreeId;
+         int _workerSpacetreeId;
          
          /** mapping of records:
          || Member 	|| startbit 	|| length
-          |  action	| startbit 0	| #bits 1
+          |  action	| startbit 0	| #bits 2
           */
          short int _packedRecords0;
          
@@ -217,17 +239,27 @@ class peano4::parallel::TreeManagementMessagePacked {
          /**
           * Generated
           */
-         PersistentRecords(const int& spacetreeId, const Action& action);
+         PersistentRecords(const int& masterSpacetreeId, const int& workerSpacetreeId, const Action& action);
          
          /**
           * Generated
           */
-          int getSpacetreeId() const ;
+          int getMasterSpacetreeId() const ;
          
          /**
           * Generated
           */
-          void setSpacetreeId(const int& spacetreeId) ;
+          void setMasterSpacetreeId(const int& masterSpacetreeId) ;
+         
+         /**
+          * Generated
+          */
+          int getWorkerSpacetreeId() const ;
+         
+         /**
+          * Generated
+          */
+          void setWorkerSpacetreeId(const int& workerSpacetreeId) ;
          
          /**
           * Generated
@@ -258,7 +290,7 @@ class peano4::parallel::TreeManagementMessagePacked {
          /**
           * Generated
           */
-         TreeManagementMessagePacked(const int& spacetreeId, const Action& action);
+         TreeManagementMessagePacked(const int& masterSpacetreeId, const int& workerSpacetreeId, const Action& action);
          
          /**
           * Generated
@@ -268,12 +300,22 @@ class peano4::parallel::TreeManagementMessagePacked {
          /**
           * Generated
           */
-          int getSpacetreeId() const ;
+          int getMasterSpacetreeId() const ;
          
          /**
           * Generated
           */
-          void setSpacetreeId(const int& spacetreeId) ;
+          void setMasterSpacetreeId(const int& masterSpacetreeId) ;
+         
+         /**
+          * Generated
+          */
+          int getWorkerSpacetreeId() const ;
+         
+         /**
+          * Generated
+          */
+          void setWorkerSpacetreeId(const int& workerSpacetreeId) ;
          
          /**
           * Generated

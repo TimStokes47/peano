@@ -93,18 +93,11 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     void exchangeDataBetweenTrees();
 
     /**
-     * Adds the spacetree to the set. The responsibility goes over to the
-     * set. Usually, users do invoke this operation only once when they
-     * pass the overall spacetree to the set. All the other, split off trees
-     * then are added by the Peano4 core internally.
-     *
-     * I have to use the move semantics here, as spacetrees hold stacks.
-     * Stacks in return may not be copied. In the implementation, I use the
-     * std::move() command to explicitly move the argument into the vector.
-     * This should not be necessary, as C++ overloads the std::vector::push_back()
-     * but I want to be on the safe side.
+     * Adds a new spacetree to the set. The responsibility goes over to the
+     * set. The operation clones the original spacetree handed in into a new
+     * spacetree with the id id.
      */
-    void addSpacetree( peano4::grid::Spacetree&& spacetree );
+    void addSpacetree( const peano4::grid::Spacetree& originalSpacetree, int id );
 
     bool canJoinWorkerWithMaster( int workerId );
 
