@@ -194,6 +194,8 @@ class peano4::parallel::Node {
     int getCurrentProgramStep() const;
 
     int getTreeManagementTag() const;
+
+    void shutdown();
 };
 
 #endif

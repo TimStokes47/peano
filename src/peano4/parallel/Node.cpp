@@ -45,7 +45,7 @@ peano4::parallel::Node::Node():
 
 
 peano4::parallel::Node::~Node() {
-  assertionMsg( tarch::mpi::Rank::getInstance().getNumberOfRanks()==1 or _currentProgramStep==Terminate, "forgot to terminate node properly" );
+  assertionMsg( tarch::mpi::Rank::getInstance().getNumberOfRanks()==1 or _currentProgramStep==Terminate, "forgot to terminate node properly through peano4::parallel::Node::getInstance().shutdown()" );
 }
 
 
@@ -96,7 +96,9 @@ void peano4::parallel::Node::registerId(int id, int masterId) {
   tarch::multicore::Lock lock(_semaphore);
   assertion( _treeEntries.count(id)==0 );
   assertion( id!=masterId );
+  #ifndef Parallel
   assertion( isGlobalMaster(id) or _treeEntries.count(masterId)==1 );
+  #endif
 
   TreeEntry newEntry;
 
@@ -261,4 +263,12 @@ int peano4::parallel::Node::getCurrentProgramStep() const {
 
 int peano4::parallel::Node::getTreeManagementTag() const {
   return _treeManagementTag;
+}
+
+
+void peano4::parallel::Node::shutdown() {
+  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
+    setNextProgramStep(peano4::parallel::Node::Terminate);
+    continueToRun();
+  }
 }

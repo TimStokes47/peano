@@ -261,6 +261,8 @@ void runParallel() {
       logInfo( "runParallel(...)", "remote unrefined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteUnrefinedCells() );
       logInfo( "runParallel(...)", "remote refined cells = " << peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfRemoteRefinedCells() );
     }
+
+    peano4::parallel::Node::getInstance().shutdown();
   }
   else {
 	while (peano4::parallel::Node::getInstance().continueToRun()) {

@@ -47,24 +47,27 @@ void peano4::parallel::SpacetreeSet::init(
 
 
 peano4::parallel::SpacetreeSet::~SpacetreeSet() {
-  if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
-    peano4::parallel::Node::getInstance().setNextProgramStep(peano4::parallel::Node::Terminate);
-    peano4::parallel::Node::getInstance().continueToRun();
-  }
 }
 
 
 void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
-	  std::cout << "@";
   if (peano4::parallel::TreeManagementMessage::isMessageInQueue(peano4::parallel::Node::getInstance().getTreeManagementTag(),true)) {
-	  // @todo Hier geht er net rein. Warum?
-    assertionMsg( false, "got a message" );
-  }
-/*
-    peano4::parallel::TreeManagementMessage message(treeId,peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree);
-    message.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-*/
+    peano4::parallel::TreeManagementMessage message;
+    message.receive(MPI_ANY_SOURCE,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::Blocking);
+    assertion1(message.getAction()==peano4::parallel::TreeManagementMessage::Action::RequestNewRemoteTree,message.toString());
 
+    int newSpacetreeId = peano4::parallel::Node::getInstance().reserveId(
+      tarch::mpi::Rank::getInstance().getRank(),  // on current node
+      message.getSpacetreeId()
+    );
+
+    // @todo debug
+    logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << message.getSpacetreeId() );
+
+    message.setSpacetreeId( newSpacetreeId );
+    message.setAction(TreeManagementMessage::Action::BookedNewRemoteTree);
+    message.send(message.getSenderRank(),peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+  }
 }
 
 

@@ -125,6 +125,11 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     static SpacetreeSet& getInstance();
 
+    /**
+     * We poll the tree management messages.
+     *
+     * If a new spacetree request drops in, we book the tree and send it back.
+     */
     void receiveDanglingMessages() override;
 
     /**
