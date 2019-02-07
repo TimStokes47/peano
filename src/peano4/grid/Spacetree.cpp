@@ -66,41 +66,6 @@ peano4::grid::Spacetree::Spacetree(
 }
 
 
-#ifdef Parallel
-peano4::grid::Spacetree::Spacetree(
-  int  masterId,
-  int  id
-):
-  _id(id),
-  _spacetreeState( SpacetreeState::NewFromSplit ),
-  _root(),
-  _statistics(),
-  _masterId(masterId),
-  _splitTriggered(),
-  _splitting() {
-
-/*
-
-	 copy._root
-
-
-  assertion1( _splitTriggered.count(_id)==0, _id );
-
-  for (auto& p: copy._vertexStack ) {
-    if ( PeanoCurve::isInOutStack(p.first) ) {
-      _vertexStack.insert( std::pair< int, peano4::stacks::GridVertexStack >(p.first,peano4::stacks::GridVertexStack()) );
-      _vertexStack[p.first].clone(p.second);
-	}
-  }
-*/
-
-  clearStatistics();
-
-  logInfo( "Spacetree(...)", "created spacetree " << _id << " from remote tree " << masterId );
-}
-#endif
-
-
 peano4::grid::Spacetree::Spacetree( Spacetree&& other ):
   _id(other._id),
   _spacetreeState( SpacetreeState::NewFromSplit ),
