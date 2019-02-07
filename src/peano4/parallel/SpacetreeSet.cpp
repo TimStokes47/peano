@@ -3,6 +3,7 @@
 
 
 #include "peano4/parallel/TreeManagementMessage.h"
+#include "peano4/grid/PeanoCurve.h"
 
 
 #include "tarch/multicore/MulticoreDefinitions.h"
@@ -69,7 +70,30 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       message.send(message.getSenderRank(),peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
     }
     else if (message.getAction()==peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree) {
-      peano4::grid::Spacetree newTree(message.getMasterSpacetreeId(),message.getWorkerSpacetreeId());
+      peano4::grid::AutomatonState state;
+      state.receive(message.getSenderRank(),peano4::parallel::Node::getInstance().getTreeManagementTag(),true,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
+
+      peano4::grid::Spacetree newTree(
+        state.getX(),
+		state.getH()
+	  );
+
+      int key = 0;
+      while (key>=0) {
+   		MPI_Recv( &key, 1, MPI_INT, message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE );
+        if (key>=0) {
+          assertion(peano4::grid::PeanoCurve::isInOutStack(key));
+          std::pair< int, peano4::stacks::GridVertexStack > newEntry( key, peano4::stacks::GridVertexStack() );
+          newTree._vertexStack.insert( newEntry );
+          // @todo Hier was mit Priorities?
+          newTree._vertexStack.startToReceive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag());
+        }
+      }
+
+      for (auto& p: newTree._vertexStack ) {
+  		p.second.finishToReceive();
+      }
+
       _spacetrees.push_back( std::move(newTree) );
     }
     else {
@@ -86,9 +110,28 @@ void peano4::parallel::SpacetreeSet::addSpacetree( const peano4::grid::Spacetree
 
   if ( peano4::parallel::Node::getInstance().getRank(id)!=tarch::mpi::Rank::getInstance().getRank() ) {
     #ifdef Parallel
+	const int targetRank = peano4::parallel::Node::getInstance().getRank(id);
+
     TreeManagementMessage message(originalSpacetree._id, id, TreeManagementMessage::CreateNewRemoteTree);
-    message.send(peano4::parallel::Node::getInstance().getRank(id),peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
-    assertionMsg( false, "continue here" );
+    message.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+
+    peano4::grid::AutomatonState state = originalSpacetree._root;
+    state.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
+
+    for (auto& p: originalSpacetree._vertexStack ) {
+      if ( peano4::grid::PeanoCurve::isInOutStack(p.first) ) {
+		MPI_Send( &p.first, 1, MPI_INT, targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator() );
+
+		p.second.startToSend(targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag());
+      }
+    }
+    for (auto& p: originalSpacetree._vertexStack ) {
+      if ( peano4::grid::PeanoCurve::isInOutStack(p.first) ) {
+		p.second.finishToSend();
+      }
+    }
+    int terminateSymbol = -1;
+	MPI_Send( &terminateSymbol, 1, MPI_INT, targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator() );
     #else
     assertionMsg( false, "should never enter this branch without -DParallel" );
     #endif
@@ -386,12 +429,6 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
   if ( tree.maySplit() ) {
     int newSpacetreeId = -1;
 
-    // @todo xxx
-    // sende message raus an anderen Rank, ob wir splitten duerfen
-    // der gibt die id zurueck
-    // jetzt geht es los
-    // Oder wir machen es eben doch so, dass man net splitten darf direkt auf einen anderen Rank
-    // Der insert ist dann aber ne separate Message, also die gleiche Message aber anderer Content
     if (tarch::mpi::Rank::getInstance().getRank()!=targetRank) {
       #ifdef Parallel
       logDebug( "split(int,int,int)", "request new tree on rank " << targetRank );

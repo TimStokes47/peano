@@ -622,14 +622,6 @@ class peano4::grid::Spacetree {
      */
     Spacetree( const Spacetree& otherTree, int newId);
 
-    #ifdef Parallel
-    /**
-     * This constructor is used if the new tree is from a remote rank, i.e.
-     * everything has to be streamed in.
-     */
-    Spacetree( int masterId, int newId);
-    #endif
-
     /**
      * Don't copy a tree as it is tied to some stacks.
      *
