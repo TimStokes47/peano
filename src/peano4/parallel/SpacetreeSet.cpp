@@ -52,6 +52,7 @@ peano4::parallel::SpacetreeSet::~SpacetreeSet() {
 
 
 void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
+  #ifdef Parallel
   if (peano4::parallel::TreeManagementMessage::isMessageInQueue(peano4::parallel::Node::getInstance().getTreeManagementTag(),true)) {
     peano4::parallel::TreeManagementMessage message;
     message.receive(MPI_ANY_SOURCE,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::Blocking);
@@ -99,6 +100,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       assertion1(false,message.toString());
     }
   }
+  #endif
 }
 
 
@@ -106,6 +108,7 @@ void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& orig
   tarch::multicore::Lock lock( _semaphore );
 
   if ( peano4::parallel::Node::getInstance().getRank(id)!=tarch::mpi::Rank::getInstance().getRank() ) {
+    #ifdef Parallel
 	const int targetRank = peano4::parallel::Node::getInstance().getRank(id);
 
     TreeManagementMessage message(originalSpacetree._id, id, TreeManagementMessage::CreateNewRemoteTree);
@@ -129,6 +132,9 @@ void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& orig
     }
     int terminateSymbol = -1;
 	MPI_Send( &terminateSymbol, 1, MPI_INT, targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator() );
+    #else
+    assertionMsg( false, "should never enter this branch without -DParallel" );
+    #endif
   }
   else {
     peano4::grid::Spacetree newTree(originalSpacetree, id);
