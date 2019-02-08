@@ -84,13 +84,12 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
           assertion(peano4::grid::PeanoCurve::isInOutStack(key));
           std::pair< int, peano4::stacks::GridVertexStack > newEntry( key, peano4::stacks::GridVertexStack() );
           newTree._vertexStack.insert( newEntry );
-          // @todo Hier was mit Priorities?
-          newTree._vertexStack.startToReceive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag());
+          newTree._vertexStack[key].startReceive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag());
         }
       }
 
       for (auto& p: newTree._vertexStack ) {
-  		p.second.finishToReceive();
+  		p.second.finishReceive();
       }
 
       _spacetrees.push_back( std::move(newTree) );
@@ -103,7 +102,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
 }
 
 
-void peano4::parallel::SpacetreeSet::addSpacetree( const peano4::grid::Spacetree& originalSpacetree, int id ) {
+void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& originalSpacetree, int id ) {
   tarch::multicore::Lock lock( _semaphore );
 
   if ( peano4::parallel::Node::getInstance().getRank(id)!=tarch::mpi::Rank::getInstance().getRank() ) {
@@ -115,16 +114,17 @@ void peano4::parallel::SpacetreeSet::addSpacetree( const peano4::grid::Spacetree
     peano4::grid::AutomatonState state = originalSpacetree._root;
     state.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
+    // @todo Fehler ist, dass originalSpacetree als const uebergeben wurde.
     for (auto& p: originalSpacetree._vertexStack ) {
       if ( peano4::grid::PeanoCurve::isInOutStack(p.first) ) {
 		MPI_Send( &p.first, 1, MPI_INT, targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator() );
 
-		p.second.startToSend(targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag());
+		p.second.startSend(targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag());
       }
     }
     for (auto& p: originalSpacetree._vertexStack ) {
       if ( peano4::grid::PeanoCurve::isInOutStack(p.first) ) {
-		p.second.finishToSend();
+		p.second.finishSend();
       }
     }
     int terminateSymbol = -1;

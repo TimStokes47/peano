@@ -5,13 +5,9 @@
 
 
 #include "peano4/grid/TraversalObserver.h"
-#include "peano4/stacks/STDVectorStack.h"
-
-
-//#include <pair>
 #include <map>
 
-
+#include "../../peano4/stacks/STDVectorStack.h"
 #include "Mapping.h"
 #include "FaceData.h"
 #include "CellData.h"

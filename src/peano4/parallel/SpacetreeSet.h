@@ -96,8 +96,14 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * Adds a new spacetree to the set. The responsibility goes over to the
      * set. The operation clones the original spacetree handed in into a new
      * spacetree with the id id.
+     *
+     * <h2> Implementation </h2>
+     *
+     * Logically, the passed spacetree is const as we do not change it.
+     * Technically, we may not make it const. We invoke MPI sends on its
+     * stacks. Therefore, it is just a reference.
      */
-    void addSpacetree( const peano4::grid::Spacetree& originalSpacetree, int id );
+    void addSpacetree( peano4::grid::Spacetree& originalSpacetree, int id );
 
     bool canJoinWorkerWithMaster( int workerId );
 
