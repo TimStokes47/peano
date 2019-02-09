@@ -675,7 +675,9 @@ class peano4::grid::Spacetree {
   public:
     Spacetree(
 	  const tarch::la::Vector<Dimensions,double>&  offset,
-	  const tarch::la::Vector<Dimensions,double>&  width
+	  const tarch::la::Vector<Dimensions,double>&  width,
+	  int treeId = 0,
+	  int masterTreeId = -1
     );
 
     ~Spacetree();

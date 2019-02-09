@@ -10,7 +10,7 @@
 
 namespace peano4 {
  namespace stacks {
-   typedef STDVectorStackForUserDefinedData< peano4::grid::GridVertex >   GridVertexStack;
+   typedef STDVectorStack< peano4::grid::GridVertex >   GridVertexStack;
  }
 }
 

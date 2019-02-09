@@ -75,23 +75,34 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
 
       peano4::grid::Spacetree newTree(
         state.getX(),
-		state.getH()
+		state.getH(),
+		message.getWorkerSpacetreeId(),
+		message.getMasterSpacetreeId()
 	  );
+
+      newTree._spacetreeState = peano4::grid::Spacetree::SpacetreeState::NewFromSplit;
 
       int key = 0;
       while (key>=0) {
    		MPI_Recv( &key, 1, MPI_INT, message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE );
         if (key>=0) {
+          int numberOfElements;
+          MPI_Recv( &numberOfElements, 1, MPI_INT, message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE );
+          logDebug( "receiveDanglingMessages()", "received notification to receive " << numberOfElements << " entries for stack " << key );
           assertion(peano4::grid::PeanoCurve::isInOutStack(key));
+          assertion(numberOfElements>0);
           std::pair< int, peano4::stacks::GridVertexStack > newEntry( key, peano4::stacks::GridVertexStack() );
           newTree._vertexStack.insert( newEntry );
-          newTree._vertexStack[key].startReceive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag());
+          newTree._vertexStack[key].startReceive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(),numberOfElements);
         }
       }
 
+      logDebug( "receiveDanglingMessages()", "finalise all receives" );
       for (auto& p: newTree._vertexStack ) {
-  		p.second.finishReceive();
+  		p.second.finishSendOrReceive();
       }
+
+      logDebug( "receiveDanglingMessages()", "tree fraction is completely copied to new node" );
 
       _spacetrees.push_back( std::move(newTree) );
     }
@@ -119,15 +130,17 @@ void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& orig
 
     // @todo Fehler ist, dass originalSpacetree als const uebergeben wurde.
     for (auto& p: originalSpacetree._vertexStack ) {
-      if ( peano4::grid::PeanoCurve::isInOutStack(p.first) ) {
+      if ( peano4::grid::PeanoCurve::isInOutStack(p.first) and p.second.size()>0) {
 		MPI_Send( &p.first, 1, MPI_INT, targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator() );
+		int numberOfElements = p.second.size();
+		MPI_Send( &numberOfElements, 1, MPI_INT, targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator() );
 
 		p.second.startSend(targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag());
       }
     }
     for (auto& p: originalSpacetree._vertexStack ) {
-      if ( peano4::grid::PeanoCurve::isInOutStack(p.first) ) {
-		p.second.finishSend();
+      if ( p.second.isSendingOrReceiving() ) {
+		p.second.finishSendOrReceive();
       }
     }
     int terminateSymbol = -1;

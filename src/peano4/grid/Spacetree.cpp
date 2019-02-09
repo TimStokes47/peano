@@ -18,12 +18,14 @@ const int peano4::grid::Spacetree::NumberOfStationarySweepsToWaitAtLeastTillJoin
 
 peano4::grid::Spacetree::Spacetree(
   const tarch::la::Vector<Dimensions,double>&  offset,
-  const tarch::la::Vector<Dimensions,double>&  width
+  const tarch::la::Vector<Dimensions,double>&  width,
+  int treeId,
+  int masterTreeId
 ):
-  _id(0),
+  _id(treeId),
   _spacetreeState( SpacetreeState::Running ),
   _root(),
-  _masterId(-1) {
+  _masterId(masterTreeId) {
   _root.setLevel( 0 );
   _root.setX( offset );
   _root.setH( width );

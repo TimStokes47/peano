@@ -1,24 +1,24 @@
-bin_PROGRAMS = PeanoDiffusionThroughFaces2d_debug PeanoDiffusionThroughFaces2d PeanoDiffusionThroughFaces3d_debug PeanoDiffusionThroughFaces3d
+bin_PROGRAMS = PeanoIntegerDiffusionThroughFaces2d_debug PeanoIntegerDiffusionThroughFaces2d PeanoIntegerDiffusionThroughFaces3d_debug PeanoIntegerDiffusionThroughFaces3d
 
-PeanoDiffusionThroughFacesSources = \
+PeanoIntegerDiffusionThroughFacesSources = \
   main.cpp \
   CellDataPlotter.cpp \
   CompositeMapping.cpp \
   MyMapping.cpp \
   MyObserver.cpp
 
-PeanoDiffusionThroughFaces2d_debug_CXXFLAGS  = -I$(top_builddir)/src -DPeanoDebug=1 -DDimensions=2
-PeanoDiffusionThroughFaces2d_debug_LDFLAGS   = -L$(top_builddir)/src  -lTarch_debug -lPeano4Core2d_debug
-PeanoDiffusionThroughFaces2d_debug_SOURCES   = $(PeanoDiffusionThroughFacesSources)
+PeanoIntegerDiffusionThroughFaces2d_debug_CXXFLAGS  = -I$(top_builddir)/src -DPeanoDebug=1 -DDimensions=2
+PeanoIntegerDiffusionThroughFaces2d_debug_LDFLAGS   = -L$(top_builddir)/src  -lTarch_debug -lPeano4Core2d_debug
+PeanoIntegerDiffusionThroughFaces2d_debug_SOURCES   = $(PeanoIntegerDiffusionThroughFacesSources)
 
-PeanoDiffusionThroughFaces2d_CXXFLAGS  = -I$(top_builddir)/src -DDimensions=2
-PeanoDiffusionThroughFaces2d_LDFLAGS   = -L$(top_builddir)/src  -lTarch -lPeano4Core2d
-PeanoDiffusionThroughFaces2d_SOURCES   = $(PeanoDiffusionThroughFacesSources)
+PeanoIntegerDiffusionThroughFaces2d_CXXFLAGS  = -I$(top_builddir)/src -DDimensions=2
+PeanoIntegerDiffusionThroughFaces2d_LDFLAGS   = -L$(top_builddir)/src  -lTarch -lPeano4Core2d
+PeanoIntegerDiffusionThroughFaces2d_SOURCES   = $(PeanoIntegerDiffusionThroughFacesSources)
 
-PeanoDiffusionThroughFaces3d_debug_CXXFLAGS  = -I$(top_builddir)/src -DPeanoDebug=1 -DDimensions=3
-PeanoDiffusionThroughFaces3d_debug_LDFLAGS   = -L$(top_builddir)/src -lTarch_debug -lPeano4Core3d_debug
-PeanoDiffusionThroughFaces3d_debug_SOURCES   = $(PeanoDiffusionThroughFacesSources)
+PeanoIntegerDiffusionThroughFaces3d_debug_CXXFLAGS  = -I$(top_builddir)/src -DPeanoDebug=1 -DDimensions=3
+PeanoIntegerDiffusionThroughFaces3d_debug_LDFLAGS   = -L$(top_builddir)/src -lTarch_debug -lPeano4Core3d_debug
+PeanoIntegerDiffusionThroughFaces3d_debug_SOURCES   = $(PeanoIntegerDiffusionThroughFacesSources)
 
-PeanoDiffusionThroughFaces3d_CXXFLAGS  = -I$(top_builddir)/src -DDimensions=3
-PeanoDiffusionThroughFaces3d_LDFLAGS   = -L$(top_builddir)/src -lTarch -lPeano4Core3d
-PeanoDiffusionThroughFaces3d_SOURCES   = $(PeanoDiffusionThroughFacesSources)
+PeanoIntegerDiffusionThroughFaces3d_CXXFLAGS  = -I$(top_builddir)/src -DDimensions=3
+PeanoIntegerDiffusionThroughFaces3d_LDFLAGS   = -L$(top_builddir)/src -lTarch -lPeano4Core3d
+PeanoIntegerDiffusionThroughFaces3d_SOURCES   = $(PeanoIntegerDiffusionThroughFacesSources)
