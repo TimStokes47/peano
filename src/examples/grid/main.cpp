@@ -267,6 +267,8 @@ void runParallel() {
   else {
 	while (peano4::parallel::Node::getInstance().continueToRun()) {
       assertionEquals( peano4::parallel::Node::getInstance().getCurrentProgramStep(), 14 );
+
+      tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
       peano4::parallel::SpacetreeSet::getInstance().traverse(emptyObserver);
 	}
   }

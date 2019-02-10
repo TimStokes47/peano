@@ -71,7 +71,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
     }
     else if (message.getAction()==peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree) {
       peano4::grid::AutomatonState state;
-      state.receive(message.getSenderRank(),peano4::parallel::Node::getInstance().getTreeManagementTag(),true,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
+      state.receive(message.getSenderRank(),peano4::parallel::Node::getInstance().getTreeManagementTag(),false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
       peano4::grid::Spacetree newTree(
         state.getX(),
@@ -81,6 +81,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
 	  );
 
       newTree._spacetreeState = peano4::grid::Spacetree::SpacetreeState::NewFromSplit;
+      newTree._root           = state;
 
       int key = 0;
       while (key>=0) {
@@ -126,7 +127,7 @@ void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& orig
     message.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     peano4::grid::AutomatonState state = originalSpacetree._root;
-    state.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    state.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     // @todo Fehler ist, dass originalSpacetree als const uebergeben wurde.
     for (auto& p: originalSpacetree._vertexStack ) {
