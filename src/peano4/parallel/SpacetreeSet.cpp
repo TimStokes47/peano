@@ -233,6 +233,7 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       logInfo( "run()", "send stack " << sourceStack.first << " to rank " << rank << " with tag " << tag );
       logInfo( "run()", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << tag << " into stack " << inStack );
       sourceStack.second.startSend(rank,tag);
+      assertion(not Node::getInstance().isBoundaryExchangeOutputStackNumber(inStack));
       _spacetree._vertexStack[inStack].startReceive(rank,tag,count);
     }
   }

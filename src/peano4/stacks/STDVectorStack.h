@@ -186,8 +186,10 @@ class peano4::stacks::STDVectorStack {
     STDVectorStack<T>( const STDVectorStack<T>& stack ):
 	  _data(),
       _currentElement(0),
-	  _ioMode(IOMode::None) {
+	  _ioMode(IOMode::None),
+	  _ioMPIRequest(nullptr) {
       assertionMsg( stack._currentElement==0, "may not copy non-empty stack" );
+      assertionMsg( stack._ioMPIRequest==nullptr, "may not copy sending/receiving stack" );
     }
 
 

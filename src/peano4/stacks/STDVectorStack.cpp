@@ -19,8 +19,10 @@ peano4::stacks::STDVectorStack<double>::~STDVectorStack() {
 peano4::stacks::STDVectorStack<double>::STDVectorStack( const STDVectorStack<double>& stack ):
   _data(),
   _currentElement(0),
-  _ioMode(IOMode::None) {
+  _ioMode(IOMode::None),
+  _ioMPIRequest(nullptr) {
   assertionMsg( stack._currentElement==0, "may not copy non-empty stack" );
+  assertionMsg( stack._ioMPIRequest==nullptr, "may not copy sending/receiving stack" );
 }
 
 
