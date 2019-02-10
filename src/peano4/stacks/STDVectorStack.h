@@ -411,6 +411,7 @@ class peano4::stacks::STDVectorStack {
    	  _ioRank = rank;
 
    	  _data.resize(numberOfElements);
+   	  _currentElement = numberOfElements;
    	  assertionEquals( _data.size(), numberOfElements );
 
    	  assertion( _ioMPIRequest == nullptr );

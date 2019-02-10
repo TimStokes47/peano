@@ -299,7 +299,12 @@ int main(int argc, char** argv) {
 
   runTests();
   #if defined(Parallel)
-  runParallel();
+  if (tarch::mpi::Rank::getInstance().getNumberOfRanks()==1) {
+    runMultithreaded();
+  }
+  else {
+    runParallel();
+  }
   #elif defined(SharedMemoryParallelisation)
   runMultithreaded();
   #else

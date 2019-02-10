@@ -74,6 +74,7 @@ class peano4::grid::Spacetree {
     };
 
     enum class SpacetreeState {
+      NewRoot,
       /**
        * Set if this tree results from a split and if this is the first
        * grid sweep when the former owner actually is in the mode
@@ -152,8 +153,12 @@ class peano4::grid::Spacetree {
     /**
      * This is not a static master. There's only a real master-worker relation
      * built into this part of the code when we actually split or join.
+     *
+     * This field should be const (it never changes), but in the MPI case, I
+     * wanna be able to construct a tree first and then to set the master.
+     * Actually, I should introduce a special constructor for this.
      */
-    const int        _masterId;
+    int        _masterId;
 
     /**
      * A split is identified by a tuple of id and cell count which tells the
@@ -675,9 +680,7 @@ class peano4::grid::Spacetree {
   public:
     Spacetree(
 	  const tarch::la::Vector<Dimensions,double>&  offset,
-	  const tarch::la::Vector<Dimensions,double>&  width,
-	  int treeId = 0,
-	  int masterTreeId = -1
+	  const tarch::la::Vector<Dimensions,double>&  width
     );
 
     ~Spacetree();

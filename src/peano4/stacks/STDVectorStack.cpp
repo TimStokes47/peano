@@ -185,6 +185,7 @@ void peano4::stacks::STDVectorStack<double>::startReceive(int rank, int tag, int
   _ioRank = rank;
 
   _data.resize(numberOfElements);
+  _currentElement = numberOfElements;
 
   assertion( _ioMPIRequest == nullptr );
   _ioMPIRequest = new MPI_Request;

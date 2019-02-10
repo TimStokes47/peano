@@ -75,13 +75,14 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
 
       peano4::grid::Spacetree newTree(
         state.getX(),
-		state.getH(),
-		message.getWorkerSpacetreeId(),
-		message.getMasterSpacetreeId()
+		state.getH()
 	  );
 
+      newTree._id        = message.getWorkerSpacetreeId();
+      newTree._masterId  = message.getMasterSpacetreeId();
+      newTree._root      = state;
       newTree._spacetreeState = peano4::grid::Spacetree::SpacetreeState::NewFromSplit;
-      newTree._root           = state;
+      //newTree._spacetreeState = peano4::grid::Spacetree::SpacetreeState::Running;
 
       int key = 0;
       while (key>=0) {
@@ -104,6 +105,12 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       }
 
       logDebug( "receiveDanglingMessages()", "tree fraction is completely copied to new node" );
+
+      for (auto& p: newTree._vertexStack) {
+    	logDebug( "run()", "stack " << p.first << ": " << p.second.size() << " element(s)" );
+      }
+
+      // @todo Ich glaube das _currentElement wird einfach net korrekt gesetzt
 
       _spacetrees.push_back( std::move(newTree) );
     }
@@ -129,7 +136,6 @@ void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& orig
     peano4::grid::AutomatonState state = originalSpacetree._root;
     state.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
-    // @todo Fehler ist, dass originalSpacetree als const uebergeben wurde.
     for (auto& p: originalSpacetree._vertexStack ) {
       if ( peano4::grid::PeanoCurve::isInOutStack(p.first) and p.second.size()>0) {
 		MPI_Send( &p.first, 1, MPI_INT, targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator() );
@@ -172,9 +178,6 @@ bool peano4::parallel::SpacetreeSet::TraverseTask::run() {
   peano4::grid::TraversalObserver* localObserver = _observer.clone( _spacetree._id );
   _spacetree.traverse( *localObserver, _spacetreeSet );
   delete localObserver;
-
-  // @todo Here are the MPI sends the very latest; but perhaps we do it completely different
-
   return false;
 }
 
@@ -208,11 +211,41 @@ peano4::parallel::SpacetreeSet::DataExchangeTask::DataExchangeTask( peano4::grid
 
 
 bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
+  // Trigger all send and receives required
+  // --------------------------------------
+  // We exploit all the symmetries
+  for (auto& sourceStack: _spacetree._vertexStack) {
+    if (
+      Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack.first)
+      and
+      not sourceStack.second.empty()
+	  and
+	  Node::getInstance().getRank( Node::getInstance().getIdOfBoundaryExchangeOutputStackNumber(sourceStack.first) )!=tarch::mpi::Rank::getInstance().getRank()
+    ) {
+   	  int targetId  = Node::getInstance().getIdOfBoundaryExchangeOutputStackNumber(sourceStack.first);
+      int rank      = Node::getInstance().getRank( targetId );
+  	  int count     = sourceStack.second.size();
+      int inStack   = Node::getInstance().getInputStackNumberOfBoundaryExchange(_spacetree._id);
+      // @todo Get the tags right
+      int tag       = 32;
+
+      // @todo debug
+      logInfo( "run()", "send stack " << sourceStack.first << " to rank " << rank << " with tag " << tag );
+      logInfo( "run()", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << tag << " into stack " << inStack );
+      sourceStack.second.startSend(rank,tag);
+      _spacetree._vertexStack[inStack].startReceive(rank,tag,count);
+    }
+  }
+
+  // All local stacks
+  // ----------------
   for (auto sourceStack = _spacetree._vertexStack.begin(); sourceStack != _spacetree._vertexStack.end(); ) {
     if (
       Node::getInstance().isBoundaryExchangeOutputStackNumber(sourceStack->first)
       and
       not sourceStack->second.empty()
+	  and
+	  Node::getInstance().getRank( Node::getInstance().getIdOfBoundaryExchangeOutputStackNumber(sourceStack->first) )==tarch::mpi::Rank::getInstance().getRank()
     ) {
 	  const int targetId = Node::getInstance().getIdOfBoundaryExchangeOutputStackNumber(sourceStack->first);
 
@@ -262,6 +295,16 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       sourceStack++;
     }
   }
+
+  // Finalise data exchange
+  // ----------------------
+  // @todo Das ist jetzt halt wieder net so klasse, weil das logisch ordnet.
+  for (auto& sourceStack: _spacetree._vertexStack) {
+    if ( sourceStack.second.isSendingOrReceiving() ) {
+      sourceStack.second.finishSendOrReceive();
+    }
+  }
+
   return false;
 }
 

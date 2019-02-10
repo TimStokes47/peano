@@ -169,10 +169,6 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      */
     bool split(int treeId, int cells, int targetRank);
 
-    /**
-     *
-     * @todo Should there be something alike a target rank?
-     */
     bool move(int sourceTreeId, int targetRank);
 };
 

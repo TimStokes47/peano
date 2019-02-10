@@ -18,14 +18,12 @@ const int peano4::grid::Spacetree::NumberOfStationarySweepsToWaitAtLeastTillJoin
 
 peano4::grid::Spacetree::Spacetree(
   const tarch::la::Vector<Dimensions,double>&  offset,
-  const tarch::la::Vector<Dimensions,double>&  width,
-  int treeId,
-  int masterTreeId
+  const tarch::la::Vector<Dimensions,double>&  width
 ):
-  _id(treeId),
-  _spacetreeState( SpacetreeState::Running ),
+  _id(0),
+  _spacetreeState( SpacetreeState::NewRoot ),
   _root(),
-  _masterId(masterTreeId) {
+  _masterId(-1) {
   _root.setLevel( 0 );
   _root.setX( offset );
   _root.setH( width );
@@ -70,7 +68,7 @@ peano4::grid::Spacetree::Spacetree(
 
 peano4::grid::Spacetree::Spacetree( Spacetree&& other ):
   _id(other._id),
-  _spacetreeState( SpacetreeState::NewFromSplit ),
+  _spacetreeState( other._spacetreeState ),
   _root( std::move(other._root) ),
   _statistics(),
   _masterId(other._masterId),
@@ -170,6 +168,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::para
   _joinTriggered.clear();
 
   switch (_spacetreeState) {
+    case SpacetreeState::NewRoot:
     case SpacetreeState::NewFromSplit:
       _spacetreeState = SpacetreeState::Running;
       break;
@@ -202,7 +201,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
 
   _coarseningHasBeenVetoed = false;
 
-  static bool isFirstTraversal = true;
+  const bool isFirstTraversal = _spacetreeState==SpacetreeState::NewRoot;
   GridVertex vertices[TwoPowerD];
   dfor2(k)
     tarch::la::Vector<Dimensions,double> x = _root.getX() + k.convertScalar<double>();
@@ -223,7 +222,6 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
     }
     logDebug( "traverse()", "create " << vertices[kScalar].toString() );
   enddforx
-  isFirstTraversal = false;
 
   descend(_root,vertices,observer);
 
@@ -479,6 +477,8 @@ peano4::grid::Spacetree::VertexType peano4::grid::Spacetree::getVertexType(
 
 std::string peano4::grid::Spacetree::toString( SpacetreeState state ) {
   switch (state) {
+    case SpacetreeState::NewRoot:
+      return "new-root";
     case SpacetreeState::NewFromSplit:
       return "new-from-split";
     case SpacetreeState::Running:
