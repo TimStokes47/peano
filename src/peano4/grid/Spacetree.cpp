@@ -979,6 +979,8 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 	 and
 	 isVertexAdjacentToLocalSpacetree(vertex,true,true)
   ) {
+	  Genau das hier geht jetzt natuerlich net -> neuen Stack verwenden statt dieses komischen synchronously
+
 	vertex = peano4::parallel::Node::getInstance().getVertexSynchronously(_masterId,_id);
 	assertion2( vertex.getState() != GridVertex::Refining, vertex.toString(), _id );
 	assertion2( vertex.getState() != GridVertex::Erasing,  vertex.toString(), _id );
