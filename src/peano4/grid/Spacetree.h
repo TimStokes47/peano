@@ -45,8 +45,8 @@ namespace peano4 {
  */
 class peano4::grid::Spacetree {
   private:
-	static const int InvalidRank;
-	static const int NumberOfStationarySweepsToWaitAtLeastTillJoin;
+    static const int InvalidRank;
+    static const int NumberOfStationarySweepsToWaitAtLeastTillJoin;
 
     static tarch::logging::Log  _log;
 
@@ -55,22 +55,22 @@ class peano4::grid::Spacetree {
 
     enum class VertexType {
       New,
-	  Hanging,
-	  Persistent,
-	  Delete
+      Hanging,
+      Persistent,
+      Delete
     };
 
     enum class FaceType {
       New,
-	  Hanging,
-	  Persistent,
-	  Delete
+      Hanging,
+      Persistent,
+      Delete
     };
 
     enum class CellType {
       New,
-	  Persistent,
-	  Delete
+      Persistent,
+      Delete
     };
 
     enum class SpacetreeState {

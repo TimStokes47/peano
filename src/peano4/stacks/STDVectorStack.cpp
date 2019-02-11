@@ -163,6 +163,7 @@ void peano4::stacks::STDVectorStack<double>::clear() {
 
 
 void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag) {
+  #ifdef Parallel
   assertion( _ioMode==IOMode::None );
   _ioMode = IOMode::MPISend;
   _ioTag  = tag;
@@ -177,10 +178,12 @@ void peano4::stacks::STDVectorStack<double>::startSend(int rank, int tag) {
       << ": " << tarch::mpi::MPIReturnValueToString(result)
     );
   }
+  #endif
 }
 
 
 void peano4::stacks::STDVectorStack<double>::startReceive(int rank, int tag, int numberOfElements) {
+  #ifdef Parallel
   assertion( _ioMode==IOMode::None );
   _ioMode = IOMode::MPIReceive;
   _ioTag  = tag;
@@ -197,6 +200,7 @@ void peano4::stacks::STDVectorStack<double>::startReceive(int rank, int tag, int
       << ": " << tarch::mpi::MPIReturnValueToString(result)
     );
   }
+  #endif
 }
 
 
@@ -206,6 +210,7 @@ bool peano4::stacks::STDVectorStack<double>::isSendingOrReceiving() const {
 
 
 void peano4::stacks::STDVectorStack<double>::finishSendOrReceive() {
+  #ifdef Parallel
   assertion( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive );
   assertion( _ioMPIRequest!=nullptr );
 
@@ -248,4 +253,5 @@ void peano4::stacks::STDVectorStack<double>::finishSendOrReceive() {
   }
   delete _ioMPIRequest;
   _ioMPIRequest = nullptr;
+  #endif
 }

@@ -387,43 +387,46 @@ class peano4::stacks::STDVectorStack {
      * mean all the data that is to be sent out is already in the container.
      */
     void startSend(int rank, int tag) {
-   	  assertion( _ioMode==IOMode::None );
-   	  _ioMode = IOMode::MPISend;
-   	  _ioTag  = tag;
-   	  _ioRank = rank;
+      #ifdef Parallel
+      assertion( _ioMode==IOMode::None );
+      _ioMode = IOMode::MPISend;
+      _ioTag  = tag;
+      _ioRank = rank;
 
-   	  assertion( _ioMPIRequest == nullptr );
-   	  _ioMPIRequest = new MPI_Request;
-   	  int result = MPI_Isend( _data.data(), _data.size(), T::Datatype, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
-   	  if  (result!=MPI_SUCCESS) {
-   	    std::ostringstream msg;
-   	    logError( "startSend(int,int)", "was not able to send to node " << rank << " on tag " << tag
-   	      << ": " << tarch::mpi::MPIReturnValueToString(result)
-   	    );
-   	  }
+      assertion( _ioMPIRequest == nullptr );
+      _ioMPIRequest = new MPI_Request;
+      int result = MPI_Isend( _data.data(), _data.size(), T::Datatype, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
+      if  (result!=MPI_SUCCESS) {
+        logError( "startSend(int,int)", "was not able to send to node " << rank << " on tag " << tag
+          << ": " << tarch::mpi::MPIReturnValueToString(result)
+        );
+      }
+      #endif
     }
 
     /**
      * @see startSend()
      */
     void startReceive(int rank, int tag, int numberOfElements) {
-   	  assertion( _ioMode==IOMode::None );
-   	  _ioMode = IOMode::MPIReceive;
-   	  _ioTag  = tag;
-   	  _ioRank = rank;
+      #ifdef Parallel
+      assertion( _ioMode==IOMode::None );
+      _ioMode = IOMode::MPIReceive;
+      _ioTag  = tag;
+      _ioRank = rank;
 
-   	  _data.resize(numberOfElements);
-   	  _currentElement = numberOfElements;
-   	  assertionEquals( _data.size(), numberOfElements );
+      _data.resize(numberOfElements);
+      _currentElement = numberOfElements;
+      assertionEquals( _data.size(), numberOfElements );
 
-   	  assertion( _ioMPIRequest == nullptr );
-   	  _ioMPIRequest = new MPI_Request;
-   	  int result = MPI_Irecv( _data.data(), _data.size(), T::Datatype, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
-   	  if  (result!=MPI_SUCCESS) {
-   	    logError( "startReceive(int,int,int)", "was not able to receive " << numberOfElements << " values from node " << rank << " on tag " << tag
-   	      << ": " << tarch::mpi::MPIReturnValueToString(result)
-   	    );
-   	  }
+      assertion( _ioMPIRequest == nullptr );
+      _ioMPIRequest = new MPI_Request;
+      int result = MPI_Irecv( _data.data(), _data.size(), T::Datatype, _ioRank, _ioTag, tarch::mpi::Rank::getInstance().getCommunicator(), _ioMPIRequest);
+      if  (result!=MPI_SUCCESS) {
+        logError( "startReceive(int,int,int)", "was not able to receive " << numberOfElements << " values from node " << rank << " on tag " << tag
+           << ": " << tarch::mpi::MPIReturnValueToString(result)
+        );
+      }
+      #endif
     }
 
 
@@ -433,16 +436,17 @@ class peano4::stacks::STDVectorStack {
 
 
     void finishSendOrReceive() {
-   	  assertion( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive );
-   	  assertion( _ioMPIRequest!=nullptr );
+      #ifdef Parallel
+      assertion( _ioMode==IOMode::MPISend or _ioMode==IOMode::MPIReceive );
+      assertion( _ioMPIRequest!=nullptr );
 
-   	  _ioMode = IOMode::None;
+      _ioMode = IOMode::None;
 
       int          flag = 0;
-  	  int          result;
-   	  clock_t      timeOutWarning   = -1;
-   	  clock_t      timeOutShutdown  = -1;
-   	  bool         triggeredTimeoutWarning = false;
+      int          result;
+      clock_t      timeOutWarning   = -1;
+      clock_t      timeOutShutdown  = -1;
+      bool         triggeredTimeoutWarning = false;
       result = MPI_Test( _ioMPIRequest, &flag, MPI_STATUS_IGNORE );
       while (!flag) {
         if (timeOutWarning==-1)   timeOutWarning   = tarch::mpi::Rank::getInstance().getDeadlockWarningTimeStamp();
@@ -475,6 +479,7 @@ class peano4::stacks::STDVectorStack {
       }
       delete _ioMPIRequest;
       _ioMPIRequest = nullptr;
+      #endif
     }
 };
 

@@ -45,16 +45,17 @@ class peano4::parallel::Node {
      * Value for _currentProgramStep.
      */
     static constexpr int        UndefProgramStep = -1;
+    /**
+     * We need one stack for outgoing data, one for incoming
+     * (boundary) data. And then we need one in/out stack for
+     * splits and joins.
+     */
+    static constexpr int        StacksPerCommunicationPartner = 3;
+
     int                         _currentProgramStep;
 
     int                         _rankOrchestrationTag;
     int                         _treeManagementTag;
-
-    /**
-     * Key is from-to.
-     */
-    std::map< std::pair<int,int>, std::queue<peano4::grid::GridVertex> >  _sendReceiveBuffer;
-
 
     std::map< int, TreeEntry >  _treeEntries;
 
@@ -143,30 +144,25 @@ class peano4::parallel::Node {
      * Hand in a spacetree id and get back the number that we should use to
      * send something to this tree.
      */
-    int getOutputStackNumberOfBoundaryExchange(int id) const;
+    static int getOutputStackNumberOfBoundaryExchange(int id);
+
+    static int getStackNumberForSplitMergeDataExchange(int id);
 
     /**
      * Counterpart of getOutputStackNumberOfBoundaryExchange(int)
      */
-    int getInputStackNumberOfBoundaryExchange(int id) const;
+    static int getInputStackNumberOfBoundaryExchange(int id);
 
     /**
      * See getOutputStackNumberOfBoundaryExchange().
      */
-    bool isBoundaryExchangeOutputStackNumber(int number) const;
-    bool isBoundaryExchangeInputStackNumber(int number) const;
+    static bool isBoundaryExchangeOutputStackNumber(int number);
+    static bool isBoundaryExchangeInputStackNumber(int number);
+    static bool isSplitMergeStackNumber(int number);
 
     /**
-     * You may only call this opeartion if isBoundaryExchangeOutputStackNumber()
-     * holds. In this case, the routine tells you the id of the spacetree
-     * that corresponds to this stack number.
      */
-    int getIdOfBoundaryExchangeOutputStackNumber(int number) const;
-
-    void sendVertexSynchronously( const peano4::grid::GridVertex& vertex, int fromId, int toId );
-    peano4::grid::GridVertex getVertexSynchronously( int fromId, int toId );
-
-    void treesCantCoarsenBecauseOfVetos( int treeId );
+    static int getIdOfExchangeStackNumber(int number);
 
     /**
      * Not const as we need a semaphore to make it thread-safe

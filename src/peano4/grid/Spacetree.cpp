@@ -976,14 +976,12 @@ std::set<int>  peano4::grid::Spacetree::getAdjacentDomainIds( const GridVertex& 
 void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex ) {
   if (
     _spacetreeState==SpacetreeState::NewFromSplit
-	 and
-	 isVertexAdjacentToLocalSpacetree(vertex,true,true)
+    and
+    isVertexAdjacentToLocalSpacetree(vertex,true,true)
   ) {
-	  Genau das hier geht jetzt natuerlich net -> neuen Stack verwenden statt dieses komischen synchronously
-
-	vertex = peano4::parallel::Node::getInstance().getVertexSynchronously(_masterId,_id);
-	assertion2( vertex.getState() != GridVertex::Refining, vertex.toString(), _id );
-	assertion2( vertex.getState() != GridVertex::Erasing,  vertex.toString(), _id );
+    GridVertex inVertex = _vertexStack[ peano4::parallel::Node::getInstance().getStackNumberForSplitMergeDataExchange(_masterId) ].pop();
+    assertion2( vertex.getState() != GridVertex::Refining, vertex.toString(), _id );
+    assertion2( vertex.getState() != GridVertex::Erasing,  vertex.toString(), _id );
   }
 
   if ( _spacetreeState!=SpacetreeState::NewFromSplit ) {
@@ -1069,7 +1067,7 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
         "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)",
         "receive updated copy of vertex " << vertex.toString() << " from worker tree " << p << " synchronously on tree " << _id
       );
-      GridVertex inVertex = peano4::parallel::Node::getInstance().getVertexSynchronously(p,_id);
+      GridVertex inVertex = _vertexStack[ peano4::parallel::Node::getInstance().getStackNumberForSplitMergeDataExchange(p) ].pop();
       assertionVectorNumericalEquals4( vertex.getX(), inVertex.getX(),   inVertex.toString(), vertex.toString(), _id, p );
       assertionEquals4( vertex.getLevel(), inVertex.getLevel(),          inVertex.toString(), vertex.toString(), _id, p );
       vertex = inVertex;
@@ -1087,19 +1085,19 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
         "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)",
         "new vertex is " << vertex.toString()
       );
-	}
+    }
   }
 
   if ( not _splitting.empty() and isVertexAdjacentToLocalSpacetree(vertex,true,true) ) {
-	std::set<int> targetIds;
-	for (int i=0; i<TwoPowerD; i++) {
+    std::set<int> targetIds;
+    for (int i=0; i<TwoPowerD; i++) {
       if ( _splitting.count( vertex.getAdjacentRanks(i) )>0 ) {
-    	targetIds.insert( vertex.getAdjacentRanks(i) );
+        targetIds.insert( vertex.getAdjacentRanks(i) );
       }
-	}
-	for (auto p: targetIds ) {
-      peano4::parallel::Node::getInstance().sendVertexSynchronously(vertex,_id,p);
-	}
+    }
+    for (auto p: targetIds ) {
+      _vertexStack[ peano4::parallel::Node::getInstance().getStackNumberForSplitMergeDataExchange(p) ].push(vertex);
+    }
   }
 
   if (
@@ -1111,7 +1109,7 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
       "receiveAndMergeVertexIfAdjacentToDomainBoundary(GridVertex)",
       "send vertex " << vertex.toString() << " on tree " << _id << " synchronously to tree " << _masterId
     );
-    peano4::parallel::Node::getInstance().sendVertexSynchronously(vertex,_id,_masterId);
+    _vertexStack[ peano4::parallel::Node::getInstance().getStackNumberForSplitMergeDataExchange(_id) ].push(vertex);
   }
 }
 

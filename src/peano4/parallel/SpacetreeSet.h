@@ -89,8 +89,24 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     peano4::grid::Spacetree& getSpacetree(int id);
 
-    void traverseTreeSet(peano4::grid::TraversalObserver& observer);
+    /**
+     * Does not run through new trees for which no data might be available yet.
+     * The reason is simple: When we split a tree, this tree pipes its data
+     * (synchronously) into the new worker. In a shared memory environmment,
+     * we thus have to run all 'running' (read non-splitting) trees first.
+     */
+    void traverseTrees(peano4::grid::TraversalObserver& observer);
+
+    /**
+     * Operation is idempotent, i.e. you can call it multiple times in a row.
+     */
     void exchangeDataBetweenTrees();
+
+    /**
+     * exchangeDataBetweenTrees() only handles those data transfers which are logically
+     * asynchronous..
+     */
+    void exchangeDataBetweenNewOrMergingTrees();
 
     /**
      * Adds a new spacetree to the set. The responsibility goes over to the
