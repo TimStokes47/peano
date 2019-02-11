@@ -53,6 +53,7 @@ AC_CONFIG_MACRO_DIRS([m4])
 # Checks for programs.
 #
 AC_PROG_CXX
+CXXFLAGS="$CXXFLAGS -std=c++11"
 
 
 # Think I do not need a C compiler
