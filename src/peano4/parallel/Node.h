@@ -50,7 +50,7 @@ class peano4::parallel::Node {
      * (boundary) data. And then we need one in/out stack for
      * splits and joins.
      */
-    static constexpr int        StacksPerCommunicationPartner = 3;
+    static constexpr int        StacksPerCommunicationPartner = 4;
 
     int                         _currentProgramStep;
 
@@ -146,7 +146,8 @@ class peano4::parallel::Node {
      */
     static int getOutputStackNumberOfBoundaryExchange(int id);
 
-    static int getStackNumberForSplitMergeDataExchange(int id);
+    static int getInputStackNumberForSplitMergeDataExchange(int id);
+    static int getOutputStackNumberForSplitMergeDataExchange(int id);
 
     /**
      * Counterpart of getOutputStackNumberOfBoundaryExchange(int)
@@ -158,7 +159,7 @@ class peano4::parallel::Node {
      */
     static bool isBoundaryExchangeOutputStackNumber(int number);
     static bool isBoundaryExchangeInputStackNumber(int number);
-    static bool isSplitMergeStackNumber(int number);
+    static bool isSplitMergeOutputStackNumber(int number);
 
     /**
      */

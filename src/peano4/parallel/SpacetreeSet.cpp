@@ -340,7 +340,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
       logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "issue task to manage data transfer of tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
     }
   }
-  logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "exchangeDataBetweenTrees" << dataExchangeTasks.size() << " concurrent data exchange tasks" );
+  logInfo( "exchangeDataBetweenTrees(TraversalObserver&)", "trigger " << dataExchangeTasks.size() << " concurrent data exchange tasks" );
 
   static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees" );
   peano4::parallel::Tasks runTraversals(dataExchangeTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion);
@@ -350,38 +350,18 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
   for (auto& tree: _spacetrees) {
     for (auto& stacks: tree._vertexStack) {
-      if (Node::isSplitMergeStackNumber(stacks.first)) {
+      if (Node::isSplitMergeOutputStackNumber(stacks.first)) {
         const int targetTreeId = Node::getIdOfExchangeStackNumber(stacks.first);
-        const int inStack      = Node::getStackNumberForSplitMergeDataExchange(tree._id);
+        const int inStack      = Node::getInputStackNumberForSplitMergeDataExchange(tree._id);
         logInfo( "exchangeDataBetweenNewOrMergingTrees()",
           "clone " << stacks.second.size() << " entries from stack " << stacks.first << " of tree " << tree._id <<
           " into stack " << inStack << " on tree " << targetTreeId
         );
+        getSpacetree(targetTreeId)._vertexStack[inStack].clone( stacks.second );
+        stacks.second.clear();
       }
     }
   }
-
-  /*
-
-  // Trigger all sends for splitting trees
-  // -------------------------------------
-  // Ist zu frueh
-
-  if (_spacetree._spacetreeState==peano4::grid::Spacetree::SpacetreeState::NewFromSplit) {
-    const int inStack  = Node::getInstance().getStackNumberForSplitMergeDataExchange( _spacetree._masterId );
-    logInfo( "run()",
-      "wait for master tree " << _spacetree._masterId << " on current tree " << _spacetree._id <<
-      " to copy its values into stack " << inStack
-    );
-    while (_spacetree._vertexStack[inStack].empty() ) {
-      tarch::multicore::yield();
-    }
-  }
-    //      tree._spacetreeState == peano4::grid::Spacetree::SpacetreeState::NewFromSplit
-  */
-
-
-
 }
 
 

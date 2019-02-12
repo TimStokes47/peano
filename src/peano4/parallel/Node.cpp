@@ -139,8 +139,13 @@ int peano4::parallel::Node::getInputStackNumberOfBoundaryExchange(int id) {
 }
 
 
-int peano4::parallel::Node::getStackNumberForSplitMergeDataExchange(int id) {
+int peano4::parallel::Node::getInputStackNumberForSplitMergeDataExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 2;
+}
+
+
+int peano4::parallel::Node::getOutputStackNumberForSplitMergeDataExchange(int id) {
+  return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner + 3;
 }
 
 
@@ -156,9 +161,9 @@ bool peano4::parallel::Node::isBoundaryExchangeInputStackNumber(int id) {
 }
 
 
-bool peano4::parallel::Node::isSplitMergeStackNumber(int id) {
+bool peano4::parallel::Node::isSplitMergeOutputStackNumber(int id) {
   return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
-     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 2 );
+     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 3 );
 }
 
 
