@@ -347,7 +347,7 @@ switch (mode) {
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessage from node " 
+        msg << "failed to start to receive peano4::parallel::IntegerMessage from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -367,7 +367,7 @@ switch (mode) {
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessage from node " 
+        msg << "failed to start to receive peano4::parallel::IntegerMessage from rank " 
              << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -454,7 +454,7 @@ switch (mode) {
       result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessage from node " 
+        msg << "failed to start to receive peano4::parallel::IntegerMessage from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -847,7 +847,7 @@ switch (mode) {
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessagePacked from node " 
+        msg << "failed to start to receive peano4::parallel::IntegerMessagePacked from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -867,7 +867,7 @@ switch (mode) {
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessagePacked from node " 
+        msg << "failed to start to receive peano4::parallel::IntegerMessagePacked from rank " 
              << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -954,7 +954,7 @@ switch (mode) {
       result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::parallel::IntegerMessagePacked from node " 
+        msg << "failed to start to receive peano4::parallel::IntegerMessagePacked from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 

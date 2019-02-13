@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   13/02/2019 08:14
+ * @date   13/02/2019 11:19
  */
 class peano4::parallel::IntegerMessage { 
    
@@ -61,7 +61,11 @@ class peano4::parallel::IntegerMessage {
          
       };
       private: 
+         public:   // change to public visibiliy as some fields are exposed 
+
          PersistentRecords _persistentRecords;
+         private:
+
          
       public:
          /**
@@ -157,7 +161,7 @@ class peano4::parallel::IntegerMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   13/02/2019 08:14
+ * @date   13/02/2019 11:19
  */
 class peano4::parallel::IntegerMessagePacked { 
    

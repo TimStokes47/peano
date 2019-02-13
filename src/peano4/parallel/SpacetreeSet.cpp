@@ -85,7 +85,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       newTree._spacetreeState = peano4::grid::Spacetree::SpacetreeState::NewFromSplit;
 
       IntegerMessage message(0);
-      while (message.valyue>=0) {
+      while (message._persistentRecords._value>=0) {
         MPI_Recv( &key, 1, MPI_INT, message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE );
         if (key>=0) {
           int numberOfElements;

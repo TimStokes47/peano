@@ -24,7 +24,7 @@ void peano4::parallel::Node::initMPIDatatypes() {
   #ifdef Parallel
   StartTraversalMessage::initDatatype();
   TreeManagementMessage::initDatatype();
-  IntgerMessage::initDatatype();
+  IntegerMessage::initDatatype();
 
   peano4::grid::AutomatonState::initDatatype();
   peano4::grid::GridVertex::initDatatype();
