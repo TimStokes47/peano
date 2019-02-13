@@ -1,8 +1,9 @@
 #include "SpacetreeSet.h"
 #include "Node.h"
+#include "TreeManagementMessage.h"
+#include "IntegerMessage.h"
 
 
-#include "peano4/parallel/TreeManagementMessage.h"
 #include "peano4/grid/PeanoCurve.h"
 
 
@@ -83,8 +84,8 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       newTree._root      = state;
       newTree._spacetreeState = peano4::grid::Spacetree::SpacetreeState::NewFromSplit;
 
-      int key = 0;
-      while (key>=0) {
+      IntegerMessage message(0);
+      while (message.valyue>=0) {
         MPI_Recv( &key, 1, MPI_INT, message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator(), MPI_STATUS_IGNORE );
         if (key>=0) {
           int numberOfElements;
