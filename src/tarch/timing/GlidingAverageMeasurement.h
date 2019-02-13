@@ -71,7 +71,7 @@ class tarch::timing::GlidingAverageMeasurement {
      * returns the average.
      */
     void setValue(const double& value);
-    int getNumberOfMeasurements() const;
+
     std::string toString() const;
 
     double max() const;

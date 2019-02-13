@@ -69,11 +69,6 @@ double tarch::timing::GlidingAverageMeasurement::getStandardDeviation() const {
 }
 
 
-int tarch::timing::GlidingAverageMeasurement::getNumberOfMeasurements() const {
-  return _values.size();
-}
-
-
 bool tarch::timing::GlidingAverageMeasurement::isAccurateValue(double factor) const {
   if (_values.size()<4) {
     return false;
