@@ -204,15 +204,19 @@ void peano4::parallel::SpacetreeSet::traverseTrees(peano4::grid::TraversalObserv
     }
   }
 
-  logInfo( "traverseTrees(TraversalObserver&)", "spawn " << traverseTasksForAllOtherTrees.size() << " concurrent traversal tasks for all trees without new-from-split marker" );
-  static int multitaskingRegionForAllOtherTrees = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverseTreeSet" );
-  peano4::parallel::Tasks runTraversalsForAllOtherTrees(traverseTasksForAllOtherTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForAllOtherTrees);
+  if ( not traverseTasksForAllOtherTrees.empty() ) {
+    logInfo( "traverseTrees(TraversalObserver&)", "spawn " << traverseTasksForAllOtherTrees.size() << " concurrent traversal tasks for all trees without new-from-split marker" );
+    static int multitaskingRegionForAllOtherTrees = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverseTreeSet" );
+    peano4::parallel::Tasks runTraversalsForAllOtherTrees(traverseTasksForAllOtherTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForAllOtherTrees);
+  }
 
   exchangeDataBetweenNewOrMergingTrees();
 
-  logInfo( "traverseTrees(TraversalObserver&)", "spawn " << traverseTasksForNewSplitTrees.size() << " concurrent traversal tasks for all new trees" );
-  static int multitaskingRegionForNewSplitTrees = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverseTreeSet" );
-  peano4::parallel::Tasks runTraversalsForNewSplitTrees(traverseTasksForNewSplitTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForNewSplitTrees);
+  if (not traverseTasksForNewSplitTrees.empty() ) {
+    logInfo( "traverseTrees(TraversalObserver&)", "spawn " << traverseTasksForNewSplitTrees.size() << " concurrent traversal tasks for all new trees" );
+    static int multitaskingRegionForNewSplitTrees = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverseTreeSet" );
+    peano4::parallel::Tasks runTraversalsForNewSplitTrees(traverseTasksForNewSplitTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForNewSplitTrees);
+  }
 }
 
 

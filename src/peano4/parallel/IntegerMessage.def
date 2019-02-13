@@ -1,0 +1,9 @@
+#include "peano4/utils/Globals.h"
+// have to know whether we are using MPI2
+#include "config.h"
+
+Packed-Type: short int;
+
+class peano4::parallel::IntegerMessage {
+  persistent        parallelise int  value;
+};
