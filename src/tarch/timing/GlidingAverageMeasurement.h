@@ -30,7 +30,6 @@ class tarch::timing::GlidingAverageMeasurement {
   private:
     static tarch::logging::Log _log;
 
-    double          _accuracy;
     /**
      * The weights q determine the weight via $q^0,q^1,q^2,...$.
      */
@@ -42,12 +41,8 @@ class tarch::timing::GlidingAverageMeasurement {
      */
     std::vector<double>  _values;
 
-    /**
-     * Needed to compute average value and variance.
-     */
-    bool            _isAccurateValue;
   public:
-    GlidingAverageMeasurement(double accuracy=0.0, double weight=0.7, int maxEntries=1024);
+    GlidingAverageMeasurement(double weight=0.7, int maxEntries=16);
 
     /**
      * @return Averaged value (mean value) of all measurements.
@@ -66,19 +61,9 @@ class tarch::timing::GlidingAverageMeasurement {
     /**
      * Is value accurate
      *
-     * Whether a value is accurate depends on the last setValue() call. The
-     * class internally holds the mean value of all setValue() calls. If a new
-     * value is set/added, the object checks whether this additional
-     * measurement modifies the mean value more than the given accuracy.
+     * A value is accurate if its standard deviation divided by its mean is smaller than the factor.
      */
-    bool isAccurateValue() const;
-
-    /**
-     * @see isAccurateValue()
-     */
-    void setAccuracy(const double& value);
-
-    void increaseAccuracy( const double& factor );
+    bool isAccurateValue(double factor=0.1) const;
 
     /**
      * Set the value. If the measurement already holds a value, this value is
@@ -93,8 +78,6 @@ class tarch::timing::GlidingAverageMeasurement {
     double min() const;
 
     void erase();
-
-    double getAccuracy() const;
 };
 
 #endif

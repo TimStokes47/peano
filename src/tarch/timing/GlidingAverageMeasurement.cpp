@@ -11,19 +11,15 @@
 tarch::logging::Log tarch::timing::GlidingAverageMeasurement::_log( "tarch::timing::GlidingAverageMeasurement" );
 
 
-tarch::timing::GlidingAverageMeasurement::GlidingAverageMeasurement(double accuracy, double weight, int maxEntries):
-  _accuracy(accuracy),
+tarch::timing::GlidingAverageMeasurement::GlidingAverageMeasurement(double weight, int maxEntries):
   _weight(weight),
-  _maxEntries(maxEntries),
-  _isAccurateValue(false) {
-  assertion1( accuracy>=0.0, accuracy );
+  _maxEntries(maxEntries) {
   assertion1( weight<=1.0, weight );
   assertion1( maxEntries>=1, weight );
 }
 
 
 void tarch::timing::GlidingAverageMeasurement::erase() {
-  _isAccurateValue      = false;
   _values.clear();
 }
 
@@ -73,39 +69,36 @@ double tarch::timing::GlidingAverageMeasurement::getStandardDeviation() const {
 }
 
 
-bool tarch::timing::GlidingAverageMeasurement::isAccurateValue() const {
-  return _isAccurateValue;
+int tarch::timing::GlidingAverageMeasurement::getNumberOfMeasurements() const {
+  return _values.size();
 }
 
 
-void tarch::timing::GlidingAverageMeasurement::setAccuracy(const double& value) {
-  assertion( value>=0.0 );
-  _accuracy        = value;
-}
-
-
-void tarch::timing::GlidingAverageMeasurement::increaseAccuracy( const double& factor ) {
-  assertion(factor>0.0);
-  _accuracy /= factor;
+bool tarch::timing::GlidingAverageMeasurement::isAccurateValue(double factor) const {
+  if (_values.size()<4) {
+    return false;
+  }
+  else if ( getValue()<=1.0 ) {
+    return getStandardDeviation() < factor;
+  }
+  else {
+    return getStandardDeviation() / std::abs(getValue()) < factor;
+  }
 }
 
 
 void tarch::timing::GlidingAverageMeasurement::setValue(const double& value) {
   if ( static_cast<int>(_values.size())<_maxEntries ) {
-    _isAccurateValue = false;
     _values.push_back(value);
   }
   else {
     const double oldAverage = getValue();
-    _isAccurateValue = false;
 
     for (int i=0; i<_maxEntries-1; i++) {
       _values[i] = _values[i+1];
     }
 
     _values[_maxEntries-1] = value;
-
-    _isAccurateValue = std::abs(oldAverage - getValue()) < _accuracy;
   }
 }
 
@@ -136,9 +129,4 @@ double tarch::timing::GlidingAverageMeasurement::min() const {
 	result = result < p ? result : p;
   }
   return result;
-}
-
-
-double tarch::timing::GlidingAverageMeasurement::getAccuracy() const {
-  return _accuracy;
 }
