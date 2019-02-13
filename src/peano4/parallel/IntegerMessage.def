@@ -5,5 +5,5 @@
 Packed-Type: short int;
 
 class peano4::parallel::IntegerMessage {
-  persistent expose parallelise int  value;
+  discard expose parallelise int  value;
 };
