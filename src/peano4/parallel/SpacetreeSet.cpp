@@ -86,16 +86,18 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
 
       IntegerMessage messageStackKey(0);
       while (messageStackKey.getValue()>=0) {
-        message.receive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    	messageStackKey.receive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
         if (messageStackKey.getValue()>=0) {
+          assertion(peano4::grid::PeanoCurve::isInOutStack(messageStackKey._value));
+
           IntegerMessage numberOfElements;
-          numberOfElements.receive( message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
-          logDebug( "receiveDanglingMessages()", "received notification to receive " << numberOfElements << " entries for stack " << messageStackKey.getValue() );
-          assertion(peano4::grid::PeanoCurve::isInOutStack(message._persistentRecords._value));
-          assertion(numberOfElements>0);
+          numberOfElements.receive( message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+          logDebug( "receiveDanglingMessages()", "received notification to receive " << numberOfElements._value << " entries for stack " << messageStackKey.getValue() );
+          assertion(numberOfElements._value>0);
+
           std::pair< int, peano4::stacks::GridVertexStack > newEntry( messageStackKey.getValue(), peano4::stacks::GridVertexStack() );
           newTree._vertexStack.insert( newEntry );
-          newTree._vertexStack[messageStackKey.getValue()].startReceive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(),numberOfElements);
+          newTree._vertexStack[messageStackKey.getValue()].startReceive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(),numberOfElements._value);
         }
       }
 
@@ -139,10 +141,10 @@ void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& orig
     for (auto& p: originalSpacetree._vertexStack ) {
       if ( peano4::grid::PeanoCurve::isInOutStack(p.first) and p.second.size()>0) {
         IntegerMessage messageStackKey(p.first);
-        messageStackKey.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+        messageStackKey.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
         IntegerMessage numberOfElements(p.second.size());
-        numberOfElements.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+        numberOfElements.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
         p.second.startSend(targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag());
       }
@@ -360,12 +362,22 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
       if (Node::isSplitMergeOutputStackNumber(stacks.first)) {
         const int targetTreeId = Node::getIdOfExchangeStackNumber(stacks.first);
         const int inStack      = Node::getInputStackNumberForSplitMergeDataExchange(tree._id);
-        logInfo( "exchangeDataBetweenNewOrMergingTrees()",
-          "clone " << stacks.second.size() << " entries from stack " << stacks.first << " of tree " << tree._id <<
-          " into stack " << inStack << " on tree " << targetTreeId
-        );
-        getSpacetree(targetTreeId)._vertexStack[inStack].clone( stacks.second );
-        stacks.second.clear();
+        if ( Node::getInstance().getRank(targetTreeId)==tarch::mpi::Rank::getInstance().getRank()) {
+          logInfo( "exchangeDataBetweenNewOrMergingTrees()",
+            "clone " << stacks.second.size() << " entries from stack " << stacks.first << " of tree " << tree._id <<
+            " into stack " << inStack << " of tree " << targetTreeId
+          );
+          getSpacetree(targetTreeId)._vertexStack[inStack].clone( stacks.second );
+          stacks.second.clear();
+        }
+        else {
+          logInfo( "exchangeDataBetweenNewOrMergingTrees()",
+            "send " << stacks.second.size() << " entries from stack " << stacks.first << " of tree " << tree._id <<
+            " to rank " << Node::getInstance().getRank(targetTreeId) << " holding tree " << targetTreeId
+          );
+          assertion(false);
+          stacks.second.clear();
+        }
       }
     }
   }

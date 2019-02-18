@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   13/02/2019 11:19
+ * @date   15/02/2019 12:32
  */
 class peano4::parallel::IntegerMessage { 
    
@@ -37,33 +37,18 @@ class peano4::parallel::IntegerMessage {
       typedef peano4::parallel::IntegerMessagePacked Packed;
       
       struct PersistentRecords {
-         int _value;
          /**
           * Generated
           */
          PersistentRecords();
          
-         /**
-          * Generated
-          */
-         PersistentRecords(const int& value);
-         
-         /**
-          * Generated
-          */
-          int getValue() const ;
-         
-         /**
-          * Generated
-          */
-          void setValue(const int& value) ;
-         
          
       };
       private: 
-         public:   // change to public visibiliy as some fields are exposed 
-
          PersistentRecords _persistentRecords;
+         public:
+
+         int _value;
          private:
 
          
@@ -161,38 +146,23 @@ class peano4::parallel::IntegerMessage {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   13/02/2019 11:19
+ * @date   15/02/2019 12:32
  */
 class peano4::parallel::IntegerMessagePacked { 
    
    public:
       
       struct PersistentRecords {
-         int _value;
          /**
           * Generated
           */
          PersistentRecords();
          
-         /**
-          * Generated
-          */
-         PersistentRecords(const int& value);
-         
-         /**
-          * Generated
-          */
-          int getValue() const ;
-         
-         /**
-          * Generated
-          */
-          void setValue(const int& value) ;
-         
          
       };
       private: 
          PersistentRecords _persistentRecords;
+         int _value;
          
       public:
          /**
