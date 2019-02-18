@@ -59,6 +59,17 @@ class peano4::parallel::Node {
 
     std::map< int, TreeEntry >  _treeEntries;
 
+    int                         _maxTreesPerRank;
+
+    /**
+     * The base tag (smallest one) used for vertex data exchange. I use
+     * some lazy initialisation, i.e. it is set to -1 a priori and then
+     * set properly upon first usage. The reason is that I otherwise
+     * don't give the user the opportunity to set the maximum number of
+     * threads per rank.
+     */
+    int                         _gridVertexDataExchangeBaseTag;
+
     /**
      * The standard constructor assigns the attributes default values and
      * checks whether the program is compiled using the -DParallel option.
@@ -76,7 +87,8 @@ class peano4::parallel::Node {
      * this routine. To identify a global stack number, please use this
      * function and add it to your local stack number.
      */
-    int getId(int rank, int threadId) const;
+    int getId(int rank, int localTreeId) const;
+    int getLocalTreeId(int treeId) const;
 
     /**
      * The operation is not thread-safe as we call it only internally,
@@ -196,7 +208,23 @@ class peano4::parallel::Node {
 
     int getTreeManagementTag() const;
 
+    /**
+     * Set in initialisation (or otherwise left to concurrency).
+     */
+    int getMaximumNumberOfTreesPerRank() const;
+
+    /**
+     * The shutdown is invoked by peano4::shutdownParallelEnvironment().
+     */
     void shutdown();
+
+    /**
+     * I use two tags per spacetree per rank: one for boundary data
+     * (horizontal) and one for up-down and synchronous (forks) data
+     * exchanges (vertical and fork/join). The operation allocates
+     * tags lazily and thus is not const.
+     */
+    int getGridDataExchangeTag( int sendingTreeId, bool boundaryDataExchange );
 };
 
 #endif

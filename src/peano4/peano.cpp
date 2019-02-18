@@ -44,6 +44,7 @@ int peano4::initParallelEnvironment(int* argc, char*** argv) {
 
 
 void peano4::shutdownParallelEnvironment() {
+  peano4::parallel::Node::getInstance().shutdown();
   peano4::parallel::Node::shutdownMPIDatatypes();
   tarch::mpi::Rank::getInstance().shutdown();
 }

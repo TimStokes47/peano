@@ -146,7 +146,7 @@ class tarch::mpi::Rank {
      * Consequently, the operation uses its own (local) log variable instead
      * of the log variable of the class. This is an important workaround!
      */
-    static int reserveFreeTag(const std::string& fullQualifiedMessageName);
+    static int reserveFreeTag(const std::string& fullQualifiedMessageName, int numberOfTags = 1);
     static void releaseTag(int tag);
 
     /**

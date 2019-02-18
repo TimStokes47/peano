@@ -72,7 +72,8 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
     }
     else if (message.getAction()==peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree) {
       peano4::grid::AutomatonState state;
-      state.receive(message.getSenderRank(),peano4::parallel::Node::getInstance().getTreeManagementTag(),false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
+      const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(message.getMasterSpacetreeId(),false);
+      state.receive(message.getSenderRank(),tag,false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
       peano4::grid::Spacetree newTree(
         state.getX(),
@@ -86,18 +87,18 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
 
       IntegerMessage messageStackKey(0);
       while (messageStackKey.getValue()>=0) {
-    	messageStackKey.receive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    	messageStackKey.receive(message.getSenderRank(), tag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
         if (messageStackKey.getValue()>=0) {
           assertion(peano4::grid::PeanoCurve::isInOutStack(messageStackKey._value));
 
           IntegerMessage numberOfElements;
-          numberOfElements.receive( message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(), true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+          numberOfElements.receive( message.getSenderRank(), tag, true, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
           logDebug( "receiveDanglingMessages()", "received notification to receive " << numberOfElements._value << " entries for stack " << messageStackKey.getValue() );
           assertion(numberOfElements._value>0);
 
           std::pair< int, peano4::stacks::GridVertexStack > newEntry( messageStackKey.getValue(), peano4::stacks::GridVertexStack() );
           newTree._vertexStack.insert( newEntry );
-          newTree._vertexStack[messageStackKey.getValue()].startReceive(message.getSenderRank(), peano4::parallel::Node::getInstance().getTreeManagementTag(),numberOfElements._value);
+          newTree._vertexStack[messageStackKey.getValue()].startReceive(message.getSenderRank(), tag, numberOfElements._value);
         }
       }
 
@@ -111,8 +112,6 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       for (auto& p: newTree._vertexStack) {
     	logDebug( "run()", "stack " << p.first << ": " << p.second.size() << " element(s)" );
       }
-
-      // @todo Ich glaube das _currentElement wird einfach net korrekt gesetzt
 
       _spacetrees.push_back( std::move(newTree) );
     }
@@ -136,17 +135,18 @@ void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& orig
     message.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     peano4::grid::AutomatonState state = originalSpacetree._root;
-    state.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
+    const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(originalSpacetree._id,false);
+    state.send(targetRank,tag,false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     for (auto& p: originalSpacetree._vertexStack ) {
       if ( peano4::grid::PeanoCurve::isInOutStack(p.first) and p.second.size()>0) {
         IntegerMessage messageStackKey(p.first);
-        messageStackKey.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+        messageStackKey.send(targetRank,tag,true,IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
         IntegerMessage numberOfElements(p.second.size());
-        numberOfElements.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
+        numberOfElements.send(targetRank,tag,true,IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
-        p.second.startSend(targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag());
+        p.second.startSend(targetRank, tag);
       }
     }
     for (auto& p: originalSpacetree._vertexStack ) {
@@ -155,7 +155,7 @@ void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& orig
       }
     }
     int terminateSymbol = -1;
-    MPI_Send( &terminateSymbol, 1, MPI_INT, targetRank, peano4::parallel::Node::getInstance().getTreeManagementTag(), tarch::mpi::Rank::getInstance().getCommunicator() );
+    MPI_Send( &terminateSymbol, 1, MPI_INT, targetRank, tag, tarch::mpi::Rank::getInstance().getCommunicator() );
     #else
     assertionMsg( false, "should never enter this branch without -DParallel" );
     #endif
@@ -381,6 +381,8 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
       }
     }
   }
+
+  @todo Hier sollte man jetzt warten, bis die Daten da sind. Dazu muss aber in der Assertion oben auch mal erst was weggeschickt werden.
 }
 
 

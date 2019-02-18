@@ -35,8 +35,10 @@ void tarch::mpi::Rank::releaseTag(int tag) {
 }
 
 
-int tarch::mpi::Rank::reserveFreeTag(const std::string& fullQualifiedMessageName) {
-  tagCounter++;
+int tarch::mpi::Rank::reserveFreeTag(const std::string& fullQualifiedMessageName, int numberOfTags) {
+  assertion2(numberOfTags>=1,fullQualifiedMessageName,numberOfTags);
+  const int result = tagCounter;
+  tagCounter += numberOfTags;
 
   // I protect the tag manually (not via log filter), as many tags are actually
   // grabbed before most applications initialise their log filters properly.
@@ -50,11 +52,11 @@ int tarch::mpi::Rank::reserveFreeTag(const std::string& fullQualifiedMessageName
     logInfo(
       "reserveFreeTag()",
       "assigned message " << fullQualifiedMessageName
-       << " the free tag " << tagCounter-1
+       << " the free tag " << result << " (" << numberOfTags << " consecutive tags reserved)"
     );
   }
 
-  return tagCounter-1;
+  return result;
 }
 
 

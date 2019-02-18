@@ -51,11 +51,24 @@ peano4::parallel::Node::Node():
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     registerId( 0, -1);
   }
+
+  _maxTreesPerRank               = std::thread::hardware_concurrency()+1;
+  _gridVertexDataExchangeBaseTag = -1;
 }
 
 
 peano4::parallel::Node::~Node() {
   assertionMsg( tarch::mpi::Rank::getInstance().getNumberOfRanks()==1 or _currentProgramStep==Terminate, "forgot to terminate node properly through peano4::parallel::Node::getInstance().shutdown()" );
+}
+
+
+int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, bool boundaryDataExchange ) {
+  if (_gridVertexDataExchangeBaseTag < 0) {
+    _gridVertexDataExchangeBaseTag = tarch::mpi::Rank::reserveFreeTag("grid-data-exchange", _maxTreesPerRank*2 );
+  }
+  int result = _gridVertexDataExchangeBaseTag + getLocalTreeId(sendingTreeId)*2;
+  if (boundaryDataExchange) result++;
+  return result;
 }
 
 
@@ -70,15 +83,21 @@ peano4::parallel::Node& peano4::parallel::Node::getInstance() {
 }
 
 
-int peano4::parallel::Node::getId(int rank, int threadId) const {
+int peano4::parallel::Node::getId(int rank, int localTreeId) const {
   const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
-  return numberOfRanks * threadId + rank;
+  return numberOfRanks * localTreeId + rank;
 }
 
 
 int peano4::parallel::Node::getRank(int id) const {
   const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
   return id % numberOfRanks;
+}
+
+
+int peano4::parallel::Node::getLocalTreeId(int treeId) const {
+  const int numberOfRanks = tarch::mpi::Rank::getInstance().getNumberOfRanks();
+  return treeId / numberOfRanks;
 }
 
 
@@ -121,6 +140,11 @@ void peano4::parallel::Node::registerId(int id, int masterId) {
 
 int peano4::parallel::Node::getNumberOfRegisteredTrees() const {
   return _treeEntries.size();
+}
+
+
+int peano4::parallel::Node::getMaximumNumberOfTreesPerRank() const {
+  return _maxTreesPerRank;
 }
 
 
