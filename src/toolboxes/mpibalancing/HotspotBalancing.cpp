@@ -387,8 +387,3 @@ void mpibalancing::HotspotBalancing::forkFailed() {
   }
   _forkHasFailed = true;
 }
-
-
-int mpibalancing::HotspotBalancing::getRegularLevelAlongBoundary() const {
-  return _regularLevelAlongBoundary;
-}

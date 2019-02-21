@@ -62,8 +62,6 @@ class mpibalancing::GreedyBalancing: public peano::parallel::loadbalancing::Orac
 
     void forkFailed() override;
  
-    int getRegularLevelAlongBoundary() const override;
-
   private:
     /**
      * Logging device

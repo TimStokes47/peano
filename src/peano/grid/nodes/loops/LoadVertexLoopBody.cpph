@@ -322,11 +322,8 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   #ifdef Parallel
   const bool AnalyseVertex =  !_fineGridVertices[positionInVertexArray].isRemote(_state, false, true);
-  const int  CoarsestRegularInnerAndOuterGridLevel = peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary();
-  assertion( CoarsestRegularInnerAndOuterGridLevel>=0 );
   #else
   const bool AnalyseVertex = true;
-  const int  CoarsestRegularInnerAndOuterGridLevel = 0;
   #endif
 
   if (AnalyseVertex) {
@@ -352,8 +349,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         assertion1( _fineGridVertices[positionInVertexArray].isOutside(),_fineGridVertices[positionInVertexArray] );
         if (
           _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined
-          &&
-          _fineGridVerticesEnumerator.getLevel()>CoarsestRegularInnerAndOuterGridLevel
         ) {
           _state.updateRefinementHistoryAfterLoad( false, false, false, true );
           _fineGridVertices[positionInVertexArray].erase();
@@ -421,8 +416,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _fineGridVertices[positionInVertexArray].switchToOutside();
         if (
           _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined
-          &&
-          _fineGridVerticesEnumerator.getLevel()>CoarsestRegularInnerAndOuterGridLevel
         ) {
           _fineGridVertices[positionInVertexArray].erase();
         }

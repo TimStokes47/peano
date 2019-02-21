@@ -252,19 +252,6 @@ class peano::parallel::loadbalancing::Oracle {
     void forkFailed();
 
     /**
-     * Get Coarsest Level of Grid
-     *
-     * For the parallelisation, might make sense to determine a coarsest grid
-     * level that should be regular along the boundary and even overlapping into
-     * the outer region. Peano can fork on this level also outer cells. Those typically
-     * are cells that are refined and have inner descendands, i.e. cells along
-     * the parallel boundary or cells that will become inside due to changing
-     * domains. With this operation, we can ensure that they can already be
-     * distributed before the domain change actually happens.
-     */
-    int getRegularLevelAlongBoundary() const;
-
-    /**
      * You can switch off the load balancing via this value. All MPI Oracles
      * are rank-local and do not communicate with each other.
      * There might be variants which do synchronise, but the default do not.

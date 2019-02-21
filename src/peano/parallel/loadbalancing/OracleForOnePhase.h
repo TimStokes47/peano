@@ -136,11 +136,6 @@ class peano::parallel::loadbalancing::OracleForOnePhase {
      * @see Oracle::forkFailed()
      */
     virtual void forkFailed() = 0;
-
-    /**
-     * @see Oracle::getRegularLevelAlongBoundary()
-     */
-    virtual int getRegularLevelAlongBoundary() const = 0;
 };
 
 

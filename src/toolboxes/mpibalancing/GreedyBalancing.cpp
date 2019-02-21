@@ -75,8 +75,3 @@ void mpibalancing::GreedyBalancing::forkFailed() {
   }
   _forkHasFailed = true;
 }
-
-
-int mpibalancing::GreedyBalancing::getRegularLevelAlongBoundary() const {
-  return _regularLevelAlongBoundary;
-}

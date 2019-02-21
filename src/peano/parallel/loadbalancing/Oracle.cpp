@@ -209,14 +209,6 @@ void peano::parallel::loadbalancing::Oracle::receivedStartCommand( peano::parall
 }
 
 
-int peano::parallel::loadbalancing::Oracle::getRegularLevelAlongBoundary() const {
-  assertion( _currentOracle>=0 );
-  assertion( _currentOracle<static_cast<int>(_oracles.size()));
-
-  return  _oracles[_currentOracle]->getRegularLevelAlongBoundary();
-}
-
-
 peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::Oracle::getLastStartCommand() const {
   assertion( _startCommand!=LoadBalancingFlag::UndefinedLoadBalancingFlag );
   return _startCommand;

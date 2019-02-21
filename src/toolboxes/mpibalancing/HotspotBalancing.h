@@ -252,8 +252,6 @@ class mpibalancing::HotspotBalancing: public peano::parallel::loadbalancing::Ora
 
     void forkFailed() override;
  
-    int getRegularLevelAlongBoundary() const override;
-
 
     /**
      * Receive load balancing information from worker rank.
