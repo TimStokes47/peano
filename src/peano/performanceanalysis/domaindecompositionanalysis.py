@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 from argparse import RawTextHelpFormatter
 
@@ -56,6 +57,23 @@ performanceanalysis_output.writeHeader(outFile,args.file,numberOfRanks,numberOfT
 (parents,levels,offset,volume,nodes) = performanceanalysis_parser.getLogicalTopology(numberOfRanks,dim,args.file,".");
 (volumes,overlaps,work)              = performanceanalysis_analysis.computeVolumesOverlapsWork(numberOfRanks,parents,offset,volume,dim,args.domainoffset,args.domainsize)
 
+maxWork         = max(work)
+rankWithMaxWork = work.index(maxWork)
+minWork         = min(w for w in work if w > 0)
+rankWithMinWork = work.index(minWork)
+
+idleRanks = [p for p in parents if p < 0]
+
+loadImbalance = maxWork/minWork
+
+print "idle ranks = %i" % (len(idleRanks))
+print "rank with maximum work (geometric), maximum work (geometric) = %i, %f" % (rankWithMaxWork, maxWork)
+print "rank with minimum work (geometric), minimum work (geometric) = %i, %f" % (rankWithMinWork, minWork)
+print "(geometric) load imbalance = %f" % loadImbalance
+
+tree = performanceanalysis_analysis.buildTree(parents,offset,volume)
+performanceanalysis_global_plotter.plotHeatMap(performanceanalysis_output.getOutputDirectory(args.file)+"/heatmap",tree,max(levels)-1,work,dim)
+
 performanceanalysis_global_plotter.plotLogicalTopology(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/topology",parents,levels,offset,volume);
 
 performanceanalysis_global_plotter.plotWorkloadAndResponsibilityDistributionPerRank(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/workload-per-rank",volumes,overlaps,work);
@@ -79,10 +97,16 @@ if dim==2:
 
 performanceanalysis_dd.printNodeTable(outFile,numberOfRanks,parents,nodes)
 
+params = {"_IMAGE_DIRECTORY_" : performanceanalysis_output.getOutputDirectory(args.file)}
+
+outputDir = performanceanalysis_output.getOutputDirectory(args.file)
+value = ""
+for l in range(1,max(levels)):
+  value += "\n<a href=\"%s/heatmap-level-%i.pdf\"><img src=\"%s/heatmap-level-%i.png\" /></a>" % (outputDir,l,outputDir,l)
+params["_HEAT_MAPS_PER_LEVEL_"] = value
 
 performanceanalysis_output.processTemplateFile(
- scriptLocation + "/domaindecompositionanalysis.template",outFile,
- {"_IMAGE_DIRECTORY_" : performanceanalysis_output.getOutputDirectory(args.file)}
+ scriptLocation + "/domaindecompositionanalysis.template",outFile, params
 )
 
 performanceanalysis_output.writeTrailer(outFile)

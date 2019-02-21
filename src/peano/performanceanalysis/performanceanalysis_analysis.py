@@ -1,3 +1,59 @@
+class TreeNode:
+  def __init__(self,rank,dim):
+      self.rank     = rank
+      if dim==2:
+        self.children = [[[None for x in range(0,3)] for y in range(0,3)] for z in range(0,1)] 
+      elif dim==3:
+        self.children = [[[None for x in range(0,3)] for y in range(0,3)] for z in range(0,3)] 
+
+  def putChild(self,pos,node):
+      self.children[pos[2]][pos[1]][pos[0]] = node
+
+  def getChild(self,ix,iy,iz):
+      return self.children[iz][iy][ix] 
+
+def buildTreeRecursively(node,parents,offset,volume):
+  dim = len(volume[0]) 
+
+  activeRanks = 1
+
+  childrenRanks = getChildrenRanks(node.rank,parents)
+  for rank in childrenRanks:
+    childOffset  = offset[rank] 
+    childSize    = volume[rank]
+    parentOffset = offset[node.rank]
+
+    pos = [0,0,0]
+    for i in range(0,dim):
+     pos[i] = int(round((childOffset[i] - parentOffset[i])/childSize[i]));
+    child = TreeNode(rank,dim)
+    node.putChild(pos,child)
+    activeRanks += buildTreeRecursively(child,parents,offset,volume)
+  return activeRanks
+
+def getChildrenRanks(rank,parents):
+  children = []
+  for i,x in enumerate(parents):
+     if x == rank:
+        children.append(i)
+  return children
+
+def buildTree(parents,offset,volume):
+  dim = len(volume[0])
+  
+  firstMaster = -1
+  for rank,parent in enumerate(parents):
+    if parent is 0:
+       firstMaster = rank
+       break
+
+  if len(parents)>1:
+    root = TreeNode(firstMaster,dim)
+    activeRanks = buildTreeRecursively(root,parents,offset,volume)
+    return root
+  else:
+    return TreeNode(0,dim)
+
 def computeVolumesOverlapsWork(numberOfRanks,parents,offset,volume,dim,domainoffset,domainsize):
   print "compute volumes, overlaps and work ",
   volumes = [0.0 for x in offset]
@@ -46,7 +102,7 @@ def computeVolumesOverlapsWork(numberOfRanks,parents,offset,volume,dim,domainoff
 
   if len(volumes)>1:
     volumes[0]=0
-    volumes[1]=0
+    #volumes[1]=0
       
   print " done "
   return (volumes,overlaps,work)

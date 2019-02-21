@@ -20,6 +20,33 @@
   load on these ranks or to make them benefit from multiple cores significiantly.
 </p>
 
+<h3>Workload per rank as heat map</h3>
+
+<a href="_IMAGE_DIRECTORY_/heatmap-all.pdf"><img src="_IMAGE_DIRECTORY_/heatmap-all.png" /></a>
+
+<p>
+  Let work be defined as overlap with the computational domain minus
+  the domain overlap of its children.
+  Ranks with the largest work are filled white.
+  In 3D, the y-axis is populated by 2-tuples indicating the
+  y and z offset of a rank's subdomain with respect to the bounding box
+  offset, e.g. the rank with x-coordinate 1 and y-z-coordinate (1,1)
+  on level 1 is placed in the center of the bounding box.
+  The same linearisation is applied on deeper levels of the tree.
+</p>
+
+<p>
+  The levels are plotted on top of each other. The deepest tree level
+  is plotted on top.
+</p>
+
+<p>
+  Below, the global heat map is decomposed into heat maps per level of the tree.
+  (Heat colouring is still performed according to the maximum global workload.)
+</p>
+
+_HEAT_MAPS_PER_LEVEL_
+
 <h3>Workload per node</h3>
 
 <a href="_IMAGE_DIRECTORY_/workload-per-node.pdf"><img src="_IMAGE_DIRECTORY_/workload-per-node.png" /></a>
