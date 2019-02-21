@@ -1032,12 +1032,12 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
       const bool OnlyNeighbourHasTriggeredRefinement =
         inVertex.getState()==GridVertex::State::RefinementTriggered &&
         (vertex.getState()==GridVertex::State::Unrefined or vertex.getState()==GridVertex::State::New or vertex.getState()==GridVertex::State::Delete);
+      const bool OnlyLocalHasTriggeredRefinement =
+        vertex.getState()==GridVertex::State::RefinementTriggered &&
+        (inVertex.getState()==GridVertex::State::Unrefined or inVertex.getState()==GridVertex::State::New or inVertex.getState()==GridVertex::State::Delete);
       const bool OnlyNeighbourHasTriggeredErase =
         inVertex.getState()==GridVertex::State::EraseTriggered &&
         vertex.getState()==GridVertex::State::Refined;
-      const bool OnlyLocalHasTriggeredRefinement =
-        vertex.getState()==GridVertex::State::RefinementTriggered &&
-        (vertex.getState()==GridVertex::State::Unrefined or vertex.getState()==GridVertex::State::New or vertex.getState()==GridVertex::State::Delete);
       const bool OnlyLocalHasTriggeredErase =
         vertex.getState()==GridVertex::State::EraseTriggered &&
         inVertex.getState()==GridVertex::State::Refined;
