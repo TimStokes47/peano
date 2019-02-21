@@ -237,7 +237,7 @@ void runParallel() {
   if (tarch::mpi::Rank::getInstance().isGlobalMaster() ) {
     peano4::parallel::Node::getInstance().setNextProgramStep(14);
 
-    for (int i=0; i<30; i++) {
+    for (int i=0; i<50; i++) {
       tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
 
       if (i==2) {

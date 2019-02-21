@@ -443,7 +443,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
 	  and
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
     ) {
-      logInfo( "traverse(Observer)", "can't join of tree " << p->_id << " with its master tree " << p->_masterId );
+      logInfo( "traverse(Observer)", "can't join tree " << p->_id << " with its master tree " << p->_masterId );
       logDebug( "traverse(Observer)", "tree: " << p->toString() );
 
       std::set< int > children = peano4::parallel::Node::getInstance().getChildren( p->_id );
