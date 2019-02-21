@@ -979,9 +979,10 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
     and
     isVertexAdjacentToLocalSpacetree(vertex,true,true)
   ) {
-	assertion4(
+	assertion5(
       not _vertexStack[ peano4::parallel::Node::getInstance().getInputStackNumberForSplitMergeDataExchange(_masterId) ].empty(),
-	  peano4::parallel::Node::getInstance().getInputStackNumberForSplitMergeDataExchange(_masterId), _masterId, vertex.toString(), _id
+	  peano4::parallel::Node::getInstance().getInputStackNumberForSplitMergeDataExchange(_masterId), _masterId, vertex.toString(), _id,
+	  toString()
 	);
     GridVertex inVertex = _vertexStack[ peano4::parallel::Node::getInstance().getInputStackNumberForSplitMergeDataExchange(_masterId) ].pop();
     assertion2( vertex.getState() != GridVertex::Refining, vertex.toString(), _id );

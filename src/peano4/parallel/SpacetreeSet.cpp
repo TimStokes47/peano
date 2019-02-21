@@ -246,12 +246,12 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       int targetId  = Node::getInstance().getIdOfExchangeStackNumber(sourceStack.first);
       int rank      = Node::getInstance().getRank( targetId );
       int count     = sourceStack.second.size();
-      int inStack   = Node::getInstance().getInputStackNumberOfBoundaryExchange(_spacetree._id);
-      // @todo Get the tags right
-      int tag       = 32;
+      int inStack   = Node::getInstance().getInputStackNumberOfBoundaryExchange(targetId);
 
-      // @todo debug
+      int tag       = Node::getInstance().getGridDataExchangeTag( _spacetree._id, true );
       logInfo( "run()", "send stack " << sourceStack.first << " to rank " << rank << " with tag " << tag );
+
+      tag           = Node::getInstance().getGridDataExchangeTag( targetId, true );
       logInfo( "run()", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << tag << " into stack " << inStack );
       sourceStack.second.startSend(rank,tag);
       assertion(not Node::getInstance().isBoundaryExchangeOutputStackNumber(inStack));
@@ -375,14 +375,38 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
             "send " << stacks.second.size() << " entries from stack " << stacks.first << " of tree " << tree._id <<
             " to rank " << Node::getInstance().getRank(targetTreeId) << " holding tree " << targetTreeId
           );
-          assertion(false);
+          const int target = Node::getInstance().getRank(targetTreeId);
+          const int tag    = Node::getInstance().getGridDataExchangeTag(tree._id,false);
+          IntegerMessage message( stacks.second.size() );
+          message.send( target, tag, false, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+          stacks.second.startSend( target, tag );
+          stacks.second.finishSendOrReceive();
           stacks.second.clear();
         }
       }
     }
-  }
 
-  @todo Hier sollte man jetzt warten, bis die Daten da sind. Dazu muss aber in der Assertion oben auch mal erst was weggeschickt werden.
+
+    if (
+      tree._spacetreeState == peano4::grid::Spacetree::SpacetreeState::NewFromSplit
+	  and
+	  Node::getInstance().getRank( tree._masterId ) != tarch::mpi::Rank::getInstance().getRank()
+	) {
+      const int inStack      = Node::getInputStackNumberForSplitMergeDataExchange(tree._masterId);
+      const int source       = Node::getInstance().getRank( tree._masterId );
+      const int tag          = Node::getInstance().getGridDataExchangeTag(tree._masterId,false);
+
+      IntegerMessage message;
+      message.receive( source, tag, false, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
+
+      logInfo( "exchangeDataBetweenNewOrMergingTrees()",
+        "tree " << tree._id << " is new and has remote master, so receive " << message._value << " entries into stack " << inStack
+      );
+
+      tree._vertexStack[inStack].startReceive( source, tag, message._value );
+      tree._vertexStack[inStack].finishSendOrReceive();
+    }
+  }
 }
 
 
