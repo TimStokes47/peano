@@ -63,6 +63,11 @@ peano4::grid::TraversalObserver* examples::grid::MyObserver::clone(int spacetree
 
 std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGridControlEvents() {
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
+
+  Hier ist der Fehler: Das Ding wird net hochgezaehlt
+
+  std::cout << std::endl << _iterationCounter << std::endl;
+
   if (_iterationCounter<8) {
     peano4::grid::GridControlEvent newEvent;
     newEvent.setRefinementControl( peano4::grid::GridControlEvent::RefinementControl::Refine );
