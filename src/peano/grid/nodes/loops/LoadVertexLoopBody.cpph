@@ -571,7 +571,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     loadVertexFromInputStream(positionInArray, action._cartesianPosition);
     if (!IrregularStaticGrid) {
       invalidateVertexIfGeometryHasChanged(positionInArray,action._cartesianPosition);
-      updateGeometry(positionInArray,action._cartesianPosition);
     }
     invokeLoadVertexEvents(positionInArray,action._cartesianPosition);
     #ifdef Parallel
@@ -585,6 +584,11 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       #endif
     ) {
       updateRefinementFlagsOfVertexAfterLoad(positionInArray,_counter[positionInArray]==CounterPersistentNodeDelete);
+    }
+    if (!IrregularStaticGrid) {
+      // It is important that the geometry update is called after the
+      // refinement flags are updated.
+      updateGeometry(positionInArray,action._cartesianPosition);
     }
     logDebug( "operator()", "vertex at " << positionInArray << " is a persistent vertex from in/out stacks: " << _fineGridVertices[positionInArray].toString() );
     if (_counter[positionInArray]==CounterPersistentNodeDelete) {
