@@ -250,7 +250,9 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       break;
   }
 
-  _state.updateRefinementHistoryAfterLoad( hasRefined, hasErased, hasFailedToEraseDueToDomainDecomposition, false );
+  if ( !_fineGridVertices[positionInVertexArray].isOutside() ) {
+    _state.updateRefinementHistoryAfterLoad( hasRefined, hasErased, hasFailedToEraseDueToDomainDecomposition, false );
+  }
 
   #ifdef Parallel
   assertion1(
@@ -352,7 +354,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
           &&
 		  not refineArtificiallyOutsideDomain()
         ) {
-          _state.updateRefinementHistoryAfterLoad( false, false, false, true );
+          //_state.updateRefinementHistoryAfterLoad( false, false, false, true );
           _fineGridVertices[positionInVertexArray].erase();
           logDebug( "updateGeometry(...)", "erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity enforcement is switched off" );
         }
