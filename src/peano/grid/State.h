@@ -367,51 +367,22 @@ class peano::grid::State {
     /**
      * Is the grid stationary
      *
-     * This operation tells you whether the grid has changed or is about to
-     * change in the next iteration. Often, one uses this as guard for a
-     * while loop that iterates until the grid doesn't change anymore - in a
-     * setup phase typically.
+     * This operation tells you whether the grid has changed. It is often
+     * used as guard for a while loop that iterates until the grid doesn't
+     * change anymore - in a setup phase typically.
      *
-     * The story is slightly different if you have a distributed mpi parallel
-     * code. Here, it can happen that erase commands don't pass through as
-     * this erase would destroy whole workers. In such a case,
-     * isGridStationary() is false all the time though the grid doesn't change
-     * from traversal to traversal. Though, if there were a join (rebalancing),
-     * it would change immediately. Also compare to isGridBalanced() for these
-     * cases.
-     *
-     * In parallel, it is does either a good idea to use isGridBalanced() or,
-     * even more precise, to combine both operations.
-     *
-     * This operation is valid when a traversal just has terminated. It is not
-     * valid throughout the computation as many of its attributes are
-     *
-     * @see isGridBalanced()
-     * @see isInvolvedInJoinOrFork().
-     * @see getCouldNotEraseDueToDecompositionFlag()
-     *
-     * @return Has the grid or have cells or vertices in the last iteration changed.
-     *         Also returns false if the grid would like to erase vertices but
-     *         cannot do so due to a domain decomposition. The latter case arises
-     *         in parallel only.
+     * This opereation is backward-looking, i.e. it tells you whether grid
+     * has not changed from the previous to the current iteration. If you
+     * need something forward-looking, use isGridBalanced() instead.
      */
     bool isGridStationary() const;
 
     /**
-     * Is the grid balanced (in parallel mode)
-     *
-     * In serial mode, this equals isGridStationary(). If we call this in
-     * the parallel case, it is only similar to grid stationary. Different to
-     * the latter one, this one returns true even though an erase
-     * is triggered that cannot pass due to the domain decomposition. However,
-     * it returns true if and only if the last traversal could have triggered
-     * a rebalancing but didn't do so (see isInvolvedInJoinOrFork()), i.e. if
-     * the grid could - in theory - fork further.
-     *
-     * @see isGridStationary()
-     *
-     * @return If grid is stationary and no rebalancing is happing though it
-     *         would be possible to rebalance.
+     * Combines isGridStationary() with forward looking analysis and some
+     * history, i.e. it returns true if isGridStationary() holds and no
+     * refinement/erasing is triggered, and also no load balancing is
+     * going on. Furthermore, it requires the grid to remain constant
+     * for a certain number of steps before it holds.
      */
     bool isGridBalanced() const;
 
