@@ -85,6 +85,8 @@ class peano::parallel::loadbalancing::Oracle {
 
     int                                      _numberOfOracles;
 
+    bool                                     _hasForkFailed;
+
     void createOracles();
     void deleteOracles();
 
@@ -250,6 +252,11 @@ class peano::parallel::loadbalancing::Oracle {
      * next time.
      */
     void forkFailed();
+
+    /**
+     * Is true if forkFailed() has been called since the last load balancing activation.
+     */
+    bool hasForkFailedBefore() const;
 
     /**
      * You can switch off the load balancing via this value. All MPI Oracles

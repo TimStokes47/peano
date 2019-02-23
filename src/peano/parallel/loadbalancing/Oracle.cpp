@@ -20,7 +20,8 @@ peano::parallel::loadbalancing::Oracle::Oracle():
   _workers(),
   _startCommand(peano::parallel::loadbalancing::LoadBalancingFlag::ForkAllChildrenAndBecomeAdministrativeRank),
   _loadBalancingActivated(true),
-  _numberOfOracles(0) {
+  _numberOfOracles(0),
+  _hasForkFailed(false) {
 }
 
 
@@ -228,6 +229,8 @@ void peano::parallel::loadbalancing::Oracle::forkFailed() {
       _startCommand = LoadBalancingFlag::Continue;
     }
   }
+
+  _hasForkFailed = true;
 }
 
 
@@ -265,6 +268,14 @@ peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing
 
 void peano::parallel::loadbalancing::Oracle::activateLoadBalancing(bool value) {
   _loadBalancingActivated = value;
+  if (value) {
+    _hasForkFailed = false;
+  }
+}
+
+
+bool peano::parallel::loadbalancing::Oracle::hasForkFailedBefore() const {
+  return _hasForkFailed;
 }
 
 
