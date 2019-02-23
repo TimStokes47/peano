@@ -11,6 +11,8 @@
 namespace peano {
     namespace grid {
       namespace nodes {
+        bool refineArtificiallyOutsideDomain();
+
         template <
           class Vertex,
           class Cell,
