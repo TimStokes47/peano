@@ -971,9 +971,8 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     !fineGridCell.isRemote(state,true,false) 
     #endif
   ) {
-	const bool cellOverlapsDomain = _geometry.refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(cellCenter,halfTheCellSize);
     const bool hasToRefineOuterCellBecauseOfGeometry = 
-      cellOverlapsDomain
+      _geometry.refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(cellCenter,halfTheCellSize)
       &&
       peano::grid::aspects::VertexStateAnalysis::areAllVerticesOutsideDomain(
         fineGridVertices,
@@ -982,55 +981,48 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 
     #ifdef Parallel
     bool oneBoundaryVertexIsCritical = false;
-    dfor2(k)
-      oneBoundaryVertexIsCritical |= 
-        (
+    if ( refineArtificiallyOutsideDomain() ) {
+      dfor2(k)
+        oneBoundaryVertexIsCritical |=
           (
-          fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Refining
-          ||
-          fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::RefinementTriggered
-          )
-          &&
-          fineGridVertices[fineGridVerticesEnumerator(k)].isBoundary()
-          &&
-          !fineGridVertices[fineGridVerticesEnumerator(k)].isRemote( state, true, false)
-        );
-    enddforx
+            (
+            fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Refining
+            ||
+            fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::RefinementTriggered
+            ||
+            fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Refined
+            )
+            &&
+            fineGridVertices[fineGridVerticesEnumerator(k)].isBoundary()
+            &&
+            !fineGridVertices[fineGridVerticesEnumerator(k)].isRemote( state, true, false)
+          );
+      enddforx
+    }
     #else
     bool oneBoundaryVertexIsCritical = false;
     #endif
 
-    dfor2(k)
-      const bool mayRefineVertex =
-        fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Unrefined
-        &&
-        !fineGridVertices[fineGridVerticesEnumerator(k)].isHangingNode()
-        #ifdef Parallel
-        &&
-        !fineGridVertices[fineGridVerticesEnumerator(k)].isRemote( state, true, false)
-        #endif
-		;
+    if (hasToRefineOuterCellBecauseOfGeometry or oneBoundaryVertexIsCritical) {
+      dfor2(k)
+        const bool mayRefineVertex =
+          fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Unrefined
+          &&
+          !fineGridVertices[fineGridVerticesEnumerator(k)].isHangingNode()
+          #ifdef Parallel
+          &&
+          !fineGridVertices[fineGridVerticesEnumerator(k)].isRemote( state, true, false)
+          #endif
+	      ;
 
-      if (
-        mayRefineVertex
-		and
-		(
-          hasToRefineOuterCellBecauseOfGeometry
-	      or
-		  (oneBoundaryVertexIsCritical and cellOverlapsDomain and refineArtificiallyOutsideDomain())
-        )
-      ) {
-        fineGridVertices[fineGridVerticesEnumerator(k)].refine();
-      }
-      else if (
-        mayRefineVertex and oneBoundaryVertexIsCritical and !cellOverlapsDomain and
-        fineGridVertices[fineGridVerticesEnumerator(k)].isBoundary() and
-		refineArtificiallyOutsideDomain()
-	  ) {
-        fineGridVertices[fineGridVerticesEnumerator(k)].refine();
-      }
-
-    enddforx
+        if (
+          mayRefineVertex
+        ) {
+          fineGridVertices[fineGridVerticesEnumerator(k)].refine();
+          logDebug( "updateCellsGeometryInformationAfterLoad(...)", "artifically postrefine " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() );
+        }
+      enddforx
+    }
   }
 
   logTraceOutWith2Arguments( "updateCellsGeometryInformationAfterLoad(...)", state.toString(), fineGridCell.toString() );

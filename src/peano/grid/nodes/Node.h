@@ -11,6 +11,24 @@
 namespace peano {
     namespace grid {
       namespace nodes {
+        /**
+         * We do refine along the domain boundaries if this flag holds. This is
+         * important as it allows the code to partition along the boundary, too.
+         * Peano forks away cells if and only if all of a cell's vertices are
+         * refined. So we do refine cells next to the boundary artificially.
+         * This is realised in Node::updateCellsGeometryInformationAfterLoad().
+         *
+         * If we naively refined in updateCellsGeometryInformationAfterLoad(),
+         * we would introduce grid oscillations. We refine and then the
+         * LoadVertexLoopBody::updateGeometry() would immediately erase again. So
+         * this routine checks against refineArtificiallyOutsideDomain(), too, and
+         * stops any refinement outside of the domain as long as this routine holds.
+         *
+         * We do not refine artifically anymore if the load balancing is deactivated
+         * or we are actually running out of idle nodes. The latter can be checked
+         * only on the root node, but this is fine, as this is the rank which hurts
+         * us most.
+         */
         bool refineArtificiallyOutsideDomain();
 
         template <
