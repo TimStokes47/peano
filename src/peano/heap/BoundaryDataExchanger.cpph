@@ -125,13 +125,21 @@ void peano::heap::BoundaryDataExchanger<Data,SendReceiveTaskType,VectorContainer
 
   tarch::multicore::RecursiveLock lock( tarch::services::Service::receiveDanglingMessagesSemaphore );
 
+  #ifdef Asserts
   assertion(_currentReceiveBuffer>=0);
   assertion(_currentReceiveBuffer<=1);
+  const bool emptyCheck = _receiveTasks[1-_currentReceiveBuffer].empty();
+  if (!emptyCheck) {
+	logError( "startToSendData(bool)", "size current receive buffer=" << _receiveTasks[_currentReceiveBuffer].empty() << ", size current deploy buffer=" << _receiveTasks[1-_currentReceiveBuffer].empty());
+	logError( "startToSendData(bool)", "identifier=" << _identifier);
+	logError( "startToSendData(bool)", "meta data tag=" << _metaDataTag);
+	logError( "startToSendData(bool)", "data tag=" << _dataTag);
+	logError( "startToSendData(bool)", "rank=" << _rank);
+  }
   assertionMsg(_receiveTasks[1-_currentReceiveBuffer].empty(), "finishedToSendData() has not been called before and deploy buffer thus is not empty. Check whether allHeapsFinishedToSendBoundaryData() on AbstractHeap has been invoked or your mappings delegate heap management to kernel. If finish is called, this error pops up if we you don't pick up messages sent to a rank in the iteration before");
 
   assertion3(!_isCurrentlySending, _identifier, _rank, "call once per traversal" );
 
-  #ifdef Asserts
   _isCurrentlySending = true;
   #endif
 
