@@ -195,7 +195,10 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
 
   _gridControlEvents = observer.getGridControlEvents();
   logDebug( "traverse(TraversalObserver&)", "got " << _gridControlEvents.size() << " grid control event(s)" );
+
+  #if !defined(SharedMemoryParallelisation) and !defined(Parallel)
   observer.beginTraversal();
+  #endif
 
   _splittedCells.clear();
 
@@ -227,7 +230,9 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
 
   _root.setInverted( not _root.getInverted() );
 
+  #if !defined(SharedMemoryParallelisation) and !defined(Parallel)
   observer.endTraversal();
+  #endif
 
   logTraceOut( "traverse(TraversalObserver)" );
 }

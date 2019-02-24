@@ -36,7 +36,8 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
 
     const std::string                                                                _filename;
     const int                                                                        _spacetreeId;
-    int                                                                              _counter;
+
+    static int                                                                       _counter;
 
     /**
      * In a parallel environment, please invoke this operation only on the main
@@ -63,7 +64,7 @@ class peano4::grid::TraversalVTKPlotter: public peano4::grid::TraversalObserver 
      *
      * If this guy is ran on the global master,
      */
-    TraversalVTKPlotter( const std::string& filename, int treeId=-1, int counter=0 );
+    TraversalVTKPlotter( const std::string& filename, int treeId=-1 );
     virtual ~TraversalVTKPlotter();
 
 	void beginTraversal() override;

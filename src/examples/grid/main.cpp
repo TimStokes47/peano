@@ -107,7 +107,7 @@ void runMultithreaded() {
   peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
 
   while (
-    not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2,0)
+    not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2-4,0)
   ) {
     #if PeanoDebug>0
     emptyObserver.startNewSnapshot(true);
@@ -132,7 +132,7 @@ void runMultithreaded() {
   }
 
   while (
-    not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3,0)
+    not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3-5,0)
   ) {
     #if PeanoDebug>0
     emptyObserver.startNewSnapshot(true);
@@ -242,7 +242,7 @@ void runParallel() {
 
       if (i==2) {
         peano4::parallel::SpacetreeSet::getInstance().split(
-          0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2,
+          0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/2,
 		  std::min(1,tarch::mpi::Rank::getInstance().getNumberOfRanks()-1)
 		);
       }

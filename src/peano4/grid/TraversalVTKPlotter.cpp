@@ -15,24 +15,24 @@
 tarch::logging::Log  peano4::grid::TraversalVTKPlotter::_log( "peano4::grid::TraversalVTKPlotter" );
 
 
-peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filename, int treeId, int counter ):
+int peano4::grid::TraversalVTKPlotter::_counter(0);
+
+
+peano4::grid::TraversalVTKPlotter::TraversalVTKPlotter( const std::string& filename, int treeId ):
   _filename(filename),
   _spacetreeId(treeId),
-  _counter(counter),
   _writer(nullptr),
   _vertexWriter(nullptr),
   _cellWriter(nullptr),
   _spacetreeIdWriter(nullptr),
   _coreWriter(nullptr),
   _timeSeriesWriter() {
-  if (treeId==-1) {
-	openFile();
-  }
+  openFile();
 }
 
 
 peano4::grid::TraversalVTKPlotter::~TraversalVTKPlotter() {
-  endTraversal();
+  closeFile();
 }
 
 
@@ -48,12 +48,10 @@ void peano4::grid::TraversalVTKPlotter::openFile() {
 
 
 void peano4::grid::TraversalVTKPlotter::beginTraversal() {
-  openFile();
 }
 
 
 void peano4::grid::TraversalVTKPlotter::endTraversal() {
-  closeFile();
 }
 
 
@@ -147,8 +145,7 @@ void peano4::grid::TraversalVTKPlotter::updateMetaFile(int spacetreeId) {
 peano4::grid::TraversalObserver*  peano4::grid::TraversalVTKPlotter::clone(int spacetreeId) {
   peano4::grid::TraversalVTKPlotter* result = new peano4::grid::TraversalVTKPlotter(
     _filename,
-	spacetreeId,
-	_counter
+	spacetreeId
   );
 
   if (_spacetreeId!=-1) {

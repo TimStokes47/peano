@@ -6,10 +6,14 @@
 
 examples::grid::MyObserver::MyObserver(int spacetreeId, int counter):
   #if PeanoDebug>0
-  TraversalVTKPlotter( "grid-construction", spacetreeId, counter ),
+  TraversalVTKPlotter( "grid-construction", spacetreeId ),
   #endif
   _iterationCounter(counter)
   {
+}
+
+
+examples::grid::MyObserver::~MyObserver() {
 }
 
 
@@ -45,7 +49,7 @@ void examples::grid::MyObserver::leaveCell(
 
 peano4::grid::TraversalObserver* examples::grid::MyObserver::clone(int spacetreeId) {
   #if PeanoDebug>0
-  MyObserver* result = new MyObserver( spacetreeId, TraversalVTKPlotter::_counter );
+  MyObserver* result = new MyObserver( spacetreeId, _iterationCounter );
 
   if (_spacetreeId!=-1) {
 	assertionMsg( false, "clone() should not be called for particular spacetree plotter" );
@@ -63,10 +67,6 @@ peano4::grid::TraversalObserver* examples::grid::MyObserver::clone(int spacetree
 
 std::vector< peano4::grid::GridControlEvent > examples::grid::MyObserver::getGridControlEvents() {
   std::vector< peano4::grid::GridControlEvent >  controlEvents;
-
-  Hier ist der Fehler: Das Ding wird net hochgezaehlt
-
-  std::cout << std::endl << _iterationCounter << std::endl;
 
   if (_iterationCounter<8) {
     peano4::grid::GridControlEvent newEvent;

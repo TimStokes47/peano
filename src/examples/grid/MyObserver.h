@@ -26,6 +26,7 @@ class examples::grid::MyObserver: public
 	int _iterationCounter;
   public:
 	MyObserver(int spacetreeId = -1, int counter=0);
+	virtual ~MyObserver();
 
 	virtual void beginTraversal() override;
 	virtual void endTraversal() override;

@@ -32,9 +32,17 @@ namespace peano4 {
  */
 class peano4::grid::TraversalObserver {
   public:
+	virtual ~TraversalObserver() {}
+
 	static constexpr int CreateOrDestroyPersistentGridEntity = -1;
 	static constexpr int CreateOrDestroyHangingGridEntity    = -2;
 
+	/**
+	 * I call this operation only once per traversal per rank.
+	 * Please note that the object we call beginTraversal() on is usually
+	 * never used directly. Instead, the code calls beginTraversal() and
+	 * then creates observer clones.
+	 */
 	virtual void beginTraversal() = 0;
 	virtual void endTraversal() = 0;
 
@@ -71,6 +79,9 @@ class peano4::grid::TraversalObserver {
 	 *
 	 * then you can be sure that the branch body is executed only once globally
 	 * per grid sweep.
+	 *
+	 *
+	 * The counterpart of the clone operation is the destructor.
 	 */
 	virtual TraversalObserver* clone(int spacetreeId) = 0;
 

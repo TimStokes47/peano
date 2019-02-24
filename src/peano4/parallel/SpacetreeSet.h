@@ -44,7 +44,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 	  private:
 	    peano4::grid::Spacetree&          _spacetree;
 	    SpacetreeSet&                     _spacetreeSet;
-	    peano4::grid::TraversalObserver&  _observer;
+        peano4::grid::TraversalObserver&  _observer;
 	  public:
 	    TraverseTask( peano4::grid::Spacetree&  tree, SpacetreeSet& set, peano4::grid::TraversalObserver&  observer );
 

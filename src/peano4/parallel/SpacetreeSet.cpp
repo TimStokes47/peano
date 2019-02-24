@@ -169,7 +169,7 @@ void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& orig
 
 peano4::parallel::SpacetreeSet::TraverseTask::TraverseTask(
   peano4::grid::Spacetree&          tree,
-  SpacetreeSet& set,
+  SpacetreeSet&                     set,
   peano4::grid::TraversalObserver&  observer
 ):
   _spacetree(tree),
@@ -371,6 +371,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
           stacks.second.clear();
         }
         else {
+          #ifdef Parallel
           logInfo( "exchangeDataBetweenNewOrMergingTrees()",
             "send " << stacks.second.size() << " entries from stack " << stacks.first << " of tree " << tree._id <<
             " to rank " << Node::getInstance().getRank(targetTreeId) << " holding tree " << targetTreeId
@@ -382,6 +383,9 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
           stacks.second.startSend( target, tag );
           stacks.second.finishSendOrReceive();
           stacks.second.clear();
+          #else
+          assertionMsg(false, "should not be called");
+          #endif
         }
       }
     }
@@ -392,6 +396,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
 	  and
 	  Node::getInstance().getRank( tree._masterId ) != tarch::mpi::Rank::getInstance().getRank()
 	) {
+      #ifdef Parallel
       const int inStack      = Node::getInputStackNumberForSplitMergeDataExchange(tree._masterId);
       const int source       = Node::getInstance().getRank( tree._masterId );
       const int tag          = Node::getInstance().getGridDataExchangeTag(tree._masterId,false);
@@ -405,6 +410,9 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
 
       tree._vertexStack[inStack].startReceive( source, tag, message._value );
       tree._vertexStack[inStack].finishSendOrReceive();
+      #else
+      assertionMsg(false, "should not be called");
+      #endif
     }
   }
 }
@@ -415,7 +423,9 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
     peano4::parallel::Node::getInstance().continueToRun();
   }
 
+  observer.beginTraversal();
   traverseTrees(observer);
+  observer.endTraversal();
 
   //
   // Merge local copies of the statistics
