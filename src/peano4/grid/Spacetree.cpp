@@ -36,7 +36,7 @@ peano4::grid::Spacetree::Spacetree(
 
   clearStatistics();
 
-  logInfo( "Spacetree(...)", "create spacetree with " << offset << "x" << width << " and id " << _id);
+  logInfo( "Spacetree(...)", "create spacetree with " << offset << "x" << width );
 }
 
 

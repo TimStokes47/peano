@@ -64,7 +64,7 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
         message.getMasterSpacetreeId()
       );
 
-      logDebug( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << message.getMasterSpacetreeId() );
+      logInfo( "receiveDanglingMessages()", "reserved tree id " << newSpacetreeId << " for tree " << message.getMasterSpacetreeId() );
 
       message.setWorkerSpacetreeId( newSpacetreeId );
       message.setAction(TreeManagementMessage::Action::BookedNewRemoteTree);
@@ -84,6 +84,8 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
       newTree._masterId  = message.getMasterSpacetreeId();
       newTree._root      = state;
       newTree._spacetreeState = peano4::grid::Spacetree::SpacetreeState::NewFromSplit;
+
+      logInfo( "receiveDanglingMessages()", "created tree " << newTree._id << " with master tree " << message.getMasterSpacetreeId() );
 
       IntegerMessage messageStackKey(0);
       while (messageStackKey.getValue()>=0) {
@@ -454,11 +456,22 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
     ) {
       logInfo( "traverse(Observer)", "can't join tree " << p->_id << " with its master tree " << p->_masterId );
-      logDebug( "traverse(Observer)", "tree: " << p->toString() );
-
       std::set< int > children = peano4::parallel::Node::getInstance().getChildren( p->_id );
       childrenThatShouldMerge.insert( children.begin(), children.end() );
     }
+    #ifdef Parallel
+  	else if (
+	  p->_coarseningHasBeenVetoed
+	  and
+	  p->mayMove()
+	  and
+	  peano4::parallel::Node::getInstance().getChildren( p->_id ).empty()
+	  and
+	  peano4::parallel::Node::getInstance().getRank( p->_masterId ) != peano4::parallel::Node::getInstance().getRank( p->_id )
+    ) {
+  	  move( p->_id, peano4::parallel::Node::getInstance().getRank( p->_masterId ) );
+  	}
+    #endif
     else if (
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
 	  and

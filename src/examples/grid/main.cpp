@@ -198,12 +198,10 @@ void runParallel() {
 		  peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/2/3,
 		  std::min(1,tarch::mpi::Rank::getInstance().getNumberOfRanks()-1)
 		);
-/*
         peano4::parallel::SpacetreeSet::getInstance().split(
-          0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/2/2,
+          0,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/2/3,
 		  std::min(1,tarch::mpi::Rank::getInstance().getNumberOfRanks()-1)
 		);
-*/
       }
 
       #if PeanoDebug>0
