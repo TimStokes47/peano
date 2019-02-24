@@ -351,6 +351,14 @@ class peano4::grid::Spacetree {
 	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch
     );
 
+    /**
+     * Routine should be const, but we cannot make it const. At least not with
+     * parallelism.
+     *
+     * If the code runs in parallel and if we therefore insert a new cell, then
+     * we increment the number of splits we have to do. The rationale is that
+     * the load balancing made its decision based upon the previous cell count.
+     */
     GridTraversalEvent createEnterCellTraversalEvent(
       GridVertex              fineGridVertices[TwoPowerD],
 	  const AutomatonState&   state
@@ -677,6 +685,12 @@ class peano4::grid::Spacetree {
     bool maySplit() const;
 
     bool _coarseningHasBeenVetoed;
+
+    /**
+     * @return Id of splitting tree or -1 if there's none.
+     */
+    int getSplittingTree() const;
+    void updateSplittingCounter( int treeId );
   public:
     Spacetree(
 	  const tarch::la::Vector<Dimensions,double>&  offset,

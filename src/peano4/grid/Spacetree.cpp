@@ -1622,28 +1622,45 @@ void peano4::grid::Spacetree::splitOrMoveNode(
     _splittedCells.push_back(reducedMarker);
   }
   else { // not refined
-    int targetSpacetreeId = -1;
-    for (auto& p: _splitTriggered) {
-      if (p.second>0) {
-        targetSpacetreeId = p.first;
-        break;
-      }
-    }
+    int targetSpacetreeId = getSplittingTree();
 
     if (isSplitCandidate and targetSpacetreeId>=0) {
       updateVertexRanksWithinCell( fineGridVertices, targetSpacetreeId );
-      for (auto& p: _splitTriggered) {
-        if (p.first==targetSpacetreeId) {
-	      p.second--;
-          break;
-	    }
+
+      static int newlyCreatedCells = 0;
+      newlyCreatedCells++;
+
+      if ( getCellType( fineGridVertices )!=CellType::New or newlyCreatedCells%ThreePowerD==0) {
+        updateSplittingCounter( targetSpacetreeId );
+        newlyCreatedCells = 0;
       }
-	  _splittedCells.push_back(targetSpacetreeId);
-	}
+
+      _splittedCells.push_back(targetSpacetreeId);
+    }
 	else {
 	  _splittedCells.push_back(-1);
-	}
+    }
   }
+}
+
+
+void peano4::grid::Spacetree::updateSplittingCounter( int treeId ) {
+  for (auto& p: _splitTriggered) {
+    if (p.first==treeId) {
+      p.second--;
+      break;
+    }
+  }
+}
+
+
+int peano4::grid::Spacetree::getSplittingTree() const {
+  for (auto& p: _splitTriggered) {
+    if (p.second>0) {
+      return p.first;
+    }
+  }
+  return -1;
 }
 
 
@@ -1668,6 +1685,10 @@ void peano4::grid::Spacetree::split(int newSpacetreeId, int cells) {
   );
   assertion3(
     cells!=std::numeric_limits<int>::max() or mayMove(),
+	newSpacetreeId, cells, toString()
+  );
+  assertion3(
+    cells>=1,
 	newSpacetreeId, cells, toString()
   );
 
