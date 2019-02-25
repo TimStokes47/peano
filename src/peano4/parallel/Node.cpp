@@ -62,11 +62,13 @@ peano4::parallel::Node::~Node() {
 }
 
 
-int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, bool boundaryDataExchange ) {
+int peano4::parallel::Node::getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, bool boundaryDataExchange ) {
   if (_gridVertexDataExchangeBaseTag < 0) {
-    _gridVertexDataExchangeBaseTag = tarch::mpi::Rank::reserveFreeTag("grid-data-exchange", _maxTreesPerRank*2 );
+    _gridVertexDataExchangeBaseTag = tarch::mpi::Rank::reserveFreeTag("grid-data-exchange", _maxTreesPerRank*_maxTreesPerRank*2 );
   }
-  int result = _gridVertexDataExchangeBaseTag + getLocalTreeId(sendingTreeId)*2;
+  int result = _gridVertexDataExchangeBaseTag +
+		       ( (getLocalTreeId(sendingTreeId)*_maxTreesPerRank) + getLocalTreeId(sendingTreeId) )*2;
+
   if (boundaryDataExchange) result++;
   return result;
 }

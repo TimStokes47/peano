@@ -72,7 +72,10 @@ void peano4::parallel::SpacetreeSet::receiveDanglingMessages() {
     }
     else if (message.getAction()==peano4::parallel::TreeManagementMessage::Action::CreateNewRemoteTree) {
       peano4::grid::AutomatonState state;
-      const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(message.getMasterSpacetreeId(),false);
+      const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(
+        message.getMasterSpacetreeId(), 0,
+		false
+	  );
       state.receive(message.getSenderRank(),tag,false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
       peano4::grid::Spacetree newTree(
@@ -137,7 +140,7 @@ void peano4::parallel::SpacetreeSet::addSpacetree( peano4::grid::Spacetree& orig
     message.send(targetRank,peano4::parallel::Node::getInstance().getTreeManagementTag(),true,TreeManagementMessage::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     peano4::grid::AutomatonState state = originalSpacetree._root;
-    const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(originalSpacetree._id,false);
+    const int tag = peano4::parallel::Node::getInstance().getGridDataExchangeTag(originalSpacetree._id,id,false);
     state.send(targetRank,tag,false,peano4::grid::AutomatonState::ExchangeMode::NonblockingWithPollingLoopOverTests);
 
     for (auto& p: originalSpacetree._vertexStack ) {
@@ -250,12 +253,12 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       int count     = sourceStack.second.size();
       int inStack   = Node::getInstance().getInputStackNumberOfBoundaryExchange(targetId);
 
-      int tag       = Node::getInstance().getGridDataExchangeTag( _spacetree._id, true );
+      int tag       = Node::getInstance().getGridDataExchangeTag( _spacetree._id, targetId, true );
       logInfo( "run()", "send stack " << sourceStack.first << " to rank " << rank << " with tag " << tag );
-
-      tag           = Node::getInstance().getGridDataExchangeTag( targetId, true );
-      logInfo( "run()", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << tag << " into stack " << inStack );
       sourceStack.second.startSend(rank,tag);
+
+      tag           = Node::getInstance().getGridDataExchangeTag( targetId, _spacetree._id, true );
+      logInfo( "run()", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << tag << " into stack " << inStack );
       assertion(not Node::getInstance().isBoundaryExchangeOutputStackNumber(inStack));
       _spacetree._vertexStack[inStack].startReceive(rank,tag,count);
     }
@@ -379,7 +382,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
             " to rank " << Node::getInstance().getRank(targetTreeId) << " holding tree " << targetTreeId
           );
           const int target = Node::getInstance().getRank(targetTreeId);
-          const int tag    = Node::getInstance().getGridDataExchangeTag(tree._id,false);
+          const int tag    = Node::getInstance().getGridDataExchangeTag( tree._id, targetTreeId, false );
           IntegerMessage message( stacks.second.size() );
           message.send( target, tag, false, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
           stacks.second.startSend( target, tag );
@@ -401,7 +404,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
       #ifdef Parallel
       const int inStack      = Node::getInputStackNumberForSplitMergeDataExchange(tree._masterId);
       const int source       = Node::getInstance().getRank( tree._masterId );
-      const int tag          = Node::getInstance().getGridDataExchangeTag(tree._masterId,false);
+      const int tag          = Node::getInstance().getGridDataExchangeTag( tree._masterId, tree._id, false);
 
       IntegerMessage message;
       message.receive( source, tag, false, IntegerMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );

@@ -224,7 +224,7 @@ class peano4::parallel::Node {
      * exchanges (vertical and fork/join). The operation allocates
      * tags lazily and thus is not const.
      */
-    int getGridDataExchangeTag( int sendingTreeId, bool boundaryDataExchange );
+    int getGridDataExchangeTag( int sendingTreeId, int receivingTreeId, bool boundaryDataExchange );
 };
 
 #endif
