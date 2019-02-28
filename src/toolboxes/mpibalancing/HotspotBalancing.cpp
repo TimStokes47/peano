@@ -207,7 +207,9 @@ peano::parallel::loadbalancing::LoadBalancingFlag  mpibalancing::HotspotBalancin
     &&
     forkIsAllowed
   ) {
-    result = peano::parallel::loadbalancing::LoadBalancingFlag::ForkAllChildrenAndBecomeAdministrativeRank;
+    result = tarch::parallel::Node::getInstance().getNumberOfNodes()>THREE_POWER_D ?
+             peano::parallel::loadbalancing::LoadBalancingFlag::ForkAllChildrenAndBecomeAdministrativeRank:
+			 THREE_POWER_D-1;
   }
   else if (_joinsAllowed && _workerCouldNotEraseDueToDecomposition[workerRank] && joinIsAllowed) {
     _forkHasFailed = false;
