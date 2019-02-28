@@ -59,12 +59,6 @@ void peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::pl
 }
 
 
-
-int peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::getRegularLevelAlongBoundary() const {
-  return _regularLevelAlongBoundary;
-}
-
-
 peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::OracleForOnePhase* peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning::createNewOracle(int adapterNumber) const {
   return new OracleForOnePhaseWithGreedyPartitioning(_joinsAllowed,_forksAllowed,_regularLevelAlongBoundary);
 }

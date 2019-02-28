@@ -86,8 +86,6 @@ class peano::parallel::loadbalancing::OracleForOnePhaseWithGreedyPartitioning: p
     OracleForOnePhase* createNewOracle(int adapterNumber) const override;
 
     void forkFailed() override;
-
-    int getRegularLevelAlongBoundary() const override;
 };
 
 

@@ -53,7 +53,8 @@ peano::geometry::GeometryHelper::VertexAction peano::geometry::GeometryHelper::g
   }
   else if (pointIsOutsideOfDomainClosure && (currentVertexState == Outside)) {
     logTraceOutWith1Argument( "getVertexCommand(...)", "LeaveOuterVertexUnaltered" );
-    return LeaveOuterVertexUnaltered;
+    return EraseOutsideVertex;
+    //return LeaveOuterVertexUnaltered;
   }
   else if (!pointWithHEnvironmentIsInside && !pointIsOutsideOfDomainClosure && (currentVertexState != Boundary)) {
     logTraceOutWith1Argument( "getVertexCommand(...)", "CreateBoundaryVertex" );

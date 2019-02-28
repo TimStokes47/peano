@@ -72,6 +72,8 @@ def getLogicalTopology(numberOfRanks,dim,inputFileName,plotDirectoryName):
   parents  = [-1 for x in range(0,numberOfRanks)]
   nodes    = ["global master" for x in range(0,numberOfRanks)]
   levels   = [-1 for x in range(0,numberOfRanks)]
+  xmin = ymin = zmin = 10**20
+  xmax = ymax = zmax = -10**20
   if dim==2:
     volume = [(0.0,0.0) for x in range(0,numberOfRanks)]
     offset = [(0.0,0.0) for x in range(0,numberOfRanks)]
@@ -98,13 +100,13 @@ def getLogicalTopology(numberOfRanks,dim,inputFileName,plotDirectoryName):
         else:
           offset[child] = ( float(fragments[0]),float(fragments[1]),float(fragments[2]) )
           volume[child] = ( float(fragments[3]),float(fragments[4]),float(fragments[5]) )
+
         levels[child] = int(line.split( "on level" )[1].split( " with" )[0])
     print " done"
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
   return (parents,levels,offset,volume,nodes)
-
 
 def getConcurrency(rank,inputFileName):
   timeStampPattern = "([0-9]+\.?[0-9]*)"

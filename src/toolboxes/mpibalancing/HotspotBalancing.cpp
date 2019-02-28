@@ -145,7 +145,11 @@ void mpibalancing::HotspotBalancing::computeMaxForksOnCriticalWorker( peano::par
 
     if ( _maxForksOnCriticalWorker>static_cast<int>(commandFromMaster) ) {
       _maxForksOnCriticalWorker = static_cast<int>(commandFromMaster);
-      logDebug( "receivedStartCommand(LoadBalancingFlag)", "manually reduced forks to " << _maxForksOnCriticalWorker << " due to restriction from master" );
+      logInfo(
+        "receivedStartCommand(LoadBalancingFlag)",
+		"manually reduced forks to " << _maxForksOnCriticalWorker << " (" <<
+		peano::parallel::loadbalancing::convertLoadBalancingFlagToString(static_cast<peano::parallel::loadbalancing::LoadBalancingFlag>(_maxForksOnCriticalWorker)) <<
+		") due to restriction from master. Master passed in " << peano::parallel::loadbalancing::convertLoadBalancingFlagToString(commandFromMaster) );
     }
     else if (_maxForksOnCriticalWorker>static_cast<int>(peano::parallel::loadbalancing::LoadBalancingFlag::ForkGreedy)) {
       _maxForksOnCriticalWorker = static_cast<int>(peano::parallel::loadbalancing::LoadBalancingFlag::ForkGreedy)/2;
@@ -242,7 +246,8 @@ peano::parallel::loadbalancing::LoadBalancingFlag  mpibalancing::HotspotBalancin
   }
 
   assertion( result!=peano::parallel::loadbalancing::LoadBalancingFlag::UndefinedLoadBalancingFlag );
-  logTraceOutWith1Argument( "getCommandForWorker(int,bool)", static_cast<int>(result) );
+  logTraceOutWith1Argument( "getCommandForWorker(int,bool)", peano::parallel::loadbalancing::convertLoadBalancingFlagToString(result) );
+
   return result;
 }
 
@@ -386,9 +391,4 @@ void mpibalancing::HotspotBalancing::forkFailed() {
     );
   }
   _forkHasFailed = true;
-}
-
-
-int mpibalancing::HotspotBalancing::getRegularLevelAlongBoundary() const {
-  return _regularLevelAlongBoundary;
 }

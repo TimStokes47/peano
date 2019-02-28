@@ -256,7 +256,9 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       break;
   }
 
-  _state.updateRefinementHistoryAfterLoad( hasRefined, hasErased, hasFailedToEraseDueToDomainDecomposition, false );
+  if ( !_fineGridVertices[positionInVertexArray].isOutside() ) {
+    _state.updateRefinementHistoryAfterLoad( hasRefined, hasErased, hasFailedToEraseDueToDomainDecomposition, false );
+  }
 
   #ifdef Parallel
   assertion1(
@@ -328,11 +330,8 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 
   #ifdef Parallel
   const bool AnalyseVertex =  !_fineGridVertices[positionInVertexArray].isRemote(_state, false, true);
-  const int  CoarsestRegularInnerAndOuterGridLevel = peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary();
-  assertion( CoarsestRegularInnerAndOuterGridLevel>=0 );
   #else
   const bool AnalyseVertex = true;
-  const int  CoarsestRegularInnerAndOuterGridLevel = 0;
   #endif
 
   if (AnalyseVertex) {
@@ -359,11 +358,11 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         if (
           _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined
           &&
-          _fineGridVerticesEnumerator.getLevel()>CoarsestRegularInnerAndOuterGridLevel
+		  not refineArtificiallyOutsideDomain()
         ) {
-          _state.updateRefinementHistoryAfterLoad( false, false, false, true );
+          //_state.updateRefinementHistoryAfterLoad( false, false, false, true );
           _fineGridVertices[positionInVertexArray].erase();
-          logDebug( "updateGeometry(...)", "erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity is set to " << peano::parallel::loadbalancing::Oracle::getInstance().getRegularLevelAlongBoundary() );
+          logDebug( "updateGeometry(...)", "erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity enforcement is switched off" );
         }
         break;
       case peano::geometry::GeometryHelper::CreateInnerVertex:
@@ -428,7 +427,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         if (
           _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined
           &&
-          _fineGridVerticesEnumerator.getLevel()>CoarsestRegularInnerAndOuterGridLevel
+		  not refineArtificiallyOutsideDomain()
         ) {
           _fineGridVertices[positionInVertexArray].erase();
         }
@@ -580,7 +579,6 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     loadVertexFromInputStream(positionInArray, action._cartesianPosition);
     if (!IrregularStaticGrid) {
       invalidateVertexIfGeometryHasChanged(positionInArray,action._cartesianPosition);
-      updateGeometry(positionInArray,action._cartesianPosition);
     }
     invokeLoadVertexEvents(positionInArray,action._cartesianPosition);
     #ifdef Parallel
@@ -594,6 +592,11 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
       #endif
     ) {
       updateRefinementFlagsOfVertexAfterLoad(positionInArray,_counter[positionInArray]==CounterPersistentNodeDelete);
+    }
+    if (!IrregularStaticGrid) {
+      // It is important that the geometry update is called after the
+      // refinement flags are updated.
+      updateGeometry(positionInArray,action._cartesianPosition);
     }
     logDebug( "operator()", "vertex at " << positionInArray << " is a persistent vertex from in/out stacks: " << _fineGridVertices[positionInArray].toString() );
     if (_counter[positionInArray]==CounterPersistentNodeDelete) {

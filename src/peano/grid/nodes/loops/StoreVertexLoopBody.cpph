@@ -160,10 +160,12 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
   const bool hasTriggeredEraseForNextIteration = _fineGridVertices[positionInVertexArray].getRefinementControl() == Vertex::Records::EraseTriggered;
   #endif
 
-  _state.updateRefinementHistoryBeforeStore(
-    hasTriggeredRefinementForNextIteration,
-    hasTriggeredEraseForNextIteration
-  );
+  if ( !_fineGridVertices[positionInVertexArray].isOutside() ) {
+    _state.updateRefinementHistoryBeforeStore(
+      hasTriggeredRefinementForNextIteration,
+      hasTriggeredEraseForNextIteration
+    );
+  }
 
   _fineGridVertices[positionInVertexArray].updateTransientRefinementFlagsBeforeVertexIsStoredToOutputStack();
   
@@ -264,7 +266,6 @@ void peano::grid::nodes::loops::StoreVertexLoopBody<Vertex,Cell,State,VertexStac
       const bool takeThisCoarseVertexIntoAccount = peano::grid::SingleLevelEnumerator::doesCoarseGridVertexInfluenceFineGridVertex(k,positionInLocalCell+_fineGridPositionOfCell);
 
       if (takeThisCoarseVertexIntoAccount) {
-        //_state.updateRefinementHistoryAfterLoad( true, false, false, false );
         _coarseGridVertices[ _coarseGridVerticesEnumerator(k)].invalidateAdjacentCellInformation();
       }
     enddforx

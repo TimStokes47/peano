@@ -20,7 +20,8 @@ peano::parallel::loadbalancing::Oracle::Oracle():
   _workers(),
   _startCommand(peano::parallel::loadbalancing::LoadBalancingFlag::ForkAllChildrenAndBecomeAdministrativeRank),
   _loadBalancingActivated(true),
-  _numberOfOracles(0) {
+  _numberOfOracles(0),
+  _hasForkFailed(false) {
 }
 
 
@@ -209,14 +210,6 @@ void peano::parallel::loadbalancing::Oracle::receivedStartCommand( peano::parall
 }
 
 
-int peano::parallel::loadbalancing::Oracle::getRegularLevelAlongBoundary() const {
-  assertion( _currentOracle>=0 );
-  assertion( _currentOracle<static_cast<int>(_oracles.size()));
-
-  return  _oracles[_currentOracle]->getRegularLevelAlongBoundary();
-}
-
-
 peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing::Oracle::getLastStartCommand() const {
   assertion( _startCommand!=LoadBalancingFlag::UndefinedLoadBalancingFlag );
   return _startCommand;
@@ -236,6 +229,8 @@ void peano::parallel::loadbalancing::Oracle::forkFailed() {
       _startCommand = LoadBalancingFlag::Continue;
     }
   }
+
+  _hasForkFailed = true;
 }
 
 
@@ -273,6 +268,14 @@ peano::parallel::loadbalancing::LoadBalancingFlag peano::parallel::loadbalancing
 
 void peano::parallel::loadbalancing::Oracle::activateLoadBalancing(bool value) {
   _loadBalancingActivated = value;
+  if (value) {
+    _hasForkFailed = false;
+  }
+}
+
+
+bool peano::parallel::loadbalancing::Oracle::hasForkFailedBefore() const {
+  return _hasForkFailed;
 }
 
 
