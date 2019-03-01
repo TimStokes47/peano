@@ -29,6 +29,10 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::beginTraversal() {
 
 
 void examples::integerdiffusionthroughfaces::CellDataPlotter::endTraversal() {
+  assertion( _vertexWriter!=nullptr );
+  assertion( _cellWriter!=nullptr );
+  assertion( _dataWriter!=nullptr );
+
   _vertexWriter->close();
   _cellWriter->close();
   _dataWriter->close();

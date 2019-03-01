@@ -152,7 +152,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::para
   );
 
   if (_spacetreeState!=SpacetreeState::Joined) {
-    traverse(observer);
+    traverse(observer,true);
   }
 
   for (auto p: _splitTriggered) {
@@ -188,7 +188,7 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::para
 }
 
 
-void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
+void peano4::grid::Spacetree::traverse(TraversalObserver& observer, bool calledFromSpacetreeSet) {
   logTraceIn( "traverse(TraversalObserver)" );
 
   clearStatistics();
@@ -196,9 +196,9 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
   _gridControlEvents = observer.getGridControlEvents();
   logDebug( "traverse(TraversalObserver&)", "got " << _gridControlEvents.size() << " grid control event(s)" );
 
-  #if !defined(SharedMemoryParallelisation) and !defined(Parallel)
-  observer.beginTraversal();
-  #endif
+  if (not calledFromSpacetreeSet) {
+    observer.beginTraversal();
+  }
 
   _splittedCells.clear();
 
@@ -230,9 +230,9 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer) {
 
   _root.setInverted( not _root.getInverted() );
 
-  #if !defined(SharedMemoryParallelisation) and !defined(Parallel)
-  observer.endTraversal();
-  #endif
+  if (not calledFromSpacetreeSet) {
+    observer.endTraversal();
+  }
 
   logTraceOut( "traverse(TraversalObserver)" );
 }

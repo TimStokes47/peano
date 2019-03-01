@@ -19,7 +19,8 @@ std::map< examples::integerdiffusionthroughfaces::MyObserver::DataKey, examples:
 
 examples::integerdiffusionthroughfaces::MyObserver::MyObserver():
   _spacetreeId(-1),
-  _iterationCounter(-1) {
+  _iterationCounter(-1),
+  _mapping(nullptr) {
   #if PeanoDebug>0
   CompositeMapping* mapping = new CompositeMapping();
   mapping->append( new MyMapping() );
@@ -39,11 +40,17 @@ examples::integerdiffusionthroughfaces::MyObserver::MyObserver(int spacetreeId, 
 
 
 examples::integerdiffusionthroughfaces::MyObserver::~MyObserver() {
-  delete _mapping;
+  if (_spacetreeId<0) {
+	assertion( _mapping!=nullptr );
+    delete _mapping;
+    _mapping = nullptr;
+  }
 }
 
 
 void examples::integerdiffusionthroughfaces::MyObserver::beginTraversal() {
+  logInfo( "beginTraversal()", "here" );
+  assertion( _mapping!=nullptr );
   _iterationCounter++;
   _mapping->beginTraversal();
 }
@@ -58,12 +65,13 @@ void examples::integerdiffusionthroughfaces::MyObserver::beginTraversal() {
 //
 
 void examples::integerdiffusionthroughfaces::MyObserver::endTraversal() {
-  // @todo Level 8
-  #if PeanoDebug>0
+  logInfo( "endTraversal()", "here" );
+  #if PeanoDebug>4
   for( auto& p: _cellData) {
 	logDebug( "endTraversal()", "cell stack (" << p.first.first << "," << p.first.second << "): " << p.second.size() << " entries" );
   }
   #endif
+  assertion( _mapping!=nullptr );
   _mapping->endTraversal();
 }
 
