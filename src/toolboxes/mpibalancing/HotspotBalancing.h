@@ -209,6 +209,12 @@ void boxmg::mappings::CreateGrid::mergeWithMaster(
  * If we identify a local minimum, we set the numbers to fork manually to
  * @f$(3^d-1)/2 @f$ and label all workers as critical.
  *
+ * <h3> Number of ranks used </h3>
+ *
+ * Rank 0 is solely administrative by construction. If we run with more than @f$ 3^d @f$
+ * ranks, then the hotspot balancing also makes the next one in the line purely
+ * administrative.
+ *
  * @image html HotspotBalancing.png
  * @author Tobias Weinzierl
  */
