@@ -111,11 +111,11 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
 #ifdef USE_ITAC
    // static tarch::logging::Log _log( "tarch::multicore::jobs::internal" );
-    static int event_execute = -1;
+  /*  static int event_execute = -1;
     std::string event_execute_name = "execute_consumer";
     if(event_execute == -1)
         int ierr = VT_funcdef(event_execute_name.c_str(), VT_NOCLASS, &event_execute);
-    VT_begin(event_execute);
+    VT_begin(event_execute);*/
 #endif
 
   bool hasProcessedJobs = false;
@@ -214,9 +214,9 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
     internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize = internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize*0.9;
   }
 
-#ifdef USE_ITAC
-  VT_end(event_execute);
-#endif
+//#ifdef USE_ITAC
+//  VT_end(event_execute);
+//#endif
   return nullptr;
 }
 
