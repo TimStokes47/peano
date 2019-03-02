@@ -361,7 +361,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
 		  not refineArtificiallyOutsideDomain()
         ) {
           //_state.updateRefinementHistoryAfterLoad( false, false, false, true );
-          _fineGridVertices[positionInVertexArray].erase();
+          //_fineGridVertices[positionInVertexArray].erase();
           logDebug( "updateGeometry(...)", "erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity enforcement is switched off" );
         }
         break;
