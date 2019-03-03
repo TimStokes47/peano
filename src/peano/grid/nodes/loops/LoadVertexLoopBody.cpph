@@ -334,33 +334,51 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
     else if (_fineGridVertices[positionInVertexArray].isInside()) vertexState = peano::geometry::GeometryHelper::Inside;
     else if (_fineGridVertices[positionInVertexArray].isBoundary()) vertexState = peano::geometry::GeometryHelper::Boundary;
 
+    bool  allCellConnectedPointsAreOutside = true;
+    dfor3(k)
+      allCellConnectedPointsAreOutside &=
+        _geometry.isOutsideClosedDomain(
+          _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell) +
+		  tarch::la::multiplyComponents(
+		    k.convertScalar<double>()-tarch::la::Vector<DIMENSIONS,double>(1.0),
+			_fineGridVerticesEnumerator.getCellSize()
+		  )
+        );
+    enddforx
+
     switch (
       peano::geometry::GeometryHelper::getVertexCommand(
         _geometry.isCompletelyInside(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),_fineGridVerticesEnumerator.getCellSize()),
-        _geometry.isCompletelyOutside(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),_fineGridVerticesEnumerator.getCellSize()),
         _geometry.isOutsideClosedDomain(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)),
+        _geometry.isCompletelyOutside(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),_fineGridVerticesEnumerator.getCellSize()),
+		allCellConnectedPointsAreOutside,
+        refineArtificiallyOutsideDomain(),
         vertexState
       )
     ) {
       case peano::geometry::GeometryHelper::LeaveVertexUnaltered:
         break;
-      case peano::geometry::GeometryHelper::LeaveOuterVertexUnaltered:
+      case peano::geometry::GeometryHelper::LeaveVertexUnalteredButRefine:
+        assertion1( _fineGridVertices[positionInVertexArray].isOutside(),_fineGridVertices[positionInVertexArray] );
+        if ( _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Unrefined ) {
+          _fineGridVertices[positionInVertexArray].refine();
+        }
         break;
       case peano::geometry::GeometryHelper::EraseOutsideVertex:
         logDebug( "updateGeometry(...)", "EraseOutsideVertex" );
         assertion1( _fineGridVertices[positionInVertexArray].isOutside(),_fineGridVertices[positionInVertexArray] );
         if (
           _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined
-          &&
-		  not refineArtificiallyOutsideDomain()
         ) {
-          //_state.updateRefinementHistoryAfterLoad( false, false, false, true );
-          //_fineGridVertices[positionInVertexArray].erase();
-          logDebug( "updateGeometry(...)", "erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity enforcement is switched off" );
+          logDebug(
+            "updateGeometry(...)",
+			"erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity enforcement is switched off"
+		  );
+          _fineGridVertices[positionInVertexArray].erase();
         }
         break;
       case peano::geometry::GeometryHelper::CreateInnerVertex:
-        logDebug( "updateGeometry(...)", "CreateInnerVertex" );
+        assertion1( not _fineGridVertices[positionInVertexArray].isInside(), _fineGridVertices[positionInVertexArray].toString() );
         _eventHandle.createInnerVertex(
           _fineGridVertices[positionInVertexArray],
           _fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),
@@ -376,6 +394,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         logDebug( "updateGeometry(...)", "switch vertex to inside. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
         break;
       case peano::geometry::GeometryHelper::CreateBoundaryVertex:
+        assertion1( not _fineGridVertices[positionInVertexArray].isBoundary(),_fineGridVertices[positionInVertexArray] );
         logDebug( "updateGeometry(...)", "CreateBoundaryVertex" );
         _eventHandle.createBoundaryVertex(
           _fineGridVertices[positionInVertexArray],
@@ -389,6 +408,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToBoundary();
         _state.updateRefinementHistoryAfterLoad( false, false, false, true );
+        logDebug( "updateGeometry(...)", "switch vertex to boundary. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
         break;
       case peano::geometry::GeometryHelper::DestroyVertexAndSwitchToOutside:
         logDebug( "updateGeometry(...)", "DestroyVertexAndSwitchToOutside" );
@@ -404,28 +424,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
         _fineGridVertices[positionInVertexArray].switchToOutside();
         _state.updateRefinementHistoryAfterLoad( false, false, false, true );
-        break;
-      case peano::geometry::GeometryHelper::DestroyVertexAndEraseItAndSwitchToOutside:
-        logDebug( "updateGeometry(...)", "DestroyVertexAndEraseItAndSwitchToOutside" );
-        _eventHandle.destroyVertex(
-          _fineGridVertices[positionInVertexArray],
-          _fineGridVerticesEnumerator.getVertexPosition(),
-          _fineGridVerticesEnumerator.getCellSize(),
-          _coarseGridVertices,
-          _coarseGridVerticesEnumerator,
-          _coarseGridCell,
-          _fineGridPositionOfCell + positionInLocalCell
-        );
-        _fineGridVertices[positionInVertexArray].invalidateAdjacentCellInformation();
-        _fineGridVertices[positionInVertexArray].switchToOutside();
-        if (
-          _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined
-          &&
-		  not refineArtificiallyOutsideDomain()
-        ) {
-          _fineGridVertices[positionInVertexArray].erase();
-        }
-        _state.updateRefinementHistoryAfterLoad( false, false, false, true );
+        logDebug( "updateGeometry(...)", "destroy vertex and switch to outside. vertex=" << _fineGridVertices[positionInVertexArray] << ",enumerator=" << _fineGridVerticesEnumerator(0) );
         break;
     }
   }

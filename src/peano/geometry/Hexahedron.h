@@ -84,9 +84,7 @@ class peano::geometry::Hexahedron: public peano::geometry::Geometry {
     tarch::la::Vector<DIMENSIONS,double> getOffset() const;
     tarch::la::Vector<DIMENSIONS,double> getBoundingBox() const;
 
-    virtual bool domainHasChanged( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution );
-
-    virtual bool refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution ) const;
+    bool domainHasChanged( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution ) override;
 
     /**
      * Routine for decision if the point and the surrounding box lies outside
@@ -112,7 +110,7 @@ class peano::geometry::Hexahedron: public peano::geometry::Geometry {
      * underlying spacetree structure.
      *
      */
-    bool isCompletelyOutside( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution );
+    bool isCompletelyOutside( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution ) override;
 
     /**
      * Routine for decision if the point and the surrounding box lies inside
@@ -138,7 +136,7 @@ class peano::geometry::Hexahedron: public peano::geometry::Geometry {
      * underlying spacetree structure.
      *
      */
-    bool isCompletelyInside( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution );
+    bool isCompletelyInside( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution ) override;
 
     /**
      * A voxel is the intersection of 2*DIMENSIONS halfspaces. For each face two tests
@@ -149,7 +147,7 @@ class peano::geometry::Hexahedron: public peano::geometry::Geometry {
      * be right of the left hexahedron face and the right face is not allowed to be more
      * than a voxel's width right from the right hexahedron's face.
      */
-    bool isOutsideClosedDomain( const tarch::la::Vector<DIMENSIONS,double>& x );
+    bool isOutsideClosedDomain( const tarch::la::Vector<DIMENSIONS,double>& x ) override;
 };
 
 #endif

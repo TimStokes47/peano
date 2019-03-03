@@ -104,6 +104,8 @@ bool peano::geometry::Hexahedron::isOutsideClosedDomain( const tarch::la::Vector
 
 
 bool peano::geometry::Hexahedron::isCompletelyOutside( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution ) {
+//  logTraceInWith2Arguments( "isCompletelyInside(...)", x, resolution);
+/*
   bool result = false;
   for( int i = 0; i < DIMENSIONS; i++ ){
     bool dimResult = true;
@@ -115,8 +117,16 @@ bool peano::geometry::Hexahedron::isCompletelyOutside( const tarch::la::Vector<D
                 !smallerUpToRelativeTolerance(x(i) + resolution(i), _offset(i) + _width(i)));
     result |= dimResult;
   }
+*/
 
-  return result;
+
+  bool inside = true;
+  for (int d=0; d<DIMENSIONS; d++) {
+    inside &= !smallerEqualsUpToRelativeTolerance(x(d),_offset(d)-resolution(d));
+    inside &= !greaterEqualsUpToRelativeTolerance(x(d),_offset(d)+_width(d)+resolution(d));
+  }
+  logDebug( "isCompletelyOutside(...)", x << "x" << resolution << ":" << !inside );
+  return !inside;
 }
 
 
@@ -136,23 +146,5 @@ bool peano::geometry::Hexahedron::isCompletelyInside( const tarch::la::Vector<DI
    enddforx
 
   logTraceOutWith1Argument("isCompletelyInside(...)", result);
-  return result;
-}
-
-
-bool peano::geometry::Hexahedron::refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(
-  const tarch::la::Vector<DIMENSIONS,double>&   x,
-  const tarch::la::Vector<DIMENSIONS,double>&   resolution
-) const {
-  logTraceInWith3Arguments("refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(...)", x, resolution, _width);
-
-  bool isInsideMinkowskiSum = true;
-  for (int d=0; d<DIMENSIONS; d++) {
-    isInsideMinkowskiSum &= !smallerEqualsUpToRelativeTolerance(x(d),_offset(d)-resolution(d));
-    isInsideMinkowskiSum &= !greaterEqualsUpToRelativeTolerance(x(d),_offset(d)+_width(d)+resolution(d));
-  }
-
-  bool result = isInsideMinkowskiSum && tarch::la::allGreater(resolution,_width/2.0);
-  logTraceOutWith1Argument("refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(...)", result);
   return result;
 }

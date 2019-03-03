@@ -200,23 +200,6 @@ class peano::grid::nodes::Node {
      * If the cell belongs to a static tree or if the cell is remote, i.e. it
      * is handled by another node, then this operation does not change the
      * cell's state.
-     *
-     * !!! Hidden Geometries
-     *
-     * Besides the geometry update, we also have to check whether the
-     * computationally is hidden in the cell: This happens if all the vertices
-     * adjacent to a cell are outside but the domain is contained within the
-     * cell.
-     *
-     * @image html peano/grid/nodes/Node_InvokeEnterCell.png
-     *
-     * In this special case, we have to refine the vertices even though they
-     * are outside.
-     *
-     * !!! Parallelisation
-     *
-     * You finsd documentation on details of the parallelisation in the method
-     * LoadVertexLoopBody::updateGeometry().
      */
     void updateCellsGeometryInformationAfterLoad(
       State&                                    state,

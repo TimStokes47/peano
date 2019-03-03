@@ -40,12 +40,11 @@ class peano::geometry::GeometryHelper {
 
     enum VertexAction {
       LeaveVertexUnaltered,
-      LeaveOuterVertexUnaltered,
+      LeaveVertexUnalteredButRefine,
       CreateInnerVertex,
       CreateBoundaryVertex,
       EraseOutsideVertex,
-      DestroyVertexAndSwitchToOutside,
-      DestroyVertexAndEraseItAndSwitchToOutside
+      DestroyVertexAndSwitchToOutside
     };
 
     enum CellAction {
@@ -57,10 +56,41 @@ class peano::geometry::GeometryHelper {
 
     ~GeometryHelper();
 
+    /**
+     *
+     * There is a rather naive interpretation of geometric information:
+     *
+     * - If a point plus its h environment is inside, then the vertex is
+     *   inside.
+     * - If a point is outside the closure of the computational domain,
+     *   then this point is outside.
+     * - Otherwise, the point is a boundary point and we can coarsen it.
+     *
+     * <h3> Hidden Geometries </h3>
+     *
+     * Unfortunately, this is working this way. In principle, we should
+     * always coarsen outer vertices. However, if a vertex is outside and
+     * all cell-connected neighbours are outside, too, it can happen that
+     * we don't see inclusions.
+     *
+     * Besides the geometry update, we also have to check whether the
+     * computationally is hidden in the cell: This happens if all the vertices
+     * adjacent to a cell are outside but the domain is contained within the
+     * cell.
+     *
+     * @image html peano/grid/nodes/Node_InvokeEnterCell.png
+     *
+     * I would like to do all the artificial boundary refinement here, but this is
+     * not possible. To run the analysis, I have to know whether cell-connected
+     * vertices are refined. However, the present routine has only geometric data.
+     * As a consequence, you find this artificial refinement in Node::updateCellsGeometryInformationAfterLoad().
+     */
     static VertexAction getVertexCommand(
       bool  pointWithHEnvironmentIsInside,
-      bool  pointWithHEnvironmentIsOutside,
       bool  pointIsOutsideOfDomainClosure,
+      bool  pointWithHEnvironmentIsOutside,
+      bool  allCellConnectedPointsAreOutside,
+	  bool  boundaryRegularisationIsEnabled,
       const CurrentVertexState& currentVertexState
     );
 
