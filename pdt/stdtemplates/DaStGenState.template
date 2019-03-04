@@ -46,6 +46,8 @@ class __NAMESPACE__::records::State {
   persistent packed parallelise bool             couldNotEraseDueToDecompositionFlag;
 
   persistent packed parallelise bool             subWorkerIsInvolvedInJoinOrFork;
+
+  persistent packed parallelise bool             refineArtificiallyOutsideDomain;
   #endif
 
   /**
