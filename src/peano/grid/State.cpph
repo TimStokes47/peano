@@ -482,10 +482,6 @@ void peano::grid::State<StateData>::resetStateAtBeginOfIteration() {
 
     tarch::parallel::NodePool::getInstance().resetHasGivenOutRankSizeLastQuery();
   }
-
-  // @todo Raus
-  logInfo( "reset...", toString() );
-
   #endif
 
   logTraceOutWith1Argument( "resetStateAtBeginOfIteration()", toString() );
