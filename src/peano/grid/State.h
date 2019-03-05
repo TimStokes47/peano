@@ -108,7 +108,15 @@ class peano::grid::State {
      */
     static tarch::logging::Log  _log;
 
-    static const int IterationsInBetweenRebalancing;
+    /**
+     * This flag control internally how soon a state recovers from its
+     * initial state and says "yes, I am ready to load balance". I set
+     * it to three by default. Most incremental load balancing schemes
+     * need some time to recover after an lb step and three seems to be
+     * a reasonable choice. You might however have a better code which
+     * doesn't need that many steps.
+     */
+    static int IterationsInBetweenRebalancing;
 
     enum class LoadBalancingState {
       NoRebalancing,

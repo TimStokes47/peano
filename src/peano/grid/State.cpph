@@ -31,7 +31,7 @@ tarch::logging::Log  peano::grid::State<StateData>::_log( "peano::grid::State" )
 
 
 template <class StateData>
-const int peano::grid::State<StateData>::IterationsInBetweenRebalancing(3);
+int peano::grid::State<StateData>::IterationsInBetweenRebalancing(3);
 
 
 template <class StateData>
@@ -41,7 +41,7 @@ peano::grid::State<StateData>::State():
 
   #ifdef Parallel
   _stateData.setReduceStateAndCell(true);
-  _iterationCounter = 0;
+  _iterationCounter = IterationsInBetweenRebalancing+1;
   _maxForkLevel = std::numeric_limits<int>::max();
   _stateData.setRefineArtificiallyOutsideDomain( StateData::BoundaryRefinement::RefineArtificially );
   #ifdef Asserts
