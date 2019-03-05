@@ -102,12 +102,6 @@ class peano::grid::State {
     State();
     State(const PersistentState& argument);
 
-  private:
-    /**
-     * Logging device
-     */
-    static tarch::logging::Log  _log;
-
     /**
      * This flag control internally how soon a state recovers from its
      * initial state and says "yes, I am ready to load balance". I set
@@ -117,6 +111,12 @@ class peano::grid::State {
      * doesn't need that many steps.
      */
     static int IterationsInBetweenRebalancing;
+
+  private:
+    /**
+     * Logging device
+     */
+    static tarch::logging::Log  _log;
 
     enum class LoadBalancingState {
       NoRebalancing,
