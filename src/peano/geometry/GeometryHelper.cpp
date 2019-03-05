@@ -29,40 +29,35 @@ tarch::la::Vector<DIMENSIONS,double> peano::geometry::GeometryHelper::getCellCen
 
 peano::geometry::GeometryHelper::VertexAction peano::geometry::GeometryHelper::getVertexCommand(
   bool  pointWithHEnvironmentIsInside,
-  bool  pointWithHEnvironmentIsOutside,
   bool  pointIsOutsideOfDomainClosure,
+  bool  pointWithHEnvironmentIsOutside,
+  bool  allCellConnectedPointsAreOutside,
+  bool  mayEraseAlongArtificiallyRefinedBoundary,
   const CurrentVertexState& currentVertexState
 ) {
-  logTraceInWith4Arguments( "getVertexCommand(...)", pointWithHEnvironmentIsInside, pointWithHEnvironmentIsOutside, pointIsOutsideOfDomainClosure, currentVertexState );
+  logTraceInWith5Arguments( "getVertexCommand(...)", pointWithHEnvironmentIsInside, pointIsOutsideOfDomainClosure, pointWithHEnvironmentIsOutside, allCellConnectedPointsAreOutside, boundaryRegularisationIsEnabled );
+
+  peano::geometry::GeometryHelper::VertexAction result = LeaveVertexUnaltered;
 
   if (pointWithHEnvironmentIsInside && (currentVertexState != Inside)) {
-    logTraceOutWith1Argument( "getVertexCommand(...)", "CreateInnerVertex" );
-    return CreateInnerVertex;
-  }
-  else if (pointWithHEnvironmentIsOutside && (currentVertexState != Outside)) {
-    logTraceOutWith1Argument( "getVertexCommand(...)", "DestroyVertexAndCoarseItAndSwitchToOutside" );
-    return DestroyVertexAndEraseItAndSwitchToOutside;
-  }
-  else if (pointWithHEnvironmentIsOutside ) {
-    logTraceOutWith1Argument( "getVertexCommand(...)", "CoarseOutsideVertex" );
-    return EraseOutsideVertex;
+    result = CreateInnerVertex;
   }
   else if (pointIsOutsideOfDomainClosure && (currentVertexState != Outside)) {
-    logTraceOutWith1Argument( "getVertexCommand(...)", "DestroyVertexAndSwitchToOutside" );
-    return DestroyVertexAndSwitchToOutside;
+    result = DestroyVertexAndSwitchToOutside;
   }
-  else if (pointIsOutsideOfDomainClosure && (currentVertexState == Outside)) {
-    logTraceOutWith1Argument( "getVertexCommand(...)", "LeaveOuterVertexUnaltered" );
-    return EraseOutsideVertex;
-    //return LeaveOuterVertexUnaltered;
+  // embedding property (notably important on coarsest rank)
+  else if (pointIsOutsideOfDomainClosure && allCellConnectedPointsAreOutside && !pointWithHEnvironmentIsOutside) {
+    result = LeaveVertexUnalteredButRefine;
   }
-  else if (!pointWithHEnvironmentIsInside && !pointIsOutsideOfDomainClosure && (currentVertexState != Boundary)) {
-    logTraceOutWith1Argument( "getVertexCommand(...)", "CreateBoundaryVertex" );
-    return CreateBoundaryVertex;
+  else if (pointIsOutsideOfDomainClosure && mayEraseAlongArtificiallyRefinedBoundary) {
+    result = EraseOutsideVertex;
+  }
+  else if ( !pointWithHEnvironmentIsInside && !pointIsOutsideOfDomainClosure && currentVertexState != Boundary ) {
+    result = CreateBoundaryVertex;
   }
 
-  logTraceOutWith1Argument( "getVertexCommand(...)", "LeaveVertexUnaltered" );
-  return LeaveVertexUnaltered;
+  logTraceOutWith1Argument( "getVertexCommand(...)", toString(result) );
+  return result;
 }
 
 

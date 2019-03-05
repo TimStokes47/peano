@@ -31,7 +31,7 @@ tarch::parallel::NodePool::NodePool():
   _jobManagementTag(-1),
   _jobServicesTag(-1),
   _isAlive(false),
-  _hasGivenOutRankSizeLastQuery(false),
+  _hasGivenOutRanks(false),
   _strategy(0) {
   #ifdef Asserts
   _isInitialised = false;
@@ -597,7 +597,7 @@ void tarch::parallel::NodePool::replyToWorkerRequestMessages() {
         }
 
         if (activatedNode!=NoFreeNodesMessage) {
-          _hasGivenOutRankSizeLastQuery = true;
+          _hasGivenOutRanks = true;
           tarch::parallel::messages::ActivationMessage activationMessage( nextRequestToAnswer.getSenderRank() );
           activationMessage.send( activatedNode, _jobManagementTag, true, tarch::parallel::messages::ActivationMessage::ExchangeMode::NonblockingWithPollingLoopOverTests );
           workersStillRequested--;
@@ -680,8 +680,11 @@ bool tarch::parallel::NodePool::isIdleNode( int rank ) const {
 }
 
 
-bool tarch::parallel::NodePool::hasGivenOutRankSizeLastQuery() {
-  bool result = _hasGivenOutRankSizeLastQuery;
-  _hasGivenOutRankSizeLastQuery = false;
-  return result;
+bool tarch::parallel::NodePool::hasGivenOutRankSizeLastQuery() const {
+  return _hasGivenOutRanks;
+}
+
+
+void tarch::parallel::NodePool::resetHasGivenOutRankSizeLastQuery() {
+  _hasGivenOutRanks       = false;
 }

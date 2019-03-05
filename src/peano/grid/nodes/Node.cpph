@@ -631,6 +631,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
               );
             switch (modifyVertex) {
               case peano::grid::aspects::ParallelMerge::CreateBoundaryVertexOnMaster:
+                assertion( !fineGridVertices[ fineGridVerticesEnumerator(k) ].isBoundary() );
                 _eventHandle.createBoundaryVertex(
                   fineGridVertices[ fineGridVerticesEnumerator(k) ],
                   fineGridVerticesEnumerator.getVertexPosition(fineGridPositionOfCell+k),
@@ -641,9 +642,11 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
                   fineGridPositionOfCell + k
                 );
                 fineGridVertices[ fineGridVerticesEnumerator(k) ].switchToBoundary();
+                logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", "make boundary. vertex=" << fineGridVertices[ fineGridVerticesEnumerator(k) ] );
                 state.updateRefinementHistoryAfterLoad( false, false, false, true );
                 break;
               case peano::grid::aspects::ParallelMerge::CreateInnerVertexOnMaster:
+                assertion( !fineGridVertices[ fineGridVerticesEnumerator(k) ].isInside() );
                 _eventHandle.createInnerVertex(
                   fineGridVertices[ fineGridVerticesEnumerator(k) ],
                   fineGridVerticesEnumerator.getVertexPosition(fineGridPositionOfCell+k),
@@ -655,6 +658,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
                 );
                 fineGridVertices[ fineGridVerticesEnumerator(k) ].switchToInside();
                 state.updateRefinementHistoryAfterLoad( false, false, false, true );
+                logDebug( "updateCellsParallelStateAfterLoadIfNodeIsJoiningWithWorker(...)", "make inside. vertex=" << fineGridVertices[ fineGridVerticesEnumerator(k) ] );
                 break;
               case peano::grid::aspects::ParallelMerge::MasterVertexStateRemainsUnaltered:
                 break;
@@ -931,6 +935,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
       case peano::geometry::GeometryHelper::LeaveCellUnaltered:
         break;
       case peano::geometry::GeometryHelper::CreateInnerCell:
+      	assertion( !fineGridCell.isInside() );
         _eventHandle.createCell(
           fineGridCell,
           fineGridVertices,
@@ -946,6 +951,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         break;
       case peano::geometry::GeometryHelper::CreateOuterCell:
       case peano::geometry::GeometryHelper::CreateOuterCellAndDoNotAnalyseItFurtherIfItsRefined:
+    	assertion( !fineGridCell.isOutside() );
         _eventHandle.destroyCell(
           fineGridCell,
           fineGridVertices,
@@ -962,69 +968,67 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     }
   }
 
+  #ifdef Parallel
   if (
     (fineGridVerticesEnumerator.getCellFlags()<=peano::grid::NotStationary) 
     && 
     fineGridCell.isOutside()
-    #ifdef Parallel
     && 
     !fineGridCell.isRemote(state,true,false) 
-    #endif
+	&&
+    state.refineArtificiallyOutsideDomain()
+	&&
+	!_geometry.isCompletelyOutside( cellCenter,halfTheCellSize )
   ) {
-    const bool hasToRefineOuterCellBecauseOfGeometry = 
-      _geometry.refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain(cellCenter,halfTheCellSize)
-      &&
-      peano::grid::aspects::VertexStateAnalysis::areAllVerticesOutsideDomain(
-        fineGridVertices,
-        fineGridVerticesEnumerator
-      );
-
-    #ifdef Parallel
     bool oneBoundaryVertexIsCritical = false;
-    if ( refineArtificiallyOutsideDomain() ) {
-      dfor2(k)
-        oneBoundaryVertexIsCritical |=
+    dfor2(k)
+      oneBoundaryVertexIsCritical |=
+        (
           (
-            (
-            fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Refining
-            ||
-            fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::RefinementTriggered
-            ||
-            fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Refined
-            )
-            &&
-            fineGridVertices[fineGridVerticesEnumerator(k)].isBoundary()
-            &&
-            !fineGridVertices[fineGridVerticesEnumerator(k)].isRemote( state, true, false)
-          );
-      enddforx
-    }
-    #else
-    bool oneBoundaryVertexIsCritical = false;
-    #endif
+          fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Refining
+          ||
+          fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::RefinementTriggered
+          ||
+          fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Refined
+          )
+          &&
+          !fineGridVertices[fineGridVerticesEnumerator(k)].isHangingNode()
+          &&
+          fineGridVertices[fineGridVerticesEnumerator(k)].isBoundary()
+          &&
+          !fineGridVertices[fineGridVerticesEnumerator(k)].isRemote( state, true, false)
+        );
+    enddforx
 
-    if (hasToRefineOuterCellBecauseOfGeometry or oneBoundaryVertexIsCritical) {
+    if (oneBoundaryVertexIsCritical) {
       dfor2(k)
         const bool mayRefineVertex =
           fineGridVertices[fineGridVerticesEnumerator(k)].getRefinementControl()==Vertex::Records::Unrefined
           &&
           !fineGridVertices[fineGridVerticesEnumerator(k)].isHangingNode()
-          #ifdef Parallel
           &&
           !fineGridVertices[fineGridVerticesEnumerator(k)].isRemote( state, true, false)
-          #endif
+          &&
+          !fineGridVertices[fineGridVerticesEnumerator(k)].isInside()
 	      ;
 
         if (
           mayRefineVertex
         ) {
           fineGridVertices[fineGridVerticesEnumerator(k)].refine();
-          logDebug( "updateCellsGeometryInformationAfterLoad(...)", "artifically postrefine " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() );
+          logDebug(
+            "updateCellsGeometryInformationAfterLoad(...)",
+			"artificially postrefine " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() <<
+			" at " << fineGridVerticesEnumerator.getVertexPosition(k) << " on level " << fineGridVerticesEnumerator.getLevel()
+		  );
         }
       enddforx
     }
   }
+    
 
+  #endif
+  
   logTraceOutWith2Arguments( "updateCellsGeometryInformationAfterLoad(...)", state.toString(), fineGridCell.toString() );
 }
 

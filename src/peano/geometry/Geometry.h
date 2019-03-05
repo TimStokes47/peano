@@ -118,29 +118,6 @@ class peano::geometry::Geometry {
      * @param resolution Resolution of subdomain, i.e. hexahedron surrounding x
      */
     virtual bool domainHasChanged( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution ) = 0;
-
-    /**
-     * Refine grid intersecting cells at the cell boundary
-     *
-     * Peano identifies whenever a cell is intersected by the computational
-     * domain but all its vertices are outside. In this case, the vertices
-     * probably never would refine. But Peano identifies this situation and
-     * asks the geometry due to this operation whether it shall refine here.
-     * In this routine, at least the minimum mesh size should be checked.
-     *
-     * @image html peano/geometry/refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain.png
-     *
-     * @param x          Center of subdomain
-     * @param resolution Resolution of subdomain, i.e. hexahedron surrounding x
-     *
-     * <h2> Remark </h2>
-     *
-     * This operation should care about something like a characteristic length
-     * of a setup. If the h is smaller than this length, it probably should
-     * return false, but if this does not hold, it should return true to force
-     * the implementation to refine and to resolve all characteristic scales.
-     */
-    virtual bool refineOuterCellWithExclusivelyOuterVerticesAsItIntersectsDomain( const tarch::la::Vector<DIMENSIONS,double>& x, const tarch::la::Vector<DIMENSIONS,double> &resolution ) const = 0;
 };
 
 #endif

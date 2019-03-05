@@ -102,13 +102,21 @@ class peano::grid::State {
     State();
     State(const PersistentState& argument);
 
+    /**
+     * This flag control internally how soon a state recovers from its
+     * initial state and says "yes, I am ready to load balance". I set
+     * it to three by default. Most incremental load balancing schemes
+     * need some time to recover after an lb step and three seems to be
+     * a reasonable choice. You might however have a better code which
+     * doesn't need that many steps.
+     */
+    static int IterationsInBetweenRebalancing;
+
   private:
     /**
      * Logging device
      */
     static tarch::logging::Log  _log;
-
-    static const int IterationsInBetweenRebalancing;
 
     enum class LoadBalancingState {
       NoRebalancing,
@@ -173,7 +181,6 @@ class peano::grid::State {
     #ifdef Asserts
     LoadBalancingState           _previousLoadRebalancingState;
     #endif
-
     #endif
 
     #ifdef PersistentRegularSubtrees
@@ -474,6 +481,9 @@ class peano::grid::State {
     int getBatchIteration() const;
 
     #ifdef Parallel
+    bool refineArtificiallyOutsideDomain() const;
+    bool eraseArtificiallyRefinedVerticesOutsideDomain() const;
+
     /**
      * Blocking send. initDatatype() has to be called before.
      *
@@ -508,6 +518,9 @@ class peano::grid::State {
     void joinWithRank( int rank );
     void splitIntoRank( int rank );
 
+    /**
+     * Returns _loadRebalancingState != LoadBalancingState::NoRebalancing.
+     */
     static bool isInvolvedInJoinOrFork();
 
     /**
