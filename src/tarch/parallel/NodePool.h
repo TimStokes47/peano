@@ -125,7 +125,7 @@ class tarch::parallel::NodePool: public tarch::services::Service {
     /**
      * @see hasGivenOutRankSizeLastQuery()
      */
-    bool _hasGivenOutRankSizeLastQuery;
+    bool _hasGivenOutRanks;
 
     /**
      * Holds the strategy to use to answer the worker queries.
@@ -413,12 +413,12 @@ class tarch::parallel::NodePool: public tarch::services::Service {
 
     bool isIdleNode( int rank ) const;
 
+    bool hasGivenOutRankSizeLastQuery() const;
+
     /**
-     * Query node pool whether it has given out any ranks. Afterwards, reset,
-     * i.e. if you call it twice in a row, the second time will always return
-     * false.
+     * Done on master automatically
      */
-    bool hasGivenOutRankSizeLastQuery();
+    void resetHasGivenOutRankSizeLastQuery();
 };
 
 
