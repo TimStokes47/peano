@@ -1015,6 +1015,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         if (
           mayRefineVertex
         ) {
+/*
           fineGridVertices[fineGridVerticesEnumerator(k)].refine();
           // @todo Debug
           logInfo(
@@ -1022,6 +1023,7 @@ void peano::grid::nodes::Node<Vertex,Cell,State,VertexStack,CellStack,EventHandl
 			"artificially postrefine " << fineGridVertices[fineGridVerticesEnumerator(k)].toString() <<
 			" at " << fineGridVerticesEnumerator.getVertexPosition(k) << " on level " << fineGridVerticesEnumerator.getLevel()
 		  );
+*/
         }
       enddforx
     }
