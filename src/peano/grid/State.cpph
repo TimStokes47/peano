@@ -193,15 +193,15 @@ template <class StateData>
 bool peano::grid::State<StateData>::isGridStationary() const {
   return !_stateData.getHasChangedVertexOrCellState()
       && !_stateData.getHasRefined()
-      && !_stateData.getHasErased();
+      && !_stateData.getHasErased()
+      && !_stateData.getHasTriggeredRefinementForNextIteration()
+      && !_stateData.getHasTriggeredEraseForNextIteration();
 }
 
 
 template <class StateData>
 bool peano::grid::State<StateData>::isGridBalanced() const {
   const bool result = isGridStationary()
-        && !_stateData.getHasTriggeredRefinementForNextIteration()
-        && !_stateData.getHasTriggeredEraseForNextIteration()
         && !hasGridChangedInPreviousIteration()
   #ifdef Parallel
         && _iterationCounter > IterationsInBetweenRebalancing+1
