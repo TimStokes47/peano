@@ -32,7 +32,7 @@ peano::geometry::GeometryHelper::VertexAction peano::geometry::GeometryHelper::g
   bool  pointIsOutsideOfDomainClosure,
   bool  pointWithHEnvironmentIsOutside,
   bool  allCellConnectedPointsAreOutside,
-  bool  boundaryRegularisationIsEnabled,
+  bool  mayEraseAlongArtificiallyRefinedBoundary,
   const CurrentVertexState& currentVertexState
 ) {
   logTraceInWith5Arguments( "getVertexCommand(...)", pointWithHEnvironmentIsInside, pointIsOutsideOfDomainClosure, pointWithHEnvironmentIsOutside, allCellConnectedPointsAreOutside, boundaryRegularisationIsEnabled );
@@ -49,7 +49,7 @@ peano::geometry::GeometryHelper::VertexAction peano::geometry::GeometryHelper::g
   else if (pointIsOutsideOfDomainClosure && allCellConnectedPointsAreOutside && !pointWithHEnvironmentIsOutside) {
     result = LeaveVertexUnalteredButRefine;
   }
-  else if (pointIsOutsideOfDomainClosure && !boundaryRegularisationIsEnabled) {
+  else if (pointIsOutsideOfDomainClosure && mayEraseAlongArtificiallyRefinedBoundary) {
     result = EraseOutsideVertex;
   }
   else if ( !pointWithHEnvironmentIsInside && !pointIsOutsideOfDomainClosure && currentVertexState != Boundary ) {

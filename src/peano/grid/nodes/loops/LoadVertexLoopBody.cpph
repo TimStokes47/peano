@@ -352,7 +352,7 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         _geometry.isOutsideClosedDomain(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell)),
         _geometry.isCompletelyOutside(_fineGridVerticesEnumerator.getVertexPosition(positionInLocalCell),_fineGridVerticesEnumerator.getCellSize()),
 		allCellConnectedPointsAreOutside,
-        refineArtificiallyOutsideDomain(),
+        _state.eraseArtificiallyRefinedVerticesOutsideDomain(),
         vertexState
       )
     ) {
@@ -365,12 +365,10 @@ void peano::grid::nodes::loops::LoadVertexLoopBody<Vertex,Cell,State,VertexStack
         }
         break;
       case peano::geometry::GeometryHelper::EraseOutsideVertex:
-        logDebug( "updateGeometry(...)", "EraseOutsideVertex" );
         assertion1( _fineGridVertices[positionInVertexArray].isOutside(),_fineGridVertices[positionInVertexArray] );
-        if (
-          _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined
-        ) {
-          logDebug(
+        if ( _fineGridVertices[positionInVertexArray].getRefinementControl()==Vertex::Records::Refined ) {
+        	// @todo Debug
+          logInfo(
             "updateGeometry(...)",
 			"erase vertex " << _fineGridVertices[positionInVertexArray].toString() << " as it is outside and boundary regularity enforcement is switched off"
 		  );

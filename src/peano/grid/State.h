@@ -173,7 +173,6 @@ class peano::grid::State {
     #ifdef Asserts
     LoadBalancingState           _previousLoadRebalancingState;
     #endif
-
     #endif
 
     #ifdef PersistentRegularSubtrees
@@ -474,6 +473,9 @@ class peano::grid::State {
     int getBatchIteration() const;
 
     #ifdef Parallel
+    bool refineArtificiallyOutsideDomain() const;
+    bool eraseArtificiallyRefinedVerticesOutsideDomain() const;
+
     /**
      * Blocking send. initDatatype() has to be called before.
      *
@@ -508,6 +510,9 @@ class peano::grid::State {
     void joinWithRank( int rank );
     void splitIntoRank( int rank );
 
+    /**
+     * Returns _loadRebalancingState != LoadBalancingState::NoRebalancing.
+     */
     static bool isInvolvedInJoinOrFork();
 
     /**

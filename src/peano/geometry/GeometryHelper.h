@@ -90,7 +90,7 @@ class peano::geometry::GeometryHelper {
       bool  pointIsOutsideOfDomainClosure,
       bool  pointWithHEnvironmentIsOutside,
       bool  allCellConnectedPointsAreOutside,
-	  bool  boundaryRegularisationIsEnabled,
+	  bool  mayEraseAlongArtificiallyRefinedBoundary,
       const CurrentVertexState& currentVertexState
     );
 

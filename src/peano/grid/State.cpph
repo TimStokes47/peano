@@ -43,6 +43,7 @@ peano::grid::State<StateData>::State():
   _stateData.setReduceStateAndCell(true);
   _iterationCounter = 0;
   _maxForkLevel = std::numeric_limits<int>::max();
+  _stateData.setRefineArtificiallyOutsideDomain( StateData::BoundaryRefinement::RefineArtificially );
   #ifdef Asserts
   _previousLoadRebalancingState = LoadBalancingState::Undef;
   #endif
@@ -449,10 +450,61 @@ void peano::grid::State<StateData>::resetStateAtBeginOfIteration() {
   #ifdef Parallel
   _stateData.setCouldNotEraseDueToDecompositionFlag(false);
   _stateData.setSubWorkerIsInvolvedInJoinOrFork( _loadRebalancingState != LoadBalancingState::NoRebalancing );
+
+  if ( tarch::parallel::Node::getInstance().isGlobalMaster() ) {
+    if (
+      _stateData.getRefineArtificiallyOutsideDomain()==StateData::BoundaryRefinement::RefineArtificially
+	) {
+      if (
+        !peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated()
+		||
+	    tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()==0
+      ) {
+        _stateData.setRefineArtificiallyOutsideDomain( StateData::BoundaryRefinement::Nop );
+      }
+    }
+    else if (
+      _stateData.getRefineArtificiallyOutsideDomain()==StateData::BoundaryRefinement::Nop
+	  &&
+	  !tarch::parallel::NodePool::getInstance().hasGivenOutRankSizeLastQuery()
+	) {
+      _stateData.setRefineArtificiallyOutsideDomain( StateData::BoundaryRefinement::EraseAggressively );
+    }
+    else if (
+      _stateData.getRefineArtificiallyOutsideDomain()==StateData::BoundaryRefinement::EraseAggressively
+      &&
+      peano::parallel::loadbalancing::Oracle::getInstance().isLoadBalancingActivated()
+	  &&
+	  tarch::parallel::NodePool::getInstance().getNumberOfIdleNodes()>0
+    ) {
+      _stateData.setRefineArtificiallyOutsideDomain( StateData::BoundaryRefinement::RefineArtificially );
+    }
+
+    tarch::parallel::NodePool::getInstance().resetHasGivenOutRankSizeLastQuery();
+  }
+
+  // @todo Raus
+  logInfo( "reset...", toString() );
+
   #endif
 
   logTraceOutWith1Argument( "resetStateAtBeginOfIteration()", toString() );
 }
+
+
+#ifdef Parallel
+template <class StateData>
+bool peano::grid::State<StateData>::refineArtificiallyOutsideDomain() const {
+  return  _stateData.getRefineArtificiallyOutsideDomain() == StateData::BoundaryRefinement::RefineArtificially;
+}
+
+
+template <class StateData>
+bool peano::grid::State<StateData>::eraseArtificiallyRefinedVerticesOutsideDomain() const {
+  return  _stateData.getRefineArtificiallyOutsideDomain() == StateData::BoundaryRefinement::EraseAggressively;
+}
+
+#endif
 
 
 template <class StateData>
