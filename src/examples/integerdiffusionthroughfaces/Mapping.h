@@ -11,6 +11,8 @@
 namespace examples {
   namespace integerdiffusionthroughfaces {
     class Mapping;
+    struct CellData;
+    struct FaceData;
   }
 }
 
@@ -31,66 +33,66 @@ class examples::integerdiffusionthroughfaces::Mapping {
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
-	  int&                                         data
+	  FaceData&                                    data
     ) = 0;
 
 	virtual void createHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
-	  int&                                         data
+	  FaceData&                                    data
     ) = 0;
 
 	virtual void destroyPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
-	  int&                                         data
+	  FaceData&                                    data
     ) = 0;
 
 	virtual void destroyHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
-	  int&                                         data
+	  FaceData&                                    data
     ) = 0;
 
 	virtual void touchFaceFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
-	  int&                                         data
+	  FaceData&                                    data
     ) = 0;
 
 	virtual void touchFaceLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       int                                          normal,
-	  int&                                         data
+	  FaceData&                                    data
     ) = 0;
 
 	virtual void createCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  int&                                         data
+	  CellData&                                    data
     ) = 0;
 
 	virtual void destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  int&                                         data
+	  CellData&                                    data
     ) = 0;
 
 	virtual void touchCellFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  int&                                         data
+	  CellData&                                    data
     ) = 0;
 
 	virtual void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  int&                                         data
+	  CellData&                                    data
     ) = 0;
 };
 

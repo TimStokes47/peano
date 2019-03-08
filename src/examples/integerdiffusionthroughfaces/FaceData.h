@@ -4,6 +4,8 @@
 #define _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_FACE_DATA_H_
 
 
+#include <string>
+
 
 namespace examples {
   namespace integerdiffusionthroughfaces {
@@ -23,6 +25,18 @@ struct examples::integerdiffusionthroughfaces::FaceData {
   tarch::la::Vector<Dimensions,double>   h;
   #endif
   int                                    value;
+  int                                    oldValue;
+
+  std::string toString() const {
+	return std::string("(")
+         #if PeanoDebug>0
+		 + x.toString() + std::string(",")
+	     + h.toString() + std::string(",")
+         #endif
+         + std::to_string(value) + std::string(",")
+         + std::to_string(oldValue) + std::string(",")
+		 + std::string(")");
+  }
 };
 
 

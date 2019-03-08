@@ -4,6 +4,9 @@
 #define _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_CELL_DATA_H_
 
 
+#include <string>
+
+
 namespace examples {
   namespace integerdiffusionthroughfaces {
     struct CellData;
@@ -22,6 +25,16 @@ struct examples::integerdiffusionthroughfaces::CellData {
   tarch::la::Vector<Dimensions,double>   h;
   #endif
   int                                    value;
+
+  std::string toString() const {
+	return std::string("(")
+         #if PeanoDebug>0
+		 + x.toString() + std::string(",")
+	     + h.toString() + std::string(",")
+         #endif
+         + std::to_string(value) + std::string(",")
+		 + std::string(")");
+  }
 };
 
 
