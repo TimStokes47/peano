@@ -151,13 +151,13 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   }
   assertionVectorNumericalEquals4(data.x,event.getX(),data.value,event.toString(),data.x,data.h);
   assertionVectorNumericalEquals4(data.h,event.getH(),data.value,event.toString(),data.x,data.h);
-  _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
 
   // @todo Es gibt noch kein inside/outside hier, oder?
   // @todo Enclaves fehlen halt auch noch
 
   // @todo Ich will pointer durchreichen, aber nix auf dem Call-Stack
   _mapping->touchCellFirstTime( event.getX(), event.getH(), data );
+  _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
 
   logTraceOutWith1Argument("enterCell(...)",event.toString());
 }
