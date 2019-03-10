@@ -158,7 +158,8 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   // @todo Enclaves fehlen halt auch noch
 
   // @todo Ich will pointer durchreichen, aber nix auf dem Call-Stack
-  _mapping->touchCellFirstTime( event.getX(), event.getH(), data, faces );
+  peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
+  _mapping->touchCellFirstTime( event.getX(), event.getH(), data, faces, marker );
   _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
 
   logTraceOutWith1Argument("enterCell(...)",event.toString());
@@ -186,7 +187,8 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
   // faces ist halt ueberhaupt noch net initialisiert hier!
 
   // @todo Ich will pointer durchreichen, aber nix auf dem Call-Stack -> moves directly
-  _mapping->touchCellLastTime( event.getX(), event.getH(), data, faces );
+  peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
+  _mapping->touchCellLastTime( event.getX(), event.getH(), data, faces,marker );
 
   if (outCellStack==TraversalObserver::CreateOrDestroyPersistentGridEntity) {
     _mapping->destroyCell(event.getX(),event.getH(),data,faces);

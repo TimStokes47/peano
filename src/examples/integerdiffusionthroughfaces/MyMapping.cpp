@@ -103,7 +103,6 @@ void examples::integerdiffusionthroughfaces::MyMapping::destroyCell(
   CellData&                                    data,
   Faces&                                       faces
 ) {
-
 }
 
 
@@ -111,16 +110,23 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  Faces&                                       faces
+  Faces&                                       faces,
+  peano4::datamanagement::CellMarker           marker
 ) {
   logTraceInWith1Argument( "touchCellFirstTime(...)", data.toString() );
   const int oldValue = data.value;
 
+  bool stimulus =
+    center(0) > 0.4 and center (0) <0.6 and
+    center(1) > 0.4 and center (1) <0.6;
   if (
-    center(0) > 0.2 and center (0) <0.4 and
-    center(1) > 0.2 and center (1) <0.4
+    (stimulus and not marker.isRefined )
+	or
+    (not stimulus and h(0)<1.0/3.0 and h(1)>=1.0/3.0/3.0)
+	or
+    (not stimulus and not marker.isRefined and h(1)>=1.0/3.0/3.0)
   ) {
-    data.value = 30;
+    data.value = 5;
   }
   else {
     data.value = oldValue-1;
@@ -141,7 +147,8 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellLastTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  Faces&                                       faces
+  Faces&                                       faces,
+  peano4::datamanagement::CellMarker           marker
 ) {
   logTraceInWith1Argument( "touchCellLastTime(...)", data.toString() );
   logTraceOutWith1Argument( "touchCellLastTime(...)", data.toString() );

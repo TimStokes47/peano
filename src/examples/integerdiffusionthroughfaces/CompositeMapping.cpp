@@ -128,10 +128,11 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::touchCellFirstTim
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  Faces&                                       faces
+  Faces&                                       faces,
+  peano4::datamanagement::CellMarker           marker
 ) {
   for (auto& p: _mappings) {
-	p->touchCellFirstTime(center,h,data,faces);
+	p->touchCellFirstTime(center,h,data,faces,marker);
   }
 }
 
@@ -140,10 +141,11 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::touchCellLastTime
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  Faces&                                       faces
+  Faces&                                       faces,
+  peano4::datamanagement::CellMarker           marker
 ) {
   for (auto& p: _mappings) {
-	p->touchCellLastTime(center,h,data,faces);
+	p->touchCellLastTime(center,h,data,faces,marker);
   }
 }
 

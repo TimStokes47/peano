@@ -6,6 +6,7 @@
 
 #include "peano4/utils/Globals.h"
 #include "peano4/datamanagement/FaceEnumerator.h"
+#include "peano4/datamanagement/CellMarker.h"
 #include "tarch/la/Vector.h"
 
 
@@ -93,14 +94,16 @@ class examples::integerdiffusionthroughfaces::Mapping {
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
+	  Faces&                                       faces,
+	  peano4::datamanagement::CellMarker           marker
     ) = 0;
 
 	virtual void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
+	  Faces&                                       faces,
+	  peano4::datamanagement::CellMarker           marker
     ) = 0;
 };
 

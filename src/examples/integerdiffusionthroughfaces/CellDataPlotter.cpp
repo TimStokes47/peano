@@ -128,38 +128,40 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::touchCellFirstTime
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  Faces&                                       faces
+  Faces&                                       faces,
+  peano4::datamanagement::CellMarker           marker
 )  {
-	// @todo Ueberlegen.
-//	  if (not event.getIsRefined()) {
-  int vertexIndices[TwoPowerD];
+  if (not marker.isRefined) {
+    int vertexIndices[TwoPowerD];
 
-  dfor2(k)
-    assertion( _vertexWriter!=nullptr );
-    vertexIndices[kScalar] = _vertexWriter->plotVertex(
-      center + tarch::la::multiplyComponents( k.convertScalar<double>(), h ) - h * 0.5
-    );
-  enddforx
+    dfor2(k)
+      assertion( _vertexWriter!=nullptr );
+      vertexIndices[kScalar] = _vertexWriter->plotVertex(
+        center + tarch::la::multiplyComponents( k.convertScalar<double>(), h ) - h * 0.5
+      );
+    enddforx
 
-  assertion( _cellWriter!=nullptr );
-  int cellIndex = -1;
-  #if Dimensions==2
-  cellIndex = _cellWriter->plotQuadrangle(vertexIndices);
-  #elif Dimensions==3
-  cellIndex = _cellWriter->plotHexahedron(vertexIndices);
-  #else
-  assertionMsg( false, "supports only 2d and 3d" );
-  #endif
+    assertion( _cellWriter!=nullptr );
+    int cellIndex = -1;
+    #if Dimensions==2
+    cellIndex = _cellWriter->plotQuadrangle(vertexIndices);
+    #elif Dimensions==3
+    cellIndex = _cellWriter->plotHexahedron(vertexIndices);
+    #else
+    assertionMsg( false, "supports only 2d and 3d" );
+    #endif
 
-  assertion( _dataWriter!=nullptr );
-  _dataWriter->plotCell(cellIndex,data.value);
+    assertion( _dataWriter!=nullptr );
+    _dataWriter->plotCell(cellIndex,data.value);
+  }
 }
 
 
 void examples::integerdiffusionthroughfaces::CellDataPlotter::touchCellLastTime(
-      const tarch::la::Vector<Dimensions,double>&  center,
-      const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data,
-	  Faces&                                       faces
-    )  {}
+  const tarch::la::Vector<Dimensions,double>&  center,
+  const tarch::la::Vector<Dimensions,double>&  h,
+  CellData&                                    data,
+  Faces&                                       faces,
+  peano4::datamanagement::CellMarker           marker
+)  {}
 

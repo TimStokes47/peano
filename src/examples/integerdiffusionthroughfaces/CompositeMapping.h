@@ -94,14 +94,16 @@ class examples::integerdiffusionthroughfaces::CompositeMapping: public Mapping {
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
+	  Faces&                                       faces,
+	  peano4::datamanagement::CellMarker           marker
     ) final;
 
 	void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
+	  Faces&                                       faces,
+	  peano4::datamanagement::CellMarker           marker
     ) final;
 };
 
