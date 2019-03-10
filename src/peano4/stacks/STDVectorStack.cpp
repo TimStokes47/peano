@@ -82,10 +82,11 @@ int peano4::stacks::STDVectorStack<double>::PushBlockVertexStackView::size() con
 }
 
 
-void peano4::stacks::STDVectorStack<double>::PushBlockVertexStackView::set(int index, const double& value) {
+double* peano4::stacks::STDVectorStack<double>::PushBlockVertexStackView::set(int index, const double& value) {
   assertion2( index>=0, index, _size );
   assertion2( index<_size, index, _size );
   _stack->_data[_baseElement+index] = value;
+  return &(_stack->_data[_baseElement+index]);
 }
 
 

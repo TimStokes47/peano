@@ -37,67 +37,71 @@ class examples::integerdiffusionthroughfaces::CompositeMapping: public Mapping {
 	void createPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) final;
 
 	void createHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) final;
 
 	void destroyPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) final;
 
 	void destroyHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) final;
 
 	void touchFaceFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) final;
 
 	void touchFaceLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) final;
 
 	void createCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) final;
 
 	void destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) final;
 
 	void touchCellFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) final;
 
 	void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) final;
 };
 

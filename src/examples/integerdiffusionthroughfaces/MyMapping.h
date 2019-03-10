@@ -37,55 +37,57 @@ class examples::integerdiffusionthroughfaces::MyMapping: public Mapping {
 	void createPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) override;
 
 	void createHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) override;
 
 	void destroyPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) override;
 
 	void destroyHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) override;
 
 	void touchFaceFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) override;
 
 	void touchFaceLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) override;
 
 	void createCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) override;
 
 	void destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) override;
 
 	/**
@@ -94,13 +96,15 @@ class examples::integerdiffusionthroughfaces::MyMapping: public Mapping {
 	void touchCellFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) override;
 
 	void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) override;
 };
 

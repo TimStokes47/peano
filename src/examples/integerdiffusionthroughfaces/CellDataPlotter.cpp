@@ -64,14 +64,14 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::endTraversal() {
 void examples::integerdiffusionthroughfaces::CellDataPlotter::createPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) {}
 
 void examples::integerdiffusionthroughfaces::CellDataPlotter::createHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) {}
 
@@ -79,7 +79,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::createHangingFace(
 void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     )  {}
 
@@ -87,7 +87,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyPersistentF
 void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     )  {}
 
@@ -95,7 +95,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyHangingFace
 void examples::integerdiffusionthroughfaces::CellDataPlotter::touchFaceFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     )  {}
 
@@ -103,7 +103,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::touchFaceFirstTime
 void examples::integerdiffusionthroughfaces::CellDataPlotter::touchFaceLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     )  {}
 
@@ -111,21 +111,24 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::touchFaceLastTime(
 void examples::integerdiffusionthroughfaces::CellDataPlotter::createCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     )  {}
 
 
 void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     )  {}
 
 
 void examples::integerdiffusionthroughfaces::CellDataPlotter::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
-  CellData&                                    data
+  CellData&                                    data,
+  Faces&                                       faces
 )  {
 	// @todo Ueberlegen.
 //	  if (not event.getIsRefined()) {
@@ -156,6 +159,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::touchCellFirstTime
 void examples::integerdiffusionthroughfaces::CellDataPlotter::touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     )  {}
 

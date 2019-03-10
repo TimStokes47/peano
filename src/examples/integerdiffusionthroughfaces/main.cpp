@@ -45,7 +45,7 @@ void runExample() {
 
   examples::integerdiffusionthroughfaces::MyObserver emptyObserver;
 
-  for (int i=0; i<10; i++) {
+  for (int i=0; i<40; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
 

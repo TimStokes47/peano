@@ -34,7 +34,7 @@ struct examples::integerdiffusionthroughfaces::FaceData {
 	     + h.toString() + std::string(",")
          #endif
          + std::to_string(value) + std::string(",")
-         + std::to_string(oldValue) + std::string(",")
+         + std::to_string(oldValue)
 		 + std::string(")");
   }
 };

@@ -5,12 +5,14 @@
 
 
 #include "peano4/utils/Globals.h"
+#include "peano4/datamanagement/FaceEnumerator.h"
 #include "tarch/la/Vector.h"
 
 
 namespace examples {
   namespace integerdiffusionthroughfaces {
     class Mapping;
+
     struct CellData;
     struct FaceData;
   }
@@ -26,73 +28,79 @@ namespace examples {
  */
 class examples::integerdiffusionthroughfaces::Mapping {
   public:
+	typedef peano4::datamanagement::FaceEnumerator<FaceData>  Faces;
+
 	virtual void beginTraversal() = 0;
 	virtual void endTraversal() = 0;
 
 	virtual void createPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) = 0;
 
 	virtual void createHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) = 0;
 
 	virtual void destroyPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) = 0;
 
 	virtual void destroyHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) = 0;
 
 	virtual void touchFaceFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) = 0;
 
 	virtual void touchFaceLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-      int                                          normal,
+      const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) = 0;
 
 	virtual void createCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) = 0;
 
 	virtual void destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) = 0;
 
 	virtual void touchCellFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) = 0;
 
 	virtual void touchCellLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
-	  CellData&                                    data
+	  CellData&                                    data,
+	  Faces&                                       faces
     ) = 0;
 };
 

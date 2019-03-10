@@ -31,7 +31,7 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::endTraversal() {
 void examples::integerdiffusionthroughfaces::CompositeMapping::createPersistentFace(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          normal,
+  const tarch::la::Vector<Dimensions,double>&  normal,
   FaceData&                                    data
 ) {
   for (auto& p: _mappings) {
@@ -43,7 +43,7 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::createPersistentF
 void examples::integerdiffusionthroughfaces::CompositeMapping::createHangingFace(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          normal,
+  const tarch::la::Vector<Dimensions,double>&  normal,
   FaceData&                                    data
 ) {
   for (auto& p: _mappings) {
@@ -55,7 +55,7 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::createHangingFace
 void examples::integerdiffusionthroughfaces::CompositeMapping::destroyPersistentFace(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          normal,
+  const tarch::la::Vector<Dimensions,double>&  normal,
   FaceData&                                    data
 ) {
   for (auto& p: _mappings) {
@@ -67,7 +67,7 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::destroyPersistent
 void examples::integerdiffusionthroughfaces::CompositeMapping::destroyHangingFace(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          normal,
+  const tarch::la::Vector<Dimensions,double>&  normal,
   FaceData&                                    data
 ) {
   for (auto& p: _mappings) {
@@ -79,7 +79,7 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::destroyHangingFac
 void examples::integerdiffusionthroughfaces::CompositeMapping::touchFaceFirstTime(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          normal,
+  const tarch::la::Vector<Dimensions,double>&  normal,
   FaceData&                                    data
 ) {
   for (auto& p: _mappings) {
@@ -91,7 +91,7 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::touchFaceFirstTim
 void examples::integerdiffusionthroughfaces::CompositeMapping::touchFaceLastTime(
   const tarch::la::Vector<Dimensions,double>&  x,
   const tarch::la::Vector<Dimensions,double>&  h,
-  int                                          normal,
+  const tarch::la::Vector<Dimensions,double>&  normal,
   FaceData&                                    data
 ) {
   for (auto& p: _mappings) {
@@ -103,10 +103,11 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::touchFaceLastTime
 void examples::integerdiffusionthroughfaces::CompositeMapping::createCell(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
-  CellData&                                    data
+  CellData&                                    data,
+  Faces&                                       faces
 ) {
   for (auto& p: _mappings) {
-	p->createCell(center,h,data);
+	p->createCell(center,h,data,faces);
   }
 }
 
@@ -114,10 +115,11 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::createCell(
 void examples::integerdiffusionthroughfaces::CompositeMapping::destroyCell(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
-  CellData&                                    data
+  CellData&                                    data,
+  Faces&                                       faces
 ) {
   for (auto& p: _mappings) {
-    p->destroyCell(center,h,data);
+    p->destroyCell(center,h,data,faces);
   }
 }
 
@@ -125,10 +127,11 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::destroyCell(
 void examples::integerdiffusionthroughfaces::CompositeMapping::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
-  CellData&                                    data
+  CellData&                                    data,
+  Faces&                                       faces
 ) {
   for (auto& p: _mappings) {
-	p->touchCellFirstTime(center,h,data);
+	p->touchCellFirstTime(center,h,data,faces);
   }
 }
 
@@ -136,10 +139,11 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::touchCellFirstTim
 void examples::integerdiffusionthroughfaces::CompositeMapping::touchCellLastTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
-  CellData&                                    data
+  CellData&                                    data,
+  Faces&                                       faces
 ) {
   for (auto& p: _mappings) {
-	p->touchCellLastTime(center,h,data);
+	p->touchCellLastTime(center,h,data,faces);
   }
 }
 

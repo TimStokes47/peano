@@ -32,7 +32,7 @@ struct examples::integerdiffusionthroughfaces::CellData {
 		 + x.toString() + std::string(",")
 	     + h.toString() + std::string(",")
          #endif
-         + std::to_string(value) + std::string(",")
+         + std::to_string(value)
 		 + std::string(")");
   }
 };
