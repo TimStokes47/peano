@@ -98,7 +98,7 @@ double mpibalancing::HotspotBalancing::getMaximumWeightOfWorkers() {
 double mpibalancing::HotspotBalancing::getMinimumWeightOfWorkers() {
   double minimumWeight  = std::numeric_limits<double>::max();
   for ( std::map<int,double>::const_iterator p=_weightMap.begin(); p!=_weightMap.end(); p++ ) {
-    if ( p->second < minimumWeight ) {
+    if ( p->second < minimumWeight && p->second>=1 ) {
       minimumWeight = p->second;
     }
   }
@@ -161,7 +161,7 @@ void mpibalancing::HotspotBalancing::computeMaxForksOnCriticalWorker( peano::par
     if (_maxForksOnCriticalWorker>0 && !_forkHasFailed) {
       logInfo(
         "computeMaxForksOnCriticalWorker(LoadBalancingFlag)",
-        _maxForksOnCriticalWorker << " forks should be done (-2 = continue) next on " << _criticalWorker.size() <<
+        _maxForksOnCriticalWorker << " fork(s) should be done (-2 = continue) next on " << _criticalWorker.size() <<
         " worker(s) given the master fork command " << peano::parallel::loadbalancing::convertLoadBalancingFlagToString(commandFromMaster) <<
         ". Number of weight entries (workers+1)=" << _weightMap.size() <<
         ". Fork has failed before and vetos forks=" << _forkHasFailed <<
