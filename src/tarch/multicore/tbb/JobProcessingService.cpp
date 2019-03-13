@@ -1,3 +1,4 @@
+#ifdef defined(SharedTBB)
 #include "JobProcessingService.h"
 
 #include "tarch/multicore/Jobs.h"
@@ -24,3 +25,5 @@ void tarch::multicore::tbb::JobProcessingService::receiveDanglingMessages() {
   tarch::multicore::jobs::processHighPriorityJobs();
   tarch::multicore::jobs::processHighBandwidthJobs();
 }
+
+#endif
