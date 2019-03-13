@@ -3,8 +3,10 @@
 #include "tarch/multicore/Jobs.h"
 
 
+#ifdef MPIWaitsProcessJobs
 #include "tarch/services/ServiceFactory.h"
 registerService(tarch::multicore::tbb::JobProcessingService)
+#endif
 
 
 tarch::multicore::tbb::JobProcessingService::JobProcessingService() {

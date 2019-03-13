@@ -6,7 +6,9 @@
 
 #include "tarch/services/Service.h"
 
-
+#ifndef noMPIWaitsProcessJobs
+#define MPIWaitsProcessJobs
+#endif
 
 
 namespace tarch {
