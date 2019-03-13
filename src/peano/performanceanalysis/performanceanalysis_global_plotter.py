@@ -222,7 +222,15 @@ def plotHeatMapRecursively(ax,node,x,zeta,dx,dzeta,heats,dim,level,plotLevel):
   activeRanks = 0
   if plotLevel is None or level is plotLevel:
     activeRanks += 1
-    ax.add_patch(matplotlib.patches.Rectangle((x,zeta),dx,dzeta,alpha=1.0, facecolor=(heats[node.rank],heats[node.rank],1), edgecolor='black',zorder=2*level))
+    heat=heats[node.rank]
+    
+    if heat > 1e-12:
+      ax.add_patch(matplotlib.patches.Rectangle((x,zeta),dx,dzeta,alpha=1.0, facecolor=(heat,heat,1), edgecolor='black',zorder=2*level))
+    else:  
+      ax.add_patch(matplotlib.patches.Rectangle((x,zeta),dx,dzeta,alpha=1.0, facecolor='none', edgecolor='black',zorder=2*level))
+  if level is plotLevel:
+    fontsize=6.0/3.0**(plotLevel-1)
+    ax.text(x+dx/2,zeta+dzeta/2, str(node.rank), color='r', weight='bold', fontsize=fontsize, ha='center', va='center', zorder=2*level+1)
 
   # descend
   for iz in range(0,dim):
@@ -254,9 +262,9 @@ def plotHeatMap(outputFileName,root,treeDepth,works,dim):
     ax.set_yscale('linear')
     ax.set_xscale('linear')
     ax.set_xlim([-0.1,3.1])
-    ax.set_ylim([-0.1,9.1])
+    ax.set_ylim([-0.1,3**(dim-1)+0.1])
     ax.autoscale_view() 
-    for j in range(0,9+1):
+    for j in range(0,3**(dim-1)+1):
       ax.add_line(matplotlib.lines.Line2D([0,3], [j,j],color='0.2',zorder=-2,linestyle='--',linewidth=1, dashes=(5, 5)))
     for i in range(0,3+1):
       ax.add_line(matplotlib.lines.Line2D([i,i], [0,9],color='0.2',zorder=-2,linestyle='--',linewidth=1, dashes=(5, 5)))
@@ -291,3 +299,4 @@ def plotHeatMap(outputFileName,root,treeDepth,works,dim):
   pylab.savefig( outputFileName+"-all.png" )
   pylab.savefig( outputFileName+"-all.pdf" )
   print "done"
+
