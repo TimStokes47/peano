@@ -222,16 +222,25 @@ def plotHeatMapRecursively(ax,node,x,zeta,dx,dzeta,heats,dim,level,plotLevel):
   activeRanks = 0
   if plotLevel is None or level is plotLevel:
     activeRanks += 1
-    ax.add_patch(matplotlib.patches.Rectangle((x,zeta),dx,dzeta,alpha=1.0, facecolor=(heats[node.rank],heats[node.rank],1), edgecolor='black',zorder=2*level))
+    heat=heats[node.rank]
+    
+    if heat > 1e-12:
+      ax.add_patch(matplotlib.patches.Rectangle((x,zeta),dx,dzeta,alpha=1.0, facecolor=(heat,heat,1), edgecolor='black',zorder=2*level))
+    else:  
+      ax.add_patch(matplotlib.patches.Rectangle((x,zeta),dx,dzeta,alpha=1.0, facecolor='none', edgecolor='black',zorder=2*level))
+  if level is plotLevel:
+    fontsize=14/3.0**(dim-2)/3.0**(plotLevel-1)
+    ax.text(x+dx/2,zeta+dzeta/2, str(node.rank), color='r', weight='bold', fontsize=fontsize, ha='center', va='center', zorder=2*level+1)
 
   # descend
-  for iz in range(0,dim):
+  izmax=1 if dim is 2 else 3
+  for iz in range(0,izmax):
     for iy in range(0,3):
       for ix in range(0,3):
           child = node.getChild(ix,iy,iz)
           if child is not None:
             dx_new    = dx/3.0
-            dzeta_new = dzeta/9.0
+            dzeta_new = dzeta/3.0**(dim-1)
             x_new     = x    + ix * dx_new
             zeta_new  = zeta + (iy+3*iz) * dzeta_new
             activeRanks += plotHeatMapRecursively(ax,child,x_new,zeta_new,dx_new,dzeta_new,heats,dim,level+1,plotLevel)
@@ -254,40 +263,47 @@ def plotHeatMap(outputFileName,root,treeDepth,works,dim):
     ax.set_yscale('linear')
     ax.set_xscale('linear')
     ax.set_xlim([-0.1,3.1])
-    ax.set_ylim([-0.1,9.1])
+    ax.set_ylim([-0.1,3**(dim-1)+0.1])
     ax.autoscale_view() 
-    for j in range(0,9+1):
+    for j in range(0,3**(dim-1)+1):
       ax.add_line(matplotlib.lines.Line2D([0,3], [j,j],color='0.2',zorder=-2,linestyle='--',linewidth=1, dashes=(5, 5)))
     for i in range(0,3+1):
-      ax.add_line(matplotlib.lines.Line2D([i,i], [0,9],color='0.2',zorder=-2,linestyle='--',linewidth=1, dashes=(5, 5)))
+      ax.add_line(matplotlib.lines.Line2D([i,i], [0,3**(dim-1)],color='0.2',zorder=-2,linestyle='--',linewidth=1, dashes=(5, 5)))
+    
+    pylab.xticks(fontsize=14)
+    pylab.yticks(fontsize=14)
+    pylab.xlabel('$i^{(1)}_{x}$',fontsize=14)  
+    if dim is 3:
+      pylab.ylabel('$(i^{(1)}_{y}, i^{(1)}_{z})$',fontsize=14)
+    else:
+      pylab.ylabel('$i^{(1)}_{y}$',fontsize=14)
 
     ax.xaxis.set_major_locator(matplotlib.ticker.FixedLocator([0.5,1.5,2.5]))
     ax.xaxis.set_major_formatter(matplotlib.ticker.FixedFormatter(['0','1','2']))
-    ax.yaxis.set_major_locator(matplotlib.ticker.FixedLocator([0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5]))
-    ax.yaxis.set_major_formatter(matplotlib.ticker.FixedFormatter(['(0,0)','(1,0)','(2,0)','(0,1)','(1,1)','(2,1)','(0,2)','(1,2)','(2,2)']))
+    if dim is 3:
+      ax.yaxis.set_major_locator(matplotlib.ticker.FixedLocator([0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5]))
+      ax.yaxis.set_major_formatter(matplotlib.ticker.FixedFormatter(['(0,0)','(1,0)','(2,0)','(0,1)','(1,1)','(2,1)','(0,2)','(1,2)','(2,2)']))
+    else:
+      ax.yaxis.set_major_locator(matplotlib.ticker.FixedLocator([0.5,1.5,2.5]))
+      ax.yaxis.set_major_formatter(matplotlib.ticker.FixedFormatter(['0', '1', '2']))
     ax.tick_params(axis=u'both', which=u'both',length=0) # hide tick marks
-    ax.set_facecolor((0.44, 0.44, 0.44))
+    ax.set_facecolor((0.66, 0.66, 0.66))
 
   # plot per level
   for plotLevel in range(1,treeDepth+1):
     resetAxes()
-    activeRanks = plotHeatMapRecursively(ax,root,0.0,0.0,3*1.0,3*3.0,heats,dim,0,plotLevel)
+    activeRanks = plotHeatMapRecursively(ax,root,0.0,0.0,3*1.0,3*3.0**(dim-2),heats,dim,0,plotLevel)
 
     print "number of active ranks on level %i = %i" % (plotLevel,activeRanks)
-    pylab.xlabel('$i^{(1)}_{x}$')  
-    pylab.ylabel('$(i^{(1)}_{y}, i^{(1)}_{z})$')
     pylab.show()
-    pylab.savefig( outputFileName+"-level-%i.png" % plotLevel )
-    pylab.savefig( outputFileName+"-level-%i.pdf" % plotLevel )
+    pylab.savefig( outputFileName+"-level-%i.png" % plotLevel, bbox_inches='tight', pad_inches=0.05 )
+    pylab.savefig( outputFileName+"-level-%i.pdf" % plotLevel, bbox_inches='tight', pad_inches=0.05 )
 
   # plot alltogether
   resetAxes()
-  activeRanks = plotHeatMapRecursively(ax,root,0.0,0.0,3*1.0,3*3.0,heats,dim,0,None)
+  activeRanks = plotHeatMapRecursively(ax,root,0.0,0.0,3*1.0,3*3.0**(dim-2),heats,dim,0,None)
   print "number of total active ranks = %i" % (activeRanks)
 
-  pylab.xlabel('$i^{(1)}_{x}$')  
-  pylab.ylabel('$(i^{(1)}_{y}, i^{(1)}_{z})$')
-  pylab.show()
-  pylab.savefig( outputFileName+"-all.png" )
-  pylab.savefig( outputFileName+"-all.pdf" )
+  pylab.savefig( outputFileName+"-all.png", bbox_inches='tight', pad_inches=0.05 )
+  pylab.savefig( outputFileName+"-all.pdf", bbox_inches='tight', pad_inches=0.05 )
   print "done"
