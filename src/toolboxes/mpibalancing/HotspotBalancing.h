@@ -228,17 +228,8 @@ class mpibalancing::HotspotBalancing: public peano::parallel::loadbalancing::Ora
      *                     if grid erases do not pass through due to the domain
      *                     decomposition, it supports joins if this flag is set
      *                     true.
-     *
-     * @param coarsestRegularInnerAndOuterGridLevel If you use this balancing,
-     *                     the grid is refined regularly up to level
-     *                     coarsestRegularInnerAndOuterGridLevel - independent
-     *                     of whether grid elements are inside or outside of
-     *                     the domain. Too regular grids facilitate a
-     *                     proper load balancing in several cases. The value
-     *                     has however no direct impact on the load balancing.
-     *                     It solely controls the grid refinement pattern.
      */
-    HotspotBalancing( bool joinsAllowed, int coarsestRegularInnerAndOuterGridLevel, int maxRanksThatCanBeUsedAsAdministors = 1 );
+    HotspotBalancing( bool joinsAllowed, int maxForksPerLoadBalancingStep = (int)(peano::parallel::loadbalancing::LoadBalancingFlag::ForkGreedy) );
 
     virtual ~HotspotBalancing();
 
@@ -280,8 +271,6 @@ class mpibalancing::HotspotBalancing: public peano::parallel::loadbalancing::Ora
     );
 
   private:
-    HotspotBalancing( bool joinsAllowed );
-
     /**
      * Runs an analysis on the _weightMap. This operation returns consistent
      * data if it is used within receivedStartCommand() and if all children
@@ -325,10 +314,6 @@ class mpibalancing::HotspotBalancing: public peano::parallel::loadbalancing::Ora
      */
     static bool                 _forkHasFailed;
 
-    static int                  _regularLevelAlongBoundary;
-
-    static int                  _finestLevelWhereRanksArePurelyAdministrative;
-
     static int                  _loadBalancingTag;
 
     /**
@@ -336,6 +321,8 @@ class mpibalancing::HotspotBalancing: public peano::parallel::loadbalancing::Ora
      */
     const bool                  _joinsAllowed;
     
+    const int                   _maxForksPerLoadBalancingStep;
+
     /**
      * Holds for each worker its local weight. Is never empty as it always
      * holds something for the local rank.
@@ -347,8 +334,6 @@ class mpibalancing::HotspotBalancing: public peano::parallel::loadbalancing::Ora
      * domain decomposition.
      */
     static std::map<int,bool>          _workerCouldNotEraseDueToDecomposition;
-
-    static std::map<int,bool>          _workerShouldBecomeAdministrativeRank;
 
     /**
      * Set of critical workers
