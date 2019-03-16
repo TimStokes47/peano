@@ -99,7 +99,7 @@ int tarch::multicore::jobs::getNumberOfWaitingBackgroundJobs() {
 }
 
 
-void tarch::multicore::jobs::spawn(Job*  job) {
+void tarch::multicore::jobs::spawn(Job*  job, int priority) {
   if ( job->isTask() ) {
 	internal::JobQueue::getStandardQueue(job->getClass()).addJobWithHighPriority(job);
   }

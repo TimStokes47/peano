@@ -23,7 +23,7 @@ tbb::atomic<bool>                             tarch::multicore::jobs::internal::
 int                      tarch::multicore::jobs::internal::_minimalNumberOfJobsPerConsumerRun(1);
 int                      tarch::multicore::jobs::internal::_maximumNumberOfJobsPerConsumerRun(std::numeric_limits<int>::max());
 
-tarch::multicore::jobs::HighPriorityTaskProcessing  tarch::multicore::jobs::internal::_processHighPriorityJobsAlwaysFirst(HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARush);
+tarch::multicore::jobs::TaskProcessingScheme  tarch::multicore::jobs::internal::_taskProcessingScheme(TaskProcessingScheme::UseCustomTBBWrapper);
 
 
 //
@@ -45,8 +45,8 @@ void tarch::multicore::jobs::setMinMaxNumberOfJobsToConsumeInOneRush(int min, in
 }
 
 
-void tarch::multicore::jobs::setHighPriorityJobBehaviour(HighPriorityTaskProcessing behaviour) {
-  internal::_processHighPriorityJobsAlwaysFirst = behaviour;
+void tarch::multicore::jobs::setTaskProcessingScheme(TaskProcessingScheme behaviour) {
+  internal::_taskProcessingScheme = behaviour;
 }
 
 
@@ -74,12 +74,10 @@ int tarch::multicore::jobs::internal::getNumberOfJobsPerConsumerRun( int jobClas
 
 #if TBB_USE_THREADING_TOOLS>=1
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfConsumerRuns(0);
-tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfHighPriorityTasks;
 tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfBackgroundTasksProcessed;
 tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfRunningConsumers;
 tbb::concurrent_hash_map<int,int>   tarch::multicore::jobs::internal::JobConsumerTask::_histogramOfBackgroundTasks;
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighBandwidthTasks(0);
-tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks(0);
 tbb::atomic<int>                    tarch::multicore::jobs::internal::JobConsumerTask::_numberOfBackgroundTasks(0);
 #endif
 
@@ -103,10 +101,6 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 
   tbb::concurrent_hash_map<int,int>::accessor p;
 
-  _histogramOfHighPriorityTasks.insert(p,getJobQueueSize(internal::HighPriorityTasksJobClassNumber));
-  p->second += 1;
-  p.release();
-
   _histogramOfBackgroundTasks.insert(p,getJobQueueSize(internal::BackgroundTasksJobClassNumber));
   p->second += 1;
   p.release();
@@ -124,7 +118,6 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   const int oldNumberOfConsumerTasks = _numberOfRunningJobConsumerTasks.fetch_and_add(-1);
   const int totalTaskCount
     = internal::getJobQueueSize(internal::BackgroundTasksJobClassNumber)
-    + internal::getJobQueueSize(internal::HighPriorityTasksJobClassNumber)
     + internal::getJobQueueSize(internal::HighBandwidthTasksJobClassNumber);
   const int optimalConsumerCounter = totalTaskCount / internal::_minimalNumberOfJobsPerConsumerRun;
 
@@ -149,38 +142,7 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
 	_bandwidthTasksAreProcessed = false;
   }
 
-
-  switch (_processHighPriorityJobsAlwaysFirst) {
-    case HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARush:
-      hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,_maxJobs);
-      hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
-      break;
-    case HighPriorityTaskProcessing::ProcessAllHighPriorityTasksInARushAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft:
-      hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,_maxJobs);
-      if (!hasProcessedJobs) {
-        hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
-      }
-      break;
-    case HighPriorityTaskProcessing::ProcessOneHighPriorityTasksAtATime:
-      hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,1);
-      hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
-      break;
-    case HighPriorityTaskProcessing::ProcessOneHighPriorityTasksAtATimeAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft:
-      hasProcessedJobs |= processJobs(internal::HighPriorityTasksJobClassNumber,1);
-      if (!hasProcessedJobs) {
-        hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
-      }
-      break;
-    case HighPriorityTaskProcessing::MapHighPriorityTasksToRealTBBTasks:
-      assertion( internal::getJobQueueSize(HighPriorityTasksJobClassNumber)==0 );
-      hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
-      break;
-    case HighPriorityTaskProcessing::MapHighPriorityAndBackgroundTasksToRealTBBTasks:
-      assertion( internal::getJobQueueSize(HighPriorityTasksJobClassNumber)==0 );
-      assertion( internal::getJobQueueSize(BackgroundTasksJobClassNumber)==0 );
-      break;
-  }
-
+  hasProcessedJobs |= processJobs(internal::BackgroundTasksJobClassNumber,_maxJobs);
 
   if ( hasProcessedJobs or rescheduleThisConsumer ) {
     enqueue();
@@ -189,7 +151,6 @@ tbb::task* tarch::multicore::jobs::internal::JobConsumerTask::execute() {
   // we have to be careful not to update/shrink these counters too often
   if (oldNumberOfConsumerTasks==1 and hasProcessedJobs) {
     internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize    = internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize*0.9;
-    internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize  = internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize*0.9;
     internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize = internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize*0.9;
   }
 
@@ -218,6 +179,7 @@ void tarch::multicore::jobs::internal::spawnBlockingJob(
   std::function<bool()>&  job,
   JobType                 jobType,
   int                     jobClass,
+  int                     priority,
   tbb::atomic<int>&       semaphore
 ) {
   if ( jobType!=JobType::Job ) {
@@ -227,7 +189,7 @@ void tarch::multicore::jobs::internal::spawnBlockingJob(
   else {
 	insertJob(
 	  jobClass,
-	  new JobWithoutCopyOfFunctorAndSemaphore(job, jobType, jobClass, semaphore )
+	  new JobWithoutCopyOfFunctorAndSemaphore(job, jobType, jobClass, priority, semaphore )
 	);
   }
 }
@@ -245,11 +207,7 @@ void tarch::multicore::jobs::plotStatistics() {
   #if TBB_USE_THREADING_TOOLS>=1
   logInfo( "plotStatistics()", "total no of consumer runs=" << internal::JobConsumerTask::_numberOfConsumerRuns.load() );
   logInfo( "plotStatistics()", "total no of high bandwidth tasks=" << internal::JobConsumerTask::_numberOfHighBandwidthTasks.load() );
-  logInfo( "plotStatistics()", "total no of high priority tasks=" << internal::JobConsumerTask::_numberOfHighPriorityTasks.load() );
   logInfo( "plotStatistics()", "total no of background tasks=" << internal::JobConsumerTask::_numberOfBackgroundTasks.load() );
-  for (auto p: internal::JobConsumerTask::_histogramOfHighPriorityTasks) {
-    logInfo( "plotStatistics()", "no of high priority tasks[" << p.first << "]=" << p.second );
-  }
   for (auto p: internal::JobConsumerTask::_histogramOfBackgroundTasks) {
     logInfo( "plotStatistics()", "no of background tasks available per consumer run[" << p.first << "]=" << p.second );
   }
@@ -262,7 +220,6 @@ void tarch::multicore::jobs::plotStatistics() {
   #endif
 
   logInfo( "plotStatistics()", "max no of background tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize.load() << " (sliding average)");
-  logInfo( "plotStatistics()", "max no of high priority tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load() << " (sliding average)" );
   logInfo( "plotStatistics()", "max no of high bandwidth tasks in queue=" << tarch::multicore::jobs::internal::getJobQueue(internal::HighBandwidthTasksJobClassNumber).maxSize.load() << " (sliding average)" );
 }
 
@@ -291,31 +248,6 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 	  while (job->run()) {};
 	  delete job;
 	  break;
-	case JobType::RunTaskAsSoonAsPossible:
-	  if (
-        internal::_processHighPriorityJobsAlwaysFirst==HighPriorityTaskProcessing::MapHighPriorityTasksToRealTBBTasks
-		or
-        internal::_processHighPriorityJobsAlwaysFirst==HighPriorityTaskProcessing::MapHighPriorityAndBackgroundTasksToRealTBBTasks
-      ) {
-	    internal::TBBWrapperAroundJob* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) internal::TBBWrapperAroundJob(
-	      job
-        );
-	    tbb::task::enqueue(*tbbTask);
-        checkWhetherToLaunchAJobConsumer = false;
-	  }
-	  else {
-        internal::insertJob(internal::HighPriorityTasksJobClassNumber,job);
-        checkWhetherToLaunchAJobConsumer = true;
-        internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize =
-          std::max(
-            static_cast<double>(internal::getJobQueueSize(internal::HighPriorityTasksJobClassNumber)),
-            internal::getJobQueue(internal::HighPriorityTasksJobClassNumber).maxSize.load()
-          );
-  	  }
-      #if TBB_USE_THREADING_TOOLS>=1
-      tarch::multicore::jobs::internal::JobConsumerTask::_numberOfHighPriorityTasks++;
-      #endif
-      break;
     case JobType::BandwidthBoundTask:
       internal::insertJob(internal::HighBandwidthTasksJobClassNumber,job);
       checkWhetherToLaunchAJobConsumer = true;
@@ -330,7 +262,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
       break;
     case JobType::BackgroundTask:
       if (
-        internal::_processHighPriorityJobsAlwaysFirst==HighPriorityTaskProcessing::MapHighPriorityAndBackgroundTasksToRealTBBTasks
+        internal::_taskProcessingScheme==TaskProcessingScheme::MapToPlainTBBTasks
       ) {
         internal::TBBWrapperAroundJob* tbbTask = new (tbb::task::allocate_root(::backgroundTaskContext)) internal::TBBWrapperAroundJob(
   	      job
@@ -376,18 +308,13 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 }
 
 
-void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, int jobClass) {
-  spawn( new tarch::multicore::jobs::GenericJobWithCopyOfFunctor(job,jobType,jobClass) );
+void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, int jobClass, int priority) {
+  spawn( new tarch::multicore::jobs::GenericJobWithCopyOfFunctor(job,jobType,jobClass,priority) );
 }
 
 
 bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs) {
   return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs);
-}
-
-
-bool tarch::multicore::jobs::processHighPriorityJobs(int maxNumberOfJobs ) {
-  return processJobs(internal::HighPriorityTasksJobClassNumber, maxNumberOfJobs);
 }
 
 
@@ -411,10 +338,11 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
   else {
     bool result = false;
 
-    #if defined(TBBPrefetchesJobData)
     Job* myTask           = nullptr;
-    Job* prefetchedTask   = nullptr;
     bool gotOne           = internal::getJobQueue(jobClass).jobs.try_pop(myTask);
+
+    #if defined(TBBPrefetchesJobData)
+    Job* prefetchedTask   = nullptr;
     bool prefetchedOne    = internal::getJobQueue(jobClass).jobs.try_pop(prefetchedTask);
 
     // consistency rollover in case somebody did sqeeze in-between the two
@@ -459,8 +387,6 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
       }
     }
     #else
-    Job* myTask   = nullptr;
-    bool gotOne   = internal::getJobQueue(jobClass).jobs.try_pop(myTask);
     while (gotOne) {
       result = true;
 
@@ -550,7 +476,8 @@ void tarch::multicore::jobs::spawnAndWait(
   JobType                 jobType0,
   JobType                 jobType1,
   int                     jobClass0,
-  int                     jobClass1
+  int                     jobClass1,
+  int priority0, int priority1
 ) {
 
 /*
@@ -590,8 +517,8 @@ void tarch::multicore::jobs::spawnAndWait(
   tbb::atomic<int>  semaphore(2);
   tbb::task_group g;
 
-  g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, priority0, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, priority1, semaphore ); });
   //g.wait();
 
   g.run( [&]() { processJobs(jobClass0); });
@@ -636,14 +563,15 @@ void tarch::multicore::jobs::spawnAndWait(
   JobType                 jobType2,
   int                     jobClass0,
   int                     jobClass1,
-  int                     jobClass2
+  int                     jobClass2,
+  int priority0, int priority1, int priority2
 ) {
   tbb::atomic<int>  semaphore(3);
   tbb::task_group g;
 
-  g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, priority0, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, priority1, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, priority2, semaphore ); });
   //g.wait();
 
   g.run( [&]() { processJobs(jobClass0); });
@@ -689,15 +617,16 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass0,
   int                     jobClass1,
   int                     jobClass2,
-  int                     jobClass3
+  int                     jobClass3,
+  int priority0, int priority1, int priority2, int priority3
 ) {
   tbb::atomic<int>  semaphore(4);
   tbb::task_group g;
 
-  g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job3, jobType3, jobClass3, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, priority0, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, priority1, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, priority2, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job3, jobType3, jobClass3, priority3, semaphore ); });
   //g.wait();
 
   g.run( [&]() { processJobs(jobClass0); });
@@ -748,16 +677,17 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass1,
   int                     jobClass2,
   int                     jobClass3,
-  int                     jobClass4
+  int                     jobClass4,
+  int priority0, int priority1, int priority2, int priority3, int priority4
 ) {
   tbb::atomic<int>  semaphore(5);
   tbb::task_group g;
 
-  g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job3, jobType3, jobClass3, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job4, jobType4, jobClass4, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, priority0, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, priority1, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, priority2, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job3, jobType3, jobClass3, priority3, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job4, jobType4, jobClass4, priority4, semaphore ); });
   //g.wait();
 
   g.run( [&]() { processJobs(jobClass0); });
@@ -813,17 +743,18 @@ void tarch::multicore::jobs::spawnAndWait(
   int                     jobClass2,
   int                     jobClass3,
   int                     jobClass4,
-  int                     jobClass5
+  int                     jobClass5,
+  int priority0, int priority1, int priority2, int priority3, int priority4, int priority5
 ) {
   tbb::atomic<int>  semaphore(6);
   tbb::task_group g;
 
-  g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job3, jobType3, jobClass3, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job4, jobType4, jobClass4, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job5, jobType5, jobClass5, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job0, jobType0, jobClass0, priority0,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1, jobType1, jobClass1, priority1,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job2, jobType2, jobClass2, priority2,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job3, jobType3, jobClass3, priority3,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job4, jobType4, jobClass4, priority4,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job5, jobType5, jobClass5, priority5,  semaphore ); });
   //g.wait();
 
   g.run( [&]() { processJobs(jobClass0); });
@@ -896,23 +827,24 @@ void tarch::multicore::jobs::spawnAndWait(
 	 int                     jobClass8,
 	 int                     jobClass9,
 	 int                     jobClass10,
-	 int                     jobClass11
+	 int                     jobClass11,
+	 int priority0, int priority1, int priority2, int priority3, int priority4, int priority5, int priority6, int priority7, int priority8, int priority9, int priority10, int priority11
 ) {
   tbb::atomic<int>  semaphore(12);
   tbb::task_group g;
 
-  g.run( [&]() { internal::spawnBlockingJob( job0,  jobType0,  jobClass0,  semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job1,  jobType1,  jobClass1,  semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job2,  jobType2,  jobClass2,  semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job3,  jobType3,  jobClass3,  semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job4,  jobType4,  jobClass4,  semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job5,  jobType5,  jobClass5,  semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job6,  jobType6,  jobClass6,  semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job7,  jobType7,  jobClass7,  semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job8,  jobType8,  jobClass8,  semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job9,  jobType9,  jobClass9,  semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job10, jobType10, jobClass10, semaphore ); });
-  g.run( [&]() { internal::spawnBlockingJob( job11, jobType11, jobClass11, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job0,  jobType0,  jobClass0,  priority0,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job1,  jobType1,  jobClass1,  priority1,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job2,  jobType2,  jobClass2,  priority2,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job3,  jobType3,  jobClass3,  priority3,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job4,  jobType4,  jobClass4,  priority4,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job5,  jobType5,  jobClass5,  priority5,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job6,  jobType6,  jobClass6,  priority6,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job7,  jobType7,  jobClass7,  priority7,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job8,  jobType8,  jobClass8,  priority8,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job9,  jobType9,  jobClass9,  priority9,  semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job10, jobType10, jobClass10, priority10, semaphore ); });
+  g.run( [&]() { internal::spawnBlockingJob( job11, jobType11, jobClass11, priority11, semaphore ); });
   //g.wait();
 
   g.run( [&]() { processJobs(jobClass0); });

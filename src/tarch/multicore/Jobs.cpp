@@ -28,9 +28,10 @@ tarch::multicore::jobs::JobType tarch::multicore::jobs::Job::getJobType() const 
 }
 
 
-tarch::multicore::jobs::Job::Job( JobType jobType, int jobClass ):
+tarch::multicore::jobs::Job::Job( JobType jobType, int jobClass, int priority ):
   _jobType(jobType),
-  _jobClass(jobClass) {
+  _jobClass(jobClass),
+  _priority(priority) {
 }
 
 
@@ -43,12 +44,17 @@ int tarch::multicore::jobs::Job::getClass() const {
 }
 
 
+int tarch::multicore::jobs::Job::getPriority() const {
+  return _priority;
+}
+
+
 void tarch::multicore::jobs::Job::prefetchData() {
 }
 
 
-tarch::multicore::jobs::GenericJobWithCopyOfFunctor::GenericJobWithCopyOfFunctor( const std::function<bool()>& functor, JobType jobType, int jobClass ):
-  Job(jobType,jobClass),
+tarch::multicore::jobs::GenericJobWithCopyOfFunctor::GenericJobWithCopyOfFunctor( const std::function<bool()>& functor, JobType jobType, int jobClass, int priority ):
+  Job(jobType,jobClass,priority),
   _functor(functor)  {
 }
 
@@ -62,8 +68,8 @@ tarch::multicore::jobs::GenericJobWithCopyOfFunctor::~GenericJobWithCopyOfFuncto
 }
 
 
-tarch::multicore::jobs::GenericJobWithoutCopyOfFunctor::GenericJobWithoutCopyOfFunctor(std::function<bool()>& functor, JobType jobType, int jobClass ):
-  Job(jobType,jobClass),
+tarch::multicore::jobs::GenericJobWithoutCopyOfFunctor::GenericJobWithoutCopyOfFunctor(std::function<bool()>& functor, JobType jobType, int jobClass, int priority ):
+  Job(jobType,jobClass,priority),
   _functor(functor)  {
 }
 
@@ -118,7 +124,7 @@ void tarch::multicore::jobs::spawn(Job*  job) {
 }
 
 
-void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, int jobClass) {
+void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, int jobClass, int priority) {
   job();
 }
 
@@ -139,11 +145,6 @@ bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs) {
 }
 
 
-bool tarch::multicore::jobs::processHighPriorityJobs(int maxNumberOfJobs ) {
-  return false;
-}
-
-
 bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs ) {
   return false;
 }
@@ -155,7 +156,8 @@ void tarch::multicore::jobs::spawnAndWait(
   JobType                 jobType0,
   JobType                 jobType1,
   int                     jobClass0,
-  int                     jobClass1
+  int                     jobClass1,
+	 int priority0, int priority1
 ) {
   while (job0()) {};
   while (job1()) {};
@@ -171,7 +173,8 @@ void tarch::multicore::jobs::spawnAndWait(
   JobType                    jobType2,
 	 int                     jobClass0,
 	 int                     jobClass1,
-	 int                     jobClass2
+	 int                     jobClass2,
+	 int priority0, int priority1, int priority2
 ) {
   while (job0()) {};
   while (job1()) {};
@@ -191,7 +194,8 @@ void tarch::multicore::jobs::spawnAndWait(
 	 int                     jobClass0,
 	 int                     jobClass1,
 	 int                     jobClass2,
-	 int                     jobClass3
+	 int                     jobClass3,
+	 int priority0, int priority1, int priority2, int priority3
 ) {
   while (job0()) {};
   while (job1()) {};
@@ -215,7 +219,8 @@ void tarch::multicore::jobs::spawnAndWait(
 	 int                     jobClass1,
 	 int                     jobClass2,
 	 int                     jobClass3,
-	 int                     jobClass4
+	 int                     jobClass4,
+	 int priority0, int priority1, int priority2, int priority3, int priority4
 ) {
   while (job0()) {};
   while (job1()) {};
@@ -243,7 +248,8 @@ void tarch::multicore::jobs::spawnAndWait(
 	 int                     jobClass2,
 	 int                     jobClass3,
 	 int                     jobClass4,
-	 int                     jobClass5
+	 int                     jobClass5,
+	 int priority0, int priority1, int priority2, int priority3, int priority4, int priority5
 ) {
   while (job0()) {};
   while (job1()) {};
@@ -290,7 +296,8 @@ void tarch::multicore::jobs::spawnAndWait(
 	 int                     jobClass8,
 	 int                     jobClass9,
 	 int                     jobClass10,
-	 int                     jobClass11
+	 int                     jobClass11,
+	 int priority0, int priority1, int priority2, int priority3, int priority4, int priority5, int priority6, int priority7, int priority8, int priority9, int priority10, int priority11
 ) {
   while (job0()) {};
   while (job1()) {};

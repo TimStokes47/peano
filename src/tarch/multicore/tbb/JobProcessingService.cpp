@@ -22,7 +22,6 @@ tarch::multicore::tbb::JobProcessingService& tarch::multicore::tbb::JobProcessin
 
 void tarch::multicore::tbb::JobProcessingService::receiveDanglingMessages() {
   tarch::multicore::jobs::processBackgroundJobs();
-  tarch::multicore::jobs::processHighPriorityJobs();
   tarch::multicore::jobs::processHighBandwidthJobs();
 }
 
