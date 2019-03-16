@@ -53,6 +53,11 @@ void tarch::multicore::jobs::Job::prefetchData() {
 }
 
 
+bool tarch::multicore::jobs::CompareJobPointers::operator()(tarch::multicore::jobs::Job* lhs, tarch::multicore::jobs::Job* rhs ) const {
+  return lhs->getPriority() < rhs->getPriority();
+}
+
+
 tarch::multicore::jobs::GenericJobWithCopyOfFunctor::GenericJobWithCopyOfFunctor( const std::function<bool()>& functor, JobType jobType, int jobClass, int priority ):
   Job(jobType,jobClass,priority),
   _functor(functor)  {

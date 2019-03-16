@@ -171,7 +171,8 @@ void tarch::multicore::jobs::internal::insertJob( int jobClass, Job* job ) {
 
 
 int  tarch::multicore::jobs::internal::getJobQueueSize( int jobClass ) {
-  return static_cast<int>(internal::getJobQueue( jobClass ).jobs.unsafe_size());
+//  return static_cast<int>(internal::getJobQueue( jobClass ).jobs.unsafe_size());
+  return static_cast<int>(internal::getJobQueue( jobClass ).jobs.size());
 }
 
 
@@ -338,6 +339,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
   else {
     bool result = false;
 
+    std::vector< Job* >   rescheduledJobs;
     Job* myTask           = nullptr;
     bool gotOne           = internal::getJobQueue(jobClass).jobs.try_pop(myTask);
 
@@ -363,13 +365,12 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
 
       bool reschedule = myTask->run();
       if (reschedule) {
-        internal::getJobQueue(jobClass).jobs.push(myTask);
-        maxNumberOfJobs--;
+    	rescheduledJobs.push_back( myTask );
       }
       else {
         delete myTask;
-        maxNumberOfJobs--;
       }
+      maxNumberOfJobs--;
 
       if ( maxNumberOfJobs>1 and prefetchedOne ) {
         gotOne        = prefetchedOne;
@@ -392,13 +393,13 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
 
       bool reschedule = myTask->run();
       if (reschedule) {
-        internal::getJobQueue(jobClass).jobs.push(myTask);
-        maxNumberOfJobs--;
+      	rescheduledJobs.push_back( myTask );
       }
       else {
         delete myTask;
-        maxNumberOfJobs--;
       }
+      maxNumberOfJobs--;
+
       if ( maxNumberOfJobs>0 ) {
         gotOne = internal::getJobQueue(jobClass).jobs.try_pop(myTask);
       }
@@ -407,6 +408,10 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
       }
     }
     #endif
+
+    for (auto p: rescheduledJobs) {
+      internal::getJobQueue(jobClass).jobs.push(p);
+    }
 
     return result;
   }

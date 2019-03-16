@@ -100,7 +100,7 @@ namespace tarch {
             * We usually use mode/hint _MM_HINT_NTA for data on machines with
             * Optane. This makes the data be loaded into L3. For urgent
             * computations it might however make sense to use T0.
-	    *
+	        *
             */
            virtual void prefetchData();
            virtual ~Job();
@@ -132,6 +132,16 @@ namespace tarch {
             * @see ProcessNormalBackgroundJobsImmediately
             */
            static void setMaxNumberOfRunningBackgroundThreads(int maxNumberOfRunningBackgroundThreads);
+       };
+
+
+       /**
+        * This operator is used by the std::less class which in turn is used by
+        * the concurrent queue to determine an ordering upon jobs.
+        */
+       class CompareJobPointers {
+         public:
+           bool operator()(tarch::multicore::jobs::Job* lhs, tarch::multicore::jobs::Job* rhs ) const;
        };
 
        /**
@@ -445,6 +455,7 @@ namespace tarch {
     }
   }
 }
+
 
 #endif
 

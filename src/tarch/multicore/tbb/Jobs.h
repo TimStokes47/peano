@@ -19,6 +19,8 @@
 
 
 #include <tbb/concurrent_queue.h>
+#include <tbb/concurrent_priority_queue.h>
+
 
 
 namespace tarch {
@@ -74,7 +76,10 @@ namespace tarch {
 
         constexpr int NumberOfJobQueues = 32;
         struct JobQueue {
-          tbb::concurrent_queue<tarch::multicore::jobs::Job*>   jobs;
+          tbb::concurrent_priority_queue<
+		    tarch::multicore::jobs::Job*,
+			tarch::multicore::jobs::CompareJobPointers
+          >   jobs;
 
           /**
            * This is not the real value but an estimate. Whenever a new
@@ -268,7 +273,7 @@ namespace tarch {
             tbb::task* execute() {
               while ( _job->run() ) {}
               delete _job;
-	      return nullptr;
+              return nullptr;
             }
         };
 
