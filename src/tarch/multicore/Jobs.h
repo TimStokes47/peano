@@ -450,6 +450,20 @@ namespace tarch {
         */
        bool processJobs(int jobClass, int maxNumberOfJobs = std::numeric_limits<int>::max() );
 
+       /**
+        * This operation is often used when a system is waiting for some jobs
+        * to come in. If you have only jobs that do not reschedule themselves,
+        * then this function with its default parameter is fine. If you have
+        * jobs that do reschedule, then the function is problematic: it could
+        * be that a polling thread simply always gets a (high priority)
+        * rescheduling job.
+        *
+        * It should work nevertheless as long as there are some job consumers
+        * active as well. I however simply recommend another pattern: If you
+        * wait within a while loop, add a counter. It is initialised with 1.
+        * After each while iteration (you still wait for jobs), you increase
+        * the counter. Let the counter serve as function argument.
+        */
        bool processBackgroundJobs(int maxNumberOfJobs = 1);
        bool processHighBandwidthJobs(int maxNumberOfJobs = 1);
     }
