@@ -21,8 +21,24 @@ tarch::multicore::tbb::JobProcessingService& tarch::multicore::tbb::JobProcessin
 
 
 void tarch::multicore::tbb::JobProcessingService::receiveDanglingMessages() {
-  tarch::multicore::jobs::processBackgroundJobs();
-  tarch::multicore::jobs::processHighBandwidthJobs();
+  static int NumberOfJobsPerInvocation = 1;
+
+  const int previousJobCount = tarch::multicore::jobs::internal::getJobQueueSize( tarch::multicore::jobs::internal::BackgroundTasksJobClassNumber )
+                             + tarch::multicore::jobs::internal::getJobQueueSize( tarch::multicore::jobs::internal::HighBandwidthTasksJobClassNumber );
+
+  tarch::multicore::jobs::processBackgroundJobs(NumberOfJobsPerInvocation);
+  tarch::multicore::jobs::processHighBandwidthJobs(NumberOfJobsPerInvocation);
+
+  const int newJobCount = tarch::multicore::jobs::internal::getJobQueueSize( tarch::multicore::jobs::internal::BackgroundTasksJobClassNumber )
+                        + tarch::multicore::jobs::internal::getJobQueueSize( tarch::multicore::jobs::internal::HighBandwidthTasksJobClassNumber );
+
+  if (newJobCount>=previousJobCount and previousJobCount>0)
+    // seems I catched only reschulding jobs
+    NumberOfJobsPerInvocation++;
+  }
+  else if (NumberOfJobsPerInvocation>1) {
+    NumberOfJobsPerInvocation--;
+  }
 }
 
 #endif
