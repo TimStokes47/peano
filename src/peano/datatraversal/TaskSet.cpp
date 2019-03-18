@@ -25,8 +25,6 @@ shminvade::SHMInvade*  peano::datatraversal::TaskSet::_backgroundTaskInvade = nu
 int  peano::datatraversal::TaskSet::translateIntoJobClass( TaskType type ) {
   const int Default = 7;
   switch ( type ) {
-    case TaskType::IsTaskAndRunAsSoonAsPossible:
-   	  return 0;
     case TaskType::IsTaskAndRunImmediately:
      	  return Default;
     case TaskType::LoadCells:
@@ -50,8 +48,6 @@ int  peano::datatraversal::TaskSet::translateIntoJobClass( TaskType type ) {
 
 tarch::multicore::jobs::JobType peano::datatraversal::TaskSet::translateIntoJobType( TaskType type ) {
   switch ( type ) {
-    case TaskType::IsTaskAndRunAsSoonAsPossible:
-      return tarch::multicore::jobs::JobType::RunTaskAsSoonAsPossible;
     case TaskType::IsTaskAndRunImmediately:
    	  return tarch::multicore::jobs::JobType::ProcessImmediately;
     case TaskType::LoadCells:
@@ -398,7 +394,7 @@ peano::datatraversal::TaskSet::TaskSet(
   TaskType                  taskType
 ) {
   typedef tarch::multicore::jobs::GenericJobWithCopyOfFunctor           Job;
-  tarch::multicore::jobs::spawn( new Job(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType) ) );
+  tarch::multicore::jobs::spawn( new Job(myTask,translateIntoJobType(taskType),translateIntoJobClass(taskType), tarch::multicore::DefaultPriority ) );
 }
 
 

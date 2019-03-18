@@ -19,6 +19,8 @@
 
 
 #include <tbb/concurrent_queue.h>
+#include <tbb/concurrent_priority_queue.h>
+
 
 
 namespace tarch {
@@ -52,20 +54,16 @@ namespace tarch {
 
       void terminateAllPendingBackgroundConsumerJobs();
 
-      enum class HighPriorityTaskProcessing {
-  		ProcessAllHighPriorityTasksInARush,
-  		ProcessAllHighPriorityTasksInARushAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft,
-  		ProcessOneHighPriorityTasksAtATime,
-  		ProcessOneHighPriorityTasksAtATimeAndRunBackgroundTasksOnlyIfNoHighPriorityTasksAreLeft,
-  		MapHighPriorityTasksToRealTBBTasks,
-  		MapHighPriorityAndBackgroundTasksToRealTBBTasks
+      enum class TaskProcessingScheme {
+    	UseCustomTBBWrapper,
+		MapToPlainTBBTasks
       };
 
       /**
        * Configure TBB runtime.
        */
       void setMinMaxNumberOfJobsToConsumeInOneRush(int min=1, int max=std::numeric_limits<int>::max());
-      void setHighPriorityJobBehaviour(HighPriorityTaskProcessing behaviour);
+      void setTaskProcessingScheme(TaskProcessingScheme behaviour);
 
       namespace internal {
         /**
@@ -77,11 +75,14 @@ namespace tarch {
 
         extern int                         _minimalNumberOfJobsPerConsumerRun;
         extern int                         _maximumNumberOfJobsPerConsumerRun;
-        extern HighPriorityTaskProcessing  _processHighPriorityJobsAlwaysFirst;
+        extern TaskProcessingScheme        _taskProcessingScheme;
 
         constexpr int NumberOfJobQueues = 32;
         struct JobQueue {
-          tbb::concurrent_queue<tarch::multicore::jobs::Job*>   jobs;
+          tbb::concurrent_priority_queue<
+		    tarch::multicore::jobs::Job*,
+			tarch::multicore::jobs::CompareJobPointers
+          >   jobs;
 
           /**
            * This is not the real value but an estimate. Whenever a new
@@ -100,8 +101,7 @@ namespace tarch {
         extern JobQueue _pendingJobs[NumberOfJobQueues];
 
         constexpr int BackgroundTasksJobClassNumber    = NumberOfJobQueues-1;
-        constexpr int HighPriorityTasksJobClassNumber  = NumberOfJobQueues-2;
-        constexpr int HighBandwidthTasksJobClassNumber = NumberOfJobQueues-3;
+        constexpr int HighBandwidthTasksJobClassNumber = NumberOfJobQueues-2;
 
         /**
          * Each consumer should roughly process MaxSizeOfBackgroundQueue
@@ -134,8 +134,8 @@ namespace tarch {
             std::function<bool()>&   _functor;
             tbb::atomic<int>&        _semaphore;
           public:
-            JobWithoutCopyOfFunctorAndSemaphore(std::function<bool()>& functor, JobType jobType, int jobClass, tbb::atomic<int>& semaphore ):
-             Job(jobType,jobClass),
+            JobWithoutCopyOfFunctorAndSemaphore(std::function<bool()>& functor, JobType jobType, int jobClass, int priority, tbb::atomic<int>& semaphore ):
+             Job(jobType,jobClass,priority),
              _functor(functor),
              _semaphore(semaphore) {
             }
@@ -154,8 +154,8 @@ namespace tarch {
             std::function<bool()>   _functor;
             tbb::atomic<int>&       _semaphore;
           public:
-            JobWithCopyOfFunctorAndSemaphore(std::function<bool()>& functor, JobType jobType, int jobClass, tbb::atomic<int>& semaphore ):
-             Job(jobType,jobClass),
+            JobWithCopyOfFunctorAndSemaphore(std::function<bool()>& functor, JobType jobType, int jobClass, int priority, tbb::atomic<int>& semaphore ):
+             Job(jobType,jobClass,priority),
              _functor(functor),
              _semaphore(semaphore) {
             }
@@ -208,6 +208,7 @@ namespace tarch {
           std::function<bool()>&  job,
           JobType                 isTask,
           int                     jobClass,
+		  int                     priority,
           tbb::atomic<int>&       semaphore
         );
 
@@ -228,11 +229,9 @@ namespace tarch {
           public:
             #if TBB_USE_THREADING_TOOLS>=1
             static tbb::atomic<int>                    _numberOfConsumerRuns;
-            static tbb::concurrent_hash_map<int,int>   _histogramOfHighPriorityTasks;
             static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasks;
             static tbb::concurrent_hash_map<int,int>   _histogramOfRunningConsumers;
             static tbb::atomic<int>                    _numberOfHighBandwidthTasks;
-            static tbb::atomic<int>                    _numberOfHighPriorityTasks;
             static tbb::atomic<int>                    _numberOfBackgroundTasks;
             static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasksProcessed;
             #endif
@@ -277,7 +276,7 @@ namespace tarch {
             tbb::task* execute() {
               while ( _job->run() ) {}
               delete _job;
-	      return nullptr;
+              return nullptr;
             }
         };
 

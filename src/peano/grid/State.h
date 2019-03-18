@@ -764,6 +764,9 @@ class peano::grid::State {
     bool isInvolvedInJoinOrFork() const { return false; }
 
     void restart();
+
+    bool refineArtificiallyOutsideDomain() const {return false; }
+    bool eraseArtificiallyRefinedVerticesOutsideDomain() {return false; }
     #endif
 
     /**

@@ -11,6 +11,11 @@
 namespace tarch {
   namespace multicore {
     /**
+     * Default priority. The smaller the value the more important a job.
+     */
+    constexpr int DefaultPriority = 128;
+
+    /**
      * Jobs are Peano's abstraction of tasks. They generalise the
      * term tasks. A task in Peano's notion follows Intel's TBB and is an
      * atomic unit. That is, it may have children which have to be processed
@@ -23,18 +28,14 @@ namespace tarch {
      */
     namespace jobs {
        enum class JobType {
-         Job,
-         BackgroundTask,
-		 /**
-		  * Task implies that there are no dependencies.
-		  */
-		 RunTaskAsSoonAsPossible,
+         Job = -1,
 		 /**
 		  * It does not really make sense to specify this flag by a user.
 		  * But it is used internally if background threads are disabled.
 		  */
-		 ProcessImmediately,
-		 BandwidthBoundTask
+		 ProcessImmediately = -2,
+		 BandwidthBoundTask = -3,
+         BackgroundTask = 128
        };
 
        /**
@@ -50,11 +51,13 @@ namespace tarch {
         * another job as well (through a shared memory region protected by
         * a semaphore). However, it should never exchange information with
         * another job of the same class.
+        *
         */
        class Job {
          private:
            const JobType  _jobType;
     	   const int      _jobClass;
+    	   const int      _priority;
 
     	   friend void startToProcessBackgroundJobs();
     	   friend bool finishToProcessBackgroundJobs();
@@ -65,8 +68,10 @@ namespace tarch {
     	    * A task is a job without any dependencies on other jobs though it
     	    * might have children. Tasks form a tree structure. Jobs may form
     	    * a DAG.
+    	    *
+    	    * @priority The smaller the priority the more important the job
     	    */
-    	   Job( JobType jobType, int jobClass );
+    	   Job( JobType jobType, int jobClass, int priority );
 
            virtual bool run() = 0;
            /**
@@ -95,12 +100,13 @@ namespace tarch {
             * We usually use mode/hint _MM_HINT_NTA for data on machines with
             * Optane. This makes the data be loaded into L3. For urgent
             * computations it might however make sense to use T0.
-	    *
+	        *
             */
            virtual void prefetchData();
            virtual ~Job();
            int getClass() const;
            JobType getJobType() const;
+           int getPriority() const;
 
            /**
             * If jobs are enqueued, they are typically not processed
@@ -129,6 +135,16 @@ namespace tarch {
            static int getMaxNumberOfRunningBackgroundThreads();
        };
 
+
+       /**
+        * This operator is used by the std::less class which in turn is used by
+        * the concurrent queue to determine an ordering upon jobs.
+        */
+       class CompareJobPointers {
+         public:
+           bool operator()(tarch::multicore::jobs::Job* lhs, tarch::multicore::jobs::Job* rhs ) const;
+       };
+
        /**
         * Frequently used implementation for job with a functor.
         */
@@ -140,7 +156,7 @@ namespace tarch {
             */
     	   std::function<bool()>   _functor;
          public:
-           GenericJobWithCopyOfFunctor( const std::function<bool()>& functor, JobType jobType, int jobClass );
+           GenericJobWithCopyOfFunctor( const std::function<bool()>& functor, JobType jobType, int jobClass, int priority );
 
            bool run() override;
 
@@ -158,7 +174,7 @@ namespace tarch {
             */
     	   std::function<bool()>&   _functor;
          public:
-           GenericJobWithoutCopyOfFunctor(std::function<bool()>& functor, JobType jobType, int jobClass );
+           GenericJobWithoutCopyOfFunctor(std::function<bool()>& functor, JobType jobType, int jobClass, int priority );
 
            bool run() override;
 
@@ -176,7 +192,7 @@ namespace tarch {
          private:
     	   T*   _functor;
          public:
-    	   GenericJobWithPointer(T* functor, JobType jobType, int jobClass  ):
+    	   GenericJobWithPointer(T* functor, JobType jobType, int jobClass, int priority  ):
              Job(jobType,jobClass),
              _functor(functor)  {
     	   }
@@ -306,7 +322,7 @@ namespace tarch {
        /**
         * Wrapper around other spawn operation.
         */
-       void spawn(std::function<bool()>& job, JobType jobType, int jobClass);
+       void spawn(std::function<bool()>& job, JobType jobType, int jobClass, int priority = DefaultPriority);
 
        void spawnAndWait(
          std::function<bool()>&  job0,
@@ -314,7 +330,8 @@ namespace tarch {
 		 JobType                 jobType0,
 		 JobType                 jobType1,
 		 int                     jobClass0,
-		 int                     jobClass1
+		 int                     jobClass1,
+		 int priority0 = DefaultPriority, int priority1 = DefaultPriority
        );
 
        void spawnAndWait(
@@ -326,7 +343,8 @@ namespace tarch {
 		 JobType                 jobType2,
 		 int                     jobClass0,
 		 int                     jobClass1,
-		 int                     jobClass2
+		 int                     jobClass2,
+		 int priority0 = DefaultPriority, int priority1 = DefaultPriority, int priority2 = DefaultPriority
        );
 
        void spawnAndWait(
@@ -341,7 +359,8 @@ namespace tarch {
 		 int                     jobClass0,
 		 int                     jobClass1,
 		 int                     jobClass2,
-		 int                     jobClass3
+		 int                     jobClass3,
+		 int priority0 = DefaultPriority, int priority1 = DefaultPriority, int priority2 = DefaultPriority, int priority3 = DefaultPriority
        );
 
        void spawnAndWait(
@@ -359,7 +378,8 @@ namespace tarch {
 		 int                     jobClass1,
 		 int                     jobClass2,
 		 int                     jobClass3,
-		 int                     jobClass4
+		 int                     jobClass4,
+		 int priority0 = DefaultPriority, int priority1 = DefaultPriority, int priority2 = DefaultPriority, int priority3 = DefaultPriority, int priority4 = DefaultPriority
        );
 
        void spawnAndWait(
@@ -380,7 +400,8 @@ namespace tarch {
 		 int                     jobClass2,
 		 int                     jobClass3,
 		 int                     jobClass4,
-		 int                     jobClass5
+		 int                     jobClass5,
+		 int priority0 = DefaultPriority, int priority1 = DefaultPriority, int priority2 = DefaultPriority, int priority3 = DefaultPriority, int priority4 = DefaultPriority, int priority5 = DefaultPriority
        );
 
        void spawnAndWait(
@@ -419,7 +440,8 @@ namespace tarch {
 		 int                     jobClass8,
 		 int                     jobClass9,
 		 int                     jobClass10,
-		 int                     jobClass11
+		 int                     jobClass11,
+		 int priority0 = DefaultPriority, int priority1 = DefaultPriority, int priority2 = DefaultPriority, int priority3 = DefaultPriority, int priority4 = DefaultPriority, int priority5 = DefaultPriority, int priority6 = DefaultPriority, int priority7 = DefaultPriority, int priority8 = DefaultPriority, int priority9 = DefaultPriority, int priority10 = DefaultPriority, int priority11 = DefaultPriority
        );
 
        int getNumberOfPendingJobs();
@@ -429,12 +451,26 @@ namespace tarch {
         */
        bool processJobs(int jobClass, int maxNumberOfJobs = std::numeric_limits<int>::max() );
 
+       /**
+        * This operation is often used when a system is waiting for some jobs
+        * to come in. If you have only jobs that do not reschedule themselves,
+        * then this function with its default parameter is fine. If you have
+        * jobs that do reschedule, then the function is problematic: it could
+        * be that a polling thread simply always gets a (high priority)
+        * rescheduling job.
+        *
+        * It should work nevertheless as long as there are some job consumers
+        * active as well. I however simply recommend another pattern: If you
+        * wait within a while loop, add a counter. It is initialised with 1.
+        * After each while iteration (you still wait for jobs), you increase
+        * the counter. Let the counter serve as function argument.
+        */
        bool processBackgroundJobs(int maxNumberOfJobs = 1);
-       bool processHighPriorityJobs(int maxNumberOfJobs = 1);
        bool processHighBandwidthJobs(int maxNumberOfJobs = 1);
     }
   }
 }
+
 
 #endif
 

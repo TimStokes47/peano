@@ -119,13 +119,6 @@ class peano::datatraversal::TaskSet {
        */
       IsTaskAndRunImmediately,
 	  IsBandwidthBoundTask,
-	  /**
-	   * Not different to IsTaskAndRunImmediately if used in a construct with 
-       * multiple functors. If you use only the single functor, it usually 
-       * behaves the same as IsTaskAndRunImmediately, but technically it 
-       * launches a new task, i.e. something else might squeeze in-between.
-	   */
-	  IsTaskAndRunAsSoonAsPossible,
       /**
        * A classic background task that is processed any time Peano thinks it
        * to be appropriate. You can set an upper bound on the number of 
