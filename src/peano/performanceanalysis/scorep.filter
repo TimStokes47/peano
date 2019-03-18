@@ -1,7 +1,0 @@
-SCOREP_REGION_NAMES_BEGIN 
-  EXCLUDE 
-    * 
-  INCLUDE
-    peano*
-    tarch*
-SCOREP_REGION_NAMES_END 
