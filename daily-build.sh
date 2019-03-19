@@ -1,7 +1,7 @@
 folders=(pdt src visualisation)
 files=(README.md)
 
-peanoVersion="Peano-v3-$(git log --format="%h" -n 1 .)"
+peanoVersion="Peano-3.0-$(git log --format="%h" -n 1 .)"
 
 tarName="$peanoVersion.tar.gz"
 
