@@ -1,4 +1,4 @@
-#ifdef defined(SharedTBB)
+#if defined(SharedTBB)
 #include "JobProcessingService.h"
 
 #include "tarch/multicore/Jobs.h"
