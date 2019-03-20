@@ -1,10 +1,9 @@
 folders=(pdt src visualisation)
 files=(README.md)a
 
+export DATE=`date +%Y-%m-%d`
 
-date=`date +%Y-%m-%d`
-
-peanoVersion="Peano-v3-$date-$(git log --format="%h" -n 1 .)"
+peanoVersion="Peano-3.0-$DATE-$(git log --format="%h" -n 1 .)"
 
 tarName="$peanoVersion.tar.gz"
 

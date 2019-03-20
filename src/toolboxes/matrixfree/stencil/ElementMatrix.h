@@ -24,7 +24,7 @@ namespace matrixfree {
    *   cell, e.g., is one coarse cell where the solver automaton descends to
    *   finer grids)
    * - Consequently, we have to convert the @f$ 2^d @f$ vertex stencils within
-   *   each cell into a element-wise assembly matrix @f$ \mathbb{R}^{2^d \times 2^d}@f$.
+   *   each cell into a element-wise assembly matrix @f$ \mathbf{R}^{2^d \times 2^d}@f$.
    *   With this matrix, we then can accumulate the residuals.
    * - PeProt automatically generates a routine that takes the @f$ 2^d @f$
    *   vertices and writes their @f$ 3^d @f$ stencils into one big vector of
