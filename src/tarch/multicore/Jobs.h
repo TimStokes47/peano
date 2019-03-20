@@ -57,13 +57,14 @@ namespace tarch {
          private:
            const JobType  _jobType;
     	   const int      _jobClass;
-    	   const int      _priority;
+    	   int            _priority;
 
     	   friend void startToProcessBackgroundJobs();
     	   friend bool finishToProcessBackgroundJobs();
 
          public:
     	   static int _maxNumberOfRunningBackgroundThreads;
+
     	   /**
     	    * A task is a job without any dependencies on other jobs though it
     	    * might have children. Tasks form a tree structure. Jobs may form
@@ -74,6 +75,7 @@ namespace tarch {
     	   Job( JobType jobType, int jobClass, int priority );
 
            virtual bool run() = 0;
+
            /**
             * This operation is called prior to run(). We try to make it as
             * close to run as possible. The idea is that codes use it to
@@ -107,6 +109,7 @@ namespace tarch {
            int getClass() const;
            JobType getJobType() const;
            int getPriority() const;
+    	   void resetPriority( int value );
 
            /**
             * If jobs are enqueued, they are typically not processed

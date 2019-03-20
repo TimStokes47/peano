@@ -272,6 +272,9 @@ void tarch::multicore::jobs::spawn(Job*  job) {
         checkWhetherToLaunchAJobConsumer = false;
   	  }
   	  else {
+  		if (internal::_taskProcessingScheme==TaskProcessingScheme::UseCustomTBBWrapperWithoutPriorities) {
+  		  job->resetPriority(tarch::multicore::DefaultPriority);
+  		}
         internal::insertJob(internal::BackgroundTasksJobClassNumber,job);
         checkWhetherToLaunchAJobConsumer = true;
         internal::getJobQueue(internal::BackgroundTasksJobClassNumber).maxSize =

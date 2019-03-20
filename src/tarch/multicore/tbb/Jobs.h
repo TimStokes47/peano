@@ -53,6 +53,7 @@ namespace tarch {
 
       enum class TaskProcessingScheme {
     	UseCustomTBBWrapper,
+    	UseCustomTBBWrapperWithoutPriorities,
 		MapToPlainTBBTasks
       };
 
