@@ -1,6 +1,6 @@
 #if defined(SharedTBB)
 #include "JobProcessingService.h"
-
+#include "Jobs.h"
 #include "tarch/multicore/Jobs.h"
 
 
@@ -32,7 +32,7 @@ void tarch::multicore::tbb::JobProcessingService::receiveDanglingMessages() {
   const int newJobCount = tarch::multicore::jobs::internal::getJobQueueSize( tarch::multicore::jobs::internal::BackgroundTasksJobClassNumber )
                         + tarch::multicore::jobs::internal::getJobQueueSize( tarch::multicore::jobs::internal::HighBandwidthTasksJobClassNumber );
 
-  if (newJobCount>=previousJobCount and previousJobCount>0 and NumberOfJobsPerInvocation<newJobCount)
+  if (newJobCount>=previousJobCount and previousJobCount>0 and NumberOfJobsPerInvocation<newJobCount) {
     // seems I catched only reschulding jobs
     NumberOfJobsPerInvocation++;
   }
