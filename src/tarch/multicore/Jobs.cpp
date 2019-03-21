@@ -52,6 +52,11 @@ int tarch::multicore::jobs::Job::getPriority() const {
 }
 
 
+void tarch::multicore::jobs::Job::resetPriority( int value ) {
+  _priority = value;
+}
+
+
 void tarch::multicore::jobs::Job::prefetchData() {
 }
 

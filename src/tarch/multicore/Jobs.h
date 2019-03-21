@@ -11,9 +11,9 @@
 namespace tarch {
   namespace multicore {
     /**
-     * Default priority. The smaller the value the more important a job.
+     * Default priority. The bigger the value the more important a job.
      */
-    constexpr int DefaultPriority = 128;
+    constexpr int DefaultPriority = 32;
 
     /**
      * Jobs are Peano's abstraction of tasks. They generalise the
@@ -28,14 +28,14 @@ namespace tarch {
      */
     namespace jobs {
        enum class JobType {
-         Job = -1,
+         Job,
 		 /**
 		  * It does not really make sense to specify this flag by a user.
 		  * But it is used internally if background threads are disabled.
 		  */
-		 ProcessImmediately = -2,
-		 BandwidthBoundTask = -3,
-         BackgroundTask = 128
+		 ProcessImmediately,
+		 BandwidthBoundTask,
+         BackgroundTask
        };
 
        /**
@@ -57,23 +57,25 @@ namespace tarch {
          private:
            const JobType  _jobType;
     	   const int      _jobClass;
-    	   const int      _priority;
+    	   int            _priority;
 
     	   friend void startToProcessBackgroundJobs();
     	   friend bool finishToProcessBackgroundJobs();
 
          public:
     	   static int _maxNumberOfRunningBackgroundThreads;
+
     	   /**
     	    * A task is a job without any dependencies on other jobs though it
     	    * might have children. Tasks form a tree structure. Jobs may form
     	    * a DAG.
     	    *
-    	    * @priority The smaller the priority the more important the job
+    	    * @priority The bigger the priority the more important the job
     	    */
     	   Job( JobType jobType, int jobClass, int priority );
 
            virtual bool run() = 0;
+
            /**
             * This operation is called prior to run(). We try to make it as
             * close to run as possible. The idea is that codes use it to
@@ -107,6 +109,7 @@ namespace tarch {
            int getClass() const;
            JobType getJobType() const;
            int getPriority() const;
+    	   void resetPriority( int value );
 
            /**
             * If jobs are enqueued, they are typically not processed

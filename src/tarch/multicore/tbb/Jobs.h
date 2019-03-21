@@ -4,7 +4,11 @@
 #include "tarch/Assertions.h"
 
 
+#include "tarch/multicore/Jobs.h"
+
+
 #include <tbb/task.h>
+#include <tbb/atomic.h>
 #include <tbb/parallel_invoke.h>
 #include <tbb/tbb_machine.h>
 #include <tbb/task.h>
@@ -21,6 +25,8 @@
 #include <tbb/concurrent_queue.h>
 #include <tbb/concurrent_priority_queue.h>
 
+
+#include <limits>
 
 
 namespace tarch {
@@ -56,6 +62,7 @@ namespace tarch {
 
       enum class TaskProcessingScheme {
     	UseCustomTBBWrapper,
+    	UseCustomTBBWrapperWithoutPriorities,
 		MapToPlainTBBTasks
       };
 
@@ -71,7 +78,7 @@ namespace tarch {
          *
          * @see BackgroundJobConsumerTask
          */
-        extern tbb::atomic<int>            _numberOfRunningJobConsumerTasks;
+        extern ::tbb::atomic<int>            _numberOfRunningJobConsumerTasks;
 
         extern int                         _minimalNumberOfJobsPerConsumerRun;
         extern int                         _maximumNumberOfJobsPerConsumerRun;
@@ -79,7 +86,7 @@ namespace tarch {
 
         constexpr int NumberOfJobQueues = 32;
         struct JobQueue {
-          tbb::concurrent_priority_queue<
+          ::tbb::concurrent_priority_queue<
 		    tarch::multicore::jobs::Job*,
 			tarch::multicore::jobs::CompareJobPointers
           >   jobs;
@@ -96,7 +103,7 @@ namespace tarch {
            *
            * @see spawnBackgroundJob()
            */
-          tbb::atomic<double>         maxSize;
+          ::tbb::atomic<double>         maxSize;
         };
         extern JobQueue _pendingJobs[NumberOfJobQueues];
 
@@ -110,7 +117,7 @@ namespace tarch {
          */
         int getNumberOfJobsPerConsumerRun( int jobClass );
 
-        extern tbb::atomic<bool> _bandwidthTasksAreProcessed;
+        extern ::tbb::atomic<bool> _bandwidthTasksAreProcessed;
 
         /**
          * Return job queue for one type of job. Does not hold for background jobs.
@@ -131,10 +138,10 @@ namespace tarch {
          */
        class JobWithoutCopyOfFunctorAndSemaphore: public tarch::multicore::jobs::Job {
           private:
-            std::function<bool()>&   _functor;
-            tbb::atomic<int>&        _semaphore;
+            std::function<bool()>&     _functor;
+            ::tbb::atomic<int>&        _semaphore;
           public:
-            JobWithoutCopyOfFunctorAndSemaphore(std::function<bool()>& functor, JobType jobType, int jobClass, int priority, tbb::atomic<int>& semaphore ):
+            JobWithoutCopyOfFunctorAndSemaphore(std::function<bool()>& functor, JobType jobType, int jobClass, int priority, ::tbb::atomic<int>& semaphore ):
              Job(jobType,jobClass,priority),
              _functor(functor),
              _semaphore(semaphore) {
@@ -151,10 +158,10 @@ namespace tarch {
 
        class JobWithCopyOfFunctorAndSemaphore: public tarch::multicore::jobs::Job {
           private:
-            std::function<bool()>   _functor;
-            tbb::atomic<int>&       _semaphore;
+            std::function<bool()>     _functor;
+            ::tbb::atomic<int>&       _semaphore;
           public:
-            JobWithCopyOfFunctorAndSemaphore(std::function<bool()>& functor, JobType jobType, int jobClass, int priority, tbb::atomic<int>& semaphore ):
+            JobWithCopyOfFunctorAndSemaphore(std::function<bool()>& functor, JobType jobType, int jobClass, int priority, ::tbb::atomic<int>& semaphore ):
              Job(jobType,jobClass,priority),
              _functor(functor),
              _semaphore(semaphore) {
@@ -205,11 +212,11 @@ namespace tarch {
          * if one of these guys finds its queues empty, it terminates immediately.
          */
         void spawnBlockingJob(
-          std::function<bool()>&  job,
-          JobType                 isTask,
-          int                     jobClass,
-		  int                     priority,
-          tbb::atomic<int>&       semaphore
+          std::function<bool()>&    job,
+          JobType                   isTask,
+          int                       jobClass,
+		  int                       priority,
+          ::tbb::atomic<int>&       semaphore
         );
 
 
@@ -221,7 +228,7 @@ namespace tarch {
          * have been more jobs to process, then it enqueues another consumer task
          * to continue to work on the jobs at a later point.
          */
-        class JobConsumerTask: public tbb::task {
+        class JobConsumerTask: public ::tbb::task {
           private:
             const int _maxJobs;
             JobConsumerTask(int maxJobs);
@@ -236,7 +243,7 @@ namespace tarch {
             static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasksProcessed;
             #endif
 
-            static tbb::task_group_context  backgroundTaskContext;
+            static ::tbb::task_group_context  backgroundTaskContext;
             
             /**
              * Schedule a new background job consumer task. We have to tell
@@ -262,10 +269,10 @@ namespace tarch {
              *
              * @see enqueue()
              */
-            tbb::task* execute();
+            ::tbb::task* execute();
         };
 
-        class TBBWrapperAroundJob: public tbb::task {
+        class TBBWrapperAroundJob: public ::tbb::task {
           private:
         	Job*  _job;
           public:
@@ -273,7 +280,7 @@ namespace tarch {
         	  _job(job) {
         	}
 
-            tbb::task* execute() {
+            ::tbb::task* execute() {
               while ( _job->run() ) {}
               delete _job;
               return nullptr;

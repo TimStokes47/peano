@@ -243,7 +243,6 @@ class peano::performanceanalysis::SpeedupLaws {
   * We bring the equation parts without any shift vectors to the right-hand side
   * and use our previously introduced quantities to end up with
 @f$
-\begin{eqnarray*}
 \left( \nabla J \right)
 \left( \nabla J \right) ^T
   \left(
@@ -253,7 +252,7 @@ class peano::performanceanalysis::SpeedupLaws {
     \Delta t_1
    \end{array}
   \right)
- & = &
+ =
  - \left( \nabla J \right)
   \left(
    \begin{array}{c}
@@ -267,7 +266,6 @@ class peano::performanceanalysis::SpeedupLaws {
     \ldots
    \end{array}
   \right)
-\end{eqnarray*}
 @f$
   *
 While the assembly of the linearised equation as well as the vector $y$ to the
