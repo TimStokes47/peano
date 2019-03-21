@@ -3,7 +3,7 @@
 
 #include "tarch/Assertions.h"
 
-
+#include "tarch/logging/Log.h"
 #include "tarch/multicore/Jobs.h"
 
 
