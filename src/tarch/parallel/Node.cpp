@@ -416,8 +416,6 @@ void tarch::parallel::Node::receiveDanglingMessages() {
       tarch::services::ServiceRepository::getInstance().receiveDanglingMessages();
     #ifdef Parallel
     }
-    else
-      tarch::multicore::jobs::processBackgroundJobs(1);
     #endif
   }
 }
