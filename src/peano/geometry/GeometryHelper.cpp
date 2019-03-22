@@ -35,7 +35,7 @@ peano::geometry::GeometryHelper::VertexAction peano::geometry::GeometryHelper::g
   bool  mayEraseAlongArtificiallyRefinedBoundary,
   const CurrentVertexState& currentVertexState
 ) {
-  logTraceInWith5Arguments( "getVertexCommand(...)", pointWithHEnvironmentIsInside, pointIsOutsideOfDomainClosure, pointWithHEnvironmentIsOutside, allCellConnectedPointsAreOutside, boundaryRegularisationIsEnabled );
+  logTraceIn( "getVertexCommand(...)" );
 
   peano::geometry::GeometryHelper::VertexAction result = LeaveVertexUnaltered;
 
@@ -56,7 +56,7 @@ peano::geometry::GeometryHelper::VertexAction peano::geometry::GeometryHelper::g
     result = CreateBoundaryVertex;
   }
 
-  logTraceOutWith1Argument( "getVertexCommand(...)", toString(result) );
+  logTraceOutWith1Argument( "getVertexCommand(...)", (int)(result) );
   return result;
 }
 

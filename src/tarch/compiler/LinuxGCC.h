@@ -33,7 +33,3 @@
 #endif
 
 
-#if !defined(IprobeEveryKIterations)
-#define IprobeEveryKIterations 1024
-#endif
-
