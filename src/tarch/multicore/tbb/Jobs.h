@@ -75,7 +75,7 @@ namespace tarch {
          *
          * @see BackgroundJobConsumerTask
          */
-        extern ::tbb::atomic<int>            _numberOfRunningJobConsumerTasks;
+        extern ::tbb::atomic<int>          _numberOfRunningJobConsumerTasks;
 
         extern int                         _minimalNumberOfJobsPerConsumerRun;
         extern int                         _maximumNumberOfJobsPerConsumerRun;
@@ -84,18 +84,18 @@ namespace tarch {
         constexpr int NumberOfJobQueues = 32;
 
         // @todo
-/*
         struct JobQueue {
           ::tbb::concurrent_priority_queue<
 		    tarch::multicore::jobs::Job*,
 			tarch::multicore::jobs::CompareJobPointers
           >   jobs;
-*/
 
+/*
         struct JobQueue {
             ::tbb::concurrent_queue<
   		    tarch::multicore::jobs::Job*
             >   jobs;
+*/
 
           /**
            * This is not the real value but an estimate. Whenever a new

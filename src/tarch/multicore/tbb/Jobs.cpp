@@ -172,8 +172,8 @@ void tarch::multicore::jobs::internal::insertJob( int jobClass, Job* job ) {
 
 int  tarch::multicore::jobs::internal::getJobQueueSize( int jobClass ) {
 	// @todo
-  return static_cast<int>(internal::getJobQueue( jobClass ).jobs.unsafe_size());
-//  return static_cast<int>(internal::getJobQueue( jobClass ).jobs.size());
+//  return static_cast<int>(internal::getJobQueue( jobClass ).jobs.unsafe_size());
+  return static_cast<int>(internal::getJobQueue( jobClass ).jobs.size());
 }
 
 
