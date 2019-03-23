@@ -26,7 +26,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::PeanoTextPa
   _numberOfCellsPerAxis(numberOfCellsPerAxis) {
   assertion( dimension>=2 );
   assertion( dimension<=3 );
-  assertion( numberOfCellsPerAxis>1 );
+  assertion( numberOfCellsPerAxis>=1 );
 
   clear();
 

@@ -19,6 +19,23 @@ namespace tarch {
 }
 
 
+/**
+ * Peano Patch File Format
+ *
+ * The Peano patch file format is simplistic: It basically dumps each individual
+ * patch into the file without any adjacency or whatever. By default, each Peano
+ * block file consist at least of two pieces of data: An actual data file and a
+ * meta data file. The file format does not really distinguish them, as any file
+ * can include another one. But the meta file is the file you specify when you
+ * create the data plotter. The idea here is that you call this create once with
+ * a true (the old file then is deleted) and from hereon with false, so further
+ * snapshots are appended.
+ *
+ *
+ * <h2> Time-dependent data </h2>
+ *
+ *
+ */
 class tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter: public tarch::plotter::griddata::Writer {
   public:
     /**

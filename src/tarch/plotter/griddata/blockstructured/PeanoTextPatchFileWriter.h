@@ -132,6 +132,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
     /**
      * @param filename Is the filename of the meta/root file, i.e. the file
      *                 including the snapshots from the various MPI ranks.
+     * @see Superclass
      */
     PeanoTextPatchFileWriter(int dimension, int numberOfCellsPerAxis, const std::string& filename, bool append);
     virtual ~PeanoTextPatchFileWriter();
