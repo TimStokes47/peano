@@ -2,7 +2,8 @@ bin_PROGRAMS = PeanoIntegerDiffusionThroughFaces2d_debug PeanoIntegerDiffusionTh
 
 PeanoIntegerDiffusionThroughFacesSources = \
   main.cpp \
-  CellDataPlotter.cpp \
+  VTUCellDataPlotter.cpp \
+  PeanoFormatCellDataPlotter.cpp \
   CompositeMapping.cpp \
   MyMapping.cpp \
   MyObserver.cpp

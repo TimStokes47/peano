@@ -1,43 +1,31 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_VTU_CELL_DATA_PLOTTER_H_
-#define _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_VTU_CELL_DATA_PLOTTER_H_
+#ifndef _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_PEANO_FORMAT_CELL_DATA_PLOTTER_H_
+#define _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_PEANO_FORMAT_CELL_DATA_PLOTTER_H_
 
 
 #include "Mapping.h"
 
 
-#include "tarch/plotter/griddata/unstructured/vtk/VTUTextFileWriter.h"
-#include "tarch/plotter/griddata/VTUTimeSeriesWriter.h"
+#include "tarch/plotter/griddata/blockstructured/PeanoPatchFileWriter.h"
 
 
 namespace examples {
   namespace integerdiffusionthroughfaces {
-    class VTUCellDataPlotter;
+    class PeanoFormatCellDataPlotter;
   }
 }
 
 
 /**
- * Observer which pipes the automaton transitions into a VTK file
- *
- * While we use the up-to-date vtk format, the observer plots the whole thing
- * as a discontinuous unstructured mesh. It is not particular sophisticated.
- *
- * The plotter can write whole time series. For this, you have to invoke
- * startNewSnapshot() prior to each plot.
+ * Observer which pipes the automaton transitions into a Peano patch file
  */
-class examples::integerdiffusionthroughfaces::VTUCellDataPlotter: public examples::integerdiffusionthroughfaces::Mapping {
+class examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter: public examples::integerdiffusionthroughfaces::Mapping {
   private:
     int                                                                              _counter;
 
-    tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter*                  _writer;
-    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*    _vertexWriter;
-    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellWriter*      _cellWriter;
-    tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*  _dataWriter;
-
-
-    tarch::plotter::griddata::VTUTimeSeriesWriter                             _timeSeriesWriter;
+    tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter*                  _writer;
+    tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter::CellDataWriter*  _dataWriter;
   public:
     /**
      * You have to invoke startNewSnapshot() if you wanna have a pvd file
@@ -45,8 +33,8 @@ class examples::integerdiffusionthroughfaces::VTUCellDataPlotter: public example
      *
      * If this guy is ran on the global master,
      */
-    VTUCellDataPlotter();
-    virtual ~VTUCellDataPlotter();
+    PeanoFormatCellDataPlotter();
+    virtual ~PeanoFormatCellDataPlotter();
 
 	void beginTraversal() final;
 	void endTraversal() final;

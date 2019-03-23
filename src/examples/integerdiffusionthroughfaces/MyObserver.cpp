@@ -1,6 +1,5 @@
 #include "MyObserver.h"
 
-#include "CellDataPlotter.h"
 #include "MyMapping.h"
 #include "CompositeMapping.h"
 
@@ -8,6 +7,8 @@
 #include "peano4/grid/GridTraversalEvent.h"
 #include "peano4/grid/PeanoCurve.h"
 #include "peano4/parallel/Node.h"
+#include "VTUCellDataPlotter.h"
+#include "PeanoFormatCellDataPlotter.h"
 
 
 /**
@@ -31,7 +32,8 @@ examples::integerdiffusionthroughfaces::MyObserver::MyObserver():
   #if PeanoDebug>0
   CompositeMapping* mapping = new CompositeMapping();
   mapping->append( new MyMapping() );
-  mapping->append( new CellDataPlotter() );
+  mapping->append( new VTUCellDataPlotter() );
+  mapping->append( new PeanoFormatCellDataPlotter() );
   _mapping = mapping;
   #else
   _mapping = new MyMapping();

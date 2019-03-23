@@ -1,7 +1,7 @@
 // This file is part of the Peano project. For conditions of distribution and
 // use, please see the copyright notice at www.peano-framework.org
-#ifndef _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_CELL_DATA_PLOTTER_H_
-#define _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_CELL_DATA_PLOTTER_H_
+#ifndef _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_VTU_CELL_DATA_PLOTTER_H_
+#define _EXAMPLES_INTEGER_DIFFUSION_THROUGH_FACES_VTU_CELL_DATA_PLOTTER_H_
 
 
 #include "Mapping.h"
@@ -13,7 +13,7 @@
 
 namespace examples {
   namespace integerdiffusionthroughfaces {
-    class CellDataPlotter;
+    class VTUCellDataPlotter;
   }
 }
 
@@ -27,7 +27,7 @@ namespace examples {
  * The plotter can write whole time series. For this, you have to invoke
  * startNewSnapshot() prior to each plot.
  */
-class examples::integerdiffusionthroughfaces::CellDataPlotter: public examples::integerdiffusionthroughfaces::Mapping {
+class examples::integerdiffusionthroughfaces::VTUCellDataPlotter: public examples::integerdiffusionthroughfaces::Mapping {
   private:
     int                                                                              _counter;
 
@@ -45,8 +45,8 @@ class examples::integerdiffusionthroughfaces::CellDataPlotter: public examples::
      *
      * If this guy is ran on the global master,
      */
-    CellDataPlotter();
-    virtual ~CellDataPlotter();
+    VTUCellDataPlotter();
+    virtual ~VTUCellDataPlotter();
 
 	void beginTraversal() final;
 	void endTraversal() final;

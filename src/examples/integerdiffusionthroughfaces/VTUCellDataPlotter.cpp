@@ -1,11 +1,10 @@
-#include "CellDataPlotter.h"
+#include "VTUCellDataPlotter.h"
 #include "CellData.h"
-
 
 #include "peano4/utils/Loop.h"
 
 
-examples::integerdiffusionthroughfaces::CellDataPlotter::CellDataPlotter():
+examples::integerdiffusionthroughfaces::VTUCellDataPlotter::VTUCellDataPlotter():
   _counter(0),
   _writer(nullptr),
   _vertexWriter(nullptr),
@@ -15,7 +14,7 @@ examples::integerdiffusionthroughfaces::CellDataPlotter::CellDataPlotter():
 }
 
 
-examples::integerdiffusionthroughfaces::CellDataPlotter::~CellDataPlotter() {
+examples::integerdiffusionthroughfaces::VTUCellDataPlotter::~VTUCellDataPlotter() {
   assertion( _writer == nullptr);
   assertion( _vertexWriter == nullptr);
   assertion( _cellWriter == nullptr);
@@ -23,7 +22,7 @@ examples::integerdiffusionthroughfaces::CellDataPlotter::~CellDataPlotter() {
 }
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::beginTraversal() {
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::beginTraversal() {
   _writer       = new tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter();
   _vertexWriter = _writer->createVertexWriter();
   _cellWriter   = _writer->createCellWriter();
@@ -31,7 +30,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::beginTraversal() {
 }
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::endTraversal() {
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::endTraversal() {
   assertion( _vertexWriter!=nullptr );
   assertion( _cellWriter!=nullptr );
   assertion( _dataWriter!=nullptr );
@@ -61,14 +60,14 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::endTraversal() {
 }
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::createPersistentFace(
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::createPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) {}
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::createHangingFace(
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::createHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
@@ -76,7 +75,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::createHangingFace(
     ) {}
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyPersistentFace(
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::destroyPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
@@ -84,7 +83,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyPersistentF
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyHangingFace(
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::destroyHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
@@ -92,7 +91,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyHangingFace
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::touchFaceFirstTime(
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchFaceFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
@@ -100,7 +99,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::touchFaceFirstTime
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::touchFaceLastTime(
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchFaceLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
@@ -108,7 +107,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::touchFaceLastTime(
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::createCell(
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::createCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
@@ -116,7 +115,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::createCell(
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyCell(
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
@@ -124,7 +123,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::destroyCell(
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::touchCellFirstTime(
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
@@ -157,7 +156,7 @@ void examples::integerdiffusionthroughfaces::CellDataPlotter::touchCellFirstTime
 }
 
 
-void examples::integerdiffusionthroughfaces::CellDataPlotter::touchCellLastTime(
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchCellLastTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,

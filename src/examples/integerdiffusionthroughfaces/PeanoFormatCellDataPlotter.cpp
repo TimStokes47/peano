@@ -1,74 +1,68 @@
+#include "PeanoFormatCellDataPlotter.h"
 #include "CellData.h"
 
-
 #include "peano4/utils/Loop.h"
-#include "VTUVTUCellDataPlotter.h"
 
 
-examples::integerdiffusionthroughfaces::VTUCellDataPlotter::VTUCellDataPlotter():
+#include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
+
+
+examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::PeanoFormatCellDataPlotter():
   _counter(0),
   _writer(nullptr),
-  _vertexWriter(nullptr),
-  _cellWriter(nullptr),
-  _dataWriter(nullptr),
-  _timeSeriesWriter() {
+  _dataWriter(nullptr) {
 }
 
 
-examples::integerdiffusionthroughfaces::VTUCellDataPlotter::~VTUCellDataPlotter() {
+examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::~PeanoFormatCellDataPlotter() {
   assertion( _writer == nullptr);
-  assertion( _vertexWriter == nullptr);
-  assertion( _cellWriter == nullptr);
   assertion( _dataWriter == nullptr);
 }
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::beginTraversal() {
-  _writer       = new tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter();
-  _vertexWriter = _writer->createVertexWriter();
-  _cellWriter   = _writer->createCellWriter();
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::beginTraversal() {
+  _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
+    Dimensions,
+	1, // int numberOfCellsPerAxis
+	"marker",
+	_counter>0  // bool append
+  );
   _dataWriter   = _writer->createCellDataWriter( "cell-data", 1 );
 }
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::endTraversal() {
-  assertion( _vertexWriter!=nullptr );
-  assertion( _cellWriter!=nullptr );
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::endTraversal() {
   assertion( _dataWriter!=nullptr );
 
-  _vertexWriter->close();
-  _cellWriter->close();
   _dataWriter->close();
 
   std::ostringstream filename;
-  filename << "data-" << _counter;
+  filename << "marker-" << _counter;
   _writer->writeToFile( filename.str() );
 
-  delete _vertexWriter;
-  delete _cellWriter;
   delete _dataWriter;
   delete _writer;
 
-  _vertexWriter = 0;
-  _cellWriter = 0;
-  _dataWriter = 0;
-  _writer = 0;
+  _dataWriter = nullptr;
+  _writer     = nullptr;
 
+/*
   _timeSeriesWriter.addSnapshot( filename.str(), _counter, false );
   _timeSeriesWriter.writeFile( "data" );
+*/
 
   _counter++;
 }
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::createPersistentFace(
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::createPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
 	  FaceData&                                    data
     ) {}
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::createHangingFace(
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::createHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
@@ -76,7 +70,7 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::createHangingFa
     ) {}
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::destroyPersistentFace(
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::destroyPersistentFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
@@ -84,7 +78,7 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::destroyPersiste
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::destroyHangingFace(
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::destroyHangingFace(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
@@ -92,7 +86,7 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::destroyHangingF
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchFaceFirstTime(
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchFaceFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
@@ -100,7 +94,7 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchFaceFirstT
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchFaceLastTime(
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchFaceLastTime(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
       const tarch::la::Vector<Dimensions,double>&  normal,
@@ -108,7 +102,7 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchFaceLastTi
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::createCell(
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::createCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
@@ -116,7 +110,7 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::createCell(
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::destroyCell(
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
@@ -124,40 +118,26 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::destroyCell(
     )  {}
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchCellFirstTime(
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
   Faces&                                       faces,
   peano4::datamanagement::CellMarker           marker
 )  {
-  if (not marker.isRefined) {
-    int vertexIndices[TwoPowerD];
+  int vertexIndices[TwoPowerD];
 
-    dfor2(k)
-      assertion( _vertexWriter!=nullptr );
-      vertexIndices[kScalar] = _vertexWriter->plotVertex(
-        center + tarch::la::multiplyComponents( k.convertScalar<double>(), h ) - h * 0.5
-      );
-    enddforx
+  std::pair<int,int> indices = _writer->plotPatch(
+    center - h * 0.5,
+	h
+  );
 
-    assertion( _cellWriter!=nullptr );
-    int cellIndex = -1;
-    #if Dimensions==2
-    cellIndex = _cellWriter->plotQuadrangle(vertexIndices);
-    #elif Dimensions==3
-    cellIndex = _cellWriter->plotHexahedron(vertexIndices);
-    #else
-    assertionMsg( false, "supports only 2d and 3d" );
-    #endif
-
-    assertion( _dataWriter!=nullptr );
-    _dataWriter->plotCell(cellIndex,data.value);
-  }
+  assertion( _dataWriter!=nullptr );
+  _dataWriter->plotCell(indices.second,data.value);
 }
 
 
-void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchCellLastTime(
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchCellLastTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
