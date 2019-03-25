@@ -1,20 +1,16 @@
-/*
- * PeanoMetaReader.cpp
- *
- *  Created on: 26 Nov 2017
- *      Author: dan
- */
-
 #include "PeanoMetaFile.h"
 
+/*
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/erase.hpp"
 #include "boost/algorithm/string/trim.hpp"
+*/
 
 #include <string>
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 
 /*
@@ -41,15 +37,19 @@ PeanoMetaFile::PeanoMetaFile(std::string fileName) {
 	for(uint i = 0; i < lines.size(); i++) {
 		std::string line = lines[i];
 
-		if(boost::starts_with(line, "#")) {
+//		line.erase(std::remove_if(line.begin(), line.end(), std::isspace), line.end());
+
+		if (line.rfind("#",0)==0 ) {
 			continue;
-		} else if(boost::starts_with(line, "begin dataset")) {
+		}
+		else if ( line.rfind("begin dataset",0)==0 ) {
 			metadataFile = true;
 			std::vector<std::string> dataSetLines;
 			for(i++; i < lines.size(); i++) {
 				std::string line2 = lines[i];
-				boost::trim(line2);
-				if(boost::starts_with(line2, "end dataset")) {
+				// @todo
+				//boost::trim(line2);
+				if( line2.rfind("end dataset",0)==0 ) {
 					break;
 				} else {
 					dataSetLines.push_back(line2);

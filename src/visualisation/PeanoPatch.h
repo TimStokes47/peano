@@ -1,26 +1,23 @@
-/*
- * PeanoPatch.h
- *
- *  Created on: 17 Oct 2017
- *      Author: dan
- */
-
 #ifndef PEANOPATCH_H_
 #define PEANOPATCH_H_
-
-#include "PeanoPatchData.h"
-#include "PeanoVariable.h"
 
 #include <string>
 #include <iostream>
 #include <unordered_map>
 #include <vector>
 
+#include "PeanoVariable.h"
+#include "PeanoPatchData.h"
+
+//#include "../config.h"
+//#ifdef UseVTK
+/*
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/split.hpp"
 #include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/trim.hpp"
 #include "boost/lexical_cast.hpp"
+*/
 
 
 class PeanoPatch {

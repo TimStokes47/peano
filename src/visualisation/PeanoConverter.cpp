@@ -5,15 +5,14 @@
  *      Author: dan
  */
 
-#include "PeanoPatch.h"
 #include "PeanoConverter.h"
-#include "PeanoPatchData.h"
-#include "PeanoVariable.h"
 
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "../config.h"
+#ifdef UseVTK
 #include "vtkImageData.h"
 #include "vtkSmartPointer.h"
 #include "vtkDoubleArray.h"
@@ -30,8 +29,14 @@
 #include <vtkSmartPointer.h>
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkMergeCells.h>
+#endif
+
+#include "PeanoPatch.h"
+#include "PeanoPatchData.h"
+#include "PeanoVariable.h"
 
 
+/*
 vtkSmartPointer<vtkImageData> PeanoConverter::toImageData(PeanoPatch *patch) {
 	vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
 
@@ -71,8 +76,10 @@ vtkSmartPointer<vtkImageData> PeanoConverter::toImageData(PeanoPatch *patch) {
 	}
 	return imageData;
 }
+*/
 
 
+#ifdef UseVTK
 vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::toUnstructuredGrid(PeanoPatch *patch) {
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
@@ -170,14 +177,18 @@ vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::toUnstructuredGrid(PeanoPat
 
 	return grid;
 }
+#endif
 
 
+/*
 int PeanoConverter::xyzToIndex(int x, int y, int z, int dimensions[3]) {
 	return x + y*(dimensions[0]+1) + z*(dimensions[0]+1)*(dimensions[1]+1);
 }
+*/
 
 
 std::string PeanoConverter::combineAndWriteToFile(const std::vector<PeanoPatch*>& patches, const std::string& outputFileWithoutExtention) {
+  #ifdef UseVTK
   vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
 
   std::string outFile = outputFileWithoutExtention + "." + writer->GetDefaultFileExtension();
@@ -188,11 +199,15 @@ std::string PeanoConverter::combineAndWriteToFile(const std::vector<PeanoPatch*>
   writer->SetCompressorTypeToZLib();
   writer->AddInputDataObject( outputGrid );
   writer->Write();
-
   return outFile;
+  #else
+  std::cerr << "Error: Can't build VTK files as code is setup without VTK (rerun ./configure with --with-vtk)" << std::endl;
+  return "error";
+  #endif
 }
 
 
+#ifdef UseVTK
 vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::combine(const std::vector<PeanoPatch*>& patches){
   vtkSmartPointer<vtkAppendFilter> appendFilter = vtkSmartPointer<vtkAppendFilter>::New();
   for(uint i = 0; i < patches.size(); i++) {
@@ -232,7 +247,9 @@ vtkSmartPointer<vtkUnstructuredGrid> PeanoConverter::combine(const std::vector<P
 
 	return combined;
 }
+#endif
 
+/*
 PeanoPatch* PeanoConverter::subSample(std::vector<PeanoReader*> &readers, int x, int y, int z) {
 	std::vector<PeanoPatch*> patches;
 
@@ -384,3 +401,4 @@ PeanoPatch* PeanoConverter::subSample(std::vector<PeanoReader*> &readers, int x,
 	}
 	return outPatch;
 }
+*/

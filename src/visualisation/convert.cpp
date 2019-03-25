@@ -1,28 +1,31 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <limits>
 
-#include "PeanoReader.h"
-#include "PeanoConverter.h"
-#include "PeanoMetaFile.h"
-#include "PeanoDataSet.h"
-
+#include "../config.h"
+#ifdef UseVTK
 #include <vtkSmartPointer.h>
 #include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkMergeCells.h>
-
-
-#ifndef noCreateDirectory
-#include <experimental/filesystem> // or #include <filesystem>
 #endif
+
+
+#include "PeanoConverter.h"
+#include "PeanoDataSet.h"
+#include "PeanoMetaFile.h"
+#include "input/PeanoTextPatchFileReader.h"
+
+
+#include <experimental/filesystem> // or #include <filesystem>
 
 
 void convertFile( std::string filename, const std::string& outputDirectory ) {
   std::string outFile = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
   std::cout << "writing file " << outFile << std::endl;
 
-  PeanoReader reader( filename );
+  visualisation::input::PeanoTextPatchFileReader reader( filename );
   PeanoConverter::combineAndWriteToFile( reader.patches, outFile );
 }
 
@@ -36,9 +39,6 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
   std::string outFileName        = outFileNamePrefix + "-full-resolution.pvd";
 
 
-  #ifdef noCreateDirectory
-  std::string dataFileNamePrefix = outFileNamePrefix;
-  #else
   std::string dataFileNamePrefix = outFileNamePrefix + "-full-resolution";
   if (
     !std::experimental::filesystem::is_directory(dataFileNamePrefix)
@@ -55,23 +55,22 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
 	}
   }
   dataFileNamePrefix += "/data";
-  #endif
 
   std::ofstream pvdFile(outFileName);
   pvdFile << "<?xml version=\"1.0\"?>" << std::endl
 		  << "<VTKFile type=\"Collection\" version=\"0.1\" >" << std::endl
 		  << "<Collection>" << std::endl;
-/*
-		  ""
-		  "byte_order="LittleEndian"
-         compressor="vtkZLibDataCompressor">
-*/
 
   int timeStepCounter = 0;
   std::vector<PeanoDataSet*>* dataSets = reader.getDataSets();
+/*
   for( auto timeStep: *dataSets ) {
-    std::vector<PeanoReader*>* readers = timeStep->createReadersFull();
+	  // @todo There should indeed by an abstract PeanoReader superclass
+//	    std::vector<PeanoReader*>* readers = timeStep->createReadersFull();
+	    std::vector<  visualisation::input::PeanoTextPatchFileReader*>* readers = timeStep->createReadersFull();
 
+
+    // @c++ parallel
     #pragma omp parallel for
     for( int i=0; i<readers->size(); i++) {
       auto p = (*readers)[i];
@@ -99,6 +98,7 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
 
     timeStepCounter++;
   }
+*/
 
   pvdFile << "</Collection>" << std::endl
 		  << "</VTKFile>" << std::endl;
@@ -136,70 +136,12 @@ int main(int argc, char* argv[]) {
         validParams = false;
       }
     }
-/*
-    if(argc == 6) {
-        std::string command = argv[1];
-        if(command.compare("subsample") == 0) {
-            validParams = true;
-            std::string input = argv[2];
-
-        	int xSize = std::stoi(argv[3]);
-        	int ySize = std::stoi(argv[4]);
-        	int zSize = std::stoi(argv[5]);
-
-            std::cout << "Reading initial file " << input << "...\n";
-            PeanoMetaFile metaFile = PeanoMetaFile(input);
-
-            #pragma omp parallel for
-            for(int i = 0; i < metaFile.numberOfDataSets(); i++) {
-                PeanoDataSet* dataset = metaFile.getDataSet(i);
-                PeanoPatch* sample = dataset->createSubSample(xSize, ySize, zSize, true);
-                delete sample;
-            }
-
-            //save the metadatafile
-            metaFile.save();
-            return 0;
-        }
-    } else if(argc == 4) {
-        std::string command = argv[1];
-        if(command.compare("convert") == 0) {
-            validParams = true;
-            std::string input = argv[2];
-            std::string output = argv[3];
-
-            std::cout << "Reading initial file " << input << "...\n";
-            PeanoMetaFile metaFile = PeanoMetaFile(input);
-
-            #pragma omp parallel for
-            for(int i = 0; i < metaFile.numberOfDataSets(); i++) {
-                PeanoDataSet* dataset = metaFile.getDataSet(i);
-                std::vector<PeanoReader*>* readers = dataset->createReadersFull();
-                vtkSmartPointer<vtkUnstructuredGrid> vtkGrid = PeanoConverter::combineImageData(readers);
-
-                //save the patch as an XML file
-                vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
-
-                std::string outFile = output + "/" + dataset->getSimpleName() + ".vtk";
-
-                std::cout << "Writing to file " << outFile << "\n";
-                writer->SetFileName(outFile.c_str());
-                writer->AddInputDataObject(vtkGrid.GetPointer());
-                writer->Write();
-            }
-
-            return 0;
-        }
-    }
-*/
 
     if (!validParams) {
       std::cerr << std::endl << std::endl;
       std::cerr << "Usage:";
       std::cerr << "\t./executable convert-file InputFile1 [InputFile2 ...] OutputFolder" << std::endl;
       std::cerr << "\t./executable convert-time-series InputFile1 [InputFile2 ...] OutputFolder" << std::endl;
-//      std::cerr << "\t./PeanoStandalone subsample INPUT_FILE X_SIZE Y_SIZE Z_SIZE\n";
- //     std::cerr << "or:\n";
       std::cerr << std::endl << std::endl;
       std::cerr << "Only convert will yield actual VTK files. All other operations create new " << std::endl
       		<< "internal data representations that then can be converted. " << std::endl << std::endl

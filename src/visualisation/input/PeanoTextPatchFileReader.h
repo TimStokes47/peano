@@ -1,18 +1,21 @@
-/*
- * PeanoReader.h
- *
- *  Created on: 16 Oct 2017
- *      Author: dan
- */
+#ifndef _VISUALISATION_INPUT_PEANO_TEXT_PATCH_FILE_READER_H_
+#define _VISUALISATION_INPUT_PEANO_TEXT_PATCH_FILE_READER_H_
 
-#ifndef PEANOREADER_H_
-#define PEANOREADER_H_
+
 
 #include <string>
 #include <vector>
 
-#include "PeanoVariable.h"
 #include "PeanoPatch.h"
+#include "PeanoVariable.h"
+
+
+namespace visualisation {
+ namespace input {
+  class PeanoTextPatchFileReader;
+ }
+}
+
 
 /**
  * Represent a Peano reader
@@ -25,7 +28,7 @@
  *
  * @author Dan Tuthill-Jones, Tobias Weinzierl
  */
-class PeanoReader {
+class visualisation::input::PeanoTextPatchFileReader {
   public:
 	/**
 	 * Read in one file.
@@ -35,8 +38,8 @@ class PeanoReader {
 	 * - Load the whole files into a vector called lines, i.e. we load line by line.
 	 * -
 	 */
-	PeanoReader(const std::string &file);
-	virtual ~PeanoReader();
+	PeanoTextPatchFileReader(const std::string &file);
+	virtual ~PeanoTextPatchFileReader();
 
 	int dimensions = -1;
 	int cells = -1;

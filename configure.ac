@@ -96,6 +96,9 @@ fi
 
 
 
+#
+# MPI  Options
+#
 AC_ARG_WITH(mpi,
   AC_HELP_STRING([--with-mpi], [switch on distributed memory parallelisation [default=no, mpiCC command]]),
   [ AC_MSG_CHECKING(for mpi)
@@ -111,11 +114,54 @@ if test "$mpi" != false; then
   AC_DEFINE([Parallel], [1], [Parallel])
 fi
 
-# CXX=
+
+
+#
+# VTK Options
+#
+AC_ARG_WITH(vtk,
+  AC_HELP_STRING([--with-vtk], [enable VTK and thus build Peano's conversion tools, too [default=no, vtk build path (such as )]]),
+  [ AC_MSG_CHECKING(for vtk)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);                               vtk=false ;;
+      *)     AC_MSG_RESULT(use vtk include path ${withval});  vtk=${withval}  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
+  
+
+if test "$vtk" != false; then
+  AC_DEFINE([UseVTK], [1], [UseVTK])
+  VTKCXXFLAGS=-ABC$vtk
+fi
+
+
+#
+# HDF5
+#
+#AC_ARG_WITH(hdf5,
+#  AC_HELP_STRING([--with-hdf5], [enable HDF5 support [default=no, hdf5 installation path (such as /usr/include/vtk-8.1)]]),
+#  [ AC_MSG_CHECKING(for vtk)
+#    case "${withval}" in
+#      no)    AC_MSG_RESULT(no);                       vtk=false ;;
+#      *)     AC_MSG_RESULT(use vtk path ${withval});  vtk=true  ;;
+#    esac ],
+#  [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
+  
+  
+#  /usr/include/hdf5.h
+
+#if test "$vtk" != false; then
+#  CXX=$vtk
+#  AC_DEFINE([Vtk], [1], [Vtk])
+#  VTK_CXXFLAGS = $vtk
+#  bin_PROGRAMS += PeanoToVTK
+#fi
+
 
   
 #
-# Kick out makefiles
+# Kick out makefiles. I'm not sure but it seems that you have to add the directories to 
+# Makefile.am in the src subdirectories, too
 #
-AC_OUTPUT(Makefile src/Makefile src/examples/grid/Makefile src/examples/integerdiffusionthroughfaces/Makefile)
+AC_OUTPUT(Makefile src/Makefile src/examples/grid/Makefile src/examples/integerdiffusionthroughfaces/Makefile src/visualisation/Makefile)
 

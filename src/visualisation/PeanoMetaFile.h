@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "PeanoDataSet.h"
-#include "PeanoReader.h"
+#include "input/PeanoTextPatchFileReader.h"
 
 /**
  * Meta files are files that hold time series or reduced resolution images.

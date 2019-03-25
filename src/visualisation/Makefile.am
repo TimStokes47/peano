@@ -1,18 +1,21 @@
-bin_PROGRAMS = PeanoToVTK
+AUTOMAKE_OPTIONS = subdir-objects
 
-PeanoToVTKSources = \
-  Convert.cpp \
+bin_PROGRAMS = convert
+
+convertSources = \
+  convert.cpp \
   PeanoConverter.cpp \
   PeanoDataSet.cpp \
   PeanoMetaFile.cpp \
   PeanoPatch.cpp \
   PeanoPatchData.cpp \
-  PeanoReader.cpp \
+  input/Parser.cpp \
+  input/PeanoTextPatchFileReader.cpp \
   PeanoVariable.cpp
 
-PeanoToVTK_CXXFLAGS  = -I$(top_builddir)/src -DPeanoDebug=1 -DDimensions=2
-PeanoToVTK_LDFLAGS   = -L$(top_builddir)/src  -lTarch_debug -lPeano4Core2d_debug
-PeanoToVTK_SOURCES   = $(PeanoToVTKSources)
+convert_CXXFLAGS  = -LALA1 $(VTKCXXFLAGS) -I$(vtk) -LALA2
+convert_LDFLAGS   = -lstdc++fs -lvtkIOXML -lvtkCommonExecutionModel -lvtkCommonCore -lvtkCommonDataModel -lvtkFiltersCore -lvtkFiltersGeneral
+convert_SOURCES   = $(convertSources)
 
 
 #ifeq ($(VTK_INCLUDE),)

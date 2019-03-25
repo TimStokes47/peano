@@ -1,13 +1,4 @@
-/*
- * PeanoPatch.cpp
- *
- *  Created on: 16 Oct 2017
- *      Author: dan
- */
-
 #include "PeanoPatch.h"
-#include "PeanoVariable.h"
-#include "PeanoPatchData.h"
 
 #include <string>
 #include <iostream>
@@ -16,11 +7,9 @@
 #include <vector>
 #include <limits>
 
-#include "boost/lexical_cast.hpp"
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/algorithm/string/split.hpp"
-#include "boost/algorithm/string/classification.hpp"
-#include "boost/algorithm/string/trim.hpp"
+#include "PeanoPatchData.h"
+#include "PeanoVariable.h"
+
 
 PeanoPatch::PeanoPatch() {
 	offsets = nullptr;
@@ -51,6 +40,10 @@ PeanoPatch::PeanoPatch(std::vector<std::string> &text, int dimensions, int* patc
 	for(uint i = 0; i < text.size(); i++) {
 		//std::cout << "Patch line " << i << "\n";
 		std::string line = text[i];
+
+		// @todo
+
+/*
 		boost::trim(line);
 
 		if(boost::starts_with(line, "offset")) {
@@ -98,6 +91,7 @@ PeanoPatch::PeanoPatch(std::vector<std::string> &text, int dimensions, int* patc
 				data->values[j] = std::stod(splitValues[j]);
 			}
 		}
+*/
 	}
 }
 

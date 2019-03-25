@@ -28,12 +28,13 @@ namespace tarch {
  * meta data file. The file format does not really distinguish them, as any file
  * can include another one. But the meta file is the file you specify when you
  * create the data plotter. The idea here is that you call this create once with
- * a true (the old file then is deleted) and from hereon with false, so further
+ * a true (the old file then is deleted) and from here with false, so further
  * snapshots are appended.
  *
  *
  * <h2> Time-dependent data </h2>
  *
+ * <h2> Parallel (MPI) runs </h2>
  *
  */
 class tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter: public tarch::plotter::griddata::Writer {

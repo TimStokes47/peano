@@ -8,10 +8,9 @@
 #ifndef PEANODATASET_H_
 #define PEANODATASET_H_
 
-#include "PeanoPatch.h"
-#include "PeanoReader.h"
-
 #include <string>
+#include "PeanoPatch.h"
+#include "input/PeanoTextPatchFileReader.h"
 
 
 /**
@@ -28,10 +27,12 @@ class PeanoDataSet {
 	/**
 	 * @return Set of readers tied to the full resolution model
 	 */
+/*
 	std::vector<PeanoReader*>* createReadersFull();
 
 	std::vector<PeanoReader*>* createReadersResolution(int res);
-	std::string getDirectory();
+*/
+//	std::string getDirectory();
 	std::vector<std::string>* getFullData();
 	std::vector<std::vector<int>>* getResolutions();
 	std::string getResolution(int index);
@@ -41,7 +42,7 @@ class PeanoDataSet {
 	std::string getSimpleName();
 
 
-	PeanoPatch* createSubSample(int x, int y, int z, bool saveToFile);
+//	PeanoPatch* createSubSample(int x, int y, int z, bool saveToFile);
 private:
 	std::vector<std::string>* fullData;
 	std::vector<std::string>* resolutionData;
