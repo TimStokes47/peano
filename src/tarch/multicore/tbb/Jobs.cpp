@@ -400,7 +400,7 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int 
     while (gotOne) {
       result = true;
 
-      if (priorities<=0 or prefetchedTask->getPriority()==priorities) {
+      if (priorities<=0 or myTask->getPriority()==priorities) {
         bool reschedule = myTask->run();
         if (reschedule) {
           rescheduledJobs.push_back( myTask );
