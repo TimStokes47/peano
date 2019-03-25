@@ -26,6 +26,7 @@ def getNumberOfRanks(filename):
   except Exception as inst:
     print "failed to read " + filename
     print inst
+    raise
   return 0
 
 
@@ -43,6 +44,7 @@ def getNumberOfThreads(filename):
   except Exception as inst:
     print "failed to read " + filename
     print inst
+    raise
   return 0
 
 
@@ -59,6 +61,7 @@ def getDimensions(filename):
   except Exception as inst:
     print "failed to read " + filename
     print inst
+    raise
   return 0
   
 
@@ -88,7 +91,8 @@ def getLogicalTopology(numberOfRanks,dim,inputFileName,plotDirectoryName):
     for line in inputFile:
       if "start node for subdomain" in line:
         print ".",
-        child = int(line.split( "rank:" )[1].split( " " )[0])
+        #print(line.split( "rank:" )[1].split( " " )[0].replace(",",""))
+        child = int(line.split( "rank:" )[1].split( " " )[0].replace(",",""))
         parent = int(line.split( "with master" )[1])
         node = line.split( ",rank:" )[0].split(" ")[-1]
         parents[child]=parent
@@ -106,6 +110,7 @@ def getLogicalTopology(numberOfRanks,dim,inputFileName,plotDirectoryName):
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
+    raise
   return (parents,levels,offset,volume,nodes)
 
 def getConcurrency(rank,inputFileName):
@@ -166,6 +171,7 @@ def getConcurrency(rank,inputFileName):
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
+    raise
 
   return (timeStamps,measuredConcurrencyLevels,obtainedConcurrencyLevels,maxConcurrencyLevels,
     maxPotentialConcurrencyLevels,numberOfBackgroundTasks,timeAveragedConcurrencyLevels,
@@ -197,6 +203,7 @@ def getBeginIterations(inputFileName,isParallelCode):
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
+    raise
 
   return beginIterations
     
@@ -258,6 +265,7 @@ def getCellsPerRank(inputFileName,numberOfRanks):
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
+    raise
 
   return (
     numberOfInnerLeafCells,
@@ -296,12 +304,13 @@ def getMemoryUsagePerRank(inputFileName,numberOfRanks):
       if ("memoryUsage" in line):
         rank  = 0
         if numberOfRanks>0:
-          rank  = int(line.split( "rank:" )[-1].split( " " )[0])
+          #print(line.split( "rank:" )[1].split( " " )[0].replace(",",""))
+          child = int(line.split( "rank:" )[1].split( " " )[0].replace(",",""))
         print ".",
         
         # Parse time
         # Example: " 4.08824      [cn6001.hpc.dur.ac.uk]"
-        time = line.split("      ")[0].strip()
+        time = line.strip().split(" ")[0]
         memoryUsage[rank][0].append(float(time))
         
         # Parse memory usage
@@ -312,5 +321,6 @@ def getMemoryUsagePerRank(inputFileName,numberOfRanks):
   except Exception as inst:
     print "failed to read " + inputFileName
     print inst
+    raise
   
   return memoryUsage
