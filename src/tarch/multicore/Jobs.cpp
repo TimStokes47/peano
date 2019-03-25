@@ -145,17 +145,17 @@ int tarch::multicore::jobs::getNumberOfPendingJobs() {
 
 
 
-bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
+bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int priorities) {
   return false;
 }
 
 
-bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs) {
+bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs, int priorities) {
   return false;
 }
 
 
-bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs ) {
+bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int priorities ) {
   return false;
 }
 
