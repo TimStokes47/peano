@@ -78,18 +78,27 @@ namespace tarch {
          *
          * @see BackgroundJobConsumerTask
          */
-        extern ::tbb::atomic<int>            _numberOfRunningJobConsumerTasks;
+        extern ::tbb::atomic<int>          _numberOfRunningJobConsumerTasks;
 
         extern int                         _minimalNumberOfJobsPerConsumerRun;
         extern int                         _maximumNumberOfJobsPerConsumerRun;
         extern TaskProcessingScheme        _taskProcessingScheme;
 
         constexpr int NumberOfJobQueues = 32;
+
+        // @todo
         struct JobQueue {
           ::tbb::concurrent_priority_queue<
 		    tarch::multicore::jobs::Job*,
 			tarch::multicore::jobs::CompareJobPointers
           >   jobs;
+
+/*
+        struct JobQueue {
+            ::tbb::concurrent_queue<
+  		    tarch::multicore::jobs::Job*
+            >   jobs;
+*/
 
           /**
            * This is not the real value but an estimate. Whenever a new
@@ -235,12 +244,12 @@ namespace tarch {
 
           public:
             #if TBB_USE_THREADING_TOOLS>=1
-            static tbb::atomic<int>                    _numberOfConsumerRuns;
-            static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasks;
-            static tbb::concurrent_hash_map<int,int>   _histogramOfRunningConsumers;
-            static tbb::atomic<int>                    _numberOfHighBandwidthTasks;
-            static tbb::atomic<int>                    _numberOfBackgroundTasks;
-            static tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasksProcessed;
+            static ::tbb::atomic<int>                    _numberOfConsumerRuns;
+            static ::tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasks;
+            static ::tbb::concurrent_hash_map<int,int>   _histogramOfRunningConsumers;
+            static ::tbb::atomic<int>                    _numberOfHighBandwidthTasks;
+            static ::tbb::atomic<int>                    _numberOfBackgroundTasks;
+            static ::tbb::concurrent_hash_map<int,int>   _histogramOfBackgroundTasksProcessed;
             #endif
 
             static ::tbb::task_group_context  backgroundTaskContext;

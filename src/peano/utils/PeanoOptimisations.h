@@ -195,7 +195,6 @@
 #endif
 
 /**
- * We found that this feature is extremely sensitive to IprobeEveryKIterations.
  * See remarks and documentation in SendReceiveBufferPool::BackgroundThread::operator().
  */
 #if defined(MultipleThreadsMayTriggerMPICalls) && !defined(noMPIUsesItsOwnThread) && !defined(MPIUsesItsOwnThread)

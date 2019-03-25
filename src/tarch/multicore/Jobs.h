@@ -451,8 +451,15 @@ namespace tarch {
 
        /**
         * Handle only jobs of one job class.
+        *
+        * @param jobClass        Class job
+        * @param maxNumberOfJobs How many jobs to process at most. By default,
+        *          the routine processes all jobs in the queue
+        * @param priorities      Filter out which jobs to process. If you pass
+        *                        something negative, all jobs of the class are
+        *                        done, i.e. I ignore priorities.
         */
-       bool processJobs(int jobClass, int maxNumberOfJobs = std::numeric_limits<int>::max() );
+       bool processJobs(int jobClass, int maxNumberOfJobs = std::numeric_limits<int>::max(), int priorities = -1 );
 
        /**
         * This operation is often used when a system is waiting for some jobs
@@ -467,9 +474,11 @@ namespace tarch {
         * wait within a while loop, add a counter. It is initialised with 1.
         * After each while iteration (you still wait for jobs), you increase
         * the counter. Let the counter serve as function argument.
+        *
+        * @see processJobs
         */
-       bool processBackgroundJobs(int maxNumberOfJobs = 1);
-       bool processHighBandwidthJobs(int maxNumberOfJobs = 1);
+       bool processBackgroundJobs(int maxNumberOfJobs = 1, int priorities = -1);
+       bool processHighBandwidthJobs(int maxNumberOfJobs = 1, int priorities = -1);
     }
   }
 }
