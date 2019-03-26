@@ -21,8 +21,7 @@
 
 
 class PeanoPatch {
-public:
-	PeanoPatch(std::vector<std::string> &text, int dimensions, int* patchSize, std::vector<PeanoVariable*> &variables) ;
+  public:
 	PeanoPatch();
 	virtual ~PeanoPatch();
 	int dimensions;//number of dimensions, probably 3
@@ -50,7 +49,7 @@ public:
 	double* getPositionCellCenter(int x, int y, int z);
 	int getIndexCellData(int x, int y, int z);
 	int getIndexVertexData(int x, int y, int z);
-	bool saveToFile(std::string filename);
+	bool saveToTextFile(std::string filename);
 };
 
 #endif /* PEANOPATCH_H_ */

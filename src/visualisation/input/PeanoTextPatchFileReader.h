@@ -10,10 +10,13 @@
 #include "PeanoVariable.h"
 
 
+#include "tarch/logging/Log.h"
+
+
 namespace visualisation {
- namespace input {
-  class PeanoTextPatchFileReader;
- }
+  namespace input {
+    class PeanoTextPatchFileReader;
+  }
 }
 
 
@@ -29,6 +32,14 @@ namespace visualisation {
  * @author Dan Tuthill-Jones, Tobias Weinzierl
  */
 class visualisation::input::PeanoTextPatchFileReader {
+  private:
+	static tarch::logging::Log _log;
+
+	const std::string  _file;
+
+	void parsePatch( const std::vector<std::string>& patchDescription );
+
+	std::string removeHyphens( const std::string& value );
   public:
 	/**
 	 * Read in one file.
@@ -38,8 +49,11 @@ class visualisation::input::PeanoTextPatchFileReader {
 	 * - Load the whole files into a vector called lines, i.e. we load line by line.
 	 * -
 	 */
-	PeanoTextPatchFileReader(const std::string &file);
+	PeanoTextPatchFileReader();
 	virtual ~PeanoTextPatchFileReader();
+
+	void parse(const std::string &file);
+	bool isEmpty();
 
 	int dimensions = -1;
 	int cells = -1;

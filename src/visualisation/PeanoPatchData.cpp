@@ -6,10 +6,10 @@
 
 
 PeanoPatchData::PeanoPatchData(PeanoVariable* variable) {
-	structure = variable;
-	values = new double[structure->totalValues];
-
+  structure = variable;
+  values = new double[structure->totalValues];
 }
+
 
 /*
  * Copies data from the pointer to this patch data

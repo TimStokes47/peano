@@ -36,6 +36,10 @@
 #include "PeanoVariable.h"
 
 
+
+tarch::logging::Log  PeanoConverter::_log( "PeanoConverter" );
+
+
 #ifdef UseVTK
 vtkSmartPointer<vtkImageData> PeanoConverter::toImageData(PeanoPatch *patch) {
 	vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
@@ -185,20 +189,26 @@ int PeanoConverter::xyzToIndex(int x, int y, int z, int dimensions[3]) {
 
 std::string PeanoConverter::combineAndWriteToFile(const std::vector<PeanoPatch*>& patches, const std::string& outputFileWithoutExtention) {
   #ifdef UseVTK
-  vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+  if (!patches.empty()) {
+    vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
 
-  std::string outFile = outputFileWithoutExtention + "." + writer->GetDefaultFileExtension();
+    std::string outFile = outputFileWithoutExtention + "." + writer->GetDefaultFileExtension();
 
-  vtkSmartPointer<vtkUnstructuredGrid> outputGrid = PeanoConverter::combine( patches );
+    vtkSmartPointer<vtkUnstructuredGrid> outputGrid = PeanoConverter::combine( patches );
 
-  writer->SetFileName(outFile.c_str());
-  writer->SetCompressorTypeToZLib();
-  writer->AddInputDataObject( outputGrid );
-  writer->Write();
-  return outFile;
+    writer->SetFileName(outFile.c_str());
+    writer->SetCompressorTypeToZLib();
+    writer->AddInputDataObject( outputGrid );
+    writer->Write();
+    return outFile;
+  }
+  else {
+    logError( "combineAndWriteToFile(...)", "Output is empty" );
+    return "";
+  }
   #else
-  std::cerr << "Error: Can't build VTK files as code is setup without VTK (rerun ./configure with --with-vtk)" << std::endl;
-  return "error";
+  logError( "combineAndWriteToFile(...)", "Can't build VTK files as code is setup without VTK (rerun ./configure with --with-vtk)" );
+  return "";
   #endif
 }
 

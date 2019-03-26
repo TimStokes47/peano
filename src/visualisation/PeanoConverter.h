@@ -31,6 +31,9 @@ class PeanoConverter {
 
 //	static PeanoPatch* subSample(std::vector<PeanoReader*> &readers, int x, int y, int z);
   private:
+	static tarch::logging::Log  _log;
+
+
     #ifdef UseVTK
 	/**
 	 * Used if the patch doesn't have any mapping and thus represents a regular grid.

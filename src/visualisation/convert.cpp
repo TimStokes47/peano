@@ -22,10 +22,15 @@
 
 
 void convertFile( std::string filename, const std::string& outputDirectory ) {
-  std::string outFile = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
+  std::string truncatedFile = filename;
+  if ( truncatedFile.find_last_of(".")!=std::string::npos ) {
+    truncatedFile.erase(truncatedFile.find_last_of(".") );
+  }
+  std::string outFile = outputDirectory + "/" + truncatedFile;
   std::cout << "writing file " << outFile << std::endl;
 
-  visualisation::input::PeanoTextPatchFileReader reader( filename );
+  visualisation::input::PeanoTextPatchFileReader reader;
+  reader.parse( filename );
   PeanoConverter::combineAndWriteToFile( reader.patches, outFile );
 }
 
