@@ -53,8 +53,13 @@ AC_CONFIG_MACRO_DIRS([m4])
 # Checks for programs.
 #
 AC_PROG_CXX
-CXXFLAGS="$CXXFLAGS -std=c++11"
 
+
+#
+# Peano variables
+#
+PEANO_CXXFLAGS="-std=c++11"
+PEANO_LDFLAGS=""
 
 # Think I do not need a C compiler
 #AC_PROG_CC
@@ -131,8 +136,7 @@ AC_ARG_WITH(vtk,
 
 if test "$vtk" != false; then
   AC_DEFINE([UseVTK], [1], [UseVTK])
-  VTK_CXXFLAGS=-I$vtk
-  AC_SUBST(VTK_CXXFLAGS)
+  PEANO_CXXFLAGS+=" -I${vtk}"
 fi
 
 
@@ -156,16 +160,22 @@ if test "$with_hdf5" = "yes"; then
   fi
   if test "$with_hdf5" = "yes"; then
     AC_DEFINE([UseHDF5], [1], [UseHDF5])
-    CC="$HDF5_CC"
-    #CC="$HDF5_CC"
-    #CC="$HDF5_CC"
-    #HDF5_{C,CPP,LD}FLAGS 
+    PEANO_CXXFLAGS+=" ${HDF5_CPPFLAGS}"
+    PEANO_LDFLAGS+=" ${HDF5_LDFLAGS} ${HDF5_LIBS}"
   else
     AC_MSG_ERROR([Unable to find HDF5, we need HDF5.])
   fi
 fi 
 
-  
+
+#
+# Export my Peano-specific flags
+#
+AC_SUBST([PEANO_CXXFLAGS])
+AC_SUBST([PEANO_LDFLAGS])
+
+
+
 #
 # Kick out makefiles. I'm not sure but it seems that you have to add the directories to 
 # Makefile.am in the src subdirectories, too

@@ -13,13 +13,14 @@ SUBDIRS = . examples/grid examples/integerdiffusionthroughfaces visualisation
 lib_LTLIBRARIES =  libTarch.la libTarch_debug.la libPeano4Core2d.la libPeano4Core2d_debug.la libPeano4Core3d.la libPeano4Core3d_debug.la
 
 
-libTarch_debug_la_CXXFLAGS = -DPeanoDebug=1 -g3
+libTarch_la_CXXFLAGS = -DPeanoDebug=1 -g3 $(PEANO_CXXFLAGS)
+libTarch_debug_la_CXXFLAGS = -DPeanoDebug=1 -g3 $(PEANO_CXXFLAGS)
 
 
-libPeano4Core2d_la_CXXFLAGS        = -DDimensions=2
-libPeano4Core2d_debug_la_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=1 -g3
-libPeano4Core3d_la_CXXFLAGS        = -DDimensions=3
-libPeano4Core3d_debug_la_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=1 -g3
+libPeano4Core2d_la_CXXFLAGS        = -DDimensions=2 $(PEANO_CXXFLAGS)
+libPeano4Core2d_debug_la_CXXFLAGS  = -DDimensions=2 -DPeanoDebug=1 -g3 $(PEANO_CXXFLAGS)
+libPeano4Core3d_la_CXXFLAGS        = -DDimensions=3 $(PEANO_CXXFLAGS)
+libPeano4Core3d_debug_la_CXXFLAGS  = -DDimensions=3 -DPeanoDebug=1 -g3 $(PEANO_CXXFLAGS)
 
 
 #

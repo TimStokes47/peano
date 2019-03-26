@@ -37,7 +37,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
     logWarning( "PeanoHDF5PatchFileWriter()", "filename should not end with .h5 as routine adds extension automatically. Chosen filename=" << filename );
   }
 
-  #ifdef HDF5
+  #ifdef UseHDF5
   if (append) {
     _file = H5Fopen((filename+".hdf5").c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
   }
@@ -190,7 +190,7 @@ std::string  tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter
 
 
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::~PeanoHDF5PatchFileWriter() {
-  #ifdef HDF5
+  #ifdef UseHDF5
   if (_file>=0) {
     herr_t   status = H5Fclose(_file);
 
@@ -286,7 +286,7 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
 }
 
 
-#ifdef HDF5
+#ifdef UseHDF5
 hid_t  tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createDataTableProperties(int lineWidth, int rowCount) const {
   const int MinNumberOfRowsForCompressionToPayOff = 64;
   if (_compress && rowCount>MinNumberOfRowsForCompressionToPayOff) {
@@ -315,7 +315,7 @@ hid_t  tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::crea
 bool tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::writeToFile( const std::string& filenamePrefix ) {
   assertion( _isOpen );
 
-  #ifdef HDF5
+  #ifdef UseHDF5
   logDebug( "writeToFile(string)", "write dataset identifier" );
 
   hid_t metaDataAttribute = H5Screate(H5S_SCALAR);

@@ -5,12 +5,12 @@
 
 
 #include "PeanoPatchFileWriter.h"
-
+#include "../config.h"
 
 #include <vector>
 
 
-#ifdef HDF5
+#ifdef UseHDF5
 #include "hdf5.h"
 #endif
 
@@ -43,7 +43,7 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
     int _vertexCounter;
     int _cellCounter;
 
-    #ifdef HDF5
+    #ifdef UseHDF5
     hid_t       _file;
 
     hid_t  createDataTableProperties(int lineWidth, int rowCount) const;

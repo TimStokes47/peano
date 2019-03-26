@@ -12,7 +12,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataW
   _writer(writer),
   _identifier(identifier),
   _numberOfUnknowns(numberOfUnknowns) {
-  #ifdef HDF5
+  #ifdef UseHDF5
   logDebug( "VertexDataWriter(...)", "create numberofunknowns entry" );
 
   /**
@@ -34,7 +34,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataW
   #endif
 
   if (!metaData.empty()) {
-    #ifdef HDF5
+    #ifdef UseHDF5
     hid_t metaDataAttribute = H5Screate(H5S_SCALAR);
     hid_t metaDataType      = H5Tcopy(H5T_C_S1);
 
@@ -59,7 +59,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataW
   }
 
   if (mapping!=nullptr) {
-    #ifdef HDF5
+    #ifdef UseHDF5
     //
     // Create the data space with unlimited dimensions.
     //
@@ -161,7 +161,7 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::Vertex
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter::close() {
   assignRemainingVerticesDefaultValues();
 
-  #ifdef HDF5
+  #ifdef UseHDF5
   logDebug( "close()", "create data table of " << _identifier );
 
   const int lineLenght = std::pow(_writer._numberOfCellsPerAxis+1,_writer._dimensions);

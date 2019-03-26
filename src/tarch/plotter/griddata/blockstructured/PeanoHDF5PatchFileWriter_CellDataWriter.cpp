@@ -12,7 +12,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
   _writer(writer),
   _identifier(identifier),
   _numberOfUnknowns(numberOfUnknowns) {
-  #ifdef HDF5
+  #ifdef UseHDF5
   /**
    * Create scalar attribute.
    */
@@ -32,7 +32,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
   #endif
 
   if (!metaData.empty()) {
-    #ifdef HDF5
+    #ifdef UseHDF5
     hid_t metaDataAttribute = H5Screate(H5S_SCALAR);
     hid_t metaDataType      = H5Tcopy(H5T_C_S1);
 
@@ -57,7 +57,7 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWri
   }
 
   if (mapping!=nullptr) {
-    #ifdef HDF5
+    #ifdef UseHDF5
     //
     // Create the data space with unlimited dimensions.
     //
@@ -159,7 +159,7 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDa
 void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter::close() {
   assignRemainingCellsDefaultValues();
 
-  #ifdef HDF5
+  #ifdef UseHDF5
   const int lineLenght = std::pow(_writer._numberOfCellsPerAxis,_writer._dimensions);
 
   assertion6(
