@@ -343,13 +343,13 @@ void tarch::multicore::jobs::spawn(std::function<bool()>& job, JobType jobType, 
 }
 
 
-bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs) {
-  return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs);
+bool tarch::multicore::jobs::processBackgroundJobs(int maxNumberOfJobs, int priorities) {
+  return processJobs(internal::BackgroundTasksJobClassNumber, maxNumberOfJobs, priorities);
 }
 
 
-bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs ) {
-  return processJobs(internal::HighBandwidthTasksJobClassNumber, maxNumberOfJobs);
+bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs, int priorities ) {
+  return processJobs(internal::HighBandwidthTasksJobClassNumber, maxNumberOfJobs, priorities);
 }
 
 
@@ -361,7 +361,7 @@ bool tarch::multicore::jobs::processHighBandwidthJobs(int maxNumberOfJobs ) {
  * by the background jobs (if processJobs() is called in a while loop) and
  * should actually use further tasks instead.
  */
-bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
+bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs, int priorities) {
   if (internal::getJobQueue(jobClass).jobs.empty() ) {
     return false;
   }
@@ -388,18 +388,23 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
     while (gotOne) {
       result = true;
 
-      if (prefetchedOne) {
-    	prefetchedTask->prefetchData();
-      }
+      if (priorities<=0 or myTask->getPriority()==priorities) {
+        if (prefetchedOne) {
+      	  prefetchedTask->prefetchData();
+        }
 
-      bool reschedule = myTask->run();
-      if (reschedule) {
-    	rescheduledJobs.push_back( myTask );
+        bool reschedule = myTask->run();
+        if (reschedule) {
+          rescheduledJobs.push_back( myTask );
+        }
+        else {
+          delete myTask;
+        }
+        maxNumberOfJobs--;
       }
       else {
-        delete myTask;
+        rescheduledJobs.push_back( myTask );
       }
-      maxNumberOfJobs--;
 
       if ( maxNumberOfJobs>1 and prefetchedOne ) {
         gotOne        = prefetchedOne;
@@ -420,14 +425,19 @@ bool tarch::multicore::jobs::processJobs(int jobClass, int maxNumberOfJobs) {
     while (gotOne) {
       result = true;
 
-      bool reschedule = myTask->run();
-      if (reschedule) {
-      	rescheduledJobs.push_back( myTask );
+      if (priorities<=0 or myTask->getPriority()==priorities) {
+        bool reschedule = myTask->run();
+        if (reschedule) {
+          rescheduledJobs.push_back( myTask );
+        }
+        else {
+          delete myTask;
+        }
+        maxNumberOfJobs--;
       }
       else {
-        delete myTask;
+        rescheduledJobs.push_back( myTask );
       }
-      maxNumberOfJobs--;
 
       if ( maxNumberOfJobs>0 ) {
         gotOne = internal::getJobQueue(jobClass).jobs.try_pop(myTask);

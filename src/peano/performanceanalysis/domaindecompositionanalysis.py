@@ -18,8 +18,6 @@ import os
 ########################################################################
 # START OF THE PROGRAM
 ########################################################################
-# For the meaning of the command line arguments, see the documen\tation
-# of the function 'plot_multithreading_adapter_scaling' above.
 help = '''
 Creates a brief overview of the domain decomposition
 \n\n
@@ -32,7 +30,6 @@ parser.add_argument('-file',required=True,help="Input file")
 parser.add_argument('-domainoffset',nargs="+",required=True,help="Offset of bounding box.")
 parser.add_argument('-domainsize',nargs="+",required=True,help="Size of domain's bounding box.")
 args   = parser.parse_args();
-
 
 scriptLocation = os.path.realpath(__file__)[:os.path.realpath(__file__).rfind("/")]
 
@@ -71,7 +68,7 @@ print "rank with maximum work (geometric), maximum work (geometric) = %i, %f" % 
 print "rank with minimum work (geometric), minimum work (geometric) = %i, %f" % (rankWithMinWork, minWork)
 print "(geometric) load imbalance = %f" % loadImbalance
 
-tree = performanceanalysis_analysis.buildTree(parents,offset,volume)
+tree = performanceanalysis_analysis.buildTree(parents,offset,volume,levels)
 performanceanalysis_global_plotter.plotHeatMap(performanceanalysis_output.getOutputDirectory(args.file)+"/heatmap",tree,max(levels)-1,work,dim)
 
 performanceanalysis_global_plotter.plotLogicalTopology(numberOfRanks,performanceanalysis_output.getOutputDirectory(args.file)+"/topology",parents,levels,offset,volume);
@@ -101,7 +98,7 @@ params = {"_IMAGE_DIRECTORY_" : performanceanalysis_output.getOutputDirectory(ar
 
 outputDir = performanceanalysis_output.getOutputDirectory(args.file)
 value = ""
-for l in range(1,max(levels)):
+for l in range(2,max(levels)+1):
   value += "\n<a href=\"%s/heatmap-level-%i.pdf\"><img src=\"%s/heatmap-level-%i.png\" /></a>" % (outputDir,l,outputDir,l)
 params["_HEAT_MAPS_PER_LEVEL_"] = value
 

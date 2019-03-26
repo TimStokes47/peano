@@ -1,6 +1,7 @@
 class TreeNode:
-  def __init__(self,rank,dim):
-      self.rank     = rank
+  def __init__(self,rank,dim,level):
+      self.rank = rank
+      self.level = level
       if dim==2:
         self.children = [[[None for x in range(0,3)] for y in range(0,3)] for z in range(0,1)] 
       elif dim==3:
@@ -9,10 +10,10 @@ class TreeNode:
   def putChild(self,pos,node):
       self.children[pos[2]][pos[1]][pos[0]] = node
 
-  def getChild(self,ix,iy,iz):
-      return self.children[iz][iy][ix] 
+  def getChild(self,pos):
+      return self.children[pos[2]][pos[1]][pos[0]]
 
-def buildTreeRecursively(node,parents,offset,volume):
+def buildTreeRecursively(node,parents,offset,volume,level):
   dim = len(volume[0]) 
 
   activeRanks = 1
@@ -21,14 +22,42 @@ def buildTreeRecursively(node,parents,offset,volume):
   for rank in childrenRanks:
     childOffset  = offset[rank] 
     childSize    = volume[rank]
+    childLevel   = level[rank]
     parentOffset = offset[node.rank]
+    parentSize   = volume[node.rank]
+    parentLevel  = level[node.rank]
 
+    levelDelta = childLevel - parentLevel
+    
+    current       = node
+    currentOffset = list(parentOffset) 
+    currentSize   = list(parentSize)
+    # insert dummy entries with child.rank=node.rank coarser levels
+    for dl in range(1,levelDelta): # bound is correct
+      pos = [0,0,0]
+      for i in range(0,dim):
+        pos[i] = int(round((childOffset[i] - currentOffset[i])/childSize[i]))/3**(levelDelta-dl);
+      child = current.getChild(pos)
+      assert child is None or child.rank is node.rank
+      if child is None:
+        #print("level=%d, pos=%s: rank=%d" % (parentLevel+dl,str(pos),node.rank))
+        child = TreeNode(node.rank,dim,parentLevel+dl)
+        current.putChild(pos,child)
+      # prepare next iteration
+      current = child
+      for i in range(0,dim):
+        currentOffset[i] = currentOffset[i] + pos[i] * currentSize[i]/3.0
+        currentSize  [i] = currentSize[i]/3.0 
+
+    #insert the actual child node on finest level
     pos = [0,0,0]
     for i in range(0,dim):
-     pos[i] = int(round((childOffset[i] - parentOffset[i])/childSize[i]));
-    child = TreeNode(rank,dim)
-    node.putChild(pos,child)
-    activeRanks += buildTreeRecursively(child,parents,offset,volume)
+      pos[i] = int(round((childOffset[i] - currentOffset[i])/childSize[i]));
+    #print("level=%d, pos=%s: rank=%d" % (childLevel,str(pos),rank))
+    child = TreeNode(rank,dim,childLevel)
+    current.putChild(pos,child)
+    activeRanks += buildTreeRecursively(child,parents,offset,volume,level)
+
   return activeRanks
 
 def getChildrenRanks(rank,parents):
@@ -38,7 +67,7 @@ def getChildrenRanks(rank,parents):
         children.append(i)
   return children
 
-def buildTree(parents,offset,volume):
+def buildTree(parents,offset,volume,level):
   dim = len(volume[0])
   
   firstMaster = -1
@@ -48,8 +77,8 @@ def buildTree(parents,offset,volume):
        break
 
   if len(parents)>1:
-    root = TreeNode(firstMaster,dim)
-    activeRanks = buildTreeRecursively(root,parents,offset,volume)
+    root = TreeNode(firstMaster,dim,level[firstMaster])
+    activeRanks = buildTreeRecursively(root,parents,offset,volume,level)
     return root
   else:
     return TreeNode(0,dim)
