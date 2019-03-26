@@ -13,7 +13,7 @@ convertSources = \
   input/PeanoTextPatchFileReader.cpp \
   PeanoVariable.cpp
 
-convert_CXXFLAGS  = -LALA1 $(VTKCXXFLAGS) -I$(vtk) -LALA2
+convert_CXXFLAGS  = $(VTK_CXXFLAGS)
 convert_LDFLAGS   = -lstdc++fs -lvtkIOXML -lvtkCommonExecutionModel -lvtkCommonCore -lvtkCommonDataModel -lvtkFiltersCore -lvtkFiltersGeneral
 convert_SOURCES   = $(convertSources)
 

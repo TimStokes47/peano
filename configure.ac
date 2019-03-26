@@ -131,7 +131,8 @@ AC_ARG_WITH(vtk,
 
 if test "$vtk" != false; then
   AC_DEFINE([UseVTK], [1], [UseVTK])
-  VTKCXXFLAGS=-ABC$vtk
+  VTK_CXXFLAGS=-I$vtk
+  AC_SUBST(VTK_CXXFLAGS)
 fi
 
 
