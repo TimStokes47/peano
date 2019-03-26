@@ -139,25 +139,31 @@ fi
 #
 # HDF5
 #
-#AC_ARG_WITH(hdf5,
-#  AC_HELP_STRING([--with-hdf5], [enable HDF5 support [default=no, hdf5 installation path (such as /usr/include/vtk-8.1)]]),
-#  [ AC_MSG_CHECKING(for vtk)
-#    case "${withval}" in
-#      no)    AC_MSG_RESULT(no);                       vtk=false ;;
-#      *)     AC_MSG_RESULT(use vtk path ${withval});  vtk=true  ;;
-#    esac ],
-#  [ AC_MSG_CHECKING(for vtk); AC_MSG_RESULT(no); vtk=false ])
-  
-  
-#  /usr/include/hdf5.h
-
-#if test "$vtk" != false; then
-#  CXX=$vtk
-#  AC_DEFINE([Vtk], [1], [Vtk])
-#  VTK_CXXFLAGS = $vtk
-#  bin_PROGRAMS += PeanoToVTK
-#fi
-
+AC_ARG_WITH(hdf5,
+  AC_HELP_STRING([--with-hdf5], [enable HDF5 support [default=no, yes]]),
+  [ AC_MSG_CHECKING(for hdf5)
+    case "${withval}" in
+      no)    AC_MSG_RESULT(no);                       hdf5=false ;;
+      *)     AC_MSG_RESULT(use vtk path ${withval});  hdf5=true  ;;
+    esac ],
+  [ AC_MSG_CHECKING(for hdf5); AC_MSG_RESULT(no); hdf5=false ])
+ 
+if test "$with_hdf5" = "yes"; then
+  if test "$mpi" != false; then
+    AX_LIB_HDF5([parallel])
+  else
+    AX_LIB_HDF5([serial])
+  fi
+  if test "$with_hdf5" = "yes"; then
+    AC_DEFINE([UseHDF5], [1], [UseHDF5])
+    CC="$HDF5_CC"
+    #CC="$HDF5_CC"
+    #CC="$HDF5_CC"
+    #HDF5_{C,CPP,LD}FLAGS 
+  else
+    AC_MSG_ERROR([Unable to find HDF5, we need HDF5.])
+  fi
+fi 
 
   
 #
