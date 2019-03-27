@@ -171,6 +171,7 @@ bool tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::writeT
   if (tarch::mpi::Rank::getInstance().isGlobalMaster()) {
     _metaFileOut << std::endl << "begin dataset" << std::endl;
 
+    #ifdef Parallel
     for (int i=0; i<tarch::mpi::Rank::getInstance().getNumberOfRanks(); i++) {
       std::ostringstream referencedFilename;
       if (filenamePrefix.find("/")!=std::string::npos) {
@@ -183,6 +184,17 @@ bool tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::writeT
                          << ".peano-patch-file";
       _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
     }
+    #else
+    std::ostringstream referencedFilename;
+    if (filenamePrefix.find("/")!=std::string::npos) {
+      referencedFilename << filenamePrefix.substr( filenamePrefix.rfind("/")+1 );
+    }
+    else {
+      referencedFilename << filenamePrefix;
+    }
+    referencedFilename << ".peano-patch-file";
+    _metaFileOut << "  include \"" << referencedFilename.str() << "\"" << std::endl;
+    #endif
 
     _metaFileOut << "end dataset" << std::endl;
   }

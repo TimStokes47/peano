@@ -84,7 +84,7 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
       std::string outFile = dataFileNamePrefix + "-" + std::to_string(i) + "-" + std::to_string(timeStepCounter);
 
       #pragma omp critical
-      std::cout << "writing file " << outFile << std::endl;
+      logInfo( "convertFile(...)", "writing file " << outFile );
 
       if (!p->patches.empty()) {
         std::string filename =  PeanoConverter::combineAndWriteToFile( p->patches, outFile );

@@ -19,7 +19,7 @@ visualisation::input::PeanoTextPatchFileReader::PeanoTextPatchFileReader() {
 void visualisation::input::PeanoTextPatchFileReader::parse(const std::string &file) {
   patchSize = new int[3];
 
-  logInfo( "PeanoTextPatchFileReader(string)", "Reading file " << file );
+  logInfo( "PeanoTextPatchFileReader(string)", "reading file " << file );
 
   std::ifstream ifs(file);
   std::vector<std::string> lines;
@@ -29,7 +29,7 @@ void visualisation::input::PeanoTextPatchFileReader::parse(const std::string &fi
   ifs.close();
 
   if (lines.empty()) {
-	logError( "PeanoTextPatchFileReader(string)", "File is empty (or does not exist)" );
+	logError( "PeanoTextPatchFileReader(string)", "file is empty (or does not exist)" );
   }
 
   for(uint i = 0; i < lines.size(); i++) {

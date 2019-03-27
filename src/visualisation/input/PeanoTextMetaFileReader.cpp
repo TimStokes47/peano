@@ -42,7 +42,7 @@ void visualisation::input::PeanoTextMetaFileReader::parseDataset(const std::vect
 	}
 	else if(tokens.size() == 2) {
 	  std::string fileName = tokens[1];
-      dataSet->fullData->push_back(fileName);
+      dataSet->fullData->push_back( Parser::removeHyphens(fileName) );
 	}
   }
 
