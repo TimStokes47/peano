@@ -12,18 +12,21 @@
 #include <vector>
 
 #include "PeanoDataSet.h"
-#include "input/PeanoTextPatchFileReader.h"
+
+namespace visualisation {
+  namespace input {
+    class PeanoTextPatchFileReader;
+    class PeanoTextMetaFileReader;
+  }
+}
+
 
 /**
  * Meta files are files that hold time series or reduced resolution images.
  */
 class PeanoMetaFile {
   public:
-//	PeanoMetaFile();
-	/**
-	 * Open a meta file and parse its content
-	 */
-	PeanoMetaFile(std::string file);
+	PeanoMetaFile();
 	virtual ~PeanoMetaFile();
 
 	std::vector<PeanoDataSet*>* getDataSets();
@@ -31,7 +34,8 @@ class PeanoMetaFile {
 	int numberOfDataSets();
 	void save();
   private:
-	static std::string getDirectory(const std::string &fileName);
+	friend class visualisation::input::PeanoTextMetaFileReader;
+
 	std::string fileName;
 	std::vector<PeanoDataSet*>* dataSets;
 	std::string directory;

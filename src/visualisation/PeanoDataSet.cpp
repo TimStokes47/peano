@@ -14,48 +14,11 @@
 
 #include "PeanoConverter.h"
 
-PeanoDataSet::PeanoDataSet(std::vector<std::string> &lines, std::string directory) {
-	this->directory = directory;
-	fullData = new std::vector<std::string>();
-	resolutionData = new std::vector<std::string>();
-	resolutions = new std::vector<std::vector<int>>();
-
-	for(std::string line: lines) {
-
-		assertion(false);
-
-		//skip the lineif it commented out
-//		if( line.rfine("#",0)==0 ) continue;
-
-		//split the line
-		std::vector<std::string> split;
-//		boost::split(split, line, boost::is_any_of(" "));
-
-		//contains resolution data
-		if(split.size() == 5) {
-			int x = std::stoi(split[1]);
-			int y = std::stoi(split[2]);
-			int z = std::stoi(split[3]);
-
-			std::string fileName = split[4];
-//			boost::erase_all(fileName, "\"");
-
-			std::vector<int> dimensions;
-			dimensions.push_back(x);
-			dimensions.push_back(y);
-			dimensions.push_back(z);
-
-			//std::vector<std::string> resolutionData;
-			//std::vector<std::vector<int>> resolutions;
-
-			resolutions->push_back(dimensions);
-			resolutionData->push_back(fileName);
-		} else if(split.size() == 2) {
-			std::string fileName = split[1];
-//			boost::erase_all(fileName, "\"");
-			fullData->push_back(fileName);
-		}
-	}
+PeanoDataSet::PeanoDataSet(std::string directory) {
+  this->directory = directory;
+  fullData = new std::vector<std::string>();
+  resolutionData = new std::vector<std::string>();
+  resolutions = new std::vector<std::vector<int>>();
 }
 
 
@@ -86,19 +49,22 @@ std::vector<std::string> PeanoDataSet::toString() {
 	return lines;
 }
 
-/*
-std::vector<PeanoReader*>* PeanoDataSet::createReadersFull() {
-  std::vector<PeanoReader*>* readers = new std::vector<PeanoReader*>();
+
+std::vector<visualisation::input::PeanoTextPatchFileReader*>* PeanoDataSet::createReadersForRawData() {
+  std::vector<visualisation::input::PeanoTextPatchFileReader*>* readers = new std::vector<visualisation::input::PeanoTextPatchFileReader*>();
   const int maxSize = fullData->size();
+
+  // @todo change
   #pragma omp parallel for
   for(uint i = 0; i < maxSize; i++) {
-    PeanoReader* newReader = new PeanoReader(directory + fullData->at(i));
+    visualisation::input::PeanoTextPatchFileReader* newReader = new visualisation::input::PeanoTextPatchFileReader();
+    newReader->parse(directory + fullData->at(i));
+    // @todo
     #pragma omp critical
 	readers->push_back(newReader);
   }
   return readers;
 }
-*/
 
 /*
 std::vector<PeanoReader*>* PeanoDataSet::createReadersResolution(int res) {

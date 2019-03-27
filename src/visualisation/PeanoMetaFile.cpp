@@ -13,61 +13,9 @@
 #include <algorithm>
 
 
-/*
- * Default consstructor, exists to prevent errors when an class's
- * instance of a meta file is not created during the constructor
-*/
-//PeanoMetaFile::PeanoMetaFile() {}
+PeanoMetaFile::PeanoMetaFile() {}
 
-PeanoMetaFile::PeanoMetaFile(std::string fileName) {
-	dataSets = new std::vector<PeanoDataSet*>();
-	this->fileName = fileName;
 
-	directory = getDirectory(fileName);
-
-	// read the file in to a vector of strings
-	std::ifstream ifs(fileName);
-	std::vector<std::string> lines;
-	for (std::string line; std::getline(ifs, line); /**/ )
-		lines.push_back(line);
-	ifs.close();
-
-	bool metadataFile = false;
-
-	for(uint i = 0; i < lines.size(); i++) {
-		std::string line = lines[i];
-
-//		line.erase(std::remove_if(line.begin(), line.end(), std::isspace), line.end());
-
-		if (line.rfind("#",0)==0 ) {
-			continue;
-		}
-		else if ( line.rfind("begin dataset",0)==0 ) {
-			metadataFile = true;
-			std::vector<std::string> dataSetLines;
-			for(i++; i < lines.size(); i++) {
-				std::string line2 = lines[i];
-				// @todo
-				//boost::trim(line2);
-				if( line2.rfind("end dataset",0)==0 ) {
-					break;
-				} else {
-					dataSetLines.push_back(line2);
-				}
-			}
-			PeanoDataSet* dataSet = new PeanoDataSet(dataSetLines, directory);
-			dataSets->push_back(dataSet);
-		}
-	}
-
-	//if the input was not a dataset then it was a peano file
-	if(!metadataFile) {
-		std::vector<std::string> dataLine;
-		dataLine.push_back(this->fileName);
-		dataSets->push_back(new PeanoDataSet(dataLine, directory));
-	} else {
-	}
-}
 
 void PeanoMetaFile::save() {
 	std::cout << "\nSaving metadeta file " << fileName << "\n";
@@ -103,21 +51,21 @@ std::vector<PeanoReader*>* PeanoMetaFile::createReadersResolution(int index, int
 }
 */
 
+
 std::vector<PeanoDataSet*>* PeanoMetaFile::getDataSets() {
 	return this->dataSets;
 }
+
 
 PeanoDataSet* PeanoMetaFile::getDataSet(int index) {
 	return this->dataSets->at(index);
 }
 
+
 int PeanoMetaFile::numberOfDataSets() {
 	return dataSets->size();
 }
 
-std::string PeanoMetaFile::getDirectory(const std::string &fileName) {
-	return fileName.substr(0, fileName.find_last_of("/\\") +1);
-}
 
 PeanoMetaFile::~PeanoMetaFile() {
 	for(uint i = 0; i < dataSets->size(); i++) {

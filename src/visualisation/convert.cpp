@@ -16,18 +16,20 @@
 #include "PeanoDataSet.h"
 #include "PeanoMetaFile.h"
 #include "input/PeanoTextPatchFileReader.h"
+#include "input/PeanoTextMetaFileReader.h"
 
 
 #include <experimental/filesystem> // or #include <filesystem>
 
 
 void convertFile( std::string filename, const std::string& outputDirectory ) {
+  static tarch::logging::Log _log( "/" );
   std::string truncatedFile = filename;
   if ( truncatedFile.find_last_of(".")!=std::string::npos ) {
     truncatedFile.erase(truncatedFile.find_last_of(".") );
   }
   std::string outFile = outputDirectory + "/" + truncatedFile;
-  std::cout << "writing file " << outFile << std::endl;
+  logInfo( "convertFile(...)", "writing file " << outFile );
 
   visualisation::input::PeanoTextPatchFileReader reader;
   reader.parse( filename );
@@ -36,14 +38,14 @@ void convertFile( std::string filename, const std::string& outputDirectory ) {
 
 
 void convertTimeSeries( std::string filename, std::string outputDirectory ) {
-  std::cout << "read file " << filename << std::endl;
-  PeanoMetaFile reader( filename );
+  static tarch::logging::Log _log( "/" );
+  logInfo( "convertFile(...)", "read file " << filename );
 
+  visualisation::input::PeanoTextMetaFileReader reader;
+  reader.parse(filename);
 
   std::string outFileNamePrefix  = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
   std::string outFileName        = outFileNamePrefix + "-full-resolution.pvd";
-
-
   std::string dataFileNamePrefix = outFileNamePrefix + "-full-resolution";
   if (
     !std::experimental::filesystem::is_directory(dataFileNamePrefix)
@@ -52,11 +54,11 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
   ) {
 	try {
       std::experimental::filesystem::create_directory(dataFileNamePrefix);
-      std::cout << "created directory " << dataFileNamePrefix << std::endl;
+      logInfo( "convertFile(...)", "created directory " << dataFileNamePrefix );
 	}
 	catch (std::exception exc) {
-      std::cerr << "failed to create directory " << dataFileNamePrefix << std::endl;
-      std::cerr << "error message: " << exc.what() << std::endl;
+      logError( "convertFile(...)", "failed to create directory " << dataFileNamePrefix );
+      logError( "convertFile(...)", "error message: " << exc.what() );
 	}
   }
   dataFileNamePrefix += "/data";
@@ -67,13 +69,13 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
 		  << "<Collection>" << std::endl;
 
   int timeStepCounter = 0;
-  std::vector<PeanoDataSet*>* dataSets = reader.getDataSets();
-/*
+  std::vector<PeanoDataSet*>* dataSets = reader.file->getDataSets();
+  logInfo( "convertFile(...)", "read " << dataSets->size() << " data sets (time steps)" );
   for( auto timeStep: *dataSets ) {
-	  // @todo There should indeed by an abstract PeanoReader superclass
-//	    std::vector<PeanoReader*>* readers = timeStep->createReadersFull();
-	    std::vector<  visualisation::input::PeanoTextPatchFileReader*>* readers = timeStep->createReadersFull();
+    // @todo There should indeed by an abstract PeanoReader superclass
+    std::vector<  visualisation::input::PeanoTextPatchFileReader*>* readers = timeStep->createReadersForRawData();
 
+    logInfo( "convertFile(...)", "time step consists of " << readers->size() << " individual data sets" );
 
     // @c++ parallel
     #pragma omp parallel for
@@ -103,7 +105,6 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
 
     timeStepCounter++;
   }
-*/
 
   pvdFile << "</Collection>" << std::endl
 		  << "</VTKFile>" << std::endl;

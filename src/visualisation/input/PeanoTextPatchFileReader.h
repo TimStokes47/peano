@@ -37,9 +37,8 @@ class visualisation::input::PeanoTextPatchFileReader {
 
 	const std::string  _file;
 
-	void parsePatch( const std::vector<std::string>& patchDescription );
-
-	std::string removeHyphens( const std::string& value );
+	void    parsePatch( const std::vector<std::string>& patchDescription );
+	double* parseMapping( const std::vector<std::string>& patchDescription );
   public:
 	/**
 	 * Read in one file.

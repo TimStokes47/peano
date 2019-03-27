@@ -11,9 +11,10 @@ convertSources = \
   PeanoPatchData.cpp \
   input/Parser.cpp \
   input/PeanoTextPatchFileReader.cpp \
+  input/PeanoTextMetaFileReader.cpp \
   PeanoVariable.cpp
 
-convert_CXXFLAGS  = $(PEANO_CXXFLAGS) -g3 -O0
+convert_CXXFLAGS  = $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS)
 convert_LDFLAGS   = -L$(top_builddir)/src $(PEANO_LDFLAGS) -lTarch_debug -lstdc++fs -lvtkIOXML -lvtkCommonExecutionModel -lvtkCommonCore -lvtkCommonDataModel -lvtkFiltersCore -lvtkFiltersGeneral
 convert_SOURCES   = $(convertSources)
 

@@ -66,6 +66,15 @@ PEANO_LDFLAGS=""
 
 
 #
+# OpenMP Options
+# We need those separately from the Peano build as we use OpenMP for 
+# postprocessing scripts, e.g.
+#
+AC_LANG(C++)
+AC_OPENMP()
+
+
+#
 # TBB Options
 #
 # The result is stored in a variable multithreading

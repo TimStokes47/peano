@@ -16,6 +16,8 @@ namespace visualisation {
 class visualisation::input::Parser {
   public:
 	static std::vector<std::string> tokenise( const std::string& line );
+	static std::string getDirectory(const std::string &fileName);
+	static std::string removeHyphens( const std::string& value );
 };
 
 #endif
