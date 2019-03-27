@@ -1,12 +1,5 @@
-/*
- * PeanoMetaReader.h
- *
- *  Created on: 26 Nov 2017
- *      Author: dan
- */
-
-#ifndef PEANOMETAFILE_H_
-#define PEANOMETAFILE_H_
+#ifndef _VISUALISATION_PEANOMETAFILE_H_
+#define _VISUALISATION_PEANOMETAFILE_H_
 
 #include <string>
 #include <vector>

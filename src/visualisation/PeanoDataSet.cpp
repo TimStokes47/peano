@@ -2,23 +2,20 @@
 #include "tarch/Assertions.h"
 
 
-/*
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/algorithm/string/erase.hpp"
-#include "boost/algorithm/string/split.hpp"
-#include "boost/algorithm/string/replace.hpp"
-*/
-
 #include <vector>
 #include <string>
 
+
 #include "PeanoConverter.h"
+
 
 PeanoDataSet::PeanoDataSet(std::string directory) {
   this->directory = directory;
   fullData = new std::vector<std::string>();
+/*
   resolutionData = new std::vector<std::string>();
   resolutions = new std::vector<std::vector<int>>();
+*/
 }
 
 
@@ -34,6 +31,7 @@ std::vector<std::string> PeanoDataSet::toString() {
 	}
 
 	//print the lower resolution versions
+/*
 	for(uint i = 0; i < resolutions->size(); i++) {
 		int x = resolutions->at(i)[0];
 		int y = resolutions->at(i)[1];
@@ -42,6 +40,7 @@ std::vector<std::string> PeanoDataSet::toString() {
 		lines.push_back("  include-resolution " + std::to_string(x) + " "
 				+ std::to_string(y) + " " + std::to_string(z) + " " + file);
 	}
+*/
 
 
 	lines.push_back("end dataset");
@@ -122,22 +121,32 @@ std:: string PeanoDataSet::getDirectory() {
 }
 */
 
+/*
 std::vector<std::string>* PeanoDataSet::getFullData() {
 	return fullData;
 }
+*/
+/*
 std::vector<std::vector<int>>* PeanoDataSet::getResolutions() {
 	return resolutions;
 }
+*/
+/*
 std::string PeanoDataSet::getResolution(int index) {
 	return resolutionData->at(index);
 }
 
+*/
+/*
 std::string PeanoDataSet::getSimpleName() {
 	return fullData->at(0);
 }
+*/
 
 PeanoDataSet::~PeanoDataSet() {
 	delete fullData;
+/*
 	delete resolutionData;
 	delete resolutions;
+*/
 }

@@ -37,6 +37,26 @@ void convertFile( std::string filename, const std::string& outputDirectory ) {
 }
 
 
+void createDirectory( const std::string& directory ) {
+  static tarch::logging::Log _log( "/" );
+  if (
+   !std::experimental::filesystem::is_directory(directory)
+    ||
+    !std::experimental::filesystem::exists(directory)
+  ) {
+	try {
+      std::experimental::filesystem::create_directory(directory);
+      logInfo( "createDirectory(...)", "created directory " << directory );
+	}
+	catch (std::exception exc) {
+      logError( "createDirectory(...)", "failed to create directory " << directory );
+      logError( "createDirectory(...)", "error message: " << exc.what() );
+      exit(-1);
+	}
+  }
+}
+
+
 void convertTimeSeries( std::string filename, std::string outputDirectory ) {
   static tarch::logging::Log _log( "/" );
   logInfo( "convertFile(...)", "read file " << filename );
@@ -45,22 +65,12 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
   reader.parse(filename);
 
   std::string outFileNamePrefix  = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
-  std::string outFileName        = outFileNamePrefix + "-full-resolution.pvd";
   std::string dataFileNamePrefix = outFileNamePrefix + "-full-resolution";
-  if (
-    !std::experimental::filesystem::is_directory(dataFileNamePrefix)
-    ||
-    !std::experimental::filesystem::exists(dataFileNamePrefix)
-  ) {
-	try {
-      std::experimental::filesystem::create_directory(dataFileNamePrefix);
-      logInfo( "convertFile(...)", "created directory " << dataFileNamePrefix );
-	}
-	catch (std::exception exc) {
-      logError( "convertFile(...)", "failed to create directory " << dataFileNamePrefix );
-      logError( "convertFile(...)", "error message: " << exc.what() );
-	}
-  }
+  std::string outFileName        = outFileNamePrefix + "-full-resolution.pvd";
+
+  createDirectory( outputDirectory );
+  createDirectory( dataFileNamePrefix );
+
   dataFileNamePrefix += "/data";
 
   std::ofstream pvdFile(outFileName);
