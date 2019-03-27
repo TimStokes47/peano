@@ -9,7 +9,7 @@ tarch::logging::Log  visualisation::input::PeanoTextMetaFileReader::_log( "visua
 
 
 void visualisation::input::PeanoTextMetaFileReader::parseDataset(const std::vector<std::string> lines) {
-  PeanoDataSet* dataSet = new PeanoDataSet(file->directory);
+  PeanoDataSet* dataSet = new PeanoDataSet();
 
   for(std::string line: lines) {
     if (line.empty()) continue;

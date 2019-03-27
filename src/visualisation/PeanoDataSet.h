@@ -31,7 +31,7 @@ namespace visualisation {
  */
 class PeanoDataSet {
   public:
-	PeanoDataSet(std::string directory);
+	PeanoDataSet();
 	virtual ~PeanoDataSet();
 
 	/**
@@ -43,8 +43,14 @@ class PeanoDataSet {
   private:
 	friend class visualisation::input::PeanoTextMetaFileReader;
 
+	/**
+	 * A data set has a unique
+	 */
+	std::vector<PeanoVariable*> variables;
+
+	std::vector<PeanoPatch*> patches;
+
 	std::vector<std::string>* fullData;
-	std::string directory;
 };
 
 #endif /* PEANODATASET_H_ */

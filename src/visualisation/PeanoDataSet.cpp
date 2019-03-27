@@ -9,13 +9,8 @@
 #include "PeanoConverter.h"
 
 
-PeanoDataSet::PeanoDataSet(std::string directory) {
-  this->directory = directory;
+PeanoDataSet::PeanoDataSet() {
   fullData = new std::vector<std::string>();
-/*
-  resolutionData = new std::vector<std::string>();
-  resolutions = new std::vector<std::vector<int>>();
-*/
 }
 
 
@@ -57,7 +52,7 @@ std::vector<visualisation::input::PeanoTextPatchFileReader*>* PeanoDataSet::crea
   #pragma omp parallel for
   for(uint i = 0; i < maxSize; i++) {
     visualisation::input::PeanoTextPatchFileReader* newReader = new visualisation::input::PeanoTextPatchFileReader();
-    newReader->parse(directory + fullData->at(i));
+    newReader->parse(fullData->at(i));
     // @todo
     #pragma omp critical
 	readers->push_back(newReader);
