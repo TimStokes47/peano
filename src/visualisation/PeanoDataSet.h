@@ -9,8 +9,9 @@
 #define PEANODATASET_H_
 
 #include <string>
+#include <map>
+
 #include "PeanoPatch.h"
-#include "input/PeanoTextPatchFileReader.h"
 
 
 namespace visualisation {
@@ -27,30 +28,37 @@ namespace visualisation {
  * on disc can be the merger of many datasets (patch sets) written by different
  * ranks.
  *
+ * Datasets do not have a filename themselves, but the dataset itself is only a
+ * wrapper around existing files on disc. It holds the data in multiple
+ * resolutions/postprocessing steps if there are multiple ones.
+ *
  * @author Dan Tuthill-Jones, Tobias Weinzierl
  */
 class PeanoDataSet {
   public:
-	PeanoDataSet();
+	static std::string RawData;
+
+	PeanoDataSet(const std::string& directory);
 	virtual ~PeanoDataSet();
 
 	/**
-	 * @return Set of readers tied to the full resolution model
+	 * @return Set of readers tied to a particular model
 	 */
-	std::vector<visualisation::input::PeanoTextPatchFileReader*>* createReadersForRawData();
+	std::vector<visualisation::input::PeanoTextPatchFileReader*>* createReaders( const std::string& identifier );
 
 	std::vector<std::string> toString();
   private:
 	friend class visualisation::input::PeanoTextMetaFileReader;
 
+	std::string  _directory;
+
 	/**
-	 * A data set has a unique
+	 * A data set has a unique set of variables. If there are multiple variable
+	 * (files), they all have to agree on those.
 	 */
 	std::vector<PeanoVariable*> variables;
 
-	std::vector<PeanoPatch*> patches;
-
-	std::vector<std::string>* fullData;
+	std::map< std::string, std::vector<std::string> > _data;
 };
 
 #endif /* PEANODATASET_H_ */

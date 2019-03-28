@@ -12,7 +12,7 @@
 #endif
 
 
-#include "PeanoConverter.h"
+#include "output/VTUWriter.h"
 #include "PeanoDataSet.h"
 #include "PeanoMetaFile.h"
 #include "input/PeanoTextPatchFileReader.h"
@@ -22,7 +22,11 @@
 #include <experimental/filesystem> // or #include <filesystem>
 
 
-void convertFile( std::string filename, const std::string& outputDirectory ) {
+const std::string OutputFormatPeano = "peano";
+const std::string OutputFormatVTU   = "vtu";
+
+
+void convertFile( std::string filename, const std::string& outputDirectory, const std::string& format ) {
   static tarch::logging::Log _log( "/" );
   std::string truncatedFile = filename;
   if ( truncatedFile.find_last_of(".")!=std::string::npos ) {
@@ -33,14 +37,14 @@ void convertFile( std::string filename, const std::string& outputDirectory ) {
 
   visualisation::input::PeanoTextPatchFileReader reader;
   reader.parse( filename );
-  PeanoConverter::combineAndWriteToFile( reader.patches, outFile );
+  visualisation::output::VTUWriter::writeFile( reader.patches, outFile );
 }
 
 
 void createDirectory( const std::string& directory ) {
   static tarch::logging::Log _log( "/" );
   if (
-   !std::experimental::filesystem::is_directory(directory)
+    !std::experimental::filesystem::is_directory(directory)
     ||
     !std::experimental::filesystem::exists(directory)
   ) {
@@ -57,7 +61,7 @@ void createDirectory( const std::string& directory ) {
 }
 
 
-void convertTimeSeries( std::string filename, std::string outputDirectory ) {
+void convertTimeSeries( std::string filename, std::string outputDirectory, const std::string& format ) {
   static tarch::logging::Log _log( "/" );
   logInfo( "convertFile(...)", "read file " << filename );
 
@@ -83,11 +87,10 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
   logInfo( "convertFile(...)", "read " << dataSets->size() << " data sets (time steps)" );
   for( auto timeStep: *dataSets ) {
     // @todo There should indeed by an abstract PeanoReader superclass
-    std::vector<  visualisation::input::PeanoTextPatchFileReader*>* readers = timeStep->createReadersForRawData();
+    std::vector<  visualisation::input::PeanoTextPatchFileReader*>* readers = timeStep->createReaders( PeanoDataSet::RawData );
 
     logInfo( "convertFile(...)", "time step consists of " << readers->size() << " individual data sets" );
 
-    // @c++ parallel
     #pragma omp parallel for
     for( int i=0; i<readers->size(); i++) {
       auto p = (*readers)[i];
@@ -97,7 +100,7 @@ void convertTimeSeries( std::string filename, std::string outputDirectory ) {
       logInfo( "convertFile(...)", "writing file " << outFile );
 
       if (!p->patches.empty()) {
-        std::string filename =  PeanoConverter::combineAndWriteToFile( p->patches, outFile );
+        std::string filename =  visualisation::output::VTUWriter::writeFile( p->patches, outFile );
 
         // Strip output directory
         std::string toRemove = outputDirectory + "/";
@@ -127,24 +130,25 @@ int main(int argc, char* argv[]) {
     std::cout << "(C) 2018 Dan Tuthill-Jones, Tobias Weinzierl" << std::endl << std::endl;
     bool validParams = true;
 
-    if(argc < 4) {
+    if(argc < 5) {
       std::cerr << "too few arguments" << std::endl;
       validParams = false;
     }
     else {
-      std::string mode = argv[1];
+      std::string mode   = argv[1];
+      std::string format = argv[argc-1];
       if (mode.compare("convert-file")==0) {
     	std::string outputDirectory = argv[ argc-1 ];
     	std::cout << "write into directory " << outputDirectory << std::endl;
-    	for (int i=2; i<argc-1; i++) {
-    	  convertFile( argv[i], outputDirectory );
+    	for (int i=2; i<argc-2; i++) {
+    	  convertFile( argv[i], outputDirectory, format );
     	}
       }
       else if (mode.compare("convert-time-series")==0) {
     	std::string outputDirectory = argv[ argc-1 ];
     	std::cout << "write into directory " << outputDirectory << std::endl;
-    	for (int i=2; i<argc-1; i++) {
-    	  convertTimeSeries( argv[i], outputDirectory );
+    	for (int i=2; i<argc-2; i++) {
+    	  convertTimeSeries( argv[i], outputDirectory, format);
     	}
       }
       else {
@@ -156,15 +160,15 @@ int main(int argc, char* argv[]) {
     if (!validParams) {
       std::cerr << std::endl << std::endl;
       std::cerr << "Usage:";
-      std::cerr << "\t./executable convert-file InputFile1 [InputFile2 ...] OutputFolder" << std::endl;
-      std::cerr << "\t./executable convert-time-series InputFile1 [InputFile2 ...] OutputFolder" << std::endl;
+      std::cerr << "\t./executable convert-file InputFile1 [InputFile2 ...] OutputFolder Format" << std::endl;
+      std::cerr << "\t./executable convert-set  InputFile1 [InputFile2 ...] OutputFolder Format" << std::endl;
       std::cerr << std::endl << std::endl;
-      std::cerr << "Only convert will yield actual VTK files. All other operations create new " << std::endl
-      		<< "internal data representations that then can be converted. " << std::endl << std::endl
-                << "Please ensure that the OutputFolder exists prior to program invocation." << std::endl << std::endl
-                << "convert-file only should be used for individual snapshot files, but not for files referring to/including other files" << std::endl << std::endl
-                << "Please invoke the tool from the directory the actual input files are stored in, i.e. do not refer to files stored relative" << std::endl
-                << "to the current directory." << std::endl << std::endl;
+      std::cerr << "Variants:" << std::endl;
+      std::cerr << "\tconvert-file         Convert a single file" << std::endl;
+      std::cerr << "\tconvert-set          Convert whole set of data comprising multiple time steps, resolutions, ..." << std::endl;
+      std::cerr << std::endl << std::endl;
+      std::cerr << "Options:" << std::endl;
+      std::cerr << "\tFormat               Either " << OutputFormatPeano << " or " << OutputFormatVTU << std::endl;
       return -1;
     }
     else return 0;

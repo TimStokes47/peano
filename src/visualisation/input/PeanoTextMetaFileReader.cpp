@@ -9,7 +9,7 @@ tarch::logging::Log  visualisation::input::PeanoTextMetaFileReader::_log( "visua
 
 
 void visualisation::input::PeanoTextMetaFileReader::parseDataset(const std::vector<std::string> lines) {
-  PeanoDataSet* dataSet = new PeanoDataSet();
+  PeanoDataSet* dataSet = new PeanoDataSet(file->directory);
 
   for(std::string line: lines) {
     if (line.empty()) continue;
@@ -42,7 +42,7 @@ void visualisation::input::PeanoTextMetaFileReader::parseDataset(const std::vect
 	}
 	else if(tokens.size() == 2) {
 	  std::string fileName = tokens[1];
-      dataSet->fullData->push_back( Parser::removeHyphens(fileName) );
+      dataSet->_data[ PeanoDataSet::RawData ].push_back( Parser::removeHyphens(fileName) );
 	}
   }
 

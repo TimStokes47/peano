@@ -4,7 +4,6 @@ bin_PROGRAMS = convert
 
 convertSources = \
   convert.cpp \
-  PeanoConverter.cpp \
   PeanoDataSet.cpp \
   PeanoMetaFile.cpp \
   PeanoPatch.cpp \
@@ -12,6 +11,7 @@ convertSources = \
   input/Parser.cpp \
   input/PeanoTextPatchFileReader.cpp \
   input/PeanoTextMetaFileReader.cpp \
+  output/VTUWriter.cpp \
   PeanoVariable.cpp
 
 convert_CXXFLAGS  = $(PEANO_CXXFLAGS) $(OPENMP_CXXFLAGS)
