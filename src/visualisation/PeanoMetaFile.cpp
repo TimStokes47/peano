@@ -8,7 +8,8 @@
 #include <algorithm>
 
 
-std::string  PeanoMetaFile::RawData( "" );
+std::string  PeanoMetaFile::RawData( "raw" );
+tarch::logging::Log  PeanoMetaFile::_log( "PeanoMetaFile" );
 
 
 PeanoMetaFile::PeanoMetaFile() {
@@ -55,6 +56,19 @@ int PeanoMetaFile::getNumberOfDataSets() const {
 }
 
 
+std::vector<std::string> PeanoMetaFile::getStoredDataRepresentations( int dataSetNumber ) const {
+  std::vector<std::string> result;
+  for (auto p: _dataSets[dataSetNumber].data) {
+	result.push_back(p.first);
+  }
+  return result;
+}
+
+
 std::vector<visualisation::input::PatchFileReader*> PeanoMetaFile::createReaders( int dataSetNumber, const std::string& identifier ) const {
+  if ( _dataSets[dataSetNumber].data.count(identifier)==0 ) {
+	 logError( "createReaders(...)", "no data set with identifier " << identifier << " in data set no " << dataSetNumber );
+	 return std::vector<visualisation::input::PatchFileReader*>();
+  }
   return _dataSets[dataSetNumber].data.at(identifier);
 }

@@ -30,6 +30,40 @@ visualisation::output::PeanoWriter::~PeanoWriter() {
 }
 
 
+void visualisation::output::PeanoWriter::writeFile(const PeanoMetaFile& metaFile) {
+  for( int timeStep = 0; timeStep<metaFile.getNumberOfDataSets(); timeStep++ ) {
+    _metaFile << "begin dataset" << std::endl;
+
+	for ( auto selector: metaFile.getStoredDataRepresentations(timeStep) ) {
+      std::vector<  visualisation::input::PatchFileReader*> readers = metaFile.createReaders( timeStep, selector );
+      logInfo( "convertFile(...)", "process " << readers.size() << " data set(s) with selector " << selector );
+
+      #pragma omp parallel for
+      for( int i=0; i<readers.size(); i++) {
+        auto p = readers[i];
+        p->parse();
+        if (!p->getPatches().empty()) {
+          std::string filename = _outputFileWithoutExtension + "-" + std::to_string(timeStep) + "-" + std::to_string(i);
+
+          #pragma omp critical
+          {
+            if (selector==PeanoMetaFile::RawData) {
+              _metaFile << "  include \"" << filename << _FileExtension << "\"" << std::endl;
+            }
+            else {
+              _metaFile << "  include \"" << selector << "\" \"" << filename << _FileExtension << "\"" << std::endl;
+            }
+          }
+          writeFile(_directory + "/" + filename, p->getPatches());
+        }
+      }
+	}
+
+    _metaFile << "end dataset" << std::endl << std::endl;
+  }
+}
+
+
 void visualisation::output::PeanoWriter::writeFile(const PeanoMetaFile&  metaFile, const std::string& selector) {
   for( int timeStep = 0; timeStep<metaFile.getNumberOfDataSets(); timeStep++ ) {
     std::vector<  visualisation::input::PatchFileReader*> readers = metaFile.createReaders( timeStep, selector );
@@ -54,7 +88,7 @@ void visualisation::output::PeanoWriter::writeFile(const PeanoMetaFile&  metaFil
       }
     }
 
-    _metaFile << "end dataset" << std::endl;
+    _metaFile << "end dataset" << std::endl << std::endl;
   }
 }
 
@@ -80,6 +114,8 @@ void visualisation::output::PeanoWriter::writeFile(const std::string& outputFile
 	file << "  number-of-unknowns " << data->structure->unknowns << "\n";
 	file << "end " << (data->structure->type == Cell_Values?"cell":"vertex") << "-values\n\n";
   }
+
+  file << std::endl << std::endl;
 
   for (auto p: patches) {
 	file << "begin patch" << std::endl;

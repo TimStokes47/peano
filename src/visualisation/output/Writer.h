@@ -11,6 +11,10 @@ namespace visualisation {
 
 class visualisation::output::Writer {
   public:
+	/**
+	 * Our writers write only one variant at a time even though the Peano file
+	 * format can hold multiple variants
+	 */
 	virtual void writeFile(const PeanoMetaFile& metaFile, const std::string& selector) = 0;
 };
 

@@ -73,7 +73,7 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
 }
 
 
-void convertTimeSeries( std::string filename, std::string outputDirectory, const std::string& format ) {
+void convertTimeSeries( std::string filename, std::string outputDirectory, const std::string& selector, const std::string& format ) {
   static tarch::logging::Log _log( "/" );
   logInfo( "convertFile(...)", "read file " << filename );
 
@@ -94,8 +94,23 @@ void convertTimeSeries( std::string filename, std::string outputDirectory, const
     logError( "convertFile(...)", "unknown output format " << format );
   }
 
-  writer->writeFile( *(reader->getFile()), PeanoMetaFile::RawData );
+  writer->writeFile( *(reader->getFile()), selector );
   delete writer;
+}
+
+
+void extractFineGrid( std::string filename, std::string outputDirectory ) {
+  static tarch::logging::Log _log( "/" );
+  logInfo( "extractFineGrid(...)", "read file " << filename );
+
+  createDirectory( outputDirectory );
+
+  visualisation::input::MetaFileReader* reader = new visualisation::input::PeanoTextMetaFileReader(filename);
+  reader->parse();
+
+  std::string                        outFileNamePrefix  = filename.erase(filename.find_last_of(".") );
+  visualisation::output::PeanoWriter writer( outputDirectory, outFileNamePrefix );
+  writer.writeFile( *(reader->getFile()) );
 }
 
 
@@ -104,26 +119,35 @@ int main(int argc, char* argv[]) {
     std::cout << "(C) 2018 Dan Tuthill-Jones, Tobias Weinzierl" << std::endl << std::endl;
     bool validParams = true;
 
-    if(argc < 5) {
+    if(argc < 3) {
       std::cerr << "too few arguments" << std::endl;
       validParams = false;
     }
     else {
       std::string mode            = argv[1];
-      std::string outputDirectory = argv[ argc-2 ];
-      std::string format          = argv[ argc-1 ];
-      if (mode.compare("convert-file")==0) {
+      if (mode.compare("convert-file")==0 and argc>=5) {
+        std::string outputDirectory = argv[ argc-2 ];
+        std::string format          = argv[ argc-1 ];
     	for (int i=2; i<argc-2; i++) {
     	  convertFile( argv[i], outputDirectory, format );
     	}
       }
-      else if (mode.compare("convert-time-series")==0) {
-    	for (int i=2; i<argc-2; i++) {
-    	  convertTimeSeries( argv[i], outputDirectory, format);
+      else if (mode.compare("convert-time-series")==0 and argc>=6) {
+        std::string selector        = argv[ argc-3 ];
+        std::string outputDirectory = argv[ argc-2 ];
+        std::string format          = argv[ argc-1 ];
+    	for (int i=2; i<argc-3; i++) {
+    	  convertTimeSeries( argv[i], outputDirectory, selector, format);
+    	}
+      }
+      else if (mode.compare("extract-fine-grid")==0 and argc>=4) {
+        std::string outputDirectory = argv[ argc-1 ];
+    	for (int i=2; i<argc-1; i++) {
+    	  extractFineGrid( argv[i], outputDirectory );
     	}
       }
       else {
-        std::cerr << "unknown command. First argument has to be convert" << std::endl;
+        std::cerr << "unknown command or invalid number of parameters for particular command" << std::endl;
         validParams = false;
       }
     }
@@ -131,15 +155,18 @@ int main(int argc, char* argv[]) {
     if (!validParams) {
       std::cerr << std::endl << std::endl;
       std::cerr << "Usage:";
-      std::cerr << "\t./executable convert-file InputFile1 [InputFile2 ...] OutputFolder Format" << std::endl;
-      std::cerr << "\t./executable convert-set  InputFile1 [InputFile2 ...] OutputFolder Format" << std::endl;
+      std::cerr << "\t./executable convert-file       InputFile1 [InputFile2 ...] OutputFolder Format" << std::endl;
+      std::cerr << "\t./executable convert-set        InputFile1 [InputFile2 ...] Selector OutputFolder Format" << std::endl;
+      std::cerr << "\t./executable extract-fine-grid  InputFile1 [InputFile2 ...] OutputFolder" << std::endl;
       std::cerr << std::endl << std::endl;
       std::cerr << "Variants:" << std::endl;
       std::cerr << "\tconvert-file         Convert a single file" << std::endl;
       std::cerr << "\tconvert-set          Convert whole set of data comprising multiple time steps, resolutions, ..." << std::endl;
+      std::cerr << "\textract-fine-grid    Extract the fine grid per snapshot and store in a new patch file comprising both the raw data and the fine grid. The fine grid's selector is fine-grid" << std::endl;
       std::cerr << std::endl << std::endl;
       std::cerr << "Options:" << std::endl;
       std::cerr << "\tFormat               Either " << OutputFormatPeano << " or " << OutputFormatVTU << std::endl;
+      std::cerr << "\tSelector             Either " << PeanoMetaFile::RawData << " or the identifier of a new data representations you created before" << std::endl;
       return -1;
     }
     else return 0;

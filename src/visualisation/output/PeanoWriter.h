@@ -36,6 +36,13 @@ class visualisation::output::PeanoWriter: public visualisation::output::Writer {
 	 */
 	void writeFile(const PeanoMetaFile& metaFile, const std::string& selector) override;
 
+	/**
+	 * This is a special variant of the writer which dumps all the different
+	 * file representations that we find in a Peano file. Therefore, it is not
+	 * a routine found in the super interface.
+	 */
+	void writeFile(const PeanoMetaFile& metaFile);
+
 	static void writeFile(const std::string& outputFileWithoutExtension, const std::vector<PeanoPatch*>& patches);
   private:
 	static tarch::logging::Log  _log;
