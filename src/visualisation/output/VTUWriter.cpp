@@ -200,9 +200,9 @@ int visualisation::output::VTUWriter::xyzToIndex(int x, int y, int z, int dimens
 }
 
 
-void visualisation::output::VTUWriter::writeFile(const PeanoMetaFile&  metaFile) {
+void visualisation::output::VTUWriter::writeFile(const PeanoMetaFile&  metaFile, const std::string& selector) {
   for( int timeStep = 0; timeStep<metaFile.getNumberOfDataSets(); timeStep++ ) {
-    std::vector<  visualisation::input::PatchFileReader*> readers = metaFile.createReaders( timeStep, PeanoMetaFile::RawData );
+    std::vector<  visualisation::input::PatchFileReader*> readers = metaFile.createReaders( timeStep, selector );
 
     logInfo( "convertFile(...)", "time step consists of " << readers.size() << " data set(s)" );
 

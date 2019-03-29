@@ -4,13 +4,13 @@ bin_PROGRAMS = convert
 
 convertSources = \
   convert.cpp \
-  PeanoDataSet.cpp \
   PeanoMetaFile.cpp \
   PeanoPatch.cpp \
   PeanoPatchData.cpp \
   input/Parser.cpp \
   input/PeanoTextPatchFileReader.cpp \
   input/PeanoTextMetaFileReader.cpp \
+  output/PeanoWriter.cpp \
   output/VTUWriter.cpp \
   PeanoVariable.cpp
 

@@ -62,8 +62,7 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
   reader.parse();
 
   if (format==OutputFormatPeano) {
-	  // @todo
-//    visualisation::output::PeanoWriter::writeFile( reader.patches, outFile );
+    visualisation::output::PeanoWriter::writeFile( outFile, reader.getPatches() );
   }
   else if (format==OutputFormatVTU) {
     visualisation::output::VTUWriter::writeFile( outFile, reader.getPatches() );
@@ -84,18 +83,18 @@ void convertTimeSeries( std::string filename, std::string outputDirectory, const
   reader->parse();
 
   std::string outFileNamePrefix  = filename.erase(filename.find_last_of(".") );
-  visualisation::output::VTUWriter* writer = new visualisation::output::VTUWriter( outputDirectory, outFileNamePrefix );
+  visualisation::output::Writer* writer = nullptr;
   if (format==OutputFormatPeano) {
-//    visualisation::output::PeanoWriter::writeFile( reader.patches, outFile );
+    writer = new visualisation::output::PeanoWriter( outputDirectory, outFileNamePrefix );
   }
   else if (format==OutputFormatVTU) {
-//    visualisation::output::VTUWriter::writeFile( reader.patches, outFile );
+	writer = new visualisation::output::VTUWriter( outputDirectory, outFileNamePrefix );
   }
   else {
     logError( "convertFile(...)", "unknown output format " << format );
   }
 
-  writer->writeFile( *(reader->getFile()) );
+  writer->writeFile( *(reader->getFile()), PeanoMetaFile::RawData );
   delete writer;
 }
 

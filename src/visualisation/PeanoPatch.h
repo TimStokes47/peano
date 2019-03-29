@@ -41,6 +41,9 @@ class PeanoPatch {
 	 */
 	double* sizes;
 
+	/**
+	 * Mapping from
+	 */
 	std::unordered_map<std::string, PeanoPatchData*> patchData;
 	bool hasMappings();
 	PeanoVariable* getStructure();
@@ -49,7 +52,6 @@ class PeanoPatch {
 	double* getPositionCellCenter(int x, int y, int z);
 	int getIndexCellData(int x, int y, int z);
 	int getIndexVertexData(int x, int y, int z);
-	bool saveToTextFile(std::string filename);
 };
 
 #endif /* PEANOPATCH_H_ */

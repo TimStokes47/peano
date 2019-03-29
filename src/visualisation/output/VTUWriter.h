@@ -3,6 +3,7 @@
 
 #include "PeanoPatch.h"
 #include "PeanoMetaFile.h"
+#include "Writer.h"
 
 #include "../config.h"
 
@@ -33,7 +34,7 @@ namespace visualisation {
 }
 
 
-class visualisation::output::VTUWriter {
+class visualisation::output::VTUWriter: public visualisation::output::Writer {
   public:
 	VTUWriter(const std::string&  directory, const std::string& outputFileWithoutExtention);
 	~VTUWriter();
@@ -41,11 +42,9 @@ class visualisation::output::VTUWriter {
 	/**
 	 * Meta file write
 	 */
-	void writeFile(const PeanoMetaFile& metaFile);
+	void writeFile(const PeanoMetaFile& metaFile, const std::string& selector) override;
 
-	static void writeFile(const std::string& outputFileWithoutExtention, const std::vector<PeanoPatch*>& patches);
-
-//	static PeanoPatch* subSample(std::vector<PeanoReader*> &readers, int x, int y, int z);
+	static void writeFile(const std::string& outputFileWithoutExtension, const std::vector<PeanoPatch*>& patches);
   private:
 	static tarch::logging::Log  _log;
 
