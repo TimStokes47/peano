@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "PatchFileReader.h"
 #include "PeanoPatch.h"
 #include "PeanoVariable.h"
 
@@ -31,7 +32,7 @@ namespace visualisation {
  *
  * @author Dan Tuthill-Jones, Tobias Weinzierl
  */
-class visualisation::input::PeanoTextPatchFileReader {
+class visualisation::input::PeanoTextPatchFileReader: public visualisation::input::PatchFileReader {
   private:
 	static tarch::logging::Log _log;
 
@@ -39,6 +40,14 @@ class visualisation::input::PeanoTextPatchFileReader {
 
 	void    parsePatch( const std::vector<std::string>& patchDescription );
 	double* parseMapping( const std::vector<std::string>& patchDescription );
+
+	int     dimensions = -1;
+	int     cells = -1;
+	int     vertices = -1;
+	int*    patchSize;
+
+	std::vector<PeanoVariable*> variables;
+	std::vector<PeanoPatch*>    patches;
   public:
 	/**
 	 * Read in one file.
@@ -48,19 +57,13 @@ class visualisation::input::PeanoTextPatchFileReader {
 	 * - Load the whole files into a vector called lines, i.e. we load line by line.
 	 * -
 	 */
-	PeanoTextPatchFileReader();
+	PeanoTextPatchFileReader(const std::string &file);
 	virtual ~PeanoTextPatchFileReader();
 
-	void parse(const std::string &file);
-	bool isEmpty();
+	void parse() override;
+	bool isEmpty() override;
 
-	int dimensions = -1;
-	int cells = -1;
-	int vertices = -1;
-	int* patchSize;
-
-	std::vector<PeanoVariable*> variables;
-	std::vector<PeanoPatch*> patches;
+	std::vector<PeanoPatch*> getPatches() override;
 };
 
 #endif /* PEANOREADER_H_ */

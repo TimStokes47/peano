@@ -1,10 +1,5 @@
 #include "PeanoMetaFile.h"
 
-/*
-#include "boost/algorithm/string/predicate.hpp"
-#include "boost/algorithm/string/erase.hpp"
-#include "boost/algorithm/string/trim.hpp"
-*/
 
 #include <string>
 #include <vector>
@@ -13,11 +8,15 @@
 #include <algorithm>
 
 
-PeanoMetaFile::PeanoMetaFile() {}
+std::string  PeanoMetaFile::RawData( "" );
+
+
+PeanoMetaFile::PeanoMetaFile() {
+}
 
 
 
-void PeanoMetaFile::save() {
+/*
 	std::cout << "\nSaving metadeta file " << fileName << "\n";
 	std::ofstream file;
 	file.open(fileName.c_str(), std::ofstream::out | std::ofstream::trunc);
@@ -39,37 +38,23 @@ void PeanoMetaFile::save() {
 
 	file << "end patch\n";
 	file.close();
-}
-
-/*
-std::vector<PeanoReader*>* PeanoMetaFile::createReadersFull(int index) {
-	return getDataSet(index)->createReadersFull();
-}
-
-std::vector<PeanoReader*>* PeanoMetaFile::createReadersResolution(int index, int resolution) {
-	return getDataSet(index)->createReadersResolution(resolution);
-}
 */
 
 
-std::vector<PeanoDataSet*>* PeanoMetaFile::getDataSets() {
-	return this->dataSets;
-}
-
-
-PeanoDataSet* PeanoMetaFile::getDataSet(int index) {
-	return this->dataSets->at(index);
-}
-
-
-int PeanoMetaFile::numberOfDataSets() {
-	return dataSets->size();
-}
-
-
 PeanoMetaFile::~PeanoMetaFile() {
-	for(uint i = 0; i < dataSets->size(); i++) {
-		delete dataSets->at(i);
-	}
-	delete dataSets;
+	// @todo Das brauchen wir eigentlich schon
+/*
+  for(uint i = 0; i < _dataSets.size(); i++) {
+	delete _dataSets.at(i);
+*/
+}
+
+
+int PeanoMetaFile::getNumberOfDataSets() const {
+  return _dataSets.size();
+}
+
+
+std::vector<visualisation::input::PatchFileReader*> PeanoMetaFile::createReaders( int dataSetNumber, const std::string& identifier ) const {
+  return _dataSets[dataSetNumber].data.at(identifier);
 }

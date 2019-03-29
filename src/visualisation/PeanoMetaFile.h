@@ -3,8 +3,11 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
-#include "PeanoDataSet.h"
+
+#include "visualisation/input/PatchFileReader.h"
+
 
 namespace visualisation {
   namespace input {
@@ -19,19 +22,27 @@ namespace visualisation {
  */
 class PeanoMetaFile {
   public:
+	static std::string RawData;
+
 	PeanoMetaFile();
 	virtual ~PeanoMetaFile();
 
-	std::vector<PeanoDataSet*>* getDataSets();
-	PeanoDataSet* getDataSet(int index);
-	int numberOfDataSets();
-	void save();
+	/**
+	 * @return Set of readers tied to a particular model. These readers haven't
+	 *         parsed their files yet, i.e. you have to call parse() manually.
+	 */
+	std::vector<visualisation::input::PatchFileReader*> createReaders( int dataSetNumber, const std::string& identifier ) const;
+
+	int getNumberOfDataSets() const;
+
   private:
 	friend class visualisation::input::PeanoTextMetaFileReader;
 
-	std::string fileName;
-	std::vector<PeanoDataSet*>* dataSets;
-	std::string directory;
+	struct PeanoDataSet {
+	  std::map< std::string, std::vector<visualisation::input::PatchFileReader*> > data;
+	};
+
+	std::vector<PeanoDataSet>  _dataSets;
 };
 
-#endif /* PEANOMETAFILE_H_ */
+#endif

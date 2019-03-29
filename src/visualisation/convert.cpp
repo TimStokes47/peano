@@ -13,7 +13,7 @@
 
 
 #include "output/VTUWriter.h"
-#include "PeanoDataSet.h"
+#include "output/PeanoWriter.h"
 #include "PeanoMetaFile.h"
 #include "input/PeanoTextPatchFileReader.h"
 #include "input/PeanoTextMetaFileReader.h"
@@ -24,21 +24,6 @@
 
 const std::string OutputFormatPeano = "peano";
 const std::string OutputFormatVTU   = "vtu";
-
-
-void convertFile( std::string filename, const std::string& outputDirectory, const std::string& format ) {
-  static tarch::logging::Log _log( "/" );
-  std::string truncatedFile = filename;
-  if ( truncatedFile.find_last_of(".")!=std::string::npos ) {
-    truncatedFile.erase(truncatedFile.find_last_of(".") );
-  }
-  std::string outFile = outputDirectory + "/" + truncatedFile;
-  logInfo( "convertFile(...)", "writing file " << outFile );
-
-  visualisation::input::PeanoTextPatchFileReader reader;
-  reader.parse( filename );
-  visualisation::output::VTUWriter::writeFile( reader.patches, outFile );
-}
 
 
 void createDirectory( const std::string& directory ) {
@@ -61,67 +46,57 @@ void createDirectory( const std::string& directory ) {
 }
 
 
+void convertFile( std::string filename, const std::string& outputDirectory, const std::string& format ) {
+  static tarch::logging::Log _log( "/" );
+
+  createDirectory( outputDirectory );
+
+  std::string truncatedFile = filename;
+  if ( truncatedFile.find_last_of(".")!=std::string::npos ) {
+    truncatedFile.erase(truncatedFile.find_last_of(".") );
+  }
+  std::string outFile = outputDirectory + "/" + truncatedFile;
+  logInfo( "convertFile(...)", "writing file " << outFile );
+
+  visualisation::input::PeanoTextPatchFileReader reader(filename);
+  reader.parse();
+
+  if (format==OutputFormatPeano) {
+	  // @todo
+//    visualisation::output::PeanoWriter::writeFile( reader.patches, outFile );
+  }
+  else if (format==OutputFormatVTU) {
+    visualisation::output::VTUWriter::writeFile( outFile, reader.getPatches() );
+  }
+  else {
+    logError( "convertFile(...)", "unknown output format " << format );
+  }
+}
+
+
 void convertTimeSeries( std::string filename, std::string outputDirectory, const std::string& format ) {
   static tarch::logging::Log _log( "/" );
   logInfo( "convertFile(...)", "read file " << filename );
 
-  visualisation::input::PeanoTextMetaFileReader reader;
-  reader.parse(filename);
-
-  std::string outFileNamePrefix  = outputDirectory + "/" + filename.erase(filename.find_last_of(".") );
-  std::string dataFileNamePrefix = outFileNamePrefix + "-full-resolution";
-  std::string outFileName        = outFileNamePrefix + "-full-resolution.pvd";
-
   createDirectory( outputDirectory );
-  createDirectory( dataFileNamePrefix );
 
-  dataFileNamePrefix += "/data";
+  visualisation::input::MetaFileReader* reader = new visualisation::input::PeanoTextMetaFileReader(filename);
+  reader->parse();
 
-  std::ofstream pvdFile(outFileName);
-  pvdFile << "<?xml version=\"1.0\"?>" << std::endl
-		  << "<VTKFile type=\"Collection\" version=\"0.1\" >" << std::endl
-		  << "<Collection>" << std::endl;
-
-  int timeStepCounter = 0;
-  std::vector<PeanoDataSet*>* dataSets = reader.file->getDataSets();
-  logInfo( "convertFile(...)", "read " << dataSets->size() << " data sets (time steps)" );
-  for( auto timeStep: *dataSets ) {
-    // @todo There should indeed by an abstract PeanoReader superclass
-    std::vector<  visualisation::input::PeanoTextPatchFileReader*>* readers = timeStep->createReaders( PeanoDataSet::RawData );
-
-    logInfo( "convertFile(...)", "time step consists of " << readers->size() << " individual data sets" );
-
-    #pragma omp parallel for
-    for( int i=0; i<readers->size(); i++) {
-      auto p = (*readers)[i];
-      std::string outFile = dataFileNamePrefix + "-" + std::to_string(i) + "-" + std::to_string(timeStepCounter);
-
-      #pragma omp critical
-      logInfo( "convertFile(...)", "writing file " << outFile );
-
-      if (!p->patches.empty()) {
-        std::string filename =  visualisation::output::VTUWriter::writeFile( p->patches, outFile );
-
-        // Strip output directory
-        std::string toRemove = outputDirectory + "/";
-        int pos = filename.find(toRemove);
-        filename.erase(pos, toRemove.length());
-
-        #pragma omp critical
-        {
-        pvdFile << "<DataSet timestep=\"" << timeStepCounter << "\" group=\"\" part=\"" << i << "\" "
-      	        << " file=\"" << filename << "\" "
-		        << "/>" << std::endl;
-        }
-      }
-    }
-
-    timeStepCounter++;
+  std::string outFileNamePrefix  = filename.erase(filename.find_last_of(".") );
+  visualisation::output::VTUWriter* writer = new visualisation::output::VTUWriter( outputDirectory, outFileNamePrefix );
+  if (format==OutputFormatPeano) {
+//    visualisation::output::PeanoWriter::writeFile( reader.patches, outFile );
+  }
+  else if (format==OutputFormatVTU) {
+//    visualisation::output::VTUWriter::writeFile( reader.patches, outFile );
+  }
+  else {
+    logError( "convertFile(...)", "unknown output format " << format );
   }
 
-  pvdFile << "</Collection>" << std::endl
-		  << "</VTKFile>" << std::endl;
-  pvdFile.close();
+  writer->writeFile( *(reader->getFile()) );
+  delete writer;
 }
 
 
@@ -135,18 +110,15 @@ int main(int argc, char* argv[]) {
       validParams = false;
     }
     else {
-      std::string mode   = argv[1];
-      std::string format = argv[argc-1];
+      std::string mode            = argv[1];
+      std::string outputDirectory = argv[ argc-2 ];
+      std::string format          = argv[ argc-1 ];
       if (mode.compare("convert-file")==0) {
-    	std::string outputDirectory = argv[ argc-1 ];
-    	std::cout << "write into directory " << outputDirectory << std::endl;
     	for (int i=2; i<argc-2; i++) {
     	  convertFile( argv[i], outputDirectory, format );
     	}
       }
       else if (mode.compare("convert-time-series")==0) {
-    	std::string outputDirectory = argv[ argc-1 ];
-    	std::cout << "write into directory " << outputDirectory << std::endl;
     	for (int i=2; i<argc-2; i++) {
     	  convertTimeSeries( argv[i], outputDirectory, format);
     	}

@@ -10,6 +10,7 @@
 #include "PeanoVariable.h"
 #include "PeanoMetaFile.h"
 
+#include "MetaFileReader.h"
 
 #include "tarch/logging/Log.h"
 
@@ -34,15 +35,22 @@ namespace visualisation {
  *
  * @author Dan Tuthill-Jones, Tobias Weinzierl
  */
-class visualisation::input::PeanoTextMetaFileReader {
+class visualisation::input::PeanoTextMetaFileReader: public visualisation::input::MetaFileReader {
   private:
 	static tarch::logging::Log  _log;
 
-	void parseDataset( const std::vector<std::string> lines );
-  public:
-	PeanoMetaFile* file;
+	const std::string  _filename;
+	PeanoMetaFile*     _file;
 
-	void parse( const std::string& filename );
+	void parseDataset( const std::vector<std::string> lines );
+
+  public:
+	PeanoTextMetaFileReader( const std::string& filename );
+	virtual ~PeanoTextMetaFileReader();
+
+	void parse() override;
+
+	PeanoMetaFile* getFile() override;
 };
 
 #endif

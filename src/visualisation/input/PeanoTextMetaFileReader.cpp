@@ -1,4 +1,5 @@
 #include "PeanoTextMetaFileReader.h"
+#include "PeanoTextPatchFileReader.h"
 #include "Parser.h"
 
 #include <fstream>
@@ -7,10 +8,58 @@
 tarch::logging::Log  visualisation::input::PeanoTextMetaFileReader::_log( "visualisation::input::PeanoTextMetaFileReader" );
 
 
+visualisation::input::PeanoTextMetaFileReader::PeanoTextMetaFileReader( const std::string& filename ):
+  _filename(filename) {
+}
+
+
+visualisation::input::PeanoTextMetaFileReader::~PeanoTextMetaFileReader() {
+  delete _file;
+}
+
+
+void visualisation::input::PeanoTextMetaFileReader::parse() {
+  _file = new PeanoMetaFile();
+
+  logInfo( "parse(...)", "parse meta file " << _filename );
+
+  // read the file in to a vector of strings
+  std::ifstream ifs(_filename);
+  std::vector<std::string> lines;
+  for (std::string line; std::getline(ifs, line); /**/ ) {
+	lines.push_back(line);
+  }
+  ifs.close();
+
+  bool metadataFile = false;
+
+  for(uint i = 0; i < lines.size(); i++) {
+  	std::string line = lines[i];
+
+	if (line.rfind("#",0)==0 ) {
+		continue;
+	}
+	else if ( line.rfind("begin dataset",0)==0 ) {
+		metadataFile = true;
+		std::vector<std::string> dataSetLines;
+		for(i++; i < lines.size(); i++) {
+			std::string line2 = lines[i];
+			if( line2.rfind("end dataset",0)==0 ) {
+				break;
+			} else {
+				dataSetLines.push_back(line2);
+			}
+		}
+		parseDataset( dataSetLines );
+	}
+  }
+
+  logInfo( "parse(...)", "meta file holds " << _file->_dataSets.size() << " entries" );
+}
+
 
 void visualisation::input::PeanoTextMetaFileReader::parseDataset(const std::vector<std::string> lines) {
-  PeanoDataSet* dataSet = new PeanoDataSet(file->directory);
-
+  _file->_dataSets.push_back( PeanoMetaFile::PeanoDataSet() );
   for(std::string line: lines) {
     if (line.empty()) continue;
 
@@ -41,63 +90,16 @@ void visualisation::input::PeanoTextMetaFileReader::parseDataset(const std::vect
 */
 	}
 	else if(tokens.size() == 2) {
-	  std::string fileName = tokens[1];
-      dataSet->_data[ PeanoDataSet::RawData ].push_back( Parser::removeHyphens(fileName) );
+	  std::string fileName = Parser::removeHyphens( tokens[1] );
+	  _file->_dataSets.back().data[PeanoMetaFile::RawData].push_back(
+        new visualisation::input::PeanoTextPatchFileReader(fileName)
+      );
 	}
   }
-
-
-  file->dataSets->push_back(dataSet);
 }
 
 
-void visualisation::input::PeanoTextMetaFileReader::parse(const std::string&  fileName) {
-  file = new PeanoMetaFile();
 
-  file->dataSets = new std::vector<PeanoDataSet*>();
-  file->fileName = fileName;
-
-  file->directory = Parser::getDirectory(fileName);
-
-  logInfo( "parse(...)", "parse meta file " << fileName );
-
-  // read the file in to a vector of strings
-  std::ifstream ifs(fileName);
-  std::vector<std::string> lines;
-  for (std::string line; std::getline(ifs, line); /**/ ) {
-	lines.push_back(line);
-  }
-  ifs.close();
-
-  bool metadataFile = false;
-
-  for(uint i = 0; i < lines.size(); i++) {
-  	std::string line = lines[i];
-
-	if (line.rfind("#",0)==0 ) {
-		continue;
-	}
-	else if ( line.rfind("begin dataset",0)==0 ) {
-		metadataFile = true;
-		std::vector<std::string> dataSetLines;
-		for(i++; i < lines.size(); i++) {
-			std::string line2 = lines[i];
-			if( line2.rfind("end dataset",0)==0 ) {
-				break;
-			} else {
-				dataSetLines.push_back(line2);
-			}
-		}
-		parseDataset( dataSetLines );
-	}
-  }
-
-  //if the input was not a dataset then it was a peano file
-  if(!metadataFile) {
-    std::vector<std::string> dataLine;
-	dataLine.push_back(fileName);
-	parseDataset(dataLine);
-  }
-
-  logInfo( "parse(...)", "meta file holds " << file->dataSets->size() << " entries" );
+PeanoMetaFile* visualisation::input::PeanoTextMetaFileReader::getFile() {
+	return _file;
 }

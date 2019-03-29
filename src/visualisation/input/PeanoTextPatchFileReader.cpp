@@ -12,16 +12,17 @@
 tarch::logging::Log visualisation::input::PeanoTextPatchFileReader::_log( "visualisation::input::PeanoTextPatchFileReader" );
 
 
-visualisation::input::PeanoTextPatchFileReader::PeanoTextPatchFileReader() {
+visualisation::input::PeanoTextPatchFileReader::PeanoTextPatchFileReader(const std::string &file):
+  _file(file) {
 }
 
 
-void visualisation::input::PeanoTextPatchFileReader::parse(const std::string &file) {
+void visualisation::input::PeanoTextPatchFileReader::parse() {
   patchSize = new int[3];
 
-  logInfo( "PeanoTextPatchFileReader(string)", "reading file " << file );
+  logInfo( "PeanoTextPatchFileReader(string)", "reading file " << _file );
 
-  std::ifstream ifs(file);
+  std::ifstream ifs(_file);
   std::vector<std::string> lines;
   for (std::string line; std::getline(ifs, line); /**/ ) {
 	lines.push_back(line);
@@ -223,4 +224,9 @@ visualisation::input::PeanoTextPatchFileReader::~PeanoTextPatchFileReader() {
   for(uint i = 0; i < variables.size(); i++) {
     delete variables[i];
   }
+}
+
+
+std::vector<PeanoPatch*> visualisation::input::PeanoTextPatchFileReader::getPatches() {
+  return patches;
 }
