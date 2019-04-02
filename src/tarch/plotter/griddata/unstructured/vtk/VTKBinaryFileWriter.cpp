@@ -129,13 +129,13 @@ void tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::validateD
 }
 
 
-tarch::plotter::griddata::Writer::CellDataWriter*    tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::createCellDataWriter( const std::string& identifier, int recordsPerCell ) {
+tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter*    tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::createCellDataWriter( const std::string& identifier, int recordsPerCell ) {
   validateDataWriterIdentifier(identifier);
   return new tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::CellDataWriter(identifier,*this, recordsPerCell);
 }
 
 
-tarch::plotter::griddata::Writer::VertexDataWriter*  tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::createVertexDataWriter( const std::string& identifier, int recordsPerVertex ) {
+tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexDataWriter*  tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::createVertexDataWriter( const std::string& identifier, int recordsPerVertex ) {
   validateDataWriterIdentifier(identifier);
   return new tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter::VertexDataWriter(identifier,*this, recordsPerVertex);
 }

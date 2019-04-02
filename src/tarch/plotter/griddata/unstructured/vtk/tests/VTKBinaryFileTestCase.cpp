@@ -67,7 +67,7 @@ void tarch::plotter::griddata::unstructured::vtk::tests::VTKBinaryFileTestCase::
   cellWriter->close();
   delete cellWriter;
 
-  tarch::plotter::griddata::Writer::VertexDataWriter* vertexDataWriter = writer.createVertexDataWriter("one", 1);
+  tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexDataWriter* vertexDataWriter = writer.createVertexDataWriter("one", 1);
   vertexDataWriter->plotVertex(0,0.0);
   vertexDataWriter->plotVertex(1,1.0);
   vertexDataWriter->plotVertex(2,2.0);
@@ -100,7 +100,7 @@ void tarch::plotter::griddata::unstructured::vtk::tests::VTKBinaryFileTestCase::
   vertexDataWriter->close();
   delete vertexDataWriter;
 
-  tarch::plotter::griddata::Writer::CellDataWriter* cellDataWriter = writer.createCellDataWriter("cell", 1);
+  tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter* cellDataWriter = writer.createCellDataWriter("cell", 1);
   cellDataWriter->plotCell(0,20.0);
   cellDataWriter->close();
   delete cellDataWriter;

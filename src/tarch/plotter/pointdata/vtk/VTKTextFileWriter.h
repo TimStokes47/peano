@@ -5,8 +5,8 @@
 
 
 #include "tarch/la/Vector.h"
-#include "tarch/plotter/pointdata/Writer.h"
 #include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
+#include "../PointWriter.h"
 
 
 namespace tarch {
@@ -28,7 +28,7 @@ namespace tarch {
  *
  * @author Tobias Weinzierl
  */
-class tarch::plotter::pointdata::vtk::VTKTextFileWriter: public tarch::plotter::pointdata::Writer {
+class tarch::plotter::pointdata::vtk::VTKTextFileWriter: public tarch::plotter::pointdata::PointWriter {
   private:
     tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter                  _vtkWriter;
     tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexWriter*   _vertexWriter;
@@ -41,7 +41,7 @@ class tarch::plotter::pointdata::vtk::VTKTextFileWriter: public tarch::plotter::
      * protected to allow implementations to hide their copy constructor as
      * well.
      */
-    VTKTextFileWriter(const Writer& writer){}
+    VTKTextFileWriter(const VTKTextFileWriter& writer) = delete;
 
     /**
      * Assignment operator.
@@ -50,7 +50,7 @@ class tarch::plotter::pointdata::vtk::VTKTextFileWriter: public tarch::plotter::
      * protected to allow implementations to hide their copy constructor as
      * well.
      */
-    VTKTextFileWriter& operator=(const Writer& writer) {return *this;}
+    VTKTextFileWriter& operator=(const VTKTextFileWriter& writer) = delete;
 
   public:
     VTKTextFileWriter();
@@ -79,15 +79,14 @@ class tarch::plotter::pointdata::vtk::VTKTextFileWriter: public tarch::plotter::
     /**
      * A writer to assign points a value.
      */
-    class PointDataWriter: public Writer::PointDataWriter {
+    class PointDataWriter: public PointWriter::PointDataWriter {
       private:
-
         /**
          * Underlying VTK writer.
          */
         VTKTextFileWriter& _myWriter;
 
-        tarch::plotter::griddata::Writer::VertexDataWriter*  _particleDataWriter;
+        tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexDataWriter*  _particleDataWriter;
       public:
         PointDataWriter(VTKTextFileWriter& myWriter, const std::string& identifier, int recordsPerPoint);
         virtual ~PointDataWriter();
@@ -118,7 +117,7 @@ class tarch::plotter::pointdata::vtk::VTKTextFileWriter: public tarch::plotter::
     /**
      * Caller has to destroy this instance manually.
      */
-    virtual Writer::PointDataWriter*    createPointDataWriter( const std::string& identifier, int recordsPerPoint );
+    virtual PointWriter::PointDataWriter*    createPointDataWriter( const std::string& identifier, int recordsPerPoint );
 };
 
 #endif

@@ -7,10 +7,11 @@
 #include <stdio.h>
 #include <fstream>
 #include <iomanip>
+
+#include "../PointWriter.h"
 #include "tarch/plotter/ByteSwap.h"
 #include "tarch/la/Vector.h"
 #include "tarch/logging/Log.h"
-#include "tarch/plotter/pointdata/Writer.h"
 
 
 namespace tarch {
@@ -32,10 +33,8 @@ namespace tarch {
  *
  * @author Tobias Weinzierl
  */
-class tarch::plotter::pointdata::vtk::VTKBinaryFileWriter: public tarch::plotter::pointdata::Writer {
+class tarch::plotter::pointdata::vtk::VTKBinaryFileWriter: public tarch::plotter::pointdata::PointWriter {
   private:
-
-    
     static tarch::logging::Log _log;
 
     static const std::string HEADER;
@@ -74,7 +73,7 @@ class tarch::plotter::pointdata::vtk::VTKBinaryFileWriter: public tarch::plotter
      * protected to allow implementations to hide their copy constructor as
      * well.
      */
-    VTKBinaryFileWriter(const Writer& writer):_precision(0){}
+    VTKBinaryFileWriter(const VTKBinaryFileWriter& writer) = delete;
 
     /**
      * Assignment operator.
@@ -83,7 +82,7 @@ class tarch::plotter::pointdata::vtk::VTKBinaryFileWriter: public tarch::plotter
      * protected to allow implementations to hide their copy constructor as
      * well.
      */
-    VTKBinaryFileWriter& operator=(const Writer& writer) {return *this;}
+    VTKBinaryFileWriter& operator=(const VTKBinaryFileWriter& writer) = delete;
 
   public:
     VTKBinaryFileWriter(const int precision=6);
@@ -112,7 +111,7 @@ class tarch::plotter::pointdata::vtk::VTKBinaryFileWriter: public tarch::plotter
     /**
      * A writer to assign points a value.
      */
-    class PointDataWriter: public tarch::plotter::pointdata::Writer::PointDataWriter {
+    class PointDataWriter: public tarch::plotter::pointdata::PointWriter::PointDataWriter {
       private:
         friend class VTKBinaryFileWriter;
 
@@ -169,7 +168,7 @@ class tarch::plotter::pointdata::vtk::VTKBinaryFileWriter: public tarch::plotter
     /**
      * Caller has to destroy this instance manually.
      */
-    virtual Writer::PointDataWriter*    createPointDataWriter( const std::string& identifier, int recordsPerPoint );
+    virtual PointWriter::PointDataWriter*    createPointDataWriter( const std::string& identifier, int recordsPerPoint );
 };
 
 #endif

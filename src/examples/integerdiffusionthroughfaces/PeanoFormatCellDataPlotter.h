@@ -7,7 +7,7 @@
 #include "Mapping.h"
 
 
-#include "tarch/plotter/griddata/blockstructured/PeanoPatchFileWriter.h"
+#include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
 
 
 namespace examples {
@@ -24,8 +24,8 @@ class examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter: public
   private:
     int                                                                              _counter;
 
-    tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter*                  _writer;
-    tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter::CellDataWriter*  _dataWriter;
+    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter*                  _writer;
+    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter*  _dataWriter;
   public:
     /**
      * You have to invoke startNewSnapshot() if you wanna have a pvd file

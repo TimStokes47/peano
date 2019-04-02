@@ -4,7 +4,7 @@
 #define _TARCH_PLOTTER_GRID_DATA_BLOCK_STRUCTURED_PEANO_HDF5_PATCH_FILE_WRITER_H_
 
 
-#include "PeanoPatchFileWriter.h"
+#include "PatchWriter.h"
 #include "../config.h"
 
 #include <vector>
@@ -31,13 +31,12 @@ namespace tarch {
  *
  * This class works if and only if you have compiled Peano with -DHDF5.
  */
-class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: public tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter {
+class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: public tarch::plotter::griddata::blockstructured::PatchWriter {
   protected:
     static tarch::logging::Log _log;
     static const std::string HEADER;
 
     const int  _dimensions;
-    const int  _numberOfCellsPerAxis;
     const bool _compress;
 
     int _vertexCounter;
@@ -53,9 +52,6 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
 
     std::vector<double>  _geometryData;
 
-    int getCellsPerPatch() const;
-    int getVerticesPerPatch() const;
-
     /**
      * See the cookbook. At any time, the writer pipes data only into one
      * dataset (subdirectory) which is identified through a unique number.
@@ -70,7 +66,7 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
     std::string  getNameOfCurrentDataset() const;
 
   public:
-    class CellDataWriter: public tarch::plotter::griddata::Writer::CellDataWriter {
+    class CellDataWriter: public tarch::plotter::griddata::blockstructured::PatchWriter::CellDataWriter {
       protected:
         tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter& _writer;
 
@@ -80,7 +76,8 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
       public:
         CellDataWriter(
           const std::string& identifier,
-          int                numberOfUnknowns,
+		  int                unknownsPerAxis,
+		  int                numberOfUnknowns,
           const std::string& metaData,
           double*            mapping,
           tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter& writer
@@ -96,16 +93,14 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
           * @param value Value for the cell.
           */
          void plotCell( int index, double value ) override;
-         void plotCell( int index, const tarch::la::Vector<2,double>& value ) override;
-         void plotCell( int index, const tarch::la::Vector<3,double>& value ) override;
-         void plotCell( int index, double* values, int numberOfValues ) override;
+         void plotCell( int index, double* values ) override;
 
          void close() override;
 
          void assignRemainingCellsDefaultValues() override;
      };
 
-     class VertexDataWriter: public tarch::plotter::griddata::Writer::VertexDataWriter {
+     class VertexDataWriter: public tarch::plotter::griddata::blockstructured::PatchWriter::VertexDataWriter {
        protected:
          tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter& _writer;
 
@@ -115,7 +110,8 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
        public:
          VertexDataWriter(
            const std::string& identifier,
-           int                numberOfUnknowns,
+		   int                unknownsPerAxis,
+		   int                numberOfUnknowns,
            const std::string& metaData,
            double*            mapping,
            tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter& writer
@@ -131,9 +127,7 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
           * @param value Value for the cell.
           */
          void plotVertex( int index, double value ) override;
-         void plotVertex( int index, const tarch::la::Vector<2,double>& value ) override;
-         void plotVertex( int index, const tarch::la::Vector<3,double>& value ) override;
-         void plotVertex( int index, double* values, int numberOfValues ) override;
+         void plotVertex( int index, double* values ) override;
 
          void close() override;
 
@@ -145,7 +139,6 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
 
     PeanoHDF5PatchFileWriter(
       int                  dimension,
-      int                  numberOfCellsPerAxis,
       const std::string&   filename,
       bool                 append,
       bool                 compress
@@ -156,22 +149,22 @@ class tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter: publi
     /**
      * Caller has to destroy this instance manually.
      */
-    CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell ) override;
-    CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData ) override;
+    CellDataWriter*    createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell ) override;
+    CellDataWriter*    createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell, const std::string& metaData ) override;
 
     /**
      * The mapping is an additional field that has d * (n+1)^d doubles that
      * describe how the vertices within a unit cube are distributed. d is the
      * dimension of the plotter, n is the number of cells per axis.
      */
-    CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData, double* mapping ) override;
+    CellDataWriter*    createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell, const std::string& metaData, double* mapping ) override;
 
     /**
      * Caller has to destroy this instance manually.
      */
-    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex ) override;
-    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData  ) override;
-    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData, double* mapping ) override;
+    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex ) override;
+    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& metaData  ) override;
+    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& metaData, double* mapping ) override;
 
     std::pair<int,int> plotPatch(
       const tarch::la::Vector<2,double>& offset,

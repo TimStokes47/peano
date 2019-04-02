@@ -4,9 +4,8 @@
 #define _TARCH_PLOTTER_GRID_DATA_BLOCK_STRUCTURED_PEANO_TEXT_PATCH_FILE_WRITER_H_
 
 
-#include "tarch/plotter/griddata/Writer.h"
 #include "tarch/logging/Log.h"
-#include "PeanoPatchFileWriter.h"
+#include "PatchWriter.h"
 
 
 #include <fstream>
@@ -23,7 +22,7 @@ namespace tarch {
 }
 
 
-class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: public tarch::plotter::griddata::blockstructured::PeanoPatchFileWriter {
+class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: public tarch::plotter::griddata::blockstructured::PatchWriter {
   protected:
     static tarch::logging::Log _log;
     static const std::string HEADER;
@@ -32,25 +31,22 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
 
     int  _dimensions;
 
-    int  _numberOfCellsPerAxis;
-
-    int _vertexCounter;
-    int _cellCounter;
+    int _patchCounter;
 
     std::ofstream     _metaFileOut;
     std::stringstream _snapshotFileOut;
 
     bool _haveWrittenAtLeastOnePatch;
 
-    int getCellsPerPatch() const;
-    int getVerticesPerPatch() const;
-
+    void writeMetaData(const std::string& metaData);
+    void writeMapping(int totalEntries, double* values);
   public:
-    class CellDataWriter: public tarch::plotter::griddata::Writer::CellDataWriter {
+    class CellDataWriter: public tarch::plotter::griddata::blockstructured::PatchWriter::CellDataWriter {
       protected:
         tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter& _writer;
 
         const std::string _identifier;
+        const int         _numberOfCellsPerAxis;
         const int         _numberOfUnknowns;
         int               _patchCounter;
         std::stringstream _out;
@@ -59,6 +55,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
       public:
         CellDataWriter(
           const std::string& identifier,
+          int                unknownsPerAxis,
           int                numberOfUnknowns,
           const std::string& metaData,
           double*            mapping,
@@ -66,7 +63,9 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
         );
         virtual ~CellDataWriter();
 
-         /**
+        int getCellsPerPatch() const;
+
+        /**
           * Write data for one cell.
           *
           * @param index Index of the cell. This index has to equal the index
@@ -75,20 +74,19 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
           * @param value Value for the cell.
           */
          void plotCell( int index, double value ) override;
-         void plotCell( int index, const tarch::la::Vector<2,double>& value ) override;
-         void plotCell( int index, const tarch::la::Vector<3,double>& value ) override;
-         void plotCell( int index, double* values, int numberOfValues ) override;
+         void plotCell( int index, double* values ) override;
 
          void close() override;
 
          void assignRemainingCellsDefaultValues() override;
      };
 
-     class VertexDataWriter: public tarch::plotter::griddata::Writer::VertexDataWriter {
+     class VertexDataWriter: public tarch::plotter::griddata::blockstructured::PatchWriter::VertexDataWriter {
        protected:
          tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter& _writer;
 
          const std::string _identifier;
+         const int         _numberOfVerticesPerAxis;
          const int         _numberOfUnknowns;
 
          /**
@@ -101,12 +99,15 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
        public:
          VertexDataWriter(
            const std::string& identifier,
+		   int                unknownsPerAxis,
            int                numberOfUnknowns,
            const std::string& metaData,
            double*            mapping,
            tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter& writer
          );
          ~VertexDataWriter();
+
+         int getVerticesPerPatch() const;
 
          /**
           * Write data for one cell.
@@ -117,9 +118,7 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
           * @param value Value for the cell.
           */
          void plotVertex( int index, double value ) override;
-         void plotVertex( int index, const tarch::la::Vector<2,double>& value ) override;
-         void plotVertex( int index, const tarch::la::Vector<3,double>& value ) override;
-         void plotVertex( int index, double* values, int numberOfValues ) override;
+         void plotVertex( int index, double* values ) override;
 
          void close() override;
 
@@ -134,22 +133,22 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
      *                 including the snapshots from the various MPI ranks.
      * @see Superclass
      */
-    PeanoTextPatchFileWriter(int dimension, int numberOfCellsPerAxis, const std::string& filename, bool append);
+    PeanoTextPatchFileWriter(int dimension, const std::string& filename, bool append);
     virtual ~PeanoTextPatchFileWriter();
 
     /**
      * Caller has to destroy this instance manually.
      */
-    CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell ) override;
-    CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData ) override;
-    CellDataWriter*    createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData, double* mapping ) override;
+    CellDataWriter*    createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell ) override;
+    CellDataWriter*    createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell, const std::string& metaData ) override;
+    CellDataWriter*    createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell, const std::string& metaData, double* mapping ) override;
 
     /**
      * Caller has to destroy this instance manually.
      */
-    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex ) override;
-    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData  ) override;
-    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData, double* mapping ) override;
+    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex ) override;
+    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& metaData  ) override;
+    VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& metaData, double* mapping ) override;
 
     std::pair<int,int> plotPatch(
       const tarch::la::Vector<2,double>& offset,
@@ -183,8 +182,6 @@ class tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter: publi
      * you to ensure that none of these instances is left.
      */
     void clear() override;
-
-    void addMetaData(const std::string& metaData) override;
 };
 
 

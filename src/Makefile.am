@@ -93,20 +93,13 @@ Tarch_SOURCES= tarch/la/tests/MatrixVectorTest.cpp \
  tarch/plotter/griddata/unstructured/vtk/VTKBinaryFileWriter_VertexDataWriter.cpp \
  tarch/plotter/griddata/unstructured/vtk/VTUTextFileWriter_VertexWriter.cpp \
  tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.cpp \
- tarch/plotter/griddata/regular/CartesianGridArrayWriter.cpp \
- tarch/plotter/griddata/regular/vtk/VTKTextFileWriter.cpp \
- tarch/plotter/griddata/regular/CartesianGridArrayWriter_CellDataWriter.cpp \
- tarch/plotter/griddata/regular/CartesianGridArrayWriter_VertexDataWriter.cpp \
  tarch/plotter/griddata/VTUTimeSeriesWriter.cpp \
  tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.cpp \
- tarch/plotter/griddata/blockstructured/PatchWriter.cpp \
  tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter_VertexDataWriter.cpp \
  tarch/plotter/griddata/blockstructured/PeanoHDF5PatchFileWriter.cpp \
  tarch/plotter/griddata/blockstructured/PeanoHDF5PatchFileWriter_CellDataWriter.cpp \
- tarch/plotter/griddata/blockstructured/PeanoPatchFileWriter.cpp \
  tarch/plotter/griddata/blockstructured/PeanoHDF5PatchFileWriter_VertexDataWriter.cpp \
  tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter_CellDataWriter.cpp \
- tarch/plotter/griddata/blockstructured/PatchWriterUnstructured.cpp \
  tarch/plotter/pointdata/vtk/VTKTextFileWriter.cpp \
  tarch/plotter/pointdata/vtk/VTKBinaryFileWriter.cpp \
  tarch/plotter/pointdata/vtk/VTKBinaryFileWriter_PointDataWriter.cpp \

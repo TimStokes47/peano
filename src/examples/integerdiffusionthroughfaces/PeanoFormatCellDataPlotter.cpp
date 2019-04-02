@@ -23,11 +23,10 @@ examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::~PeanoFormat
 void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::beginTraversal() {
   _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
     Dimensions,
-	1, // int numberOfCellsPerAxis
 	"marker",
 	_counter>0  // bool append
   );
-  _dataWriter   = _writer->createCellDataWriter( "cell-data", 1 );
+  _dataWriter   = _writer->createCellDataWriter( "cell-data", 1, 1 );
 }
 
 

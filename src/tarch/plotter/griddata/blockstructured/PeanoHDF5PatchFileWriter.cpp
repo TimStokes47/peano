@@ -19,17 +19,14 @@ const std::string tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileW
 
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5PatchFileWriter(
   int                  dimensions,
-  int                  numberOfCellsPerAxis,
   const std::string&   filename,
   bool                 append,
   bool                 compress
 ):
   _dimensions(dimensions),
-  _numberOfCellsPerAxis(numberOfCellsPerAxis),
   _compress(compress) {
   assertion( _dimensions>=2 );
   assertion( _dimensions<=3 );
-  assertion( numberOfCellsPerAxis>1 );
 
   clear();
 
@@ -93,7 +90,8 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::PeanoHDF5Pa
         /**
          * Write scalar attribute.
          */
-        H5Awrite(numberOfCellsPerAxisAttribute, H5T_NATIVE_INT, &_numberOfCellsPerAxis);
+        assertion(false);
+        //H5Awrite(numberOfCellsPerAxisAttribute, H5T_NATIVE_INT, &_numberOfCellsPerAxis);
 
         H5Aclose(numberOfCellsPerAxisAttribute);
         H5Sclose(numberOfCellsPerAxisDataSpace);
@@ -205,44 +203,44 @@ tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::~PeanoHDF5P
 
 
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter*
-tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createCellDataWriter( const std::string& identifier, int recordsPerCell ) {
+tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell ) {
   assertion( _isOpen );
-  return new CellDataWriter(identifier, recordsPerCell, "", nullptr, *this);
+  return new CellDataWriter(identifier, unknownsPerAxis, recordsPerCell, "", nullptr, *this);
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter*
-tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData ) {
+tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell, const std::string& metaData ) {
   assertion( _isOpen );
-  return new CellDataWriter(identifier, recordsPerCell, metaData, nullptr, *this);
+  return new CellDataWriter(identifier, unknownsPerAxis, recordsPerCell, metaData, nullptr, *this);
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::CellDataWriter*
-tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createCellDataWriter( const std::string& identifier, int recordsPerCell, const std::string& metaData, double* mapping ) {
+tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell, const std::string& metaData, double* mapping ) {
   assertion( _isOpen );
-  return new CellDataWriter(identifier, recordsPerCell, metaData, mapping, *this);
+  return new CellDataWriter(identifier, unknownsPerAxis, recordsPerCell, metaData, mapping, *this);
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter*
-tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createVertexDataWriter( const std::string& identifier, int recordsPerVertex ) {
+tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex ) {
   assertion( _isOpen );
-  return new VertexDataWriter(identifier, recordsPerVertex , "", nullptr, *this);
+  return new VertexDataWriter(identifier, unknownsPerAxis, recordsPerVertex , "", nullptr, *this);
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter*
-tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData ) {
+tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& metaData ) {
   assertion( _isOpen );
-  return new VertexDataWriter(identifier, recordsPerVertex , metaData, nullptr, *this);
+  return new VertexDataWriter(identifier, unknownsPerAxis, recordsPerVertex , metaData, nullptr, *this);
 }
 
 
 tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::VertexDataWriter*
-tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createVertexDataWriter( const std::string& identifier, int recordsPerVertex, const std::string& metaData, double* mapping ) {
+tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& metaData, double* mapping ) {
   assertion( _isOpen );
-  return new VertexDataWriter(identifier, recordsPerVertex , metaData, mapping, *this);
+  return new VertexDataWriter(identifier, unknownsPerAxis, recordsPerVertex , metaData, mapping, *this);
 }
 
 
@@ -259,8 +257,11 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
   _geometryData.push_back( size(1) );
 
   std::pair<int,int> result(_vertexCounter,_cellCounter);
+  assertion(false);
+/*
   _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
   _cellCounter   += std::pow(_numberOfCellsPerAxis,_dimensions);
+*/
   return result;
 }
 
@@ -280,8 +281,11 @@ std::pair<int,int> tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFile
   _geometryData.push_back( size(2) );
 
   std::pair<int,int> result(_vertexCounter,_cellCounter);
+  assertion(false);
+/*
   _vertexCounter += std::pow(_numberOfCellsPerAxis+1,_dimensions);
   _cellCounter   += std::pow(_numberOfCellsPerAxis,_dimensions);
+*/
   return result;
 }
 
@@ -402,14 +406,4 @@ void tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::addMet
        << metaData << std::endl
        << "end meta-data" << std::endl << std::endl;
 */
-}
-
-
-int tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::getCellsPerPatch() const {
-  return std::pow( _numberOfCellsPerAxis, _dimensions );
-}
-
-
-int tarch::plotter::griddata::blockstructured::PeanoHDF5PatchFileWriter::getVerticesPerPatch() const {
-  return std::pow( _numberOfCellsPerAxis+1, _dimensions );
 }

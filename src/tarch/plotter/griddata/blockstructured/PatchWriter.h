@@ -3,9 +3,8 @@
 #ifndef _TARCH_PLOTTER_GRID_DATA_BLOCK_STRUCTURED_PATCH_WRITER_H_
 #define _TARCH_PLOTTER_GRID_DATA_BLOCK_STRUCTURED_PATCH_WRITER_H_
 
-#include "tarch/plotter/griddata/Writer.h"
 
-#include "tarch/multicore/BooleanSemaphore.h"
+#include "tarch/la/Vector.h"
 
 
 namespace tarch {
@@ -28,90 +27,107 @@ namespace tarch {
  *
  * @author Kristof Unterweger, Tobias Weinzierl
  */
-class tarch::plotter::griddata::blockstructured::PatchWriter:
-  public tarch::plotter::griddata::Writer {
+class tarch::plotter::griddata::blockstructured::PatchWriter {
   public:
     /**
-     * Writes patches
-     *
-     * Typically, you use this writer within enterCell as follows:
-     * \code
-    int unknownIndex = _patchWriter->plotPatch(
-      fineGridVerticesEnumerator.getVertexPosition(),
-      fineGridVerticesEnumerator.getCellSize(),
-      Experiment::getInstance().getNumberOfInnerCellsPerSpacetreeLeaf()
-    ).first;
-
-    const tarch::la::Vector<DIMENSIONS,int> offsetOfInnerDataWithinPatch = tarch::la::Vector<DIMENSIONS,int>(
-      Experiment::getInstance().getNumberOfGhostCellsPerSpacetreeLeaf()
-    );
-
-    dfor(i,Experiment::getInstance().getNumberOfInnerCellsPerSpacetreeLeaf()+1) {
-      const tarch::la::Vector<DIMENSIONS,int> currentVertex = offsetOfInnerDataWithinPatch + i;
-      const int linearisedCurrentVertex =
-        peano::utils::dLinearisedWithoutLookup(currentVertex,Experiment::getInstance().getNumberOfCellsPerSpacetreeLeaf()+1);
-
-      assertion( static_cast<int>( DataHeap::getInstance().getData(patchDescription.getU()).size() )>linearisedCurrentVertex);
-
-      _solutionWriter->plotVertex(
-        unknownIndex,
-        DataHeap::getInstance().getData(patchDescription.getU())[linearisedCurrentVertex]._persistentRecords._u
-      );
-      unknownIndex++;
-    }
-     \endcode
+     * @return Write has been successful
      */
-    class SinglePatchWriter {
-      public:
-        virtual ~SinglePatchWriter() {}
+    virtual bool writeToFile( const std::string& filename ) = 0;
+
+    /**
+     * @return Whether writer is ready to accept data.
+     */
+    virtual bool isOpen() = 0;
+
+    /**
+     * Clear the writer, i.e. erase all the data. However, as the writer does
+     * not track how many vertex and cell writers you've created, it's up to
+     * you to ensure that none of these instances is left.
+     */
+    virtual void clear() = 0;
+
+    /**
+     * A writer for scalar data on elements.
+     */
+    class CellDataWriter {
+   	  public:
+        virtual ~CellDataWriter() {};
 
         /**
-         * Create grid structure for one patch
+         * Write data for one cell.
          *
-         * @param offset
-         * @param size
-         * @param cells
-         *
-         * @return Pair of indices. The first index is the index of very first
-         *         vertex in the patch, the second index is the index of the
-         *         very first cell.
+         * @param index Index of the cell. This index has to equal the index
+         *              used for the cell within the VTKWriter class
+         *              interface.
+         * @param value Value for the cell.
          */
-        virtual std::pair<int,int> plotPatch(
-          const tarch::la::Vector<2,double>& offset,
-          const tarch::la::Vector<2,double>& size,
-          const tarch::la::Vector<2,int>&    cells
-        ) = 0;
-        virtual std::pair<int,int> plotPatch(
-          const tarch::la::Vector<3,double>& offset,
-          const tarch::la::Vector<3,double>& size,
-          const tarch::la::Vector<3,int>&    cells
-        ) = 0;
-/*
-        virtual std::pair<int,int> plotPatch(
-          const tarch::la::Vector<2,double>& offset,
-          const tarch::la::Vector<2,double>& size,
-          int                                cellsPerDimension
-        ) = 0;
-        virtual std::pair<int,int> plotPatch(
-          const tarch::la::Vector<3,double>& offset,
-          const tarch::la::Vector<3,double>& size,
-          int                                cellsPerDimension
-        ) = 0;
-*/
+        virtual void plotCell( int index, double value ) = 0;
+        virtual void plotCell( int index, double* values ) = 0;
 
         /**
-         * Pleaes close the patch writer before you close any data writer.
+         * If you close your writer, each cell/vertex has to be assigned a
+         * value, i.e. you may not add less data than you have cells. See
+         *
          */
         virtual void close() = 0;
+
+        /**
+         * @see close()
+         */
+        virtual void assignRemainingCellsDefaultValues() = 0;
     };
 
     /**
-     * Caller has to destroy this instance manually. Do not create more than
-     * one vertex writer.
+     * A writer for scalar data on points (vertices).
      */
-    virtual SinglePatchWriter*   createSinglePatchWriter() = 0;
+    class VertexDataWriter {
+      public:
+        virtual ~VertexDataWriter() {};
 
-    virtual ~PatchWriter();
+        /**
+         * Write data for one cell.
+         *
+         * @param index Index of the vertex. This index has to equal the index
+         *              used for the cell within the VTKWriter class
+         *              interface.
+         * @param value Value for the cell.
+         */
+        virtual void plotVertex( int index, double value ) = 0;
+        virtual void plotVertex( int index, double* values ) = 0;
+
+        virtual void close() = 0;
+
+        /**
+         * @see close()
+         */
+        virtual void assignRemainingVerticesDefaultValues() = 0;
+    };
+
+    virtual std::pair<int,int> plotPatch(
+      const tarch::la::Vector<2,double>& offset,
+      const tarch::la::Vector<2,double>& size
+    ) = 0;
+
+    virtual std::pair<int,int> plotPatch(
+      const tarch::la::Vector<3,double>& offset,
+      const tarch::la::Vector<3,double>& size
+    ) = 0;
+
+
+    /**
+     * Caller has to destroy this instance manually.
+     */
+    virtual CellDataWriter*    createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell ) = 0;
+    virtual CellDataWriter*    createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell, const std::string& metaData ) = 0;
+    virtual CellDataWriter*    createCellDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerCell, const std::string& metaData, double* mapping ) = 0;
+
+    /**
+     * Caller has to destroy this instance manually.
+     */
+    virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex ) = 0;
+    virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& metaData  ) = 0;
+    virtual VertexDataWriter*  createVertexDataWriter( const std::string& identifier, int unknownsPerAxis, int recordsPerVertex, const std::string& metaData, double* mapping ) = 0;
+
 };
 
 #endif

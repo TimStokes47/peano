@@ -16,7 +16,7 @@ tarch::plotter::pointdata::vtk::VTKTextFileWriter::~VTKTextFileWriter() {
 }
 
 
-tarch::plotter::pointdata::Writer::PointDataWriter*    tarch::plotter::pointdata::vtk::VTKTextFileWriter::createPointDataWriter( const std::string& identifier, int recordsPerPoint ) {
+tarch::plotter::pointdata::PointWriter::PointDataWriter*    tarch::plotter::pointdata::vtk::VTKTextFileWriter::createPointDataWriter( const std::string& identifier, int recordsPerPoint ) {
   return new PointDataWriter(*this,identifier,recordsPerPoint);
 }
 

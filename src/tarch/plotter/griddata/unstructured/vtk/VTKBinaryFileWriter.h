@@ -232,7 +232,7 @@ class tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter:
     };
 
     class CellDataWriter:
-      public tarch::plotter::griddata::Writer::CellDataWriter {
+      public tarch::plotter::griddata::unstructured::UnstructuredGridWriter::CellDataWriter {
         private:
           /**
            * The father class is a friend. There are no other friends.
@@ -293,7 +293,7 @@ class tarch::plotter::griddata::unstructured::vtk::VTKBinaryFileWriter:
     };
 
     class VertexDataWriter:
-      public tarch::plotter::griddata::Writer::VertexDataWriter {
+      public tarch::plotter::griddata::unstructured::UnstructuredGridWriter::VertexDataWriter {
         private:
         /**
          * The father class is a friend. There are no other friends.
