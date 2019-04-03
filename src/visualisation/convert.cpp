@@ -71,6 +71,7 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
 
   visualisation::input::PeanoTextPatchFileReader reader(filename);
   reader.parse();
+  visualisation::data::DataSet data = reader.getData();
 
   visualisation::output::PeanoWriter::Writer* writer = nullptr;
   if (format==OutputFormatPeano) {
@@ -81,9 +82,10 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
   }
   else {
     logError( "convertFile(...)", "unknown output format " << format );
+    data.free();
+    return;
   }
 
-  visualisation::data::DataSet data = reader.getData();
   if (data.hasVariable(selector)) {
 	visualisation::data::Variable variable = data.getVariable(selector);
     writer->writeFile( variable, data.getData(variable) );

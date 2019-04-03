@@ -62,23 +62,23 @@ class visualisation::output::VTUWriter: public visualisation::output::Writer {
 //    static vtkSmartPointer<vtkUnstructuredGrid> combine(const std::vector<PeanoPatch*>& patches);
 
 	/**
-	 * Used if the patch doesn't have any mapping and thus represents a regular grid.
+	 * Convert one patch into a regular grid, i.e. an image.
 	 */
-//	static vtkSmartPointer<vtkImageData> toImageData(PeanoPatch *patch);
+	static vtkSmartPointer<vtkImageData> toImageData(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data);
 
 	/**
 	 * Basic routine.
 	 *
 	 * Take an individual patch and convert it into an unstructured grid.
 	 */
-//	static vtkSmartPointer<vtkUnstructuredGrid> toUnstructuredGrid(PeanoPatch* patch);
+	static vtkSmartPointer<vtkUnstructuredGrid> toUnstructuredGrid(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data);
     #endif
 
 	/**
 	 * Helper function that we use extensively when we map a patch within one
 	 * cell onto an unstructured grid fragment.
 	 */
-	static int xyzToIndex(int x, int y, int z, int dimensions[3]);
+	static int xyzToIndex(int x, int y, int z, int verticesPerAxis);
 };
 
 #endif

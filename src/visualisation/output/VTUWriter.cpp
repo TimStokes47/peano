@@ -49,28 +49,27 @@ visualisation::output::VTUWriter::~VTUWriter() {
 
 
 #ifdef UseVTK
-/*
-vtkSmartPointer<vtkImageData> visualisation::output::VTUWriter::toImageData(PeanoPatch *patch) {
-	vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
+vtkSmartPointer<vtkImageData> visualisation::output::VTUWriter::toImageData(const visualisation::data::Variable& variable, const visualisation::data::PatchData& patchData) {
+  vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
 
+  //get the data from the patch in to arrays
+  double spacing[3] = {1, 1, 1};
+  double offSets[3] = {0, 0, 0};
+  int dimensions[3] = {1, 1, 1};
 
-	//get the data from the patch in to arrays
-	double spacing[3] = {1, 1, 1};
-	double offSets[3] = {0, 0, 0};
-	int dimensions[3] = {1, 1, 1};
+  for(int i = 0; i < variable.dimensions; i++) {
+    dimensions[i] = variable.getVerticesPerAxisInCartesianMesh();
+    offSets[i]    = patchData.offset[i];
+	spacing[i]    = patchData.size[i]/(variable.getVerticesPerAxisInCartesianMesh()-1);
+  }
 
-	for(int i = 0; i < patch->dimensions; i++) {
-		dimensions[i] = patch->resolution[i] +1;
-		offSets[i] = patch->offsets[i];
-		spacing[i] = patch->sizes[i]/patch->resolution[i];
-	}
-
-	imageData->SetDimensions(dimensions);
-	imageData->SetOrigin(offSets);
-	imageData->SetSpacing(spacing);
+  imageData->SetDimensions(dimensions);
+  imageData->SetOrigin(offSets);
+  imageData->SetSpacing(spacing);
 
 
 	//allocate any variables
+/*
 	for(auto kv : patch->patchData) {
 		PeanoPatchData& data = kv.second;
 		vtkSmartPointer<vtkDoubleArray> variableArray = vtkSmartPointer<vtkDoubleArray>::New();
@@ -87,14 +86,18 @@ vtkSmartPointer<vtkImageData> visualisation::output::VTUWriter::toImageData(Pean
 			imageData->GetPointData()->AddArray(variableArray);
 		}
 	}
+*/
 	return imageData;
 }
 
 
-vtkSmartPointer<vtkUnstructuredGrid> visualisation::output::VTUWriter::toUnstructuredGrid(PeanoPatch *patch) {
-	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+vtkSmartPointer<vtkUnstructuredGrid> visualisation::output::VTUWriter::toUnstructuredGrid(const visualisation::data::Variable& variable, const visualisation::data::PatchData& patchData) {
+  vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
-	PeanoVariable* structure = patch->getStructure();
+/*
+  double spacing[3] = {1, 1, 1};
+  double offSets[3] = {0, 0, 0};
+  int dimensions[3] = {1, 1, 1};
 
 	double* offsets = patch->offsets;
 	double* sizes = patch->sizes;
@@ -102,71 +105,92 @@ vtkSmartPointer<vtkUnstructuredGrid> visualisation::output::VTUWriter::toUnstruc
 	int mappings = structure->mappings;
 	int dimensions = patch->dimensions;
 	int numberOfPoints = mappings/patch->dimensions;
+*/
 
-	points->SetNumberOfPoints(numberOfPoints);
+  double spacing[3] = {1, 1, 1};
+  double offSets[3] = {0, 0, 0};
+//  int dimensions[3] = {1, 1, 1};
 
-	for(int i = 0; i < numberOfPoints; i++) {
-		int index = i*patch->dimensions;
+  for(int i = 0; i < variable.dimensions; i++) {
+    spacing[i]    = patchData.size[i]/(variable.getVerticesPerAxisInCartesianMesh()-1);
+    offSets[i]    = patchData.offset[i];
+    //    dimensions[i] = variable.getLogicallyCartesianMeshsDimensionPerAxis();
+  }
 
-		double position[3] = {0, 0, 0};
-		for(int j = 0; j < patch->dimensions; j++) {
-			position[j] = mapping[index + j]*sizes[j] + offsets[j];
-		}
-		points->SetPoint(i, position);
-	}
+  points->SetNumberOfPoints( variable.getTotalNumberOfVerticesInCartesianMesh() );
 
+  double position[3] = {0, 0, 0};
+  int i =0;
+  if (variable.dimensions==2) {
+    for (int xx=0; xx<variable.getVerticesPerAxisInCartesianMesh(); xx++)
+    for (int yy=0; yy<variable.getVerticesPerAxisInCartesianMesh(); yy++) {
+      position[0] = offSets[0] + xx * spacing[0];
+      position[1] = offSets[1] + yy * spacing[1];
+      points->SetPoint(i, position);
+      i++;
+    }
+  }
+  else {
+    for (int xx=0; xx<variable.getVerticesPerAxisInCartesianMesh(); xx++)
+    for (int yy=0; yy<variable.getVerticesPerAxisInCartesianMesh(); yy++)
+    for (int zz=0; zz<variable.getVerticesPerAxisInCartesianMesh(); zz++) {
+      position[0] = offSets[0] + xx * spacing[0];
+      position[1] = offSets[1] + yy * spacing[1];
+      position[2] = offSets[2] + zz * spacing[2];
+      points->SetPoint(i, position);
+      i++;
+    }
+  }
+/*
 
-	int dimensions3D[3] = {1, 1, 1};
-	int totalCells = 1;
-	for(int i = 0; i < patch->dimensions; i++) {
+  int dimensions3D[3] = {1, 1, 1};
+  int totalCells = 1;
+  for(int i = 0; i < patch->dimensions; i++) {
 		totalCells *= patch->resolution[i];
 		dimensions3D[i] = patch->resolution[i];
 	}
+*/
 
-	vtkSmartPointer<vtkCellArray> connectivity = vtkSmartPointer<vtkCellArray>::New();
-	connectivity->Allocate(VTK_VOXEL,totalCells);
+  vtkSmartPointer<vtkCellArray> connectivity = vtkSmartPointer<vtkCellArray>::New();
+  connectivity->Allocate(VTK_VOXEL,variable.getTotalNumberOfCellsInCartesianMesh());
 
-    vtkSmartPointer<vtkUnstructuredGrid> grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	if (patch->dimensions==3) {
-      for(int x = 0; x < dimensions3D[0]; x++) {
-		for(int y = 0; y < dimensions3D[1]; y++) {
-			for(int z = 0; z < dimensions3D[2]; z++) {
-				vtkSmartPointer<vtkVoxel> voxel = vtkSmartPointer<vtkVoxel>::New();
-				vtkIdList* points = voxel->GetPointIds();
-				points->SetId(0, xyzToIndex(x,y,z, dimensions3D));
-				points->SetId(1, xyzToIndex(x+1,y,z, dimensions3D));
-				points->SetId(2, xyzToIndex(x,y+1,z, dimensions3D));
-				points->SetId(3, xyzToIndex(x+1,y+1,z, dimensions3D));
-				points->SetId(4, xyzToIndex(x,y,z+1, dimensions3D));
-				points->SetId(5, xyzToIndex(x+1,y,z+1, dimensions3D));
-				points->SetId(6, xyzToIndex(x,y+1,z+1, dimensions3D));
-				points->SetId(7, xyzToIndex(x+1,y+1,z+1, dimensions3D));
-
-				connectivity->InsertNextCell(voxel);
-			}
-		}
-	  }
-      grid->SetPoints(points);
-      grid->SetCells(VTK_VOXEL, connectivity);
-	}
-	else {
-      for(int x = 0; x < dimensions3D[0]; x++) {
-		for(int y = 0; y < dimensions3D[1]; y++) {
-          vtkSmartPointer<vtkQuad> voxel = vtkSmartPointer<vtkQuad>::New();
-          vtkIdList* points = voxel->GetPointIds();
-          points->SetId(0, xyzToIndex(x,y,0, dimensions3D));
-		  points->SetId(1, xyzToIndex(x+1,y,0, dimensions3D));
-		  points->SetId(2, xyzToIndex(x+1,y+1,0, dimensions3D));
-		  points->SetId(3, xyzToIndex(x,y+1,0, dimensions3D));
-
-          connectivity->InsertNextCell(voxel);
-        }
-      }
-      grid->SetPoints(points);
-      grid->SetCells(VTK_QUAD, connectivity);
-	}
+  vtkSmartPointer<vtkUnstructuredGrid> grid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+  if (variable.dimensions==3) {
+    for (int xx=0; xx<variable.getVerticesPerAxisInCartesianMesh()-1; xx++)
+    for (int yy=0; yy<variable.getVerticesPerAxisInCartesianMesh()-1; yy++)
+    for (int zz=0; zz<variable.getVerticesPerAxisInCartesianMesh()-1; zz++) {
+      vtkSmartPointer<vtkVoxel> voxel = vtkSmartPointer<vtkVoxel>::New();
+      vtkIdList* points = voxel->GetPointIds();
+      points->SetId(0, xyzToIndex(xx,  yy,  zz,   variable.getVerticesPerAxisInCartesianMesh()));
+      points->SetId(1, xyzToIndex(xx+1,yy,  zz,   variable.getVerticesPerAxisInCartesianMesh()));
+      points->SetId(2, xyzToIndex(xx,  yy+1,zz,   variable.getVerticesPerAxisInCartesianMesh()));
+      points->SetId(3, xyzToIndex(xx+1,yy+1,zz,   variable.getVerticesPerAxisInCartesianMesh()));
+      points->SetId(4, xyzToIndex(xx,  yy,  zz+1, variable.getVerticesPerAxisInCartesianMesh()));
+      points->SetId(5, xyzToIndex(xx+1,yy,  zz+1, variable.getVerticesPerAxisInCartesianMesh()));
+      points->SetId(6, xyzToIndex(xx,  yy+1,zz+1, variable.getVerticesPerAxisInCartesianMesh()));
+      points->SetId(7, xyzToIndex(xx+1,yy+1,zz+1, variable.getVerticesPerAxisInCartesianMesh()));
+      connectivity->InsertNextCell(voxel);
+    }
+    grid->SetPoints(points);
+    grid->SetCells(VTK_VOXEL, connectivity);
+  }
+  else {
+    for (int xx=0; xx<variable.getVerticesPerAxisInCartesianMesh()-1; xx++)
+    for (int yy=0; yy<variable.getVerticesPerAxisInCartesianMesh()-1; yy++) {
+      vtkSmartPointer<vtkQuad> voxel = vtkSmartPointer<vtkQuad>::New();
+      vtkIdList* points = voxel->GetPointIds();
+      points->SetId(0, xyzToIndex(xx,  yy,  0,   variable.getVerticesPerAxisInCartesianMesh()));
+      points->SetId(1, xyzToIndex(xx+1,yy,  0,   variable.getVerticesPerAxisInCartesianMesh()));
+      points->SetId(2, xyzToIndex(xx,  yy+1,0,   variable.getVerticesPerAxisInCartesianMesh()));
+      points->SetId(3, xyzToIndex(xx+1,yy+1,0,   variable.getVerticesPerAxisInCartesianMesh()));
+      connectivity->InsertNextCell(voxel);
+    }
+    grid->SetPoints(points);
+    grid->SetCells(VTK_QUAD, connectivity);
+  }
 
 
+/*
 	//allocate any variables
 	std::vector<vtkSmartPointer<vtkDoubleArray>> variables;
 	for(auto kv : patch->patchData) {
@@ -185,46 +209,53 @@ vtkSmartPointer<vtkUnstructuredGrid> visualisation::output::VTUWriter::toUnstruc
 			grid->GetPointData()->AddArray(variableArray);
 		}
 	}
-
-	return grid;
-}
 */
+
+  return grid;
+}
 #endif
 
 
-int visualisation::output::VTUWriter::xyzToIndex(int x, int y, int z, int dimensions[3]) {
-	return x + y*(dimensions[0]+1) + z*(dimensions[0]+1)*(dimensions[1]+1);
+int visualisation::output::VTUWriter::xyzToIndex(int x, int y, int z, int verticesPerAxis) {
+  return x + y*verticesPerAxis + z*verticesPerAxis*verticesPerAxis;
 }
 
 
-void visualisation::output::VTUWriter::writeFile(const visualisation::data::Variable& variable, const std::vector<visualisation::data::PatchData>& data) {
-	/*
-  for( int timeStep = 0; timeStep<metaFile.getNumberOfDataSets(); timeStep++ ) {
-	std::vector<PeanoPatch*> p = metaFile.getData( timeStep, selector );
-
-    if (!p.empty()) {
-      std::string filename = _outputFileWithoutExtension + "-" + std::to_string(timeStep);
-
-      vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
-          _pvdFile << "<DataSet timestep=\"" << timeStep << "\" group=\"\" part=\"" << 0 << "\" "
-    	           << " file=\"" << filename << "." << writer->GetDefaultFileExtension() << "\" "
-    	           << "/>" << std::endl;
-//        }
-
-      writeFile(_directory + "/" + filename, p);
-    }
+void visualisation::output::VTUWriter::writeFile(const visualisation::data::Variable& variable, const std::vector<visualisation::data::PatchData>& patchData) {
+  #ifdef UseVTK
+  vtkSmartPointer<vtkAppendFilter> appendFilter = vtkSmartPointer<vtkAppendFilter>::New();
+  for (auto p: patchData) {
+/*
+	if(patch->hasMappings()) {
+		appendFilter->AddInputData(toUnstructuredGrid(patch));
+	} else {
+*/
+    appendFilter->AddInputData(toImageData(variable,p));
   }
-  */
+
+  appendFilter->Update();
+  vtkSmartPointer<vtkUnstructuredGrid> combined = vtkSmartPointer<vtkUnstructuredGrid>::New();
+  combined->ShallowCopy(appendFilter->GetOutput());
+
+  vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+  std::string outputFileName = _directory + "/" + _outputFileWithoutExtension + "." + writer->GetDefaultFileExtension();
+  writer->SetFileName(outputFileName.c_str());
+  writer->SetCompressorTypeToZLib();
+  writer->AddInputDataObject( combined );
+  writer->Write();
+
+  logInfo( "writeFile(...)", "write to file " << outputFileName );
+  #endif
 }
+
+
 
 /*
 
 void visualisation::output::VTUWriter::writeFile(const std::string& outputFileWithoutExtention, const std::vector<PeanoPatch*>& patches) {
   #ifdef UseVTK
   if (!patches.empty()) {
-    vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
-
-    std::string outFile = outputFileWithoutExtention + "." + writer->GetDefaultFileExtension();
+     std::string outFile = outputFileWithoutExtention + "." + writer->GetDefaultFileExtension();
 
     vtkSmartPointer<vtkUnstructuredGrid> outputGrid = visualisation::output::VTUWriter::combine( patches );
 
@@ -264,29 +295,6 @@ vtkSmartPointer<vtkUnstructuredGrid> visualisation::output::VTUWriter::combine(c
 */
 
 
-/*
-vtkSmartPointer<vtkUnstructuredGrid> visualisation::output::VTUWriter::combine(const std::vector<visualisation::input::PeanoTextPatchFileReader*>& readers) {
-	vtkSmartPointer<vtkAppendFilter> appendFilter = vtkSmartPointer<vtkAppendFilter>::New();
-	for(uint i = 0; i < readers.size(); i++) {
-		std::vector<PeanoPatch*> patches = readers.at(i)->patches;
-		for(uint j = 0; j < patches.size(); j++) {
-			PeanoPatch* patch = patches[j];
-			if(patch->hasMappings()) {
-				appendFilter->AddInputData(toUnstructuredGrid(patch));
-			} else {
-				appendFilter->AddInputData(toImageData(patch));
-			}
-		}
-	}
-
-	appendFilter->Update();
-	vtkSmartPointer<vtkUnstructuredGrid> combined = vtkSmartPointer<vtkUnstructuredGrid>::New();
-	combined->ShallowCopy(appendFilter->GetOutput());
-
-	return combined;
-}
-*/
-//#endif
 
 /*
 PeanoPatch* visualisation::output::VTUWriter::subSample(std::vector<PeanoReader*> &readers, int x, int y, int z) {
