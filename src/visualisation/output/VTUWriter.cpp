@@ -197,7 +197,7 @@ int visualisation::output::VTUWriter::xyzToIndex(int x, int y, int z, int dimens
 }
 
 
-void visualisation::output::VTUWriter::writeFile(const visualisation::data::DataSet& data, const std::string& selector) {
+void visualisation::output::VTUWriter::writeFile(const visualisation::data::Variable& variable, const std::vector<visualisation::data::PatchData>& data) {
 	/*
   for( int timeStep = 0; timeStep<metaFile.getNumberOfDataSets(); timeStep++ ) {
 	std::vector<PeanoPatch*> p = metaFile.getData( timeStep, selector );

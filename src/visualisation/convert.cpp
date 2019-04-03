@@ -40,7 +40,24 @@ void createDirectory( const std::string& directory ) {
 }
 
 
-void convertFile( std::string filename, const std::string& outputDirectory, const std::string& format ) {
+void inspect( std::string filename ) {
+  static tarch::logging::Log _log( "/" );
+
+  visualisation::input::PeanoTextPatchFileReader reader(filename);
+  reader.parse();
+
+  visualisation::data::DataSet data = reader.getData();
+
+  for (auto p: data.getVariables()) {
+	logInfo( "inspect", "variable " << p.name );
+	logInfo( "inspect", "\ttype\t\t\t" << (p.type==visualisation::data::PeanoDataType::Cell_Values ? "cell values" : "vertex values" ));
+	logInfo( "inspect", "\tdofs per axis\t\t" << p.dofsPerAxis );
+	logInfo( "inspect", "\tunknowns per dof\t" << p.unknowns );
+  }
+}
+
+
+void convertFile( std::string filename, const std::string& outputDirectory, const std::string& selector, const std::string& format ) {
   static tarch::logging::Log _log( "/" );
 
   createDirectory( outputDirectory );
@@ -66,7 +83,16 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
     logError( "convertFile(...)", "unknown output format " << format );
   }
 
-  writer->writeFile(reader.getData(),visualisation::data::DataSet::RawData );
+  visualisation::data::DataSet data = reader.getData();
+  if (data.hasVariable(selector)) {
+	visualisation::data::Variable variable = data.getVariable(selector);
+    writer->writeFile( variable, data.getData(variable) );
+  }
+  else {
+    logError( "convertFile(...)", "data file does not contain any data set with name " << selector );
+  }
+
+  data.free();
   delete writer;
 }
 
@@ -128,11 +154,17 @@ int main(int argc, char* argv[]) {
     }
     else {
       std::string mode            = argv[1];
-      if (mode.compare("convert-file")==0 and argc>=5) {
+      if (mode.compare("inspect")==0 and argc>=3) {
+    	for (int i=2; i<argc; i++) {
+    	  inspect( argv[i] );
+    	}
+      }
+      else if (mode.compare("convert-file")==0 and argc>=5) {
+        std::string selector        = argv[ argc-3 ];
         std::string outputDirectory = argv[ argc-2 ];
         std::string format          = argv[ argc-1 ];
-    	for (int i=2; i<argc-2; i++) {
-    	  convertFile( argv[i], outputDirectory, format );
+    	for (int i=2; i<argc-3; i++) {
+    	  convertFile( argv[i], outputDirectory, selector, format );
     	}
       }
       else if (mode.compare("convert-time-series")==0 and argc>=6) {
@@ -158,18 +190,20 @@ int main(int argc, char* argv[]) {
     if (!validParams) {
       std::cerr << std::endl << std::endl;
       std::cerr << "Usage:";
-      std::cerr << "\t./executable convert-file       InputFile1 [InputFile2 ...] OutputFolder Format" << std::endl;
+      std::cerr << "\t./executable inspect            InputFile1 [InputFile2 ...] " << std::endl;
+      std::cerr << "\t./executable convert-file       InputFile1 [InputFile2 ...] Selector OutputFolder Format" << std::endl;
       std::cerr << "\t./executable convert-set        InputFile1 [InputFile2 ...] Selector OutputFolder Format" << std::endl;
       std::cerr << "\t./executable extract-fine-grid  InputFile1 [InputFile2 ...] OutputFolder" << std::endl;
       std::cerr << std::endl << std::endl;
       std::cerr << "Variants:" << std::endl;
+      std::cerr << "\tinspect              Inspect which data sets are stored within file (cmp Selector below)" << std::endl;
       std::cerr << "\tconvert-file         Convert a single file" << std::endl;
       std::cerr << "\tconvert-set          Convert whole set of data comprising multiple time steps, resolutions, ..." << std::endl;
       std::cerr << "\textract-fine-grid    Extract the fine grid per snapshot and store in a new patch file comprising both the raw data and the fine grid. The fine grid's selector is fine-grid" << std::endl;
       std::cerr << std::endl << std::endl;
       std::cerr << "Options:" << std::endl;
       std::cerr << "\tFormat               Either " << OutputFormatPeano << " or " << OutputFormatVTU << std::endl;
-      std::cerr << "\tSelector             Either " << visualisation::data::DataSet::RawData << " or the identifier of a new data representations you created before" << std::endl;
+      std::cerr << "\tSelector             Use inspect to see which data sets are stored within your patch file, i.e. which you can select" << std::endl;
       return -1;
     }
     else return 0;

@@ -89,15 +89,72 @@ void visualisation::output::PeanoWriter::writeFile(const PeanoMetaFile&  metaFil
 
 
 //void visualisation::output::PeanoWriter::writeFile(const std::string& outputFileWithoutExtention, const std::vector<PeanoPatch*>& patches) {
-void visualisation::output::PeanoWriter::writeFile(const visualisation::data::DataSet& data, const std::string& selector) {
-	// @todo Hier faengt es an
-/*
-  std::ofstream  file( outputFileWithoutExtention + _FileExtension );
-  logInfo( "writeFile(...)", "write to file " << outputFileWithoutExtention << _FileExtension );
+void visualisation::output::PeanoWriter::writeFile(const visualisation::data::Variable& variable, const std::vector<visualisation::data::PatchData>& patches) {
+  std::string outputFileName = _directory + "/" + _outputFileWithoutExtension + _FileExtension;
+  std::ofstream  file( outputFileName );
+  logInfo( "writeFile(...)", "write to file " << outputFileName );
 
   file << _Header << std::endl;
 
-  file << "dimensions " << patches[0]->dimensions << std::endl;
+  file << "dimensions " << variable.dimensions << std::endl << std::endl;
+
+  file << "begin ";
+  if ( variable.type==visualisation::data::PeanoDataType::Cell_Values) {
+    file << "cell-values ";
+  }
+  else {
+    file << "vertex-values ";
+  }
+  file << "\"" << variable.name << "\"" << std::endl;
+  file << "  number-of-dofs-per-axis " << variable.dofsPerAxis << std::endl;
+  file << "  number-of-unknowns      " << variable.unknowns << std::endl;
+  file << "end ";
+  if ( variable.type==visualisation::data::PeanoDataType::Cell_Values) {
+    file << "cell-values ";
+  }
+  else {
+    file << "vertex-values ";
+  }
+  file << std::endl << std::endl;
+
+  for (auto p: patches) {
+    file << "begin patch " << std::endl;
+    file << "  offset";
+    for (int d=0; d<variable.dimensions; d++)
+      file << " " << p.offset[d];
+    file << std::endl;
+    file << "  size";
+    for (int d=0; d<variable.dimensions; d++)
+      file << " " << p.size[d];
+    file << std::endl;
+    file << "  begin ";
+    if ( variable.type==visualisation::data::PeanoDataType::Cell_Values) {
+      file << "cell-values ";
+    }
+    else {
+      file << "vertex-values ";
+    }
+    file << "\"" << variable.name << "\"" << std::endl;
+    file << "    ";
+    for (int i=0; i<variable.getTotalNumberOfQuantitiesPerPatch(); i++) {
+      file << " " << std::to_string( p.data[i] );
+    }
+    file << std::endl;
+    file << "  end ";
+    if ( variable.type==visualisation::data::PeanoDataType::Cell_Values) {
+      file << "cell-values ";
+    }
+    else {
+      file << "vertex-values ";
+    }
+    file << std::endl;
+
+    file << "end patch" << std::endl << std::endl;
+
+  }
+
+/*
+
   assertion( patches[0]->dimensions==2 or patches[0]->dimensions==3 );
 
   file << "patch-size " ;
@@ -153,7 +210,7 @@ void visualisation::output::PeanoWriter::writeFile(const visualisation::data::Da
 
     file << "end patch" << std::endl << std::endl;
   }
+*/
 
   file.close();
-*/
 }

@@ -33,7 +33,7 @@ class visualisation::output::PeanoWriter: public visualisation::output::Writer {
 	PeanoWriter(const std::string&  directory, const std::string& outputFileWithoutExtention);
 	~PeanoWriter();
 
-	void writeFile(const visualisation::data::DataSet& data, const std::string& selector) override;
+	void writeFile(const visualisation::data::Variable& variable, const std::vector<visualisation::data::PatchData>& data) override;
   private:
 	static tarch::logging::Log  _log;
 

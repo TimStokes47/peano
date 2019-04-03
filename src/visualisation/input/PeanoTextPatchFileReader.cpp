@@ -138,7 +138,7 @@ void visualisation::input::PeanoTextPatchFileReader::parseVariablesDeclaration( 
 
     _data.data.insert(
       std::pair<visualisation::data::Variable, std::vector<visualisation::data::PatchData>>(
-        visualisation::data::Variable( variableName, numberOfDofs, numberOfUnknowns, type ),
+        visualisation::data::Variable( variableName, numberOfDofs, numberOfUnknowns, type, _dimensions ),
 		std::vector<visualisation::data::PatchData>()
 	) );
 }
@@ -219,30 +219,25 @@ void visualisation::input::PeanoTextPatchFileReader::parsePatch( const std::vect
 void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( const std::string& variableName, double* offset, double* size, const std::vector< std::string >& textData ) {
   logDebug( "parsePatch(...)", "set data of variable " << variableName );
 
-  const visualisation::data::Variable*  key = nullptr;
-  for (auto& p: _data.data) {
- 	if (p.first.name==variableName) {
-  	  key = &(p.first);
-  	}
-  }
-
-  if (key==nullptr) {
+  if (!_data.hasVariable(variableName)) {
     logError( "parsePatch(...)", "no variables for " << variableName << " have been declared. Ignore data set");
     return;
   }
 
-  const int expectedDataEntries = tarch::la::aPowI(_dimensions,key->dofsPerAxis);
+  const visualisation::data::Variable  key = _data.getVariable(variableName);
+
+  const int expectedDataEntries = key.getTotalNumberOfQuantitiesPerPatch();
   if ( textData.size()!=expectedDataEntries ) {
     logError( "parsePatch(...)", "expected " << expectedDataEntries << " data entries for variable " << variableName << " but got only " << textData.size() << ". Ignore data set");
     return;
   }
 
-  visualisation::data::PatchData newEntry(_dimensions, offset, size, key->dofsPerAxis, key->type);
+  visualisation::data::PatchData newEntry(_dimensions, offset, size, key.dofsPerAxis, key.type);
   for (int i=0; i<expectedDataEntries; i++) {
     newEntry.data[i] = std::stod(textData[i]);
   }
 
-  _data.data[*key].push_back( newEntry );
+  _data.data[key].push_back( newEntry );
 }
 
 

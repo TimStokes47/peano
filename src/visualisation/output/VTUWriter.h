@@ -38,7 +38,7 @@ class visualisation::output::VTUWriter: public visualisation::output::Writer {
 	VTUWriter(const std::string&  directory, const std::string& outputFileWithoutExtention);
 	~VTUWriter();
 
-	void writeFile(const visualisation::data::DataSet& data, const std::string& selector) override;
+	void writeFile(const visualisation::data::Variable& variable, const std::vector<visualisation::data::PatchData>& data) override;
 
 	/**
 	 * Meta file write
