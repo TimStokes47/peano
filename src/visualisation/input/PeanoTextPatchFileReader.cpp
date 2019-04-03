@@ -5,22 +5,28 @@
 
 
 #include "Parser.h"
-#include "PeanoPatch.h"
 #include "PeanoTextPatchFileReader.h"
-#include "PeanoVariable.h"
+
+
+#include "tarch/Assertions.h"
+#include "tarch/la/ScalarOperations.h"
+
 
 tarch::logging::Log visualisation::input::PeanoTextPatchFileReader::_log( "visualisation::input::PeanoTextPatchFileReader" );
 
 
 visualisation::input::PeanoTextPatchFileReader::PeanoTextPatchFileReader(const std::string &file):
+  _dimensions(-1),
   _file(file) {
 }
 
 
-void visualisation::input::PeanoTextPatchFileReader::parse() {
-  patchSize = new int[3];
+visualisation::input::PeanoTextPatchFileReader::~PeanoTextPatchFileReader() {
+}
 
-  logInfo( "PeanoTextPatchFileReader(string)", "reading file " << _file );
+
+void visualisation::input::PeanoTextPatchFileReader::parse() {
+  logInfo( "parse()", "reading file " << _file );
 
   std::ifstream ifs(_file);
   std::vector<std::string> lines;
@@ -30,13 +36,11 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
   ifs.close();
 
   if (lines.empty()) {
-	logError( "PeanoTextPatchFileReader(string)", "file is empty (or does not exist)" );
+	logError( "parse()", "file is empty (or does not exist)" );
   }
 
   for(uint i = 0; i < lines.size(); i++) {
     std::string line = lines[i];
-
-	logDebug( "PeanoTextPatchFileReader(string)", "Interpret line " << line);
 
     std::vector< std::string > tokens = Parser::tokenise( line );
 
@@ -45,61 +49,76 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
 	else if ( tokens[0]=="begin" and tokens[1]=="cell-values" ) { //define a cell variable
       std::string variableName = Parser::removeHyphens(tokens[2]);
 
-  	  logDebug( "PeanoTextPatchFileReader(string)", "Added new variables " << variableName);
-
-  	  i++;
-  	  std::string nextLine = lines[i];
-      std::vector<std::string> splitUnknowns = Parser::tokenise( nextLine );
-      int unknowns = std::stoi(splitUnknowns[1]);
-
-      //get mapping
-      double* mapping = nullptr;
-      int mappings = -1;
-      std::string line2 = lines[i+2];
-      if( line2.compare( "begin mapping")==0 ) {
-        logDebug( "PeanoTextPatchFileReader(string)", "start to parse mapping" );
-        std::vector<std::string> patchLines;
-        while ( lines[i].find( "end mapping" )==std::string::npos ) {
-          patchLines.push_back( lines[i] );
-          i++;
-        }
-        mapping = parseMapping( patchLines );
+	  std::vector<std::string> variableDeclarationLines;
+      while ( lines[i].find( "end cell-values" )==std::string::npos ) {
+        variableDeclarationLines.push_back( lines[i] );
+        i++;
       }
-      PeanoVariable* variable = new PeanoVariable(variableName, unknowns, Cell_Values, cells, mapping, mappings);
-      variables.push_back(variable);
-      i++;
+
+      parseVariablesDeclaration( variableDeclarationLines, variableName, visualisation::data::PeanoDataType::Cell_Values );
     }
 	else if ( tokens[0]=="begin" and tokens[1]=="vertex-values" ) { //define a vertex variable
       std::string variableName = Parser::removeHyphens(tokens[2]);
 
-  	  logDebug( "PeanoTextPatchFileReader(string)", "Added new variables " << variableName);
-
-  	  i++;
-  	  std::string nextLine = lines[i];
-      std::vector<std::string> splitUnknowns = Parser::tokenise( nextLine );
-      int unknowns = std::stoi(splitUnknowns[1]);
-
-      //get mapping
-      double* mapping = nullptr;
-      int mappings = -1;
-      std::string line2 = lines[i+2];
-      if( line2.compare( "begin mapping")==0 ) {
-        logDebug( "PeanoTextPatchFileReader(string)", "start to parse mapping" );
-        std::vector<std::string> patchLines;
-        while ( lines[i].find( "end mapping" )==std::string::npos ) {
-          patchLines.push_back( lines[i] );
-          i++;
-        }
-        mapping = parseMapping( patchLines );
+	  std::vector<std::string> variableDeclarationLines;
+      while ( lines[i].find( "end vertex-values" )==std::string::npos ) {
+        variableDeclarationLines.push_back( lines[i] );
+        i++;
       }
-      PeanoVariable* variable = new PeanoVariable(variableName, unknowns, Vertex_Values, vertices, mapping, mappings);
-      variables.push_back(variable);
-      i++;
+
+      parseVariablesDeclaration( variableDeclarationLines, variableName, visualisation::data::PeanoDataType::Vertex_Values );
 	}
     else if ( tokens[0]=="dimensions" ) {
-	  dimensions = std::stoi(tokens[1]);
-	  logDebug( "PeanoTextPatchFileReader(string)", "dimensions=" << dimensions );
+	  _dimensions = std::stoi(tokens[1]);
+	  logDebug( "parse()", "dimensions=" << _dimensions );
 	}
+    else if( tokens[0]=="begin" and tokens[1]=="patch" ) {
+      logDebug( "parse()", "start to parse patch" );
+	  std::vector<std::string> patchLines;
+      while ( lines[i].find( "end patch" )==std::string::npos ) {
+        patchLines.push_back( lines[i] );
+        i++;
+      }
+      parsePatch( patchLines );
+    }
+    else {
+  	  logDebug( "parse()", "ignore line " << line );
+	}
+  }
+}
+
+
+void visualisation::input::PeanoTextPatchFileReader::parseVariablesDeclaration( const std::vector<std::string>& description, const std::string&  variableName, visualisation::data::PeanoDataType type ) {
+    //get mapping
+    int numberOfUnknowns = -1;
+    int numberOfDofs     = -1;
+	for (auto p: description) {
+      std::vector<std::string> tokens = Parser::tokenise( p );
+	  if (tokens[0]=="number-of-unknowns") {
+        numberOfUnknowns = std::stoi(tokens[1]);
+	  }
+	  if (tokens[0]=="number-of-dofs-per-axis") {
+        numberOfDofs = std::stoi(tokens[1]);
+	  }
+	}
+/*
+    double* mapping = nullptr;
+    int mappings = -1;
+    std::string line2 = lines[i+2];
+    if( line2.compare( "begin mapping")==0 ) {
+      logDebug( "parse()", "start to parse mapping" );
+      std::vector<std::string> patchLines;
+      while ( lines[i].find( "end mapping" )==std::string::npos ) {
+        patchLines.push_back( lines[i] );
+        i++;
+      }
+      mapping = parseMapping( patchLines );
+    }
+    _data.push
+*/
+
+    // @todo This belongs into the variable definition
+/*
     else if( tokens[0]=="patch-size" ) {
       for(int j = 1; j <= dimensions; j++) {
         patchSize[j-1] = std::stoi(tokens[j]);
@@ -113,22 +132,19 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
         vertices *= patchSize[i] +1;
       }
     }
-    else if( tokens[0]=="begin" and tokens[1]=="patch" ) {
-      logDebug( "PeanoTextPatchFileReader(string)", "start to parse patch" );
-	  std::vector<std::string> patchLines;
-      while ( lines[i].find( "end patch" )==std::string::npos ) {
-        patchLines.push_back( lines[i] );
-        i++;
-      }
-      parsePatch( patchLines );
-    }
-    else {
-  	  logDebug( "PeanoTextPatchFileReader(string)", "ignore line " << line );
-	}
-  }
+*/
+
+    logDebug( "parse()", "Added new variables " << variableName << " with " << numberOfDofs << " dof per axis (Cartesian layout) and " << numberOfUnknowns << " unknowns per dof" );
+
+    _data.data.insert(
+      std::pair<visualisation::data::Variable, std::vector<visualisation::data::PatchData>>(
+        visualisation::data::Variable( variableName, numberOfDofs, numberOfUnknowns, type ),
+		std::vector<visualisation::data::PatchData>()
+	) );
 }
 
 
+/*
 double* visualisation::input::PeanoTextPatchFileReader::parseMapping( const std::vector<std::string>& patchDescription ) {
   std::vector<double> data;
   for (auto p: patchDescription) {
@@ -143,90 +159,94 @@ double* visualisation::input::PeanoTextPatchFileReader::parseMapping( const std:
   }
   return result;
 }
+*/
 
 
 void visualisation::input::PeanoTextPatchFileReader::parsePatch( const std::vector<std::string>& text ) {
-  PeanoPatch* data = new PeanoPatch();
+  assertion( _dimensions==2 or _dimensions==3 );
 
-  data->dimensions = dimensions;
-  data->resolution = patchSize;
-
-  logDebug( "parsePatch(...)", "create patch of dimension " << dimensions << " with " << variables.size() << " variable(s)" );
-
-  //calculate the number of cells in the patch
-  int cells = 1;
-  for(int i = 0; i < dimensions; i++) {
-    cells *= patchSize[i];
-  }
-
-  //initialize the data objects for each variable
-  for(uint i = 0; i < variables.size(); i++) {
-    PeanoPatchData* patchData = new PeanoPatchData(variables[i]);
-    data->patchData[patchData->structure->name] = patchData;
-    logDebug( "parsePatch(...)", "add entry for variable " << patchData->structure->name << " with " << variables[i]->totalValues << " value(s)" );
-  }
-
+  logDebug( "parsePatch(...)", "create patch" );
   logDebug( "parsePatch(...)", "parse " << text.size() << " lines" );
+
+  std::vector<double> offset;
+  std::vector<double> size;
+
   for (int i=0; i<text.size(); i++) {
     std::vector<std::string> tokens = Parser::tokenise( text[i] );
 
     if( tokens[0]=="offset" ) {
       logDebug( "parsePatch(...)", "set offset to " << text[i] );
-      data->offsets = new double[dimensions];
-      for(int j = 0; j < dimensions; j++) {
-        data->offsets[j] = std::stod(tokens[j+1]);//the 0th element of split is "offset" so skip it
+      for(int j = 0; j < _dimensions; j++) {
+    	offset.push_back( std::stod(tokens[j+1]) );
       }
 	}
     else if ( tokens[0]=="size" ) {
       logDebug( "parsePatch(...)", "set sizes to " << text[i] );
-      data->sizes = new double[dimensions];
-      for(int j = 0; j < dimensions; j++) {
-        data->sizes[j] = std::stod(tokens[j+1]);//the 0th element of split is "offset" so skip it
+      for(int j = 0; j < _dimensions; j++) {
+    	size.push_back( std::stod(tokens[j+1]) );
       }
     }
-    else if ( tokens[0]=="begin" and (tokens[1]=="cell-values" or tokens[1]=="vertex-values") ) {
-      std::string variableName = Parser::removeHyphens(tokens[2]); //variableName.substr(1, variableName.size() -2);
-      logDebug( "parsePatch(...)", "set data of variable " << variableName );
+    else if ( tokens[0]=="begin" and tokens[1]=="cell-values") {
+      std::string variableName = Parser::removeHyphens(tokens[2]);
 
-      if ( data->patchData.count( variableName) == 0 ) {
-    	logError( "parsePatch(...)", "No data set for variable " << variableName << " found" );
-      }
-      else {
-        PeanoPatchData* variableData = data->patchData[variableName];
-
+      i++;
+	  std::vector<std::string> data;
+      while ( text[i].find( "end cell-values" )==std::string::npos ) {
+    	std::vector<std::string> tokens = Parser::tokenise( text[i] );
+        data.insert( data.end(), tokens.begin(), tokens.end() );
         i++;
-        std::vector< std::string >   values = Parser::tokenise( text[i] );
-
-        //convert the strings to doubles and add to the array
-        for(int j = 0; j < variableData->structure->totalValues; j++) {
-         variableData->values[j] = std::stod(values[j]);
-        }
       }
+
+      addDataToPatch(variableName,offset.data(),size.data(),data);
+	}
+    else if ( tokens[0]=="begin" and tokens[1]=="vertex-values" ) {
+      std::string variableName = Parser::removeHyphens(tokens[2]);
+
+      i++;
+	  std::vector<std::string> data;
+      while ( text[i].find( "end vertex-values" )==std::string::npos ) {
+    	std::vector<std::string> tokens = Parser::tokenise( text[i] );
+        data.insert( data.end(), tokens.begin(), tokens.end() );
+        i++;
+      }
+
+      addDataToPatch(variableName,offset.data(),size.data(),data);
 	}
   }
-
-  patches.push_back(data);
 }
 
 
-bool visualisation::input::PeanoTextPatchFileReader::isEmpty() {
-  return variables.empty() and patches.empty();
-}
+void visualisation::input::PeanoTextPatchFileReader::addDataToPatch( const std::string& variableName, double* offset, double* size, const std::vector< std::string >& textData ) {
+  logDebug( "parsePatch(...)", "set data of variable " << variableName );
 
-
-visualisation::input::PeanoTextPatchFileReader::~PeanoTextPatchFileReader() {
-  delete [] patchSize;
-
-  for(uint i = 0; i < patches.size(); i++) {
-    delete patches[i];
+  const visualisation::data::Variable*  key = nullptr;
+  for (auto& p: _data.data) {
+ 	if (p.first.name==variableName) {
+  	  key = &(p.first);
+  	}
   }
 
-  for(uint i = 0; i < variables.size(); i++) {
-    delete variables[i];
+  if (key==nullptr) {
+    logError( "parsePatch(...)", "no variables for " << variableName << " have been declared. Ignore data set");
+    return;
   }
+
+  const int expectedDataEntries = tarch::la::aPowI(_dimensions,key->dofsPerAxis);
+  if ( textData.size()!=expectedDataEntries ) {
+    logError( "parsePatch(...)", "expected " << expectedDataEntries << " data entries for variable " << variableName << " but got only " << textData.size() << ". Ignore data set");
+    return;
+  }
+
+  visualisation::data::PatchData newEntry(_dimensions, offset, size, key->dofsPerAxis, key->type);
+  for (int i=0; i<expectedDataEntries; i++) {
+    newEntry.data[i] = std::stod(textData[i]);
+  }
+
+  _data.data[*key].push_back( newEntry );
 }
 
 
-std::vector<PeanoPatch*> visualisation::input::PeanoTextPatchFileReader::getPatches() {
-  return patches;
+
+visualisation::data::DataSet  visualisation::input::PeanoTextPatchFileReader::getData() const {
+  return _data;
 }

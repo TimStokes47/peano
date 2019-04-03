@@ -1,11 +1,10 @@
 #ifndef _VISUALISATION_OUTPUT_VTU_WRITER_H_
 #define _VISUALISATION_OUTPUT_VTU_WRITER_H_
 
-#include "PeanoPatch.h"
-#include "PeanoMetaFile.h"
 #include "Writer.h"
 
 #include "../config.h"
+#include "../data/PatchData.h"
 
 #include "tarch/logging/Log.h"
 
@@ -39,12 +38,16 @@ class visualisation::output::VTUWriter: public visualisation::output::Writer {
 	VTUWriter(const std::string&  directory, const std::string& outputFileWithoutExtention);
 	~VTUWriter();
 
+	void writeFile(const visualisation::data::DataSet& data, const std::string& selector) override;
+
 	/**
 	 * Meta file write
 	 */
+/*
 	void writeFile(const PeanoMetaFile& metaFile, const std::string& selector) override;
 
 	static void writeFile(const std::string& outputFileWithoutExtension, const std::vector<PeanoPatch*>& patches);
+*/
   private:
 	static tarch::logging::Log  _log;
 
@@ -56,20 +59,19 @@ class visualisation::output::VTUWriter: public visualisation::output::Writer {
     /**
      * Maps a set of patches onto one unstructured grids.
      */
-    static vtkSmartPointer<vtkUnstructuredGrid> combine(const std::vector<PeanoPatch*>& patches);
-//    static vtkSmartPointer<vtkUnstructuredGrid> combine(const std::vector<visualisation::input::PeanoTextPatchFileReader*>& readers);
+//    static vtkSmartPointer<vtkUnstructuredGrid> combine(const std::vector<PeanoPatch*>& patches);
 
 	/**
 	 * Used if the patch doesn't have any mapping and thus represents a regular grid.
 	 */
-	static vtkSmartPointer<vtkImageData> toImageData(PeanoPatch *patch);
+//	static vtkSmartPointer<vtkImageData> toImageData(PeanoPatch *patch);
 
 	/**
 	 * Basic routine.
 	 *
 	 * Take an individual patch and convert it into an unstructured grid.
 	 */
-	static vtkSmartPointer<vtkUnstructuredGrid> toUnstructuredGrid(PeanoPatch* patch);
+//	static vtkSmartPointer<vtkUnstructuredGrid> toUnstructuredGrid(PeanoPatch* patch);
     #endif
 
 	/**

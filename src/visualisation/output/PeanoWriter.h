@@ -1,8 +1,9 @@
 #ifndef _VISUALISATION_OUTPUT_PEANO_WRITER_H_
 #define _VISUALISATION_OUTPUT_PEANO_WRITER_H_
 
-#include "PeanoPatch.h"
-#include "PeanoMetaFile.h"
+#include "visualisation/data/Variable.h"
+
+
 #include "Writer.h"
 
 #include "../config.h"
@@ -11,6 +12,7 @@
 
 #include <vector>
 #include <fstream>
+#include "../data/PatchData.h"
 
 namespace visualisation {
   namespace output {
@@ -31,19 +33,7 @@ class visualisation::output::PeanoWriter: public visualisation::output::Writer {
 	PeanoWriter(const std::string&  directory, const std::string& outputFileWithoutExtention);
 	~PeanoWriter();
 
-	/**
-	 * Meta file write
-	 */
-	void writeFile(const PeanoMetaFile& metaFile, const std::string& selector) override;
-
-	/**
-	 * This is a special variant of the writer which dumps all the different
-	 * file representations that we find in a Peano file. Therefore, it is not
-	 * a routine found in the super interface.
-	 */
-	void writeFile(const PeanoMetaFile& metaFile);
-
-	static void writeFile(const std::string& outputFileWithoutExtension, const std::vector<PeanoPatch*>& patches);
+	void writeFile(const visualisation::data::DataSet& data, const std::string& selector) override;
   private:
 	static tarch::logging::Log  _log;
 

@@ -8,6 +8,7 @@
 tarch::logging::Log  visualisation::input::PeanoTextMetaFileReader::_log( "visualisation::input::PeanoTextMetaFileReader" );
 
 
+/*
 visualisation::input::PeanoTextMetaFileReader::PeanoTextMetaFileReader( const std::string& filename ):
   _filename(filename) {
 }
@@ -26,7 +27,7 @@ void visualisation::input::PeanoTextMetaFileReader::parse() {
   // read the file in to a vector of strings
   std::ifstream ifs(_filename);
   std::vector<std::string> lines;
-  for (std::string line; std::getline(ifs, line); /**/ ) {
+  for (std::string line; std::getline(ifs, line);  ) {
 	lines.push_back(line);
   }
   ifs.close();
@@ -54,7 +55,7 @@ void visualisation::input::PeanoTextMetaFileReader::parse() {
 	}
   }
 
-  logInfo( "parse(...)", "meta file holds " << _file->_dataSets.size() << " entries" );
+  logInfo( "parse(...)", "meta file holds " << _file->_dataSets.size() << " entries (time stamps)" );
 }
 
 
@@ -73,7 +74,13 @@ void visualisation::input::PeanoTextMetaFileReader::parseDataset(const std::vect
       int z = std::stoi(tokens[3]);
 
       logError( "parseDataset(...)", "not supported yet")
-/*
+
+*/
+
+
+
+
+      /*
 			std::string fileName = split[4];
 //			boost::erase_all(fileName, "\"");
 
@@ -88,12 +95,24 @@ void visualisation::input::PeanoTextMetaFileReader::parseDataset(const std::vect
 			resolutions->push_back(dimensions);
 			resolutionData->push_back(fileName);
 */
+
+
+
+
+
+/*
 	}
 	else if(tokens.size() == 2) {
 	  std::string fileName = Parser::removeHyphens( tokens[1] );
-	  _file->_dataSets.back().data[PeanoMetaFile::RawData].push_back(
-        new visualisation::input::PeanoTextPatchFileReader(fileName)
+      visualisation::input::PeanoTextPatchFileReader  reader(fileName);
+      reader.parse();
+      auto data = reader.getPatches();
+	  _file->_dataSets.back().data[PeanoMetaFile::RawData].insert(
+        _file->_dataSets.back().data[PeanoMetaFile::RawData].end(),
+		data.begin(), data.end()
       );
+	  // @todo remove
+      logError( "parseDataset(...)", "inserted " << data.size() << " patch(es)" );
 	}
   }
 }
@@ -103,3 +122,4 @@ void visualisation::input::PeanoTextMetaFileReader::parseDataset(const std::vect
 PeanoMetaFile* visualisation::input::PeanoTextMetaFileReader::getFile() {
 	return _file;
 }
+*/

@@ -17,7 +17,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWri
   _patchCounter(0) {
   _writer._snapshotFileOut << "begin cell-values \"" << identifier << "\"" << std::endl
                << "  number-of-unknowns " << _numberOfUnknowns << std::endl
-               << "  number-of-cells-per-axis " << _numberOfCellsPerAxis << std::endl;
+               << "  number-of-dofs-per-axis " << _numberOfCellsPerAxis << std::endl;
 
   _writer.writeMetaData(metaData);
   _writer.writeMapping(getCellsPerPatch(),mapping);
@@ -37,9 +37,8 @@ int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDat
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, double value ) {
   assertion( !std::isnan(value) );
-  _out << " " << value;
-  for (int i=1; i<_numberOfUnknowns; i++) {
-    _out << " 0";
+  for (int i=0; i<getCellsPerPatch()*_numberOfUnknowns; i++) {
+    _out << " " << value;
   }
   _patchCounter++;
   flushIfPatchIsComplete();
@@ -47,18 +46,12 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDa
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter::plotCell( int index, double* values ) {
-	assertion(false);
-/*
-  for (int i=0; i<numberOfValues; i++) {
-    assertion( !std::isnan(values[i]) );
+  for (int i=0; i<getCellsPerPatch()*_numberOfUnknowns; i++) {
     _out << " " << values[i];
-  }
-  for (int i=numberOfValues; i<_numberOfUnknowns; i++) {
-    _out << " 0";
+    assertion( !std::isnan(values[i]) );
   }
   _patchCounter++;
   flushIfPatchIsComplete();
-*/
 }
 
 

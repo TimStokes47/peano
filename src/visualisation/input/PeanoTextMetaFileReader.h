@@ -6,9 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "PeanoPatch.h"
-#include "PeanoVariable.h"
-#include "PeanoMetaFile.h"
 
 #include "MetaFileReader.h"
 
@@ -45,12 +42,14 @@ class visualisation::input::PeanoTextMetaFileReader: public visualisation::input
 	void parseDataset( const std::vector<std::string> lines );
 
   public:
+/*
 	PeanoTextMetaFileReader( const std::string& filename );
 	virtual ~PeanoTextMetaFileReader();
 
 	void parse() override;
 
 	PeanoMetaFile* getFile() override;
+*/
 };
 
 #endif

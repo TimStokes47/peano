@@ -10,11 +10,17 @@ namespace visualisation {
 }
 
 
+namespace visualisation {
+  namespace data {
+    class DataSet;
+  }
+}
+
 
 class visualisation::input::MetaFileReader {
   public:
 	virtual void parse() = 0;
-	virtual PeanoMetaFile* getFile() = 0;
+//	virtual PeanoMetaFile* getFile() = 0;
 };
 
 #endif

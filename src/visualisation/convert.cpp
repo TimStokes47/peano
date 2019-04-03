@@ -5,16 +5,10 @@
 #include <limits>
 
 #include "../config.h"
-#ifdef UseVTK
-#include <vtkSmartPointer.h>
-#include <vtkXMLUnstructuredGridWriter.h>
-#include <vtkMergeCells.h>
-#endif
 
 
 #include "output/VTUWriter.h"
 #include "output/PeanoWriter.h"
-#include "PeanoMetaFile.h"
 #include "input/PeanoTextPatchFileReader.h"
 #include "input/PeanoTextMetaFileReader.h"
 
@@ -61,19 +55,24 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
   visualisation::input::PeanoTextPatchFileReader reader(filename);
   reader.parse();
 
+  visualisation::output::PeanoWriter::Writer* writer = nullptr;
   if (format==OutputFormatPeano) {
-    visualisation::output::PeanoWriter::writeFile( outFile, reader.getPatches() );
+    writer = new visualisation::output::PeanoWriter( outputDirectory, truncatedFile );
   }
   else if (format==OutputFormatVTU) {
-    visualisation::output::VTUWriter::writeFile( outFile, reader.getPatches() );
+    writer = new visualisation::output::VTUWriter( outputDirectory, truncatedFile );
   }
   else {
     logError( "convertFile(...)", "unknown output format " << format );
   }
+
+  writer->writeFile(reader.getData(),visualisation::data::DataSet::RawData );
+  delete writer;
 }
 
 
 void convertTimeSeries( std::string filename, std::string outputDirectory, const std::string& selector, const std::string& format ) {
+/*
   static tarch::logging::Log _log( "/" );
   logInfo( "convertFile(...)", "read file " << filename );
 
@@ -96,10 +95,12 @@ void convertTimeSeries( std::string filename, std::string outputDirectory, const
 
   writer->writeFile( *(reader->getFile()), selector );
   delete writer;
+*/
 }
 
 
 void extractFineGrid( std::string filename, std::string outputDirectory ) {
+/*
   static tarch::logging::Log _log( "/" );
   logInfo( "extractFineGrid(...)", "read file " << filename );
 
@@ -107,10 +108,12 @@ void extractFineGrid( std::string filename, std::string outputDirectory ) {
 
   visualisation::input::MetaFileReader* reader = new visualisation::input::PeanoTextMetaFileReader(filename);
   reader->parse();
+//  visualisation::filter::Intersections::removeIntersectedCoarseGrainPatches(reader);
 
   std::string                        outFileNamePrefix  = filename.erase(filename.find_last_of(".") );
   visualisation::output::PeanoWriter writer( outputDirectory, outFileNamePrefix );
   writer.writeFile( *(reader->getFile()) );
+*/
 }
 
 
@@ -166,7 +169,7 @@ int main(int argc, char* argv[]) {
       std::cerr << std::endl << std::endl;
       std::cerr << "Options:" << std::endl;
       std::cerr << "\tFormat               Either " << OutputFormatPeano << " or " << OutputFormatVTU << std::endl;
-      std::cerr << "\tSelector             Either " << PeanoMetaFile::RawData << " or the identifier of a new data representations you created before" << std::endl;
+      std::cerr << "\tSelector             Either " << visualisation::data::DataSet::RawData << " or the identifier of a new data representations you created before" << std::endl;
       return -1;
     }
     else return 0;

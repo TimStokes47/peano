@@ -2,9 +2,6 @@
 #define _VISUALISATION_INPUT_PEANO_PATCH_FILE_READER_H_
 
 
-class PeanoPatch;
-
-
 namespace visualisation {
   namespace input {
     class PatchFileReader;
@@ -12,12 +9,17 @@ namespace visualisation {
 }
 
 
+namespace visualisation {
+  namespace data {
+    class DataSet;
+  }
+}
+
 
 class visualisation::input::PatchFileReader {
   public:
 	virtual void parse() = 0;
-	virtual bool isEmpty() = 0;
-	virtual std::vector<PeanoPatch*> getPatches() = 0;
+	virtual visualisation::data::DataSet  getData() const = 0;
 };
 
 #endif

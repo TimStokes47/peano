@@ -17,7 +17,7 @@ tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataW
   _patchCounter(0) {
   _writer._snapshotFileOut << "begin vertex-values \"" << identifier << "\"" << std::endl
                            << "  number-of-unknowns " << _numberOfUnknowns << std::endl
-                           << "  number-of-vertices-per-axis " << _numberOfVerticesPerAxis << std::endl;
+                           << "  number-of-dofs-per-axis " << _numberOfVerticesPerAxis << std::endl;
 
   _writer.writeMetaData(metaData);
   _writer.writeMapping(getVerticesPerPatch(),mapping);
@@ -37,9 +37,8 @@ int tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexD
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::plotVertex( int index, double value ) {
   assertion( !std::isnan(value) );
-  _out << " " << value;
-  for (int i=1; i<_numberOfUnknowns; i++) {
-    _out << " 0";
+  for (int i=0; i<getVerticesPerPatch()*_numberOfUnknowns; i++) {
+    _out << " " << value;
   }
   _patchCounter++;
   flushIfPatchIsComplete();
@@ -47,18 +46,12 @@ void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::Vertex
 
 
 void tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::VertexDataWriter::plotVertex( int index, double* values ) {
-	assertion(false);
-/*
-  for (int i=0; i<numberOfValues; i++) {
+  for (int i=0; i<getVerticesPerPatch()*_numberOfUnknowns; i++) {
     _out << " " << values[i];
     assertion( !std::isnan(values[i]) );
   }
-  for (int i=numberOfValues; i<_numberOfUnknowns; i++) {
-    _out << " 0";
-  }
   _patchCounter++;
   flushIfPatchIsComplete();
-*/
 }
 
 

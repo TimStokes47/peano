@@ -5,11 +5,9 @@
 #include "../config.h"
 #include "visualisation/input/PeanoTextPatchFileReader.h"
 
-#include "PeanoWriter.h"
-#include "PeanoPatch.h"
-#include "PeanoPatchData.h"
-#include "PeanoVariable.h"
+#include "tarch/Assertions.h"
 
+#include "PeanoWriter.h"
 
 
 tarch::logging::Log  visualisation::output::PeanoWriter::_log( "PeanoConverter" );
@@ -30,32 +28,31 @@ visualisation::output::PeanoWriter::~PeanoWriter() {
 }
 
 
-void visualisation::output::PeanoWriter::writeFile(const PeanoMetaFile& metaFile) {
+/*
+void visualisation::output::PeanoWriter::writeFile(const visualisation::data::DataSet& data, const std::string& selector) {
   for( int timeStep = 0; timeStep<metaFile.getNumberOfDataSets(); timeStep++ ) {
     _metaFile << "begin dataset" << std::endl;
 
 	for ( auto selector: metaFile.getStoredDataRepresentations(timeStep) ) {
-      std::vector<  visualisation::input::PatchFileReader*> readers = metaFile.createReaders( timeStep, selector );
-      logInfo( "convertFile(...)", "process " << readers.size() << " data set(s) with selector " << selector );
+	  std::vector<PeanoPatch*>  p = metaFile.getData( timeStep, selector );
+      logInfo( "convertFile(...)", "process " << p.size() << " patches with selector " << selector );
 
-      #pragma omp parallel for
-      for( int i=0; i<readers.size(); i++) {
-        auto p = readers[i];
-        p->parse();
-        if (!p->getPatches().empty()) {
-          std::string filename = _outputFileWithoutExtension + "-" + std::to_string(timeStep) + "-" + std::to_string(i);
+      if (!p.empty()) {
+    	  // @todo in the future, we might wanna split up the patches into subdirectories
+        //std::string filename = _outputFileWithoutExtension + "-" + std::to_string(timeStep) + "-" + std::to_string(i);
+    	// @todo Perhaps raw ito filename?
+        std::string filename = _outputFileWithoutExtension + "-" + std::to_string(timeStep);
 
-          #pragma omp critical
-          {
-            if (selector==PeanoMetaFile::RawData) {
-              _metaFile << "  include \"" << filename << _FileExtension << "\"" << std::endl;
-            }
-            else {
-              _metaFile << "  include \"" << selector << "\" \"" << filename << _FileExtension << "\"" << std::endl;
-            }
+        #pragma omp critical
+        {
+          if (selector==PeanoMetaFile::RawData) {
+            _metaFile << "  include \"" << filename << _FileExtension << "\"" << std::endl;
           }
-          writeFile(_directory + "/" + filename, p->getPatches());
+          else {
+           _metaFile << "  include \"" << selector << "\" \"" << filename << _FileExtension << "\"" << std::endl;
+          }
         }
+        writeFile(_directory + "/" + filename, p);
       }
 	}
 
@@ -66,53 +63,57 @@ void visualisation::output::PeanoWriter::writeFile(const PeanoMetaFile& metaFile
 
 void visualisation::output::PeanoWriter::writeFile(const PeanoMetaFile&  metaFile, const std::string& selector) {
   for( int timeStep = 0; timeStep<metaFile.getNumberOfDataSets(); timeStep++ ) {
-    std::vector<  visualisation::input::PatchFileReader*> readers = metaFile.createReaders( timeStep, selector );
+	std::vector<PeanoPatch*> p = metaFile.getData( timeStep, selector );
 
-    logInfo( "convertFile(...)", "time step consists of " << readers.size() << " data set(s)" );
+//    logInfo( "convertFile(...)", "time step consists of " << readers.size() << " data set(s)" );
 
     _metaFile << "begin dataset" << std::endl;
 
-    #pragma omp parallel for
-    for( int i=0; i<readers.size(); i++) {
-      auto p = readers[i];
-      p->parse();
-      if (!p->getPatches().empty()) {
-        std::string filename = _outputFileWithoutExtension + "-" + std::to_string(timeStep) + "-" + std::to_string(i);
+//    #pragma omp parallel for
+    if (!p.empty()) {
+//      std::string filename = _outputFileWithoutExtension + "-" + std::to_string(timeStep) + "-" + std::to_string(i);
+      std::string filename = _outputFileWithoutExtension + "-" + std::to_string(timeStep);
 
-        #pragma omp critical
-        {
-          _metaFile << "  include \"" << filename << _FileExtension << "\"" << std::endl;
-        }
-
-        writeFile(_directory + "/" + filename, p->getPatches());
+//        #pragma omp critical
+      {
+        _metaFile << "  include \"" << filename << _FileExtension << "\"" << std::endl;
       }
+
+      writeFile(_directory + "/" + filename, p);
     }
 
     _metaFile << "end dataset" << std::endl << std::endl;
   }
 }
+*/
 
 
-void visualisation::output::PeanoWriter::writeFile(const std::string& outputFileWithoutExtention, const std::vector<PeanoPatch*>& patches) {
+//void visualisation::output::PeanoWriter::writeFile(const std::string& outputFileWithoutExtention, const std::vector<PeanoPatch*>& patches) {
+void visualisation::output::PeanoWriter::writeFile(const visualisation::data::DataSet& data, const std::string& selector) {
+	// @todo Hier faengt es an
+/*
   std::ofstream  file( outputFileWithoutExtention + _FileExtension );
   logInfo( "writeFile(...)", "write to file " << outputFileWithoutExtention << _FileExtension );
 
   file << _Header << std::endl;
 
   file << "dimensions " << patches[0]->dimensions << std::endl;
-  file << "patch-size " ;
+  assertion( patches[0]->dimensions==2 or patches[0]->dimensions==3 );
 
+  file << "patch-size " ;
   for (int i=0; i<patches[0]->dimensions; i++) {
 	file << patches[0]->resolution[i] << " ";
+    assertion( patches[0]->resolution[i]>=1 );
   }
   file << std::endl << std::endl;
 
   for (auto it : patches[0]->patchData) {
-	PeanoPatchData* data = it.second;
-	file << "begin " << (data->structure->type == Cell_Values?"cell":"vertex") << "-values";
-	file << " \"" << data->structure->name << "\"\n";
-	file << "  number-of-unknowns " << data->structure->unknowns << "\n";
-	file << "end " << (data->structure->type == Cell_Values?"cell":"vertex") << "-values\n\n";
+	PeanoPatchData& data = it.second;
+    assertion( data.structure->unknowns>=1 );
+	file << "begin " << (data.structure->type == Cell_Values?"cell":"vertex") << "-values";
+	file << " \"" << data.structure->name << "\"\n";
+	file << "  number-of-unknowns " << data.structure->unknowns << "\n";
+	file << "end " << (data.structure->type == Cell_Values?"cell":"vertex") << "-values\n\n";
   }
 
   file << std::endl << std::endl;
@@ -129,30 +130,30 @@ void visualisation::output::PeanoWriter::writeFile(const std::string& outputFile
 	file << "  size ";
     for (int d=0; d<p->dimensions; d++) {
 	  file << p->sizes[d] << " ";
+	  assertion( p->sizes[d]>=1 );
     }
     file << std::endl;
 
 	for (auto it : p->patchData) {
-  	  PeanoPatchData* data = it.second;
-	  file << "  begin " << (data->structure->type == Cell_Values?"cell":"vertex") << "-values";
-	  file << " \"" << data->structure->name << "\"\n";
+  	  PeanoPatchData& data = it.second;
+	  file << "  begin " << (data.structure->type == Cell_Values?"cell":"vertex") << "-values";
+	  file << " \"" << data.structure->name << "\"\n";
 	  file << "   ";
-      for(int i=0; i<data->structure->totalValues; i++) {
-		double value = data->values[i];
-		if(value < 0.000000000001 && value > 0) {
+      for(int i=0; i<data.structure->totalValues; i++) {
+		double value = data.values[i];
+		if(value < 1e-12 && value > 0) {
           file << " 0";
 		}
 		else {
           file << " " << value;
 		}
       }
-      file << "\n  end " << (data->structure->type == Cell_Values?"cell":"vertex") << "-values\n";
+      file << "\n  end " << (data.structure->type == Cell_Values?"cell":"vertex") << "-values\n";
 	}
 
     file << "end patch" << std::endl << std::endl;
   }
 
   file.close();
+*/
 }
-
-

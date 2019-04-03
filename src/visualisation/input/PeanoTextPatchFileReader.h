@@ -6,9 +6,12 @@
 #include <string>
 #include <vector>
 
+#include "../data/PatchData.h"
 #include "PatchFileReader.h"
-#include "PeanoPatch.h"
-#include "PeanoVariable.h"
+
+
+#include "visualisation/data/DataSet.h"
+#include "visualisation/data/Variable.h"
 
 
 #include "tarch/logging/Log.h"
@@ -39,15 +42,12 @@ class visualisation::input::PeanoTextPatchFileReader: public visualisation::inpu
 	const std::string  _file;
 
 	void    parsePatch( const std::vector<std::string>& patchDescription );
-	double* parseMapping( const std::vector<std::string>& patchDescription );
+	void    parseVariablesDeclaration( const std::vector<std::string>& patchDescription, const std::string&  name, visualisation::data::PeanoDataType type );
 
-	int     dimensions = -1;
-	int     cells = -1;
-	int     vertices = -1;
-	int*    patchSize;
+    void    addDataToPatch( const std::string& variableName, double* offset, double* size, const std::vector< std::string >& textData );
 
-	std::vector<PeanoVariable*> variables;
-	std::vector<PeanoPatch*>    patches;
+	int                           _dimensions;
+    visualisation::data::DataSet  _data;
   public:
 	/**
 	 * Read in one file.
@@ -61,9 +61,7 @@ class visualisation::input::PeanoTextPatchFileReader: public visualisation::inpu
 	virtual ~PeanoTextPatchFileReader();
 
 	void parse() override;
-	bool isEmpty() override;
-
-	std::vector<PeanoPatch*> getPatches() override;
+	visualisation::data::DataSet  getData() const override;
 };
 
-#endif /* PEANOREADER_H_ */
+#endif

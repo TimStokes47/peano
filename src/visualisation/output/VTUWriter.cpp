@@ -27,11 +27,6 @@
 #include <vtkMergeCells.h>
 #endif
 
-#include "PeanoPatch.h"
-#include "PeanoPatchData.h"
-#include "PeanoVariable.h"
-
-
 
 tarch::logging::Log  visualisation::output::VTUWriter::_log( "PeanoConverter" );
 
@@ -54,6 +49,7 @@ visualisation::output::VTUWriter::~VTUWriter() {
 
 
 #ifdef UseVTK
+/*
 vtkSmartPointer<vtkImageData> visualisation::output::VTUWriter::toImageData(PeanoPatch *patch) {
 	vtkSmartPointer<vtkImageData> imageData = vtkSmartPointer<vtkImageData>::New();
 
@@ -76,18 +72,18 @@ vtkSmartPointer<vtkImageData> visualisation::output::VTUWriter::toImageData(Pean
 
 	//allocate any variables
 	for(auto kv : patch->patchData) {
-		PeanoPatchData* data = kv.second;
+		PeanoPatchData& data = kv.second;
 		vtkSmartPointer<vtkDoubleArray> variableArray = vtkSmartPointer<vtkDoubleArray>::New();
-		variableArray->SetNumberOfComponents(data->structure->unknowns);
-		variableArray->SetName(data->structure->name.c_str());
+		variableArray->SetNumberOfComponents(data.structure->unknowns);
+		variableArray->SetName(data.structure->name.c_str());
 		//std:: << "\n " << data->variableName << ": ";
-		for(int i = 0; i < data->structure->totalValues; i += data->structure->unknowns) {
-			variableArray->InsertNextTuple(&data->values[i]);
+		for(int i = 0; i < data.structure->totalValues; i += data.structure->unknowns) {
+			variableArray->InsertNextTuple(&(data.values[i]));
 		}
 
-		if(data->structure->type == Cell_Values) {
+		if(data.structure->type == Cell_Values) {
 			imageData->GetCellData()->AddArray(variableArray);
-		} else if(data->structure->type == Vertex_Values) {
+		} else if(data.structure->type == Vertex_Values) {
 			imageData->GetPointData()->AddArray(variableArray);
 		}
 	}
@@ -174,24 +170,25 @@ vtkSmartPointer<vtkUnstructuredGrid> visualisation::output::VTUWriter::toUnstruc
 	//allocate any variables
 	std::vector<vtkSmartPointer<vtkDoubleArray>> variables;
 	for(auto kv : patch->patchData) {
-		PeanoPatchData* data = kv.second;
+		PeanoPatchData& data = kv.second;
 		vtkSmartPointer<vtkDoubleArray> variableArray = vtkSmartPointer<vtkDoubleArray>::New();
-		variableArray->SetNumberOfComponents(data->structure->unknowns);
-		variableArray->SetName(data->structure->name.c_str());
+		variableArray->SetNumberOfComponents(data.structure->unknowns);
+		variableArray->SetName(data.structure->name.c_str());
 		//std:: << "\n " << data->variableName << ": ";
-		for(int i = 0; i < data->structure->totalValues; i += data->structure->unknowns) {
-			variableArray->InsertNextTuple(&data->values[i]);
+		for(int i = 0; i < data.structure->totalValues; i += data.structure->unknowns) {
+			variableArray->InsertNextTuple(&(data.values[i]));
 		}
 
-		if(data->structure->type == Cell_Values) {
+		if(data.structure->type == Cell_Values) {
 			grid->GetCellData()->AddArray(variableArray);
-		} else if(data->structure->type == Vertex_Values) {
+		} else if(data.structure->type == Vertex_Values) {
 			grid->GetPointData()->AddArray(variableArray);
 		}
 	}
 
 	return grid;
 }
+*/
 #endif
 
 
@@ -200,33 +197,27 @@ int visualisation::output::VTUWriter::xyzToIndex(int x, int y, int z, int dimens
 }
 
 
-void visualisation::output::VTUWriter::writeFile(const PeanoMetaFile&  metaFile, const std::string& selector) {
+void visualisation::output::VTUWriter::writeFile(const visualisation::data::DataSet& data, const std::string& selector) {
+	/*
   for( int timeStep = 0; timeStep<metaFile.getNumberOfDataSets(); timeStep++ ) {
-    std::vector<  visualisation::input::PatchFileReader*> readers = metaFile.createReaders( timeStep, selector );
+	std::vector<PeanoPatch*> p = metaFile.getData( timeStep, selector );
 
-    logInfo( "convertFile(...)", "time step consists of " << readers.size() << " data set(s)" );
+    if (!p.empty()) {
+      std::string filename = _outputFileWithoutExtension + "-" + std::to_string(timeStep);
 
-    #pragma omp parallel for
-    for( int i=0; i<readers.size(); i++) {
-      auto p = readers[i];
-      p->parse();
-      if (!p->getPatches().empty()) {
-        std::string filename = _outputFileWithoutExtension + "-" + std::to_string(timeStep) + "-" + std::to_string(i);
-
-        #pragma omp critical
-        {
-          vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
-          _pvdFile << "<DataSet timestep=\"" << timeStep << "\" group=\"\" part=\"" << i << "\" "
+      vtkSmartPointer<vtkXMLUnstructuredGridWriter> writer = vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
+          _pvdFile << "<DataSet timestep=\"" << timeStep << "\" group=\"\" part=\"" << 0 << "\" "
     	           << " file=\"" << filename << "." << writer->GetDefaultFileExtension() << "\" "
     	           << "/>" << std::endl;
-        }
+//        }
 
-        writeFile(_directory + "/" + filename, p->getPatches());
-      }
+      writeFile(_directory + "/" + filename, p);
     }
   }
+  */
 }
 
+/*
 
 void visualisation::output::VTUWriter::writeFile(const std::string& outputFileWithoutExtention, const std::vector<PeanoPatch*>& patches) {
   #ifdef UseVTK
@@ -270,6 +261,7 @@ vtkSmartPointer<vtkUnstructuredGrid> visualisation::output::VTUWriter::combine(c
 
   return combined;
 }
+*/
 
 
 /*
@@ -294,7 +286,7 @@ vtkSmartPointer<vtkUnstructuredGrid> visualisation::output::VTUWriter::combine(c
 	return combined;
 }
 */
-#endif
+//#endif
 
 /*
 PeanoPatch* visualisation::output::VTUWriter::subSample(std::vector<PeanoReader*> &readers, int x, int y, int z) {
