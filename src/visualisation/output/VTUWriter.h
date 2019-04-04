@@ -72,6 +72,8 @@ class visualisation::output::VTUWriter: public visualisation::output::Writer {
 	 * Take an individual patch and convert it into an unstructured grid.
 	 */
 	static vtkSmartPointer<vtkUnstructuredGrid> toUnstructuredGrid(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data);
+
+	static vtkSmartPointer<vtkDoubleArray> getVTUDataForOnePatch(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data);
     #endif
 
 	/**
