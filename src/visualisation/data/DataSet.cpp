@@ -1,0 +1,65 @@
+#include "DataSet.h"
+
+#include <string>
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <algorithm>
+
+
+tarch::logging::Log  visualisation::data::DataSet::_log( "visualisation::data::DataSet" );
+
+
+visualisation::data::DataSet::DataSet() {
+}
+
+
+void visualisation::data::DataSet::free() {
+  for (auto& p: data) {
+	for (auto& pp: p.second) {
+      pp.free();
+	}
+  }
+}
+
+
+std::vector<visualisation::data::PatchData> visualisation::data::DataSet::getData( const Variable& selector ) const {
+  if ( data.count(selector)==0) {
+    logError( "createReaders(...)", "no data set with identifier " << selector.name );
+	return std::vector<visualisation::data::PatchData>();
+  }
+  else {
+    return data.at(selector);
+  }
+}
+
+
+std::vector<visualisation::data::Variable>  visualisation::data::DataSet::getVariables() const {
+  std::vector<visualisation::data::Variable> result;
+  for (auto p: data) {
+	result.push_back(p.first);
+  }
+  return result;
+}
+
+
+bool visualisation::data::DataSet::hasVariable( const std::string& name ) const {
+  for (auto& p: data) {
+ 	if (p.first.name==name) {
+  	  return true;
+  	}
+  }
+  return false;
+}
+
+
+visualisation::data::Variable visualisation::data::DataSet::getVariable( const std::string& name ) const {
+  const visualisation::data::Variable* result;
+  for (auto& p: data) {
+ 	if (p.first.name==name) {
+  	  result = &(p.first);
+  	}
+  }
+  return *result;
+}
+
