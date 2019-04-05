@@ -9,8 +9,15 @@
 
 #include "output/VTUWriter.h"
 #include "output/PeanoWriter.h"
+
 #include "input/PeanoTextPatchFileReader.h"
 #include "input/PeanoTextMetaFileReader.h"
+
+#include "filter/Copy.h"
+#include "filter/Intersection.h"
+
+
+#include "tarch/Assertions.h"
 
 
 #include <experimental/filesystem> // or #include <filesystem>
@@ -50,10 +57,22 @@ void inspect( std::string filename ) {
 
   for (auto p: data.getVariables()) {
 	logInfo( "inspect", "variable " << p.name );
-	logInfo( "inspect", "\ttype\t\t\t" << (p.type==visualisation::data::PeanoDataType::Cell_Values ? "cell values" : "vertex values" ));
+    logInfo( "inspect", "\ttype\t\t\t" << (p.type==visualisation::data::PeanoDataType::Cell_Values ? "cell values" : "vertex values" ));
 	logInfo( "inspect", "\tdofs per axis\t\t" << p.dofsPerAxis );
 	logInfo( "inspect", "\tunknowns per dof\t" << p.unknowns );
   }
+}
+
+
+std::string getFileNameWithoutExtensionAndWithoutPatch( std::string& file ) {
+  std::string result = file;
+  if ( result.find_last_of(".")!=std::string::npos ) {
+    result.erase(result.find_last_of(".") );
+  }
+  if ( result.find_last_of("/")!=std::string::npos ) {
+    result.erase(result.find_last_of("/") );
+  }
+  return result;
 }
 
 
@@ -62,10 +81,7 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
 
   createDirectory( outputDirectory );
 
-  std::string truncatedFile = filename;
-  if ( truncatedFile.find_last_of(".")!=std::string::npos ) {
-    truncatedFile.erase(truncatedFile.find_last_of(".") );
-  }
+  std::string truncatedFile = getFileNameWithoutExtensionAndWithoutPatch( filename );
   std::string outFile = outputDirectory + "/" + truncatedFile;
   logInfo( "convertFile(...)", "writing file " << outFile );
 
@@ -99,6 +115,69 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
 }
 
 
+enum class Filter {
+  Copy,
+  ExtractFineGrid
+};
+
+std::string toString( Filter filter ) {
+  switch (filter) {
+    case Filter::Copy:
+      return "copy";
+    case Filter::ExtractFineGrid:
+      return "extract-fine-grid";
+  }
+  return "undef";
+}
+
+
+void applyFilter( std::string filename, std::string outputDirectory, std::string selector, std::string filterName, std::string targetSelector) {
+  static tarch::logging::Log _log( "/" );
+
+  createDirectory( outputDirectory );
+
+  std::string truncatedFile = getFileNameWithoutExtensionAndWithoutPatch( filename );
+  logInfo( "convertFile(...)", "writing file " << truncatedFile );
+
+  visualisation::input::PeanoTextPatchFileReader reader(filename);
+  reader.parse();
+  visualisation::data::DataSet data = reader.getData();
+
+  visualisation::output::PeanoWriter writer( outputDirectory, truncatedFile );
+  if (data.hasVariable(selector)) {
+	visualisation::data::Variable variable = data.getVariable(selector);
+
+    if (data.hasVariable(targetSelector)) {
+      logError( "convertFile(...)", "file already contains data set with name " << targetSelector );
+    }
+    else {
+      visualisation::filter::Filter* filter = nullptr;
+      if (filterName==toString(Filter::Copy)) {
+        filter = new visualisation::filter::Copy();
+      }
+      else if (filterName==toString(Filter::ExtractFineGrid)) {
+        filter = new visualisation::filter::Intersection( visualisation::filter::Intersection::Strategy::KeepFinerGrid );
+      }
+      else {
+        logError( "convertFile(...)", "unknown filter " << filterName );
+      }
+
+      if (filter!=nullptr) {
+    	filter->apply( data, variable, targetSelector );
+    	assertion1( data.hasVariable(targetSelector), targetSelector );
+    	visualisation::data::Variable targetVariable = data.getVariable(targetSelector);
+        writer.writeFile( data );
+      }
+    }
+  }
+  else {
+    logError( "convertFile(...)", "data file does not contain any data set with name " << selector );
+  }
+
+  data.free();
+}
+
+
 void convertTimeSeries( std::string filename, std::string outputDirectory, const std::string& selector, const std::string& format ) {
 /*
   static tarch::logging::Log _log( "/" );
@@ -127,10 +206,10 @@ void convertTimeSeries( std::string filename, std::string outputDirectory, const
 }
 
 
-void extractFineGrid( std::string filename, std::string outputDirectory ) {
+void extractExtractFineGrid( std::string filename, std::string outputDirectory ) {
 /*
   static tarch::logging::Log _log( "/" );
-  logInfo( "extractFineGrid(...)", "read file " << filename );
+  logInfo( "extractExtractFineGrid(...)", "read file " << filename );
 
   createDirectory( outputDirectory );
 
@@ -169,6 +248,16 @@ int main(int argc, char* argv[]) {
     	  convertFile( argv[i], outputDirectory, selector, format );
     	}
       }
+      else if (mode.compare("apply-filter")==0 and argc>=7) {
+        std::string selector        = argv[ argc-4 ];
+        std::string outputDirectory = argv[ argc-3 ];
+        std::string filter          = argv[ argc-2 ];
+        std::string targetSelector  = argv[ argc-1 ];
+    	for (int i=2; i<argc-4; i++) {
+    	  applyFilter( argv[i], outputDirectory, selector, filter, targetSelector);
+    	}
+      }
+/*
       else if (mode.compare("convert-time-series")==0 and argc>=6) {
         std::string selector        = argv[ argc-3 ];
         std::string outputDirectory = argv[ argc-2 ];
@@ -180,9 +269,10 @@ int main(int argc, char* argv[]) {
       else if (mode.compare("extract-fine-grid")==0 and argc>=4) {
         std::string outputDirectory = argv[ argc-1 ];
     	for (int i=2; i<argc-1; i++) {
-    	  extractFineGrid( argv[i], outputDirectory );
+    	  extractExtractFineGrid( argv[i], outputDirectory );
     	}
       }
+*/
       else {
         std::cerr << "unknown command or invalid number of parameters for particular command" << std::endl;
         validParams = false;
@@ -192,20 +282,29 @@ int main(int argc, char* argv[]) {
     if (!validParams) {
       std::cerr << std::endl << std::endl;
       std::cerr << "Usage:";
-      std::cerr << "\t./executable inspect            InputFile1 [InputFile2 ...] " << std::endl;
-      std::cerr << "\t./executable convert-file       InputFile1 [InputFile2 ...] Selector OutputFolder Format" << std::endl;
-      std::cerr << "\t./executable convert-set        InputFile1 [InputFile2 ...] Selector OutputFolder Format" << std::endl;
-      std::cerr << "\t./executable extract-fine-grid  InputFile1 [InputFile2 ...] OutputFolder" << std::endl;
+      std::cerr << "\t./executable inspect       InputFile1 [InputFile2 ...] " << std::endl;
+      std::cerr << "\t./executable convert-file  InputFile1 [InputFile2 ...] Selector OutputFolder Format" << std::endl;
+      std::cerr << "\t./executable apply-filter  InputFile1 [InputFile2 ...] Selector OutputFolder Filter TargetSelector" << std::endl;
+//      std::cerr << "\t./executable convert-set        InputFile1 [InputFile2 ...] Selector OutputFolder Format" << std::endl;
       std::cerr << std::endl << std::endl;
       std::cerr << "Variants:" << std::endl;
       std::cerr << "\tinspect              Inspect which data sets are stored within file (cmp Selector below)" << std::endl;
       std::cerr << "\tconvert-file         Convert a single file" << std::endl;
+      std::cerr << "\tapply-filter         Take a data set from the input file (identified by Selector), apply a filter to" << std::endl;
+      std::cerr << "\t                     this set and add the result to the file with a given TargetSelector name" << std::endl;
+/*
       std::cerr << "\tconvert-set          Convert whole set of data comprising multiple time steps, resolutions, ..." << std::endl;
       std::cerr << "\textract-fine-grid    Extract the fine grid per snapshot and store in a new patch file comprising both the raw data and the fine grid. The fine grid's selector is fine-grid" << std::endl;
+*/
       std::cerr << std::endl << std::endl;
       std::cerr << "Options:" << std::endl;
       std::cerr << "\tFormat               Either " << OutputFormatPeano << " or " << OutputFormatVTU << std::endl;
       std::cerr << "\tSelector             Use inspect to see which data sets are stored within your patch file, i.e. which you can select" << std::endl;
+
+      std::cerr << std::endl << std::endl;
+      std::cerr << "Filters:" << std::endl;
+      std::cerr << "\t" << toString(Filter::Copy) << "                 Create 1:1 copy of dataset with different name (for debugging)" << std::endl;
+      std::cerr << "\t" << toString(Filter::ExtractFineGrid) << "    Extract fine grid" << std::endl;
       return -1;
     }
     else return 0;
