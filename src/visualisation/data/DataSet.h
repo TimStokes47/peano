@@ -51,6 +51,7 @@ class visualisation::data::DataSet {
 	bool                   hasVariable( const std::string& name ) const;
 	Variable               getVariable( const std::string& name ) const;
 
+	void add( Variable variable, const std::vector<PatchData>& patchData );
   private:
 	friend class visualisation::input::PeanoTextPatchFileReader;
 	friend class visualisation::input::PeanoTextMetaFileReader;

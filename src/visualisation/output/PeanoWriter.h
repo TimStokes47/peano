@@ -13,6 +13,7 @@
 #include <vector>
 #include <fstream>
 #include "../data/PatchData.h"
+#include "../data/DataSet.h"
 
 namespace visualisation {
   namespace output {
@@ -34,6 +35,7 @@ class visualisation::output::PeanoWriter: public visualisation::output::Writer {
 	~PeanoWriter();
 
 	void writeFile(const visualisation::data::Variable& variable, const std::vector<visualisation::data::PatchData>& data) override;
+	void writeFile(const visualisation::data::DataSet& dataSet);
   private:
 	static tarch::logging::Log  _log;
 
@@ -43,6 +45,9 @@ class visualisation::output::PeanoWriter: public visualisation::output::Writer {
 	const std::string& _outputFileWithoutExtension;
 	const std::string& _directory;
 	std::ofstream      _metaFile;
+
+	void writeVariableDeclaration(const visualisation::data::Variable& variable, std::ofstream& );
+	void writePatchData(const visualisation::data::Variable& variable, const visualisation::data::PatchData& data, std::ofstream&  );
 };
 
 #endif

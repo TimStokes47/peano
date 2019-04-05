@@ -25,12 +25,17 @@ namespace visualisation {
  */
 class visualisation::data::PatchData {
   public:
-	PatchData(int dimensions, double* offset_, double* size_, int pointsPerAxis, PeanoDataType type_);
+	PatchData(int dimensions, double* offset_, double* size_, int dofsPerAxis);
+
+	bool samePatch( const PatchData& otherPatch );
+	bool overlaps( const PatchData& otherPatch );
 
 	/**
 	 * Free internal dynamic data types
 	 */
 	void free();
+
+	const int dimensions;
 
 	/*
 	 * offset of the patch in each dimension
@@ -48,6 +53,8 @@ class visualisation::data::PatchData {
 	 * fastest running index.
 	 */
 	double* data;
+
+	void copyData( const PatchData& otherData, int dofsPerAxis );
 };
 
 #endif

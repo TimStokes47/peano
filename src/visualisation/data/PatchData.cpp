@@ -8,23 +8,52 @@
 #include "PatchData.h"
 
 #include "tarch/la/ScalarOperations.h"
+#include "tarch/la/Vector.h"
+#include "tarch/la/VectorOperations.h"
 
 
-visualisation::data::PatchData::PatchData(int dimensions, double* offset_, double* size_, int pointsPerAxis, PeanoDataType type_) {
+visualisation::data::PatchData::PatchData(int dimensions_, double* offset_, double* size_, int dofsPerAxis):
+  dimensions(dimensions_) {
   for (int d=0; d<dimensions; d++) {
 	offset[d]    = offset_[d];
 	size[d]      = size_[d];
   }
 
-  int points;
-  if (type_ == PeanoDataType::Cell_Values) {
-    points = tarch::la::aPowI(dimensions,pointsPerAxis);
-  }
-  else {
-    points = tarch::la::aPowI(dimensions,pointsPerAxis+1);
-  }
+  int points = tarch::la::aPowI(dimensions,dofsPerAxis);
 
   data = new double[points];
+}
+
+
+bool visualisation::data::PatchData::samePatch( const PatchData& otherPatch ) {
+  bool equal = true;
+
+  for (int d=0; d<dimensions; d++) {
+	equal &= tarch::la::equals( size[d], otherPatch.size[d] );
+	equal &= tarch::la::equals( offset[d], otherPatch.offset[d] );
+  }
+
+  return equal;
+}
+
+
+bool visualisation::data::PatchData::overlaps( const PatchData& otherPatch ) {
+  bool overlaps = true;
+
+  for (int d=0; d<dimensions; d++) {
+	overlaps &= tarch::la::smaller( offset[d], otherPatch.offset[d] + otherPatch.size[d] );
+	overlaps &= tarch::la::greater( offset[d]+size[d], otherPatch.offset[d] );
+  }
+
+  return overlaps;
+}
+
+
+void visualisation::data::PatchData::copyData( const PatchData& otherData, int dofsPerAxis ) {
+  int points = tarch::la::aPowI(dimensions,dofsPerAxis);
+  for (int i=0; i<points; i++) {
+	data[i] = otherData.data[i];
+  }
 }
 
 

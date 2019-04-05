@@ -1,6 +1,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <list>
 
 #include "../config.h"
 #include "visualisation/input/PeanoTextPatchFileReader.h"
@@ -88,45 +89,67 @@ void visualisation::output::PeanoWriter::writeFile(const PeanoMetaFile&  metaFil
 */
 
 
-//void visualisation::output::PeanoWriter::writeFile(const std::string& outputFileWithoutExtention, const std::vector<PeanoPatch*>& patches) {
-void visualisation::output::PeanoWriter::writeFile(const visualisation::data::Variable& variable, const std::vector<visualisation::data::PatchData>& patches) {
+void visualisation::output::PeanoWriter::writeFile(const visualisation::data::DataSet& dataSet) {
   std::string outputFileName = _directory + "/" + _outputFileWithoutExtension + _FileExtension;
   std::ofstream  file( outputFileName );
   logInfo( "writeFile(...)", "write to file " << outputFileName );
 
   file << _Header << std::endl;
 
-  file << "dimensions " << variable.dimensions << std::endl << std::endl;
+  if (dataSet.getVariables().size()>0) {
+    file << "dimensions " << dataSet.getVariables()[0].dimensions << std::endl << std::endl;
+  }
 
-  file << "begin ";
-  if ( variable.type==visualisation::data::PeanoDataType::Cell_Values) {
-    file << "cell-values ";
+  std::list< visualisation::data::PatchData > allPatches;
+  for (auto p: dataSet.getVariables()) {
+    writeVariableDeclaration(p,file);
+    auto newData = dataSet.getData(p);
+    std::copy(newData.begin(), newData.end(), std::back_inserter(allPatches));
   }
-  else {
-    file << "vertex-values ";
-  }
-  file << "\"" << variable.name << "\"" << std::endl;
-  file << "  number-of-dofs-per-axis " << variable.dofsPerAxis << std::endl;
-  file << "  number-of-unknowns      " << variable.unknowns << std::endl;
-  file << "end ";
-  if ( variable.type==visualisation::data::PeanoDataType::Cell_Values) {
-    file << "cell-values ";
-  }
-  else {
-    file << "vertex-values ";
-  }
-  file << std::endl << std::endl;
 
-  for (auto p: patches) {
+  while (not allPatches.empty()) {
+    visualisation::data::PatchData currentPatch = allPatches.back();
+
+    // remove patch from all patches
+    for (
+      std::list< visualisation::data::PatchData >::iterator p = allPatches.begin();
+      p != allPatches.end();
+    ) {
+      if (p->samePatch(currentPatch)) {
+    	p = allPatches.erase( p );
+      }
+      else {
+    	p++;
+      }
+    }
+
     file << "begin patch " << std::endl;
     file << "  offset";
-    for (int d=0; d<variable.dimensions; d++)
-      file << " " << p.offset[d];
+    for (int d=0; d<currentPatch.dimensions; d++)
+      file << " " << currentPatch.offset[d];
     file << std::endl;
     file << "  size";
-    for (int d=0; d<variable.dimensions; d++)
-      file << " " << p.size[d];
+    for (int d=0; d<currentPatch.dimensions; d++)
+      file << " " << currentPatch.size[d];
     file << std::endl;
+
+    for (auto p: dataSet.getVariables()) {
+      for (auto pp: dataSet.getData(p)) {
+        if (pp.samePatch(currentPatch)) {
+          writePatchData( p, pp, file );
+        }
+      }
+    }
+
+
+    file << "end patch" << std::endl << std::endl;
+  }
+
+  file.close();
+}
+
+
+void visualisation::output::PeanoWriter::writePatchData(const visualisation::data::Variable& variable, const visualisation::data::PatchData& p, std::ofstream& file ) {
     file << "  begin ";
     if ( variable.type==visualisation::data::PeanoDataType::Cell_Values) {
       file << "cell-values ";
@@ -148,69 +171,57 @@ void visualisation::output::PeanoWriter::writeFile(const visualisation::data::Va
       file << "vertex-values ";
     }
     file << std::endl;
+}
 
-    file << "end patch" << std::endl << std::endl;
 
-  }
+void visualisation::output::PeanoWriter::writeFile(const visualisation::data::Variable& variable, const std::vector<visualisation::data::PatchData>& patches) {
+  std::string outputFileName = _directory + "/" + _outputFileWithoutExtension + _FileExtension;
+  std::ofstream  file( outputFileName );
+  logInfo( "writeFile(...)", "write to file " << outputFileName );
 
-/*
+  file << _Header << std::endl;
 
-  assertion( patches[0]->dimensions==2 or patches[0]->dimensions==3 );
+  file << "dimensions " << variable.dimensions << std::endl << std::endl;
 
-  file << "patch-size " ;
-  for (int i=0; i<patches[0]->dimensions; i++) {
-	file << patches[0]->resolution[i] << " ";
-    assertion( patches[0]->resolution[i]>=1 );
-  }
-  file << std::endl << std::endl;
-
-  for (auto it : patches[0]->patchData) {
-	PeanoPatchData& data = it.second;
-    assertion( data.structure->unknowns>=1 );
-	file << "begin " << (data.structure->type == Cell_Values?"cell":"vertex") << "-values";
-	file << " \"" << data.structure->name << "\"\n";
-	file << "  number-of-unknowns " << data.structure->unknowns << "\n";
-	file << "end " << (data.structure->type == Cell_Values?"cell":"vertex") << "-values\n\n";
-  }
-
-  file << std::endl << std::endl;
+  writeVariableDeclaration( variable, file );
 
   for (auto p: patches) {
-	file << "begin patch" << std::endl;
-
-	file << "  offset ";
-    for (int d=0; d<p->dimensions; d++) {
-	  file << p->offsets[d] << " ";
-    }
+    file << "begin patch " << std::endl;
+    file << "  offset";
+    for (int d=0; d<variable.dimensions; d++)
+      file << " " << p.offset[d];
+    file << std::endl;
+    file << "  size";
+    for (int d=0; d<variable.dimensions; d++)
+      file << " " << p.size[d];
     file << std::endl;
 
-	file << "  size ";
-    for (int d=0; d<p->dimensions; d++) {
-	  file << p->sizes[d] << " ";
-	  assertion( p->sizes[d]>=1 );
-    }
-    file << std::endl;
-
-	for (auto it : p->patchData) {
-  	  PeanoPatchData& data = it.second;
-	  file << "  begin " << (data.structure->type == Cell_Values?"cell":"vertex") << "-values";
-	  file << " \"" << data.structure->name << "\"\n";
-	  file << "   ";
-      for(int i=0; i<data.structure->totalValues; i++) {
-		double value = data.values[i];
-		if(value < 1e-12 && value > 0) {
-          file << " 0";
-		}
-		else {
-          file << " " << value;
-		}
-      }
-      file << "\n  end " << (data.structure->type == Cell_Values?"cell":"vertex") << "-values\n";
-	}
+    writePatchData( variable, p, file );
 
     file << "end patch" << std::endl << std::endl;
   }
-*/
 
   file.close();
+}
+
+
+void visualisation::output::PeanoWriter::writeVariableDeclaration(const visualisation::data::Variable& variable, std::ofstream& file) {
+  file << "begin ";
+  if ( variable.type==visualisation::data::PeanoDataType::Cell_Values) {
+    file << "cell-values ";
+  }
+  else {
+    file << "vertex-values ";
+  }
+  file << "\"" << variable.name << "\"" << std::endl;
+  file << "  number-of-dofs-per-axis " << variable.dofsPerAxis << std::endl;
+  file << "  number-of-unknowns      " << variable.unknowns << std::endl;
+  file << "end ";
+  if ( variable.type==visualisation::data::PeanoDataType::Cell_Values) {
+    file << "cell-values ";
+  }
+  else {
+    file << "vertex-values ";
+  }
+  file << std::endl << std::endl;
 }

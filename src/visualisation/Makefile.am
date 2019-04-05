@@ -7,6 +7,8 @@ convertSources = \
   data/DataSet.cpp \
   data/PatchData.cpp \
   data/Variable.cpp \
+  filter/Copy.cpp \
+  filter/Intersection.cpp \
   input/Parser.cpp \
   input/PeanoTextPatchFileReader.cpp \
   input/PeanoTextMetaFileReader.cpp \

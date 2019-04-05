@@ -6,6 +6,8 @@
 #include <fstream>
 #include <algorithm>
 
+#include "tarch/Assertions.h"
+
 
 tarch::logging::Log  visualisation::data::DataSet::_log( "visualisation::data::DataSet" );
 
@@ -63,3 +65,11 @@ visualisation::data::Variable visualisation::data::DataSet::getVariable( const s
   return *result;
 }
 
+
+void visualisation::data::DataSet::add( Variable variable, const std::vector<PatchData>& patchData ) {
+  assertion( data.count(variable)==0 );
+
+  data.insert( std::pair< visualisation::data::Variable, std::vector<visualisation::data::PatchData> >(
+	variable, patchData
+  ));
+}
