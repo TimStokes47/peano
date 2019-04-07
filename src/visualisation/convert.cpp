@@ -64,14 +64,41 @@ void inspect( std::string filename ) {
 
 
 std::string getFileNameWithoutExtensionAndWithoutPatch( std::string& file ) {
+  static tarch::logging::Log _log( "/" );
+
   std::string result = file;
+  logDebug( "getFileNameWithoutExtensionAndWithoutPatch(std::string)", "in=" << result );
   if ( result.find_last_of(".")!=std::string::npos ) {
-    result.erase(result.find_last_of(".") );
+    result = result.erase(result.find_last_of(".") );
   }
   if ( result.find_last_of("/")!=std::string::npos ) {
-    result.erase(result.find_last_of("/") );
+    result = result.erase(0,result.find_last_of("/")+1 );
   }
+  logDebug( "getFileNameWithoutExtensionAndWithoutPatch(std::string)", "out=" << result );
   return result;
+}
+
+
+void convertFile( const std::string& outputDirectory, const std::string& truncatedFile, const std::string& format, visualisation::data::Variable variable, visualisation::data::DataSet& data ) {
+  static tarch::logging::Log _log( "/" );
+
+  visualisation::output::PeanoWriter::Writer* writer = nullptr;
+
+  const std::string fileWithCorrectSelector = truncatedFile + "-" + variable.name;
+  if (format==OutputFormatPeano) {
+    writer = new visualisation::output::PeanoWriter( outputDirectory, fileWithCorrectSelector );
+  }
+  else if (format==OutputFormatVTU) {
+    writer = new visualisation::output::VTUWriter( outputDirectory, fileWithCorrectSelector );
+  }
+  else {
+    logError( "convertFile(...)", "unknown output format " << format );
+    return;
+  }
+
+  writer->writeFile( variable, data.getData(variable) );
+
+  delete writer;
 }
 
 
@@ -80,37 +107,34 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
 
   createDirectory( outputDirectory );
 
-  std::string truncatedFile = getFileNameWithoutExtensionAndWithoutPatch( filename );
-  std::string outFile = outputDirectory + "/" + truncatedFile;
-  logInfo( "convertFile(...)", "writing file " << outFile );
-
   visualisation::input::PeanoTextPatchFileReader reader(filename);
   reader.parse();
   visualisation::data::DataSet data = reader.getData();
 
-  visualisation::output::PeanoWriter::Writer* writer = nullptr;
-  if (format==OutputFormatPeano) {
-    writer = new visualisation::output::PeanoWriter( outputDirectory, truncatedFile );
-  }
-  else if (format==OutputFormatVTU) {
-    writer = new visualisation::output::VTUWriter( outputDirectory, truncatedFile );
-  }
-  else {
-    logError( "convertFile(...)", "unknown output format " << format );
-    data.free();
-    return;
-  }
+//  std::string truncatedFile = getFileNameWithoutExtensionAndWithoutPatch( filename ) + "-" + selector;
+  std::string truncatedFile = getFileNameWithoutExtensionAndWithoutPatch( filename );
+  logDebug( "convertFile(...)", "read " << filename << " and write into " << truncatedFile << " in directory " << outputDirectory );
 
-  if (data.hasVariable(selector)) {
+  if (selector=="all") {
+    for (auto variable: data.getVariables()) {
+      convertFile(
+        outputDirectory, truncatedFile, format,
+        variable, data
+      );
+    }
+  }
+  else if (data.hasVariable(selector)) {
 	visualisation::data::Variable variable = data.getVariable(selector);
-    writer->writeFile( variable, data.getData(variable) );
+	convertFile(
+      outputDirectory, truncatedFile, format,
+	  variable, data
+	);
   }
   else {
     logError( "convertFile(...)", "data file does not contain any data set with name " << selector );
   }
 
   data.free();
-  delete writer;
 }
 
 
@@ -244,13 +268,13 @@ int main(int argc, char* argv[]) {
       std::cerr << std::endl << std::endl;
       std::cerr << "Options:" << std::endl;
       std::cerr << "\tFormat               Either " << OutputFormatPeano << " or " << OutputFormatVTU << std::endl;
-      std::cerr << "\tSelector             Use inspect to see which data sets are stored within your patch file, i.e. which you can select" << std::endl;
+      std::cerr << "\tSelector             Use inspect to see which data sets are stored within your patch file, i.e. which you can select. Pass all to convert all data sets (works only with convert-file)" << std::endl;
 
       std::cerr << std::endl << std::endl;
       std::cerr << "Filters:" << std::endl;
       std::cerr << "\t" << toString(Filter::Copy) << "                 Create 1:1 copy of dataset with different name (for debugging)" << std::endl;
       std::cerr << "\t" << toString(Filter::ExtractFineGrid) << "    Extract fine grid" << std::endl;
-      std::cerr << "\t" << toString(Filter::SelectValue) << "    Extract grid patches that hold values of a certain range. Append :from:to to filter to specify range" << std::endl;
+      std::cerr << "\t" << toString(Filter::SelectValue) << "         Extract grid patches that hold values of a certain range. Append :from:to to filter to specify range" << std::endl;
       return -1;
     }
     else return 0;
