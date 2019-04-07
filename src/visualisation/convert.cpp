@@ -275,6 +275,9 @@ int main(int argc, char* argv[]) {
       std::cerr << "\t" << toString(Filter::Copy) << "                 Create 1:1 copy of dataset with different name (for debugging)" << std::endl;
       std::cerr << "\t" << toString(Filter::ExtractFineGrid) << "    Extract fine grid" << std::endl;
       std::cerr << "\t" << toString(Filter::SelectValue) << "         Extract grid patches that hold values of a certain range. Append :from:to to filter to specify range" << std::endl;
+
+      std::cerr << std::endl << std::endl;
+      std::cerr << "Output directory plus filename can be the same as the input file. In this case, the original file is overwritten/augmented with new data" << std::endl;
       return -1;
     }
     else return 0;
