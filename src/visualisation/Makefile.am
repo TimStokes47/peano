@@ -10,6 +10,7 @@ convertSources = \
   filter/Copy.cpp \
   filter/Intersection.cpp \
   filter/SelectValue.cpp \
+  filter/SeparateResolutions.cpp \
   input/Parser.cpp \
   input/PeanoTextPatchFileReader.cpp \
   input/PeanoTextMetaFileReader.cpp \

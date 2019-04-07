@@ -44,5 +44,5 @@ void visualisation::filter::SelectValue::apply( visualisation::data::DataSet& da
 
   dataSet.add( targetVariable, targetData );
 
-  logInfo( "apply(...)", "copied " << targetData.size() << " data entries matching range constraint" );
+  logInfo( "apply(...)", "selected (and copied) " << targetData.size() << " out of " << inputData.size() << " data entries (patches) matching range constraint" );
 }

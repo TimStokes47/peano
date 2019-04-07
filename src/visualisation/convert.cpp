@@ -15,11 +15,14 @@
 
 #include "filter/Copy.h"
 #include "filter/Intersection.h"
+#include "filter/SelectValue.h"
+#include "filter/SeparateResolutions.h"
+
+
 #include "tarch/Assertions.h"
 
 
 #include <experimental/filesystem> // or #include <filesystem>
-#include "filter/SelectValue.h"
 
 
 const std::string OutputFormatPeano = "peano";
@@ -141,8 +144,10 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
 enum class Filter {
   Copy,
   ExtractFineGrid,
-  SelectValue
+  SelectValue,
+  SeparateResolutions
 };
+
 
 std::string toString( Filter filter ) {
   switch (filter) {
@@ -152,6 +157,8 @@ std::string toString( Filter filter ) {
       return "extract-fine-grid";
     case Filter::SelectValue:
       return "select-value";
+    case Filter::SeparateResolutions:
+      return "separate-resolutions";
   }
   return "undef";
 }
@@ -184,6 +191,9 @@ void applyFilter( std::string filename, std::string outputDirectory, std::string
       else if (filterName==toString(Filter::ExtractFineGrid)) {
         filter = new visualisation::filter::Intersection( visualisation::filter::Intersection::Strategy::KeepFinerGrid );
       }
+      else if (filterName==toString(Filter::SeparateResolutions)) {
+        filter = new visualisation::filter::SeparateResolutions();
+      }
       else if (filterName.compare(toString(Filter::SelectValue))>0) {
     	std::string rangeToken = filterName.substr( filterName.find(':')+1 );
     	std::string fromToken  = rangeToken.substr( 0, rangeToken.find(':') );
@@ -214,7 +224,7 @@ void applyFilter( std::string filename, std::string outputDirectory, std::string
 
 int main(int argc, char* argv[]) {
     std::cout << "Peano block file to vtk converter" << std::endl;
-    std::cout << "(C) 2018 Dan Tuthill-Jones, Tobias Weinzierl" << std::endl << std::endl;
+    std::cout << "(C) 2018/2019 Dan Tuthill-Jones, Tobias Weinzierl" << std::endl << std::endl;
     bool validParams = true;
 
     if(argc < 3) {
@@ -275,6 +285,7 @@ int main(int argc, char* argv[]) {
       std::cerr << "\t" << toString(Filter::Copy) << "                 Create 1:1 copy of dataset with different name (for debugging)" << std::endl;
       std::cerr << "\t" << toString(Filter::ExtractFineGrid) << "    Extract fine grid" << std::endl;
       std::cerr << "\t" << toString(Filter::SelectValue) << "         Extract grid patches that hold values of a certain range. Append :from:to to filter to specify range" << std::endl;
+      std::cerr << "\t" << toString(Filter::SeparateResolutions) << " Splits up the tree mesh into its resolutions" << std::endl;
 
       std::cerr << std::endl << std::endl;
       std::cerr << "Output directory plus filename can be the same as the input file. In this case, the original file is overwritten/augmented with new data" << std::endl;
