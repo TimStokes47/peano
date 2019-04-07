@@ -9,6 +9,7 @@ convertSources = \
   data/Variable.cpp \
   filter/Copy.cpp \
   filter/Intersection.cpp \
+  filter/SelectValue.cpp \
   input/Parser.cpp \
   input/PeanoTextPatchFileReader.cpp \
   input/PeanoTextMetaFileReader.cpp \
