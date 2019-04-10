@@ -114,25 +114,25 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
   peano4::datamanagement::CellMarker           marker
 ) {
   logTraceInWith1Argument( "touchCellFirstTime(...)", data.toString() );
-  const int oldValue = data.value;
+  const int oldCellValue = data.value;
 
   bool stimulus =
     center(0) > 0.4 and center (0) <0.6 and
     center(1) > 0.4 and center (1) <0.6;
+
   if (
     (stimulus and not marker.isRefined )
-//	evtl falsch
 	or
     (not stimulus and h(0)<1.0/3.0 and h(0)>=1.0/3.0/3.0)
 	or
-    (not stimulus and not marker.isRefined and h(0)<=1.0/3.0)
+    (not stimulus and not marker.isRefined and h(0)>=1.0/3.0)
   ) {
     data.value = 5;
   }
   else {
-    data.value = oldValue-1;
+    data.value = std::max(oldCellValue-1,0);
     for (int i=0; i<TwoTimesD; i++) {
-      data.value = std::max( data.value, faces(i).oldValue/2 );
+      data.value = std::max( data.value, faces(i).oldValue-oldCellValue-1 );
     }
   }
 
