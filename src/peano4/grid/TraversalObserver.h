@@ -43,8 +43,15 @@ class peano4::grid::TraversalObserver {
 	 * never used directly. Instead, the code calls beginTraversal() and
 	 * then creates observer clones.
 	 */
-	virtual void beginTraversal() = 0;
-	virtual void endTraversal() = 0;
+	virtual void beginTraversal(
+      const tarch::la::Vector<Dimensions,double>&  x,
+      const tarch::la::Vector<Dimensions,double>&  h
+    ) = 0;
+
+	virtual void endTraversal(
+      const tarch::la::Vector<Dimensions,double>&  x,
+      const tarch::la::Vector<Dimensions,double>&  h
+    ) = 0;
 
 	/**
 	 * Event is invoked per cell. It is however not called for the root cell,

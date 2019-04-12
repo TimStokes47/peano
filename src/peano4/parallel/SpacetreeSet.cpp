@@ -428,9 +428,7 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
     peano4::parallel::Node::getInstance().continueToRun();
   }
 
-  observer.beginTraversal();
   traverseTrees(observer);
-  observer.endTraversal();
 
   //
   // Merge local copies of the statistics

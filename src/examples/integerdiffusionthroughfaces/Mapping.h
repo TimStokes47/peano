@@ -80,14 +80,18 @@ class examples::integerdiffusionthroughfaces::Mapping {
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
+	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces
     ) = 0;
 
 	virtual void destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
+	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces
     ) = 0;
 
 	virtual void touchCellFirstTime(
@@ -95,6 +99,8 @@ class examples::integerdiffusionthroughfaces::Mapping {
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
 	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces,
 	  peano4::datamanagement::CellMarker           marker
     ) = 0;
 
@@ -103,6 +109,8 @@ class examples::integerdiffusionthroughfaces::Mapping {
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
 	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces,
 	  peano4::datamanagement::CellMarker           marker
     ) = 0;
 };

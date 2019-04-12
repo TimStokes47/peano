@@ -105,16 +105,20 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::createC
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
-    )  {}
+	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces
+)  {}
 
 
 void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
-    )  {}
+	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces
+)  {}
 
 
 void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchCellFirstTime(
@@ -122,6 +126,8 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchCe
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
   Faces&                                       faces,
+  CellData&                                    coarseData,
+  Faces&                                       coarseFaces,
   peano4::datamanagement::CellMarker           marker
 )  {
   int vertexIndices[TwoPowerD];
@@ -141,6 +147,8 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchCe
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
   Faces&                                       faces,
+  CellData&                                    coarseData,
+  Faces&                                       coarseFaces,
   peano4::datamanagement::CellMarker           marker
 )  {}
 

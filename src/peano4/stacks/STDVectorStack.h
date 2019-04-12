@@ -124,6 +124,7 @@ class peano4::stacks::STDVectorStack<double> {
 
     bool isSendingOrReceiving() const;
     double pop();
+    double& top(int shift=0);
     void push( const double& element );
     PopBlockVertexStackView  popBlock(int numberOfVertices);
     PushBlockVertexStackView  pushBlock(int numberOfVertices);
@@ -316,6 +317,12 @@ class peano4::stacks::STDVectorStack {
       assertion(_currentElement>0);
       _currentElement--;
       return _data[_currentElement];
+    }
+
+
+    T& top(int shift=0) {
+      //assertion2(_currentElement>shift, _currentElement, shift);
+      return _data[_currentElement-1-shift];
     }
 
     /**

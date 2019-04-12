@@ -28,8 +28,15 @@ class peano4::grid::EmptyTraversalObserver: public peano4::grid::TraversalObserv
     static tarch::logging::Log  _log;
 
   public:
-	void beginTraversal() override;
-	void endTraversal() override;
+	void beginTraversal(
+      const tarch::la::Vector<Dimensions,double>&  x,
+      const tarch::la::Vector<Dimensions,double>&  h
+    ) override;
+
+	void endTraversal(
+      const tarch::la::Vector<Dimensions,double>&  x,
+      const tarch::la::Vector<Dimensions,double>&  h
+    ) override;
 
 	void enterCell(
 	  const GridTraversalEvent&  event

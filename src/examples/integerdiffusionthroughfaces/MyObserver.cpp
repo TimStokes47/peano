@@ -57,11 +57,22 @@ examples::integerdiffusionthroughfaces::MyObserver::~MyObserver() {
 }
 
 
-void examples::integerdiffusionthroughfaces::MyObserver::beginTraversal() {
-  logInfo( "beginTraversal()", "here" );
+void examples::integerdiffusionthroughfaces::MyObserver::beginTraversal(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  const tarch::la::Vector<Dimensions,double>&  h
+) {
   assertion( _mapping!=nullptr );
+
   _iterationCounter++;
   _mapping->beginTraversal();
+
+  int outCellStack = peano4::grid::PeanoCurve::CallStack;
+  CellData data;
+  #if PeanoDebug>=1
+  data.x = x;
+  data.h = h;
+  #endif
+  _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
 }
 
 
@@ -73,14 +84,20 @@ void examples::integerdiffusionthroughfaces::MyObserver::beginTraversal() {
 //
 //
 
-void examples::integerdiffusionthroughfaces::MyObserver::endTraversal() {
-  logInfo( "endTraversal()", "here" );
+void examples::integerdiffusionthroughfaces::MyObserver::endTraversal(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  const tarch::la::Vector<Dimensions,double>&  h
+) {
+  int cellStack = peano4::grid::PeanoCurve::CallStack;
+  _cellData[ DataKey(_spacetreeId,cellStack) ].pop();
+
   #if PeanoDebug>4
   for( auto& p: _cellData) {
 	logDebug( "endTraversal()", "cell stack (" << p.first.first << "," << p.first.second << "): " << p.second.size() << " entries" );
   }
   #endif
   assertion( _mapping!=nullptr );
+
   _mapping->endTraversal();
 }
 
@@ -94,8 +111,8 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   // Vertex processing -> nop here
   // =============================
 
-
-  MyMapping::Faces faces(event.getX(),event.getH());
+  MyMapping::Faces fineGridFaces(event.getX(),event.getH());
+  MyMapping::Faces coarseGridFaces(event.getX(),event.getH());
 
   // Face processing
   // ===============
@@ -108,31 +125,31 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
 
 	logDebug("enterCell(...)", "face " << inFaceStack << "->pos-" << outFaceStack );
     if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {
-      _mapping->createPersistentFace(faces.x(outFaceStack),event.getH(),faces.normal(outFaceStack),data);
-      _mapping->touchFaceFirstTime(faces.x(outFaceStack),event.getH(),faces.normal(outFaceStack),data);
+      _mapping->createPersistentFace(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      _mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
       #if PeanoDebug>=1
-      data.x = faces.x(outFaceStack);
+      data.x = fineGridFaces.x(outFaceStack);
       data.h = event.getH();
       #endif
     }
     else if (inFaceStack==peano4::grid::TraversalObserver::CreateOrDestroyHangingGridEntity) {
-      _mapping->createHangingFace(faces.x(outFaceStack),event.getH(),faces.normal(outFaceStack),data);
-      _mapping->touchFaceFirstTime(faces.x(outFaceStack),event.getH(),faces.normal(outFaceStack),data);
+      _mapping->createHangingFace(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
+      _mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
       #if PeanoDebug>=1
-      data.x = faces.x(outFaceStack);
+      data.x = fineGridFaces.x(outFaceStack);
       data.h = event.getH();
       #endif
     }
     else {
       data = _faceData[ DataKey(_spacetreeId,inFaceStack) ].pop();
-      assertionVectorNumericalEquals3(data.x,faces.x(outFaceStack),event.toString(),faces.toString(),data.x );
-      assertionVectorNumericalEquals3(data.h,event.getH(),event.toString(),faces.toString(),data.x );
+      assertionVectorNumericalEquals3(data.x,fineGridFaces.x(outFaceStack),event.toString(),fineGridFaces.toString(),data.x );
+      assertionVectorNumericalEquals3(data.h,event.getH(),event.toString(),fineGridFaces.toString(),data.x );
       if (peano4::grid::PeanoCurve::isInOutStack(inFaceStack)) {
-        _mapping->touchFaceFirstTime(faces.x(outFaceStack),event.getH(),faces.normal(outFaceStack),data);
+        _mapping->touchFaceFirstTime(fineGridFaces.x(outFaceStack),event.getH(),fineGridFaces.normal(outFaceStack),data);
       }
     }
     FaceData* pointer = faceView.set(outFaceStack,data);
-    faces.setPointer(outFaceStack, pointer );
+    fineGridFaces.setPointer(outFaceStack, pointer );
   }
 
   // Cell processing
@@ -141,28 +158,46 @@ void examples::integerdiffusionthroughfaces::MyObserver::enterCell(
   // @todo coarser level + enumerator
   int inCellStack  = event.getCellData();
   int outCellStack = peano4::grid::PeanoCurve::CallStack;
-  CellData data;
-  logDebug("enterCell(...)", "cell " << inCellStack << "->pos-" << outCellStack << ": " << data.x << "x" << data.h );
+  logDebug("enterCell(...)", "cell " << inCellStack << "->pos-" << outCellStack );
   if (inCellStack==peano4::grid::TraversalObserver::CreateOrDestroyPersistentGridEntity) {
-    _mapping->createCell(event.getX(),event.getH(),data,faces);
+    CellData data;
+	  // @todo update
+    _mapping->createCell(event.getX(),event.getH(),data,fineGridFaces,data,fineGridFaces);
     #if PeanoDebug>=1
     data.x = event.getX();
     data.h = event.getH();
     #endif
+    assertionVectorNumericalEquals4(data.x,event.getX(),data.value,event.toString(),data.x,data.h);
+    assertionVectorNumericalEquals4(data.h,event.getH(),data.value,event.toString(),data.x,data.h);
+    _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
   else {
+    CellData data;
     data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
+    assertionVectorNumericalEquals4(data.x,event.getX(),data.value,event.toString(),data.x,data.h);
+    assertionVectorNumericalEquals4(data.h,event.getH(),data.value,event.toString(),data.x,data.h);
+    _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
   }
-  assertionVectorNumericalEquals4(data.x,event.getX(),data.value,event.toString(),data.x,data.h);
-  assertionVectorNumericalEquals4(data.h,event.getH(),data.value,event.toString(),data.x,data.h);
 
-  // @todo Es gibt noch kein inside/outside hier, oder?
+  // @todo Es gibt noch kein inside/outside hier, oder? Was ist remote?
   // @todo Enclaves fehlen halt auch noch
-
-  // @todo Ich will pointer durchreichen, aber nix auf dem Call-Stack
+  // @todo Ich will pointer/referenzen auf CallStack durchreichen. Fuer Faces noch net gemacht
   peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
-  _mapping->touchCellFirstTime( event.getX(), event.getH(), data, faces, marker );
-  _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);
+  assertionNumericalEquals2(
+    _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0).h(0)*3.0,
+	_cellData[ DataKey(_spacetreeId,outCellStack) ].top(1).h(0),
+    _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0).h,
+	_cellData[ DataKey(_spacetreeId,outCellStack) ].top(1).h
+  );
+  // @todo Aendern
+  _mapping->touchCellFirstTime(
+    event.getX(), event.getH(),
+    _cellData[ DataKey(_spacetreeId,outCellStack) ].top(0),
+    fineGridFaces,
+    _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1),
+	fineGridFaces,
+	marker
+  );
 
   logTraceOutWith1Argument("enterCell(...)",event.toString());
 }
@@ -190,10 +225,11 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
 
   // @todo Ich will pointer durchreichen, aber nix auf dem Call-Stack -> moves directly
   peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
-  _mapping->touchCellLastTime( event.getX(), event.getH(), data, faces,marker );
+  _mapping->touchCellLastTime( event.getX(), event.getH(), data, faces, data, faces, marker );
 
   if (outCellStack==TraversalObserver::CreateOrDestroyPersistentGridEntity) {
-    _mapping->destroyCell(event.getX(),event.getH(),data,faces);
+	  // @todo update
+    _mapping->destroyCell(event.getX(),event.getH(),data,faces,data,faces);
   }
   else {
     _cellData[ DataKey(_spacetreeId,outCellStack) ].push(data);

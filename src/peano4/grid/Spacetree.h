@@ -705,7 +705,7 @@ class peano4::grid::Spacetree {
      * @param calledFromSpacetreeSet If you use traverse directly, please do
      *     not alter this value
      */
-    void traverse(TraversalObserver& observer, bool calledFromSpacetreeSet=false);
+    void traverse(TraversalObserver& observer);
 
     GridStatistics getGridStatistics() const;
 

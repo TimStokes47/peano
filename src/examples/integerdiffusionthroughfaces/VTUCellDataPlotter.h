@@ -97,14 +97,18 @@ class examples::integerdiffusionthroughfaces::VTUCellDataPlotter: public example
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
+	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces
     ) final;
 
 	void destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
+	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces
     ) final;
 
 	void touchCellFirstTime(
@@ -112,6 +116,8 @@ class examples::integerdiffusionthroughfaces::VTUCellDataPlotter: public example
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
 	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces,
 	  peano4::datamanagement::CellMarker           marker
     ) final;
 
@@ -120,6 +126,8 @@ class examples::integerdiffusionthroughfaces::VTUCellDataPlotter: public example
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
 	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces,
 	  peano4::datamanagement::CellMarker           marker
     ) final;
 };

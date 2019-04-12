@@ -104,10 +104,12 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::createCell(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  Faces&                                       faces
+  Faces&                                       faces,
+  CellData&                                    coarseData,
+  Faces&                                       coarseFaces
 ) {
   for (auto& p: _mappings) {
-	p->createCell(center,h,data,faces);
+	p->createCell(center,h,data,faces,coarseData,coarseFaces);
   }
 }
 
@@ -116,10 +118,12 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::destroyCell(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
-  Faces&                                       faces
+  Faces&                                       faces,
+  CellData&                                    coarseData,
+  Faces&                                       coarseFaces
 ) {
   for (auto& p: _mappings) {
-    p->destroyCell(center,h,data,faces);
+    p->destroyCell(center,h,data,faces,coarseData,coarseFaces);
   }
 }
 
@@ -129,10 +133,12 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::touchCellFirstTim
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
   Faces&                                       faces,
+  CellData&                                    coarseData,
+  Faces&                                       coarseFaces,
   peano4::datamanagement::CellMarker           marker
 ) {
   for (auto& p: _mappings) {
-	p->touchCellFirstTime(center,h,data,faces,marker);
+	p->touchCellFirstTime(center,h,data,faces,coarseData,coarseFaces,marker);
   }
 }
 
@@ -142,10 +148,12 @@ void examples::integerdiffusionthroughfaces::CompositeMapping::touchCellLastTime
   const tarch::la::Vector<Dimensions,double>&  h,
   CellData&                                    data,
   Faces&                                       faces,
+  CellData&                                    coarseData,
+  Faces&                                       coarseFaces,
   peano4::datamanagement::CellMarker           marker
 ) {
   for (auto& p: _mappings) {
-	p->touchCellLastTime(center,h,data,faces,marker);
+	p->touchCellLastTime(center,h,data,faces,coarseData,coarseFaces,marker);
   }
 }
 

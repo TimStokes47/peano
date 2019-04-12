@@ -15,8 +15,6 @@
 tarch::logging::Log _log("grid");
 
 
-
-
 void runTests() {
   #if PeanoDebug>=1
   tarch::tests::TestCaseRegistry::getInstance().getTestCaseCollection().run();

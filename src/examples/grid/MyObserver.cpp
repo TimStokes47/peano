@@ -17,17 +17,23 @@ examples::grid::MyObserver::~MyObserver() {
 }
 
 
-void examples::grid::MyObserver::beginTraversal() {
+void examples::grid::MyObserver::beginTraversal(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  const tarch::la::Vector<Dimensions,double>&  h
+) {
   #if PeanoDebug>0
-  TraversalVTKPlotter::beginTraversal();
+  TraversalVTKPlotter::beginTraversal(x,h);
   #endif
   _iterationCounter++;
 }
 
 
-void examples::grid::MyObserver::endTraversal() {
+void examples::grid::MyObserver::endTraversal(
+  const tarch::la::Vector<Dimensions,double>&  x,
+  const tarch::la::Vector<Dimensions,double>&  h
+) {
   #if PeanoDebug>0
-  TraversalVTKPlotter::endTraversal();
+  TraversalVTKPlotter::endTraversal(x,h);
   #endif
 }
 

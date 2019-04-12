@@ -115,6 +115,11 @@ double peano4::stacks::STDVectorStack<double>::pop() {
 }
 
 
+double& peano4::stacks::STDVectorStack<double>::top(int shift) {
+  return _data[_currentElement-1-shift];
+}
+
+
 void peano4::stacks::STDVectorStack<double>::push( const double& element ) {
   if (_currentElement >= static_cast<int>(_data.size()) ) {
     assertion(_currentElement - static_cast<int>(_data.size()) <= 1 );

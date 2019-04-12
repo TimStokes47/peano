@@ -80,14 +80,18 @@ class examples::integerdiffusionthroughfaces::MyMapping: public Mapping {
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
+	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces
     ) override;
 
 	void destroyCell(
       const tarch::la::Vector<Dimensions,double>&  center,
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
-	  Faces&                                       faces
+	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces
     ) override;
 
 	/**
@@ -98,6 +102,8 @@ class examples::integerdiffusionthroughfaces::MyMapping: public Mapping {
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
 	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces,
 	  peano4::datamanagement::CellMarker           marker
     ) override;
 
@@ -106,6 +112,8 @@ class examples::integerdiffusionthroughfaces::MyMapping: public Mapping {
       const tarch::la::Vector<Dimensions,double>&  h,
 	  CellData&                                    data,
 	  Faces&                                       faces,
+	  CellData&                                    coarseData,
+	  Faces&                                       coarseFaces,
 	  peano4::datamanagement::CellMarker           marker
     ) override;
 };
