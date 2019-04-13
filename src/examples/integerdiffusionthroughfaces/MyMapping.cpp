@@ -149,10 +149,6 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
     coarseData.value = CoarseGridMarker;
   }
 
-  for (int i=0; i<TwoTimesD; i++) {
-    faces(i).value += data.value;
-  }
-
   logTraceOutWith1Argument( "touchCellFirstTime(...)", data.toString() );
 }
 
@@ -167,6 +163,11 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellLastTime(
   peano4::datamanagement::CellMarker           marker
 ) {
   logTraceInWith1Argument( "touchCellLastTime(...)", data.toString() );
+
+  for (int i=0; i<TwoTimesD; i++) {
+    faces(i).value += data.value;
+  }
+
   logTraceOutWith1Argument( "touchCellLastTime(...)", data.toString() );
 }
 

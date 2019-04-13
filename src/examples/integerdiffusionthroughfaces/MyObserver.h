@@ -36,8 +36,9 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
 	 */
 	typedef std::pair<int,int>  DataKey;
 
-	typedef peano4::stacks::STDVectorStack< FaceData >   FaceDataContainer;
-	typedef peano4::stacks::STDVectorStack< CellData >   CellDataContainer;
+	typedef peano4::stacks::STDVectorStack< FaceData >         FaceDataContainer;
+	typedef peano4::stacks::STDVectorStack< CellData >         CellDataContainer;
+	typedef peano4::stacks::STDVectorStack< Mapping::Faces >   FacesDataContainer;
 
 	/**
 	 * It is absolutely essential that these guys are static. They are global
@@ -50,6 +51,7 @@ class examples::integerdiffusionthroughfaces::MyObserver: public peano4::grid::T
 	 * All observers share one mapping, i.e. you have to make it thread-safe
 	 */
 	Mapping*                                _mapping;
+	FacesDataContainer                      _facesCallStack;
   public:
 	MyObserver();
 	MyObserver(int spacetreeId, int counter, Mapping* mapping);

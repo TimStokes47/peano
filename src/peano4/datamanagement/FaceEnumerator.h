@@ -24,9 +24,9 @@ class peano4::datamanagement::FaceEnumerator {
 	/**
 	 * Bottom left vertex of associated cell.
 	 */
-	const tarch::la::Vector<Dimensions,double>  _x;
+	tarch::la::Vector<Dimensions,double>  _x;
 
-	const tarch::la::Vector<Dimensions,double>  _h;
+	tarch::la::Vector<Dimensions,double>  _h;
   public:
 	/**
 	 * Usually is only used by the observers, i.e. users should not interact
@@ -41,6 +41,26 @@ class peano4::datamanagement::FaceEnumerator {
 	  }
       #endif
 	}
+
+
+	FaceEnumerator(const FaceEnumerator<Face>& copy ):
+      _x(copy._x),
+      _h(copy._h) {
+      for (int i=0; i<TwoTimesD; i++) {
+        _faces[i] = copy._faces[i];
+      }
+    }
+
+
+	FaceEnumerator& operator=(const FaceEnumerator<Face>& copy ) {
+      _x = copy._x;
+      _h = copy._h;
+      for (int i=0; i<TwoTimesD; i++) {
+        _faces[i] = copy._faces[i];
+      }
+      return *this;
+    }
+
 
 	/**
 	 * Usually is only used by the observers, i.e. users should not interact
