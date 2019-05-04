@@ -31,9 +31,10 @@ examples::integerdiffusionthroughfaces::MyObserver::MyObserver():
   _mapping(nullptr) {
   #if PeanoDebug>0
   CompositeMapping* mapping = new CompositeMapping();
+//  mapping->append( new PeanoFormatCellDataPlotter("old-marker",true) );
   mapping->append( new MyMapping() );
-  mapping->append( new VTUCellDataPlotter() );
-  mapping->append( new PeanoFormatCellDataPlotter() );
+//  mapping->append( new VTUCellDataPlotter("data",false) );
+  mapping->append( new PeanoFormatCellDataPlotter("marker",false));
   _mapping = mapping;
   #else
   _mapping = new MyMapping();
@@ -214,21 +215,22 @@ void examples::integerdiffusionthroughfaces::MyObserver::leaveCell(
 
   // @todo Es gibt noch kein inside/outside hier, oder?
   // @todo Enclaves fehlen halt auch noch
-
   int inCellStack   = peano4::grid::PeanoCurve::CallStack;
   int outCellStack  = event.getCellData();
+
+  peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
+  _mapping->touchCellLastTime(
+    event.getX(), event.getH(),
+    _cellData[ DataKey(_spacetreeId,inCellStack) ].top(0),
+	_facesCallStack.top(0),
+    _cellData[ DataKey(_spacetreeId,inCellStack) ].top(1),
+	_facesCallStack.top(1), marker
+  );
+
   logDebug("leaveCell(...)", "cell " << inCellStack << "->" << outCellStack );
   CellData data = _cellData[ DataKey(_spacetreeId,inCellStack) ].pop();
   assertionVectorNumericalEquals4(data.x,event.getX(),data.value,data.x,data.h,event.toString());
   assertionVectorNumericalEquals4(data.h,event.getH(),data.value,data.x,data.h,event.toString());
-
-  peano4::datamanagement::CellMarker marker(event.getIsRefined(),false);
-  _mapping->touchCellLastTime(
-    event.getX(), event.getH(), data,
-	_facesCallStack.top(0),
-    _cellData[ DataKey(_spacetreeId,outCellStack) ].top(1),
-	_facesCallStack.top(1), marker
-  );
 
   if (outCellStack==TraversalObserver::CreateOrDestroyPersistentGridEntity) {
 	  // @todo update

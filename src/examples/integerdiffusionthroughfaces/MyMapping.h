@@ -20,11 +20,44 @@ namespace examples {
 
 
 /**
- * This is basically an abstract from the observer. The observer is
- * informed about actions of the automata inside the grid. It then
- * translates the observed activities into user data movements and
- * invocations of this interface. On the long run, I want to generate
- * these mappings. Well, at least the header.
+ * Integer diffusion mapping
+ *
+ * <h2> Marker semantics </h2>
+ *
+ * - Marker k=K:   cell holds valid data.
+ * - Marker k<K:   type of boundary data.
+ * - Marker k=K+1: cell where all successors host or shall host K cells.
+ *
+ * K is typically set to something around 5. The bigger K the bigger the
+ * diffusive area around the marker.
+ *
+ * The faces always hold the sum of the two adjacent cells. Therefore, we can
+ * reconstruct neighbour values in every cell.
+ *
+ * The cell information is analysed
+ * on-the-fly: We copy the marker over into a backup variable when we touch a
+ * face for the first time, clear the face attribute, and then accumulate the
+ * value again.
+ *
+ * <h2> Marker flow </h2>
+ *
+ * We basically solve an integer-valued equation
+ *
+ * @f$
+ * -\Delta k = -1
+ * @f$
+ *
+ * on the grid, while we expect valid cells to overwrite their value to K in
+ * each and every sweep. As these values are fixed, the k marker diffuses out
+ * into the domain. Boundary faces need no special treatment as the right-hand
+ * side brings down the k values automatically.
+ *
+ * The multiscale behaviour is slightly more delicate:
+ *
+ * - All markers propagate bottom-up.
+ * - All markers decrease monotonically (yet not strict) top-down.
+ *
+ * @author Tobias Weinzierl
  */
 class examples::integerdiffusionthroughfaces::MyMapping: public Mapping {
   private:

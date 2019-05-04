@@ -8,12 +8,10 @@ tarch::logging::Log   examples::integerdiffusionthroughfaces::MyMapping::_log( "
 
 
 void examples::integerdiffusionthroughfaces::MyMapping::beginTraversal() {
-
 }
 
 
 void examples::integerdiffusionthroughfaces::MyMapping::endTraversal() {
-
 }
 
 
@@ -47,7 +45,6 @@ void examples::integerdiffusionthroughfaces::MyMapping::destroyPersistentFace(
   const tarch::la::Vector<Dimensions,double>&  normal,
   FaceData&                                    data
 ) {
-
 }
 
 
@@ -57,7 +54,6 @@ void examples::integerdiffusionthroughfaces::MyMapping::destroyHangingFace(
   const tarch::la::Vector<Dimensions,double>&  normal,
   FaceData&                                    data
 ) {
-
 }
 
 
@@ -110,6 +106,10 @@ void examples::integerdiffusionthroughfaces::MyMapping::destroyCell(
 }
 
 
+const int FineGridMarker   = 5;
+const int CoarseGridMarker = FineGridMarker+1;
+
+
 void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
@@ -120,15 +120,14 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
   peano4::datamanagement::CellMarker           marker
 ) {
   logTraceInWith1Argument( "touchCellFirstTime(...)", data.toString() );
-  const int oldCellValue = data.value;
+  data.oldValue = data.value;
 
   bool stimulus =
     center(0) > 0.4 and center (0) <0.6 and
     center(1) > 0.4 and center (1) <0.6;
 
-  const int FineGridMarker   = 5;
-  const int CoarseGridMarker = FineGridMarker+1;
 
+  // @todo working part from user code
   if (
     (stimulus and not marker.isRefined )
 	or
@@ -138,15 +137,16 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
   ) {
     data.value = FineGridMarker;
   }
-  else {
-    data.value = std::max(oldCellValue-1,0);
-    for (int i=0; i<TwoTimesD; i++) {
-      data.value = std::max( data.value, faces(i).oldValue-oldCellValue-1 );
-    }
+  // @todo remainder
+  else
+  if (coarseData.oldValue==CoarseGridMarker and data.value<FineGridMarker) {
+    data.value = FineGridMarker;
   }
-
-  if (data.value==FineGridMarker) {
-    coarseData.value = CoarseGridMarker;
+  else {
+    data.value = std::max(data.oldValue-1,0);
+    for (int i=0; i<TwoTimesD; i++) {
+      data.value = std::max( data.value, faces(i).oldValue-data.oldValue-1 );
+    }
   }
 
   logTraceOutWith1Argument( "touchCellFirstTime(...)", data.toString() );
@@ -166,6 +166,15 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellLastTime(
 
   for (int i=0; i<TwoTimesD; i++) {
     faces(i).value += data.value;
+  }
+
+  if (
+    data.value==FineGridMarker
+	or
+    data.value==CoarseGridMarker
+  ) {
+    coarseData.value = CoarseGridMarker;
+    logDebug( "touchCellLastTime(...)", "set coarse cell marker to " << coarseData.toString() );
   }
 
   logTraceOutWith1Argument( "touchCellLastTime(...)", data.toString() );

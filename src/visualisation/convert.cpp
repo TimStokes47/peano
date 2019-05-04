@@ -11,7 +11,6 @@
 #include "output/PeanoWriter.h"
 
 #include "input/PeanoTextPatchFileReader.h"
-#include "input/PeanoTextMetaFileReader.h"
 
 #include "filter/Copy.h"
 #include "filter/Intersection.h"
@@ -114,7 +113,6 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
   reader.parse();
   visualisation::data::DataSet data = reader.getData();
 
-//  std::string truncatedFile = getFileNameWithoutExtensionAndWithoutPatch( filename ) + "-" + selector;
   std::string truncatedFile = getFileNameWithoutExtensionAndWithoutPatch( filename );
   logDebug( "convertFile(...)", "read " << filename << " and write into " << truncatedFile << " in directory " << outputDirectory );
 

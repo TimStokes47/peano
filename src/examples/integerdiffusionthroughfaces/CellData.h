@@ -25,6 +25,7 @@ struct examples::integerdiffusionthroughfaces::CellData {
   tarch::la::Vector<Dimensions,double>   h;
   #endif
   int                                    value;
+  int                                    oldValue;
 
   std::string toString() const {
 	return std::string("(")

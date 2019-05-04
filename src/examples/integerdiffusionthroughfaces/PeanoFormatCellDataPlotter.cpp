@@ -7,48 +7,52 @@
 #include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
 
 
-examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::PeanoFormatCellDataPlotter():
+examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::PeanoFormatCellDataPlotter(const std::string&  fileNamePrefix, bool plotThroughoutDescent):
+  _plotThroughoutDescent(plotThroughoutDescent),
+  _fileNamePrefix(fileNamePrefix),
   _counter(0),
   _writer(nullptr),
-  _dataWriter(nullptr) {
+  _dataWriter(nullptr),
+  _oldDataWriter(nullptr) {
 }
 
 
 examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::~PeanoFormatCellDataPlotter() {
   assertion( _writer == nullptr);
   assertion( _dataWriter == nullptr);
+  assertion( _oldDataWriter == nullptr);
 }
 
 
 void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::beginTraversal() {
   _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
     Dimensions,
-	"marker",
+	_fileNamePrefix,
 	_counter>0  // bool append
   );
-  _dataWriter   = _writer->createCellDataWriter( "cell-data", 1, 1 );
+  _dataWriter      = _writer->createCellDataWriter( "cell-data", 1, 1 );
+  _oldDataWriter   = _writer->createCellDataWriter( "old-cell-data", 1, 1 );
 }
 
 
 void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::endTraversal() {
   assertion( _dataWriter!=nullptr );
+  assertion( _oldDataWriter!=nullptr );
 
   _dataWriter->close();
+  _oldDataWriter->close();
 
   std::ostringstream filename;
-  filename << "marker-" << _counter;
+  filename << _fileNamePrefix << "-" << _counter;
   _writer->writeToFile( filename.str() );
 
   delete _dataWriter;
+  delete _oldDataWriter;
   delete _writer;
 
-  _dataWriter = nullptr;
-  _writer     = nullptr;
-
-/*
-  _timeSeriesWriter.addSnapshot( filename.str(), _counter, false );
-  _timeSeriesWriter.writeFile( "data" );
-*/
+  _dataWriter    = nullptr;
+  _oldDataWriter = nullptr;
+  _writer        = nullptr;
 
   _counter++;
 }
@@ -121,6 +125,25 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::destroy
 )  {}
 
 
+void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::plotCell(
+  const tarch::la::Vector<Dimensions,double>&  center,
+  const tarch::la::Vector<Dimensions,double>&  h,
+  CellData&                                    data
+) {
+  int vertexIndices[TwoPowerD];
+
+  std::pair<int,int> indices = _writer->plotPatch(
+    center - h * 0.5,
+	h
+  );
+
+  assertion( _dataWriter!=nullptr );
+  assertion( _oldDataWriter!=nullptr );
+  _dataWriter->plotCell(indices.second,data.value);
+  _oldDataWriter->plotCell(indices.second,data.oldValue);
+}
+
+
 void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchCellFirstTime(
   const tarch::la::Vector<Dimensions,double>&  center,
   const tarch::la::Vector<Dimensions,double>&  h,
@@ -130,15 +153,9 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchCe
   Faces&                                       coarseFaces,
   peano4::datamanagement::CellMarker           marker
 )  {
-  int vertexIndices[TwoPowerD];
-
-  std::pair<int,int> indices = _writer->plotPatch(
-    center - h * 0.5,
-	h
-  );
-
-  assertion( _dataWriter!=nullptr );
-  _dataWriter->plotCell(indices.second,data.value);
+  if (_plotThroughoutDescent) {
+	plotCell(center,h,data);
+  }
 }
 
 
@@ -150,5 +167,9 @@ void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::touchCe
   CellData&                                    coarseData,
   Faces&                                       coarseFaces,
   peano4::datamanagement::CellMarker           marker
-)  {}
+)  {
+  if (not _plotThroughoutDescent) {
+	plotCell(center,h,data);
+  }
+}
 

@@ -22,10 +22,20 @@ namespace examples {
  */
 class examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter: public examples::integerdiffusionthroughfaces::Mapping {
   private:
-    int                                                                              _counter;
+	const bool         _plotThroughoutDescent;
+	const std::string  _fileNamePrefix;
+
+    int                                                                                   _counter;
 
     tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter*                  _writer;
     tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter*  _dataWriter;
+    tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter::CellDataWriter*  _oldDataWriter;
+
+    void plotCell(
+      const tarch::la::Vector<Dimensions,double>&  center,
+      const tarch::la::Vector<Dimensions,double>&  h,
+      CellData&                                    data
+	);
   public:
     /**
      * You have to invoke startNewSnapshot() if you wanna have a pvd file
@@ -33,7 +43,7 @@ class examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter: public
      *
      * If this guy is ran on the global master,
      */
-    PeanoFormatCellDataPlotter();
+    PeanoFormatCellDataPlotter(const std::string&  fileNamePrefix, bool plotThroughoutDescent);
     virtual ~PeanoFormatCellDataPlotter();
 
 	void beginTraversal() final;

@@ -29,6 +29,9 @@ namespace examples {
  */
 class examples::integerdiffusionthroughfaces::VTUCellDataPlotter: public examples::integerdiffusionthroughfaces::Mapping {
   private:
+	const bool         _plotThroughoutDescent;
+	const std::string  _fileNamePrefix;
+
     int                                                                              _counter;
 
     tarch::plotter::griddata::unstructured::vtk::VTUTextFileWriter*                  _writer;
@@ -38,14 +41,23 @@ class examples::integerdiffusionthroughfaces::VTUCellDataPlotter: public example
 
 
     tarch::plotter::griddata::VTUTimeSeriesWriter                             _timeSeriesWriter;
+
+    void plotCell(
+      const tarch::la::Vector<Dimensions,double>&  center,
+      const tarch::la::Vector<Dimensions,double>&  h,
+      CellData&                                    data
+	);
+
   public:
     /**
      * You have to invoke startNewSnapshot() if you wanna have a pvd file
      * immediately after you've created this observer in the main code.
      *
-     * If this guy is ran on the global master,
+     * @param plotThroughoutDescent If this flag is set, we plot throughout the
+     *   tree descent, i.e. in touch cell first time. Otherwise, we plot
+     *   throughout the ascent.
      */
-    VTUCellDataPlotter();
+    VTUCellDataPlotter(const std::string&  fileNamePrefix, bool plotThroughoutDescent);
     virtual ~VTUCellDataPlotter();
 
 	void beginTraversal() final;

@@ -13,7 +13,6 @@ convertSources = \
   filter/SeparateResolutions.cpp \
   input/Parser.cpp \
   input/PeanoTextPatchFileReader.cpp \
-  input/PeanoTextMetaFileReader.cpp \
   output/PeanoWriter.cpp \
   output/VTUWriter.cpp
 

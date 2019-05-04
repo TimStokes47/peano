@@ -4,7 +4,11 @@
 #include "peano4/utils/Loop.h"
 
 
-examples::integerdiffusionthroughfaces::VTUCellDataPlotter::VTUCellDataPlotter():
+examples::integerdiffusionthroughfaces::VTUCellDataPlotter::VTUCellDataPlotter(
+  const std::string&  fileNamePrefix, bool plotThroughoutDescent
+):
+  _plotThroughoutDescent(plotThroughoutDescent),
+  _fileNamePrefix(fileNamePrefix),
   _counter(0),
   _writer(nullptr),
   _vertexWriter(nullptr),
@@ -40,7 +44,7 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::endTraversal() 
   _dataWriter->close();
 
   std::ostringstream filename;
-  filename << "data-" << _counter;
+  filename << _fileNamePrefix << "-" << _counter;
   _writer->writeToFile( filename.str() );
 
   delete _vertexWriter;
@@ -136,29 +140,38 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchCellFirstT
   Faces&                                       coarseFaces,
   peano4::datamanagement::CellMarker           marker
 )  {
-  if (not marker.isRefined) {
-    int vertexIndices[TwoPowerD];
-
-    dfor2(k)
-      assertion( _vertexWriter!=nullptr );
-      vertexIndices[kScalar] = _vertexWriter->plotVertex(
-        center + tarch::la::multiplyComponents( k.convertScalar<double>(), h ) - h * 0.5
-      );
-    enddforx
-
-    assertion( _cellWriter!=nullptr );
-    int cellIndex = -1;
-    #if Dimensions==2
-    cellIndex = _cellWriter->plotQuadrangle(vertexIndices);
-    #elif Dimensions==3
-    cellIndex = _cellWriter->plotHexahedron(vertexIndices);
-    #else
-    assertionMsg( false, "supports only 2d and 3d" );
-    #endif
-
-    assertion( _dataWriter!=nullptr );
-    _dataWriter->plotCell(cellIndex,data.value);
+  if (not marker.isRefined and _plotThroughoutDescent) {
+	plotCell( center, h, data );
   }
+}
+
+
+void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::plotCell(
+  const tarch::la::Vector<Dimensions,double>&  center,
+  const tarch::la::Vector<Dimensions,double>&  h,
+  CellData&                                    data
+) {
+  int vertexIndices[TwoPowerD];
+
+  dfor2(k)
+    assertion( _vertexWriter!=nullptr );
+    vertexIndices[kScalar] = _vertexWriter->plotVertex(
+      center + tarch::la::multiplyComponents( k.convertScalar<double>(), h ) - h * 0.5
+    );
+  enddforx
+
+  assertion( _cellWriter!=nullptr );
+  int cellIndex = -1;
+  #if Dimensions==2
+  cellIndex = _cellWriter->plotQuadrangle(vertexIndices);
+  #elif Dimensions==3
+  cellIndex = _cellWriter->plotHexahedron(vertexIndices);
+  #else
+  assertionMsg( false, "supports only 2d and 3d" );
+  #endif
+
+  assertion( _dataWriter!=nullptr );
+  _dataWriter->plotCell(cellIndex,data.value);
 }
 
 
@@ -170,5 +183,9 @@ void examples::integerdiffusionthroughfaces::VTUCellDataPlotter::touchCellLastTi
   CellData&                                    coarseData,
   Faces&                                       coarseFaces,
   peano4::datamanagement::CellMarker           marker
-)  {}
+)  {
+  if (not marker.isRefined and not _plotThroughoutDescent) {
+	plotCell( center, h, data );
+  }
+}
 
