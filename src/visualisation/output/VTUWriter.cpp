@@ -33,18 +33,23 @@ tarch::logging::Log  visualisation::output::VTUWriter::_log( "PeanoConverter" );
 
 visualisation::output::VTUWriter::VTUWriter(const std::string&  directory, const std::string& outputFileWithoutExtension):
   _outputFileWithoutExtension(outputFileWithoutExtension),
-  _directory(directory),
-  _pvdFile(directory + "/" + outputFileWithoutExtension+".pvd") {
-  _pvdFile << "<?xml version=\"1.0\"?>" << std::endl
+  _directory(directory) {
+
+/*
+	  _pvdFile(directory + "/" + outputFileWithoutExtension+".pvd")
+	_pvdFile << "<?xml version=\"1.0\"?>" << std::endl
 	       << "<VTKFile type=\"Collection\" version=\"0.1\" >" << std::endl
 	 	   << "<Collection>" << std::endl;
+*/
 }
 
 
 visualisation::output::VTUWriter::~VTUWriter() {
+/*
   _pvdFile << "</Collection>" << std::endl
 	       << "</VTKFile>" << std::endl;
   _pvdFile.close();
+*/
 }
 
 

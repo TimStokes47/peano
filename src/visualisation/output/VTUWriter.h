@@ -53,7 +53,6 @@ class visualisation::output::VTUWriter: public visualisation::output::Writer {
 
 	const std::string& _outputFileWithoutExtension;
 	const std::string& _directory;
-	std::ofstream      _pvdFile;
 
     #ifdef UseVTK
     /**

@@ -67,7 +67,9 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
       #pragma omp taskwait
 	}
 	else if ( tokens[0]=="include") {
-	  const std::string filename = Parser::removeHyphens(tokens[1]);
+	  std::string directory = Parser::getDirectory(_file);
+	  if ( directory.empty() ) directory = ".";
+	  const std::string filename = directory + "/" + Parser::removeHyphens(tokens[1]);
 
       #pragma task nowait
       {
@@ -123,6 +125,16 @@ void visualisation::input::PeanoTextPatchFileReader::parse() {
 	}
   }
   } // OpenMP
+
+  if (_data.size()>1) {
+    logInfo( "parse()", "file " << _file << " hosts " << _data.size() << " data sets (time steps or iterations, e.g.)");
+  }
+  else {
+    logInfo( "parse()", "file " << _file << " hosts " << _data[0].data.size() << " variable(s)");
+    for (auto p: _data[0].data) {
+      logDebug( "parse()", "variable " << p.first.name << " hosts " << p.second.size() << " patch(es)");
+    }
+  }
 }
 
 
@@ -203,8 +215,7 @@ double* visualisation::input::PeanoTextPatchFileReader::parseMapping( const std:
 void visualisation::input::PeanoTextPatchFileReader::parsePatch( int dataSetCounter, const std::vector<std::string>& text ) {
   assertion( _dimensions==2 or _dimensions==3 );
 
-  logDebug( "parsePatch(...)", "create patch" );
-  logDebug( "parsePatch(...)", "parse " << text.size() << " lines" );
+  logDebug( "parsePatch(...)", "create patch described by " << text.size() << " lines" );
 
   std::vector<double> offset;
   std::vector<double> size;
