@@ -36,7 +36,10 @@ class visualisation::output::PeanoWriter: public visualisation::output::Writer {
 
 	void writeFile(const visualisation::data::Variable& variable, const std::vector<visualisation::data::PatchData>& data) override;
 	void writeFile(const visualisation::data::DataSet& dataSet);
+	void writeFile(const std::vector< visualisation::data::DataSet > dataSet);
   private:
+	void writeFile(const visualisation::data::DataSet& dataSet, const std::string& filename);
+
 	static tarch::logging::Log  _log;
 
 	static const std::string _FileExtension;

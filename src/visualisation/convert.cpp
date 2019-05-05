@@ -196,11 +196,11 @@ void applyFilter( std::string filename, std::string outputDirectory, std::string
   else if (data[0].hasVariable(selector)) {
     logInfo( "applyFilter(...)", "apply filter to " << data.size() << " file(s)" );
 
+    visualisation::output::PeanoWriter writer( outputDirectory, truncatedFile );
+
     const int numberOfDataSets = data.size();
     #pragma omp parallel for
     for (int i=0; i<numberOfDataSets; i++) {
-      std::string outputFileName = data.size()==1 ? truncatedFile : truncatedFile + "-" + std::to_string(i);
-   	  visualisation::output::PeanoWriter writer( outputDirectory, outputFileName );
 
       if (data[i].hasVariable(targetSelector)) {
         logError( "applyFilter(...)", "file already contains data set with name " << targetSelector );
@@ -237,11 +237,10 @@ void applyFilter( std::string filename, std::string outputDirectory, std::string
           // selectors from thereon. The resolution splitting is an example.
           // assertion2( data[i].hasVariable(targetSelector), targetSelector, i );
           delete filter;
-          writer.writeFile( data[i] );
         }
       }
     }
-//    writer.writeFile( data[i] );
+    writer.writeFile( data );
   }
   else {
     logError( "applyFilter(...)", "data file does not contain any data set with name " << selector );

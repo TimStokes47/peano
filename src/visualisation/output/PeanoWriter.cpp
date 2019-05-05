@@ -13,7 +13,7 @@
 
 tarch::logging::Log  visualisation::output::PeanoWriter::_log( "visualisation::output::PeanoWriter" );
 const std::string    visualisation::output::PeanoWriter::_FileExtension( ".peano-patch-file" );
-const std::string    visualisation::output::PeanoWriter::_Header( "# \n# Peano patch file\n# Version 0.2\n# Written by Peano's writer tool\n#\nformat ASCII\n" ) ;
+const std::string    visualisation::output::PeanoWriter::_Header( "# \n# Peano patch file\n# Version 0.2\n# Written by Peano's visualisation/conversion tool\n#\nformat ASCII\n" ) ;
 
 
 visualisation::output::PeanoWriter::PeanoWriter(const std::string&  directory, const std::string& outputFileWithoutExtension):
@@ -89,10 +89,38 @@ void visualisation::output::PeanoWriter::writeFile(const PeanoMetaFile&  metaFil
 */
 
 
+void visualisation::output::PeanoWriter::writeFile(const std::vector<visualisation::data::DataSet> dataSet) {
+  const int numberOfDataSets = dataSet.size();
+  #pragma omp parallel for
+  for (int i=0; i<numberOfDataSets; i++) {
+    const std::string outputFileName = numberOfDataSets==1 ? _outputFileWithoutExtension : _outputFileWithoutExtension + "-" + std::to_string(i);
+    writeFile( dataSet[i], _directory + "/" + outputFileName + _FileExtension );
+  }
+
+  if (numberOfDataSets>0) {
+    std::string outputFileName = _directory + "/" + _outputFileWithoutExtension + _FileExtension;
+    logInfo( "writeFile(...)", "write meta file " << outputFileName );
+    std::ofstream  file( outputFileName );
+    file << _Header << std::endl;
+    for (int i=0; i<numberOfDataSets; i++) {
+	  const std::string outputFileName = _outputFileWithoutExtension + "-" + std::to_string(i) + _FileExtension;
+      file << "begin dataset" << std::endl;
+      file << "  include \"" << outputFileName << "\"" << std::endl;
+      file << "end dataset" << std::endl << std::endl;
+    }
+  }
+}
+
+
 void visualisation::output::PeanoWriter::writeFile(const visualisation::data::DataSet& dataSet) {
   std::string outputFileName = _directory + "/" + _outputFileWithoutExtension + _FileExtension;
-  std::ofstream  file( outputFileName );
-  logInfo( "writeFile(...)", "start to write to file " << outputFileName );
+  writeFile( dataSet, outputFileName );
+}
+
+
+void visualisation::output::PeanoWriter::writeFile(const visualisation::data::DataSet& dataSet, const std::string& filename) {
+  std::ofstream  file( filename );
+  logInfo( "writeFile(...)", "start to write to file " << filename );
 
   file << _Header << std::endl;
 
@@ -147,7 +175,7 @@ void visualisation::output::PeanoWriter::writeFile(const visualisation::data::Da
 
   file.close();
 
-  logInfo( "writeFile(...)", "written to file " << outputFileName );
+  logInfo( "writeFile(...)", "written to file " << filename );
 }
 
 
