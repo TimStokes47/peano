@@ -36,6 +36,22 @@ std::vector<visualisation::data::PatchData> visualisation::data::DataSet::getDat
 }
 
 
+void visualisation::data::DataSet::merge(const DataSet& other) {
+  for (const auto& p: other.data) {
+	if ( data.count(p.first)==0 ) {
+      data.insert( std::pair< Variable, std::vector<PatchData> >(
+        p.first, p.second
+      ));
+	}
+	else {
+	  for (const auto& pp: other.getData(p.first)) {
+        data[p.first].push_back(pp);
+	  }
+	}
+  }
+}
+
+
 std::vector<visualisation::data::Variable>  visualisation::data::DataSet::getVariables() const {
   std::vector<visualisation::data::Variable> result;
   for (auto p: data) {

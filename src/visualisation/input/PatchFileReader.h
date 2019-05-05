@@ -9,6 +9,9 @@ namespace visualisation {
 }
 
 
+#include <vector>
+
+
 namespace visualisation {
   namespace data {
     class DataSet;
@@ -19,7 +22,10 @@ namespace visualisation {
 class visualisation::input::PatchFileReader {
   public:
 	virtual void parse() = 0;
-	virtual visualisation::data::DataSet  getData() const = 0;
+	/**
+	 * @return A time series of data sets
+	 */
+	virtual std::vector< visualisation::data::DataSet >  getData() const = 0;
 };
 
 #endif

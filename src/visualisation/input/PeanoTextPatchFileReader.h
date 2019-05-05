@@ -41,13 +41,13 @@ class visualisation::input::PeanoTextPatchFileReader: public visualisation::inpu
 
 	const std::string  _file;
 
-	void    parsePatch( const std::vector<std::string>& patchDescription );
-	void    parseVariablesDeclaration( const std::vector<std::string>& patchDescription, const std::string&  name, visualisation::data::PeanoDataType type );
+	void    parsePatch( int dataSetCounter, const std::vector<std::string>& patchDescription );
+	void    parseVariablesDeclaration( int dataSetCounter, const std::vector<std::string>& patchDescription, const std::string&  name, visualisation::data::PeanoDataType type );
 
-    void    addDataToPatch( const std::string& variableName, double* offset, double* size, const std::vector< std::string >& textData );
+    void    addDataToPatch( int dataSetCounter, const std::string& variableName, double* offset, double* size, const std::vector< std::string >& textData );
 
-	int                           _dimensions;
-    visualisation::data::DataSet  _data;
+	int                                          _dimensions;
+	std::vector< visualisation::data::DataSet >  _data;
   public:
 	/**
 	 * Read in one file.
@@ -61,7 +61,7 @@ class visualisation::input::PeanoTextPatchFileReader: public visualisation::inpu
 	virtual ~PeanoTextPatchFileReader();
 
 	void parse() override;
-	visualisation::data::DataSet  getData() const override;
+	std::vector< visualisation::data::DataSet >  getData() const override;
 };
 
 #endif

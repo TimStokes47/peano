@@ -39,6 +39,12 @@ class visualisation::data::DataSet {
 	void free();
 
 	/**
+	 * If you add a patch, don't free the patch, i.e. this operation does not
+	 * do a deep copy.
+	 */
+	void merge(const DataSet& other);
+
+	/**
 	 * @return Set of readers tied to a particular model. These readers haven't
 	 *         parsed their files yet, i.e. you have to call parse() manually.
 	 */
@@ -51,6 +57,10 @@ class visualisation::data::DataSet {
 	bool                   hasVariable( const std::string& name ) const;
 	Variable               getVariable( const std::string& name ) const;
 
+	/**
+	 * If you add a patch, don't free the patch, i.e. this operation does not
+	 * do a deep copy.
+	 */
 	void add( Variable variable, const std::vector<PatchData>& patchData );
   private:
 	friend class visualisation::input::PeanoTextPatchFileReader;

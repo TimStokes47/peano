@@ -54,13 +54,18 @@ void inspect( std::string filename ) {
   visualisation::input::PeanoTextPatchFileReader reader(filename);
   reader.parse();
 
-  visualisation::data::DataSet data = reader.getData();
+  std::vector< visualisation::data::DataSet >  data = reader.getData();
 
-  for (auto p: data.getVariables()) {
-	logInfo( "inspect", "variable " << p.name );
-    logInfo( "inspect", "\ttype\t\t\t" << (p.type==visualisation::data::PeanoDataType::Cell_Values ? "cell values" : "vertex values" ));
-	logInfo( "inspect", "\tdofs per axis\t\t" << p.dofsPerAxis );
-	logInfo( "inspect", "\tunknowns per dof\t" << p.unknowns );
+  int datasetCounter = 0;
+  for (auto& pp: data) {
+    logInfo( "inspect", "dataset #" << datasetCounter );
+    datasetCounter++;
+    for (auto& p: pp.getVariables()) {
+      logInfo( "inspect", "variable " << p.name );
+      logInfo( "inspect", "\ttype\t\t\t" << (p.type==visualisation::data::PeanoDataType::Cell_Values ? "cell values" : "vertex values" ));
+	  logInfo( "inspect", "\tdofs per axis\t\t" << p.dofsPerAxis );
+	  logInfo( "inspect", "\tunknowns per dof\t" << p.unknowns );
+    }
   }
 }
 
@@ -81,7 +86,7 @@ std::string getFileNameWithoutExtensionAndWithoutPatch( std::string& file ) {
 }
 
 
-void convertFile( const std::string& outputDirectory, const std::string& truncatedFile, const std::string& format, visualisation::data::Variable variable, visualisation::data::DataSet& data ) {
+void convertFile( const std::string& outputDirectory, const std::string& truncatedFile, const std::string& format, visualisation::data::Variable variable, const visualisation::data::DataSet& data ) {
   static tarch::logging::Log _log( "/" );
 
   visualisation::output::PeanoWriter::Writer* writer = nullptr;
@@ -111,31 +116,42 @@ void convertFile( std::string filename, const std::string& outputDirectory, cons
 
   visualisation::input::PeanoTextPatchFileReader reader(filename);
   reader.parse();
-  visualisation::data::DataSet data = reader.getData();
+  std::vector< visualisation::data::DataSet > data = reader.getData();
 
   std::string truncatedFile = getFileNameWithoutExtensionAndWithoutPatch( filename );
   logDebug( "convertFile(...)", "read " << filename << " and write into " << truncatedFile << " in directory " << outputDirectory );
 
-  if (selector=="all") {
-    for (auto variable: data.getVariables()) {
-      convertFile(
-        outputDirectory, truncatedFile, format,
-        variable, data
-      );
+  if (data.empty() ){
+    logError( "convertFile(...)", "data file is empty" );
+  }
+  else if (selector=="all") {
+    #pragma omp parallel for
+    for (int i=0; i<data.size(); i++) {
+      for (auto variable: data[i].getVariables()) {
+        convertFile(
+          outputDirectory, truncatedFile + "-" + std::to_string(i), format,
+          variable, data[i]
+        );
+      }
     }
   }
-  else if (data.hasVariable(selector)) {
-	visualisation::data::Variable variable = data.getVariable(selector);
-	convertFile(
-      outputDirectory, truncatedFile, format,
-	  variable, data
-	);
+  else if (data[0].hasVariable(selector)) {
+    #pragma omp parallel for
+    for (int i=0; i<data.size(); i++) {
+      visualisation::data::Variable variable = data[i].getVariable(selector);
+      convertFile(
+        outputDirectory, truncatedFile + "-" + std::to_string(i), format,
+        variable, data[i]
+      );
+    }
   }
   else {
     logError( "convertFile(...)", "data file does not contain any data set with name " << selector );
   }
 
-  data.free();
+  for (auto& p: data) {
+    p.free();
+  }
 }
 
 
@@ -168,60 +184,77 @@ void applyFilter( std::string filename, std::string outputDirectory, std::string
   createDirectory( outputDirectory );
 
   std::string truncatedFile = getFileNameWithoutExtensionAndWithoutPatch( filename );
-  logInfo( "convertFile(...)", "writing file " << truncatedFile );
+  logInfo( "applyFilter(...)", "writing file " << truncatedFile );
 
   visualisation::input::PeanoTextPatchFileReader reader(filename);
   reader.parse();
-  visualisation::data::DataSet data = reader.getData();
+  std::vector< visualisation::data::DataSet >  data = reader.getData();
 
-  visualisation::output::PeanoWriter writer( outputDirectory, truncatedFile );
-  if (data.hasVariable(selector)) {
-	visualisation::data::Variable variable = data.getVariable(selector);
+  if (data.empty()) {
+    logError( "applyFilter(...)", "file already contains data set with name " << targetSelector );
+  }
+  else if (data[0].hasVariable(selector)) {
+    logInfo( "applyFilter(...)", "apply filter to " << data.size() << " file(s)" );
 
-    if (data.hasVariable(targetSelector)) {
-      logError( "convertFile(...)", "file already contains data set with name " << targetSelector );
-    }
-    else {
-      visualisation::filter::Filter* filter = nullptr;
-      if (filterName==toString(Filter::Copy)) {
-        filter = new visualisation::filter::Copy();
-      }
-      else if (filterName==toString(Filter::ExtractFineGrid)) {
-        filter = new visualisation::filter::Intersection( visualisation::filter::Intersection::Strategy::KeepFinerGrid );
-      }
-      else if (filterName==toString(Filter::SeparateResolutions)) {
-        filter = new visualisation::filter::SeparateResolutions();
-      }
-      else if (filterName.compare(toString(Filter::SelectValue))>0) {
-    	std::string rangeToken = filterName.substr( filterName.find(':')+1 );
-    	std::string fromToken  = rangeToken.substr( 0, rangeToken.find(':') );
-    	std::string toToken    = rangeToken.substr( rangeToken.find(':')+1 );
+    const int numberOfDataSets = data.size();
+    #pragma omp parallel for
+    for (int i=0; i<numberOfDataSets; i++) {
+      std::string outputFileName = data.size()==1 ? truncatedFile : truncatedFile + "-" + std::to_string(i);
+   	  visualisation::output::PeanoWriter writer( outputDirectory, outputFileName );
 
-    	logDebug( "convertFile(...)", "use range token " << rangeToken << " split into " << fromToken << " and " << toToken );
-        filter = new visualisation::filter::SelectValue( std::stod(fromToken), std::stod(toToken) );
+      if (data[i].hasVariable(targetSelector)) {
+        logError( "applyFilter(...)", "file already contains data set with name " << targetSelector );
       }
       else {
-        logError( "convertFile(...)", "unknown filter " << filterName );
-      }
+        visualisation::data::Variable variable = data[i].getVariable(selector);
 
-      if (filter!=nullptr) {
-    	filter->apply( data, variable, targetSelector );
-    	assertion1( data.hasVariable(targetSelector), targetSelector );
-    	visualisation::data::Variable targetVariable = data.getVariable(targetSelector);
-        writer.writeFile( data );
+        visualisation::filter::Filter* filter = nullptr;
+        if (filterName==toString(Filter::Copy)) {
+          filter = new visualisation::filter::Copy();
+        }
+        else if (filterName==toString(Filter::ExtractFineGrid)) {
+          filter = new visualisation::filter::Intersection( visualisation::filter::Intersection::Strategy::KeepFinerGrid );
+        }
+        else if (filterName==toString(Filter::SeparateResolutions)) {
+          filter = new visualisation::filter::SeparateResolutions();
+        }
+        else if (filterName.compare(toString(Filter::SelectValue))>0) {
+    	  std::string rangeToken = filterName.substr( filterName.find(':')+1 );
+    	  std::string fromToken  = rangeToken.substr( 0, rangeToken.find(':') );
+    	  std::string toToken    = rangeToken.substr( rangeToken.find(':')+1 );
+
+          logDebug( "applyFilter(...)", "use range token " << rangeToken << " split into " << fromToken << " and " << toToken );
+          filter = new visualisation::filter::SelectValue( std::stod(fromToken), std::stod(toToken) );
+        }
+        else {
+          logError( "applyFilter(...)", "unknown filter " << filterName );
+        }
+
+        if (filter!=nullptr) {
+          filter->apply( data[i], variable, targetSelector );
+          // for most filters, this assertion would be correct. But there are
+          // filters which use targetSelector as prefix and do derive various
+          // selectors from thereon. The resolution splitting is an example.
+          // assertion2( data[i].hasVariable(targetSelector), targetSelector, i );
+          delete filter;
+          writer.writeFile( data[i] );
+        }
       }
     }
+//    writer.writeFile( data[i] );
   }
   else {
-    logError( "convertFile(...)", "data file does not contain any data set with name " << selector );
+    logError( "applyFilter(...)", "data file does not contain any data set with name " << selector );
   }
 
-  data.free();
+  for (auto& p: data) {
+    p.free();
+  }
 }
 
 
 int main(int argc, char* argv[]) {
-    std::cout << "Peano block file to vtk converter" << std::endl;
+    std::cout << "Peano file format converter/inspector" << std::endl;
     std::cout << "(C) 2018/2019 Dan Tuthill-Jones, Tobias Weinzierl" << std::endl << std::endl;
     bool validParams = true;
 

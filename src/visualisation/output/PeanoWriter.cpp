@@ -11,9 +11,9 @@
 #include "PeanoWriter.h"
 
 
-tarch::logging::Log  visualisation::output::PeanoWriter::_log( "PeanoConverter" );
-const std::string visualisation::output::PeanoWriter::_FileExtension( ".peano-patch-file" );
-const std::string visualisation::output::PeanoWriter::_Header( "# \n# Peano patch file\n# Version 0.1\n# Written by Peano's writer tool\n#\nformat ASCII\n" ) ;
+tarch::logging::Log  visualisation::output::PeanoWriter::_log( "visualisation::output::PeanoWriter" );
+const std::string    visualisation::output::PeanoWriter::_FileExtension( ".peano-patch-file" );
+const std::string    visualisation::output::PeanoWriter::_Header( "# \n# Peano patch file\n# Version 0.2\n# Written by Peano's writer tool\n#\nformat ASCII\n" ) ;
 
 
 visualisation::output::PeanoWriter::PeanoWriter(const std::string&  directory, const std::string& outputFileWithoutExtension):
@@ -92,7 +92,7 @@ void visualisation::output::PeanoWriter::writeFile(const PeanoMetaFile&  metaFil
 void visualisation::output::PeanoWriter::writeFile(const visualisation::data::DataSet& dataSet) {
   std::string outputFileName = _directory + "/" + _outputFileWithoutExtension + _FileExtension;
   std::ofstream  file( outputFileName );
-  logInfo( "writeFile(...)", "write to file " << outputFileName );
+  logInfo( "writeFile(...)", "start to write to file " << outputFileName );
 
   file << _Header << std::endl;
 
@@ -146,6 +146,8 @@ void visualisation::output::PeanoWriter::writeFile(const visualisation::data::Da
   }
 
   file.close();
+
+  logInfo( "writeFile(...)", "written to file " << outputFileName );
 }
 
 

@@ -42,6 +42,7 @@ class visualisation::data::Variable {
 	double* mapping;
 */
 	bool operator<( const visualisation::data::Variable& rhs ) const;
+	bool operator==( const visualisation::data::Variable& rhs ) const;
 
 	/**
 	 * This is getTotalNumberOfDofsPerPatch() times the number of unknowns per dof.

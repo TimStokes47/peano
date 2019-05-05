@@ -18,6 +18,11 @@ bool visualisation::data::Variable::operator<( const visualisation::data::Variab
   return name<rhs.name;
 }
 
+
+bool visualisation::data::Variable::operator==( const visualisation::data::Variable& rhs ) const {
+  return name==rhs.name;
+}
+
 /*
 bool operator<( const visualisation::data::Variable& lhs, const visualisation::data::Variable& rhs ) {
   return lhs.name<rhs.name;
