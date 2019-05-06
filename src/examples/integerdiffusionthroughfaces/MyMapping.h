@@ -24,9 +24,11 @@ namespace examples {
  *
  * <h2> Marker semantics </h2>
  *
- * - Marker k=K:   cell holds valid data.
- * - Marker k<K:   type of boundary data.
- * - Marker k=K+1: cell where all successors host or shall host K cells.
+ * - Marker k=K:   Cell holds valid data.
+ * - Marker k=K-1: Remove cell if appropriate.
+ * - Marker k<K-1: Type of boundary data.
+ * - Marker k=K+1: Cell where all successors host or shall host K cells. Holds data.
+ * - Marker k=K+2: Cell where all successors host or shall host K cells. Holds no data.
  *
  * K is typically set to something around 5. The bigger K the bigger the
  * diffusive area around the marker.
@@ -41,7 +43,7 @@ namespace examples {
  *
  * <h2> Marker flow </h2>
  *
- * We basically solve an integer-valued equation
+ * We basically solve an integer-valued equation similar to
  *
  * @f$
  * -\Delta k = -1

@@ -31,10 +31,10 @@ examples::integerdiffusionthroughfaces::MyObserver::MyObserver():
   _mapping(nullptr) {
   #if PeanoDebug>0
   CompositeMapping* mapping = new CompositeMapping();
-//  mapping->append( new PeanoFormatCellDataPlotter("old-marker",true) );
+  mapping->append( new PeanoFormatCellDataPlotter("marker",true));
   mapping->append( new MyMapping() );
 //  mapping->append( new VTUCellDataPlotter("data",false) );
-  mapping->append( new PeanoFormatCellDataPlotter("marker",false));
+//  mapping->append( new PeanoFormatCellDataPlotter("marker",false));
   _mapping = mapping;
   #else
   _mapping = new MyMapping();

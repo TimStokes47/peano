@@ -106,8 +106,10 @@ void examples::integerdiffusionthroughfaces::MyMapping::destroyCell(
 }
 
 
-const int FineGridMarker   = 5;
-const int CoarseGridMarker = FineGridMarker+1;
+const int MarkerFineGridCell   = 5;
+const int MarkerCoarseGridReplication           = MarkerFineGridCell+1;
+const int MarkerCoarseGridWithoutData           = MarkerFineGridCell+2;
+const int MarkerFineGridCellWhichCanBeDeleted   = MarkerFineGridCell-1;
 
 
 void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
@@ -120,14 +122,24 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
   peano4::datamanagement::CellMarker           marker
 ) {
   logTraceInWith1Argument( "touchCellFirstTime(...)", data.toString() );
-  data.oldValue = data.value;
 
+  // Integer diffusion - preamble
+  data.oldValue = data.value;
+  if (data.value==MarkerCoarseGridReplication) {
+	int maxOfNeighbours = 0;
+    for (int i=0; i<TwoTimesD; i++) {
+      maxOfNeighbours = std::max( maxOfNeighbours, faces(i).oldValue-data.value );
+    }
+    if (maxOfNeighbours>=MarkerCoarseGridReplication) {
+      data.oldValue = MarkerCoarseGridWithoutData;
+    }
+  }
+
+  // Part written by user to identify working grid
   bool stimulus =
     center(0) > 0.4 and center (0) <0.6 and
     center(1) > 0.4 and center (1) <0.6;
 
-
-  // @todo working part from user code
   if (
     (stimulus and not marker.isRefined )
 	or
@@ -135,14 +147,14 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellFirstTime(
 	or
     (not stimulus and not marker.isRefined and h(0)>=1.0/3.0)
   ) {
-    data.value = FineGridMarker;
+    data.value = MarkerFineGridCell;
   }
-  // @todo remainder
-  else
-  if (coarseData.oldValue==CoarseGridMarker and data.value<FineGridMarker) {
-    data.value = FineGridMarker;
+
+  // Integer diffusion - epilogue
+  if (coarseData.oldValue>=MarkerCoarseGridReplication and data.value<MarkerFineGridCell) {
+    data.value = MarkerFineGridCellWhichCanBeDeleted;
   }
-  else {
+  else if (data.value < MarkerFineGridCell) {
     data.value = std::max(data.oldValue-1,0);
     for (int i=0; i<TwoTimesD; i++) {
       data.value = std::max( data.value, faces(i).oldValue-data.oldValue-1 );
@@ -169,11 +181,13 @@ void examples::integerdiffusionthroughfaces::MyMapping::touchCellLastTime(
   }
 
   if (
-    data.value==FineGridMarker
+    data.value==MarkerFineGridCell
 	or
-    data.value==CoarseGridMarker
+    data.value==MarkerCoarseGridReplication
+	or
+    data.value==MarkerFineGridCellWhichCanBeDeleted
   ) {
-    coarseData.value = CoarseGridMarker;
+    coarseData.value = MarkerCoarseGridReplication;
     logDebug( "touchCellLastTime(...)", "set coarse cell marker to " << coarseData.toString() );
   }
 
