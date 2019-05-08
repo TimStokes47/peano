@@ -131,6 +131,8 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     void cleanUpTrees();
 
+    void mergeStatistics();
+
     SpacetreeSet();
     SpacetreeSet(const SpacetreeSet& ) = delete;
     SpacetreeSet& operator=(const SpacetreeSet& ) = delete;

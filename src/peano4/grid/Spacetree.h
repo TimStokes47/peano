@@ -83,9 +83,9 @@ class peano4::grid::Spacetree {
       NewFromSplit,
 	  Running,
 	  /**
-	   * Trigger the join. Nothing is happening yet. It is only the worker
-	   * that updates all adjacency lists. These updates however are not
-	   * yet given to the master.
+	   * Join has been triggered for this tree. Nothing is happening yet. It is
+	   * only the worker that updates all adjacency lists. These updates
+	   * however are not yet given to the master.
 	   */
 	  JoinTriggered,
 	  /**

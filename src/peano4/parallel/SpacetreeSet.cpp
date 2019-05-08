@@ -430,18 +430,27 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
 
   traverseTrees(observer);
 
-  //
-  // Merge local copies of the statistics
-  //
-  for (auto&  from: _spacetrees) {
-    if ( from._id != _spacetrees.begin()->_id ) {
-      merge(from._statistics, _spacetrees.begin()->_statistics );
-    }
-  }
+  mergeStatistics();
 
   exchangeDataBetweenTrees();
 
   cleanUpTrees();
+}
+
+
+void peano4::parallel::SpacetreeSet::mergeStatistics() {
+  for (auto&  from: _spacetrees) {
+    if (
+      from._id != _spacetrees.begin()->_id
+	  and
+	  from._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::NewFromSplit
+	) {
+      merge(from._statistics, _spacetrees.begin()->_statistics );
+    }
+  }
+#ifdef Parallel
+  assertion(false);
+#endif
 }
 
 
