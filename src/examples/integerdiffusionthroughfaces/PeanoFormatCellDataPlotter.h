@@ -8,6 +8,7 @@
 
 
 #include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
+#include "tarch/multicore/BooleanSemaphore.h"
 
 
 namespace examples {
@@ -24,6 +25,9 @@ class examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter: public
   private:
 	const bool         _plotThroughoutDescent;
 	const std::string  _fileNamePrefix;
+
+	static tarch::multicore::BooleanSemaphore   _semaphore;
+	static int                                  _instanceCounter;
 
     int                                                                                   _counter;
 

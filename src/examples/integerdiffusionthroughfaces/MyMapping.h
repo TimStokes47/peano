@@ -130,7 +130,9 @@ class examples::integerdiffusionthroughfaces::MyMapping: public Mapping {
     ) override;
 
 	/**
-	 * @todo Jetzt kommen aber die Enumeratoren rein hier fuer die Faces und Vertices
+	 * This routine is invoked as the pushback automaton running through the
+	 * spacetree hits a cell for the first time. If a cell is brand new, this
+	 * routine is invoked directly after the create call.
 	 */
 	void touchCellFirstTime(
       const tarch::la::Vector<Dimensions,double>&  center,

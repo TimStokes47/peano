@@ -5,6 +5,11 @@
 
 
 #include "tarch/plotter/griddata/blockstructured/PeanoTextPatchFileWriter.h"
+#include "tarch/multicore/Lock.h"
+
+
+tarch::multicore::BooleanSemaphore  examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::_semaphore;
+int                                 examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::_instanceCounter(0);
 
 
 examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::PeanoFormatCellDataPlotter(const std::string&  fileNamePrefix, bool plotThroughoutDescent):
@@ -14,6 +19,7 @@ examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::PeanoFormatC
   _writer(nullptr),
   _dataWriter(nullptr),
   _oldDataWriter(nullptr) {
+  assertionEquals(_instanceCounter,0);
 }
 
 
@@ -25,36 +31,47 @@ examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::~PeanoFormat
 
 
 void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::beginTraversal() {
-  _writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
-    Dimensions,
-	_fileNamePrefix,
-	_counter>0  // bool append
-  );
-  _dataWriter      = _writer->createCellDataWriter( "cell-data", 1, 1 );
-  _oldDataWriter   = _writer->createCellDataWriter( "old-cell-data", 1, 1 );
+  tarch::multicore::Lock lock(_semaphore);
+  if (_instanceCounter==0) {
+    assertion(_writer==nullptr);
+
+ 	_writer = new tarch::plotter::griddata::blockstructured::PeanoTextPatchFileWriter(
+      Dimensions,
+      _fileNamePrefix,
+      _counter>0  // bool append
+    );
+    _dataWriter      = _writer->createCellDataWriter( "cell-data", 1, 1 );
+    _oldDataWriter   = _writer->createCellDataWriter( "old-cell-data", 1, 1 );
+  }
+  _instanceCounter++;
 }
 
 
 void examples::integerdiffusionthroughfaces::PeanoFormatCellDataPlotter::endTraversal() {
-  assertion( _dataWriter!=nullptr );
-  assertion( _oldDataWriter!=nullptr );
+  tarch::multicore::Lock lock(_semaphore);
+  _instanceCounter--;
 
-  _dataWriter->close();
-  _oldDataWriter->close();
+  if (_instanceCounter==0) {
+    assertion( _dataWriter!=nullptr );
+    assertion( _oldDataWriter!=nullptr );
 
-  std::ostringstream filename;
-  filename << _fileNamePrefix << "-" << _counter;
-  _writer->writeToFile( filename.str() );
+    _dataWriter->close();
+    _oldDataWriter->close();
 
-  delete _dataWriter;
-  delete _oldDataWriter;
-  delete _writer;
+    std::ostringstream filename;
+    filename << _fileNamePrefix << "-" << _counter;
+    _writer->writeToFile( filename.str() );
 
-  _dataWriter    = nullptr;
-  _oldDataWriter = nullptr;
-  _writer        = nullptr;
+    delete _dataWriter;
+    delete _oldDataWriter;
+    delete _writer;
 
-  _counter++;
+    _dataWriter    = nullptr;
+    _oldDataWriter = nullptr;
+    _writer        = nullptr;
+
+    _counter++;
+  }
 }
 
 

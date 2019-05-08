@@ -31,6 +31,11 @@ class examples::integerdiffusionthroughfaces::Mapping {
   public:
 	typedef peano4::datamanagement::FaceEnumerator<FaceData>  Faces;
 
+	/**
+	 * This operation is called once per thread, i.e. each rank holds
+	 * only one instance of a mapping. As each thread calls this
+	 * routine, it is effectively invoked multiple times.
+	 */
 	virtual void beginTraversal() = 0;
 	virtual void endTraversal() = 0;
 
