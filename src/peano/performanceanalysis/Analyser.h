@@ -86,8 +86,8 @@ class peano::performanceanalysis::Analyser {
 
     virtual void beginToReceiveDataFromWorker() = 0;
     virtual void endToReceiveDataFromWorker( int fromRank ) = 0;
-    virtual void beginToReceiveDataFromMaster() = 0;
-    virtual void endToReceiveDataFromMaster() = 0;
+    virtual void beginToReceiveDataFromMaster( int masterRank ) = 0;
+    virtual void endToReceiveDataFromMaster( int masterRank ) = 0;
     virtual void beginToReleaseSynchronousHeapData() = 0;
     virtual void endToReleaseSynchronousHeapData() = 0;
     virtual void beginToPrepareAsynchronousHeapDataExchange() = 0;

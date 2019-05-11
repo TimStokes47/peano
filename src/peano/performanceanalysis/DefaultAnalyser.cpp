@@ -179,14 +179,14 @@ void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromWorker( in
 }
 
 
-void peano::performanceanalysis::DefaultAnalyser::beginToReceiveDataFromMaster() {
+void peano::performanceanalysis::DefaultAnalyser::beginToReceiveDataFromMaster( int masterRank ) {
   if (_isSwitchedOn && !_waitForMasterDataWatch.isOn()) {
     _waitForMasterDataWatch.startTimer();
   }
 }
 
 
-void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromMaster() {
+void peano::performanceanalysis::DefaultAnalyser::endToReceiveDataFromMaster( int masterRank ) {
   if (_isSwitchedOn && _waitForMasterDataWatch.isOn()) {
     _waitForMasterDataWatch.stopTimer();
     const double elapsedTime = _waitForMasterDataWatch.getCalendarTime();

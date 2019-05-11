@@ -256,7 +256,7 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
   assertion( !tarch::parallel::Node::getInstance().isGlobalMaster() );
 
   if ( !state.isJoiningWithMaster() ) {
-    Cell    coarseGridCellFromMaster;
+	Cell    coarseGridCellFromMaster;
     Vertex  coarseVertexFromMaster[TWO_POWER_D];
 
     if (skipMPICalls) {
@@ -534,7 +534,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
     &&
     !tarch::parallel::Node::getInstance().isGlobalMaster()
   ) {
+    peano::performanceanalysis::Analysis::getInstance().beginToReceiveDataFromMaster(tarch::parallel::NodePool::getInstance().getMasterRank());
     state.receiveStartupDataFromMaster();
+    peano::performanceanalysis::Analysis::getInstance().endToReceiveDataFromMaster(tarch::parallel::NodePool::getInstance().getMasterRank());
     state.resetStateAtBeginOfIteration();
     if ( ShallKernelControlHeap ) {
       peano::heap::AbstractHeap::allHeapsStartToSendSynchronousData();
@@ -631,7 +633,9 @@ void peano::grid::nodes::Root<Vertex,Cell,State,VertexStack,CellStack,EventHandl
         &&
         !tarch::parallel::Node::getInstance().isGlobalMaster()
       ) {
+   	    peano::performanceanalysis::Analysis::getInstance().beginToReceiveDataFromMaster(tarch::parallel::NodePool::getInstance().getMasterRank());
         state.receiveStartupDataFromMaster();
+        peano::performanceanalysis::Analysis::getInstance().endToReceiveDataFromMaster(tarch::parallel::NodePool::getInstance().getMasterRank());
         state.resetStateAtBeginOfIteration();
         if ( ShallKernelControlHeap ) {
           peano::heap::AbstractHeap::allHeapsStartToSendSynchronousData();

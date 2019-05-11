@@ -98,8 +98,8 @@ class peano::performanceanalysis::Analysis: public peano::performanceanalysis::A
      */
     virtual void beginToReceiveDataFromWorker();
     virtual void endToReceiveDataFromWorker( int fromRank );
-    virtual void beginToReceiveDataFromMaster();
-    virtual void endToReceiveDataFromMaster();
+    virtual void beginToReceiveDataFromMaster( int masterRank );
+    virtual void endToReceiveDataFromMaster( int masterRank );
 
     virtual void beginToReleaseSynchronousHeapData();
     virtual void endToReleaseSynchronousHeapData();
@@ -182,8 +182,8 @@ class peano::performanceanalysis::Analysis {
      */
     virtual void beginToReceiveDataFromWorker() {}
     virtual void endToReceiveDataFromWorker( int fromRank ) {}
-    virtual void beginToReceiveDataFromMaster() {};
-    virtual void endToReceiveDataFromMaster() {};
+    virtual void beginToReceiveDataFromMaster( int masterRank ) {};
+    virtual void endToReceiveDataFromMaster( int masterRank ) {};
 
     virtual void beginToReleaseSynchronousHeapData() {}
     virtual void endToReleaseSynchronousHeapData() {}
