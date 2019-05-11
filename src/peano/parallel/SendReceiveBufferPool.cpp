@@ -253,9 +253,6 @@ bool peano::parallel::SendReceiveBufferPool::BackgroundThread::operator()() {
 
   bool result = true;
 
-  static int counter = 0;
-  counter = 0;
-
     tarch::multicore::Lock stateLock( _semaphore );
     State state = _state;
     stateLock.free();

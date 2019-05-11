@@ -964,8 +964,6 @@ void peano::grid::State<StateData>::receiveStartupDataFromMaster() {
     setReduceStateAndCell(true);
   }
   else if ( !isJoiningWithMaster() ) {
-    peano::performanceanalysis::Analysis::getInstance().beginToReceiveDataFromMaster();
-
     peano::parallel::messages::LoadBalancingMessage loadBalancingMessage;
     loadBalancingMessage.receive(
       tarch::parallel::NodePool::getInstance().getMasterRank(),
@@ -998,7 +996,6 @@ void peano::grid::State<StateData>::receiveStartupDataFromMaster() {
       State::MPIDatatypeContainer::ExchangeMode::NonblockingWithPollingLoopOverTests
     );
 
-    peano::performanceanalysis::Analysis::getInstance().endToReceiveDataFromMaster();
     logDebug( "receiveStartupDataFromMaster()", "received state " << toString() );
   }
 
