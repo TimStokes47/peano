@@ -88,11 +88,17 @@ class peano4::parallel::Node {
      * function and add it to your local stack number.
      */
     int getId(int rank, int localTreeId) const;
+
+    /**
+     * @see getId(int,int)
+     */
     int getLocalTreeId(int treeId) const;
 
     /**
      * The operation is not thread-safe as we call it only internally,
      * i.e. you are not supposed to call this function directly.
+     *
+     * @see getId(int,int)
      */
     void registerId(int id, int masterId);
 
@@ -138,17 +144,20 @@ class peano4::parallel::Node {
      *          the master is preserved.
      *
      * @return -1 If there are no ids left anymore
+     * @see getId(int,int)
      */
     int reserveId(int rank, int forTreeId);
 
     /**
      * You hand in a tree number and the node tells you on which rank such a
      * tree is hosted.
+     * @see getId(int,int)
      */
     int getRank(int treeId) const;
 
     /**
      * Only the SpacetreeSet should call this operation.
+     * @see getId(int,int)
      */
     void deregisterId(int id);
 
@@ -178,15 +187,15 @@ class peano4::parallel::Node {
     static int getIdOfExchangeStackNumber(int number);
 
     /**
-     * Not const as we need a semaphore to make it thread-safe
+     * Has a tree forked once before? If so, we may not move it between ranks.
+     * Otherwise, we destroy our master-worker topology.
      */
-    int getParentTree( int treeId );
+    bool hasTreeForkedBefore( int treeId );
 
     /**
-     * Not const as we need a semaphore to make it thread-safe
+     * We know for each tree hosted on one particular rank who its children
+     * are. But we only have data on nodes that are local.
      */
-    bool hasChildrenTree( int treeId );
-
     std::set< int > getChildren( int treeId );
 
     /**

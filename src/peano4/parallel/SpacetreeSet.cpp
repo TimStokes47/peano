@@ -254,11 +254,11 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       int inStack   = Node::getInstance().getInputStackNumberOfBoundaryExchange(targetId);
 
       int tag       = Node::getInstance().getGridDataExchangeTag( _spacetree._id, targetId, true );
-      logInfo( "run()", "send stack " << sourceStack.first << " to rank " << rank << " with tag " << tag );
+      logInfo( "DataExchangeTask::run()", "send stack " << sourceStack.first << " to rank " << rank << " with tag " << tag );
       sourceStack.second.startSend(rank,tag);
 
       tag           = Node::getInstance().getGridDataExchangeTag( targetId, _spacetree._id, true );
-      logInfo( "run()", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << tag << " into stack " << inStack );
+      logInfo( "DataExchangeTask::run()", "in return, receive " << count << " element(s) from rank " << rank << " with tag " << tag << " into stack " << inStack );
       assertion(not Node::getInstance().isBoundaryExchangeOutputStackNumber(inStack));
       _spacetree._vertexStack[inStack].startReceive(rank,tag,count);
     }
@@ -280,7 +280,7 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
       peano4::grid::Spacetree& targetTree = _spacetreeSet.getSpacetree( targetId );
       const int targetStack = Node::getInstance().getInputStackNumberOfBoundaryExchange(_spacetree._id);
       logDebug(
-         "traverse(Observer)",
+         "DataExchangeTask::run()",
          "map output stream " << sourceStack->first << " of tree " <<
 		 _spacetree._id << " onto input stream " << targetStack <<
          " of tree " << targetId <<
@@ -297,14 +297,35 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
 
       #if PeanoDebug>0
       const int comparisonStackForTarget = Node::getInstance().getOutputStackNumberOfBoundaryExchange(_spacetree._id);
+
+      // @todo raus
+      if (
+    		  targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
+    		          or
+    		          targetTree._vertexStack[ comparisonStackForTarget ].empty()
+      ) {}
+      else {
+    	while ( not targetTree._vertexStack[ targetStack ].empty() ) {
+    	  logError( "DataExchangeTask::run()", targetTree._vertexStack[ targetStack ].pop().toString() );
+    	}
+    	while ( not targetTree._vertexStack[ comparisonStackForTarget ].empty() ) {
+    	  logError( "DataExchangeTask::run()", targetTree._vertexStack[ comparisonStackForTarget ].pop().toString() );
+    	}
+
       assertion6(
+    		  (
         targetTree._vertexStack[ targetStack ].size() == targetTree._vertexStack[ comparisonStackForTarget ].size()
         or
-        targetTree._vertexStack[ comparisonStackForTarget ].empty(),
+        targetTree._vertexStack[ comparisonStackForTarget ].empty()
+		)
+		// todo raus
+		and
+		false,
         targetTree._vertexStack[ targetStack ].size(),
         targetTree._vertexStack[ comparisonStackForTarget ].size(),
         targetStack, comparisonStackForTarget, targetTree._id, _spacetree._id
       );
+      }
       #endif
 
       _spacetree._vertexStack[sourceStack->first].clear();
@@ -448,9 +469,12 @@ void peano4::parallel::SpacetreeSet::mergeStatistics() {
       merge(from._statistics, _spacetrees.begin()->_statistics );
     }
   }
+  // @todo
+/*
 #ifdef Parallel
   assertion(false);
 #endif
+*/
 }
 
 
@@ -469,6 +493,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
       std::set< int > children = peano4::parallel::Node::getInstance().getChildren( p->_id );
       childrenThatShouldMerge.insert( children.begin(), children.end() );
     }
+  	/*
     #ifdef Parallel
   	else if (
 	  p->_coarseningHasBeenVetoed
@@ -482,6 +507,7 @@ void peano4::parallel::SpacetreeSet::cleanUpTrees() {
   	  move( p->_id, peano4::parallel::Node::getInstance().getRank( p->_masterId ) );
   	}
     #endif
+*/
     else if (
 	  p->_spacetreeState==peano4::grid::Spacetree::SpacetreeState::Running
 	  and
@@ -639,23 +665,4 @@ peano4::grid::Spacetree&  peano4::parallel::SpacetreeSet::getSpacetree(int id) {
   }
   assertion3( false, "no spacetree found", id, tarch::mpi::Rank::getInstance().getRank() );
   return *_spacetrees.begin(); // just here to avoid warning
-}
-
-
-bool peano4::parallel::SpacetreeSet::move(int sourceTreeId, int targetRank) {
-  peano4::grid::Spacetree&  sourceTree = getSpacetree( sourceTreeId );
-
-  int result = -1;
-  if (
-    not peano4::parallel::Node::getInstance().hasChildrenTree(sourceTreeId)
-    and
-	sourceTree.mayMove()
-  ) {
-	result = peano4::parallel::Node::getInstance().reserveId(targetRank,sourceTree._masterId);
-	if ( result>=0 ) {
-      sourceTree.split(result, std::numeric_limits<int>::max());
-      logInfo( "move(int,int)", "move tree " << sourceTreeId << " to tree " << result );
-	}
-  }
-  return result>=0;
 }

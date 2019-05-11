@@ -107,15 +107,10 @@ void runMultithreaded() {
   peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
 
   while (
+    peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2-4==0
+	or
     not peano4::parallel::SpacetreeSet::getInstance().split(1,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2-4,0)
   ) {
-    #if PeanoDebug>0
-    emptyObserver.startNewSnapshot(true);
-    #endif
-    peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-  }
-
-  while ( not peano4::parallel::SpacetreeSet::getInstance().move(2, 0) ) {
     #if PeanoDebug>0
     emptyObserver.startNewSnapshot(true);
     #endif
@@ -130,6 +125,10 @@ void runMultithreaded() {
     #endif
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
   }
+
+  // @todo Wird wirklich immer eine Schicht net abgeben, so dass wir nach wie vor eine Topologie haben?
+  // @todo Muesste man auch mal woanders instantiieren, also auf einem anderen Rank
+  // @todo Schauen, ob er jetzt auch joined
 
   while (
     not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3-5,0)
@@ -244,7 +243,6 @@ int main(int argc, char** argv) {
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
     "info", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4::grid::EmptyTraversalObserver", true
   ));
-  // @todo Wieder raus
   tarch::logging::CommandLineLogger::getInstance().addFilterListEntry( tarch::logging::CommandLineLogger::FilterListEntry(
     "debug", tarch::logging::CommandLineLogger::FilterListEntry::AnyRank, "peano4", false
   ));

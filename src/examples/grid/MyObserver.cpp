@@ -4,12 +4,18 @@
 #include "peano4/parallel/Node.h"
 
 
-examples::grid::MyObserver::MyObserver(int spacetreeId, int counter):
+
+int examples::grid::MyObserver::_iterationCounter(0);
+
+
+examples::grid::MyObserver::MyObserver(int spacetreeId, int counter)
   #if PeanoDebug>0
-  TraversalVTKPlotter( "grid-construction", spacetreeId ),
+  : TraversalVTKPlotter( "grid-construction", spacetreeId )
   #endif
-  _iterationCounter(counter)
   {
+  if (spacetreeId==0) {
+	_iterationCounter++;
+  }
 }
 
 
@@ -24,7 +30,6 @@ void examples::grid::MyObserver::beginTraversal(
   #if PeanoDebug>0
   TraversalVTKPlotter::beginTraversal(x,h);
   #endif
-  _iterationCounter++;
 }
 
 

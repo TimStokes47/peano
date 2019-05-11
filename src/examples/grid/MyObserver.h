@@ -23,7 +23,7 @@ class examples::grid::MyObserver: public
   #endif
 {
   private:
-	int _iterationCounter;
+	static int _iterationCounter;
   public:
 	MyObserver(int spacetreeId = -1, int counter=0);
 	virtual ~MyObserver();

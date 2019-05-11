@@ -348,7 +348,8 @@ class peano4::grid::Spacetree {
     void updateVertexAfterLoad(
       GridVertex&                               vertex,
       GridVertex                                fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch
+	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch,
+	  TraversalObserver&                        observer
     );
 
     /**
@@ -475,7 +476,8 @@ class peano4::grid::Spacetree {
     void updateVertexBeforeStore(
       GridVertex&                               vertex,
       GridVertex                                fineGridVertices[TwoPowerD],
-	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch
+	  const tarch::la::Vector<Dimensions,int>&  fineVertexPositionWithinPatch,
+	  TraversalObserver&                        observer
     );
 
     static bool restrictToCoarseGrid(
@@ -580,14 +582,14 @@ class peano4::grid::Spacetree {
      * set and sends out data. The two-step scheme becomes necessary, as we
      * have to avoid that vertices are sent around multiple times.
      */
-    void sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex );
+    void sendOutVertexIfAdjacentToDomainBoundary( const GridVertex& vertex, TraversalObserver& observer );
 
     /**
      * Manage the data exchange after a vertex is loaded for the first time
      *
      * The operation has three jobs to do:
      * - If this is the first sweep on a new tree, i.e. if we are in the
-     *   splitting phase, we have to recive data from the tree that is
+     *   splitting phase, we have to receive data from the tree that is
      *   splitting and merge them into the local data as it is forwarded.
      * - Exchange vertices along domain boundary.
      * - Send/stream data to another rank which is just splitting (see item
@@ -626,7 +628,7 @@ class peano4::grid::Spacetree {
      * ignore any updates (there should not be any).
      *
      */
-    void receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex );
+    void receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex, TraversalObserver& observer );
 
     /**
      * The original tree registers itself. But we can't register the copied
@@ -637,10 +639,6 @@ class peano4::grid::Spacetree {
 
     /**
      * Don't copy a tree as it is tied to some stacks.
-     *
-     * @todo
-     *
-     * Unfortunately, this does not work, as we need it for the vector.
      */
     Spacetree( const Spacetree& ) = delete;
 
@@ -675,13 +673,6 @@ class peano4::grid::Spacetree {
 
     bool mayJoinWithWorker() const;
 
-    /**
-     * A spacetree may be moved if this attribute holds and there are no
-     * kids. It is the reponsibility of the calling operation to check for
-     * this master/child thing as well.
-     */
-    bool mayMove() const;
-
     bool maySplit() const;
 
     bool _coarseningHasBeenVetoed;
@@ -710,6 +701,8 @@ class peano4::grid::Spacetree {
     GridStatistics getGridStatistics() const;
 
     std::string toString() const;
+
+    bool isInvolvedInJoinOrFork() const;
 };
 
 

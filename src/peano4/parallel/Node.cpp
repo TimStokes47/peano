@@ -152,7 +152,7 @@ int peano4::parallel::Node::getMaximumNumberOfTreesPerRank() const {
 
 void peano4::parallel::Node::deregisterId(int id) {
   assertion1( _treeEntries.count(id)==1, id );
-  assertion1( not hasChildrenTree(id), id );
+  assertion1( not hasTreeForkedBefore(id), id );
 
   tarch::multicore::Lock lock(_semaphore);
   _treeEntries.erase(id);
@@ -204,19 +204,16 @@ int peano4::parallel::Node::getIdOfExchangeStackNumber(int number) {
 }
 
 
-int peano4::parallel::Node::getParentTree( int treeId ) {
-  tarch::multicore::Lock lock(_semaphore);
 
-  assertion( _treeEntries.count(treeId) );
-  return _treeEntries[treeId].getMaster();
-}
-
-
-bool peano4::parallel::Node::hasChildrenTree( int treeId ) {
+// @todo Should be const
+bool peano4::parallel::Node::hasTreeForkedBefore( int treeId ) {
   tarch::multicore::Lock lock(_semaphore);
 
   bool result = false;
   for (const auto& p: _treeEntries) {
+	  // @todo Falsches Flag
+	  // @todo Master raus. Wir muesseen nur wissen, ob jemand gefork that oder net;
+	  // Wie wird das allerdings wiederum zurueckgesetzt?
 	result |= p.second.getMaster()==treeId;
   }
 
