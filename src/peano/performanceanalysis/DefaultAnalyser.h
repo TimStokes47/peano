@@ -115,8 +115,8 @@ class peano::performanceanalysis::DefaultAnalyser: public peano::performanceanal
      */
     virtual void beginToReceiveDataFromWorker();
     virtual void endToReceiveDataFromWorker( int fromRank );
-    virtual void beginToReceiveDataFromMaster();
-    virtual void endToReceiveDataFromMaster();
+    virtual void beginToReceiveDataFromMaster( int masterRank );
+    virtual void endToReceiveDataFromMaster( int masterRank );
 
     virtual void dataWasNotReceivedInBackground( int fromRank, int tag, int cardinality, int pageSize );
 
