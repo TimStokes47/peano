@@ -261,3 +261,8 @@ void peano4::stacks::STDVectorStack<double>::finishSendOrReceive() {
   _ioMPIRequest = nullptr;
   #endif
 }
+
+
+void peano4::stacks::STDVectorStack<double>::reverse() {
+  std::reverse(std::begin(_data), std::end(_data));
+}

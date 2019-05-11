@@ -5,6 +5,8 @@
 
 
 #include <vector>
+#include <algorithm>
+
 
 #include "tarch/logging/Log.h"
 #include "tarch/Assertions.h"
@@ -134,6 +136,7 @@ class peano4::stacks::STDVectorStack<double> {
     void startSend(int rank, int tag);
     void startReceive(int rank, int tag, int numberOfElements);
     void finishSendOrReceive();
+    void reverse();
 };
 
 
@@ -491,6 +494,10 @@ class peano4::stacks::STDVectorStack {
       delete _ioMPIRequest;
       _ioMPIRequest = nullptr;
       #endif
+    }
+
+    void reverse() {
+      std::reverse(std::begin(_data), std::end(_data));
     }
 };
 
