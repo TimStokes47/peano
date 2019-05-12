@@ -988,8 +988,10 @@ void peano4::grid::Spacetree::receiveAndMergeVertexIfAdjacentToDomainBoundary( G
 
     logDebug( "receiveAndMergeVertexIfAdjacentToDomainBoundary(...)", "streamed in vertex " << inVertex.toString() << " on tree " << _id << " from master " << _masterId << ". local vertex=" << vertex.toString() );
 
-    assertionVectorNumericalEquals4( vertex.getX(), inVertex.getX(),   inVertex.toString(), vertex.toString(), _id, _masterId );
-    // Der Fehler hier ist, dass wir nicht invertieren! Es ist ein Stream, kein Stack!
+    assertionVectorNumericalEquals5(
+      vertex.getX(), inVertex.getX(),   inVertex.toString(), vertex.toString(), _id, _masterId,
+	  peano4::parallel::Node::getInstance().getInputStackNumberForSplitMergeDataExchange(_masterId)
+	);
 
     // @todo
 //    _observer.

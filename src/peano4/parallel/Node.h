@@ -181,6 +181,7 @@ class peano4::parallel::Node {
     static bool isBoundaryExchangeOutputStackNumber(int number);
     static bool isBoundaryExchangeInputStackNumber(int number);
     static bool isSplitMergeOutputStackNumber(int number);
+    static bool isSplitMergeInputStackNumber(int number);
 
     /**
      */

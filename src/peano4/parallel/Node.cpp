@@ -199,6 +199,12 @@ bool peano4::parallel::Node::isSplitMergeOutputStackNumber(int id) {
 }
 
 
+bool peano4::parallel::Node::isSplitMergeInputStackNumber(int id) {
+  return id>=peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance
+     and ( (id-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) % StacksPerCommunicationPartner == 2 );
+}
+
+
 int peano4::parallel::Node::getIdOfExchangeStackNumber(int number) {
   return (number-peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance) / StacksPerCommunicationPartner;
 }

@@ -353,6 +353,18 @@ bool peano4::parallel::SpacetreeSet::DataExchangeTask::run() {
     }
   }
 
+  // Finalise streams
+  for (auto& sourceStack: _spacetree._vertexStack) {
+    if (
+      Node::isSplitMergeOutputStackNumber(sourceStack.first)
+      or
+      Node::isSplitMergeInputStackNumber(sourceStack.first)
+    ) {
+  	  logInfo( "DataExchangeTask::run()", "invert content of stack " << sourceStack.first );
+      sourceStack.second.reverse();
+    }
+  }
+
   return false;
 }
 
@@ -395,6 +407,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
           );
           getSpacetree(targetTreeId)._vertexStack[inStack].clone( stacks.second );
           stacks.second.clear();
+          getSpacetree(targetTreeId)._vertexStack[inStack].reverse();
         }
         else {
           #ifdef Parallel
@@ -436,6 +449,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
 
       tree._vertexStack[inStack].startReceive( source, tag, message._value );
       tree._vertexStack[inStack].finishSendOrReceive();
+      tree._vertexStack[inStack].reverse();
       #else
       assertionMsg(false, "should not be called");
       #endif
