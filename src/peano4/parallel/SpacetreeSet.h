@@ -90,23 +90,24 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     peano4::grid::Spacetree& getSpacetree(int id);
 
     /**
-     * Does not run through new trees for which no data might be available yet.
-     * The reason is simple: When we split a tree, this tree pipes its data
-     * (synchronously) into the new worker. In a shared memory environmment,
-     * we thus have to run all 'running' (read non-splitting) trees first.
+     *
+     * @see split()
      */
     void traverseTrees(peano4::grid::TraversalObserver& observer);
-
-    /**
-     * Operation is idempotent, i.e. you can call it multiple times in a row.
-     */
-    void exchangeDataBetweenTrees();
 
     /**
      * exchangeDataBetweenTrees() only handles those data transfers which are logically
      * asynchronous..
      */
-    void exchangeDataBetweenNewOrMergingTrees();
+    void exchangeDataBetweenTrees();
+
+    /**
+     * We iterate over all local existing trees and trigger the swap of
+     * all data.
+     *
+     * @see split() For a description of the overall split process.
+     */
+    void exchangeDataBetweenNewOrMergingTrees(const std::set<int>& newTrees);
 
     /**
      * Adds a new spacetree to the set. The responsibility goes over to the
@@ -168,15 +169,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     peano4::grid::GridStatistics  getGridStatistics() const;
 
     /**
-     * Does exist for debug reasons. Usually not used by codes.
-     *
-     * If you split a tree, please note that trees go through two states: split
-     * triggered and splitting. In the latter case, you may split again once
-     * more. Throughout the split-triggered, the tree does not physically exist
-     * yet and you are thus not allowed to split it further.
-     *
-     * If the target tree shall be stored on the local node, then you
-     * may wanna pass
+     * If the target tree shall be stored on the local node, then you pass
      *
      * <pre>
       peano4::parallel::Node::getInstance().getRank(treeId)
@@ -184,6 +177,44 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * as last argument. Splits on the local node allow Peano to exploit more
      * cores on the node.
      *
+     * <h2> Split process </h2>
+     *
+     * If you split a tree, the original tree, i.e. the source of the data,
+     * makes the new tree run through two states: split triggered and splitting.
+     *
+     * While an id is associated by one tree with split triggered, the tree
+     * does not yet physically exist. The original (source) tree has the
+     * complete ownership of all data, i.e. it does all refines and coarses and
+     * also creates all events. However, it already enters the new, yet to be
+     * created, tree's indices into all adjacency lists with are consequently
+     * sent out to the other ranks. After the grid sweep, we mark the new
+     * tree id as splitting.
+     *
+     * While an id is associated with splitting, we know that all the other
+     * trees around start to send data to the new tree that is yet to be
+     * created. The data we've received from our partners however has not been
+     * aware yet of the new rank. So the source tree once again traverses its
+     * tree and does all the admin, i.e. takes care of all refining an
+     * coarsening. This time, it already starts to send out boundary data to
+     * the newish tree. Furthermore, it pipes all read data into a splitting
+     * stream.
+     *
+     * After the splitting tree traversal has terminated, we (i) establish
+     * the new tree and mark it as new. See exchangeDataBetweenNewOrMergingTrees()
+     * and createNewTrees()
+     * for some details on this creation plus the data transfer as
+     * sketched below. (ii) We immediately trigger a grid
+     * sweep over the new tree. This grid sweep however does not receive any
+     * standard data but reads out the splitting stream from above. It also
+     * does not do any further grid modifications (refines or coarsens). But
+     * the new tree does send out data along MPI boundaries. (iii) We mark
+     * the new tree as a standard one.
+     *
+     *
+     * Does not run through new trees for which no data might be available yet.
+     * The reason is simple: When we split a tree, this tree pipes its data
+     * (synchronously) into the new worker. In a shared memory environmment,
+     * we thus have to run all 'running' (read non-splitting) trees first.
      */
     bool split(int treeId, int cells, int targetRank);
 };

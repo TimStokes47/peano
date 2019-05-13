@@ -137,6 +137,8 @@ bool peano4::grid::Spacetree::isSpacetreeNodeLocal(
 }
 
 
+// @todo Ich glaube das Set wird nicht mehr gebraucht. Aber wir muessen natuerlich die eine traverse()
+//       Variante von der anderen unterscheiden. Das ist klar.
 void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::parallel::SpacetreeSet& spacetreeSet) {
   logTraceIn( "traverse(TraversalObserver,SpacetreeSet)" );
 
@@ -155,10 +157,10 @@ void peano4::grid::Spacetree::traverse(TraversalObserver& observer, peano4::para
     traverse(observer);
   }
 
-  for (auto p: _splitTriggered) {
+/*  for (auto p: _splitTriggered) {
 	assertion( p.first!=_id );
     spacetreeSet.addSpacetree(*this,p.first);
-  }
+  }*/
   _splitting.clear();
   _splitting.insert( _splitTriggered.begin(), _splitTriggered.end() );
   _splitTriggered.clear();

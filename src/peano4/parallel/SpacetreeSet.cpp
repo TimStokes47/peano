@@ -215,7 +215,7 @@ void peano4::parallel::SpacetreeSet::traverseTrees(peano4::grid::TraversalObserv
   }
 
   if ( not traverseTasksForAllOtherTrees.empty() ) {
-    logInfo( "traverseTrees(TraversalObserver&)", "spawn " << traverseTasksForAllOtherTrees.size() << " concurrent traversal tasks for all trees without new-from-split marker" );
+    logInfo( "traverseTrees(TraversalObserver&)", "spawn " << traverseTasksForAllOtherTrees.size() << " concurrent traversal tasks for all normal trees (not new)" );
     static int multitaskingRegionForAllOtherTrees = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverseTreeSet" );
     peano4::parallel::Tasks runTraversalsForAllOtherTrees(traverseTasksForAllOtherTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForAllOtherTrees);
   }
@@ -394,7 +394,8 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
 }
 
 
-void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
+void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees(const std::set<int>& newTrees) {
+	// @assertion Muss ich schon aufbauen. Achtung.
   for (auto& tree: _spacetrees) {
     for (auto& stacks: tree._vertexStack) {
       if (Node::isSplitMergeOutputStackNumber(stacks.first)) {
@@ -429,6 +430,7 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewOrMergingTrees() {
       }
     }
 
+Hier muss ich halt schon wissen, dass einer daher kommt auf dem Zielrank
 
     if (
       tree._spacetreeState == peano4::grid::Spacetree::SpacetreeState::NewFromSplit
@@ -650,12 +652,6 @@ bool peano4::parallel::SpacetreeSet::split(int treeId, int cells, int targetRank
       #endif
     }
     else {
-      #if !defined(SharedMemoryParallelisation)
-      if ( peano4::parallel::Node::getInstance().getRank(treeId) == targetRank ) {
-        logWarning( "split(int,int)", "tree " << treeId << " tries to split up into another on rank " << targetRank << " even though no multithreading enabled. This might lead to deadlocks" );
-      }
-      #endif
-
       newSpacetreeId = peano4::parallel::Node::getInstance().reserveId(
         peano4::parallel::Node::getInstance().getRank(treeId),
         treeId

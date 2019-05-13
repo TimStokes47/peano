@@ -106,6 +106,8 @@ void runMultithreaded() {
   #endif
   peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
 
+  // @todo Wieder rein
+/*
   while (
     peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3/2-4==0
 	or
@@ -124,12 +126,12 @@ void runMultithreaded() {
     emptyObserver.startNewSnapshot(true);
     #endif
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-  }
+  }*/
 
   // @todo Wird wirklich immer eine Schicht net abgeben, so dass wir nach wie vor eine Topologie haben?
   // @todo Muesste man auch mal woanders instantiieren, also auf einem anderen Rank
   // @todo Schauen, ob er jetzt auch joined
-
+/*
   while (
     not peano4::parallel::SpacetreeSet::getInstance().split(2,peano4::parallel::SpacetreeSet::getInstance().getGridStatistics().getNumberOfLocalUnrefinedCells()/3-5,0)
   ) {
@@ -146,7 +148,7 @@ void runMultithreaded() {
     emptyObserver.startNewSnapshot(true);
     #endif
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
-  }
+  }*/
 
   for (int i=0; i<30; i++) {
 	tarch::logging::CommandLineLogger::getInstance().closeOutputStreamAndReopenNewOne();
