@@ -196,10 +196,11 @@ void peano4::parallel::SpacetreeSet::TraverseTask::prefetch() {
 
 
 void peano4::parallel::SpacetreeSet::traverseTrees(peano4::grid::TraversalObserver& observer) {
-  std::vector< tarch::multicore::Task* > traverseTasksForNewSplitTrees;
+//  std::vector< tarch::multicore::Task* > traverseTasksForNewSplitTrees;
   std::vector< tarch::multicore::Task* > traverseTasksForAllOtherTrees;
 
   for (auto& p: _spacetrees) {
+/*
     if ( p._spacetreeState==peano4::grid::Spacetree::SpacetreeState::NewFromSplit ) {
       traverseTasksForNewSplitTrees.push_back( new TraverseTask(
         p, *this, observer
@@ -207,20 +208,21 @@ void peano4::parallel::SpacetreeSet::traverseTrees(peano4::grid::TraversalObserv
       logDebug( "traverseTrees(TraversalObserver&)", "issue task to traverse tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
     }
     else {
+*/
       traverseTasksForAllOtherTrees.push_back( new TraverseTask(
         p, *this, observer
       ));
       logDebug( "traverseTrees(TraversalObserver&)", "issue task to traverse tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
-    }
+//    }
   }
+
+xxxx
 
   if ( not traverseTasksForAllOtherTrees.empty() ) {
     logInfo( "traverseTrees(TraversalObserver&)", "spawn " << traverseTasksForAllOtherTrees.size() << " concurrent traversal tasks for all normal trees (not new)" );
     static int multitaskingRegionForAllOtherTrees = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::traverseTreeSet" );
     peano4::parallel::Tasks runTraversalsForAllOtherTrees(traverseTasksForAllOtherTrees,peano4::parallel::Tasks::TaskType::Task,multitaskingRegionForAllOtherTrees);
   }
-
-  exchangeDataBetweenNewOrMergingTrees();
 
   if (not traverseTasksForNewSplitTrees.empty() ) {
     logInfo( "traverseTrees(TraversalObserver&)", "spawn " << traverseTasksForNewSplitTrees.size() << " concurrent traversal tasks for all new trees" );
@@ -374,10 +376,13 @@ void peano4::parallel::SpacetreeSet::DataExchangeTask::prefetch() {
 
 
 void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
+Erst muessen wir die Splitting machen, sonst sind deren Daten net da.
+
   std::vector< tarch::multicore::Task* > dataExchangeTasks;
   dataExchangeTasks.reserve( _spacetrees.size() );
 
   for (auto& p: _spacetrees) {
+	  // @todo Brauchen wir net
     if (
       p._spacetreeState!=peano4::grid::Spacetree::SpacetreeState::Joined
     ) {
@@ -391,6 +396,24 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees() {
 
   static int multitaskingRegion = peano4::parallel::Tasks::getLocationIdentifier( "peano4::parallel::SpacetreeSet::exchangeDataBetweenTrees" );
   peano4::parallel::Tasks runTraversals(dataExchangeTasks,peano4::parallel::Tasks::TaskType::Task,multitaskingRegion);
+
+
+  koennten wir hier theoretisch hinten dran sein? Remote calls?
+
+  		Gehoert alles logisch in den Data Exchange, i.e. nicht hier rein
+
+    exchangeDataBetweenNewOrMergingTrees();
+
+}
+
+
+std::set<int> peano4::parallel::SpacetreeSet::getLocalSplittingRanks() const {
+  std::set<int> result;
+  for (const auto& tree: _spacetrees) {
+	std::set<int> append = tree.getSplittingTreeIds();
+    result.insert( append.begin(), append.end() );
+  }
+  return result;
 }
 
 
@@ -465,11 +488,13 @@ void peano4::parallel::SpacetreeSet::traverse(peano4::grid::TraversalObserver& o
     peano4::parallel::Node::getInstance().continueToRun();
   }
 
+  const std::set<int> localSplittingRanks = getLocalSplittingRanks();
+
   traverseTrees(observer);
 
   mergeStatistics();
 
-  exchangeDataBetweenTrees();
+  exchangeDataBetweenTrees(localSplittingRanks);
 
   cleanUpTrees();
 }

@@ -399,6 +399,15 @@ peano4::grid::Spacetree::FaceType peano4::grid::Spacetree::getFaceType(
 }
 
 
+std::set<int> peano4::grid::Spacetree::getSplittingTreeIds() const {
+  std::set<int> result;
+  for (auto p: _splitting) {
+	result.insert(p.first);
+  }
+  return result;
+}
+
+
 peano4::grid::Spacetree::VertexType peano4::grid::Spacetree::getVertexType(
   GridVertex                         coarseGridVertices[TwoPowerD],
   tarch::la::Vector<Dimensions,int>  position,

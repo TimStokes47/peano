@@ -700,6 +700,11 @@ class peano4::grid::Spacetree {
 
     GridStatistics getGridStatistics() const;
 
+    /**
+     * @return Ids of ranks that are locally labelled as splitting
+     */
+    std::set<int> getSplittingTreeIds() const;
+
     std::string toString() const;
 
     bool isInvolvedInJoinOrFork() const;

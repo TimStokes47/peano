@@ -134,6 +134,14 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
 
     void mergeStatistics();
 
+    /**
+     * Runs through all local trees and gets the ids of all the splitting
+     * ranks from the local trees. We have to call this routine in-between
+     * the iteration that adds this rank as split-triggered and the routine
+     * that realises this split.
+     */
+    std::set<int> getLocalSplittingRanks() const;
+
     SpacetreeSet();
     SpacetreeSet(const SpacetreeSet& ) = delete;
     SpacetreeSet& operator=(const SpacetreeSet& ) = delete;
