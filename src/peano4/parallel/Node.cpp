@@ -161,6 +161,11 @@ void peano4::parallel::Node::deregisterId(int id) {
 }
 
 
+bool peano4::parallel::Node::isStorageStackNumber(int number) {
+  return number<peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance;
+}
+
+
 int peano4::parallel::Node::getOutputStackNumberOfBoundaryExchange(int id) {
   return peano4::grid::PeanoCurve::MaxNumberOfStacksPerSpacetreeInstance + id * StacksPerCommunicationPartner;
 }

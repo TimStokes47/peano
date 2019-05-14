@@ -352,6 +352,11 @@ class peano4::grid::Spacetree {
 	  TraversalObserver&                        observer
     );
 
+    void sendOutVertexToSplittingTrees(
+      GridVertex&                               vertex,
+	  TraversalObserver&                        observer
+    );
+
     /**
      * Routine should be const, but we cannot make it const. At least not with
      * parallelism.
@@ -631,11 +636,15 @@ class peano4::grid::Spacetree {
     void receiveAndMergeVertexIfAdjacentToDomainBoundary( GridVertex& vertex, TraversalObserver& observer );
 
     /**
-     * The original tree registers itself. But we can't register the copied
-     * tree that late. We have to register its new id as soon as we trigger the
-     * split.
+     * Only used by SpacetreeSet to create children of the original tree.
      */
-    Spacetree( const Spacetree& otherTree, int newId);
+    Spacetree(
+      int newId,
+	  int masterId,
+	  const tarch::la::Vector<Dimensions,double>&  offset,
+	  const tarch::la::Vector<Dimensions,double>&  width,
+	  bool  traversalInverted
+	);
 
     /**
      * Don't copy a tree as it is tied to some stacks.

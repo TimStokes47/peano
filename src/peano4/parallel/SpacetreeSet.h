@@ -96,18 +96,24 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
     void traverseTrees(peano4::grid::TraversalObserver& observer);
 
     /**
-     * exchangeDataBetweenTrees() only handles those data transfers which are logically
-     * asynchronous..
+     * <h2> Forks </h2>
+     *
+     * If we are forking, we first have to establish the new (forked) trees
+     * before we issue any data transer. Otherwise, the xxx
+     *
+     * @param newTrees This set holds all indices of local ids that are down as
+     *          splitting before we issue the traversal preceding this function
+     *          call.
      */
     void exchangeDataBetweenTrees();
 
     /**
-     * We iterate over all local existing trees and trigger the swap of
-     * all data.
-     *
+     * @see exchangeDataBetweenTrees() for details.
      * @see split() For a description of the overall split process.
      */
-    void exchangeDataBetweenNewOrMergingTrees(const std::set<int>& newTrees);
+    void createNewTrees(const std::set< std::pair<int,int> >& newTrees);
+
+    void exchangeDataBetweenNewTreesAndRerunClones(peano4::grid::TraversalObserver& observer);
 
     /**
      * Adds a new spacetree to the set. The responsibility goes over to the
@@ -120,7 +126,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * Technically, we may not make it const. We invoke MPI sends on its
      * stacks. Therefore, it is just a reference.
      */
-    void addSpacetree( peano4::grid::Spacetree& originalSpacetree, int id );
+    void addSpacetree( int masterId, int newTreeId );
 
     bool canJoinWorkerWithMaster( int workerId );
 
@@ -140,7 +146,7 @@ class peano4::parallel::SpacetreeSet: public tarch::services::Service {
      * the iteration that adds this rank as split-triggered and the routine
      * that realises this split.
      */
-    std::set<int> getLocalSplittingRanks() const;
+    std::set<std::pair<int,int> > getLocalSplittingRanks() const;
 
     SpacetreeSet();
     SpacetreeSet(const SpacetreeSet& ) = delete;

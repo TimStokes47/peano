@@ -180,6 +180,14 @@ class peano4::parallel::Node {
      */
     static bool isBoundaryExchangeOutputStackNumber(int number);
     static bool isBoundaryExchangeInputStackNumber(int number);
+
+    /**
+     * There are communication stacks and storage stacks. This is
+     * a storage stack.
+     */
+    static bool isStorageStackNumber(int number);
+
+    // @todo Die gibt es eigentlich nimmer
     static bool isSplitMergeOutputStackNumber(int number);
     static bool isSplitMergeInputStackNumber(int number);
 
