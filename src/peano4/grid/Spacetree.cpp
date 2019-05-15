@@ -737,6 +737,7 @@ void peano4::grid::Spacetree::updateVertexBeforeStore(
   if (restrictIsAntecessorOfRefinedVertex) {
 	dfor2(k)
       if (restrictToCoarseGrid(k,fineVertexPositionWithinPatch)) {
+        logDebug( "updateVertexBeforeStore(...)", "set antecessor flag (veto coarsenign) on vertex " << coarseGridVertices[kScalar].toString() << " due to vertex " << vertex.toString() );
         coarseGridVertices[kScalar].setIsAntecessorOfRefinedVertexInCurrentTreeSweep(true);
       }
 	enddforx
@@ -1379,9 +1380,6 @@ void peano4::grid::Spacetree::evaluateGridControlEvents(
 	    fineGridVertices[i].getState()==GridVertex::State::Refined
       ) {
   	    fineGridVertices[i].setState( GridVertex::State::EraseTriggered );
-  	    if (not isSpacetreeNodeLocal(coarseGridVertices)) {
-          logDebug( "evaluateGridControlEvents(...)", "emergency flag set on tree " << _id << ": seems to be unable to erase because of domain decomposition");
-  	    }
       }
     }
   }
@@ -1434,18 +1432,14 @@ void peano4::grid::Spacetree::descend(
     //
     if ( isSpacetreeNodeLocal(fineGridVertices) ) {
       if ( not isSpacetreeNodeLocal(vertices) ) {
-        updateVerticesAroundForkedCell(vertices);
+        markVerticesAroundParentOfForkedCell(vertices);
       }
+
       evaluateGridControlEvents(fineGridStates[peano4::utils::dLinearised(k,3)], vertices, fineGridVertices);
 
       observer.enterCell(createEnterCellTraversalEvent(
         fineGridVertices,fineGridStates[peano4::utils::dLinearised(k,3)]
       ));
-    }
-    else {
-      if ( isSpacetreeNodeLocal(vertices) ) {
-        updateVerticesAroundForkedCell(vertices);
-      }
     }
 
     //
@@ -1756,7 +1750,7 @@ peano4::grid::GridStatistics peano4::grid::Spacetree::getGridStatistics() const 
 }
 
 
-void peano4::grid::Spacetree::updateVerticesAroundForkedCell(
+void peano4::grid::Spacetree::markVerticesAroundParentOfForkedCell(
   GridVertex            coarseGridVertices[TwoPowerD]
 ) const {
   dfor2(k)

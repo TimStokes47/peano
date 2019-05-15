@@ -202,10 +202,11 @@ class peano4::grid::Spacetree {
     void clearStatistics();
 
     /**
-     * If a cell is given away to another rank, we have to mark its vertices
-     * manually with our veto flag, such that we do not coarsen above it.
+     * If a cell is given away to another rank, we have to mark the vertices
+     * of its mother cell such that we do not coarsen above it and thus
+     * effectively remove our whole splitted subpartition.
      */
-    void updateVerticesAroundForkedCell(
+    void markVerticesAroundParentOfForkedCell(
       GridVertex            coarseGridVertices[TwoPowerD]
     ) const;
 
