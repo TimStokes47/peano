@@ -16,7 +16,10 @@ class peano4::grid::GridStatistics {
   persistent parallelise int  numberOfRemoteRefinedCells;
   
   /**
-   * Stores the number of sweeps till the last grid sweep.
+   * Stores the number of sweeps since the last grid sweep that did change the
+   * mesh.
    */ 
   persistent             int  stationarySweeps;
+
+  persistent parallelise packed bool  coarseningHasBeenVetoed;
 };

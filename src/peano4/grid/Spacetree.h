@@ -498,6 +498,10 @@ class peano4::grid::Spacetree {
      * not update any cell immediately. If I do this, then the adjacency
      * information of the adjacent vertices is overwritten and I loose this
      * clue that these vertices are adjacent to the local, joining rank.
+     *
+     * If we split, we have to be careful that we preserve the master-worker
+     * topology over the ranks. So this routine may only be called on the master,
+     * on a cell that is local, and on a cell whose parent is local, too.
      */
     static void updateVertexRanksWithinCell(
       GridVertex  fineGridVertices[TwoPowerD],
@@ -567,15 +571,10 @@ class peano4::grid::Spacetree {
      * operation is called on the receiver side if and only if the spacetree is
      * not new. On the sender side, the routine is used to analyse outflowing data if and
      * only if the state is not joining.
+     *
+     * The operation returns the empty set if a vertex is not local.
      */
     std::set<int>  getAdjacentDomainIds( const GridVertex& vertex, bool calledByReceivingProcess ) const;
-
-    /**
-     * This is the parallel version of traverse() as it is used by the
-     * spacetree set. The latter passes in a callback. Through this, the
-     * tree can actually split and merge.
-     */
-    void traverse(TraversalObserver& observer, peano4::parallel::SpacetreeSet& spacetreeSet);
 
     /**
      * This one is to be invoked if and only if a vertex goes to the in/out
@@ -685,6 +684,7 @@ class peano4::grid::Spacetree {
 
     bool maySplit() const;
 
+    // @tood Remove. Should be in statistics
     bool _coarseningHasBeenVetoed;
 
     /**
@@ -706,7 +706,7 @@ class peano4::grid::Spacetree {
      * @param calledFromSpacetreeSet If you use traverse directly, please do
      *     not alter this value
      */
-    void traverse(TraversalObserver& observer);
+    void traverse(TraversalObserver& observer, bool calledFromSpacetreeSet = false);
 
     GridStatistics getGridStatistics() const;
 

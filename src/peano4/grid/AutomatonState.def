@@ -1,4 +1,5 @@
 #include "peano4/utils/Globals.h"
+
 // have to know whether we are using MPI
 #include "config.h"
 
@@ -6,12 +7,13 @@ Packed-Type: short int;
 
 Constant: Dimensions hint-value 4;
 Constant: DimensionsTimesTwo;
+Constant: TwoPowerD;
 
 
 class peano4::grid::AutomatonState {
-  persistent parallelise packed int     level;
-  persistent parallelise double         x[Dimensions];
-  persistent parallelise double         h[Dimensions];
+  persistent parallelise int        level;
+  persistent parallelise double     x[Dimensions];
+  persistent parallelise double     h[Dimensions];
 
   persistent packed bool inverted;
 
@@ -29,9 +31,10 @@ class peano4::grid::AutomatonState {
    * There is no need to exchange this data throughout the iterations or 
    * even a join.
    *
-   * @todo Hier muessen Symbolische Konstanten DIMENSIONS_TIMES_TWO verwendet
-   *       werden statt dieser festen Konstanten
-   * @todo Hier sollte ein packed stehen!
+   * We should use TwoPowerD here instead of the fixed numbers, but that is 
+   * currently not supported by DaStGen. So we are prepared for four dimensions
+   * but can't do 5d.
    */
-  persistent short int accessNumber[DimensionsTimesTwo] from -8 to 8;
+//  persistent packed short int accessNumber[DimensionsTimesTwo] from -16 to 16;
+  persistent packed short int accessNumber[DimensionsTimesTwo] from -8 to 8;
 };

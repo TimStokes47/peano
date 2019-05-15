@@ -5,7 +5,7 @@ peano4::grid::GridStatistics::PersistentRecords::PersistentRecords() {
 }
 
 
-peano4::grid::GridStatistics::PersistentRecords::PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps):
+peano4::grid::GridStatistics::PersistentRecords::PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps, const bool& coarseningHasBeenVetoed):
 _numberOfRefinedVertices(numberOfRefinedVertices),
 _numberOfUnrefinedVertices(numberOfUnrefinedVertices),
 _numberOfErasingVertices(numberOfErasingVertices),
@@ -14,7 +14,8 @@ _numberOfLocalUnrefinedCells(numberOfLocalUnrefinedCells),
 _numberOfRemoteUnrefinedCells(numberOfRemoteUnrefinedCells),
 _numberOfLocalRefinedCells(numberOfLocalRefinedCells),
 _numberOfRemoteRefinedCells(numberOfRemoteRefinedCells),
-_stationarySweeps(stationarySweeps) {
+_stationarySweeps(stationarySweeps),
+_coarseningHasBeenVetoed(coarseningHasBeenVetoed) {
    
 }
 
@@ -126,19 +127,31 @@ _stationarySweeps(stationarySweeps) {
 }
 
 
+
+ bool peano4::grid::GridStatistics::PersistentRecords::getCoarseningHasBeenVetoed() const  {
+   return _coarseningHasBeenVetoed;
+}
+
+
+
+ void peano4::grid::GridStatistics::PersistentRecords::setCoarseningHasBeenVetoed(const bool& coarseningHasBeenVetoed)  {
+   _coarseningHasBeenVetoed = coarseningHasBeenVetoed;
+}
+
+
 peano4::grid::GridStatistics::GridStatistics() {
    
 }
 
 
 peano4::grid::GridStatistics::GridStatistics(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._numberOfRefinedVertices, persistentRecords._numberOfUnrefinedVertices, persistentRecords._numberOfErasingVertices, persistentRecords._numberOfRefiningVertices, persistentRecords._numberOfLocalUnrefinedCells, persistentRecords._numberOfRemoteUnrefinedCells, persistentRecords._numberOfLocalRefinedCells, persistentRecords._numberOfRemoteRefinedCells, persistentRecords._stationarySweeps) {
+_persistentRecords(persistentRecords._numberOfRefinedVertices, persistentRecords._numberOfUnrefinedVertices, persistentRecords._numberOfErasingVertices, persistentRecords._numberOfRefiningVertices, persistentRecords._numberOfLocalUnrefinedCells, persistentRecords._numberOfRemoteUnrefinedCells, persistentRecords._numberOfLocalRefinedCells, persistentRecords._numberOfRemoteRefinedCells, persistentRecords._stationarySweeps, persistentRecords._coarseningHasBeenVetoed) {
    
 }
 
 
-peano4::grid::GridStatistics::GridStatistics(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps):
-_persistentRecords(numberOfRefinedVertices, numberOfUnrefinedVertices, numberOfErasingVertices, numberOfRefiningVertices, numberOfLocalUnrefinedCells, numberOfRemoteUnrefinedCells, numberOfLocalRefinedCells, numberOfRemoteRefinedCells, stationarySweeps) {
+peano4::grid::GridStatistics::GridStatistics(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps, const bool& coarseningHasBeenVetoed):
+_persistentRecords(numberOfRefinedVertices, numberOfUnrefinedVertices, numberOfErasingVertices, numberOfRefiningVertices, numberOfLocalUnrefinedCells, numberOfRemoteUnrefinedCells, numberOfLocalRefinedCells, numberOfRemoteRefinedCells, stationarySweeps, coarseningHasBeenVetoed) {
    
 }
 
@@ -254,6 +267,18 @@ peano4::grid::GridStatistics::~GridStatistics() { }
 
 
 
+ bool peano4::grid::GridStatistics::getCoarseningHasBeenVetoed() const  {
+   return _persistentRecords._coarseningHasBeenVetoed;
+}
+
+
+
+ void peano4::grid::GridStatistics::setCoarseningHasBeenVetoed(const bool& coarseningHasBeenVetoed)  {
+   _persistentRecords._coarseningHasBeenVetoed = coarseningHasBeenVetoed;
+}
+
+
+
 
 std::string peano4::grid::GridStatistics::toString() const {
    std::ostringstream stringstr;
@@ -280,6 +305,8 @@ void peano4::grid::GridStatistics::toString (std::ostream& out) const {
    out << "numberOfRemoteRefinedCells:" << getNumberOfRemoteRefinedCells();
    out << ",";
    out << "stationarySweeps:" << getStationarySweeps();
+   out << ",";
+   out << "coarseningHasBeenVetoed:" << getCoarseningHasBeenVetoed();
    out <<  ")";
 }
 
@@ -298,7 +325,8 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
       getNumberOfRemoteUnrefinedCells(),
       getNumberOfLocalRefinedCells(),
       getNumberOfRemoteRefinedCells(),
-      getStationarySweeps()
+      getStationarySweeps(),
+      getCoarseningHasBeenVetoed()
    );
 }
 
@@ -314,9 +342,9 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          GridStatistics dummyGridStatistics[16];
          
          #ifdef MPI2
-         const int Attributes = 8;
+         const int Attributes = 9;
          #else
-         const int Attributes = 8+2;
+         const int Attributes = 9+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
@@ -330,6 +358,7 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , MPI_INT		 //numberOfRemoteUnrefinedCells
             , MPI_INT		 //numberOfLocalRefinedCells
             , MPI_INT		 //numberOfRemoteRefinedCells
+            , MPI_CXX_BOOL		 //coarseningHasBeenVetoed
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -348,6 +377,7 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , 1		 //numberOfRemoteUnrefinedCells
             , 1		 //numberOfLocalRefinedCells
             , 1		 //numberOfRemoteRefinedCells
+            , 1		 //coarseningHasBeenVetoed
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -408,6 +438,12 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._coarseningHasBeenVetoed))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._coarseningHasBeenVetoed))), 		&disp[currentAddress] );
+         #endif
          #ifndef MPI2
          currentAddress++;
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[1]))), &disp[currentAddress]);
@@ -445,9 +481,9 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          GridStatistics dummyGridStatistics[16];
          
          #ifdef MPI2
-         const int Attributes = 9;
+         const int Attributes = 10;
          #else
-         const int Attributes = 9+2;
+         const int Attributes = 10+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
@@ -462,6 +498,7 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , MPI_INT		 //numberOfLocalRefinedCells
             , MPI_INT		 //numberOfRemoteRefinedCells
             , MPI_INT		 //stationarySweeps
+            , MPI_CXX_BOOL		 //coarseningHasBeenVetoed
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -481,6 +518,7 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
             , 1		 //numberOfLocalRefinedCells
             , 1		 //numberOfRemoteRefinedCells
             , 1		 //stationarySweeps
+            , 1		 //coarseningHasBeenVetoed
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -546,6 +584,12 @@ peano4::grid::GridStatisticsPacked peano4::grid::GridStatistics::convert() const
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._stationarySweeps))), 		&disp[currentAddress] );
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._stationarySweeps))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._coarseningHasBeenVetoed))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatistics[0]._persistentRecords._coarseningHasBeenVetoed))), 		&disp[currentAddress] );
          #endif
          #ifndef MPI2
          currentAddress++;
@@ -845,11 +889,17 @@ switch (mode) {
 
 
 peano4::grid::GridStatisticsPacked::PersistentRecords::PersistentRecords() {
+   if ((1 >= (8 * sizeof(short int)))) {
+      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+      std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+   }
+   assertion((1 < (8 * sizeof(short int))));
    
 }
 
 
-peano4::grid::GridStatisticsPacked::PersistentRecords::PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps):
+peano4::grid::GridStatisticsPacked::PersistentRecords::PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps, const bool& coarseningHasBeenVetoed):
 _numberOfRefinedVertices(numberOfRefinedVertices),
 _numberOfUnrefinedVertices(numberOfUnrefinedVertices),
 _numberOfErasingVertices(numberOfErasingVertices),
@@ -859,6 +909,13 @@ _numberOfRemoteUnrefinedCells(numberOfRemoteUnrefinedCells),
 _numberOfLocalRefinedCells(numberOfLocalRefinedCells),
 _numberOfRemoteRefinedCells(numberOfRemoteRefinedCells),
 _stationarySweeps(stationarySweeps) {
+   setCoarseningHasBeenVetoed(coarseningHasBeenVetoed);
+   if ((1 >= (8 * sizeof(short int)))) {
+      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+      std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+   }
+   assertion((1 < (8 * sizeof(short int))));
    
 }
 
@@ -970,19 +1027,52 @@ _stationarySweeps(stationarySweeps) {
 }
 
 
+
+ bool peano4::grid::GridStatisticsPacked::PersistentRecords::getCoarseningHasBeenVetoed() const  {
+   short int mask = 1 << (0);
+   short int tmp = static_cast<short int>(_packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano4::grid::GridStatisticsPacked::PersistentRecords::setCoarseningHasBeenVetoed(const bool& coarseningHasBeenVetoed)  {
+   short int mask = 1 << (0);
+   _packedRecords0 = static_cast<short int>( coarseningHasBeenVetoed ? (_packedRecords0 | mask) : (_packedRecords0 & ~mask));
+}
+
+
 peano4::grid::GridStatisticsPacked::GridStatisticsPacked() {
+   if ((1 >= (8 * sizeof(short int)))) {
+      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+      std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+   }
+   assertion((1 < (8 * sizeof(short int))));
    
 }
 
 
 peano4::grid::GridStatisticsPacked::GridStatisticsPacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords._numberOfRefinedVertices, persistentRecords._numberOfUnrefinedVertices, persistentRecords._numberOfErasingVertices, persistentRecords._numberOfRefiningVertices, persistentRecords._numberOfLocalUnrefinedCells, persistentRecords._numberOfRemoteUnrefinedCells, persistentRecords._numberOfLocalRefinedCells, persistentRecords._numberOfRemoteRefinedCells, persistentRecords._stationarySweeps) {
+_persistentRecords(persistentRecords._numberOfRefinedVertices, persistentRecords._numberOfUnrefinedVertices, persistentRecords._numberOfErasingVertices, persistentRecords._numberOfRefiningVertices, persistentRecords._numberOfLocalUnrefinedCells, persistentRecords._numberOfRemoteUnrefinedCells, persistentRecords._numberOfLocalRefinedCells, persistentRecords._numberOfRemoteRefinedCells, persistentRecords._stationarySweeps, persistentRecords.getCoarseningHasBeenVetoed()) {
+   if ((1 >= (8 * sizeof(short int)))) {
+      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+      std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+   }
+   assertion((1 < (8 * sizeof(short int))));
    
 }
 
 
-peano4::grid::GridStatisticsPacked::GridStatisticsPacked(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps):
-_persistentRecords(numberOfRefinedVertices, numberOfUnrefinedVertices, numberOfErasingVertices, numberOfRefiningVertices, numberOfLocalUnrefinedCells, numberOfRemoteUnrefinedCells, numberOfLocalRefinedCells, numberOfRemoteRefinedCells, stationarySweeps) {
+peano4::grid::GridStatisticsPacked::GridStatisticsPacked(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps, const bool& coarseningHasBeenVetoed):
+_persistentRecords(numberOfRefinedVertices, numberOfUnrefinedVertices, numberOfErasingVertices, numberOfRefiningVertices, numberOfLocalUnrefinedCells, numberOfRemoteUnrefinedCells, numberOfLocalRefinedCells, numberOfRemoteRefinedCells, stationarySweeps, coarseningHasBeenVetoed) {
+   if ((1 >= (8 * sizeof(short int)))) {
+      std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
+      std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
+      std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
+   }
+   assertion((1 < (8 * sizeof(short int))));
    
 }
 
@@ -1098,6 +1188,21 @@ peano4::grid::GridStatisticsPacked::~GridStatisticsPacked() { }
 
 
 
+ bool peano4::grid::GridStatisticsPacked::getCoarseningHasBeenVetoed() const  {
+   short int mask = 1 << (0);
+   short int tmp = static_cast<short int>(_persistentRecords._packedRecords0 & mask);
+   return (tmp != 0);
+}
+
+
+
+ void peano4::grid::GridStatisticsPacked::setCoarseningHasBeenVetoed(const bool& coarseningHasBeenVetoed)  {
+   short int mask = 1 << (0);
+   _persistentRecords._packedRecords0 = static_cast<short int>( coarseningHasBeenVetoed ? (_persistentRecords._packedRecords0 | mask) : (_persistentRecords._packedRecords0 & ~mask));
+}
+
+
+
 
 std::string peano4::grid::GridStatisticsPacked::toString() const {
    std::ostringstream stringstr;
@@ -1124,6 +1229,8 @@ void peano4::grid::GridStatisticsPacked::toString (std::ostream& out) const {
    out << "numberOfRemoteRefinedCells:" << getNumberOfRemoteRefinedCells();
    out << ",";
    out << "stationarySweeps:" << getStationarySweeps();
+   out << ",";
+   out << "coarseningHasBeenVetoed:" << getCoarseningHasBeenVetoed();
    out <<  ")";
 }
 
@@ -1142,7 +1249,8 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
       getNumberOfRemoteUnrefinedCells(),
       getNumberOfLocalRefinedCells(),
       getNumberOfRemoteRefinedCells(),
-      getStationarySweeps()
+      getStationarySweeps(),
+      getCoarseningHasBeenVetoed()
    );
 }
 
@@ -1158,9 +1266,9 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          GridStatisticsPacked dummyGridStatisticsPacked[16];
          
          #ifdef MPI2
-         const int Attributes = 8;
+         const int Attributes = 9;
          #else
-         const int Attributes = 8+2;
+         const int Attributes = 9+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
@@ -1174,6 +1282,7 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             , MPI_INT		 //numberOfRemoteUnrefinedCells
             , MPI_INT		 //numberOfLocalRefinedCells
             , MPI_INT		 //numberOfRemoteRefinedCells
+            , MPI_SHORT		 //_packedRecords0
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -1192,6 +1301,7 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             , 1		 //numberOfRemoteUnrefinedCells
             , 1		 //numberOfLocalRefinedCells
             , 1		 //numberOfRemoteRefinedCells
+            , 1		 //_packedRecords0
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -1252,6 +1362,12 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._numberOfRemoteRefinedCells))), 		&disp[currentAddress] );
          #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
+         #endif
          #ifndef MPI2
          currentAddress++;
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[1]))), &disp[currentAddress]);
@@ -1289,9 +1405,9 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          GridStatisticsPacked dummyGridStatisticsPacked[16];
          
          #ifdef MPI2
-         const int Attributes = 9;
+         const int Attributes = 10;
          #else
-         const int Attributes = 9+2;
+         const int Attributes = 10+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
@@ -1306,6 +1422,7 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             , MPI_INT		 //numberOfLocalRefinedCells
             , MPI_INT		 //numberOfRemoteRefinedCells
             , MPI_INT		 //stationarySweeps
+            , MPI_SHORT		 //_packedRecords0
             #ifndef MPI2
             , MPI_UB
             #endif
@@ -1325,6 +1442,7 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
             , 1		 //numberOfLocalRefinedCells
             , 1		 //numberOfRemoteRefinedCells
             , 1		 //stationarySweeps
+            , 1		 //_packedRecords0
             #ifndef MPI2
             , 1 // upper bound
             #endif
@@ -1390,6 +1508,12 @@ peano4::grid::GridStatistics peano4::grid::GridStatisticsPacked::convert() const
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._stationarySweeps))), 		&disp[currentAddress] );
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._stationarySweeps))), 		&disp[currentAddress] );
+         #endif
+         currentAddress++;
+         #ifdef MPI2
+         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
+         #else
+         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyGridStatisticsPacked[0]._persistentRecords._packedRecords0))), 		&disp[currentAddress] );
          #endif
          #ifndef MPI2
          currentAddress++;

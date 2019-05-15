@@ -192,7 +192,7 @@ peano4::parallel::SpacetreeSet::TraverseTask::TraverseTask(
 
 bool peano4::parallel::SpacetreeSet::TraverseTask::run() {
   peano4::grid::TraversalObserver* localObserver = _observer.clone( _spacetree._id );
-  _spacetree.traverse( *localObserver, _spacetreeSet );
+  _spacetree.traverse( *localObserver, true );
   delete localObserver;
   return false;
 }
@@ -210,8 +210,7 @@ void peano4::parallel::SpacetreeSet::traverseTrees(peano4::grid::TraversalObserv
       traverseTasksForRunningTrees.push_back( new TraverseTask(
         p, *this, observer
       ));
-      // @todo Debug
-      logInfo( "traverseTrees(TraversalObserver&)", "issue task to traverse tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
+      logDebug( "traverseTrees(TraversalObserver&)", "issue task to traverse tree " << p._id << " in state " << peano4::grid::Spacetree::toString(p._spacetreeState) );
 	}
   }
 
@@ -371,9 +370,9 @@ void peano4::parallel::SpacetreeSet::exchangeDataBetweenNewTreesAndRerunClones(p
       }
 
       // @todo Debug
-      logInfo( "exchangeDataBetweenNewTreesAndRerunClones()", "run tree " << p._id << " in dry mode" );
+      logInfo( "exchangeDataBetweenNewTreesAndRerunClones()", "run tree " << p._id << " in dry mode (data exchange only)" );
       peano4::grid::TraversalObserver* localObserver = observer.clone( p._id );
-      p.traverse(*localObserver,*this);
+      p.traverse(*localObserver,true);
       delete localObserver;
 	}
   }

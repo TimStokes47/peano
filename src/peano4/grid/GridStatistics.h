@@ -27,7 +27,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   18/01/2019 12:11
+ * @date   15/05/2019 07:30
  */
 class peano4::grid::GridStatistics { 
    
@@ -45,6 +45,7 @@ class peano4::grid::GridStatistics {
          int _numberOfLocalRefinedCells;
          int _numberOfRemoteRefinedCells;
          int _stationarySweeps;
+         bool _coarseningHasBeenVetoed;
          /**
           * Generated
           */
@@ -53,7 +54,7 @@ class peano4::grid::GridStatistics {
          /**
           * Generated
           */
-         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps);
+         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps, const bool& coarseningHasBeenVetoed);
          
          /**
           * Generated
@@ -145,6 +146,16 @@ class peano4::grid::GridStatistics {
           */
           void setStationarySweeps(const int& stationarySweeps) ;
          
+         /**
+          * Generated
+          */
+          bool getCoarseningHasBeenVetoed() const ;
+         
+         /**
+          * Generated
+          */
+          void setCoarseningHasBeenVetoed(const bool& coarseningHasBeenVetoed) ;
+         
          
       };
       private: 
@@ -164,7 +175,7 @@ class peano4::grid::GridStatistics {
          /**
           * Generated
           */
-         GridStatistics(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps);
+         GridStatistics(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps, const bool& coarseningHasBeenVetoed);
          
          /**
           * Generated
@@ -264,6 +275,16 @@ class peano4::grid::GridStatistics {
          /**
           * Generated
           */
+          bool getCoarseningHasBeenVetoed() const ;
+         
+         /**
+          * Generated
+          */
+          void setCoarseningHasBeenVetoed(const bool& coarseningHasBeenVetoed) ;
+         
+         /**
+          * Generated
+          */
          std::string toString() const;
          
          /**
@@ -324,7 +345,7 @@ class peano4::grid::GridStatistics {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   18/01/2019 12:11
+ * @date   15/05/2019 07:30
  */
 class peano4::grid::GridStatisticsPacked { 
    
@@ -340,6 +361,13 @@ class peano4::grid::GridStatisticsPacked {
          int _numberOfLocalRefinedCells;
          int _numberOfRemoteRefinedCells;
          int _stationarySweeps;
+         
+         /** mapping of records:
+         || Member 	|| startbit 	|| length
+          |  coarseningHasBeenVetoed	| startbit 0	| #bits 1
+          */
+         short int _packedRecords0;
+         
          /**
           * Generated
           */
@@ -348,7 +376,7 @@ class peano4::grid::GridStatisticsPacked {
          /**
           * Generated
           */
-         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps);
+         PersistentRecords(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps, const bool& coarseningHasBeenVetoed);
          
          /**
           * Generated
@@ -440,6 +468,16 @@ class peano4::grid::GridStatisticsPacked {
           */
           void setStationarySweeps(const int& stationarySweeps) ;
          
+         /**
+          * Generated
+          */
+          bool getCoarseningHasBeenVetoed() const ;
+         
+         /**
+          * Generated
+          */
+          void setCoarseningHasBeenVetoed(const bool& coarseningHasBeenVetoed) ;
+         
          
       };
       private: 
@@ -459,7 +497,7 @@ class peano4::grid::GridStatisticsPacked {
          /**
           * Generated
           */
-         GridStatisticsPacked(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps);
+         GridStatisticsPacked(const int& numberOfRefinedVertices, const int& numberOfUnrefinedVertices, const int& numberOfErasingVertices, const int& numberOfRefiningVertices, const int& numberOfLocalUnrefinedCells, const int& numberOfRemoteUnrefinedCells, const int& numberOfLocalRefinedCells, const int& numberOfRemoteRefinedCells, const int& stationarySweeps, const bool& coarseningHasBeenVetoed);
          
          /**
           * Generated
@@ -555,6 +593,16 @@ class peano4::grid::GridStatisticsPacked {
           * Generated
           */
           void setStationarySweeps(const int& stationarySweeps) ;
+         
+         /**
+          * Generated
+          */
+          bool getCoarseningHasBeenVetoed() const ;
+         
+         /**
+          * Generated
+          */
+          void setCoarseningHasBeenVetoed(const bool& coarseningHasBeenVetoed) ;
          
          /**
           * Generated

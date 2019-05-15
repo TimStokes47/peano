@@ -639,7 +639,7 @@ switch (mode) {
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::grid::AutomatonState from node " 
+        msg << "failed to start to receive peano4::grid::AutomatonState from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -659,7 +659,7 @@ switch (mode) {
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::grid::AutomatonState from node " 
+        msg << "failed to start to receive peano4::grid::AutomatonState from rank " 
              << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -746,7 +746,7 @@ switch (mode) {
       result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::grid::AutomatonState from node " 
+        msg << "failed to start to receive peano4::grid::AutomatonState from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -793,29 +793,29 @@ switch (mode) {
 
 
 peano4::grid::AutomatonStatePacked::PersistentRecords::PersistentRecords() {
-   if ((Dimensions+1 >= (8 * sizeof(short int)))) {
+   if ((Dimensions+5 * DimensionsTimesTwo+1 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((Dimensions+1 < (8 * sizeof(short int))));
+   assertion((Dimensions+5 * DimensionsTimesTwo+1 < (8 * sizeof(short int))));
    
 }
 
 
 peano4::grid::AutomatonStatePacked::PersistentRecords::PersistentRecords(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber):
+_level(level),
 _x(x),
-_h(h),
-_accessNumber(accessNumber) {
-   setLevel(level);
+_h(h) {
    setInverted(inverted);
    setEvenFlags(evenFlags);
-   if ((Dimensions+1 >= (8 * sizeof(short int)))) {
+   setAccessNumber(accessNumber);
+   if ((Dimensions+5 * DimensionsTimesTwo+1 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((Dimensions+1 < (8 * sizeof(short int))));
+   assertion((Dimensions+5 * DimensionsTimesTwo+1 < (8 * sizeof(short int))));
    
 }
 
@@ -892,47 +892,72 @@ _accessNumber(accessNumber) {
 
 
  tarch::la::Vector<DimensionsTimesTwo,short int> peano4::grid::AutomatonStatePacked::PersistentRecords::getAccessNumber() const  {
-   return _accessNumber;
+   short int mask = 31;
+   mask = mask << (Dimensions + 1);
+   tarch::la::Vector<DimensionsTimesTwo,short int> result;
+   short int tmp;
+   
+   for (int i = 0; i < DimensionsTimesTwo; i++) {
+      tmp = _packedRecords0 & mask;
+      tmp = tmp >> (Dimensions + 1 + i * 5);
+      tmp = tmp + -8;
+      result[i] = (short int) tmp;
+      mask = mask << 5;
+   }
+   for (int i = 0; i < DimensionsTimesTwo; i++) {
+      assertion((result[i] >= -8 && result[i] <= 8));
+   }
+   return result;
 }
 
 
 
  void peano4::grid::AutomatonStatePacked::PersistentRecords::setAccessNumber(const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber)  {
-   _accessNumber = (accessNumber);
+   
+   for (int i = 0; i < DimensionsTimesTwo; i++) {
+      assertion((accessNumber[i] >= -8 && accessNumber[i] <= 8));
+   }
+   for (int i = 0; i < DimensionsTimesTwo; i++) {
+      short int mask = 31;
+      mask = mask << (Dimensions + 1 + i * 5 );
+      _packedRecords0 = _packedRecords0 & ~mask;
+      short int tmp = static_cast<short int>(accessNumber[i]);
+      _packedRecords0 = _packedRecords0 | ( tmp - -8) << (Dimensions + 1 + i * 5);
+   }
 }
 
 
 peano4::grid::AutomatonStatePacked::AutomatonStatePacked() {
-   if ((Dimensions+1 >= (8 * sizeof(short int)))) {
+   if ((Dimensions+5 * DimensionsTimesTwo+1 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((Dimensions+1 < (8 * sizeof(short int))));
+   assertion((Dimensions+5 * DimensionsTimesTwo+1 < (8 * sizeof(short int))));
    
 }
 
 
 peano4::grid::AutomatonStatePacked::AutomatonStatePacked(const PersistentRecords& persistentRecords):
-_persistentRecords(persistentRecords.getLevel(), persistentRecords._x, persistentRecords._h, persistentRecords.getInverted(), persistentRecords.getEvenFlags(), persistentRecords._accessNumber) {
-   if ((Dimensions+1 >= (8 * sizeof(short int)))) {
+_persistentRecords(persistentRecords._level, persistentRecords._x, persistentRecords._h, persistentRecords.getInverted(), persistentRecords.getEvenFlags(), persistentRecords.getAccessNumber()) {
+   if ((Dimensions+5 * DimensionsTimesTwo+1 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((Dimensions+1 < (8 * sizeof(short int))));
+   assertion((Dimensions+5 * DimensionsTimesTwo+1 < (8 * sizeof(short int))));
    
 }
 
 
 peano4::grid::AutomatonStatePacked::AutomatonStatePacked(const int& level, const tarch::la::Vector<Dimensions,double>& x, const tarch::la::Vector<Dimensions,double>& h, const bool& inverted, const std::bitset<Dimensions>& evenFlags, const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber):
 _persistentRecords(level, x, h, inverted, evenFlags, accessNumber) {
-   if ((Dimensions+1 >= (8 * sizeof(short int)))) {
+   if ((Dimensions+5 * DimensionsTimesTwo+1 >= (8 * sizeof(short int)))) {
       std::cerr << "Packed-Type in " << __FILE__ << " too small. Either use bigger data type or append " << std::endl << std::endl;
       std::cerr << "  Packed-Type: short int hint-size no-of-bits;  " << std::endl << std::endl;
       std::cerr << "to your data type spec to guide DaStGen how many bits (no-of-bits) a data type has on your machine. DaStGen then can split up the bitfields into several attributes. " << std::endl; 
    }
-   assertion((Dimensions+1 < (8 * sizeof(short int))));
+   assertion((Dimensions+5 * DimensionsTimesTwo+1 < (8 * sizeof(short int))));
    
 }
 
@@ -1081,31 +1106,67 @@ peano4::grid::AutomatonStatePacked::~AutomatonStatePacked() { }
 
 
  tarch::la::Vector<DimensionsTimesTwo,short int> peano4::grid::AutomatonStatePacked::getAccessNumber() const  {
-   return _persistentRecords._accessNumber;
+   short int mask = 31;
+   mask = mask << (Dimensions + 1);
+   tarch::la::Vector<DimensionsTimesTwo,short int> result;
+   short int tmp;
+   
+   for (int i = 0; i < DimensionsTimesTwo; i++) {
+      tmp = _persistentRecords._packedRecords0 & mask;
+      tmp = tmp >> (Dimensions + 1 + i * 5);
+      tmp = tmp + -8;
+      result[i] = (short int) tmp;
+      mask = mask << 5;
+   }
+   for (int i = 0; i < DimensionsTimesTwo; i++) {
+      assertion((result[i] >= -8 && result[i] <= 8));
+   }
+   return result;
 }
 
 
 
  void peano4::grid::AutomatonStatePacked::setAccessNumber(const tarch::la::Vector<DimensionsTimesTwo,short int>& accessNumber)  {
-   _persistentRecords._accessNumber = (accessNumber);
+   
+   for (int i = 0; i < DimensionsTimesTwo; i++) {
+      assertion((accessNumber[i] >= -8 && accessNumber[i] <= 8));
+   }
+   for (int i = 0; i < DimensionsTimesTwo; i++) {
+      short int mask = 31;
+      mask = mask << (Dimensions + 1 + i * 5 );
+      _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 & ~mask;
+      short int tmp = static_cast<short int>(accessNumber[i]);
+      _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 | ( tmp - -8) << (Dimensions + 1 + i * 5);
+   }
 }
 
 
 
  short int peano4::grid::AutomatonStatePacked::getAccessNumber(int elementIndex) const  {
+   
    assertion(elementIndex>=0);
    assertion(elementIndex<DimensionsTimesTwo);
-   return _persistentRecords._accessNumber[elementIndex];
-   
+   short int mask = 31;
+   mask = mask << (Dimensions + 1 + elementIndex * 5);
+   short int tmp = _persistentRecords._packedRecords0 & mask;
+   tmp = tmp >> (Dimensions + 1 + elementIndex * 5);
+   tmp = tmp + -8;
+   assertion((tmp >= -8) && (tmp <= 8));
+   return (short int) tmp;
 }
 
 
 
  void peano4::grid::AutomatonStatePacked::setAccessNumber(int elementIndex, const short int& accessNumber)  {
+   
    assertion(elementIndex>=0);
    assertion(elementIndex<DimensionsTimesTwo);
-   _persistentRecords._accessNumber[elementIndex]= accessNumber;
-   
+   assertion((accessNumber >= -8 && accessNumber <= 8));
+   short int mask = 31;
+   mask = mask << (Dimensions + 1 + elementIndex * 5);
+   _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 & ~mask;
+   short int tmp = static_cast<short int>(accessNumber);
+   _persistentRecords._packedRecords0 = _persistentRecords._packedRecords0 | ( tmp - -8) << (Dimensions + 1 + elementIndex * 5);
 }
 
 
@@ -1268,9 +1329,9 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
          AutomatonStatePacked dummyAutomatonStatePacked[16];
          
          #ifdef MPI2
-         const int Attributes = 5;
+         const int Attributes = 4;
          #else
-         const int Attributes = 5+2;
+         const int Attributes = 4+2;
          #endif
          MPI_Datatype subtypes[Attributes] = {
             #ifndef MPI2
@@ -1279,7 +1340,6 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
               MPI_INT		 //level
             , MPI_DOUBLE		 //x
             , MPI_DOUBLE		 //h
-            , MPI_SHORT		 //accessNumber
             , MPI_SHORT		 //_packedRecords0
             #ifndef MPI2
             , MPI_UB
@@ -1294,7 +1354,6 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
               1		 //level
             , Dimensions		 //x
             , Dimensions		 //h
-            , DimensionsTimesTwo		 //accessNumber
             , 1		 //_packedRecords0
             #ifndef MPI2
             , 1 // upper bound
@@ -1325,12 +1384,6 @@ peano4::grid::AutomatonState peano4::grid::AutomatonStatePacked::convert() const
          MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
          #else
          MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._h[0]))), 		&disp[currentAddress] );
-         #endif
-         currentAddress++;
-         #ifdef MPI2
-         MPI_Get_address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._accessNumber[0]))), 		&disp[currentAddress] );
-         #else
-         MPI_Address( const_cast<void*>(static_cast<const void*>(&(dummyAutomatonStatePacked[0]._persistentRecords._accessNumber[0]))), 		&disp[currentAddress] );
          #endif
          currentAddress++;
          #ifdef MPI2
@@ -1482,7 +1535,7 @@ switch (mode) {
       const int   result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::grid::AutomatonStatePacked from node " 
+        msg << "failed to start to receive peano4::grid::AutomatonStatePacked from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -1502,7 +1555,7 @@ switch (mode) {
       ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::grid::AutomatonStatePacked from node " 
+        msg << "failed to start to receive peano4::grid::AutomatonStatePacked from rank " 
              << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 
@@ -1589,7 +1642,7 @@ switch (mode) {
       result = MPI_Recv(this, 1, exchangeOnlyAttributesMarkedWithParallelise ? Datatype : FullDatatype, source, tag, tarch::mpi::Rank::getInstance().getCommunicator(), source==MPI_ANY_SOURCE ? &status : MPI_STATUS_IGNORE ); 
       if ( result != MPI_SUCCESS ) { 
         std::ostringstream msg; 
-        msg << "failed to start to receive peano4::grid::AutomatonStatePacked from node " 
+        msg << "failed to start to receive peano4::grid::AutomatonStatePacked from rank " 
             << source << ": " << tarch::mpi::MPIReturnValueToString(result); 
         _log.error( "receive(int)", msg.str() ); 
       } 

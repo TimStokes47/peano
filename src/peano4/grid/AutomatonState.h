@@ -28,7 +28,7 @@ namespace peano4 {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   18/01/2019 12:11
+ * @date   15/05/2019 11:04
  */
 class peano4::grid::AutomatonState { 
    
@@ -232,7 +232,7 @@ class peano4::grid::AutomatonState {
  *
  * 		   build date: 09-02-2014 14:40
  *
- * @date   18/01/2019 12:11
+ * @date   15/05/2019 11:04
  */
 class peano4::grid::AutomatonStatePacked { 
    
@@ -242,12 +242,12 @@ class peano4::grid::AutomatonStatePacked {
          int _level;
          tarch::la::Vector<Dimensions,double> _x;
          tarch::la::Vector<Dimensions,double> _h;
-         tarch::la::Vector<DimensionsTimesTwo,short int> _accessNumber;
          
          /** mapping of records:
          || Member 	|| startbit 	|| length
           |  inverted	| startbit 0	| #bits 1
           |  evenFlags	| startbit 1	| #bits Dimensions
+          |  accessNumber	| startbit Dimensions + 1	| #bits 5 * DimensionsTimesTwo
           */
          short int _packedRecords0;
          

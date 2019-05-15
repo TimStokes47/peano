@@ -126,8 +126,8 @@ void runMultithreaded() {
     peano4::parallel::SpacetreeSet::getInstance().traverse( emptyObserver );
   }
 
-  // @todo Wird wirklich immer eine Schicht net abgeben, so dass wir nach wie vor eine Topologie haben?
-  // @todo Warum wird ein Vertex in der Mitte nicht erased?
+  // @todo _coarseningHasBeenVetoed in Spacetree.h raus -> ist jetzt in Statistics
+  // @todo Join wieder einfuehren
   // @todo Muesste man auch mal woanders instantiieren, also auf einem anderen Rank
   // @todo Schauen, ob er jetzt auch joined
   while (
